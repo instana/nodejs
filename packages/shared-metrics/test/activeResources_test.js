@@ -7,35 +7,41 @@
 
 const expect = require('chai').expect;
 const net = require('net');
+const fs = require('fs');
 
 const config = require('@instana/core/test/config');
 const testUtils = require('@instana/core/test/test_util');
-const activeHandles = require('../src/activeHandles');
+const activeResources = require('../src/activeResources');
 
-describe('metrics.activeHandles', function () {
+describe('metrics.activeResources', function () {
   this.timeout(config.getTestTimeout());
 
-  it('should export active handle count', () => {
-    // @ts-ignore
-    expect(activeHandles.currentPayload).to.equal(process._getActiveHandles().length);
+  it('should export active resource count', () => {
+    // [ 'TTYWrap', 'TTYWrap', 'TTYWrap', 'PipeWrap', 'ProcessWrap' ]
+    // Teletypewriter = stdin, stdout, stderr
+    // PipeWrap = internal pipe for process communication (test -> app)
+    // ProcessWrap = the child process itself
+    expect(activeResources.currentPayload).to.be.an('object');
+    expect(activeResources.currentPayload.count).to.equal(5);
   });
 
-  // This test is only compatible with Node.js versions lower than 11.
-  // The failure is due to changes introduced in commit:
-  //  https://github.com/nodejs/node/commit/ccc3bb73db.
-  // We can reintroduce the test once we switch from the deprecated
-  // _getActiveHandles flag to getActiveResourcesInfo, which is more reliable.
-  // More details: https://nodejs.org/api/process.html#processgetactiveresourcesinfo
-  // For additional context, see: https://github.com/instana/nodejs/pull/1387
-
-  it.skip('should update handle count for a setTimeout', () => {
-    const previousCount = activeHandles.currentPayload;
+  it('should update resource count for a setTimeout', () => {
     const timeoutHandle = setTimeout(() => {}, 100);
 
-    // TODO: getActiveResourcesInfo returns the correct value, but `_getActiveHandles` does not
-    //       for v23.
-    expect(activeHandles.currentPayload).to.equal(previousCount + 1);
+    // [ 'TTYWrap', 'TTYWrap', 'TTYWrap', 'PipeWrap', 'ProcessWrap', 'Timeout' ]
+    expect(activeResources.currentPayload).to.be.an('object');
+    expect(activeResources.currentPayload.count).to.equal(6);
     clearTimeout(timeoutHandle);
+  });
+
+  it('should update requests count for a fs.open', () => {
+    const initialCount = activeResources.currentPayload.count;
+    const count = 13;
+    for (let i = 0; i < count; i++) {
+      fs.open(__filename, 'r', () => {});
+    }
+    expect(activeResources.currentPayload).to.be.an('object');
+    expect(activeResources.currentPayload.count).to.equal(initialCount + count);
   });
 
   describe('with net client/server', () => {
@@ -50,11 +56,10 @@ describe('metrics.activeHandles', function () {
     const connections = [];
     /** @type {Array.<*>} */
     const clients = [];
-    /** @type {*} */
-    let activeHandlesBefore;
+    let initialActiveResources = 0;
 
-    beforeEach(() => {
-      activeHandlesBefore = activeHandles.currentPayload;
+    before(() => {
+      initialActiveResources = activeResources.currentPayload.count;
       server = net
         .createServer(function listener(c) {
           connections.push(c);
@@ -62,7 +67,7 @@ describe('metrics.activeHandles', function () {
         .listen(0, makeConnection);
     });
 
-    afterEach(() => {
+    after(() => {
       clients.forEach(client => {
         client.destroy();
       });
@@ -77,12 +82,12 @@ describe('metrics.activeHandles', function () {
         () =>
           new Promise((resolve, reject) => {
             if (clients.length >= maxClients) {
-              // At least one handle should exist per client and one per connection, that's why we expect
-              // (2 * maxClients) more handles than we had initially. However, other things are happening in the Node.js
-              // runtime as well while this test is running, so it might actually happen that some of the unrelated
-              // handles that existed initially have since been removed, which is why we allow for a little wiggle room
-              // (-4 at the end). Without this wiggle room, this test is flaky.
-              expect(activeHandles.currentPayload).to.be.at.least(activeHandlesBefore + 2 * maxClients - 4);
+              // Initially is 5 with the test setup.
+              // 1 TCPServerWrap because of the server
+              // Max Clients is 8 (each 2 TCPSocketWrap because of client and server side)
+              // 1 timeoutWrap because of the makeConnection timeout
+              expect(activeResources.currentPayload).to.be.an('object');
+              expect(activeResources.currentPayload.count).to.be.at.least(initialActiveResources + maxClients * 2 + 1);
               resolve();
             } else {
               reject(new Error('Still waiting for more clients to connect.'));

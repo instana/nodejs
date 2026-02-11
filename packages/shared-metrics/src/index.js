@@ -5,8 +5,7 @@
 
 'use strict';
 
-const activeHandles = require('./activeHandles');
-const activeRequests = require('./activeRequests');
+const activeResources = require('./activeResources');
 const args = require('./args');
 const dependencies = require('./dependencies');
 const directDependencies = require('./directDependencies');
@@ -25,8 +24,7 @@ const util = require('./util');
 
 /** @type {Array.<import('@instana/core/src/metrics').InstanaMetricsModule>} */
 const allMetrics = [
-  activeHandles,
-  activeRequests,
+  activeResources,
   args,
   dependencies,
   directDependencies,
