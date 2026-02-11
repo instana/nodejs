@@ -89,7 +89,9 @@ function cleanVersionDirs(testDir) {
   });
 }
 
-function generateTestWrapper({ suiteName, displayVersion, rawVersion, isLatest, esmOnly, mode, sourceDepth, nodeConstraint }) {
+function generateTestWrapper({
+  suiteName, displayVersion, rawVersion, isLatest, esmOnly, mode, sourceDepth, nodeConstraint
+}) {
   const currentYear = new Date().getFullYear();
   const relSourcePath = sourceDepth === 2 ? '../..' : '..';
 
