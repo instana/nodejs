@@ -105,6 +105,7 @@ const { execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const config = require('@_local/core/test/config');
+const installSemaphore = require('@_local/core/test/test_util/install-semaphore');
 const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
@@ -165,9 +166,9 @@ mochaSuiteFn(suiteTitle, function () {
   before(async function () {
     const installTimeout = config.getNPMInstallTimeout();
     const staggerDelay = process.env.CI ? Math.floor(Math.random() * 1000 * 15) : 0;
-    const maxRetries = 3;
-    // Budget: 15s + 30s + 60s + 120s = 225s worst case
-    this.timeout(installTimeout * 15 + staggerDelay);
+    const maxRetries = 2;
+    const semaphoreWait = process.env.CI ? 10 * 60 * 1000 : 0;
+    this.timeout(installTimeout * 15 + staggerDelay + semaphoreWait);
 
     if (staggerDelay > 0) {
       log(\`[INFO] Staggering dependency setup by \${(staggerDelay / 1000).toFixed(1)}s...\`);
@@ -175,25 +176,30 @@ mochaSuiteFn(suiteTitle, function () {
     }
 
     log('[INFO] Setting up dependencies for ${suiteName}@${displayVersion}...');
-    fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true });
+    const slot = process.env.CI ? await installSemaphore.acquireSlot(log) : undefined;
+    try {
+      fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true });
 
-    // eslint-disable-next-line global-require,import/no-dynamic-require
-    const preinstalledMod = require('@_local/collector/test/test_util/preinstalled-node-modules');
-    preinstalledMod.extractPreinstalledPackages(__dirname, { timeout: installTimeout - 1000 });
+      // eslint-disable-next-line global-require,import/no-dynamic-require
+      const preinstalledMod = require('@_local/collector/test/test_util/preinstalled-node-modules');
+      preinstalledMod.extractPreinstalledPackages(__dirname, { timeout: installTimeout - 1000 });
 
-    log('[INFO] Running npm install for ${suiteName}@${displayVersion}...');
-    const npmCmd = 'npm install --no-package-lock --no-audit --prefix ./ --no-progress';
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      const timeout = installTimeout * Math.pow(2, attempt);
-      try {
-        execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });
-        break;
-      } catch (err) {
-        if (attempt === maxRetries) throw err;
-        const secs = timeout / 1000;
-        log(\`[WARN] npm install failed (\${err.message}), retry \${attempt + 1}/\${maxRetries} (\${secs}s)...\`);
-        fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true });
+      log('[INFO] Running npm install for ${suiteName}@${displayVersion}...');
+      const npmCmd = 'npm install --no-package-lock --no-audit --prefix ./ --no-progress';
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        const timeout = installTimeout * Math.pow(2, attempt);
+        try {
+          execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });
+          break;
+        } catch (err) {
+          if (attempt === maxRetries) throw err;
+          const secs = timeout / 1000;
+          log(\`[WARN] npm install failed (\${err.message}), retry \${attempt + 1}/\${maxRetries} (\${secs}s)...\`);
+          fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true });
+        }
       }
+    } finally {
+      if (slot !== undefined) installSemaphore.releaseSlot(slot);
     }
 
     log('[INFO] Done setting up dependencies for ${suiteName}@${displayVersion}');
