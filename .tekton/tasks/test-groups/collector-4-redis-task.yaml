@@ -96,7 +96,7 @@ spec:
       script: |
         #!/bin/bash
         AVAILABLE_SIDECARS="redis,redis-slave,redis-sentinel"
-        SIDECAR_COUNTS="redis=22,redis-slave=22,redis-sentinel=22,zookeeper=3,kafka=3,kafka-topics=3,schema-registry=3,postgres=1,elasticsearch=1,mongodb=1,couchbase=1,rabbitmq=1,nats=1,nats-streaming=1,nats-streaming-2=1,mysql=1,localstack=1,memcached=1,oracledb=1"
+        SIDECAR_COUNTS="redis=21,redis-slave=21,redis-sentinel=21,zookeeper=3,kafka=3,kafka-topics=3,schema-registry=3,postgres=2,elasticsearch=1,mongodb=1,couchbase=1,rabbitmq=1,nats=1,nats-streaming=1,nats-streaming-2=1,mysql=1,localstack=1,memcached=1,oracledb=1"
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         BASE_REVISION=$(git rev-parse origin/main)

@@ -918,11 +918,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-22-redis-task
+    - name: collector-22-kafka-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-22-redis
+        name: collector-22-kafka
       params:
         - name: node-version
           value: $(params.node-version)
@@ -993,11 +993,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-25-kafka-task
+    - name: collector-25-postgres-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-25-kafka
+        name: collector-25-postgres
       params:
         - name: node-version
           value: $(params.node-version)
