@@ -117,22 +117,16 @@ for test_file in $ALL_TESTS; do
   fi
 done
 
-# Calculate Quotas
-# SIDECAR_COUNTS format: "postgres=4,kafka=10"
+# Parse SIDECAR_COUNTS into per-sidecar runner counts (used for dynamic quota inside the lock)
+# SIDECAR_COUNTS format: "postgres=2,kafka=3,redis=22"
 if [ -n "$SIDECAR_COUNTS" ]; then
   IFS=',' read -ra ADDR <<< "$SIDECAR_COUNTS"
   for entry in "${ADDR[@]}"; do
     sidecar="${entry%%=*}"
     count="${entry##*=}"
-    # Sanitize: bash variable names cannot contain hyphens
     sidecar_var=$(echo "$sidecar" | tr '-' '_')
     if [ -n "$sidecar_var" ] && [ -n "$count" ] && [ "$count" -gt 0 ]; then
-       total_req=$(eval echo "\${REQ_COUNTS_${sidecar_var}:-0}")
-       
-       if [ "$total_req" -gt 0 ]; then
-         quota=$(( (total_req + count - 1) / count ))
-         eval "SIDECAR_QUOTAS_${sidecar_var}=$quota"
-       fi
+      eval "SIDECAR_RUNNER_COUNT_${sidecar_var}=$count"
     fi
   done
 fi
@@ -162,6 +156,14 @@ trap 'rmdir "$LOCK_DIR" 2>/dev/null' EXIT
 CLAIMED=$(cat "$CLAIMED_FILE" 2>/dev/null || echo "")
 CLAIMED_COUNT=0
 PROCESSED=0
+
+# Count unclaimed prio tests (for dynamic quota calculation)
+UNCLAIMED_PRIO=0
+for pf in $PRIO_TESTS; do
+  if ! echo "$CLAIMED" | grep -qF "$pf"; then
+    UNCLAIMED_PRIO=$((UNCLAIMED_PRIO + 1))
+  fi
+done
 
 for test_file in $FINAL_LIST; do
   PROCESSED=$((PROCESSED + 1))
@@ -204,10 +206,14 @@ for test_file in $FINAL_LIST; do
     SERVICES_CHECK=$(echo "$SERVICES_CHECK" | tr -s ' ' '\n' | sort -u | tr '\n' ' ')
 
     for service in $SERVICES_CHECK; do
-        quote=$(eval echo "\${SIDECAR_QUOTAS_${service}:-0}")
-        if [ "$quote" -gt 0 ]; then
-          usage=$(eval echo "\${MY_REQ_USAGE_${service}:-0}")
-          if [ "$usage" -ge "$quote" ]; then
+        sidecar_var=$(echo "$service" | tr '-' '_')
+        runner_count=$(eval echo "\${SIDECAR_RUNNER_COUNT_${sidecar_var}:-0}")
+        if [ "$runner_count" -gt 0 ]; then
+          usage=$(eval echo "\${MY_REQ_USAGE_${sidecar_var}:-0}")
+          # Dynamic quota based on remaining unclaimed prio tests
+          quota=$(( (UNCLAIMED_PRIO + runner_count - 1) / runner_count ))
+          if [ "$quota" -lt 1 ]; then quota=1; fi
+          if [ "$usage" -ge "$quota" ]; then
              QUOTA_EXCEEDED=true
              break
           fi
@@ -225,6 +231,11 @@ for test_file in $FINAL_LIST; do
      curr=$(eval echo "\${MY_REQ_USAGE_${req}:-0}")
      eval "MY_REQ_USAGE_${req}=$((curr + 1))"
   done
+
+  # Track prio claims for dynamic quota
+  if [ $PROCESSED -le $PRIO_COUNT ]; then
+    UNCLAIMED_PRIO=$((UNCLAIMED_PRIO - 1))
+  fi
   
   echo "$test_file" >> "$CLAIMED_FILE"
   echo "$test_file" >> "$OUTPUT_FILE"
