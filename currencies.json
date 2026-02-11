@@ -925,7 +925,8 @@
     "versions": [
       {
         "v": "3.5.2",
-        "optional": true
+        "optional": true,
+        "node": "<25"
       }
     ]
   },
@@ -1304,7 +1305,8 @@
     "versions": [
       {
         "v": "1.8.0",
-        "optional": true
+        "optional": true,
+        "node": "<25"
       }
     ]
   }
