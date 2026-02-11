@@ -21,24 +21,27 @@ describe('metrics.activeResources', function () {
     // Teletypewriter = stdin, stdout, stderr
     // PipeWrap = internal pipe for process communication (test -> app)
     // ProcessWrap = the child process itself
-    expect(activeResources.currentPayload).to.equal(5);
+    expect(activeResources.currentPayload).to.be.an('object');
+    expect(activeResources.currentPayload.count).to.equal(5);
   });
 
   it('should update resource count for a setTimeout', () => {
     const timeoutHandle = setTimeout(() => {}, 100);
 
     // [ 'TTYWrap', 'TTYWrap', 'TTYWrap', 'PipeWrap', 'ProcessWrap', 'Timeout' ]
-    expect(activeResources.currentPayload).to.equal(6);
+    expect(activeResources.currentPayload).to.be.an('object');
+    expect(activeResources.currentPayload.count).to.equal(6);
     clearTimeout(timeoutHandle);
   });
 
   it('should update requests count for a fs.open', () => {
-    const initialCount = activeResources.currentPayload;
+    const initialCount = activeResources.currentPayload.count;
     const count = 13;
     for (let i = 0; i < count; i++) {
       fs.open(__filename, 'r', () => {});
     }
-    expect(activeResources.currentPayload).to.equal(initialCount + count);
+    expect(activeResources.currentPayload).to.be.an('object');
+    expect(activeResources.currentPayload.count).to.equal(initialCount + count);
   });
 
   describe('with net client/server', () => {
@@ -56,7 +59,7 @@ describe('metrics.activeResources', function () {
     let initialActiveResources = 0;
 
     before(() => {
-      initialActiveResources = activeResources.currentPayload;
+      initialActiveResources = activeResources.currentPayload.count;
       server = net
         .createServer(function listener(c) {
           connections.push(c);
@@ -83,7 +86,8 @@ describe('metrics.activeResources', function () {
               // 1 TCPServerWrap because of the server
               // Max Clients is 8 (each 2 TCPSocketWrap because of client and server side)
               // 1 timeoutWrap because of the makeConnection timeout
-              expect(activeResources.currentPayload).to.be.at.least(initialActiveResources + 1 * (maxClients * 2) + 1);
+              expect(activeResources.currentPayload).to.be.an('object');
+              expect(activeResources.currentPayload.count).to.be.at.least(initialActiveResources + maxClients * 2 + 1);
               resolve();
             } else {
               reject(new Error('Still waiting for more clients to connect.'));

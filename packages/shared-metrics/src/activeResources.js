@@ -8,6 +8,8 @@ exports.payloadPrefix = 'activeResources';
 
 Object.defineProperty(exports, 'currentPayload', {
   get: function () {
-    return process.getActiveResourcesInfo().length;
+    return {
+      count: process.getActiveResourcesInfo().length
+    };
   }
 });
