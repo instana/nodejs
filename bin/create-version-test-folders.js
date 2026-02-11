@@ -175,7 +175,7 @@ mochaSuiteFn(suiteTitle, function () {
     }
 
     log('[INFO] Setting up dependencies for ${suiteName}@${displayVersion}...');
-    execSync('rm -rf node_modules', { cwd: __dirname });
+    fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true });
 
     // eslint-disable-next-line global-require,import/no-dynamic-require
     const preinstalledMod = require('@_local/collector/test/test_util/preinstalled-node-modules');
@@ -192,7 +192,7 @@ mochaSuiteFn(suiteTitle, function () {
         if (attempt === maxRetries) throw err;
         const secs = timeout / 1000;
         log(\`[WARN] npm install failed (\${err.message}), retry \${attempt + 1}/\${maxRetries} (\${secs}s)...\`);
-        execSync('rm -rf node_modules', { cwd: __dirname });
+        fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true });
       }
     }
 
