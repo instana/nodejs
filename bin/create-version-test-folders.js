@@ -155,7 +155,7 @@ const ts = new Date().toISOString();
 const suiteTitle = esmPrefix + \`[\${ts}] tracing/${suiteName}@${displayVersion}${mode ? ` (${mode})` : ''}\`;
 mochaSuiteFn(suiteTitle, function () {
   this.timeout(config.getTestTimeout());
-  try { fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true }); } catch (_) {}
+  try { fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true, maxRetries: 3 }); } catch (_) {}
   const copiedFiles = copyParentFiles(__dirname, path.resolve(__dirname, '${relSourcePath}'));
   const cleanup = () => cleanupCopiedFiles(copiedFiles);
   after(() => cleanup());
@@ -171,8 +171,9 @@ mochaSuiteFn(suiteTitle, function () {
 
     log('[INFO] Setting up dependencies for ${suiteName}@${displayVersion}...');
     const slot = process.env.CI ? await installSemaphore.acquireSlot(log) : undefined;
+    if (slot !== undefined) log(\`[INFO] Acquired install slot \${slot}\`);
     try {
-      fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true });
+      fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true, maxRetries: 3 });
 
       // eslint-disable-next-line global-require,import/no-dynamic-require
       const preinstalledMod = require('@_local/collector/test/test_util/preinstalled-node-modules');
@@ -189,7 +190,7 @@ mochaSuiteFn(suiteTitle, function () {
           if (attempt === maxRetries) throw err;
           const secs = timeout / 1000;
           log(\`[WARN] npm install failed (\${err.message}), retry \${attempt + 1}/\${maxRetries} (\${secs}s)...\`);
-          fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true });
+          fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true, maxRetries: 3 });
         }
       }
     } finally {
