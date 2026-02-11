@@ -131,7 +131,7 @@ const collectorSidecarData = countTestsPerSidecar('collector');
 
 const packages = {
   'test:ci:collector': {
-    splits: 35,
+    splits: 40,
     sidecars: collectorSidecarData.counts,
     totalTests: collectorSidecarData.totalTests
   },

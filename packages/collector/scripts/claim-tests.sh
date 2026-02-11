@@ -42,6 +42,16 @@ fi
 PRIO_TESTS=""
 GENERIC_TESTS=""
 
+# Build list of known CI sidecars from SIDECAR_COUNTS
+# Services in hosts_config.json but not in SIDECAR_COUNTS use external services (e.g. Azure SQL)
+KNOWN_SIDECARS=""
+if [ -n "$SIDECAR_COUNTS" ]; then
+  IFS=',' read -ra SC_ENTRIES <<< "$SIDECAR_COUNTS"
+  for entry in "${SC_ENTRIES[@]}"; do
+    KNOWN_SIDECARS="$KNOWN_SIDECARS ${entry%%=*}"
+  done
+fi
+
 # We use eval for dynamic variables to simulate associative arrays (Bash 3 compatible)
 # Variables: REQ_COUNTS_<service>, SIDECAR_QUOTAS_<service>, MY_REQ_USAGE_<service>
 
@@ -65,7 +75,11 @@ for test_file in $ALL_TESTS; do
         suffix=${env_var#$ENV_PREFIX}
         service_upper=$(echo "$suffix" | cut -d'_' -f1)
         service=$(echo "$service_upper" | tr '[:upper:]' '[:lower:]')
-        REQUIRED_SIDECARS="$REQUIRED_SIDECARS $service"
+        # Only treat as sidecar requirement if it exists as a CI sidecar.
+        # Services only in hosts_config.json (e.g. mssql) use external services in CI.
+        if echo "$KNOWN_SIDECARS" | grep -qw "$service"; then
+          REQUIRED_SIDECARS="$REQUIRED_SIDECARS $service"
+        fi
       fi
     done
     REQUIRED_SIDECARS=$(echo "$REQUIRED_SIDECARS" | tr -s ' ' '\n' | sort -u | tr '\n' ' ')

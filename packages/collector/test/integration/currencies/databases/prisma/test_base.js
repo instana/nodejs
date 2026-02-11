@@ -10,6 +10,7 @@ const path = require('path');
 const recursiveCopy = require('recursive-copy');
 const rimraf = require('util').promisify(require('rimraf'));
 
+const semver = require('semver');
 const config = require('@_local/core/test/config');
 const { retry, verifyHttpRootEntry, verifyExitSpan } = require('@_local/core/test/test_util');
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
@@ -26,6 +27,8 @@ module.exports = function (name, version, isLatest, mode) {
     const provider = mode; // mode is either 'sqlite' or 'postgresql'
     const majorVersion = parseInt(version, 10);
     const isV7 = majorVersion >= 7;
+    // Getting the URL is not possible between Prisma 4.10 and 5.1 (getConfig was removed)
+    const urlUnavailable = semver.gte(version, '4.10.0') && semver.lt(version, '5.2.0');
 
     if (provider === 'postgresql' && !process.env.INSTANA_CONNECT_POSTGRES_PRISMA_URL) {
         throw new Error('PRISMA_POSTGRES_URL is not set.');
@@ -243,13 +246,13 @@ module.exports = function (name, version, isLatest, mode) {
                 span => expect(span.data.prisma.model).to.equal(model),
                 span => expect(span.data.prisma.action).to.equal(action),
                 span =>
-                    // Explanation in https://github.com/instana/nodejs/pull/1114
+                    // URL is unavailable between Prisma 4.10 and 5.1 (getConfig removed)
                     // In v7, SQLite adapter doesn't expose the URL
-                    !(majorVersion === 4 || (provider === 'sqlite' && isV7))
+                    !(urlUnavailable || (provider === 'sqlite' && isV7))
                         ? expect(span.data.prisma.url).to.equal(expectedUrl)
                         : expect(span.data.prisma.url).to.equal(''),
                 span => {
-                    if (provider !== 'sqlite' && majorVersion !== 4) {
+                    if (provider !== 'sqlite' && !urlUnavailable) {
                         expect(span.data.prisma.url).to.contain('_redacted_');
                     }
                 },

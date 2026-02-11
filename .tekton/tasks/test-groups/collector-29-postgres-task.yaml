@@ -1,74 +1,28 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: collector-23-kafka
+  name: collector-29-postgres
 spec:
   sidecars:
-    - name: zookeeper
-      image: confluentinc/cp-zookeeper:7.9.1
+    - name: postgres
+      image: public.ecr.aws/docker/library/postgres:15.15
       imagePullPolicy: IfNotPresent
       env:
-          - name: "ZOOKEEPER_CLIENT_PORT"
-            value: "2181"
+          - name: "POSTGRES_USER"
+            value: "node"
+          - name: "POSTGRES_PASSWORD"
+            value: "nodepw"
+          - name: "POSTGRES_DB"
+            value: "nodedb"
       readinessProbe:
-          tcpSocket:
-            port: 2181 
-          initialDelaySeconds: 5
+          exec:
+            command:
+            - "sh"
+            - "-c"
+            - "pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb"
+          initialDelaySeconds: 3
           periodSeconds: 2
-          timeoutSeconds: 30
-    - name: kafka
-      image: confluentinc/cp-kafka:7.9.1
-      imagePullPolicy: IfNotPresent
-      env:
-          - name: "KAFKA_BROKER_ID"
-            value: "1"
-          - name: "KAFKA_ZOOKEEPER_CONNECT"
-            value: "localhost:2181"
-          - name: "KAFKA_ADVERTISED_LISTENERS"
-            value: "PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092"
-          - name: "KAFKA_LISTENERS"
-            value: "EXTERNAL://:9092,PLAINTEXT://:29092"
-          - name: "KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR"
-            value: "1"
-          - name: "KAFKA_DEFAULT_REPLICATION_FACTOR"
-            value: "1"
-          - name: "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP"
-            value: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT"
-      readinessProbe:
-          tcpSocket:
-            port: 9092 
-          initialDelaySeconds: 90
-          periodSeconds: 2
-          timeoutSeconds: 60
-    - name: kafka-topics
-      image: confluentinc/cp-kafka:7.9.1
-      imagePullPolicy: IfNotPresent
-      args:
-          - "-lc"
-          - "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
-      command:
-          - "/bin/bash"
-    - name: schema-registry
-      image: confluentinc/cp-schema-registry:7.9.0
-      imagePullPolicy: IfNotPresent
-      env:
-          - name: "SCHEMA_REGISTRY_HOST_NAME"
-            value: "schema-registry"
-          - name: "SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL"
-            value: "0.0.0.0:2181"
-          - name: "SCHEMA_REGISTRY_LISTENERS"
-            value: "http://0.0.0.0:8081"
-          - name: "SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS"
-            value: "PLAINTEXT://0.0.0.0:29092"
-          - name: "SCHEMA_REGISTRY_DEBUG"
-            value: "true"
-      readinessProbe:
-          httpGet:
-            path: / 
-            port: 8081 
-          initialDelaySeconds: 5
-          periodSeconds: 2
-          timeoutSeconds: 60
+          timeoutSeconds: 10
   envFrom:
     - configMapRef:
         name: environment-properties  
@@ -134,8 +88,8 @@ spec:
       imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
-        AVAILABLE_SIDECARS="zookeeper,kafka,kafka-topics,schema-registry"
-        SIDECAR_COUNTS="redis=21,redis-slave=21,redis-sentinel=21,zookeeper=3,kafka=3,kafka-topics=3,schema-registry=3,postgres=2,elasticsearch=1,mongodb=1,couchbase=1,rabbitmq=1,nats=1,nats-streaming=1,nats-streaming-2=1,mysql=1,localstack=1,memcached=1,oracledb=1"
+        AVAILABLE_SIDECARS="postgres"
+        SIDECAR_COUNTS="redis=25,redis-slave=25,redis-sentinel=25,zookeeper=3,kafka=3,kafka-topics=3,schema-registry=3,postgres=2,elasticsearch=2,mongodb=1,couchbase=1,rabbitmq=1,nats=1,nats-streaming=1,nats-streaming-2=1,mysql=1,localstack=1,memcached=1,oracledb=1"
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         BASE_REVISION=$(git rev-parse origin/main)
@@ -160,7 +114,7 @@ spec:
         echo "GIT_COMMIT_DESC: $GIT_COMMIT_DESC"
         if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && true; then
           echo "Skipping group."
-          touch "collector-23-kafka.succeeded"
+          touch "collector-29-postgres.succeeded"
           exit 0
         fi
         export CI=true
@@ -174,50 +128,50 @@ spec:
           export RUN_ESM=true
           if ! echo "test:ci:collector" | grep -q 'ci:collector'; then
             echo "Skipping tests because group does not support ESM."
-            touch "collector-23-kafka.succeeded"
+            touch "collector-29-postgres.succeeded"
             exit 0
           fi
         fi
         if [ "true" == "true" ]; then
-          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*.test.js" "35" "$ARTIFACTS_PATH" "$SIDECAR_COUNTS")
+          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*.test.js" "40" "$ARTIFACTS_PATH" "$SIDECAR_COUNTS")
           if [ -z "$CLAIMED_TESTS" ]; then
             echo "No tests to claim for this task"
-            touch "collector-23-kafka.succeeded"
+            touch "collector-29-postgres.succeeded"
             exit 0
           fi
           echo "Claimed tests: $CLAIMED_TESTS"
           # Write mapping to shared file (printed by tasks-results)
           SHORT_NAMES=$(echo "$CLAIMED_TESTS" | tr ' ' '\n' | sed 's|.*/currencies/||; s|.*/misc/||; s|.*/unit/||; s|/test\.js$||' | tr '\n' ', ' | sed 's/,$//')
-          echo "collector-23-kafka: $SHORT_NAMES" >> "$ARTIFACTS_PATH/test-mapping.txt"
+          echo "collector-29-postgres: $SHORT_NAMES" >> "$ARTIFACTS_PATH/test-mapping.txt"
         fi
-        rm -f "collector-23-kafka.succeeded" "collector-23-kafka.failed"
+        rm -f "collector-29-postgres.succeeded" "collector-29-postgres.failed"
         retry=1
         LAST_EXIT=1
         while [ $retry -le 2 ]; do
           LAST_EXIT=0
           if [ "$(params.coverage)" == "true" ]; then
             if [ "true" == "true" ]; then
-              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="35" CI_TEST_SPLIT_CURRENT="23" npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-23-kafka" || LAST_EXIT=$?
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="40" CI_TEST_SPLIT_CURRENT="29" npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-29-postgres" || LAST_EXIT=$?
             else
-              CI_TEST_SPLIT="35" CI_TEST_SPLIT_CURRENT="23" npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-23-kafka" || LAST_EXIT=$?
+              CI_TEST_SPLIT="40" CI_TEST_SPLIT_CURRENT="29" npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-29-postgres" || LAST_EXIT=$?
             fi
           else
             if [ "true" == "true" ]; then
-              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="35" CI_TEST_SPLIT_CURRENT="23" npm run "test:ci:collector" || LAST_EXIT=$?
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="40" CI_TEST_SPLIT_CURRENT="29" npm run "test:ci:collector" || LAST_EXIT=$?
             else
-              CI_TEST_SPLIT="35" CI_TEST_SPLIT_CURRENT="23" npm run "test:ci:collector" || LAST_EXIT=$?
+              CI_TEST_SPLIT="40" CI_TEST_SPLIT_CURRENT="29" npm run "test:ci:collector" || LAST_EXIT=$?
             fi
           fi
           if [ $LAST_EXIT -eq 0 ]; then
-            touch "collector-23-kafka.succeeded"
+            touch "collector-29-postgres.succeeded"
             break
           else
             echo "Attempt $retry failed with exit code $LAST_EXIT"
             retry=$((retry + 1))
           fi
         done
-        if [ ! -f "collector-23-kafka.succeeded" ]; then
-          echo "All $((retry - 1)) retries failed for collector-23-kafka"
-          touch "collector-23-kafka.failed"
+        if [ ! -f "collector-29-postgres.succeeded" ]; then
+          echo "All $((retry - 1)) retries failed for collector-29-postgres"
+          touch "collector-29-postgres.failed"
           exit 1
         fi
