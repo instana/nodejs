@@ -182,7 +182,7 @@ mochaSuiteFn(suiteTitle, function () {
     log('[INFO] Running npm install for ${suiteName}@${displayVersion}...');
     const npmCmd = 'npm install --no-package-lock --no-audit --prefix ./ --no-progress';
     const npmOpts = { cwd: __dirname, stdio: 'inherit', timeout: installTimeout - 1000 };
-    for (let attempt = 1; attempt <= 3; attempt++) {
+    for (let attempt = 1; attempt <= 4; attempt++) {
       try {
         execSync(npmCmd, npmOpts);
         break;
