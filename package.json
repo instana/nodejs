@@ -69,6 +69,7 @@
   "devDependencies": {
     "@_local/collector": "file:./packages/collector",
     "@_local/core": "file:./packages/core",
+    "@_local/metrics-util": "file:./packages/metrics-util",
     "@_local/serverless": "file:./packages/serverless",
     "@as-integrations/express5": "1.1.2",
     "@aws-sdk/client-cloudwatch-logs": "3.696.0",

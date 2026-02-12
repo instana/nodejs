@@ -23,40 +23,26 @@ Object.keys(hostsConfig).forEach(key => {
   }
 });
 
-if (isCI()) {
-  return;
-}
+if (!isCI()) {
+  const checksumPath = path.join(__dirname, '.currencies-checksum');
+  const hash = crypto.createHash('md5');
+  hash.update(fs.readFileSync(path.join(rootDir, 'currencies.json'), 'utf8'));
+  hashTemplates(__dirname, hash);
+  const currentHash = hash.digest('hex');
 
-const checksumPath = path.join(__dirname, '.currencies-checksum');
+  let needsRegen = true;
+  try {
+    needsRegen = fs.readFileSync(checksumPath, 'utf8').trim() !== currentHash;
+  } catch (_) {
+    // checksum file doesn't exist yet → first run
+  }
 
-const hash = crypto.createHash('md5');
-hash.update(fs.readFileSync(path.join(rootDir, 'currencies.json'), 'utf8'));
-hashTemplates(__dirname, hash);
-const currentHash = hash.digest('hex');
-
-let needsRegen = true;
-try {
-  needsRegen = fs.readFileSync(checksumPath, 'utf8').trim() !== currentHash;
-} catch (_) {
-  // checksum file doesn't exist yet → first run
-}
-
-if (needsRegen) {
-  // eslint-disable-next-line no-console
-  console.log('Test folders out of date — regenerating...');
-  execSync('node bin/create-version-test-folders.js', { cwd: rootDir, stdio: 'inherit' });
-  fs.writeFileSync(checksumPath, currentHash);
-}
-
-function hashTemplates(dir, h) {
-  fs.readdirSync(dir, { withFileTypes: true })
-    .filter(entry => entry.name !== 'node_modules' && !entry.name.startsWith('_v'))
-    .forEach(entry => {
-      const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) hashTemplates(full, h);
-      else if (entry.name === 'package.json.template' || entry.name === 'modes.json') h.update(fs.readFileSync(full, 'utf8'));
-      else if (entry.name === 'test_base.js') h.update(full);
-    });
+  if (needsRegen) {
+    // eslint-disable-next-line no-console
+    console.log('Test folders out of date — regenerating...');
+    execSync('node bin/create-version-test-folders.js', { cwd: rootDir, stdio: 'inherit' });
+    fs.writeFileSync(checksumPath, currentHash);
+  }
 }
 
 if (process.env.SKIP_TGZ !== 'true') {
@@ -103,4 +89,15 @@ function hashDir(dir, h) {
       h.update(fs.readFileSync(full));
     }
   });
+}
+
+function hashTemplates(dir, h) {
+  fs.readdirSync(dir, { withFileTypes: true })
+    .filter(entry => entry.name !== 'node_modules' && !entry.name.startsWith('_v'))
+    .forEach(entry => {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) hashTemplates(full, h);
+      else if (entry.name === 'package.json.template' || entry.name === 'modes.json') h.update(fs.readFileSync(full, 'utf8'));
+      else if (entry.name === 'test_base.js') h.update(full);
+    });
 }
