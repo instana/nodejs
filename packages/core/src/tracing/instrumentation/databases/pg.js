@@ -85,6 +85,7 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
     }
 
     const promise = originalQuery.apply(ctx, argsForOriginalQuery);
+
     if (promise && typeof promise.then === 'function') {
       promise
         .then(value => {
@@ -95,6 +96,9 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
           finishSpan(error, span);
           return error;
         });
+    } else {
+      tracingUtil.handleUnexpectedReturnValue(promise, span, 'pg', 'query');
+      finishSpan(null, span);
     }
     return promise;
   });
