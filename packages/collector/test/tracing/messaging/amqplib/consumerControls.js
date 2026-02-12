@@ -7,9 +7,9 @@
 
 const spawn = require('child_process').spawn;
 const path = require('path');
-const testUtils = require('@_instana/core/test/test_util');
-const config = require('@_instana/core/test/config');
-const agentPort = require('@_instana/collector/test/globalAgent').instance.agentPort;
+const testUtils = require('@_local/core/test/test_util');
+const config = require('@_local/core/test/config');
+const agentPort = require('@_local/collector/test/globalAgent').instance.agentPort;
 
 let app;
 

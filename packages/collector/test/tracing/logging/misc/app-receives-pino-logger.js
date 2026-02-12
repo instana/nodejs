@@ -45,12 +45,12 @@ if (extendedLoggerConfig) {
 
 instana.setLogger(pinoInstance);
 
-const instanaLogger = require('@_instana/collector/src/logger').getLogger();
+const instanaLogger = require('@_local/collector/src/logger').getLogger();
 
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const port = require('@_instana/collector/test/test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 const app = express();
 const logPrefix = `Pino App [Instana receives Pino logger] (${process.pid}):\t`;
 

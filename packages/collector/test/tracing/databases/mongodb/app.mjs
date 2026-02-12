@@ -17,7 +17,7 @@ import bodyParser from 'body-parser';
 import express from 'express';
 import morgan from 'morgan';
 import assert from 'assert';
-import getAppPort from '@_instana/collector/test/test_util/app-port.js';
+import getAppPort from '@_local/collector/test/test_util/app-port.js';
 
 const isLegacy = semver.major(process.env.LIBRARY_VERSION) <= 4;
 const agentPort = process.env.INSTANA_AGENT_PORT;

@@ -12,7 +12,7 @@ process.on('SIGTERM', () => {
 });
 
 import Hapi from '@hapi/hapi';
-import getAppPort from '@_instana/collector/test/test_util/app-port.js';
+import getAppPort from '@_local/collector/test/test_util/app-port.js';
 const port = getAppPort();
 
 const logPrefix = `Hapi Server: (${process.pid}):\t`;

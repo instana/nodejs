@@ -8,17 +8,17 @@
 const path = require('path');
 const { expect } = require('chai');
 const { fail } = expect;
-const config = require('@_instana/core/test/config');
-const { retry, stringifyItems, delay } = require('@_instana/core/test/test_util');
+const config = require('@_local/core/test/config');
+const { retry, stringifyItems, delay } = require('@_local/core/test/test_util');
 const ProcessControls = require('@instana/collector/test/test_util/ProcessControls');
 const globalAgent = require('@instana/collector/test/globalAgent');
-const expectAtLeastOneMatching = require('@_instana/core/test/test_util/expectAtLeastOneMatching');
-const expectExactlyOneMatching = require('@_instana/core/test/test_util/expectExactlyOneMatching');
+const expectAtLeastOneMatching = require('@_local/core/test/test_util/expectAtLeastOneMatching');
+const expectExactlyOneMatching = require('@_local/core/test/test_util/expectExactlyOneMatching');
 const {
   verifyHttpRootEntry,
   verifyHttpExit,
   verifyExitSpan
-} = require('@_instana/core/test/test_util/common_verifications');
+} = require('@_local/core/test/test_util/common_verifications');
 
 const SPAN_NAME = 'memcached';
 

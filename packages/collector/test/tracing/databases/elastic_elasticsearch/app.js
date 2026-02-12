@@ -22,7 +22,7 @@ const express = require('express');
 const morgan = require('morgan');
 
 const { Client } = require('@elastic/elasticsearch');
-const port = require('@_instana/collector/test/test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 
 const app = express();
 const logPrefix = `Elasticsearch ${process.env.ELASTIC_VERSION} (${process.pid}):\t`;

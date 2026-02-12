@@ -17,15 +17,15 @@ const fs = require('fs');
 const http2 = require('http2');
 const path = require('path');
 
-const http2Promise = require('@_instana/collector/test/test_util/http2Promise');
-const router = require('@_instana/collector/test/test_util/simpleHttp2Router');
+const http2Promise = require('@_local/collector/test/test_util/http2Promise');
+const router = require('@_local/collector/test/test_util/simpleHttp2Router');
 
 const { HTTP2_HEADER_STATUS } = http2.constants;
 
 const logPrefix = `HTTP2: Client (${process.pid}):\t`;
-const port = require('@_instana/collector/test/test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 const downstreamPort = process.env.SERVER_PORT;
-const sslDir = path.join(path.dirname(require.resolve('@_instana/collector/package.json')), 'test', 'apps', 'ssl');
+const sslDir = path.join(path.dirname(require.resolve('@_local/collector/package.json')), 'test', 'apps', 'ssl');
 
 const server = http2.createSecureServer({
   key: fs.readFileSync(path.join(sslDir, 'key')),

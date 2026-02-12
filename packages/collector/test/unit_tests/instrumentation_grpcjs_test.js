@@ -5,8 +5,8 @@
 'use strict';
 
 const expect = require('chai').expect;
-const supportedVersion = require('@_instana/core').tracing.supportedVersion;
-const grpc = require('@_instana/core/src/tracing/instrumentation/protocols/grpcJs');
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
+const grpc = require('@_local/core/src/tracing/instrumentation/protocols/grpcJs');
 class Metadata {
   constructor() {
     this._data = {};

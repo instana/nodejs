@@ -26,7 +26,7 @@ const inventoryPort = process.env.SERVICE_PORT_INVENTORY;
 const productsPort = process.env.SERVICE_PORT_PRODUCTS;
 const reviewsPort = process.env.SERVICE_PORT_REVIEWS;
 
-const port = require('@_instana/collector/test/test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 const app = express();
 
 const logPrefix = `Apollo Subgraph Gateway (${process.pid}):\t`;

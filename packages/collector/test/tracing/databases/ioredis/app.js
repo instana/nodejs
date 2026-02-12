@@ -22,7 +22,7 @@ const express = require('express');
 const morgan = require('morgan');
 const ioredis = require('ioredis');
 
-const port = require('@_instana/collector/test/test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 const connect = require('./connect-via');
 const app = express();
 const logPrefix = `Express / IORedis App (${process.pid}):\t`;

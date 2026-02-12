@@ -19,8 +19,8 @@ const instana = require('@instana/collector')();
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const port = require('@_instana/collector/test/test_util/app-port')();
-const asyncRoute = require('@_instana/collector/test/test_util/asyncExpressRoute');
+const port = require('@_local/collector/test/test_util/app-port')();
+const asyncRoute = require('@_local/collector/test/test_util/asyncExpressRoute');
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 const baseUrl = `http://localhost:${process.env.SERVER_PORT}`;

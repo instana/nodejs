@@ -15,7 +15,7 @@ require('@instana/collector')();
 
 const Hapi = require('@hapi/hapi');
 const logPrefix = `Hapi Server: (${process.pid}):\t`;
-const port = require('@_instana/collector/test/test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 
 const init = async () => {
   const server = Hapi.server({

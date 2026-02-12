@@ -10,18 +10,18 @@
 const expect = require('chai').expect;
 const { fail } = expect;
 const semver = require('semver');
-const constants = require('@_instana/core').tracing.constants;
-const config = require('@_instana/core/test/config');
+const constants = require('@_local/core').tracing.constants;
+const config = require('@_local/core/test/config');
 const {
   stringifyItems,
   expectExactlyOneMatching,
   getSpansByName,
   retry,
   delay
-} = require('@_instana/core/test/test_util');
-const supportedVersion = require('@_instana/core').tracing.supportedVersion;
-const ProcessControls = require('@_instana/collector/test/test_util/ProcessControls');
-const globalAgent = require('@_instana/collector/test/globalAgent');
+} = require('@_local/core/test/test_util');
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
+const globalAgent = require('@_local/collector/test/globalAgent');
 
 module.exports = function (name, version, isLatest) {
   // Determine instrumentation flavor and engine requirement based on version

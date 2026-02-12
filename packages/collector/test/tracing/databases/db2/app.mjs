@@ -19,7 +19,7 @@ import ibmdb from 'ibm_db';
 import testUtil from '@instana/core/test/test_util/index.js';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import getAppPort from '@_instana/collector/test/test_util/app-port.js';
+import getAppPort from '@_local/collector/test/test_util/app-port.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

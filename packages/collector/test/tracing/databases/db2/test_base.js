@@ -9,11 +9,11 @@ const dns = require('dns').promises;
 const path = require('path');
 const expect = require('chai').expect;
 
-const { supportedVersion, constants } = require('@_instana/core').tracing;
-const testUtils = require('@_instana/core/test/test_util');
-const config = require('@_instana/core/test/config');
-const ProcessControls = require('@_instana/collector/test/test_util/ProcessControls');
-const globalAgent = require('@_instana/collector/test/globalAgent');
+const { supportedVersion, constants } = require('@_local/core').tracing;
+const testUtils = require('@_local/core/test/test_util');
+const config = require('@_local/core/test/config');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
+const globalAgent = require('@_local/collector/test/globalAgent');
 
 module.exports = function (name, version, isLatest) {
   const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;

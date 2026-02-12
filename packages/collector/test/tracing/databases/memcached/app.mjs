@@ -14,8 +14,8 @@ process.on('SIGTERM', () => {
 import Memcached from 'memcached';
 import express from 'express';
 
-const { default: getAppPort } = await import('@_instana/collector/test/test_util/app-port.js');
-const { default: logger } = await import('@_instana/core/test/test_util/log.js');
+const { default: getAppPort } = await import('@_local/collector/test/test_util/app-port.js');
+const { default: logger } = await import('@_local/core/test/test_util/log.js');
 
 const app = express();
 const port = getAppPort();

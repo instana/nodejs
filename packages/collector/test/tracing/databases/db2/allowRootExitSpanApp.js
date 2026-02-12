@@ -18,7 +18,7 @@ require('@instana/collector')({
 
 const { promisify } = require('util');
 const ibmdb = require('ibm_db');
-const { delay } = require('@_instana/core/test/test_util');
+const { delay } = require('@_local/core/test/test_util');
 
 const logPrefix = `DB2 Allow Root Exit Span App (${process.pid}):\t`;
 

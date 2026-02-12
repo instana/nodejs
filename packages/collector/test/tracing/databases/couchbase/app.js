@@ -18,8 +18,8 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const uuid = require('uuid');
 const morgan = require('morgan');
-const port = require('@_instana/collector/test/test_util/app-port')();
-const { delay } = require('@_instana/core/test/test_util');
+const port = require('@_local/collector/test/test_util/app-port')();
+const { delay } = require('@_local/core/test/test_util');
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 let connected = false;

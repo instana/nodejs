@@ -78,8 +78,8 @@
     "depcheck": "lerna exec 'npx depcheck --skip-missing --ignores nan,@types/*' --stream"
   },
   "devDependencies": {
-    "@_instana/collector": "file:./packages/collector",
-    "@_instana/core": "file:./packages/core",
+    "@_local/collector": "file:./packages/collector",
+    "@_local/core": "file:./packages/core",
     "@as-integrations/express5": "1.1.2",
     "@aws-sdk/client-cloudwatch-logs": "3.696.0",
     "@aws-sdk/middleware-retry": "3.370.0",

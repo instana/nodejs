@@ -18,11 +18,11 @@ require('@instana/collector')();
 const fs = require('fs');
 const path = require('path');
 
-const readSymbolProperty = require('@_instana/core/src/util/readSymbolProperty');
+const readSymbolProperty = require('@_local/core/src/util/readSymbolProperty');
 const streamSymbol = 'Symbol(stream)';
 
 const logPrefix = `HTTP: Server (${process.pid}):\t`;
-const port = require('@_instana/collector/test/test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 
 if (process.env.APP_USES_HTTP2 === 'true' && process.env.APP_USES_HTTPS === 'false') {
   throw new Error('Using the HTTP2 compat API without HTTPS is not supported by this test app.');
@@ -30,7 +30,7 @@ if (process.env.APP_USES_HTTP2 === 'true' && process.env.APP_USES_HTTPS === 'fal
 
 let server;
 if (process.env.APP_USES_HTTPS === 'true') {
-  const sslDir = path.join(path.dirname(require.resolve('@_instana/collector/package.json')), 'test', 'apps', 'ssl');
+  const sslDir = path.join(path.dirname(require.resolve('@_local/collector/package.json')), 'test', 'apps', 'ssl');
   const createServer =
     process.env.APP_USES_HTTP2 === 'true' ? require('http2').createSecureServer : require('https').createServer;
   server = createServer({

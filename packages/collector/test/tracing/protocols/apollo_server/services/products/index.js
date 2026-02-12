@@ -27,7 +27,7 @@ if (parseInt(process.env.LIBRARY_VERSION, 10) >= 5) {
   ({ expressMiddleware } = require('@apollo/server/express4'));
 }
 
-const port = require('@_instana/collector/test/test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 const app = express();
 const logPrefix = `Products Service (${process.pid}):\t`;
 

@@ -16,7 +16,7 @@ require('@instana/collector')({
   }
 });
 
-const { delay } = require('@_instana/core/test/test_util');
+const { delay } = require('@_local/core/test/test_util');
 const amqp = require('amqplib');
 const exchange = require('./amqpUtil').exchange;
 

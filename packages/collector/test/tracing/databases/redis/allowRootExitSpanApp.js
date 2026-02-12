@@ -17,7 +17,7 @@ require('@instana/collector')({
 });
 
 const redis = require(process.env.REDIS_PKG);
-const { delay } = require('@_instana/core/test/test_util');
+const { delay } = require('@_local/core/test/test_util');
 const connect = require('./connect-via');
 const redisVersion = process.env.LIBRARY_VERSION;
 const logPrefix =

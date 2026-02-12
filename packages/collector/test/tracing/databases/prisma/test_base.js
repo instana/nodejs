@@ -10,11 +10,11 @@ const path = require('path');
 const recursiveCopy = require('recursive-copy');
 const rimraf = require('util').promisify(require('rimraf'));
 
-const config = require('@_instana/core/test/config');
-const { retry, verifyHttpRootEntry, verifyExitSpan } = require('@_instana/core/test/test_util');
-const ProcessControls = require('@_instana/collector/test/test_util/ProcessControls');
-const globalAgent = require('@_instana/collector/test/globalAgent');
-const { executeAsync } = require('@_instana/collector/test/test_util/executeCommand');
+const config = require('@_local/core/test/config');
+const { retry, verifyHttpRootEntry, verifyExitSpan } = require('@_local/core/test/test_util');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
+const globalAgent = require('@_local/collector/test/globalAgent');
+const { executeAsync } = require('@_local/collector/test/test_util/executeCommand');
 
 const appDir = __dirname;
 const schemaTargetFile = path.join(appDir, 'prisma', 'schema.prisma');

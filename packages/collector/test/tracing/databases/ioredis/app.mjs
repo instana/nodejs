@@ -20,7 +20,7 @@ import express from 'express';
 import morgan from 'morgan';
 import ioredis from 'ioredis';
 
-import portFactory from '@_instana/collector/test/test_util/app-port.js';
+import portFactory from '@_local/collector/test/test_util/app-port.js';
 import connect from './connect-via/index.js';
 const port = portFactory();
 const app = express();

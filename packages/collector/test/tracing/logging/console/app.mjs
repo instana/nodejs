@@ -19,7 +19,7 @@ import bodyParser from 'body-parser';
 import express from 'express';
 import morgan from 'morgan';
 import bunyan from 'bunyan';
-const { default: getAppPort } = await import('@_instana/collector/test/test_util/app-port.js');
+const { default: getAppPort } = await import('@_local/collector/test/test_util/app-port.js');
 const port = getAppPort();
 
 const bunyanLogger = bunyan.createLogger({ name: 'test-logger-console' });

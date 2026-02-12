@@ -6,15 +6,15 @@
 'use strict';
 
 const expect = require('chai').expect;
-const testUtils = require('@_instana/core/test/test_util');
+const testUtils = require('@_local/core/test/test_util');
 const {
     verifyHttpRootEntry,
     verifyHttpExit,
     verifyExitSpan
-} = require('@_instana/core/test/test_util/common_verifications');
-const globalAgent = require('@_instana/collector/test/globalAgent');
-const ProcessControls = require('@_instana/collector/test/test_util/ProcessControls');
-const { AgentStubControls } = require('@_instana/collector/test/apps/agentStubControls');
+} = require('@_local/core/test/test_util/common_verifications');
+const globalAgent = require('@_local/collector/test/globalAgent');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
+const { AgentStubControls } = require('@_local/collector/test/apps/agentStubControls');
 
 module.exports = function (name, version, isLatest) {
     globalAgent.setUpCleanUpHooks();

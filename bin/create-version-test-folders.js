@@ -131,8 +131,8 @@ function generateTestWrapper({ suiteName, displayVersion, rawVersion, isLatest, 
 const { execSync } = require('child_process');
 const path = require('path');
 const testBase = require('./test_base');
-const config = require('@_instana/core/test/config');
-const supportedVersion = require('@_instana/core').tracing.supportedVersion;
+const config = require('@_local/core/test/config');
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 ${esmOnly ? `if (!process.env.RUN_ESM) {

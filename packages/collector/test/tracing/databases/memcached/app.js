@@ -18,8 +18,8 @@ require('@instana/collector')();
 const Memcached = require('memcached')
 const express = require('express');
 const app = express();
-const port = require('@_instana/collector/test/test_util/app-port')();
-const log = require('@_instana/core/test/test_util/log').getLogger(`Memcached (${process.pid}):\t`);
+const port = require('@_local/collector/test/test_util/app-port')();
+const log = require('@_local/core/test/test_util/log').getLogger(`Memcached (${process.pid}):\t`);
 const memcached = new Memcached(process.env.MEMCACHED || 'localhost:11211');
 
 /**

@@ -14,7 +14,7 @@ import { PrismaClient } from '@prisma/client';
 import express from 'express';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
-import getAppPort from '@_instana/collector/test/test_util/app-port.js';
+import getAppPort from '@_local/collector/test/test_util/app-port.js';
 const port = getAppPort();
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';

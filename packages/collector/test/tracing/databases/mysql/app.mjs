@@ -20,7 +20,7 @@ const instana = instanaFactory();
 import mysql from 'mysql';
 import mysql2 from 'mysql2';
 import mysql2promise from 'mysql2/promise';
-import getAppPort from '@_instana/collector/test/test_util/app-port.js';
+import getAppPort from '@_local/collector/test/test_util/app-port.js';
 const port = getAppPort();
 
 const accessFunction = process.env.USE_EXECUTE ? 'execute' : 'query';

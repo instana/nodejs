@@ -23,7 +23,7 @@ const ibmdb = require('ibm_db');
 const { delay } = require('@instana/core/test/test_util');
 
 const app = express();
-const port = require('@_instana/collector/test/test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 const logPrefix = `DB2 App (${process.pid}):\t`;
 
 const DB2_DATABASE_NAME = process.env.DB2_DATABASE_NAME || 'nodedb';

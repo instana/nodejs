@@ -8,11 +8,11 @@
 const { expect } = require('chai');
 const { fail } = require('chai').assert;
 
-const constants = require('@_instana/core').tracing.constants;
-const config = require('@_instana/core/test/config');
-const testUtils = require('@_instana/core/test/test_util');
-const ProcessControls = require('@_instana/collector/test/test_util/ProcessControls');
-const globalAgent = require('@_instana/collector/test/globalAgent');
+const constants = require('@_local/core').tracing.constants;
+const config = require('@_local/core/test/config');
+const testUtils = require('@_local/core/test/test_util');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
+const globalAgent = require('@_local/collector/test/globalAgent');
 
 // There is no official sequelize release with support for Node.js >= 20 yet. It seems to be work in progress though:
 // https://github.com/sequelize/sequelize/releases/tag/v7.0.0-alpha.27

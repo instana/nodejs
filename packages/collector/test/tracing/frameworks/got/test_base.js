@@ -5,9 +5,9 @@
 'use strict';
 
 const expect = require('chai').expect;
-const { retry, verifyHttpRootEntry, verifyExitSpan } = require('@_instana/core/test/test_util');
-const ProcessControls = require('@_instana/collector/test/test_util/ProcessControls');
-const globalAgent = require('@_instana/collector/test/globalAgent');
+const { retry, verifyHttpRootEntry, verifyExitSpan } = require('@_local/core/test/test_util');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
+const globalAgent = require('@_local/collector/test/globalAgent');
 
 module.exports = function (name, version, isLatest) {
   globalAgent.setUpCleanUpHooks();

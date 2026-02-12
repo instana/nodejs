@@ -17,7 +17,7 @@ require('@instana/collector')();
 const express = require('express');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
-const port = require('@_instana/collector/test/test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 const app = express();
 const logPrefix = `Sequilize App (${process.pid}):\t`;
 

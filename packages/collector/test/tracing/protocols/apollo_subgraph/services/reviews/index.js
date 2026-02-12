@@ -16,7 +16,7 @@ const { gql } = require('graphql-tag');
 
 const { expressMiddleware } = require('@as-integrations/express5');
 
-const port = require('@_instana/collector/test/test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 const app = express();
 const logPrefix = `Reviews Service (${process.pid}):\t`;
 

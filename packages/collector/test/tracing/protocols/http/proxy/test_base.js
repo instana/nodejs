@@ -8,9 +8,9 @@
 const expect = require('chai').expect;
 const Promise = require('bluebird');
 
-const config = require('@_instana/core/test/config');
-const { expectAtLeastOneMatching, retry } = require('@_instana/core/test/test_util');
-const globalAgent = require('@_instana/collector/test/globalAgent');
+const config = require('@_local/core/test/config');
+const { expectAtLeastOneMatching, retry } = require('@_local/core/test/test_util');
+const globalAgent = require('@_local/collector/test/globalAgent');
 
 module.exports = function (name, version, isLatest) {
   this.timeout(config.getTestTimeout());
@@ -25,7 +25,7 @@ module.exports = function (name, version, isLatest) {
   };
 
   const expressProxyControls = require('./expressProxyControls');
-  const expressControls = require('@_instana/collector/test/apps/expressControls');
+  const expressControls = require('@_local/collector/test/apps/expressControls');
 
   before(async () => {
     await expressControls.start({ useGlobalAgent: true, env: commonEnv });

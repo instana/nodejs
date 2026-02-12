@@ -7,11 +7,11 @@
 
 const expect = require('chai').expect;
 
-const constants = require('@_instana/core').tracing.constants;
-const config = require('@_instana/core/test/config');
-const ProcessControls = require('@_instana/collector/test/test_util/ProcessControls');
-const { delay, expectExactlyOneMatching, retry } = require('@_instana/core/test/test_util');
-const globalAgent = require('@_instana/collector/test/globalAgent');
+const constants = require('@_local/core').tracing.constants;
+const config = require('@_local/core/test/config');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
+const { delay, expectExactlyOneMatching, retry } = require('@_local/core/test/test_util');
+const globalAgent = require('@_local/collector/test/globalAgent');
 
 const exchange = require('./amqpUtil').exchange;
 const queueName = require('./amqpUtil').queueName;

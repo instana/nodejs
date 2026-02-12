@@ -28,7 +28,7 @@ const instanaConfig = {
 require('@instana/collector')(instanaConfig);
 const express = require('express');
 const http = require('http');
-const port = require('@_instana/collector/test/test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 const app = express();
 
 app.get('/', (req, res) => {

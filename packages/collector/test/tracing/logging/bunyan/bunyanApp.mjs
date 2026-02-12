@@ -20,7 +20,7 @@ import morgan from 'morgan';
 import fs from 'fs';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-const { default: getAppPort } = await import('@_instana/collector/test/test_util/app-port.js');
+const { default: getAppPort } = await import('@_local/collector/test/test_util/app-port.js');
 const port = getAppPort();
 const logger = bunyan.createLogger({ name: 'test-logger' });
 const __dirname = dirname(fileURLToPath(import.meta.url));

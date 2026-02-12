@@ -21,7 +21,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 const bunyan = require('bunyan');
-const port = require('@_instana/collector/test/test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 const bunyanLogger = bunyan.createLogger({ name: 'test-logger-console' });
 
 const app = express();

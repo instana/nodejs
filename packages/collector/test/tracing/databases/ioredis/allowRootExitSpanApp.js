@@ -17,7 +17,7 @@ require('@instana/collector')({
 });
 
 const ioredis = require('ioredis');
-const { delay } = require('@_instana/core/test/test_util');
+const { delay } = require('@_local/core/test/test_util');
 
 const logPrefix = `IORedis allowRootExitSpan App (${process.pid}):\t`;
 

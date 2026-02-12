@@ -20,12 +20,12 @@ const fs = require('fs');
 const morgan = require('morgan');
 const path = require('path');
 
-const port = require('@_instana/collector/test/test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 
 const httpModule = process.env.APP_USES_HTTPS === 'true' ? require('https') : require('http');
 const protocol = process.env.APP_USES_HTTPS === 'true' ? 'https' : 'http';
 const baseUrl = `${protocol}://user:password@localhost:${process.env.SERVER_PORT}`;
-const sslDir = path.join(path.dirname(require.resolve('@_instana/collector/package.json')), 'test', 'apps', 'ssl');
+const sslDir = path.join(path.dirname(require.resolve('@_local/collector/package.json')), 'test', 'apps', 'ssl');
 const key = fs.readFileSync(path.join(sslDir, 'key'));
 const cert = fs.readFileSync(path.join(sslDir, 'cert'));
 

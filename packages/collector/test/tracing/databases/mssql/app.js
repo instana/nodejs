@@ -20,8 +20,8 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 const devNull = require('dev-null');
-const port = require('@_instana/collector/test/test_util/app-port')();
-const { delay } = require('@_instana/core/test/test_util');
+const port = require('@_local/collector/test/test_util/app-port')();
+const { delay } = require('@_local/core/test/test_util');
 
 let pool;
 const app = express();

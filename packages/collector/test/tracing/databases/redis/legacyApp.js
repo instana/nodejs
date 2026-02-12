@@ -20,8 +20,8 @@ const express = require('express');
 const morgan = require('morgan');
 const redis = require('redis');
 
-const port = require('@_instana/collector/test/test_util/app-port')();
-const cls = require('@_instana/core/src/tracing/cls');
+const port = require('@_local/collector/test/test_util/app-port')();
+const cls = require('@_local/core/src/tracing/cls');
 const app = express();
 
 const logPrefix = `Redis Legacy App (${process.pid}):\t`;

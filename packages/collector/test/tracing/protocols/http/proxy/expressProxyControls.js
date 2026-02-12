@@ -8,10 +8,10 @@
 const path = require('path');
 const spawn = require('child_process').spawn;
 
-const portfinder = require('@_instana/collector/test/test_util/portfinder');
-const testUtils = require('@_instana/core/test/test_util');
-const config = require('@_instana/core/test/config');
-const agentControls = require('@_instana/collector/test/globalAgent').instance;
+const portfinder = require('@_local/collector/test/test_util/portfinder');
+const testUtils = require('@_local/core/test/test_util');
+const config = require('@_local/core/test/config');
+const agentControls = require('@_local/collector/test/globalAgent').instance;
 let appPort;
 let expressProxyApp;
 

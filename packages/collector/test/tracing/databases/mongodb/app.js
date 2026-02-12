@@ -26,7 +26,7 @@ const express = require('express');
 const morgan = require('morgan');
 const assert = require('assert');
 const semver = require('semver');
-const port = require('@_instana/collector/test/test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 const isLegacy = semver.major(process.env.LIBRARY_VERSION) <= 4;
 const agentPort = process.env.INSTANA_AGENT_PORT;
 

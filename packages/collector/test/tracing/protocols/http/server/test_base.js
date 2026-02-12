@@ -8,11 +8,11 @@
 const { expect } = require('chai');
 const { fail } = expect;
 
-const constants = require('@_instana/core').tracing.constants;
-const config = require('@_instana/core/test/config');
-const { delay, retry } = require('@_instana/core/test/test_util');
-const ProcessControls = require('@_instana/collector/test/test_util/ProcessControls');
-const { AgentStubControls } = require('@_instana/collector/test/apps/agentStubControls');
+const constants = require('@_local/core').tracing.constants;
+const config = require('@_local/core/test/config');
+const { delay, retry } = require('@_local/core/test/test_util');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
+const { AgentStubControls } = require('@_local/collector/test/apps/agentStubControls');
 
 module.exports = function (name, version, isLatest) {
   this.timeout(config.getTestTimeout());

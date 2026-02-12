@@ -7,18 +7,18 @@
 
 const expect = require('chai').expect;
 
-const constants = require('@_instana/core').tracing.constants;
+const constants = require('@_local/core').tracing.constants;
 const {
   delay,
   expectExactlyOneMatching,
   expectAtLeastOneMatching,
   retry,
   stringifyItems
-} = require('@_instana/core/test/test_util');
-const config = require('@_instana/core/test/config');
-const ProcessControls = require('@_instana/collector/test/test_util/ProcessControls');
-const globalAgent = require('@_instana/collector/test/globalAgent');
-const expectExactlyNMatching = require('@_instana/core/test/test_util/expectExactlyNMatching');
+} = require('@_local/core/test/test_util');
+const config = require('@_local/core/test/config');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
+const globalAgent = require('@_local/collector/test/globalAgent');
+const expectExactlyNMatching = require('@_local/core/test/test_util/expectExactlyNMatching');
 
 function checkConnection(span, setupType) {
   if (setupType === 'cluster') {
@@ -805,7 +805,7 @@ module.exports = function (name, version, isLatest, setupType) {
       this.timeout(config.getTestTimeout());
 
       describe('when ignore-endpoints is enabled via agent configuration', () => {
-        const { AgentStubControls } = require('@_instana/collector/test/apps/agentStubControls');
+        const { AgentStubControls } = require('@_local/collector/test/apps/agentStubControls');
         const customAgentControls = new AgentStubControls();
         let controls;
 

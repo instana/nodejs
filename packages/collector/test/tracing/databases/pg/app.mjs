@@ -17,7 +17,7 @@ import _pg from 'pg';
 import express from 'express';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
-const { default: getAppPort } = await import('@_instana/collector/test/test_util/app-port.js');
+const { default: getAppPort } = await import('@_local/collector/test/test_util/app-port.js');
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 const Pool = _pg.Pool;

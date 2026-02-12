@@ -12,7 +12,7 @@ process.on('SIGTERM', () => {
 
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
-const delay = require('@_instana/core/test/test_util/delay');
+const delay = require('@_local/core/test/test_util/delay');
 import amqp from 'amqplib';
 import { exchange } from './amqpUtil.js';
 

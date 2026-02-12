@@ -5,7 +5,7 @@
 'use strict';
 
 const MAX_TRIES = 50;
-const { delay } = require('@_instana/core/test/test_util');
+const { delay } = require('@_local/core/test/test_util');
 
 // NOTE: We run the tests locally and on CI against azure redis cluster.
 // NOTE: We cannot run redis cluster on Tekton https://github.com/bitnami/charts/issues/28894

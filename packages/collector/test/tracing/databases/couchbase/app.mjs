@@ -15,8 +15,8 @@ import bodyParser from 'body-parser';
 import express from 'express';
 import { v1 } from 'uuid';
 import morgan from 'morgan';
-import portFactory from '@_instana/collector/test/test_util/app-port.js';
-import testUtil from '@_instana/core/test/test_util/index.js';
+import portFactory from '@_local/collector/test/test_util/app-port.js';
+import testUtil from '@_local/core/test/test_util/index.js';
 
 const port = portFactory();
 const uuid = { v1 };

@@ -36,14 +36,14 @@ const logger = log4js.getLogger();
 instana.setLogger(logger);
 
 let instanaLogger;
-instanaLogger = require('@_instana/collector/src/logger').getLogger('test-module-name', newLogger => {
+instanaLogger = require('@_local/collector/src/logger').getLogger('test-module-name', newLogger => {
   instanaLogger = newLogger;
 });
 
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const port = require('@_instana/collector/test/test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 const app = express();
 const logPrefix = `Log4js App [Instana receives Log4js logger] (${process.pid}):\t`;
 

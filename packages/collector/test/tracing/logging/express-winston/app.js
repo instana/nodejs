@@ -20,7 +20,7 @@ const express = require('express');
 const moduleModule = require('module');
 const morgan = require('morgan');
 const expressWinston = require('express-winston');
-const port = require('@_instana/collector/test/test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 const expressWinstonLocation = require.resolve('express-winston');
 const winston = moduleModule.createRequire(expressWinstonLocation)('winston');
 

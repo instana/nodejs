@@ -21,7 +21,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 const pino = require('pino');
-const port = require('@_instana/collector/test/test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 const agentPort = process.env.INSTANA_AGENT_PORT;
 const pinoOptions = {
   customLevels: {

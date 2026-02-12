@@ -16,7 +16,7 @@ process.on('SIGTERM', () => {
 import bodyParser from 'body-parser';
 import express from 'express';
 import morgan from 'morgan';
-import getAppPort from '@_instana/collector/test/test_util/app-port.js';
+import getAppPort from '@_local/collector/test/test_util/app-port.js';
 const port = getAppPort();
 
 const app = express();

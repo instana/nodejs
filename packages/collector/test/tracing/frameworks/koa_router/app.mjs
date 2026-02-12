@@ -15,7 +15,7 @@ import Koa from 'koa';
 import Router from '@koa/router';
 import bodyParser from 'koa-bodyparser';
 import morgan from 'koa-morgan';
-import getAppPort from '@_instana/collector/test/test_util/app-port.js';
+import getAppPort from '@_local/collector/test/test_util/app-port.js';
 const port = getAppPort();
 const logPrefix = `Koa Server: (${process.pid}):\t`;
 

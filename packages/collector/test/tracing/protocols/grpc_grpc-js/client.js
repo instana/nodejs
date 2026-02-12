@@ -10,7 +10,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const port = require('@_instana/collector/test/test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 
 require('@instana/collector')();
 
@@ -23,7 +23,7 @@ const path = require('path');
 const app = express();
 
 const logPrefix = `GRPC-JS Client (${process.pid}):\t`;
-const log = require('@_instana/core/test/test_util/log').getLogger(logPrefix);
+const log = require('@_local/core/test/test_util/log').getLogger(logPrefix);
 
 const PROTO_PATH = path.join(__dirname, 'protos/test.proto');
 

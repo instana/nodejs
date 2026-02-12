@@ -6,9 +6,9 @@
 
 const path = require('path');
 const expect = require('chai').expect;
-const testUtils = require('@_instana/core/test/test_util');
-const globalAgent = require('@_instana/collector/test/globalAgent');
-const ProcessControls = require('@_instana/collector/test/test_util/ProcessControls');
+const testUtils = require('@_local/core/test/test_util');
+const globalAgent = require('@_local/collector/test/globalAgent');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 
 module.exports = function (name, version, isLatest) {
   const versionDir = path.join(__dirname, `_v${version}`);

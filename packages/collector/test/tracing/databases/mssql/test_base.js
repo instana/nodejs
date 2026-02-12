@@ -9,11 +9,11 @@ const uuid = require('uuid').v4;
 const path = require('path');
 const expect = require('chai').expect;
 
-const constants = require('@_instana/core/src/tracing/constants');
-const config = require('@_instana/core/test/config');
-const { retry, expectAtLeastOneMatching, expectExactlyOneMatching } = require('@_instana/core/test/test_util');
-const ProcessControls = require('@_instana/collector/test/test_util/ProcessControls');
-const globalAgent = require('@_instana/collector/test/globalAgent');
+const constants = require('@_local/core/src/tracing/constants');
+const config = require('@_local/core/test/config');
+const { retry, expectAtLeastOneMatching, expectExactlyOneMatching } = require('@_local/core/test/test_util');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
+const globalAgent = require('@_local/collector/test/globalAgent');
 
 const userTable = `UserTable_${uuid()}`.replace(/-/g, '_');
 const procedureName = `testProcedure_${uuid()}`.replace(/-/g, '_');

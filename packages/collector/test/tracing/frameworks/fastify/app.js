@@ -13,7 +13,7 @@ process.on('SIGTERM', () => {
 
 require('@instana/collector')();
 const fastify = require('fastify')
-const port = require('@_instana/collector/test/test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 
 // NOTE: beforeHandler got deprecated in v2 and removed in v3
 //       see https://github.com/fastify/fastify/pull/1750
