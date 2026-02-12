@@ -17,6 +17,7 @@ cd "$SCRIPT_DIR/.." || exit 1
 LOCK_FILE="$ARTIFACTS_PATH/.test-claim.lock"
 CLAIMED_FILE="$ARTIFACTS_PATH/claimed-tests.txt"
 OUTPUT_FILE="$ARTIFACTS_PATH/my-tests-$$.txt"
+TASK_SERVICES=""
 
 # Ensure claimed file exists
 touch "$CLAIMED_FILE"
@@ -157,6 +158,35 @@ CLAIMED=$(cat "$CLAIMED_FILE" 2>/dev/null || echo "")
 CLAIMED_COUNT=0
 PROCESSED=0
 
+# Compute per-service quotas using shared runner counters.
+# quota = ceil(unclaimed_tests / remaining_runners) — ensures even distribution.
+for svc in $KNOWN_SIDECARS; do
+    svc_var=$(echo "$svc" | tr '-' '_')
+    rc=$(eval echo "\${REQ_COUNTS_${svc_var}:-0}")
+    runner_count=$(eval echo "\${SIDECAR_RUNNER_COUNT_${svc_var}:-0}")
+    if [ "$rc" -gt 0 ] && [ "$runner_count" -gt 0 ]; then
+        # Count unclaimed prio tests for this service
+        unclaimed=0
+        for pf in $PRIO_TESTS; do
+          if ! echo "$CLAIMED" | grep -qF "$pf"; then
+            unclaimed=$((unclaimed + 1))
+          fi
+        done
+
+        counter_file="$ARTIFACTS_PATH/.svc-runners-${svc}"
+        done_runners=$(cat "$counter_file" 2>/dev/null || echo 0)
+        remaining_runners=$((runner_count - done_runners))
+        if [ "$remaining_runners" -lt 1 ]; then remaining_runners=1; fi
+
+        quota=$(( (unclaimed + remaining_runners - 1) / remaining_runners ))
+        if [ "$quota" -lt 1 ]; then quota=1; fi
+        eval "SERVICE_QUOTA_${svc_var}=$quota"
+
+        # Track service for counter update after claiming
+        TASK_SERVICES="$TASK_SERVICES $svc"
+    fi
+done
+
 for test_file in $FINAL_LIST; do
   PROCESSED=$((PROCESSED + 1))
 
@@ -185,7 +215,6 @@ for test_file in $FINAL_LIST; do
   QUOTA_CHECK_REQ=""
   
   if [ -n "$USED_ENVS_CHECK" ]; then
-    # Resolve unique services first
     SERVICES_CHECK=""
     for env_var in $USED_ENVS_CHECK; do
         if echo "$KNOWN_ENVS" | grep -q "^$env_var$"; then
@@ -202,9 +231,7 @@ for test_file in $FINAL_LIST; do
         runner_count=$(eval echo "\${SIDECAR_RUNNER_COUNT_${sidecar_var}:-0}")
         if [ "$runner_count" -gt 0 ]; then
           usage=$(eval echo "\${MY_REQ_USAGE_${sidecar_var}:-0}")
-          req_total=$(eval echo "\${REQ_COUNTS_${sidecar_var}:-0}")
-          quota=$(( (req_total + runner_count - 1) / runner_count ))
-          if [ "$quota" -lt 1 ]; then quota=1; fi
+          quota=$(eval echo "\${SERVICE_QUOTA_${sidecar_var}:-999}")
           if [ "$usage" -ge "$quota" ]; then
              QUOTA_EXCEEDED=true
              break
@@ -218,7 +245,6 @@ for test_file in $FINAL_LIST; do
      continue 
   fi
   
-  # Update Usage if claiming
   for req in $QUOTA_CHECK_REQ; do
      curr=$(eval echo "\${MY_REQ_USAGE_${req}:-0}")
      eval "MY_REQ_USAGE_${req}=$((curr + 1))"
@@ -227,6 +253,13 @@ for test_file in $FINAL_LIST; do
   echo "$test_file" >> "$CLAIMED_FILE"
   echo "$test_file" >> "$OUTPUT_FILE"
   CLAIMED_COUNT=$((CLAIMED_COUNT + 1))
+done
+
+# Update shared runner counters so next task computes correct remaining_runners
+for svc in $TASK_SERVICES; do
+  counter_file="$ARTIFACTS_PATH/.svc-runners-${svc}"
+  done_runners=$(cat "$counter_file" 2>/dev/null || echo 0)
+  echo $((done_runners + 1)) > "$counter_file"
 done
 
 # Output claimed tests for this task
