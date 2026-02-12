@@ -29,7 +29,7 @@ describe('agent connection/bazel', function () {
 
   describe("Bazel's node-patches are present", () => {
     before(() => {
-      agentConnection = proxyquire('../src/agentConnection', {
+      agentConnection = proxyquire('@_local/collector/src/agentConnection', {
         // stub out the http communication part of the announce request
         '@_local/core': mockInstanaCoreHttp()
       });
@@ -49,7 +49,7 @@ describe('agent connection/bazel', function () {
 
   describe("Bazel's node-patches are not present", () => {
     before(() => {
-      agentConnection = proxyquire('../src/agentConnection', {
+      agentConnection = proxyquire('@_local/collector/src/agentConnection', {
         // Stub out the fs part part of the fd/inode lookup (the readlinkSync call), and act as if node-patches from
         // Bazel were not active, that is, act like an unpatched fs modules would work on Linux and return an
         // unqualified file name (no absolute path) from readlinkSync.

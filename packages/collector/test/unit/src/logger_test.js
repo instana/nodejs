@@ -8,8 +8,8 @@
 const expect = require('chai').expect;
 const bunyan = require('bunyan');
 let pino = require('pino');
-let uninstrumentedLogger = require('../src/uninstrumentedLogger');
-let log = require('../src/logger');
+let uninstrumentedLogger = require('@_local/collector/src/uninstrumentedLogger');
+let log = require('@_local/collector/src/logger');
 const { expectAtLeastOneMatching } = require('@_local/core/test/test_util');
 
 describe('logger', () => {
@@ -32,7 +32,7 @@ describe('logger', () => {
   }
 
   it('should verify pino output streams are not there for the logger', () => {
-    log = require('../src/logger');
+    log = require('@_local/collector/src/logger');
     const logger = log.init({});
 
     // When using pino with a multi-stream setup, the logger's streams aren't directly exposed
@@ -42,7 +42,7 @@ describe('logger', () => {
   });
 
   it('should verify pino output streams are there ', () => {
-    uninstrumentedLogger = require('../src/uninstrumentedLogger');
+    uninstrumentedLogger = require('@_local/collector/src/uninstrumentedLogger');
     const logger = log.init({});
 
     // When using pino with a multi-stream setup, the logger's streams aren't directly exposed

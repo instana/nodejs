@@ -56,13 +56,13 @@ describe('cmdline', () => {
   });
 
   function req() {
-    result = proxyquire('../src/cmdline', {
+    result = proxyquire('@_local/collector/src/cmdline', {
       '@_local/core': {
         uninstrumentedFs: fs
       },
 
       // We need to proxyquire logger, too, to work around the duplicate module logger name check.
-      './logger': proxyquire('../src/logger', {})
+      './logger': proxyquire('@_local/collector/src/logger', {})
     }).getCmdline();
   }
 });
