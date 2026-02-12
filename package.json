@@ -74,6 +74,8 @@
     "@_local/shared-metrics": "file:./packages/shared-metrics",
     "@as-integrations/express5": "1.1.2",
     "@aws-sdk/client-cloudwatch-logs": "3.696.0",
+    "@aws-sdk/lib-dynamodb": "3.985.0",
+    "@aws-sdk/client-dynamodb": "3.985.0",
     "@aws-sdk/client-kinesis": "3.985.0",
     "@aws-sdk/client-s3": "3.985.0",
     "@aws-sdk/client-sns": "3.985.0",

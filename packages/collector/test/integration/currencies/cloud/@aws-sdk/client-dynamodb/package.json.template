@@ -1,5 +1,0 @@
-{
-  "dependencies": {
-    "@aws-sdk/lib-dynamodb": "latest"
-  }
-}
