@@ -1165,7 +1165,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "0.3.28"
+      }
+    ]
   },
   {
     "name": "bunyan",

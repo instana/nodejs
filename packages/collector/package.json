@@ -91,7 +91,6 @@
     "@instana/autoprofile": "5.2.2"
   },
   "devDependencies": {
-    "opentracing": "^0.14.5",
-    "typeorm": "^0.3.28"
+    "opentracing": "^0.14.5"
   }
 }
