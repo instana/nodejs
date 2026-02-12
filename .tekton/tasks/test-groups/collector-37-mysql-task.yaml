@@ -31,7 +31,7 @@ spec:
           timeoutSeconds: 10
   envFrom:
     - configMapRef:
-        name: environment-properties  
+        name: environment-properties
   params:
     - name: node-version
       value: $(params.node-version)
@@ -48,7 +48,7 @@ spec:
     - name: coverage
       value: $(params.coverage)
     - name: prerelease
-      value: $(params.prerelease) 
+      value: $(params.prerelease)
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -69,7 +69,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: $(params.continuous-delivery-context-secret)
-              key: "AZURE_REDIS_CLUSTER_PWD"              
+              key: "AZURE_REDIS_CLUSTER_PWD"
         - name: DB2_CONNECTION_STR
           valueFrom:
             secretKeyRef:
@@ -109,6 +109,7 @@ spec:
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
         fi
+        npm config set registry http://registry.npmjs.org
         if [ -n "$(params.revision)" ]; then
           CIRCLE_COMPARE_URL="$(params.repository)/compare/$BASE_REVISION..$(params.revision)"
           # MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
