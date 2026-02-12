@@ -146,9 +146,7 @@ class ProcessControls {
         APP_USES_HTTPS: this.appUsesHttps ? 'true' : 'false',
         INSTANA_DISABLE_USE_OPENTELEMETRY: !this.enableOtelIntegration,
         LIBRARY_VERSION: process.env.LIBRARY_VERSION,
-        LIBRARY_NAME: process.env.LIBRARY_NAME,
-        CORE_PATH: global.corePath,
-        COLLECTOR_PATH: global.collectorPath
+        LIBRARY_NAME: process.env.LIBRARY_NAME
       },
       opts.env
     );

@@ -9,17 +9,13 @@ const path = require('path');
 const semver = require('semver');
 const expect = require('chai').expect;
 
-const constants = require(path.join(global.corePath, 'src', 'tracing', 'constants'));
-const config = require(path.join(global.corePath, 'test', 'config'));
-const { retry, getSpansByName, expectAtLeastOneMatching, expectExactlyOneMatching } = require(path.join(
-  global.corePath,
-  'test',
-  'test_util'
-));
-const ProcessControls = require(path.join(global.collectorPath, 'test', 'test_util', 'ProcessControls'));
-const globalAgent = require(path.join(global.collectorPath, 'test', 'globalAgent'));
+const constants = require('@_instana/core/src/tracing/constants');
+const config = require('@_instana/core/test/config');
+const { retry, getSpansByName, expectAtLeastOneMatching, expectExactlyOneMatching } = require('@_instana/core/test/test_util');
+const ProcessControls = require('@_instana/collector/test/test_util/ProcessControls');
+const globalAgent = require('@_instana/collector/test/globalAgent');
 
-module.exports = function (name, version) {
+module.exports = function (name, version, isLatest) {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
   let controls;
@@ -29,6 +25,7 @@ module.exports = function (name, version) {
       dirname: __dirname,
       useGlobalAgent: true,
       env: {
+        LIBRARY_LATEST: isLatest,
         LIBRARY_VERSION: version,
         LIBRARY_NAME: name
       }

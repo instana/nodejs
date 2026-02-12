@@ -53,8 +53,12 @@ function main() {
 
     console.log(`Found test directory: ${testDir}`);
 
+    const sortedVersions = currency.versions.map(v => (typeof v === 'string' ? v : v.v)).sort(semver.rcompare);
+    const latestVersion = sortedVersions[0];
+
     currency.versions.forEach(versionObj => {
       const version = typeof versionObj === 'string' ? versionObj : versionObj.v;
+      const isLatest = version === latestVersion;
       const majorVersion = semver.major(version);
       const versionDir = path.join(testDir, `_v${majorVersion}`);
 
@@ -75,7 +79,7 @@ function main() {
 const { execSync } = require('child_process');
 const path = require('path');
 const testBase = require('./test_base');
-const config = require(path.join(corePath, 'test', 'config'));
+const config = require('@_instana/core/test/config');
 
 describe('tracing/${currency.name}@v${majorVersion}', function () {
   this.timeout(config.getTestTimeout());
@@ -85,7 +89,7 @@ describe('tracing/${currency.name}@v${majorVersion}', function () {
     execSync('npm install --no-audit --prefix ./', { cwd: __dirname, stdio: 'inherit' });
   });
 
-  testBase.call(this, '${currency.name}', '${version}');
+  testBase.call(this, '${currency.name}', '${version}', ${isLatest});
 });
 `;
       fs.writeFileSync(path.join(versionDir, 'test.js'), testContent);

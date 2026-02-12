@@ -41,21 +41,28 @@ if [ "$WATCH" = true ]; then
 fi
 
 if [ -n "$PACKAGE" ]; then
-  AVAILABLE_VERSIONS=$(find "packages/collector/test/tracing/databases/$PACKAGE" -maxdepth 1 -type d -name "_v*" 2>/dev/null | sed 's/.*_v/v/' | sort -V | tr '\n' ', ' | sed 's/,$//')
+  PACKAGE_DIR=$(find "packages/collector/test/tracing" -mindepth 2 -maxdepth 2 -type d -name "$PACKAGE" 2>/dev/null | head -1)
+  
+  if [ -z "$PACKAGE_DIR" ]; then
+    echo "Error: Package '$PACKAGE' not found in any tracing category"
+    exit 1
+  fi
+  
+  AVAILABLE_VERSIONS=$(find "$PACKAGE_DIR" -maxdepth 1 -type d -name "_v*" 2>/dev/null | sed 's/.*_v/v/' | sort -V | tr '\n' ', ' | sed 's/,$//')
 
   if [ -n "$VERSION" ]; then
     if [[ ! $VERSION =~ ^v ]]; then
       VERSION="v$VERSION"
     fi
 
-    if [ ! -d "packages/collector/test/tracing/databases/$PACKAGE/_${VERSION}" ]; then
+    if [ ! -d "$PACKAGE_DIR/_${VERSION}" ]; then
       echo "Error: Version not found. We only have: $AVAILABLE_VERSIONS"
       exit 1
     fi
 
     GREP_PATTERN="tracing/$PACKAGE@$VERSION"
   else
-    HIGHEST_VERSION=$(find "packages/collector/test/tracing/databases/$PACKAGE" -maxdepth 1 -type d -name "_v*" 2>/dev/null | sed 's/.*_v//' | sort -n | tail -1)
+    HIGHEST_VERSION=$(find "$PACKAGE_DIR" -maxdepth 1 -type d -name "_v*" 2>/dev/null | sed 's/.*_v//' | sort -n | tail -1)
     if [ -n "$HIGHEST_VERSION" ]; then
       GREP_PATTERN="tracing/$PACKAGE@v$HIGHEST_VERSION"
     else

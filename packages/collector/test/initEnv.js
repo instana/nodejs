@@ -53,7 +53,3 @@ Object.keys(DEFAULT_ENV_VALUES).forEach(key => {
     process.env[key] = DEFAULT_ENV_VALUES[key];
   }
 });
-
-const root = path.join(__dirname, '..', '..', '..');
-global.corePath = path.join(root, 'packages', 'core');
-global.collectorPath = path.join(root, 'packages', 'collector');

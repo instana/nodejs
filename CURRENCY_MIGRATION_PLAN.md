@@ -7,6 +7,10 @@ All currencies in currencies.json must use the new test structure:
 - Version-specific `_vX/` folders with test runners
 - Automatic folder generation via `create-version-test-folders.js`
 
+# RULES
+
+DO NOT RUN THE TESTS!!!
+
 ---
 
 ## Template for each currency
@@ -17,6 +21,7 @@ All currencies in currencies.json must use the new test structure:
 - Search for the package name in the root `package.json` devDependencies/optionalDependencies
 - Extract all versions (e.g. `"couchbase": "4.6.0"` → `4.6.0`)
 - Note suffixed versions (e.g. `"couchbase-v4.4.3": "npm:couchbase@4.4.3"` → `4.4.3`)
+- You have to remove latest version too! e.g. "couchbase": "4.6.0" -> REMOVE!
 
 ### Step 2: Update `currencies.json`
 ```json
@@ -58,6 +63,7 @@ You always find the test folder by searching for `require(currency)` in the test
 #### 4d. Adjust app files if needed
 - `app.js`, `app.mjs` must remain in the root folder
 - They will be symlinked into `_vX/` (no manual action needed!)
+- You have to adapt app.js and app.mjs to follow the same patterns as in mssql or pg!!!
 
 ### Step 5: Run `create-version-test-folders.js`
 ```bash

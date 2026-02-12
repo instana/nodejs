@@ -11,24 +11,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const FASTIFY_VERSION = process.env.FASTIFY_VERSION || 'latest';
-const FASTIFY_REQUIRE = FASTIFY_VERSION === 'latest' ? 'fastify' : `fastify-${FASTIFY_VERSION}`;
-
-const mock = require('@instana/core/test/test_util/mockRequire');
-
-/**
- * NOTE:
- * Link e.g. fastify-v2 to fastify or fastify-v3 to fastify
- * We have to create the link otherwise the fastify instrumentation
- * will no longer work because we use ´onModuleLoad('fastify')`
- */
-if (FASTIFY_REQUIRE !== 'fastify') {
-  mock('fastify', FASTIFY_REQUIRE);
-}
-
-require('../../../..')();
-const fastify = require('fastify');
-const port = require('../../../test_util/app-port')();
+const fastify = global.library;
+const port = require('@_instana/collector/test/test_util/app-port')();
 
 // NOTE: beforeHandler got deprecated in v2 and removed in v3
 //       see https://github.com/fastify/fastify/pull/1750
@@ -133,12 +117,12 @@ app.register(subRouter, { prefix: '/sub' });
 
 const start = async () => {
   try {
-    if (FASTIFY_VERSION === 'latest') {
+    if (process.env.LIBRARY_LATEST === 'true') {
       await app.listen({ port });
     } else {
       await app.listen(port);
     }
-    log(`listening on ${app.server.address().port} with Fastify version ${FASTIFY_VERSION}`);
+    log(`listening on ${app.server.address().port} with Fastify version ${process.env.LIBRARY_VERSION}`);
   } catch (err) {
     log('startup failure', err);
     process.exit(1);

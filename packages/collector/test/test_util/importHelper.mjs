@@ -15,6 +15,3 @@ expect(collectorPath).to.contain(path.join(process.cwd(), 'node_modules', '@inst
 
 const version = require(path.join(process.cwd(), 'node_modules', process.env.LIBRARY_NAME, 'package.json')).version;
 expect(version).to.equal(process.env.LIBRARY_VERSION);
-
-global.corePath = process.env.CORE_PATH;
-global.collectorPath = process.env.COLLECTOR_PATH;

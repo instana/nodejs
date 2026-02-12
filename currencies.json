@@ -360,7 +360,18 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "5.7.1"
+      },
+      {
+        "v": "4.29.1"
+      },
+      {
+        "v": "3.29.5"
+      }
+    ]
   },
   {
     "name": "got",
@@ -537,7 +548,17 @@
     "ignoreUpdates": false,
     "note": "",
     "core": false,
-    "versions": [{ "v": "12.2.0" }, { "v": "10.0.4" }, { "v": "9.3.0" }]
+    "versions": [
+      {
+        "v": "12.2.0"
+      },
+      {
+        "v": "10.0.4"
+      },
+      {
+        "v": "9.3.0"
+      }
+    ]
   },
   {
     "name": "mysql",
@@ -615,7 +636,11 @@
     "ignoreUpdates": false,
     "note": "",
     "core": false,
-    "versions": [{ "v": "8.17.1" }]
+    "versions": [
+      {
+        "v": "8.17.1"
+      }
+    ]
   },
   {
     "name": "pg-native",
