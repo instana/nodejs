@@ -7,6 +7,7 @@
 
 const { expect } = require('chai');
 const { fail } = expect;
+const path = require('path');
 const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const config = require('@_local/core/test/config');
 const { retry, stringifyItems, delay } = require('@_local/core/test/test_util');

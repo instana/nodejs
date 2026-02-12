@@ -7,6 +7,7 @@
 
 const { v4: uuid } = require('uuid');
 const semver = require('semver');
+const path = require('path');
 const { expect } = require('chai');
 const { cleanup } = require('./util');
 const { fail } = expect;

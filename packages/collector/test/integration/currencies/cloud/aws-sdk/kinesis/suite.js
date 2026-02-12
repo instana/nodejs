@@ -8,6 +8,7 @@
 const { v4: uuid } = require('uuid');
 const { cleanup, checkStreamExistence } = require('./util');
 const semver = require('semver');
+const path = require('path');
 const { expect } = require('chai');
 const { fail } = expect;
 const supportedVersion = require('@_local/core').tracing.supportedVersion;

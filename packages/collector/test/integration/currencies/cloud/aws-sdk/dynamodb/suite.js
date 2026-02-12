@@ -9,6 +9,7 @@ const { v4: uuid } = require('uuid');
 const { checkTableExistence, cleanup } = require('./util');
 const semver = require('semver');
 const { expect } = require('chai');
+const path = require('path');
 const { fail } = expect;
 const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const config = require('@_local/core/test/config');
