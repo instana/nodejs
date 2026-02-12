@@ -7,6 +7,19 @@
 
 'use strict';
 
+/**
+ * Copied from @instana/core/src/core.d.ts to avoid a prod dependency on @instana/core.
+ *
+ * @typedef {Object} GenericLogger
+ * @property {Function} error
+ * @property {Function} warn
+ * @property {Function} info
+ * @property {Function} [log]
+ * @property {Function} [debug]
+ * @property {Function} [trace]
+ * @property {(fields: Record<string, any>) => GenericLogger} [child]
+ */
+
 // 30 = info
 let minLevel = 30;
 
@@ -31,14 +44,14 @@ function createLogFn(level, fn) {
 
 class InstanaServerlessLogger {
   /**
-   * @param {import('@instana/core/src/core').GenericLogger} logger
+   * @param {GenericLogger} logger
    */
   constructor(logger) {
     this.logger = logger;
   }
 
   /**
-   * @param {import('@instana/core/src/core').GenericLogger} _logger
+   * @param {GenericLogger} _logger
    */
   setLogger(_logger) {
     this.logger = _logger;
@@ -129,7 +142,7 @@ exports.getLogger = () => {
 });
 
 /**
- * @param {import('@instana/core/src/core').GenericLogger | *} _logger
+ * @param {GenericLogger | *} _logger
  * @returns {boolean}
  */
 function hasLoggingFunctions(_logger) {
