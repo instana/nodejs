@@ -8,7 +8,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "2.13.0"
+      }
+    ]
   },
   {
     "name": "@apollo/server",
@@ -19,7 +24,15 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "5.3.0"
+      },
+      {
+        "v": "4.12.2"
+      }
+    ]
   },
   {
     "name": "@apollo/subgraph",
@@ -30,7 +43,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "2.13.0"
+      }
+    ]
   },
   {
     "name": "@apollo/federation",
@@ -52,7 +70,12 @@
     "isBeta": false,
     "ignoreUpdates": true,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "3.967.0"
+      }
+    ]
   },
   {
     "name": "@aws-sdk/client-kinesis",
@@ -63,7 +86,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "3.975.0"
+      }
+    ]
   },
   {
     "name": "@aws-sdk/client-kms",
@@ -74,7 +102,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "3.975.0"
+      }
+    ]
   },
   {
     "name": "@aws-sdk/client-lambda",
@@ -85,7 +118,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "3.975.0"
+      }
+    ]
   },
   {
     "name": "@aws-sdk/client-s3",
@@ -96,7 +134,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "3.975.0"
+      }
+    ]
   },
   {
     "name": "@aws-sdk/client-sns",
@@ -107,7 +150,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "3.975.0"
+      }
+    ]
   },
   {
     "name": "@aws-sdk/client-sqs",
@@ -118,7 +166,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "3.975.0"
+      }
+    ]
   },
   {
     "name": "@aws-sdk/client-ssm",
@@ -129,7 +182,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "3.975.0"
+      }
+    ]
   },
   {
     "name": "@aws-sdk/lib-dynamodb",
@@ -140,7 +198,12 @@
     "isBeta": false,
     "ignoreUpdates": true,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "3.967.0"
+      }
+    ]
   },
   {
     "name": "@elastic/elasticsearch",
@@ -151,7 +214,18 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "9.2.0"
+      },
+      {
+        "v": "7.17.0"
+      },
+      {
+        "v": "7.9.0"
+      }
+    ]
   },
   {
     "name": "@google-cloud/pubsub",
@@ -162,7 +236,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "5.2.2"
+      }
+    ]
   },
   {
     "name": "@google-cloud/storage",
@@ -173,7 +252,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "7.18.0"
+      }
+    ]
   },
   {
     "name": "@grpc/grpc-js",
@@ -184,7 +268,15 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "1.14.3"
+      },
+      {
+        "v": "1.9.4"
+      }
+    ]
   },
   {
     "name": "@grpc/proto-loader",
@@ -195,7 +287,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "0.8.0"
+      }
+    ]
   },
   {
     "name": "@hapi/hapi",
@@ -206,7 +303,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "21.4.4"
+      }
+    ]
   },
   {
     "name": "@redis/client",
@@ -217,7 +319,18 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "5.10.0"
+      },
+      {
+        "v": "1.6.1"
+      },
+      {
+        "v": "5.8.3"
+      }
+    ]
   },
   {
     "name": "amqplib",
@@ -228,7 +341,15 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "0.10.9"
+      },
+      {
+        "v": "0.8.0"
+      }
+    ]
   },
   {
     "name": "superagent",
@@ -239,7 +360,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "10.3.0"
+      }
+    ]
   },
   {
     "name": "aws-sdk",
@@ -250,7 +376,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "2.1693.0"
+      }
+    ]
   },
   {
     "name": "bull",
@@ -261,7 +392,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "4.16.5"
+      }
+    ]
   },
   {
     "name": "couchbase",
@@ -272,7 +408,17 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "4.6.0",
+        "optional": true
+      },
+      {
+        "v": "4.4.3",
+        "optional": true
+      }
+    ]
   },
   {
     "name": "express",
@@ -283,7 +429,15 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "5.2.1"
+      },
+      {
+        "v": "4.21.2"
+      }
+    ]
   },
   {
     "name": "http(s)-server",
@@ -382,7 +536,15 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "14.6.6"
+      },
+      {
+        "v": "11.8.6"
+      }
+    ]
   },
   {
     "name": "graphql",
@@ -393,7 +555,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "16.12.0"
+      }
+    ]
   },
   {
     "name": "graphql-subscriptions",
@@ -404,7 +571,15 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "3.0.0"
+      },
+      {
+        "v": "2.0.0"
+      }
+    ]
   },
   {
     "name": "graphql-ws",
@@ -415,7 +590,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "6.0.6"
+      }
+    ]
   },
   {
     "name": "ioredis",
@@ -426,7 +606,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "5.9.2"
+      }
+    ]
   },
   {
     "name": "kafka-node",
@@ -448,7 +633,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "2.2.4"
+      }
+    ]
   },
   {
     "name": "knex",
@@ -470,7 +660,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "3.1.1"
+      }
+    ]
   },
   {
     "name": "koa-router",
@@ -492,7 +687,15 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "15.3.0"
+      },
+      {
+        "v": "14.0.0"
+      }
+    ]
   },
   {
     "name": "log4js",
@@ -503,7 +706,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "6.9.1"
+      }
+    ]
   },
   {
     "name": "memcached",
@@ -530,7 +738,18 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "7.0.0"
+      },
+      {
+        "v": "4.17.2"
+      },
+      {
+        "v": "6.20.0"
+      }
+    ]
   },
   {
     "name": "mongoose",
@@ -541,7 +760,15 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "9.1.5"
+      },
+      {
+        "v": "6.13.8"
+      }
+    ]
   },
   {
     "name": "mssql",
@@ -574,7 +801,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "2.18.1"
+      }
+    ]
   },
   {
     "name": "mysql2",
@@ -585,7 +817,15 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "3.16.2"
+      },
+      {
+        "v": "3.11.4"
+      }
+    ]
   },
   {
     "name": "nats",
@@ -596,7 +836,15 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "2.29.3"
+      },
+      {
+        "v": "1.4.12"
+      }
+    ]
   },
   {
     "name": "node-nats-streaming",
@@ -618,7 +866,15 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "3.3.2"
+      },
+      {
+        "v": "2.7.0"
+      }
+    ]
   },
   {
     "name": "fetch",
@@ -656,7 +912,13 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "3.5.2",
+        "optional": true
+      }
+    ]
   },
   {
     "name": "pino",
@@ -667,7 +929,15 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "10.3.0"
+      },
+      {
+        "v": "8.21.0"
+      }
+    ]
   },
   {
     "name": "redis",
@@ -678,7 +948,21 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "5.10.0"
+      },
+      {
+        "v": "3.1.2"
+      },
+      {
+        "v": "4.7.1"
+      },
+      {
+        "v": "5.8.3"
+      }
+    ]
   },
   {
     "name": "restify",
@@ -689,7 +973,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "11.1.0"
+      }
+    ]
   },
   {
     "name": "sequelize",
@@ -700,7 +989,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "6.37.7"
+      }
+    ]
   },
   {
     "name": "socket.io",
@@ -711,7 +1005,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "4.8.3"
+      }
+    ]
   },
   {
     "name": "socket.io-client",
@@ -722,7 +1021,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "4.8.3"
+      }
+    ]
   },
   {
     "name": "sqs-consumer",
@@ -733,7 +1037,15 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "14.2.1"
+      },
+      {
+        "v": "5.8.0"
+      }
+    ]
   },
   {
     "name": "tedious",
@@ -744,7 +1056,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "19.2.0"
+      }
+    ]
   },
   {
     "name": "winston",
@@ -755,7 +1072,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "3.19.0"
+      }
+    ]
   },
   {
     "name": "express-winston",
@@ -766,7 +1088,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "4.2.0"
+      }
+    ]
   },
   {
     "name": "ibm_db",
@@ -777,7 +1104,13 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "3.3.4",
+        "optional": true
+      }
+    ]
   },
   {
     "name": "node-rdkafka",
@@ -788,7 +1121,13 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "3.6.1",
+        "optional": true
+      }
+    ]
   },
   {
     "name": "prisma",
@@ -799,7 +1138,22 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "7.3.0",
+        "optional": true
+      },
+      {
+        "v": "4.16.2"
+      },
+      {
+        "v": "4.5.0"
+      },
+      {
+        "v": "6.19.0"
+      }
+    ]
   },
   {
     "name": "typeorm",
@@ -821,7 +1175,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "1.8.15"
+      }
+    ]
   },
   {
     "name": "bluebird",
@@ -843,7 +1202,15 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "12.29.1"
+      },
+      {
+        "v": "12.27.0"
+      }
+    ]
   },
   {
     "name": "tsoa",
@@ -854,7 +1221,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "6.4.0"
+      }
+    ]
   },
   {
     "name": "request",
@@ -898,7 +1270,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "6.10.0"
+      }
+    ]
   },
   {
     "name": "@confluentinc/kafka-javascript",
@@ -909,6 +1286,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "1.8.0",
+        "optional": true
+      }
+    ]
   }
 ]

@@ -11,7 +11,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const fastify = global.library;
+require('@instana/collector')();
+const fastify = require('fastify')
 const port = require('@_instana/collector/test/test_util/app-port')();
 
 // NOTE: beforeHandler got deprecated in v2 and removed in v3

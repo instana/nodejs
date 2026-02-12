@@ -14,11 +14,11 @@ process.on('SIGTERM', () => {
 });
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
-const _pg = global.library;
 
+require('@instana/collector')();
+const _pg = require('pg');
 const express = require('express');
 const morgan = require('morgan');
-
 const bodyParser = require('body-parser');
 const port = require('@_instana/collector/test/test_util/app-port')();
 

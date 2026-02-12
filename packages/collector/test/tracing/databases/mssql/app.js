@@ -13,7 +13,9 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const sql = global.library;
+require('@instana/collector')();
+
+const sql = require('mssql');
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');

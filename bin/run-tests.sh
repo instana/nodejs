@@ -41,14 +41,13 @@ if [ "$WATCH" = true ]; then
 fi
 
 if [ -n "$PACKAGE" ]; then
-  PACKAGE_DIR=$(find "packages/collector/test/tracing" -mindepth 2 -maxdepth 2 -type d -name "*$PACKAGE*" 2>/dev/null | head -1)
+  PACKAGE_DIR=$(find "packages/collector/test/tracing" -mindepth 2 -maxdepth 2 -type d -name "$PACKAGE" 2>/dev/null | head -1)
   
   if [ -z "$PACKAGE_DIR" ]; then
     echo "Error: Package '$PACKAGE' not found in any tracing category"
     exit 1
   fi
   
-  # Extract the actual package name from the matched directory
   ACTUAL_PACKAGE=$(basename "$PACKAGE_DIR")
   
   AVAILABLE_VERSIONS=$(find "$PACKAGE_DIR" -maxdepth 1 -type d -name "_v*" 2>/dev/null | sed 's/.*_v/v/' | sort -V | tr '\n' ', ' | sed 's/,$//')

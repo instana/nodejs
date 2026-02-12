@@ -13,17 +13,16 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+import _pg from 'pg';
 import express from 'express';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
 const { default: getAppPort } = await import('@_instana/collector/test/test_util/app-port.js');
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
-import _pg from 'pg';
 const Pool = _pg.Pool;
 const Client = _pg.Client;
 const port = getAppPort();
-
 const app = express();
 const logPrefix = `Express / Postgres ESM App (${process.pid}):\t`;
 const pool = new Pool({

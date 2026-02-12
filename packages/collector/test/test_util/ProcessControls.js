@@ -11,6 +11,7 @@ const _ = require('lodash');
 const fork = require('child_process').fork;
 const fs = require('fs');
 const path = require('path');
+const semver = require('semver');
 const config = require('../../../core/test/config');
 const http2Promise = require('./http2Promise');
 const testUtils = require('../../../core/test/test_util');
