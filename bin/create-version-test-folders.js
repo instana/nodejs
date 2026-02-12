@@ -154,21 +154,17 @@ mochaSuiteFn(suiteTitle, function () {
   process.on('SIGINT', () => { cleanup(); process.exit(130); });
   process.on('SIGTERM', () => { cleanup(); process.exit(143); });
 
-  try {
+  before(() => {
     console.log('[INFO] Installing dependencies for ${suiteName}@${displayVersion}...');
     try { fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true }); } catch (_) {}
     execSync('npm install --no-package-lock --no-audit --prefix ./ --no-progress', {
       cwd: __dirname, stdio: 'inherit', timeout: 60000
     });
     console.log('[INFO] Done installing dependencies for ${suiteName}@${displayVersion}');
+  });
 
-    const testBase = require('./test_base');
-    testBase.call(this, '${suiteName}', '${rawVersion}', ${isLatest}${mode ? `, '${mode}'` : ''});
-  } catch (err) {
-    it('should set up dependencies', function () {
-      throw err;
-    });
-  }
+  const testBase = require('./test_base');
+  testBase.call(this, '${suiteName}', '${rawVersion}', ${isLatest}${mode ? `, '${mode}'` : ''});
 });
 `;
 }
