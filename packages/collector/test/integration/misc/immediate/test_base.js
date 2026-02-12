@@ -5,20 +5,22 @@
 
 'use strict';
 
+const path = require('path');
 const { expect } = require('chai');
 const { spawn } = require('child_process');
 const _ = require('lodash');
-const portfinder = require('../test_util/portfinder');
+const portfinder = require('@_local/collector/test/test_util/portfinder');
 
 const config = require('@_local/core/test/config');
 const { delay, retry } = require('@_local/core/test/test_util');
-const ProcessControls = require('../test_util/ProcessControls');
-const globalAgent = require('../globalAgent');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
+const globalAgent = require('@_local/collector/test/globalAgent');
 
-const agentControls = globalAgent.instance;
-let controls;
+module.exports = function (name, version) {
+  const versionDir = path.join(__dirname, `_v${version}`);
+  const agentControls = globalAgent.instance;
+  let controls;
 
-describe('collector/src/immediate', function () {
   globalAgent.setUpCleanUpHooks();
 
   this.timeout(config.getTestTimeout());
@@ -28,9 +30,9 @@ describe('collector/src/immediate', function () {
       controls = new ProcessControls({
         useGlobalAgent: true,
         dirname: __dirname,
-        cwd: __dirname,
+        cwd: versionDir,
         env: {
-          NODE_OPTIONS: '--require ../../src/immediate'
+          NODE_OPTIONS: '--require @instana/collector/src/immediate'
         }
       });
 
@@ -50,7 +52,6 @@ describe('collector/src/immediate', function () {
     });
 
     it('should have connected to the agent', async () => {
-      // Make sure the npm process did not report to the agent even after waiting for that to happen.
       const pidsThatContactedTheAgent = await agentControls.getDiscoveries();
       expect(pidsThatContactedTheAgent[controls.getPid()]).to.exist;
     });
@@ -72,7 +73,7 @@ describe('collector/src/immediate', function () {
     it('should ignore npm but instrument the actual application', async () => {
       const appPort = portfinder();
       const env = _.assign({}, process.env, {
-        NODE_OPTIONS: '--require ../../src/immediate',
+        NODE_OPTIONS: '--require @instana/collector/src/immediate',
         INSTANA_AGENT_PORT: agentControls.agentPort,
         INSTANA_LOG_LEVEL: 'info',
         APP_PORT: appPort
@@ -82,7 +83,7 @@ describe('collector/src/immediate', function () {
       // application under test (as a child process of npm).
       npmProcess = spawn('npm', ['start'], {
         shell: true,
-        cwd: __dirname,
+        cwd: versionDir,
         stdio: config.getAppStdio(),
         env
       });
@@ -114,4 +115,4 @@ describe('collector/src/immediate', function () {
       expect(pidsThatContactedTheAgent[npmPid]).to.not.exist;
     });
   });
-});
+};

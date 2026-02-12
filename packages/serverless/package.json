@@ -68,7 +68,6 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@instana/core": "5.2.2",
     "https-proxy-agent": "^7.0.6"
   },
   "overrides": {
