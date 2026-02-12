@@ -157,14 +157,6 @@ CLAIMED=$(cat "$CLAIMED_FILE" 2>/dev/null || echo "")
 CLAIMED_COUNT=0
 PROCESSED=0
 
-# Count unclaimed prio tests (for dynamic quota calculation)
-UNCLAIMED_PRIO=0
-for pf in $PRIO_TESTS; do
-  if ! echo "$CLAIMED" | grep -qF "$pf"; then
-    UNCLAIMED_PRIO=$((UNCLAIMED_PRIO + 1))
-  fi
-done
-
 for test_file in $FINAL_LIST; do
   PROCESSED=$((PROCESSED + 1))
 
@@ -210,8 +202,8 @@ for test_file in $FINAL_LIST; do
         runner_count=$(eval echo "\${SIDECAR_RUNNER_COUNT_${sidecar_var}:-0}")
         if [ "$runner_count" -gt 0 ]; then
           usage=$(eval echo "\${MY_REQ_USAGE_${sidecar_var}:-0}")
-          # Dynamic quota based on remaining unclaimed prio tests
-          quota=$(( (UNCLAIMED_PRIO + runner_count - 1) / runner_count ))
+          req_total=$(eval echo "\${REQ_COUNTS_${sidecar_var}:-0}")
+          quota=$(( (req_total + runner_count - 1) / runner_count ))
           if [ "$quota" -lt 1 ]; then quota=1; fi
           if [ "$usage" -ge "$quota" ]; then
              QUOTA_EXCEEDED=true
@@ -232,11 +224,6 @@ for test_file in $FINAL_LIST; do
      eval "MY_REQ_USAGE_${req}=$((curr + 1))"
   done
 
-  # Track prio claims for dynamic quota
-  if [ $PROCESSED -le $PRIO_COUNT ]; then
-    UNCLAIMED_PRIO=$((UNCLAIMED_PRIO - 1))
-  fi
-  
   echo "$test_file" >> "$CLAIMED_FILE"
   echo "$test_file" >> "$OUTPUT_FILE"
   CLAIMED_COUNT=$((CLAIMED_COUNT + 1))
