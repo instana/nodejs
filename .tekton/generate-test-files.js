@@ -18,7 +18,7 @@ const sidecarGroups = {
 const collectorSidecarTasks = {
   redis: 20,
   kafka: 6,
-  postgres: 2,
+  postgres: 3,
   elasticsearch: 2,
   mongodb: 1,
   couchbase: 1,
