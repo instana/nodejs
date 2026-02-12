@@ -81,6 +81,10 @@ class ProcessControls {
     }
 
     if (!opts.appPath) {
+      if (process.env.RUN_ESM) {
+        this.noESMApp = true;
+      }
+
       opts.appPath = path.join(opts.dirname, opts.appName ? opts.appName : 'app.js');
     }
 
@@ -167,6 +171,8 @@ class ProcessControls {
   }
 
   async start(retryTime, until, skipWaitUntilServerIsUp = false) {
+    if (this.noESMApp) return;
+
     const that = this;
     this.receivedIpcMessages = [];
 
