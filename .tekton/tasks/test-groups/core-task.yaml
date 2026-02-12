@@ -125,15 +125,15 @@ spec:
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
             if [ "false" == "true" ]; then
-              npm run coverage-ci --npm_command="test:ci:core" --report_dir="core" --test_files="$CLAIMED_TESTS"
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run coverage-ci --npm_command="test:ci:core" --report_dir="core"
             else
-              npm run coverage-ci --npm_command="test:ci:core" --report_dir="core"
+              CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run coverage-ci --npm_command="test:ci:core" --report_dir="core"
             fi
           else
             if [ "false" == "true" ]; then
-              npx lerna run "false" --stream --scope="@instana/core" -- $CLAIMED_TESTS
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run "test:ci:core"
             else
-              npm run "test:ci:core"
+              CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run "test:ci:core"
             fi
           fi          
           if [ $? -eq 0 ]; then

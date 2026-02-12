@@ -125,15 +125,15 @@ spec:
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
             if [ "false" == "true" ]; then
-              npm run coverage-ci --npm_command="test:ci:serverless-collector" --report_dir="serverless-collector" --test_files="$CLAIMED_TESTS"
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run coverage-ci --npm_command="test:ci:serverless-collector" --report_dir="serverless-collector"
             else
-              npm run coverage-ci --npm_command="test:ci:serverless-collector" --report_dir="serverless-collector"
+              CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run coverage-ci --npm_command="test:ci:serverless-collector" --report_dir="serverless-collector"
             fi
           else
             if [ "false" == "true" ]; then
-              npx lerna run "false" --stream --scope="@instana/serverless-collector" -- $CLAIMED_TESTS
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run "test:ci:serverless-collector"
             else
-              npm run "test:ci:serverless-collector"
+              CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run "test:ci:serverless-collector"
             fi
           fi          
           if [ $? -eq 0 ]; then

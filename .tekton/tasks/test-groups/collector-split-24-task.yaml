@@ -158,15 +158,15 @@ spec:
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
             if [ "true" == "true" ]; then
-              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-split-24" --test_files="$CLAIMED_TESTS"
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="30" CI_TEST_SPLIT_CURRENT="24" npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-split-24"
             else
-              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-split-24"
+              CI_TEST_SPLIT="30" CI_TEST_SPLIT_CURRENT="24" npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-split-24"
             fi
           else
             if [ "true" == "true" ]; then
-              npx lerna run "test:ci" --stream --scope="@instana/collector" -- $CLAIMED_TESTS
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="30" CI_TEST_SPLIT_CURRENT="24" npm run "test:ci:collector"
             else
-              npm run "test:ci:collector"
+              CI_TEST_SPLIT="30" CI_TEST_SPLIT_CURRENT="24" npm run "test:ci:collector"
             fi
           fi          
           if [ $? -eq 0 ]; then

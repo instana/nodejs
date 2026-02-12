@@ -125,15 +125,15 @@ spec:
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
             if [ "false" == "true" ]; then
-              npm run coverage-ci --npm_command="test:ci:azure-container-services" --report_dir="azure-container-services" --test_files="$CLAIMED_TESTS"
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run coverage-ci --npm_command="test:ci:azure-container-services" --report_dir="azure-container-services"
             else
-              npm run coverage-ci --npm_command="test:ci:azure-container-services" --report_dir="azure-container-services"
+              CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run coverage-ci --npm_command="test:ci:azure-container-services" --report_dir="azure-container-services"
             fi
           else
             if [ "false" == "true" ]; then
-              npx lerna run "false" --stream --scope="@instana/azure-container-services" -- $CLAIMED_TESTS
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run "test:ci:azure-container-services"
             else
-              npm run "test:ci:azure-container-services"
+              CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run "test:ci:azure-container-services"
             fi
           fi          
           if [ $? -eq 0 ]; then

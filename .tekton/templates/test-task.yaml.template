@@ -138,15 +138,15 @@ spec:
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
             if [ "{{claimTests}}" == "true" ]; then
-              npm run coverage-ci --npm_command="{{groupName}}" --report_dir="{{sanitizedGroupName}}" --test_files="$CLAIMED_TESTS"
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="{{split}}" CI_TEST_SPLIT_CURRENT="{{splitNumber}}" npm run coverage-ci --npm_command="{{groupName}}" --report_dir="{{sanitizedGroupName}}"
             else
-              npm run coverage-ci --npm_command="{{groupName}}" --report_dir="{{sanitizedGroupName}}"
+              CI_TEST_SPLIT="{{split}}" CI_TEST_SPLIT_CURRENT="{{splitNumber}}" npm run coverage-ci --npm_command="{{groupName}}" --report_dir="{{sanitizedGroupName}}"
             fi
           else
             if [ "{{claimTests}}" == "true" ]; then
-              npx lerna run "{{subname}}" --stream --scope="{{scope}}" -- $CLAIMED_TESTS
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="{{split}}" CI_TEST_SPLIT_CURRENT="{{splitNumber}}" npm run "{{groupName}}"
             else
-              npm run "{{groupName}}"
+              CI_TEST_SPLIT="{{split}}" CI_TEST_SPLIT_CURRENT="{{splitNumber}}" npm run "{{groupName}}"
             fi
           fi          
 

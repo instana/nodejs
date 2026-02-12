@@ -125,15 +125,15 @@ spec:
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
             if [ "false" == "true" ]; then
-              npm run coverage-ci --npm_command="test:ci:aws-lambda" --report_dir="aws-lambda-split-5" --test_files="$CLAIMED_TESTS"
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="5" CI_TEST_SPLIT_CURRENT="5" npm run coverage-ci --npm_command="test:ci:aws-lambda" --report_dir="aws-lambda-split-5"
             else
-              npm run coverage-ci --npm_command="test:ci:aws-lambda" --report_dir="aws-lambda-split-5"
+              CI_TEST_SPLIT="5" CI_TEST_SPLIT_CURRENT="5" npm run coverage-ci --npm_command="test:ci:aws-lambda" --report_dir="aws-lambda-split-5"
             fi
           else
             if [ "false" == "true" ]; then
-              npx lerna run "test:ci" --stream --scope="@instana/aws-lambda" -- $CLAIMED_TESTS
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="5" CI_TEST_SPLIT_CURRENT="5" npm run "test:ci:aws-lambda"
             else
-              npm run "test:ci:aws-lambda"
+              CI_TEST_SPLIT="5" CI_TEST_SPLIT_CURRENT="5" npm run "test:ci:aws-lambda"
             fi
           fi          
           if [ $? -eq 0 ]; then

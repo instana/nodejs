@@ -125,15 +125,15 @@ spec:
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
             if [ "false" == "true" ]; then
-              npm run coverage-ci --npm_command="test:ci:shared-metrics" --report_dir="shared-metrics" --test_files="$CLAIMED_TESTS"
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run coverage-ci --npm_command="test:ci:shared-metrics" --report_dir="shared-metrics"
             else
-              npm run coverage-ci --npm_command="test:ci:shared-metrics" --report_dir="shared-metrics"
+              CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run coverage-ci --npm_command="test:ci:shared-metrics" --report_dir="shared-metrics"
             fi
           else
             if [ "false" == "true" ]; then
-              npx lerna run "false" --stream --scope="@instana/shared-metrics" -- $CLAIMED_TESTS
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run "test:ci:shared-metrics"
             else
-              npm run "test:ci:shared-metrics"
+              CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run "test:ci:shared-metrics"
             fi
           fi          
           if [ $? -eq 0 ]; then

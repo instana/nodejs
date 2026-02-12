@@ -125,15 +125,15 @@ spec:
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
             if [ "false" == "true" ]; then
-              npm run coverage-ci --npm_command="test:ci:opentelemetry-exporter" --report_dir="opentelemetry-exporter" --test_files="$CLAIMED_TESTS"
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run coverage-ci --npm_command="test:ci:opentelemetry-exporter" --report_dir="opentelemetry-exporter"
             else
-              npm run coverage-ci --npm_command="test:ci:opentelemetry-exporter" --report_dir="opentelemetry-exporter"
+              CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run coverage-ci --npm_command="test:ci:opentelemetry-exporter" --report_dir="opentelemetry-exporter"
             fi
           else
             if [ "false" == "true" ]; then
-              npx lerna run "false" --stream --scope="@instana/opentelemetry-exporter" -- $CLAIMED_TESTS
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run "test:ci:opentelemetry-exporter"
             else
-              npm run "test:ci:opentelemetry-exporter"
+              CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run "test:ci:opentelemetry-exporter"
             fi
           fi          
           if [ $? -eq 0 ]; then
