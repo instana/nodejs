@@ -51,10 +51,6 @@ class ProcessControls {
       opts.cwd = opts.dirname;
     }
 
-    if (!process.env.RUN_ESM && !opts.appPath) {
-      opts.appPath = path.join(opts.dirname, opts.appName ? opts.appName : 'app.js');
-    }
-
     if (process.env.RUN_ESM && !opts.execArgv) {
       const esmLoader = [
         `--import=${opts.esmLoaderPath ? opts.esmLoaderPath : path.join(opts.cwd, 'node_modules', '@instana', 'collector', 'esm-register.mjs')}`
@@ -82,6 +78,10 @@ class ProcessControls {
         // eslint-disable-next-line no-console
         console.log('Unable to load the target app.mjs', err);
       }
+    }
+
+    if (!opts.appPath) {
+      opts.appPath = path.join(opts.dirname, opts.appName ? opts.appName : 'app.js');
     }
 
     this.collectorUninitialized = opts.collectorUninitialized;
