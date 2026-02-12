@@ -20,11 +20,16 @@ const http = require('http');
 const morgan = require('morgan');
 const { gql } = require('graphql-tag');
 
-const { expressMiddleware } = require('@as-integrations/express5');
+let expressMiddleware;
+if (parseInt(process.env.LIBRARY_VERSION, 10) >= 5) {
+  ({ expressMiddleware } = require('@as-integrations/express5'));
+} else {
+  ({ expressMiddleware } = require('@apollo/server/express4'));
+}
 
 const port = require('@_instana/collector/test/test_util/app-port')();
 const app = express();
-const logPrefix = `Products Service (${process.pid}):\t`;
+const logPrefix = `Accounts Service (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
@@ -34,47 +39,43 @@ app.use(bodyParser.json());
 
 const typeDefs = gql`
   extend type Query {
-    topProducts(first: Int = 5): [Product]
+    me(withError: Boolean): User
   }
 
-  type Product @key(fields: "upc") {
-    upc: String!
+  type User @key(fields: "id") {
+    id: ID!
     name: String
-    price: Int
-    weight: Int
+    username: String
   }
 `;
 
-const products = [
+const users = [
   {
-    upc: '1',
-    name: 'Table',
-    price: 899,
-    weight: 100
+    id: '1',
+    name: 'Ada Lovelace',
+    birthDate: '1815-12-10',
+    username: '@ada'
   },
   {
-    upc: '2',
-    name: 'Couch',
-    price: 1299,
-    weight: 1000
-  },
-  {
-    upc: '3',
-    name: 'Chair',
-    price: 54,
-    weight: 50
+    id: '2',
+    name: 'Alan Turing',
+    birthDate: '1912-06-23',
+    username: '@complete'
   }
 ];
 
 const resolvers = {
-  Product: {
-    __resolveReference(object) {
-      return products.find(product => product.upc === object.upc);
+  Query: {
+    me(__, { withError }) {
+      if (withError) {
+        throw new Error('Deliberately throwing an error in account service.');
+      }
+      return users[0];
     }
   },
-  Query: {
-    topProducts(_, args) {
-      return products.slice(0, args.first);
+  User: {
+    __resolveReference(object) {
+      return users.find(user => user.id === object.id);
     }
   }
 };
@@ -94,6 +95,7 @@ app.get('/', (req, res) => {
 
 (async () => {
   await server.start();
+
   app.use('/graphql', expressMiddleware(server));
 
   const httpServer = http.createServer(app);

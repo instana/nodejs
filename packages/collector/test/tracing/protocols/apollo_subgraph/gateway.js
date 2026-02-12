@@ -10,7 +10,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../..')();
+require('@instana/collector')();
 
 const { ApolloServer } = require('@apollo/server');
 const { ApolloGateway, IntrospectAndCompose } = require('@apollo/gateway');
@@ -19,23 +19,14 @@ const express = require('express');
 const http = require('http');
 const morgan = require('morgan');
 
-// In Apollo Server v5, use @as-integrations/express5; otherwise, fall back to the built-in v4 middleware.
-const apolloServerVersion = process.env.APOLLO_SERVER_VERSION || 'latest';
-
-let expressMiddleware;
-
-if (apolloServerVersion === 'latest') {
-  ({ expressMiddleware } = require('@as-integrations/express5'));
-} else {
-  ({ expressMiddleware } = require('@apollo/server-v4/express4'));
-}
+const { expressMiddleware } = require('@as-integrations/express5');
 
 const accountsPort = process.env.SERVICE_PORT_ACCOUNTS;
 const inventoryPort = process.env.SERVICE_PORT_INVENTORY;
 const productsPort = process.env.SERVICE_PORT_PRODUCTS;
 const reviewsPort = process.env.SERVICE_PORT_REVIEWS;
 
-const port = require('../../../test_util/app-port')();
+const port = require('@_instana/collector/test/test_util/app-port')();
 const app = express();
 
 const logPrefix = `Apollo Subgraph Gateway (${process.pid}):\t`;

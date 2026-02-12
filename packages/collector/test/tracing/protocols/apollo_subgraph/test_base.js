@@ -4,143 +4,137 @@
 
 'use strict';
 
-const path = require('path');
 const { expect } = require('chai');
 
 const constants = require('@instana/core').tracing.constants;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../../../../core/test/config');
-const testUtils = require('../../../../../core/test/test_util');
-const ProcessControls = require('../../../test_util/ProcessControls');
-const globalAgent = require('../../../globalAgent');
+const config = require('@instana/core/test/config');
+const testUtils = require('@instana/core/test/test_util');
+const ProcessControls = require('@_instana/collector/test/test_util/ProcessControls');
+const globalAgent = require('@_instana/collector/test/globalAgent');
 
 const agentControls = globalAgent.instance;
 
-['latest', 'v4'].forEach(version => {
-  let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+module.exports = function (name, version, isLatest) {
+  this.timeout(config.getTestTimeout() * 5);
+  globalAgent.setUpCleanUpHooks();
 
-  // Apollo Server 5 supports Node.js v20.0.0 and later.
-  if (version === 'latest' && process.versions.node < '20.0.0') {
-    mochaSuiteFn = describe.skip;
-  }
-  mochaSuiteFn(`tracing gateway with apollo-subgraph, using @apollo-server ${version}`, function () {
-    this.timeout(config.getTestTimeout() * 5);
-    globalAgent.setUpCleanUpHooks();
+  [true, false].forEach(withError => {
+    describe(`queries (with error: ${withError})`, function () {
+      let accountServiceControls;
+      let inventoryServiceControls;
+      let productsServiceControls;
+      let reviewsServiceControls;
+      let gatewayControls;
+      let clientControls;
 
-    [true, false].forEach(withError => {
-      describe(`queries (with error: ${withError})`, function () {
-        let accountServiceControls;
-        let inventoryServiceControls;
-        let productsServiceControls;
-        let reviewsServiceControls;
-        let gatewayControls;
-        let clientControls;
+      before(async () => {
+        const commonEnv = {
+          LIBRARY_LATEST: isLatest,
+          LIBRARY_VERSION: version,
+          LIBRARY_NAME: name
+        };
 
-        before(async () => {
-          accountServiceControls = new ProcessControls({
-            appPath: path.join(__dirname, 'services', 'accounts'),
-            useGlobalAgent: true,
-            env: {
-              APOLLO_SERVER_VERSION: version
-            }
-          });
-          inventoryServiceControls = new ProcessControls({
-            appPath: path.join(__dirname, 'services', 'inventory'),
-            useGlobalAgent: true,
-            env: {
-              APOLLO_SERVER_VERSION: version
-            }
-          });
-          productsServiceControls = new ProcessControls({
-            appPath: path.join(__dirname, 'services', 'products'),
-            useGlobalAgent: true,
-            env: {
-              APOLLO_SERVER_VERSION: version
-            }
-          });
-          reviewsServiceControls = new ProcessControls({
-            appPath: path.join(__dirname, 'services', 'reviews'),
-            useGlobalAgent: true,
-            env: {
-              APOLLO_SERVER_VERSION: version
-            }
-          });
-          gatewayControls = new ProcessControls({
-            appPath: path.join(__dirname, 'gateway'),
-            useGlobalAgent: true,
-            env: {
-              SERVICE_PORT_ACCOUNTS: accountServiceControls.getPort(),
-              SERVICE_PORT_INVENTORY: inventoryServiceControls.getPort(),
-              SERVICE_PORT_PRODUCTS: productsServiceControls.getPort(),
-              SERVICE_PORT_REVIEWS: reviewsServiceControls.getPort(),
-              APOLLO_SERVER_VERSION: version
-            }
-          });
-          clientControls = new ProcessControls({
-            appPath: path.join(__dirname, 'client'),
-            useGlobalAgent: true,
-            env: {
-              SERVER_PORT: gatewayControls.getPort(),
-              APOLLO_SERVER_VERSION: version
-            }
-          });
-
-          await accountServiceControls.startAndWaitForAgentConnection();
-          await inventoryServiceControls.startAndWaitForAgentConnection();
-          await productsServiceControls.startAndWaitForAgentConnection();
-          await reviewsServiceControls.startAndWaitForAgentConnection();
-          await gatewayControls.startAndWaitForAgentConnection();
-          await clientControls.startAndWaitForAgentConnection();
+        accountServiceControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'services/accounts/index.js',
+          useGlobalAgent: true,
+          env: commonEnv
+        });
+        inventoryServiceControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'services/inventory/index.js',
+          useGlobalAgent: true,
+          env: commonEnv
+        });
+        productsServiceControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'services/products/index.js',
+          useGlobalAgent: true,
+          env: commonEnv
+        });
+        reviewsServiceControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'services/reviews/index.js',
+          useGlobalAgent: true,
+          env: commonEnv
+        });
+        gatewayControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'gateway.js',
+          useGlobalAgent: true,
+          env: {
+            ...commonEnv,
+            SERVICE_PORT_ACCOUNTS: accountServiceControls.getPort(),
+            SERVICE_PORT_INVENTORY: inventoryServiceControls.getPort(),
+            SERVICE_PORT_PRODUCTS: productsServiceControls.getPort(),
+            SERVICE_PORT_REVIEWS: reviewsServiceControls.getPort()
+          }
+        });
+        clientControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'client.js',
+          useGlobalAgent: true,
+          env: {
+            ...commonEnv,
+            SERVER_PORT: gatewayControls.getPort()
+          }
         });
 
-        beforeEach(async () => {
-          await agentControls.clearReceivedTraceData();
-        });
+        await accountServiceControls.startAndWaitForAgentConnection();
+        await inventoryServiceControls.startAndWaitForAgentConnection();
+        await productsServiceControls.startAndWaitForAgentConnection();
+        await reviewsServiceControls.startAndWaitForAgentConnection();
+        await gatewayControls.startAndWaitForAgentConnection();
+        await clientControls.startAndWaitForAgentConnection();
+      });
 
-        after(async () => {
-          await accountServiceControls.stop();
-          await inventoryServiceControls.stop();
-          await productsServiceControls.stop();
-          await reviewsServiceControls.stop();
-          await gatewayControls.stop();
-          await clientControls.stop();
-        });
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
 
-        it(`must trace a query (with error: ${withError})`, () => {
-          const queryParams = withError ? 'withError=yes' : null;
-          const url = queryParams ? `/query?${queryParams}` : '/query';
+      after(async () => {
+        await accountServiceControls.stop();
+        await inventoryServiceControls.stop();
+        await productsServiceControls.stop();
+        await reviewsServiceControls.stop();
+        await gatewayControls.stop();
+        await clientControls.stop();
+      });
 
-          return clientControls
-            .sendRequest({
-              method: 'POST',
-              path: url
-            })
-            .then(response => {
-              verifyQueryResponse(response, { withError });
+      it(`must trace a query (with error: ${withError})`, () => {
+        const queryParams = withError ? 'withError=yes' : null;
+        const url = queryParams ? `/query?${queryParams}` : '/query';
 
-              return testUtils.retry(() => {
-                return agentControls.getSpans().then(spans => {
-                  if (withError) {
-                    expect(spans.length).to.equal(5);
-                  } else {
-                    expect(spans.length).to.equal(11);
-                  }
-                  return verifySpansForQuery(
-                    {
-                      gatewayControls,
-                      clientControls,
-                      inventoryServiceControls,
-                      accountServiceControls,
-                      reviewsServiceControls,
-                      productsServiceControls
-                    },
-                    { withError },
-                    spans
-                  );
-                });
+        return clientControls
+          .sendRequest({
+            method: 'POST',
+            path: url
+          })
+          .then(response => {
+            verifyQueryResponse(response, { withError });
+
+            return testUtils.retry(() => {
+              return agentControls.getSpans().then(spans => {
+                if (withError) {
+                  expect(spans.length).to.equal(5);
+                } else {
+                  expect(spans.length).to.equal(11);
+                }
+                return verifySpansForQuery(
+                  {
+                    gatewayControls,
+                    clientControls,
+                    inventoryServiceControls,
+                    accountServiceControls,
+                    reviewsServiceControls,
+                    productsServiceControls
+                  },
+                  { withError },
+                  spans
+                );
               });
             });
-        });
+          });
       });
     });
   });
@@ -187,8 +181,6 @@ const agentControls = globalAgent.instance;
     );
     const graphQLQueryEntryInGateway = verifyGraphQLGatewayEntry(httpExitFromClientApp, allControls, testConfig, spans);
 
-    // The gateway sends a GraphQL request to each service, thus there There are four HTTP exits from the
-    // gateway and four corresponding GraphQL entries - one for each service involved.
     const httpExitFromGatewayToAccounts = verifyHttpExit(
       graphQLQueryEntryInGateway,
       gatewayControls,
@@ -198,9 +190,6 @@ const agentControls = globalAgent.instance;
 
     verifyGraphQLAccountEntry(httpExitFromGatewayToAccounts, allControls, testConfig, spans);
 
-    // In the error test we throw an error in the accounts service. The gateway then aborts processing this GraphQL
-    // query and never talks to the other services. Thus, the remaining GraphQL communication only happens in the
-    // non-error test case.
     if (!withError) {
       const httpExitFromGatewayToInventory = verifyHttpExit(
         graphQLQueryEntryInGateway,
@@ -227,7 +216,6 @@ const agentControls = globalAgent.instance;
       verifyGraphQLReviewsEntry(httpExitFromGatewayToReviews, allControls, testConfig, spans);
     }
 
-    // Verify there are no unexpected extraneous GraphQL spans:
     const allGraphQLSpans = spans
       .filter(s => s.n === 'graphql.server')
       .filter(s => !['GetServiceDefinition', 'IntrospectionQuery'].includes(s.data.graphql.operationName))
@@ -277,7 +265,6 @@ const agentControls = globalAgent.instance;
     const entrySpans = spans.filter(span => span.k === 1 && span.n === 'graphql.server');
     return testUtils.expectAtLeastOneMatching(entrySpans, span => {
       verifyGraphQLQueryEntry(span, parentSpan, gatewayControls, testConfig);
-      // excludes 'GetServiceDefinition' or 'IntrospectionQuery' queries
       expect(span.data.graphql.operationName).to.not.exist;
       expect(span.data.graphql.fields.me).to.deep.equal(['__typename', 'id', 'username']);
       expect(span.data.graphql.args.me).to.deep.equal(['withError']);
@@ -288,7 +275,6 @@ const agentControls = globalAgent.instance;
     const { accountServiceControls } = allControls;
     return testUtils.expectAtLeastOneMatching(spans, span => {
       verifyGraphQLQueryEntry(span, parentSpan, accountServiceControls, testConfig);
-      // excludes 'GetServiceDefinition' or 'IntrospectionQuery' queries
       expect(span.data.graphql.operationName).to.not.exist;
       expect(span.data.graphql.fields.me).to.deep.equal(['__typename', 'id', 'username']);
       expect(span.data.graphql.args.me).to.deep.equal(['withError']);
@@ -299,7 +285,6 @@ const agentControls = globalAgent.instance;
     const { inventoryServiceControls } = allControls;
     return testUtils.expectAtLeastOneMatching(spans, span => {
       verifyGraphQLQueryEntry(span, parentSpan, inventoryServiceControls, testConfig);
-      // excludes 'GetServiceDefinition' or 'IntrospectionQuery' queries
       expect(span.data.graphql.operationName).to.not.exist;
       expect(span.data.graphql.fields._entities).to.deep.equal([]);
       expect(span.data.graphql.args._entities).to.deep.equal(['representations']);
@@ -310,7 +295,6 @@ const agentControls = globalAgent.instance;
     const { productsServiceControls } = allControls;
     return testUtils.expectAtLeastOneMatching(spans, span => {
       verifyGraphQLQueryEntry(span, parentSpan, productsServiceControls, testConfig);
-      // excludes 'GetServiceDefinition' or 'IntrospectionQuery' queries
       expect(span.data.graphql.operationName).to.not.exist;
       expect(span.data.graphql.fields._entities).to.deep.equal([]);
       expect(span.data.graphql.args._entities).to.deep.equal(['representations']);
@@ -321,7 +305,6 @@ const agentControls = globalAgent.instance;
     const { reviewsServiceControls } = allControls;
     return testUtils.expectAtLeastOneMatching(spans, span => {
       verifyGraphQLQueryEntry(span, parentSpan, reviewsServiceControls, testConfig);
-      // excludes 'GetServiceDefinition' or 'IntrospectionQuery' queries
       expect(span.data.graphql.operationName).to.not.exist;
       expect(span.data.graphql.fields._entities).to.deep.equal([]);
       expect(span.data.graphql.args._entities).to.deep.equal(['representations']);
@@ -349,4 +332,4 @@ const agentControls = globalAgent.instance;
       expect(span.data.graphql.errors).to.not.exist;
     }
   }
-});
+};

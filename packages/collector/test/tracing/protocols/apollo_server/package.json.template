@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "@apollo/subgraph": "latest",
+    "@apollo/gateway": "latest",
+    "@as-integrations/express5": "latest"
+  }
+}

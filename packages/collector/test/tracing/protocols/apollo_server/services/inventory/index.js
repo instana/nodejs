@@ -20,61 +20,49 @@ const http = require('http');
 const morgan = require('morgan');
 const { gql } = require('graphql-tag');
 
-const { expressMiddleware } = require('@as-integrations/express5');
+let expressMiddleware;
+if (parseInt(process.env.LIBRARY_VERSION, 10) >= 5) {
+  ({ expressMiddleware } = require('@as-integrations/express5'));
+} else {
+  ({ expressMiddleware } = require('@apollo/server/express4'));
+}
 
 const port = require('@_instana/collector/test/test_util/app-port')();
 const app = express();
-const logPrefix = `Products Service (${process.pid}):\t`;
+const logPrefix = `Inventory Service (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
 }
-
 app.use(bodyParser.json());
 
 const typeDefs = gql`
-  extend type Query {
-    topProducts(first: Int = 5): [Product]
-  }
-
-  type Product @key(fields: "upc") {
-    upc: String!
-    name: String
-    price: Int
-    weight: Int
+  extend type Product @key(fields: "upc") {
+    upc: String! @external
+    weight: Int @external
+    price: Int @external
+    inStock: Boolean
+    shippingEstimate: Int @requires(fields: "price weight")
   }
 `;
 
-const products = [
-  {
-    upc: '1',
-    name: 'Table',
-    price: 899,
-    weight: 100
-  },
-  {
-    upc: '2',
-    name: 'Couch',
-    price: 1299,
-    weight: 1000
-  },
-  {
-    upc: '3',
-    name: 'Chair',
-    price: 54,
-    weight: 50
-  }
+const inventory = [
+  { upc: '1', inStock: true },
+  { upc: '2', inStock: false },
+  { upc: '3', inStock: true }
 ];
 
 const resolvers = {
   Product: {
     __resolveReference(object) {
-      return products.find(product => product.upc === object.upc);
-    }
-  },
-  Query: {
-    topProducts(_, args) {
-      return products.slice(0, args.first);
+      return {
+        ...object,
+        ...inventory.find(product => product.upc === object.upc)
+      };
+    },
+    shippingEstimate(object) {
+      if (object.price > 1000) return 0;
+      return object.weight * 0.5;
     }
   }
 };
@@ -94,6 +82,7 @@ app.get('/', (req, res) => {
 
 (async () => {
   await server.start();
+
   app.use('/graphql', expressMiddleware(server));
 
   const httpServer = http.createServer(app);

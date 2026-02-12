@@ -14,7 +14,12 @@ const http = require('http');
 const morgan = require('morgan');
 const { gql } = require('graphql-tag');
 
-const { expressMiddleware } = require('@as-integrations/express5');
+let expressMiddleware;
+if (parseInt(process.env.LIBRARY_VERSION, 10) >= 5) {
+  ({ expressMiddleware } = require('@as-integrations/express5'));
+} else {
+  ({ expressMiddleware } = require('@apollo/server/express4'));
+}
 
 const port = require('@_instana/collector/test/test_util/app-port')();
 const app = express();
@@ -51,30 +56,10 @@ const usernames = [
   { id: '2', username: '@complete' }
 ];
 const reviews = [
-  {
-    id: '1',
-    authorID: '1',
-    product: { upc: '1' },
-    body: 'Love it!'
-  },
-  {
-    id: '2',
-    authorID: '1',
-    product: { upc: '2' },
-    body: 'Too expensive.'
-  },
-  {
-    id: '3',
-    authorID: '2',
-    product: { upc: '3' },
-    body: 'Could be better.'
-  },
-  {
-    id: '4',
-    authorID: '2',
-    product: { upc: '1' },
-    body: 'Prefer something else.'
-  }
+  { id: '1', authorID: '1', product: { upc: '1' }, body: 'Love it!' },
+  { id: '2', authorID: '1', product: { upc: '2' }, body: 'Too expensive.' },
+  { id: '3', authorID: '2', product: { upc: '3' }, body: 'Could be better.' },
+  { id: '4', authorID: '2', product: { upc: '1' }, body: 'Prefer something else.' }
 ];
 
 const resolvers = {

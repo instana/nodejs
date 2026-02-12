@@ -22,7 +22,7 @@ const serverGraphQLEndpoint = `${serverBaseUrl}/graphql`;
 
 const app = express();
 const port = require('@_instana/collector/test/test_util/app-port')();
-const logPrefix = `Apollo Subgraph Client (${process.pid}):\t`;
+const logPrefix = `Apollo Server Client (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));

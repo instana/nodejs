@@ -13,18 +13,28 @@ process.on('SIGTERM', () => {
 require('@instana/collector')();
 
 const { ApolloServer } = require('@apollo/server');
-const { buildSubgraphSchema } = require('@apollo/subgraph');
+const { ApolloGateway, IntrospectAndCompose } = require('@apollo/gateway');
 const bodyParser = require('body-parser');
 const express = require('express');
 const http = require('http');
 const morgan = require('morgan');
-const { gql } = require('graphql-tag');
 
-const { expressMiddleware } = require('@as-integrations/express5');
+let expressMiddleware;
+if (parseInt(process.env.LIBRARY_VERSION, 10) >= 5) {
+  ({ expressMiddleware } = require('@as-integrations/express5'));
+} else {
+  ({ expressMiddleware } = require('@apollo/server/express4'));
+}
+
+const accountsPort = process.env.SERVICE_PORT_ACCOUNTS;
+const inventoryPort = process.env.SERVICE_PORT_INVENTORY;
+const productsPort = process.env.SERVICE_PORT_PRODUCTS;
+const reviewsPort = process.env.SERVICE_PORT_REVIEWS;
 
 const port = require('@_instana/collector/test/test_util/app-port')();
 const app = express();
-const logPrefix = `Products Service (${process.pid}):\t`;
+
+const logPrefix = `Apollo Server Gateway (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
@@ -32,60 +42,15 @@ if (process.env.WITH_STDOUT) {
 
 app.use(bodyParser.json());
 
-const typeDefs = gql`
-  extend type Query {
-    topProducts(first: Int = 5): [Product]
-  }
-
-  type Product @key(fields: "upc") {
-    upc: String!
-    name: String
-    price: Int
-    weight: Int
-  }
-`;
-
-const products = [
-  {
-    upc: '1',
-    name: 'Table',
-    price: 899,
-    weight: 100
-  },
-  {
-    upc: '2',
-    name: 'Couch',
-    price: 1299,
-    weight: 1000
-  },
-  {
-    upc: '3',
-    name: 'Chair',
-    price: 54,
-    weight: 50
-  }
-];
-
-const resolvers = {
-  Product: {
-    __resolveReference(object) {
-      return products.find(product => product.upc === object.upc);
-    }
-  },
-  Query: {
-    topProducts(_, args) {
-      return products.slice(0, args.first);
-    }
-  }
-};
-
-const server = new ApolloServer({
-  schema: buildSubgraphSchema([
-    {
-      typeDefs,
-      resolvers
-    }
-  ])
+const gateway = new ApolloGateway({
+  supergraphSdl: new IntrospectAndCompose({
+    subgraphs: [
+      { name: 'accounts', url: `http://localhost:${accountsPort}/graphql` },
+      { name: 'inventory', url: `http://localhost:${inventoryPort}/graphql` },
+      { name: 'products', url: `http://localhost:${productsPort}/graphql` },
+      { name: 'reviews', url: `http://localhost:${reviewsPort}/graphql` }
+    ]
+  })
 });
 
 app.get('/', (req, res) => {
@@ -93,7 +58,12 @@ app.get('/', (req, res) => {
 });
 
 (async () => {
+  const server = new ApolloServer({
+    gateway
+  });
+
   await server.start();
+
   app.use('/graphql', expressMiddleware(server));
 
   const httpServer = http.createServer(app);

@@ -20,7 +20,12 @@ const http = require('http');
 const morgan = require('morgan');
 const { gql } = require('graphql-tag');
 
-const { expressMiddleware } = require('@as-integrations/express5');
+let expressMiddleware;
+if (parseInt(process.env.LIBRARY_VERSION, 10) >= 5) {
+  ({ expressMiddleware } = require('@as-integrations/express5'));
+} else {
+  ({ expressMiddleware } = require('@apollo/server/express4'));
+}
 
 const port = require('@_instana/collector/test/test_util/app-port')();
 const app = express();
@@ -46,24 +51,9 @@ const typeDefs = gql`
 `;
 
 const products = [
-  {
-    upc: '1',
-    name: 'Table',
-    price: 899,
-    weight: 100
-  },
-  {
-    upc: '2',
-    name: 'Couch',
-    price: 1299,
-    weight: 1000
-  },
-  {
-    upc: '3',
-    name: 'Chair',
-    price: 54,
-    weight: 50
-  }
+  { upc: '1', name: 'Table', price: 899, weight: 100 },
+  { upc: '2', name: 'Couch', price: 1299, weight: 1000 },
+  { upc: '3', name: 'Chair', price: 54, weight: 50 }
 ];
 
 const resolvers = {

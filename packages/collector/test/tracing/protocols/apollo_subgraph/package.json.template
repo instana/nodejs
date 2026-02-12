@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@apollo/gateway": "latest",
+    "@as-integrations/express5": "latest"
+  }
+}
