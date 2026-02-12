@@ -76,11 +76,25 @@ class AgentStubControls {
     await this.waitUntilAgentHasStarted();
   }
 
-  stopAgent() {
-    this.agentStub.kill();
+  async stopAgent() {
+    const pid = this.agentStub.pid;
 
-    // eslint-disable-next-line no-console
-    console.log(`[AgentStubControls] Stopped agent stub with pid ${this.agentStub.pid}`);
+    return new Promise(resolve => {
+      if (this.agentStub.exitCode !== null) {
+        // eslint-disable-next-line no-console
+        console.log(`[AgentStubControls] Agent stub ${pid} already exited.`);
+        resolve();
+        return;
+      }
+
+      this.agentStub.once('exit', () => {
+        // eslint-disable-next-line no-console
+        console.log(`[AgentStubControls] Stopped agent stub with pid ${pid}`);
+        resolve();
+      });
+
+      this.agentStub.kill();
+    });
   }
 
   getPort() {
@@ -105,7 +119,8 @@ class AgentStubControls {
       console.log(`[AgentStubControls] started with pid ${this.agentStub.pid}`);
     } catch (err) {
       // eslint-disable-next-line no-console
-      console.log(`agentStubControls: error waiting until server (${url}) is up: ${err.message}`);
+      console.error(`agentStubControls: error waiting until server (${url}) is up: ${err.message}`);
+      throw err;
     }
   }
 

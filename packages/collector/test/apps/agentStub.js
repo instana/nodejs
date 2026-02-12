@@ -54,8 +54,6 @@ let rejectAnnounceAttempts = 0;
 let requests = {};
 let receivedData = resetReceivedData();
 
-logger.info('Agent stub listening on port: %s', port);
-
 // We usually do not activate morgan in the agent stub because it creates a lot of noise with little benefit. Activate
 // it on demand if required.
 // if (process.env.WITH_STDOUT) {
