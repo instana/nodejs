@@ -75,6 +75,7 @@
   },
   "devDependencies": {
     "@aws-sdk/client-kms": "3.985.0",
-    "@aws-sdk/client-ssm": "3.985.0"
+    "@aws-sdk/client-ssm": "3.985.0",
+    "pino": "10.3.0"
   }
 }
