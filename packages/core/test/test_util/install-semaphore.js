@@ -10,12 +10,16 @@ const path = require('path');
 // Semaphore dir in the workspace root (shared across CI containers via PVC)
 const rootDir = path.resolve(__dirname, '..', '..', '..', '..');
 const SEMAPHORE_DIR = path.join(rootDir, '.npm-install-semaphore');
-const MAX_CONCURRENT = parseInt(process.env.NPM_INSTALL_CONCURRENCY, 10) || 10;
+const MAX_CONCURRENT = 6;
 const MAX_WAIT = 10 * 60 * 1000;
 const STALE_TIMEOUT = 10 * 60 * 1000;
 
 function tryUnlink(file) {
-  try { fs.unlinkSync(file); } catch (e) { /* already removed */ }
+  try {
+    fs.unlinkSync(file);
+  } catch (e) {
+    /* already removed */
+  }
 }
 
 /**

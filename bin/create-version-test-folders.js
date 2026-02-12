@@ -90,7 +90,15 @@ function cleanVersionDirs(testDir) {
 }
 
 function generateTestWrapper({
-  suiteName, displayVersion, rawVersion, isLatest, esmOnly, mode, sourceDepth, nodeConstraint, isOptional
+  suiteName,
+  displayVersion,
+  rawVersion,
+  isLatest,
+  esmOnly,
+  mode,
+  sourceDepth,
+  nodeConstraint,
+  isOptional
 }) {
   const currentYear = new Date().getFullYear();
   const relSourcePath = sourceDepth === 2 ? '../..' : '..';
@@ -151,16 +159,16 @@ ${
 `
     : ''
 }${
-  nodeConstraint
-    ? `// eslint-disable-next-line global-require
+    nodeConstraint
+      ? `// eslint-disable-next-line global-require
 if (!require('semver').satisfies(process.versions.node, '${nodeConstraint}')) {
   it.skip('tracing/${suiteName}@${displayVersion} skipped (requires node ${nodeConstraint})');
   return;
 }
 
 `
-    : ''
-}function log(msg) { console.log(\`[\${new Date().toISOString()}] \${msg}\`); }
+      : ''
+  }function log(msg) { console.log(\`[\${new Date().toISOString()}] \${msg}\`); }
 
 const esmPrefix = process.env.RUN_ESM ? '[ESM] ' : '';
 const ts = new Date().toISOString();
@@ -177,7 +185,7 @@ mochaSuiteFn(suiteTitle, function () {
 
   before(async function () {
     const installTimeout = config.getNPMInstallTimeout();
-    const maxRetries = 3;
+    const maxRetries = 4;
     const semaphoreWait = process.env.CI ? 10 * 60 * 1000 : 0;
     this.timeout(8 * 60 * 1000 + semaphoreWait);
 
@@ -185,7 +193,7 @@ mochaSuiteFn(suiteTitle, function () {
     const slot = process.env.CI ? await installSemaphore.acquireSlot(log) : undefined;
     if (slot !== undefined) log(\`[INFO] Acquired install slot \${slot}\`);
     try {
-      fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true, maxRetries: 3 });
+      fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true, maxRetries });
 
       // eslint-disable-next-line global-require,import/no-dynamic-require
       const preinstalledMod = require('@_local/collector/test/test_util/preinstalled-node-modules');
@@ -197,13 +205,13 @@ mochaSuiteFn(suiteTitle, function () {
         const timeout = (60 + attempt * 30) * 1000;
         try {
           execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });${
-    isOptional
-      ? `
+            isOptional
+              ? `
           if (!fs.existsSync(path.join(__dirname, 'node_modules', '${suiteName}'))) {
             throw new Error('${suiteName} not found after install');
           }`
-      : ''
-  }
+              : ''
+          }
           break;
         } catch (err) {
           if (attempt === maxRetries) throw err;

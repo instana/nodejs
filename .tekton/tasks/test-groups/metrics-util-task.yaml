@@ -84,7 +84,6 @@ spec:
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
         fi
-        npm config set registry http://registry.npmjs.org
         if [ -n "$(params.revision)" ]; then
           CIRCLE_COMPARE_URL="$(params.repository)/compare/$BASE_REVISION..$(params.revision)"
           # MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
