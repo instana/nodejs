@@ -6,9 +6,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
-
-const ENV_PREFIX = 'INSTANA_CONNECT_';
 
 const sidecarGroups = {
   redis: ['redis', 'redis-slave', 'redis-sentinel'],
@@ -16,124 +13,26 @@ const sidecarGroups = {
   nats: ['nats', 'nats-streaming', 'nats-streaming-2']
 };
 
-/**
- * Scan collector test files to count how many tests need each sidecar.
- * Uses the same INSTANA_CONNECT_* detection as claim-tests.sh.
- */
-function countTestsPerSidecar(packageName) {
-  const hostsConfig = require(path.join(__dirname, '..', 'hosts_config.json'));
-  const knownEnvVars = new Set(Object.keys(hostsConfig));
-
-  const sidecarsJson = require(path.join(__dirname, 'assets', 'sidecars.json'));
-  const validSidecars = new Set(Object.keys(sidecarGroups));
-  for (const sc of sidecarsJson.sidecars) {
-    if (!Object.values(sidecarGroups).some(g => g.includes(sc.name))) {
-      validSidecars.add(sc.name);
-    }
-  }
-
-  const packageDir = path.join(__dirname, '..', 'packages', packageName);
-  let allTests;
-  try {
-    const raw = execSync(
-      'find . -path "*/test/**" -name "*.test.js"' +
-      ' -not -path "*/node_modules/*" -not -path "*/long_*/*"',
-      { cwd: packageDir, encoding: 'utf8' }
-    );
-    allTests = raw.trim().split('\n').filter(Boolean);
-  } catch (e) {
-    console.warn('Warning: could not scan test files, using empty counts');
-    return {};
-  }
-
-  // Same filter as claim-tests.sh: _v* dirs only accept *.test.js (flat or mode subdir)
-  const filtered = allTests.filter(f => {
-    if (!/_v[0-9]/.test(f)) return true;
-    return /\/_v[^/]+\/([^/]+\/)?[^/]+\.test\.js$/.test(f);
-  });
-
-  const counts = {};
-  const contentWeightCache = new Map();
-
-  // Content weight per scanDir: test_base.js size with superlinear scaling (KB^1.5)
-  // Longer tests are disproportionally heavier (more setup/teardown cycles, retries, I/O waits)
-  function getContentWeight(scanDir) {
-    if (contentWeightCache.has(scanDir)) return contentWeightCache.get(scanDir);
-    let totalBytes = 0;
-    try {
-      const testBase = path.join(scanDir, 'test_base.js');
-      if (fs.existsSync(testBase)) {
-        totalBytes = fs.statSync(testBase).size;
-      }
-    } catch (_) {}
-    const kb = totalBytes / 1024;
-    const weight = Math.max(1, Math.round(Math.pow(kb, 1.5)));
-    contentWeightCache.set(scanDir, weight);
-    return weight;
-  }
-
-  let totalWeight = 0;
-
-  for (const testFile of filtered) {
-    const testDir = path.dirname(path.join(packageDir, testFile));
-    // Navigate up to the test package dir (past _v* and optional mode subdir)
-    let scanDir = testDir;
-    if (/_v[^/\\]*$/.test(scanDir)) {
-      scanDir = path.dirname(scanDir);
-    } else if (/_v[^/\\]*$/.test(path.dirname(scanDir))) {
-      scanDir = path.dirname(path.dirname(scanDir));
-    }
-
-    const weight = getContentWeight(scanDir);
-    totalWeight += weight;
-
-    let grepResult = '';
-    try {
-      grepResult = execSync(
-        'find -L . -maxdepth 1 \\( -name "*.js" -o -name "*.mjs" \\)' +
-        ` -exec grep -h -o "${ENV_PREFIX}[A-Z0-9_]*" {} + 2>/dev/null`,
-        { cwd: scanDir, encoding: 'utf8' }
-      );
-    } catch (e) {
-      // no matches
-    }
-
-    const envVars = [...new Set(grepResult.trim().split('\n').filter(Boolean))];
-    const sidecars = new Set();
-
-    for (const envVar of envVars) {
-      if (knownEnvVars.has(envVar)) {
-        const sidecar = envVar.replace(ENV_PREFIX, '').split('_')[0].toLowerCase();
-        if (validSidecars.has(sidecar)) {
-          sidecars.add(sidecar);
-        }
-      }
-    }
-
-    for (const s of sidecars) {
-      counts[s] = (counts[s] || 0) + weight;
-    }
-  }
-
-  const sidecarTestCount = Object.values(counts).reduce((a, b) => a + b, 0);
-
-  console.log('\nAuto-detected sidecar weights (content-weighted, KB):');
-  for (const [name, count] of Object.entries(counts).sort((a, b) => b[1] - a[1])) {
-    console.log(`  ${name}: ${count}`);
-  }
-  console.log(`  (generic tests without sidecars: ${totalWeight - sidecarTestCount})`);
-  console.log(`  (total weight: ${totalWeight}, files: ${filtered.length})`);
-
-  return { counts, totalTests: totalWeight };
-}
-
-const collectorSidecarData = countTestsPerSidecar('collector');
+// Static configuration: number of CI tasks per sidecar type.
+// Adjust these numbers to control parallelism for each sidecar.
+const collectorSidecarTasks = {
+  redis: 20,
+  kafka: 6,
+  postgres: 2,
+  elasticsearch: 2,
+  mongodb: 1,
+  couchbase: 1,
+  rabbitmq: 1,
+  nats: 1,
+  mysql: 1,
+  localstack: 1,
+  memcached: 1,
+  oracledb: 1
+};
 
 const packages = {
   'test:ci:collector': {
-    splits: 40,
-    sidecars: collectorSidecarData.counts,
-    totalTests: collectorSidecarData.totalTests
+    sidecarTasks: collectorSidecarTasks
   },
 
   'test:ci:autoprofile': {},
@@ -160,7 +59,7 @@ function generateScope(groupName) {
 }
 
 function generateSubname(groupName, config) {
-  if (config.sidecars && typeof config.sidecars === 'object' && !Array.isArray(config.sidecars)) {
+  if (config.sidecarTasks) {
     return 'test:ci';
   }
   if (config.split) {
@@ -189,90 +88,20 @@ function expandSidecar(name) {
 }
 
 /**
- * Calculate total weight for a list of sidecars
+ * Build task list from static sidecar configuration.
  */
-function calculateWeight(sidecars) {
-  return sidecars.reduce((sum, s) => sum + (sidecarWeights[s] || 1), 0);
-}
+function buildTasksFromConfig(sidecarTasks) {
+  const tasks = [];
+  let index = 1;
 
-/**
- * Distribute sidecars across N tasks based on how many tasks each sidecar actually needs.
- * quota = totalTests / numTasks (how many tests each task handles)
- * replicas per sidecar = ceil(testCount / quota) (minimum tasks needed to cover all tests)
- * Remaining tasks go to the heaviest sidecars.
- */
-function distributeSidecars(sidecarConfig, numTasks, totalTests) {
-  const quota = totalTests / numTasks;
-  const sidecarData = [];
-
-  for (const [name, weight] of Object.entries(sidecarConfig)) {
-    const sidecars = expandSidecar(name);
-    const minReplicas = Math.max(1, Math.ceil(weight / quota));
-    sidecarData.push({ name, sidecars, weight, replicas: minReplicas });
-  }
-
-  console.log(`\n  Quota per task: ${quota.toFixed(1)} (${totalTests} total weight / ${numTasks} tasks)`);
-  for (const d of sidecarData.sort((a, b) => b.weight - a.weight)) {
-    console.log(`  ${d.name}: weight ${d.weight} → ${d.replicas} tasks needed`);
-  }
-
-  // Track allocated replicas per sidecar
-  const allocated = new Map(sidecarData.map(d => [d.name, d.replicas]));
-
-  // Fill remaining tasks: give each extra to the sidecar with the worst tests-per-task ratio
-  const totalAllocated = () => [...allocated.values()].reduce((a, b) => a + b, 0);
-  while (totalAllocated() < numTasks) {
-    let worst = null;
-    let worstRatio = 0;
-    for (const d of sidecarData) {
-      const ratio = d.weight / allocated.get(d.name);
-      if (ratio > worstRatio) {
-        worstRatio = ratio;
-        worst = d;
-      }
-    }
-    allocated.set(worst.name, allocated.get(worst.name) + 1);
-  }
-
-  const items = [];
-  for (const data of sidecarData) {
-    const replicas = allocated.get(data.name);
-    for (let i = 0; i < replicas; i++) {
-      items.push({ name: data.name, sidecars: data.sidecars, weight: data.weight });
+  for (const [sidecar, count] of Object.entries(sidecarTasks)) {
+    const sidecars = expandSidecar(sidecar);
+    for (let i = 0; i < count; i++) {
+      tasks.push({ index: index++, sidecarNames: [sidecar], sidecars });
     }
   }
 
-  items.sort((a, b) => b.weight - a.weight);
-
-  const tasks = Array.from({ length: numTasks }, (_, i) => ({
-    index: i + 1,
-    sidecars: [],
-    sidecarSet: new Set(),
-    sidecarNames: new Set(),
-    weight: 0
-  }));
-
-  for (const item of items) {
-    const minTask = tasks.reduce((min, t) => (t.weight < min.weight ? t : min), tasks[0]);
-
-    minTask.sidecarNames.add(item.name);
-
-    for (const sc of item.sidecars) {
-      if (!minTask.sidecarSet.has(sc)) {
-        minTask.sidecars.push(sc);
-        minTask.sidecarSet.add(sc);
-      }
-    }
-
-    minTask.weight += item.weight;
-  }
-
-  return tasks.map(t => ({
-    index: t.index,
-    sidecars: t.sidecars,
-    sidecarNames: [...t.sidecarNames],
-    weight: t.weight
-  }));
+  return tasks;
 }
 
 // =============================================================================
@@ -506,15 +335,19 @@ function updatePipelineCollectorEntries(tasks) {
 console.log('\n=== Generating Tasks ===\n');
 
 for (const [groupName, config] of Object.entries(packages)) {
-  if (config.sidecars && typeof config.sidecars === 'object' && !Array.isArray(config.sidecars)) {
-    console.log(`\nDistributing ${Object.keys(config.sidecars).length} sidecar groups across ${config.splits} collector tasks:\n`);
+  if (config.sidecarTasks) {
+    const tasks = buildTasksFromConfig(config.sidecarTasks);
+    const totalTasks = tasks.length;
+
+    console.log(`\nGenerating ${totalTasks} collector tasks:\n`);
+    for (const [sidecar, count] of Object.entries(config.sidecarTasks)) {
+      console.log(`  ${sidecar}: ${count} tasks [${expandSidecar(sidecar).join(', ')}]`);
+    }
 
     cleanupOldCollectorTasks();
 
-    const collectorTasks = distributeSidecars(config.sidecars, config.splits, config.totalTests);
-
     const sidecarCounts = {};
-    collectorTasks.forEach(t => {
+    tasks.forEach(t => {
       t.sidecars.forEach(s => {
         sidecarCounts[s] = (sidecarCounts[s] || 0) + 1;
       });
@@ -523,17 +356,16 @@ for (const [groupName, config] of Object.entries(packages)) {
 
     const collectorTasks_ = [];
 
-    for (const task of collectorTasks) {
+    for (const task of tasks) {
       const sidecarSuffix = task.sidecarNames.join('-');
       const taskName = `collector-${task.index}-${sidecarSuffix}`;
 
       collectorTasks_.push({ taskName, displayName: taskName });
-      console.log(`  ${taskName}: [${task.sidecars.join(', ')}] (weight: ${task.weight})`);
 
       const content = generateTask(taskName, task.sidecars, {
         groupName,
         subname: generateSubname(groupName, config),
-        split: config.splits,
+        split: totalTasks,
         splitNumber: task.index,
         scope: generateScope(groupName),
         condition: generateCondition(groupName),
