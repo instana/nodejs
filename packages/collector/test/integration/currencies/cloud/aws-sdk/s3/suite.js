@@ -43,6 +43,7 @@ const availableOperations = [
 
 const getNextCallMethod = require('@_local/core/test/test_util/circular_list').getCircularList(requestMethods);
 
+const esmLoaderPath = path.join(__dirname, '..', 'node_modules', '@instana', 'collector', 'esm-register.mjs');
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 module.exports = function (libraryEnv) {
@@ -61,6 +62,7 @@ module.exports = function (libraryEnv) {
         appControls = new ProcessControls({
           dirname: __dirname,
           useGlobalAgent: true,
+          esmLoaderPath,
           env: {
             AWS_S3_BUCKET_NAME: bucketName,
             ...libraryEnv
@@ -144,6 +146,7 @@ module.exports = function (libraryEnv) {
           dirname: __dirname,
           useGlobalAgent: true,
           tracingEnabled: false,
+          esmLoaderPath,
           env: {
             AWS_S3_BUCKET_NAME: bucketName,
             ...libraryEnv
@@ -192,6 +195,7 @@ module.exports = function (libraryEnv) {
         appControls = new ProcessControls({
           dirname: __dirname,
           useGlobalAgent: true,
+          esmLoaderPath,
           env: {
             AWS_S3_BUCKET_NAME: bucketName,
             ...libraryEnv
