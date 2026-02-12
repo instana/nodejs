@@ -13,7 +13,7 @@ process.on('SIGTERM', () => {
 
 const http = require('http');
 
-const { sendToParent } = require('../../../core/test/test_util');
+const { sendToParent } = require('@_local/core/test/test_util');
 
 const downstreamDummyUrl = process.env.DOWNSTREAM_DUMMY_URL;
 const getAppPort = require('@_local/collector/test/test_util/app-port');

@@ -16,8 +16,8 @@ const http = require('http');
 const morgan = require('morgan');
 const pino = require('pino')();
 
-const { sendToParent } = require('../../../core/test/test_util');
-const delay = require('../../../core/test/test_util/delay');
+const { sendToParent } = require('@_local/core/test/test_util');
+const delay = require('@_local/core/test/test_util/delay');
 
 const logPrefix = 'downstream-dummy';
 const logger = pino.child({ name: logPrefix, pid: process.pid });

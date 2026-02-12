@@ -8,7 +8,7 @@
 const expect = require('chai').expect;
 
 const supportedVersion = require('@_local/core').tracing.supportedVersion;
-const config = require('../../../../../core/test/config');
+const config = require('@_local/core/test/config');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 

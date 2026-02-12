@@ -7,9 +7,9 @@
 const expect = require('chai').expect;
 const path = require('path');
 const { execSync } = require('child_process');
-const config = require('../../../../../../core/test/config');
-const testUtils = require('../../../../../../core/test/test_util');
-const supportedVersion = require('../../../../../../core').tracing.supportedVersion;
+const config = require('@_local/core/test/config');
+const testUtils = require('@_local/core/test/test_util');
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 

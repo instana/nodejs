@@ -7,7 +7,7 @@
 
 const { expect } = require('chai');
 
-const config = require('../../../core/test/config');
+const config = require('@_local/core/test/config');
 const CountDownLatch = require('../../src/util/CountDownLatch');
 
 describe('count down latch event emitter', function () {

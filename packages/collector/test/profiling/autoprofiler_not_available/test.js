@@ -8,8 +8,8 @@ const os = require('os');
 const { expect } = require('chai');
 const { execSync } = require('child_process');
 const supportedVersion = require('@_local/core').tracing.supportedVersion;
-const { retry } = require('../../../../core/test/test_util');
-const config = require('../../../../core/test/config');
+const { retry } = require('@_local/core/test/test_util');
+const config = require('@_local/core/test/config');
 const ProcessControls = require('../../test_util/ProcessControls');
 const { AgentStubControls } = require('../../apps/agentStubControls');
 

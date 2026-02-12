@@ -19,7 +19,6 @@ const {
   retry,
   delay
 } = require('@_local/core/test/test_util');
-const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 const globalAgent = require('@_local/collector/test/globalAgent');
 

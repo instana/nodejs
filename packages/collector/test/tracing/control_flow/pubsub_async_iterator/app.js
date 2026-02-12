@@ -15,7 +15,7 @@ require('./mockVersion');
 
 require('../../../..')();
 
-const cls = require('../../../../../core/src/tracing/cls');
+const cls = require('@_local/core/src/tracing/cls');
 const express = require('express');
 const morgan = require('morgan');
 const graphqlSubscriptions = require('graphql-subscriptions');

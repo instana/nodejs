@@ -12,8 +12,8 @@ const expect = require('chai').expect;
 const { execSync } = require('child_process');
 const path = require('path');
 
-const config = require('../../../../core/test/config');
-const { retry } = require('../../../../core/test/test_util');
+const config = require('@_local/core/test/config');
+const { retry } = require('@_local/core/test/test_util');
 const ProcessControls = require('../../test_util/ProcessControls');
 const globalAgent = require('../../globalAgent');
 

@@ -11,7 +11,7 @@ const path = require('path');
 const constants = require('@_local/core').tracing.constants;
 
 const Control = require('../Control');
-const { delay, expectExactlyOneMatching } = require('../../../core/test/test_util');
+const { delay, expectExactlyOneMatching } = require('@_local/core/test/test_util');
 const config = require('@_local/core/test/config');
 const retry = require('@_local/core/test/test_util/retry');
 

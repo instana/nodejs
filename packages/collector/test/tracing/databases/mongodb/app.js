@@ -11,7 +11,6 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-
 require('@instana/collector')({
   level: 'warn',
   tracing: {

@@ -8,8 +8,8 @@
 const expect = require('chai').expect;
 
 const constants = require('@_local/core').tracing.constants;
-const config = require('../../../../../core/test/config');
-const testUtils = require('../../../../../core/test/test_util');
+const config = require('@_local/core/test/config');
+const testUtils = require('@_local/core/test/test_util');
 
 describe('tracing/asyncAwait', function () {
   this.timeout(config.getTestTimeout());

@@ -11,7 +11,7 @@
 const instana = require('../..');
 
 const { consoleLogger: serverlessLogger } = require('@_local/serverless');
-const delay = require('../../../core/test/test_util/delay');
+const delay = require('@_local/core/test/test_util/delay');
 
 exports.handler = instana.wrap(async () => {
   console.warn('this is a warning');

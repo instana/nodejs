@@ -9,7 +9,7 @@ const path = require('path');
 
 const portfinder = require('@_local/collector/test/test_util/portfinder');
 const config = require('@_local/core/test/config');
-const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
+const AbstractServerlessControl = require('@_local/serverless/test/util/AbstractServerlessControl');
 
 const SERVERLESS_COLLECTOR_PATH = path.join(__dirname, '..');
 let execArg;

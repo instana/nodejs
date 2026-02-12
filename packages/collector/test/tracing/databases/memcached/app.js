@@ -15,7 +15,7 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 
 require('@instana/collector')();
 
-const Memcached = require('memcached')
+const Memcached = require('memcached');
 const express = require('express');
 const app = express();
 const port = require('@_local/collector/test/test_util/app-port')();

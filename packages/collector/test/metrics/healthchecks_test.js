@@ -6,8 +6,8 @@
 'use strict';
 
 const expect = require('chai').expect;
-const config = require('../../../core/test/config');
-const { retry } = require('../../../core/test/test_util');
+const config = require('@_local/core/test/config');
+const { retry } = require('@_local/core/test/test_util');
 const globalAgent = require('../globalAgent');
 
 describe('metrics/healthchecks', function () {

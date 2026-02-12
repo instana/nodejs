@@ -33,7 +33,7 @@ module.exports = function (name, version, isLatest, mode) {
         await executeAsync('rm -rf node_modules', appDir);
         await executeAsync('mkdir -p node_modules', appDir);
 
-        let versionToInstall = version;
+        const versionToInstall = version;
 
         try {
             await executeAsync(`npm install prisma@${versionToInstall}`, appDir);

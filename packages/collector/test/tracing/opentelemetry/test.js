@@ -9,7 +9,7 @@ const path = require('path');
 const semver = require('semver');
 const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const constants = require('@_local/core').tracing.constants;
-const config = require('../../../../core/test/config');
+const config = require('@_local/core/test/config');
 const portfinder = require('../../test_util/portfinder');
 const { execSync } = require('child_process');
 const {
@@ -21,7 +21,7 @@ const {
   expectExactlyNMatching,
   delay,
   expectExactlyOneMatching
-} = require('../../../../core/test/test_util');
+} = require('@_local/core/test/test_util');
 const ProcessControls = require('../../test_util/ProcessControls');
 const globalAgent = require('../../globalAgent');
 const DELAY_TIMEOUT_IN_MS = 500;

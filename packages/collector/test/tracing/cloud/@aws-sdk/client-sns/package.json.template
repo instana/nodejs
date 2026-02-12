@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@aws-sdk/client-sqs": "latest",
+    "@aws-sdk/middleware-retry": "latest"
+  }
+}

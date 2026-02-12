@@ -1,7 +1,11 @@
-
 /*
  * (c) Copyright IBM Corp. 2026
  */
+
+/* [object Object]
+[object Object]
+[object Object]
+[object Object] */
 
 'use strict';
 

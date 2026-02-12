@@ -8,7 +8,7 @@
 const expect = require('chai').expect;
 const sinon = require('sinon');
 const path = require('path');
-const testUtils = require('../../core/test/test_util');
+const testUtils = require('@_local/core/test/test_util');
 const name = require('../src/name');
 const { applicationUnderMonitoring } = require('@_local/core').util;
 

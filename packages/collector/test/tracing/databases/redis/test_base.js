@@ -70,10 +70,8 @@ module.exports = function (name, version, isLatest, mode) {
   const isV3 = semver.major(redisVersion) === 3;
   const greaterThanV4 = semver.major(redisVersion) > 4;
 
-
   this.timeout(config.getTestTimeout() * 4);
   const agentControls = globalAgent.instance;
-
 
   let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
@@ -1272,7 +1270,6 @@ module.exports = function (name, version, isLatest, mode) {
     }
   });
 
-
   function verifyHttpExit(controls, spans, parent) {
     expectExactlyOneMatching(spans, [
       span => expect(span.t).to.equal(parent.t),
@@ -1329,5 +1326,4 @@ module.exports = function (name, version, isLatest, mode) {
       )
     );
   }
-}
-
+};

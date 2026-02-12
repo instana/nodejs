@@ -11,8 +11,8 @@ const fs = require('fs');
 const os = require('os');
 const semver = require('semver');
 
-const config = require('../../../core/test/config');
-const { retry, runCommandSync } = require('../../../core/test/test_util');
+const config = require('@_local/core/test/config');
+const { retry, runCommandSync } = require('@_local/core/test/test_util');
 const ProcessControls = require('../test_util/ProcessControls');
 const globalAgent = require('../globalAgent');
 const { execSync } = require('child_process');

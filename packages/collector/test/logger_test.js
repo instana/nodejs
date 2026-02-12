@@ -10,7 +10,7 @@ const bunyan = require('bunyan');
 let pino = require('pino');
 let uninstrumentedLogger = require('../src/uninstrumentedLogger');
 let log = require('../src/logger');
-const { expectAtLeastOneMatching } = require('../../core/test/test_util');
+const { expectAtLeastOneMatching } = require('@_local/core/test/test_util');
 
 describe('logger', () => {
   before(() => {

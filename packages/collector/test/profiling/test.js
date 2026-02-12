@@ -8,7 +8,7 @@
 const { expect } = require('chai');
 
 const supportedVersion = require('@_local/core').tracing.supportedVersion;
-const { delay, isCI, isCILongRunning, retry } = require('../../../core/test/test_util');
+const { delay, isCI, isCILongRunning, retry } = require('@_local/core/test/test_util');
 const ProcessControls = require('../test_util/ProcessControls');
 const { AgentStubControls } = require('../apps/agentStubControls');
 

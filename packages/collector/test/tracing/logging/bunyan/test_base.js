@@ -6,9 +6,7 @@
 'use strict';
 
 const expect = require('chai').expect;
-const path = require('path');
 const constants = require('@_local/core/src/tracing/constants');
-const config = require('@_local/core/test/config');
 const { retry, expectAtLeastOneMatching, getSpansByName, delay, stringifyItems } = require('@_local/core/test/test_util');
 const globalAgent = require('@_local/collector/test/globalAgent');
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');

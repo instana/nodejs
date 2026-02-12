@@ -32,7 +32,7 @@ module.exports = function (name, version, isLatest) {
                 env: {
                     LIBRARY_LATEST: isLatest,
                     LIBRARY_VERSION: version,
-                    LIBRARY_NAME: name,
+                    LIBRARY_NAME: name
                 }
             });
 

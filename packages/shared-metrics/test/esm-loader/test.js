@@ -11,7 +11,7 @@ const { supportedVersion } = require('@_local/core').tracing;
 const testUtils = require('@_local/core/test/test_util');
 const config = require('@_local/core/test/config');
 
-const ProcessControls = require('../../../collector/test/test_util/ProcessControls');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 const loaderPath = ['--import', '../../../../collector/esm-register.mjs'];
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;

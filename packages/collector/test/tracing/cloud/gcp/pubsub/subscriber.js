@@ -19,7 +19,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 
-const { sendToParent } = require('../../../../../../core/test/test_util');
+const { sendToParent } = require('@_local/core/test/test_util');
 const { createTopicAndSubscription } = require('./pubsubUtil');
 
 const port = require('../../../../test_util/app-port')();

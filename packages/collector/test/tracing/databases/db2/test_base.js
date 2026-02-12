@@ -2,7 +2,6 @@
  * (c) Copyright IBM Corp. 2022
  */
 
-
 'use strict';
 
 const dns = require('dns').promises;

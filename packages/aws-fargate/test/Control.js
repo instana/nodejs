@@ -9,8 +9,8 @@ const { fork } = require('child_process');
 const path = require('path');
 
 const config = require('@_local/core/test/config');
-const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
-const portfinder = require('../../collector/test/test_util/portfinder');
+const AbstractServerlessControl = require('@_local/serverless/test/util/AbstractServerlessControl');
+const portfinder = require('@_local/collector/test/test_util/portfinder');
 const PATH_TO_INSTANA_FARGATE_PACKAGE = path.join(__dirname, '..');
 let execArg;
 

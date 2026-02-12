@@ -11,7 +11,6 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 require('@instana/collector')();

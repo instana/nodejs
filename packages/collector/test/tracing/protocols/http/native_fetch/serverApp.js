@@ -23,7 +23,6 @@ const port = require('@_local/collector/test/test_util/app-port')();
 
 const app = express();
 
-
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
 }

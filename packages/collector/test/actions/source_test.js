@@ -8,8 +8,8 @@
 const expect = require('chai').expect;
 const path = require('path');
 
-const config = require('../../../core/test/config');
-const testUtils = require('../../../core/test/test_util');
+const config = require('@_local/core/test/config');
+const testUtils = require('@_local/core/test/test_util');
 const globalAgent = require('../globalAgent');
 
 describe('actions/source', function () {

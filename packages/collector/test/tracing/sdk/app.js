@@ -24,7 +24,7 @@ const morgan = require('morgan');
 const path = require('path');
 
 const port = require('../../test_util/app-port')();
-const { delay, getTestAppLogger } = require('../../../../core/test/test_util');
+const { delay, getTestAppLogger } = require('@_local/core/test/test_util');
 const DummyEmitter = require('./dummyEmitter');
 
 const app = express();

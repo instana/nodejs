@@ -15,7 +15,7 @@ const {
   expectExactlyOneMatching,
   delay,
   isCI
-} = require('../../../core/test/test_util');
+} = require('@_local/core/test/test_util');
 const config = require('@_local/core/test/config');
 
 const functionName = 'functionName';

@@ -10,7 +10,7 @@ const { fork } = require('child_process');
 const { expect } = require('chai');
 const proxyquire = require('proxyquire');
 const portfinder = require('@_local/collector/test/test_util/portfinder');
-const { retry, createFakeLogger } = require('../../../core/test/test_util');
+const { retry, createFakeLogger } = require('@_local/core/test/test_util');
 const testConfig = require('@_local/core/test/config');
 const core = require('@_local/core');
 let transmissionCycle;

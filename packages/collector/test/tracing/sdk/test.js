@@ -12,9 +12,9 @@ const { v4: uuid } = require('uuid');
 
 const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const constants = require('@_local/core').tracing.constants;
-const config = require('../../../../core/test/config');
-const { expectExactlyOneMatching, isCI, retry } = require('../../../../core/test/test_util');
-const delay = require('../../../../core/test/test_util/delay');
+const config = require('@_local/core/test/config');
+const { expectExactlyOneMatching, isCI, retry } = require('@_local/core/test/test_util');
+const delay = require('@_local/core/test/test_util/delay');
 const ProcessControls = require('../../test_util/ProcessControls');
 const globalAgent = require('../../globalAgent');
 

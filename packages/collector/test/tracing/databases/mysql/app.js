@@ -15,7 +15,6 @@ process.on('SIGTERM', () => {
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-
 const instana = require('@instana/collector')();
 
 const accessFunction = process.env.USE_EXECUTE ? 'execute' : 'query';

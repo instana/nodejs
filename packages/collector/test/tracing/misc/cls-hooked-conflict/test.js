@@ -8,8 +8,8 @@
 const expect = require('chai').expect;
 
 const constants = require('@_local/core').tracing.constants;
-const config = require('../../../../../core/test/config');
-const { expectExactlyOneMatching, retry } = require('../../../../../core/test/test_util');
+const config = require('@_local/core/test/config');
+const { expectExactlyOneMatching, retry } = require('@_local/core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 

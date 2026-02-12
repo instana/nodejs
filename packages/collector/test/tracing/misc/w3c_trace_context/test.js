@@ -11,9 +11,9 @@ const { expect } = require('chai');
 const portfinder = require('../../../test_util/portfinder');
 const constants = require('@_local/core').tracing.constants;
 const supportedVersion = require('@_local/core').tracing.supportedVersion;
-const config = require('../../../../../core/test/config');
-const delay = require('../../../../../core/test/test_util/delay');
-const { retryUntilSpansMatch, expectExactlyOneMatching } = require('../../../../../core/test/test_util');
+const config = require('@_local/core/test/config');
+const delay = require('@_local/core/test/test_util/delay');
+const { retryUntilSpansMatch, expectExactlyOneMatching } = require('@_local/core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 

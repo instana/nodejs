@@ -12,7 +12,7 @@ const { expect } = require('chai');
 const { HttpDataSource } = require('@_local/metrics-util');
 const portfinder = require('@_local/collector/test/test_util/portfinder');
 
-const { delay, retry } = require('../../../../core/test/test_util');
+const { delay, retry } = require('@_local/core/test/test_util');
 const config = require('@_local/core/test/config');
 
 const InstrumentedDockerProcessor = require('../../../src/metrics/docker/InstrumentedDockerProcessor');

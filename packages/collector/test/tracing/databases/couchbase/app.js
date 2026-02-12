@@ -10,7 +10,6 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-
 require('@instana/collector')();
 
 const couchbase = require('couchbase');

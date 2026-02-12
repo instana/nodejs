@@ -5,7 +5,7 @@
 'use strict';
 
 const mock = require('@_local/core/test/test_util/mockRequire');
-const hook = require('../../../../../core/src/util/hook');
+const hook = require('@_local/core/src/util/hook');
 
 const GRAPHQL_SUBSCRIPTIONS_VERSION = process.env.GRAPHQL_SUBSCRIPTIONS_VERSION;
 const GRAPHQL_SUBSCRIPTIONS_REQUIRE =

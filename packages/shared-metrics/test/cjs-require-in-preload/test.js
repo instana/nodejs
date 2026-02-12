@@ -11,7 +11,7 @@ const expect = require('chai').expect;
 const testUtils = require('@_local/core/test/test_util');
 const config = require('@_local/core/test/config');
 
-const ProcessControls = require('../../../collector/test/test_util/ProcessControls');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 
 describe('cjs require collector in preload phase', function () {
   this.timeout(config.getTestTimeout());

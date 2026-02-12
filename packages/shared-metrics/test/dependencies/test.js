@@ -17,8 +17,8 @@ const { satisfies } = require('semver');
 
 const config = require('@_local/core/test/config');
 const { retry, runCommandSync } = require('@_local/core/test/test_util');
-const ProcessControls = require('../../../collector/test/test_util/ProcessControls');
-const globalAgent = require('../../../collector/test/globalAgent');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
+const globalAgent = require('@_local/collector/test/globalAgent');
 
 describe('dependencies', function () {
   // Some of the tests in this suite include running npm install and on CI we have observed that this can take roughly

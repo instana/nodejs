@@ -14,8 +14,8 @@ const portfinder = require('@_local/collector/test/test_util/portfinder');
 const retry = require('@_local/core/test/test_util/retry');
 
 const config = require('@_local/core/test/config');
-const delay = require('../../../core/test/test_util/delay');
-const expectExactlyOneMatching = require('../../../core/test/test_util/expectExactlyOneMatching');
+const delay = require('@_local/core/test/test_util/delay');
+const expectExactlyOneMatching = require('@_local/core/test/test_util/expectExactlyOneMatching');
 
 const { fail } = expect;
 

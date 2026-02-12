@@ -39,7 +39,7 @@ if (vendor === 'instana') {
 let cls;
 if (isInstana()) {
   require('../../../..')();
-  cls = require('../../../../../core/src/tracing/cls');
+  cls = require('@_local/core/src/tracing/cls');
 }
 
 const fs = require('fs');
@@ -51,7 +51,7 @@ const http2Promise = require('../../../test_util/http2Promise');
 
 const { HTTP2_HEADER_METHOD, HTTP2_HEADER_PATH, HTTP2_HEADER_STATUS } = require('http2').constants;
 
-const tracingUtil = require('../../../../../core/src/tracing/tracingUtil');
+const tracingUtil = require('@_local/core/src/tracing/tracingUtil');
 
 const port = require('../../../test_util/app-port')();
 const downstreamPort = process.env.DOWNSTREAM_PORT;

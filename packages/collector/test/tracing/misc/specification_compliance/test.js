@@ -11,8 +11,8 @@ const querystring = require('querystring');
 
 const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const constants = require('@_local/core').tracing.constants;
-const config = require('../../../../../core/test/config');
-const { delay, expectExactlyOneMatching, retryUntilSpansMatch } = require('../../../../../core/test/test_util');
+const config = require('@_local/core/test/config');
+const { delay, expectExactlyOneMatching, retryUntilSpansMatch } = require('@_local/core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 const allTestCases = require('./tracer_compliance_test_cases.json'); /* .slice(0, 1); */ // in lieu of .only

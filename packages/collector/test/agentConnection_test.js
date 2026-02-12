@@ -9,8 +9,8 @@ const expect = require('chai').expect;
 
 const constants = require('@_local/core').tracing.constants;
 const supportedVersion = require('@_local/core').tracing.supportedVersion;
-const testConfig = require('../../core/test/config');
-const testUtils = require('../../core/test/test_util');
+const testConfig = require('@_local/core/test/config');
+const testUtils = require('@_local/core/test/test_util');
 
 const dummyEntry = {
   n: 'dummy.entry',

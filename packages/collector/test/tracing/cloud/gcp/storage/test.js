@@ -11,17 +11,17 @@ const semver = require('semver');
 
 const constants = require('@_local/core').tracing.constants;
 const supportedVersion = require('@_local/core').tracing.supportedVersion;
-const config = require('../../../../../../core/test/config');
+const config = require('@_local/core/test/config');
 const {
   expectAtLeastOneMatching,
   expectExactlyOneMatching,
   getSpansByName,
   retry,
   stringifyItems
-} = require('../../../../../../core/test/test_util');
+} = require('@_local/core/test/test_util');
 
 const ProcessControls = require('../../../../test_util/ProcessControls');
-const testUtils = require('../../../../../../core/test/test_util');
+const testUtils = require('@_local/core/test/test_util');
 const globalAgent = require('../../../../globalAgent');
 
 const bucketName = 'nodejs-tracer-test-bucket';

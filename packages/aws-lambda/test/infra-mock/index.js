@@ -29,7 +29,7 @@ if (instanaKey == null) {
 
 /* dependencies */
 const https = sendUnencrypted ? require('http') : require('https');
-const constants = require('../../../serverless/src/constants');
+const constants = require('@_local/serverless/src/constants');
 
 const legacySensorMode = process.env.LEGACY_SENSOR != null;
 const anotherLambda = process.env.ANOTHER != null;

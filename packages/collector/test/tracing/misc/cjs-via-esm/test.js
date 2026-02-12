@@ -10,7 +10,7 @@ const expect = require('chai').expect;
 const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
-const { retry } = require('../../../../../core/test/test_util');
+const { retry } = require('@_local/core/test/test_util');
 
 const mochaSuiteFn =
   supportedVersion(process.versions.node) && semver.gte(process.versions.node, '18.19.0') ? describe : describe.skip;

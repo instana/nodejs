@@ -11,7 +11,7 @@ const constants = require('@_local/core').tracing.constants;
 
 const Control = require('../Control');
 const config = require('@_local/core/test/config');
-const { expectExactlyOneMatching, retry } = require('../../../core/test/test_util');
+const { expectExactlyOneMatching, retry } = require('@_local/core/test/test_util');
 
 const { fail } = expect;
 

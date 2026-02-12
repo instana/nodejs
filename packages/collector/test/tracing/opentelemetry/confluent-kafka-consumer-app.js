@@ -12,7 +12,7 @@ process.on('SIGTERM', () => {
 require('@instana/collector')();
 const express = require('express');
 const bodyParser = require('body-parser');
-const delay = require('../../../../core/test/test_util/delay');
+const delay = require('@_local/core/test/test_util/delay');
 const port = require('../../test_util/app-port')();
 const logPrefix = `Confluent Kafka Consumer App (${process.pid}):\t`;
 const confluentKafka = require('@confluentinc/kafka-javascript');

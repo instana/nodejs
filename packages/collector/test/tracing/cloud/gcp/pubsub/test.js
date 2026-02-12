@@ -12,8 +12,8 @@ const semver = require('semver');
 
 const constants = require('@_local/core').tracing.constants;
 const supportedVersion = require('@_local/core').tracing.supportedVersion;
-const config = require('../../../../../../core/test/config');
-const { delay, expectExactlyOneMatching, retry, stringifyItems } = require('../../../../../../core/test/test_util');
+const config = require('@_local/core/test/config');
+const { delay, expectExactlyOneMatching, retry, stringifyItems } = require('@_local/core/test/test_util');
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 // We use different topics/subscriptions per Node.js major version so tests on CI run independently of each other.

@@ -11,8 +11,8 @@ const portFinder = require('../test_util/portfinder');
 const path = require('path');
 const _ = require('lodash');
 
-const { retry, delay } = require('../../../core/test/test_util');
-const config = require('../../../core/test/config');
+const { retry, delay } = require('@_local/core/test/test_util');
+const config = require('@_local/core/test/config');
 
 class AgentStubControls {
   constructor(agentPort) {

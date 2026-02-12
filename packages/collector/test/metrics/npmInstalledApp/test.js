@@ -9,8 +9,8 @@ const path = require('path');
 const expect = require('chai').expect;
 const _ = require('lodash');
 
-const config = require('../../../../core/test/config');
-const testUtils = require('../../../../core/test/test_util');
+const config = require('@_local/core/test/config');
+const testUtils = require('@_local/core/test/test_util');
 const ProcessControls = require('../../test_util/ProcessControls');
 const globalAgent = require('../../globalAgent');
 

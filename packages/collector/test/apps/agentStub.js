@@ -18,7 +18,7 @@ const _ = require('lodash');
 // const morgan = require('morgan');
 const app = express();
 
-const deepMerge = require('../../../core/src/util/deepMerge');
+const deepMerge = require('@_local/core/src/util/deepMerge');
 
 const logger = bunyan.createLogger({ name: 'agent-stub', pid: process.pid });
 

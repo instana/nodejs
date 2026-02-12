@@ -18,7 +18,7 @@ const express = require('express');
 const morgan = require('morgan');
 const pino = require('pino')();
 
-const { sendToParent } = require('../../../core/test/test_util');
+const { sendToParent } = require('@_local/core/test/test_util');
 
 const logPrefix = 'metadata-mock';
 const logger = pino.child({ name: logPrefix, pid: process.pid });

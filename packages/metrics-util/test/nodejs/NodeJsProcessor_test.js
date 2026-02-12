@@ -8,7 +8,7 @@
 const { expect } = require('chai');
 const semver = require('semver');
 const sinon = require('sinon');
-const { delay, retry } = require('../../../core/test/test_util');
+const { delay, retry } = require('@_local/core/test/test_util');
 const testConfig = require('@_local/core/test/config');
 const NodeJsProcessor = require('../../src/nodejs/NodeJsProcessor');
 

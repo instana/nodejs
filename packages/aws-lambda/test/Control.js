@@ -9,7 +9,7 @@ const { fork } = require('child_process');
 const portfinder = require('@_local/collector/test/test_util/portfinder');
 const retry = require('@_local/core/test/test_util/retry');
 const config = require('@_local/core/test/config');
-const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
+const AbstractServerlessControl = require('@_local/serverless/test/util/AbstractServerlessControl');
 
 function Control(opts) {
   AbstractServerlessControl.call(this, opts);

@@ -5,18 +5,15 @@
 
 'use strict';
 
-const path = require('path');
 const expect = require('chai').expect;
 const semver = require('semver');
 
 const constants = require('@_local/core').tracing.constants;
-const config = require('@_local/core/test/config');
 const testUtils = require('@_local/core/test/test_util');
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 const globalAgent = require('@_local/collector/test/globalAgent');
 
 module.exports = function (name, version, isLatest) {
-
     if (isLatest && semver.lt(process.versions.node, '20.0.0')) {
         console.log(`Skipping tests for version ${version} because it requires Node.js version 20 or higher.`);
         return;

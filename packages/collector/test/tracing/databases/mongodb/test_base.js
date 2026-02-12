@@ -12,7 +12,6 @@ const { v4: uuid } = require('uuid');
 const _ = require('lodash');
 
 const constants = require('@_local/core').tracing.constants;
-const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const config = require('@_local/core/test/config');
 const { expectExactlyOneMatching, expectAtLeastOneMatching, retry } = require('@_local/core/test/test_util');
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
@@ -44,7 +43,7 @@ module.exports = function (name, version, isLatest) {
         const env = {
             LIBRARY_VERSION: version,
             LIBRARY_LATEST: isLatest,
-            LIBRARY_NAME: name,
+            LIBRARY_NAME: name
         };
 
         if (topology === 'legacy') {
