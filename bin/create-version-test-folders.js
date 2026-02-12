@@ -139,7 +139,7 @@ function cleanupCopiedFiles(files) {
 }
 
 ${esmOnly ? `if (!process.env.RUN_ESM) {
-  console.log('Skipping ${suiteName}@${displayVersion} because it is ESM-only. Set RUN_ESM=true to run.');
+  it.skip('tracing/${suiteName}@${displayVersion} (ESM-only, set RUN_ESM=true)');
   return;
 }
 
@@ -147,13 +147,12 @@ ${esmOnly ? `if (!process.env.RUN_ESM) {
 const suiteTitle = esmPrefix + 'tracing/${suiteName}@${displayVersion}${mode ? ` (${mode})` : ''}';
 mochaSuiteFn(suiteTitle, function () {
   this.timeout(config.getTestTimeout());
-
   const copiedFiles = copyParentFiles(__dirname);
   const cleanup = () => cleanupCopiedFiles(copiedFiles);
-  process.on('exit', cleanup);
-  process.on('SIGINT', () => { cleanup(); process.exit(130); });
-  process.on('SIGTERM', () => { cleanup(); process.exit(143); });
-
+  process.once('exit', cleanup);
+  process.once('SIGINT', () => { cleanup(); process.exit(130); });
+  process.once('SIGTERM', () => { cleanup(); process.exit(143); });
+  
   before(() => {
     console.log('[INFO] Installing dependencies for ${suiteName}@${displayVersion}...');
     try { fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true }); } catch (_) {}

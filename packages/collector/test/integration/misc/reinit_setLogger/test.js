@@ -16,7 +16,7 @@ const globalAgent = require('@_local/collector/test/globalAgent');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn.only('tracing/logging/misc/reinit-setLogger', function () {
+mochaSuiteFn('tracing/logging/misc/reinit-setLogger', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();

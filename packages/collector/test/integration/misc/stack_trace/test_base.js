@@ -20,7 +20,7 @@ module.exports = function () {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
 
-      const expressProxyControls = require('@_local/collector/test/tracing/protocols/http/proxy/expressProxyControls');
+      const expressProxyControls = require('@_local/collector/test/integration/currencies/protocols/http/proxy/expressProxyControls');
       const expressControls = require('@_local/collector/test/apps/expressControls');
 
       describe('with stack trace lenght of 0', () => {
