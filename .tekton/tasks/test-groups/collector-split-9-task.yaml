@@ -210,5 +210,6 @@ spec:
         done
         if [ ! -f "test:ci:collector.succeeded" ]; then
           echo "All retries failed for test:ci:collector"
+          touch "test:ci:collector.failed"
           exit 1
         fi

@@ -145,5 +145,6 @@ spec:
         done
         if [ ! -f "test:ci:azure-container-services.succeeded" ]; then
           echo "All retries failed for test:ci:azure-container-services"
+          touch "test:ci:azure-container-services.failed"
           exit 1
         fi

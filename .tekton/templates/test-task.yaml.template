@@ -160,5 +160,6 @@ spec:
 
         if [ ! -f "{{groupName}}.succeeded" ]; then
           echo "All retries failed for {{groupName}}"
+          touch "{{groupName}}.failed"
           exit 1
         fi

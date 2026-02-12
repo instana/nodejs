@@ -145,5 +145,6 @@ spec:
         done
         if [ ! -f "test:ci:core.succeeded" ]; then
           echo "All retries failed for test:ci:core"
+          touch "test:ci:core.failed"
           exit 1
         fi

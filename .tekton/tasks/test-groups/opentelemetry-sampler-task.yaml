@@ -145,5 +145,6 @@ spec:
         done
         if [ ! -f "test:ci:opentelemetry-sampler.succeeded" ]; then
           echo "All retries failed for test:ci:opentelemetry-sampler"
+          touch "test:ci:opentelemetry-sampler.failed"
           exit 1
         fi

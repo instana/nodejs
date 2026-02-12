@@ -145,5 +145,6 @@ spec:
         done
         if [ ! -f "test:ci:opentelemetry-exporter.succeeded" ]; then
           echo "All retries failed for test:ci:opentelemetry-exporter"
+          touch "test:ci:opentelemetry-exporter.failed"
           exit 1
         fi

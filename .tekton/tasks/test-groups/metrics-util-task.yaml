@@ -145,5 +145,6 @@ spec:
         done
         if [ ! -f "test:ci:metrics-util.succeeded" ]; then
           echo "All retries failed for test:ci:metrics-util"
+          touch "test:ci:metrics-util.failed"
           exit 1
         fi

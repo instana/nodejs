@@ -145,5 +145,6 @@ spec:
         done
         if [ ! -f "test:ci:serverless.succeeded" ]; then
           echo "All retries failed for test:ci:serverless"
+          touch "test:ci:serverless.failed"
           exit 1
         fi

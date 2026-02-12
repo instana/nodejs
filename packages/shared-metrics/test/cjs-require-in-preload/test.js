@@ -19,6 +19,7 @@ describe('cjs require collector in preload phase', function () {
 
   before(async () => {
     controls = new ProcessControls({
+      dirname: __dirname,
       useGlobalAgent: true,
       cwd: path.join(__dirname, 'module'),
       appPath: path.join(__dirname, 'module', 'src', 'app'),

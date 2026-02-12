@@ -145,5 +145,6 @@ spec:
         done
         if [ ! -f "test:ci:google-cloud-run.succeeded" ]; then
           echo "All retries failed for test:ci:google-cloud-run"
+          touch "test:ci:google-cloud-run.failed"
           exit 1
         fi

@@ -145,5 +145,6 @@ spec:
         done
         if [ ! -f "test:ci:autoprofile.succeeded" ]; then
           echo "All retries failed for test:ci:autoprofile"
+          touch "test:ci:autoprofile.failed"
           exit 1
         fi

@@ -145,5 +145,6 @@ spec:
         done
         if [ ! -f "test:ci:aws-lambda.succeeded" ]; then
           echo "All retries failed for test:ci:aws-lambda"
+          touch "test:ci:aws-lambda.failed"
           exit 1
         fi

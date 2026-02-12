@@ -145,5 +145,6 @@ spec:
         done
         if [ ! -f "test:ci:aws-fargate.succeeded" ]; then
           echo "All retries failed for test:ci:aws-fargate"
+          touch "test:ci:aws-fargate.failed"
           exit 1
         fi
