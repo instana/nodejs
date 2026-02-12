@@ -26,7 +26,7 @@ import getAppPort from '../../../test_util/app-port.js';
 const port = getAppPort();
 
 const app = express();
-const logPrefix = `Express / Postgres App (${process.pid}):\t`;
+const logPrefix = `Express / Postgres ESM App (${process.pid}):\t`;
 const pool = new Pool({
   user: process.env.POSTGRES_USER,
   host: process.env.POSTGRES_HOST,

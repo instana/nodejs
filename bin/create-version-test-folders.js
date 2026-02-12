@@ -74,6 +74,7 @@ const path = require('path');
 const testBase = require('./test_base');
 const root = global.findRootFolder();
 const config = require(path.join(root, 'packages', 'core', 'test', 'config'));
+
 describe('tracing/${currency.name}@v${majorVersion}', function () {
   this.timeout(config.getTestTimeout());
   before(() => {
