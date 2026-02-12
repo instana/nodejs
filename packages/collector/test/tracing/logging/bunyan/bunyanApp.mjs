@@ -12,20 +12,17 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+import path from 'path';
+import bunyan from 'bunyan';
 import bodyParser from 'body-parser';
 import express from 'express';
 import morgan from 'morgan';
 import fs from 'fs';
-const { default: getAppPort } = await import('../../../test_util/app-port.js');
-const port = getAppPort();
-
-import path from 'path';
-import bunyan from 'bunyan';
-const logger = bunyan.createLogger({ name: 'test-logger' });
-
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-
+const { default: getAppPort } = await import('@_instana/collector/test/test_util/app-port.js');
+const port = getAppPort();
+const logger = bunyan.createLogger({ name: 'test-logger' });
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const agentPort = process.env.INSTANA_AGENT_PORT;

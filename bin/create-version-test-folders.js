@@ -53,6 +53,12 @@ function main() {
 
     console.log(`Found test directory: ${testDir}`);
 
+    const testBasePath = path.join(testDir, 'test_base.js');
+    if (!fs.existsSync(testBasePath)) {
+      console.log(`test_base.js not found in ${testDir}, skipping generation...`);
+      return;
+    }
+
     const sortedVersions = currency.versions.map(v => (typeof v === 'string' ? v : v.v)).sort(semver.rcompare);
     const latestVersion = sortedVersions[0];
 
@@ -127,26 +133,49 @@ describe('tracing/${currency.name}@v${majorVersion}', function () {
 
       fs.writeFileSync(path.join(versionDir, 'package.json'), `${JSON.stringify(versionPackageJson, null, 2)}\n`);
 
-      const appJsPath = path.join(testDir, 'app.js');
-      const appMjsPath = path.join(testDir, 'app.mjs');
-      const testBasePath = path.join(testDir, 'test_base.js');
+      let appJsName = 'app.js';
+      let appJsPath = path.join(testDir, appJsName);
+
+      if (!fs.existsSync(appJsPath)) {
+        const files = fs.readdirSync(testDir);
+        const customAppJs = files.find(f => f.endsWith('.js') && f !== 'test_base.js' && f !== 'package.json');
+
+        if (customAppJs) {
+          appJsName = customAppJs;
+          appJsPath = path.join(testDir, appJsName);
+        }
+      }
 
       if (fs.existsSync(appJsPath)) {
-        const symlinkPath = path.join(versionDir, 'app.js');
+        const symlinkPath = path.join(versionDir, appJsName);
         if (fs.existsSync(symlinkPath)) {
           fs.unlinkSync(symlinkPath);
         }
         fs.symlinkSync(path.relative(versionDir, appJsPath), symlinkPath);
       }
 
+      let appMjsName = 'app.mjs';
+      let appMjsPath = path.join(testDir, appMjsName);
+
+      if (!fs.existsSync(appMjsPath)) {
+        const files = fs.readdirSync(testDir);
+        const customAppMjs = files.find(f => f.endsWith('.mjs') && f !== 'test_base.mjs');
+
+        if (customAppMjs) {
+          appMjsName = customAppMjs;
+          appMjsPath = path.join(testDir, appMjsName);
+        }
+      }
+
       if (fs.existsSync(appMjsPath)) {
-        const symlinkPath = path.join(versionDir, 'app.mjs');
+        const symlinkPath = path.join(versionDir, appMjsName);
         if (fs.existsSync(symlinkPath)) {
           fs.unlinkSync(symlinkPath);
         }
         fs.symlinkSync(path.relative(versionDir, appMjsPath), symlinkPath);
       }
 
+      const testBasePath = path.join(testDir, 'test_base.js');
       if (fs.existsSync(testBasePath)) {
         const symlinkPath = path.join(versionDir, 'test_base.js');
         if (fs.existsSync(symlinkPath)) {

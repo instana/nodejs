@@ -50,7 +50,7 @@ class ProcessControls {
     opts.cwd = path.join(opts.dirname, `_v${semver.major(opts.env.LIBRARY_VERSION)}`);
 
     if (!process.env.RUN_ESM) {
-      opts.appPath = path.join(opts.dirname, `_v${semver.major(opts.env.LIBRARY_VERSION)}`, 'app.js');
+      opts.appPath = path.join(opts.dirname, `_v${semver.major(opts.env.LIBRARY_VERSION)}`, opts.appName ? opts.appName : 'app.js');
     }
 
     if (process.env.RUN_ESM && !opts.execArgv) {
@@ -60,7 +60,8 @@ class ProcessControls {
 
       try {
         if (opts?.appName) {
-          const appPath = path.join(opts.cwd, opts.appName);
+          const appName = opts.appName.endsWith('.mjs') ? opts.appName : `${opts.appName}.mjs`;
+          const appPath = path.join(opts.cwd, appName);
           const esmApp = testUtils.checkESMApp({ appPath });
 
           if (esmApp) {

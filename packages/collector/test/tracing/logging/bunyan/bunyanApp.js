@@ -13,13 +13,13 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../..')();
+require('@instana/collector')();
 
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 const fs = require('fs');
-const port = require('../../../test_util/app-port')();
+const port = require('@_instana/collector/test/test_util/app-port')();
 const path = require('path');
 const bunyan = require('bunyan');
 const logger = bunyan.createLogger({ name: 'test-logger' });

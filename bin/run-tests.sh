@@ -11,6 +11,7 @@ SCOPE=""
 PACKAGE=""
 VERSION=""
 GREP_PATTERN=""
+TEST_FILES=""
 
 for arg in "$@"; do
   case $arg in
@@ -40,6 +41,8 @@ if [ "$WATCH" = true ]; then
   args="-- --watch"
 fi
 
+npm_command="npm run test:debug"
+
 if [ -n "$PACKAGE" ]; then
   PACKAGE_DIR=$(find "packages/collector/test/tracing" -mindepth 2 -maxdepth 2 -type d -name "$PACKAGE" 2>/dev/null | head -1)
   
@@ -63,18 +66,66 @@ if [ -n "$PACKAGE" ]; then
     fi
 
     GREP_PATTERN="tracing/$ACTUAL_PACKAGE@$VERSION"
+    
+    # Check for test files in the version directory
+    if [ -f "$PACKAGE_DIR/_${VERSION}/test.js" ]; then
+        TEST_FILES="$PACKAGE_DIR/_${VERSION}/test.js"
+    elif [ -f "$PACKAGE_DIR/_${VERSION}/${ACTUAL_PACKAGE}_test.js" ]; then
+        TEST_FILES="$PACKAGE_DIR/_${VERSION}/${ACTUAL_PACKAGE}_test.js"
+    fi
+
   else
     HIGHEST_VERSION=$(find "$PACKAGE_DIR" -maxdepth 1 -type d -name "_v*" 2>/dev/null | sed 's/.*_v//' | sort -n | tail -1)
     if [ -n "$HIGHEST_VERSION" ]; then
       GREP_PATTERN="tracing/$ACTUAL_PACKAGE@v$HIGHEST_VERSION"
+      
+      # Check for test files in the highest version directory
+      if [ -f "$PACKAGE_DIR/_v${HIGHEST_VERSION}/test.js" ]; then
+          TEST_FILES="$PACKAGE_DIR/_v${HIGHEST_VERSION}/test.js"
+      elif [ -f "$PACKAGE_DIR/_v${HIGHEST_VERSION}/${ACTUAL_PACKAGE}_test.js" ]; then
+          TEST_FILES="$PACKAGE_DIR/_v${HIGHEST_VERSION}/${ACTUAL_PACKAGE}_test.js"
+      fi
+
     else
       GREP_PATTERN="tracing/$ACTUAL_PACKAGE@v"
+      
+      # Fallback for non-versioned packages
+      if [ -f "$PACKAGE_DIR/test.js" ]; then
+          TEST_FILES="$PACKAGE_DIR/test.js"
+      else
+          # Fallback: all test.js files in that package directory
+          TEST_FILES=$(find "$PACKAGE_DIR" -name "*test.js")
+      fi
     fi
   fi
-  args="-- --grep \"$GREP_PATTERN\" $args"
-  echo "Running tests for $ACTUAL_PACKAGE${VERSION:+ version $VERSION} (grep pattern: $GREP_PATTERN)"
+  
+  if [ -n "$TEST_FILES" ]; then
+      # Make paths relative to packages/collector for the npm script
+      RELATIVE_TEST_FILES=$(echo "$TEST_FILES" | sed 's|packages/collector/||g')
+      
+      # Use test:debug:files to run only the specific files
+      npm_command="npm run test:debug:files -- $RELATIVE_TEST_FILES"
+      
+      # If specific files are found (which are in collector), default scope to collector if not set
+      if [ -z "$SCOPE" ]; then
+        SCOPE="@instana/collector"
+      fi
+      
+      # We still pass grep pattern just in case, though mocha might not need it if we pass specific files
+      # But usually filtering by file is enough.
+      # args="-- --grep \"$GREP_PATTERN\" $args"
+      
+      echo "Running tests for $ACTUAL_PACKAGE${VERSION:+ version $VERSION}"
+      echo "Target files: $RELATIVE_TEST_FILES"
+  else
+      # If we couldn't determine specific files, fall back to old behavior but warn
+      args="-- --grep \"$GREP_PATTERN\" $args"
+      echo "Running tests for $ACTUAL_PACKAGE${VERSION:+ version $VERSION} (grep pattern: $GREP_PATTERN)"
+      echo "Warning: Could not identify specific test files, running full suite with filter."
+  fi
+
 else
   echo "Running all tests with $SCOPE $args"
 fi
 
-npx lerna exec --scope="$SCOPE" "npm run test:debug $args"
+npx lerna exec --scope="$SCOPE" "$npm_command $args"
