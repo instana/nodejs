@@ -185,7 +185,7 @@ mochaSuiteFn(suiteTitle, function () {
 
   before(async function () {
     const installTimeout = config.getNPMInstallTimeout();
-    const maxRetries = 4;
+    const maxRetries = 3;
     const semaphoreWait = process.env.CI ? 10 * 60 * 1000 : 0;
     this.timeout(8 * 60 * 1000 + semaphoreWait);
 
@@ -201,8 +201,13 @@ mochaSuiteFn(suiteTitle, function () {
 
       log('[INFO] Running npm install for ${suiteName}@${displayVersion}...');
       const npmCmd = 'npm install --no-package-lock --no-audit --prefix ./ --no-progress';
-      for (let attempt = 0; attempt <= maxRetries; attempt++) {
-        const timeout = (60 + attempt * 30) * 1000;
+      for (let attempt = 0; attempt < maxRetries; attempt++) {${
+            isOptional
+              ? `
+        const timeout = 180 * 1000;`
+              : `
+        const timeout = (60 + attempt * 30) * 1000;`
+          }
         try {
           execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });${
             isOptional
@@ -214,7 +219,7 @@ mochaSuiteFn(suiteTitle, function () {
           }
           break;
         } catch (err) {
-          if (attempt === maxRetries) throw err;
+          if (attempt === maxRetries - 1) throw err;
           const secs = timeout / 1000;
           log(\`[WARN] npm install failed (\${err.message}), retry \${attempt + 1}/\${maxRetries} (\${secs}s)...\`);
           fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true, maxRetries: 3 });
