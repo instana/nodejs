@@ -159,6 +159,28 @@ app.post('/valuesAndCall', (req, res) => {
   });
 });
 
+app.post('/error', (req, res) => {
+  pool.getConnection((err, connection) => {
+    if (err) {
+      log('Failed to get connection', err);
+      res.sendStatus(500);
+      return;
+    }
+
+    connection.query('SELECT * FROM non_existent_table', queryError => {
+      connection.release();
+
+      if (queryError) {
+        log('Expected error occurred', queryError);
+        res.sendStatus(500);
+        return;
+      }
+
+      res.sendStatus(200);
+    });
+  });
+});
+
 app.listen(port, () => {
   log(`Listening on port: ${port} (driver: mysql, cluster: ${useCluster})`);
 });
