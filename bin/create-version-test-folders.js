@@ -143,23 +143,35 @@ function copyParentFiles(dir, sourceDir) {
   return copied;
 }
 
+function rmDir(dirPath) {
+  try {
+    fs.rmSync(dirPath, { recursive: true, force: true, maxRetries: 10, retryDelay: 1000 });
+  } catch (err) {
+    if (process.platform !== 'win32') {
+      try {
+        execSync(\`rm -rf \${dirPath}\`, { stdio: 'ignore' });
+      } catch (e) {
+        // ignore
+      }
+    }
+  }
+}
+
 function cleanupCopiedFiles(files) {
   files.forEach(f => {
-    try { fs.rmSync(f, { recursive: true, force: true }); } catch (_) {}
+    rmDir(f);
   });
 }
 
-${
-  esmOnly
-    ? `if (!process.env.RUN_ESM) {
+${esmOnly
+      ? `if (!process.env.RUN_ESM) {
   it.skip('tracing/${suiteName}@${displayVersion} (ESM-only, set RUN_ESM=true)');
   return;
 }
 
 `
-    : ''
-}${
-    nodeConstraint
+      : ''
+    }${nodeConstraint
       ? `// eslint-disable-next-line global-require
 if (!require('semver').satisfies(process.versions.node, '${nodeConstraint}')) {
   it.skip('tracing/${suiteName}@${displayVersion} skipped (requires node ${nodeConstraint})');
@@ -168,14 +180,14 @@ if (!require('semver').satisfies(process.versions.node, '${nodeConstraint}')) {
 
 `
       : ''
-  }function log(msg) { console.log(\`[\${new Date().toISOString()}] \${msg}\`); }
+    }function log(msg) { console.log(\`[\${new Date().toISOString()}] \${msg}\`); }
 
 const esmPrefix = process.env.RUN_ESM ? '[ESM] ' : '';
 const ts = new Date().toISOString();
 const suiteTitle = esmPrefix + \`[\${ts}] tracing/${suiteName}@${displayVersion}${mode ? ` (${mode})` : ''}\`;
 mochaSuiteFn(suiteTitle, function () {
   this.timeout(config.getTestTimeout());
-  try { fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true, maxRetries: 3 }); } catch (_) {}
+  rmDir(path.join(__dirname, 'node_modules'));
   const copiedFiles = copyParentFiles(__dirname, path.resolve(__dirname, '${relSourcePath}'));
   const cleanup = () => cleanupCopiedFiles(copiedFiles);
   after(() => cleanup());
@@ -193,7 +205,7 @@ mochaSuiteFn(suiteTitle, function () {
     const slot = process.env.CI ? await installSemaphore.acquireSlot(log) : undefined;
     if (slot !== undefined) log(\`[INFO] Acquired install slot \${slot}\`);
     try {
-      fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true, maxRetries });
+      rmDir(path.join(__dirname, 'node_modules'));
 
       // eslint-disable-next-line global-require,import/no-dynamic-require
       const preinstalledMod = require('@_local/collector/test/test_util/preinstalled-node-modules');
@@ -201,28 +213,26 @@ mochaSuiteFn(suiteTitle, function () {
 
       log('[INFO] Running npm install for ${suiteName}@${displayVersion}...');
       const npmCmd = 'npm install --no-package-lock --no-audit --prefix ./ --no-progress';
-      for (let attempt = 0; attempt < maxRetries; attempt++) {${
-            isOptional
-              ? `
+      for (let attempt = 0; attempt < maxRetries; attempt++) {${isOptional
+      ? `
         const timeout = 180 * 1000;`
-              : `
+      : `
         const timeout = (60 + attempt * 30) * 1000;`
-          }
+    }
         try {
-          execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });${
-            isOptional
-              ? `
+          execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });${isOptional
+      ? `
           if (!fs.existsSync(path.join(__dirname, 'node_modules', '${suiteName}'))) {
             throw new Error('${suiteName} not found after install');
           }`
-              : ''
-          }
+      : ''
+    }
           break;
         } catch (err) {
           if (attempt === maxRetries - 1) throw err;
           const secs = timeout / 1000;
           log(\`[WARN] npm install failed (\${err.message}), retry \${attempt + 1}/\${maxRetries} (\${secs}s)...\`);
-          fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true, maxRetries: 3 });
+          rmDir(path.join(__dirname, 'node_modules'));
         }
       }
     } finally {
