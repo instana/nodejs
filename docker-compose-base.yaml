@@ -10,13 +10,13 @@ services:
       ORACLE_PWD: teamnodejspassword
 
   redis:
-    image: redis:7.4.3
+    image: public.ecr.aws/docker/library/redis:7.4.3
     ports:
       - 6379:6379
 
  # sentinel test setup
   redis-slave:
-    image: redis:7.4.3
+    image: public.ecr.aws/docker/library/redis:7.4.3
     network_mode: host
     command:
       [
@@ -29,7 +29,7 @@ services:
       ]
 
   redis-sentinel:
-    image: redis:7.4.3
+    image: public.ecr.aws/docker/library/redis:7.4.3
     network_mode: host
     command: >
       sh -c 'echo "sentinel monitor mymaster 127.0.0.1 6379 1" > /etc/sentinel.conf &&
