@@ -19,7 +19,7 @@ process.on('SIGTERM', () => {
  */
 
 const http = require('http');
-const { delay, sendToParent } = require('../../../core/test/test_util');
+const { delay, sendToParent } = require('@_local/core/test/test_util');
 
 const instana = require('../..');
 

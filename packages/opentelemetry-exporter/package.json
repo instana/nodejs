@@ -61,7 +61,6 @@
     "@opentelemetry/core": "2.3.0"
   },
   "devDependencies": {
-    "@instana/core": "5.2.2",
     "@opentelemetry/auto-instrumentations-node": "^0.67.3",
     "@opentelemetry/resources": "^2.3.0",
     "@opentelemetry/sdk-node": "^0.209.0",

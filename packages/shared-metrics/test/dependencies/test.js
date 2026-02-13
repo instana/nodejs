@@ -15,10 +15,10 @@ const path = require('path');
 const rimraf = require('rimraf');
 const { satisfies } = require('semver');
 
-const config = require('@instana/core/test/config');
-const { retry, runCommandSync } = require('@instana/core/test/test_util');
-const ProcessControls = require('../../../collector/test/test_util/ProcessControls');
-const globalAgent = require('../../../collector/test/globalAgent');
+const config = require('@_local/core/test/config');
+const { retry, runCommandSync } = require('@_local/core/test/test_util');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
+const globalAgent = require('@_local/collector/test/globalAgent');
 
 describe('dependencies', function () {
   // Some of the tests in this suite include running npm install and on CI we have observed that this can take roughly
@@ -94,7 +94,7 @@ describe('dependencies', function () {
       const instanaPath = path.join(tmpDir, 'node_modules', '@instana');
       mkdirp.sync(instanaPath);
       const collectorPath = path.join(instanaPath, 'collector');
-      // We create a symlink to this repo for the @instana/collector package to be able to test with the current code
+      // We create a symlink to this repo for the @_local/collector package to be able to test with the current code
       // base.
       symlinkSync(path.join(repoRootDir, 'packages', 'collector'), collectorPath);
       unlinkSync(path.join(tmpDir, 'package.json'));
@@ -160,7 +160,7 @@ describe('dependencies', function () {
       const instanaPath = path.join(tmpDir, 'node_modules', '@instana');
       mkdirp.sync(instanaPath);
       const collectorPath = path.join(instanaPath, 'collector');
-      // We create a symlink to this repo for the @instana/collector package to be able to test with the current code
+      // We create a symlink to this repo for the @_local/collector package to be able to test with the current code
       // base.
       symlinkSync(path.join(repoRootDir, 'packages', 'collector'), collectorPath);
     });

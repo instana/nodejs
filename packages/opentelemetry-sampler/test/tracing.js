@@ -7,7 +7,7 @@
 const process = require('process');
 const api = require('@opentelemetry/api');
 const logPrefix = `OpenTelemetry Sampler tracing (${process.pid}):\t`;
-const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
+const log = require('@_local/core/test/test_util/log').getLogger(logPrefix);
 const opentelemetry = require('@opentelemetry/sdk-node');
 const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
 const { ATTR_SERVICE_NAME } = require('@opentelemetry/semantic-conventions');

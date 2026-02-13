@@ -23,7 +23,11 @@ exports.getTestTimeout = () => {
     return 120 * 1000;
   }
 
-  return 2 * 5000;
+  return 4 * 5000;
+};
+
+exports.getNPMInstallTimeout = () => {
+  return 60 * 1000;
 };
 
 // The retry needs to end before the mocha timeout!

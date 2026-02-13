@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "socket.io-client": "latest",
+    "@opentelemetry/api": "1.9.0",
+    "@opentelemetry/api-v1.3.0": "npm:@opentelemetry/api@1.3.0"
+  }
+}

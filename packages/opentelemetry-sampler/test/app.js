@@ -29,11 +29,11 @@ require('./tracing');
 const express = require('express');
 
 const logPrefix = `OpenTelemetry test app (${process.pid}):\t`;
-const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
-const { delay } = require('@instana/core/test/test_util');
-const { sendToParent } = require('@instana/core/test/test_util');
+const log = require('@_local/core/test/test_util/log').getLogger(logPrefix);
+const { delay } = require('@_local/core/test/test_util');
+const { sendToParent } = require('@_local/core/test/test_util');
 
-const getAppPort = require('@instana/collector/test/test_util/app-port');
+const getAppPort = require('@_local/collector/test/test_util/app-port');
 const port = getAppPort();
 
 /**

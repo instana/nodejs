@@ -30,26 +30,17 @@ currencies = currencies.map(currency => {
   console.log('\n###############################################');
   console.log(`Checking ${currency.name}...`);
 
-  let installedVersion = utils.getRootDependencyVersion(currency.name);
+  let installedVersion = utils.getLatestInstalledVersion(currency).version;
   let latestVersion;
   let upToDate;
   let latestVersionPublishedAt = 'N/A';
   let daysBehind = '0';
-
-  if (!installedVersion) {
-    installedVersion = utils.getPackageDependencyVersion(currency.name);
-  }
 
   // CASE: core pkg
   if (currency.core) {
     installedVersion = latestVersion = 'latest';
     upToDate = true;
   } else {
-    // CASE: remove tilde or caret
-    if (installedVersion) {
-      installedVersion = installedVersion.replace(/[^0-9.]/g, '');
-    }
-
     latestVersion = utils.getLatestVersion({
       pkgName: currency.name,
       installedVersion: installedVersion,
@@ -116,6 +107,7 @@ currencies = currencies.map(currency => {
       : latestVersionPublishedAt,
     daysBehind
   };
+
   return currency;
 });
 

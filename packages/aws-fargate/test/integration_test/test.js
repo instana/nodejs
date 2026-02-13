@@ -8,13 +8,13 @@
 const { expect, assert } = require('chai');
 const { fail } = assert;
 const path = require('path');
-const constants = require('@instana/core').tracing.constants;
-const portfinder = require('@instana/collector/test/test_util/portfinder');
+const constants = require('@_local/core').tracing.constants;
+const portfinder = require('@_local/collector/test/test_util/portfinder');
 
 const Control = require('../Control');
-const { delay, expectExactlyOneMatching } = require('../../../core/test/test_util');
-const config = require('@instana/core/test/config');
-const retry = require('@instana/core/test/test_util/retry');
+const { delay, expectExactlyOneMatching } = require('@_local/core/test/test_util');
+const config = require('@_local/core/test/config');
+const retry = require('@_local/core/test/test_util/retry');
 
 const region = 'us-east-2';
 const account = '555123456789';

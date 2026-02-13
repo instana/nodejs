@@ -1,0 +1,5 @@
+{
+    "dependencies": {
+        "npm-installed-test-app": "file:../node_modules/npm-installed-test-app"
+    }
+}

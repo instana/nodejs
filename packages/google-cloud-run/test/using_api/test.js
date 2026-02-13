@@ -7,11 +7,11 @@
 
 const expect = require('chai').expect;
 const path = require('path');
-const constants = require('@instana/core').tracing.constants;
+const constants = require('@_local/core').tracing.constants;
 
 const Control = require('../Control');
-const { delay, expectExactlyOneMatching, retry } = require('../../../core/test/test_util');
-const config = require('@instana/core/test/config');
+const { delay, expectExactlyOneMatching, retry } = require('@_local/core/test/test_util');
+const config = require('@_local/core/test/config');
 
 const instanceId =
   // eslint-disable-next-line max-len

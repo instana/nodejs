@@ -37,9 +37,8 @@ exports.request = function request(opts) {
   }
 
   return new Promise((resolve, reject) => {
-    const client = http2.connect(baseUrl, {
-      ca: cert
-    });
+    const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:|$)/.test(baseUrl);
+    const client = http2.connect(baseUrl, isLocalhost ? { ca: cert } : {});
 
     client.on('error', err => {
       reject(err);

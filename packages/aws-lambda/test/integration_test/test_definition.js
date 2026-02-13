@@ -7,15 +7,15 @@
 
 const expect = require('chai').expect;
 const path = require('path');
-const constants = require('@instana/core').tracing.constants;
+const constants = require('@_local/core').tracing.constants;
 
 const Control = require('../Control');
-const portfinder = require('@instana/collector/test/test_util/portfinder');
-const retry = require('@instana/core/test/test_util/retry');
+const portfinder = require('@_local/collector/test/test_util/portfinder');
+const retry = require('@_local/core/test/test_util/retry');
 
-const config = require('@instana/core/test/config');
-const delay = require('../../../core/test/test_util/delay');
-const expectExactlyOneMatching = require('../../../core/test/test_util/expectExactlyOneMatching');
+const config = require('@_local/core/test/config');
+const delay = require('@_local/core/test/test_util/delay');
+const expectExactlyOneMatching = require('@_local/core/test/test_util/expectExactlyOneMatching');
 
 const { fail } = expect;
 

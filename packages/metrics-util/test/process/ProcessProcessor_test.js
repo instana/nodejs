@@ -7,9 +7,9 @@
 
 const { expect } = require('chai');
 
-const { delay, retry } = require('../../../core/test/test_util');
-const testConfig = require('@instana/core/test/config');
-const core = require('@instana/core');
+const { delay, retry } = require('@_local/core/test/test_util');
+const testConfig = require('@_local/core/test/config');
+const core = require('@_local/core');
 const ProcessProcessor = require('../../src/process/ProcessProcessor');
 
 describe('Process processor', function () {

@@ -8,10 +8,10 @@ const path = require('path');
 const _ = require('lodash');
 const expect = require('chai').expect;
 
-const testUtils = require('@instana/core/test/test_util');
-const config = require('@instana/core/test/config');
+const testUtils = require('@_local/core/test/test_util');
+const config = require('@_local/core/test/config');
 
-const ProcessControls = require('../../../collector/test/test_util/ProcessControls');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 
 describe('cjs require collector in preload phase', function () {
   this.timeout(config.getTestTimeout());
@@ -19,6 +19,7 @@ describe('cjs require collector in preload phase', function () {
 
   before(async () => {
     controls = new ProcessControls({
+      dirname: __dirname,
       useGlobalAgent: true,
       cwd: path.join(__dirname, 'module'),
       appPath: path.join(__dirname, 'module', 'src', 'app'),

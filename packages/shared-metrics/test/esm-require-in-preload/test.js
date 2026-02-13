@@ -6,13 +6,13 @@
 
 const path = require('path');
 const _ = require('lodash');
-const { supportedVersion } = require('@instana/core').tracing;
+const { supportedVersion } = require('@_local/core').tracing;
 const expect = require('chai').expect;
 
-const testUtils = require('@instana/core/test/test_util');
-const config = require('@instana/core/test/config');
+const testUtils = require('@_local/core/test/test_util');
+const config = require('@_local/core/test/config');
 
-const ProcessControls = require('../../../collector/test/test_util/ProcessControls');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
@@ -22,6 +22,7 @@ mochaSuiteFn('ejs require collector in preload', function () {
 
   before(async () => {
     controls = new ProcessControls({
+      dirname: __dirname,
       useGlobalAgent: true,
       cwd: path.join(__dirname, 'module'),
       appPath: path.join(__dirname, 'module', 'src', 'app'),

@@ -11,8 +11,8 @@ const portFinder = require('../test_util/portfinder');
 const path = require('path');
 const _ = require('lodash');
 
-const { retry, delay } = require('../../../core/test/test_util');
-const config = require('../../../core/test/config');
+const { retry, delay } = require('@_local/core/test/test_util');
+const config = require('@_local/core/test/config');
 
 class AgentStubControls {
   constructor(agentPort) {
@@ -76,11 +76,25 @@ class AgentStubControls {
     await this.waitUntilAgentHasStarted();
   }
 
-  stopAgent() {
-    this.agentStub.kill();
+  async stopAgent() {
+    const pid = this.agentStub.pid;
 
-    // eslint-disable-next-line no-console
-    console.log(`[AgentStubControls] Stopped agent stub with pid ${this.agentStub.pid}`);
+    return new Promise(resolve => {
+      if (this.agentStub.exitCode !== null) {
+        // eslint-disable-next-line no-console
+        console.log(`[AgentStubControls] Agent stub ${pid} already exited.`);
+        resolve();
+        return;
+      }
+
+      this.agentStub.once('exit', () => {
+        // eslint-disable-next-line no-console
+        console.log(`[AgentStubControls] Stopped agent stub with pid ${pid}`);
+        resolve();
+      });
+
+      this.agentStub.kill();
+    });
   }
 
   getPort() {
@@ -88,7 +102,7 @@ class AgentStubControls {
   }
 
   async waitUntilAgentHasStarted() {
-    const url = `http://127.0.0.1:${this.agentPort}/ping`;
+    const url = `http://127.0.0.1:${this.agentPort}`;
 
     // eslint-disable-next-line no-console
     console.log(`[AgentStubControls] starting: ${url}`);
@@ -97,7 +111,7 @@ class AgentStubControls {
       await retry(() =>
         fetch(url, {
           method: 'GET',
-          url
+          url: `${url}/ping`
         })
       );
 
@@ -105,7 +119,8 @@ class AgentStubControls {
       console.log(`[AgentStubControls] started with pid ${this.agentStub.pid}`);
     } catch (err) {
       // eslint-disable-next-line no-console
-      console.log(`agentStubControls: error waiting until server (${url}) is up: ${err.message}`);
+      console.error(`agentStubControls: error waiting until server (${url}) is up: ${err.message}`);
+      throw err;
     }
   }
 

@@ -1,6 +1,6 @@
     - name: {{name}}-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: {{name}}
       params:

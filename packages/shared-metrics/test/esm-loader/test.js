@@ -7,11 +7,11 @@
 const path = require('path');
 const _ = require('lodash');
 const expect = require('chai').expect;
-const { supportedVersion } = require('@instana/core').tracing;
-const testUtils = require('@instana/core/test/test_util');
-const config = require('@instana/core/test/config');
+const { supportedVersion } = require('@_local/core').tracing;
+const testUtils = require('@_local/core/test/test_util');
+const config = require('@_local/core/test/config');
 
-const ProcessControls = require('../../../collector/test/test_util/ProcessControls');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 const loaderPath = ['--import', '../../../../collector/esm-register.mjs'];
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
@@ -23,6 +23,7 @@ mochaSuiteFn('ESM loader', function () {
     let controls;
     before(async () => {
       controls = new ProcessControls({
+        dirname: __dirname,
         useGlobalAgent: true,
         cwd: path.join(__dirname, 'module'),
         appPath: path.join(__dirname, 'module', 'src', 'app'),
@@ -56,6 +57,7 @@ mochaSuiteFn('ESM loader', function () {
 
     before(async () => {
       controls = new ProcessControls({
+        dirname: __dirname,
         useGlobalAgent: true,
         cwd: path.join(__dirname, 'module'),
         appPath: path.join(__dirname, 'module-2', 'src', 'app.mjs'),
@@ -89,6 +91,7 @@ mochaSuiteFn('ESM loader', function () {
 
     before(async () => {
       controls = new ProcessControls({
+        dirname: __dirname,
         useGlobalAgent: true,
         cwd: path.join(__dirname, 'module'),
         appPath: path.join(__dirname, 'module-3', 'node_modules', 'my-app', 'server.mjs'),
@@ -123,6 +126,7 @@ mochaSuiteFn('ESM loader', function () {
 
     before(async () => {
       controls = new ProcessControls({
+        dirname: __dirname,
         env: {
           NODE_OPTIONS: nodeOption
         },

@@ -7,11 +7,11 @@
 
 const { expect } = require('chai');
 const path = require('path');
-const constants = require('@instana/core').tracing.constants;
+const constants = require('@_local/core').tracing.constants;
 
 const Control = require('../Control');
-const { delay, expectExactlyNMatching, isCI } = require('../../../core/test/test_util');
-const config = require('@instana/core/test/config');
+const { delay, expectExactlyNMatching, isCI } = require('@_local/core/test/test_util');
+const config = require('@_local/core/test/config');
 
 const functionName = 'functionName';
 const unqualifiedArn = `arn:aws:lambda:us-east-2:767398002385:function:${functionName}`;

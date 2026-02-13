@@ -8,6 +8,7 @@
 module.exports = {
   rules: {
     'no-console': 'off',
-    'instana/no-unsafe-require': 'off'
+    'instana/no-unsafe-require': 'off',
+    'import/no-extraneous-dependencies': ['error', { devDependencies: true }]
   }
 };

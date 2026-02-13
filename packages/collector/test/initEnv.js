@@ -5,49 +5,194 @@
 
 'use strict';
 
-// NOTE: default docker compose hosts, ports and credentials
-const DEFAULT_ENV_VALUES = {
-  MONGODB: '127.0.0.1:27017',
-  ELASTICSEARCH: '127.0.0.1:9200',
-  ELASTICSEARCH_ALTERNATIVE: 'localhost:9200',
-  ZOOKEEPER: '127.0.0.1:2181',
-  KAFKA: 'localhost:9092',
-  SCHEMA_REGISTRY: 'http://localhost:8081',
-  REDIS: '127.0.0.1:6379',
-  REDIS_ALTERNATIVE: 'localhost:6379',
-  ORACLEDB: 'localhost:1521',
-  REDIS_SENTINEL_MASTER_NAME: 'mymaster',
-  REDIS_SENTINEL_HOST: 'localhost',
-  REDIS_SENTINEL_PORT: 26379,
-  COUCHBASE: 'couchbase://127.0.0.1:11210',
-  COUCHBASE_ALTERNATIVE: 'couchbase://127.0.0.1',
-  COUCHBASE_WEB_UI: 'http://127.0.0.1:8091',
-  LOCALSTACK_AWS: 'localstack://127.0.0.1:4566',
-  MYSQL_HOST: '127.0.0.1',
-  MYSQL_PORT: '3306',
-  MYSQL_USER: 'node',
-  MYSQL_PW: 'nodepw',
-  MYSQL_DB: 'nodedb',
-  AMQP: 'amqp://127.0.0.1',
-  NATS: 'nats://127.0.0.1:4222',
-  NATS_ALTERNATIVE: 'nats://localhost:4222',
-  NATS_STREAMING: 'nats://127.0.0.1:4223',
-  NATS_STREAMING_ALTERNATIVE: 'nats://127.0.0.1:4224',
-  POSTGRES_USER: 'node',
-  POSTGRES_PASSWORD: 'nodepw',
-  POSTGRES_DB: 'nodedb',
-  POSTGRES_HOST: '127.0.0.1',
-  PRISMA_POSTGRES_URL: 'postgresql://node:nodepw@127.0.0.1/nodedb?schema=public',
-  MSSQL_HOST: 'localhost',
-  MSSQL_PORT: '1433',
-  MSSQL_USER: 'sa',
-  MSSQL_PW: 'stanCanHazMsSQL1',
-  PRISMA_SQLITE_URL: 'file:./dev.db'
-};
+const path = require('path');
+const fs = require('fs');
+const { execSync } = require('child_process');
+const crypto = require('crypto');
+const isCI = require('@_local/core/test/test_util/is_ci');
 
-// CASE: if env variable is not set from outside, fallback to defaults
-Object.keys(DEFAULT_ENV_VALUES).forEach(key => {
+const rootDir = path.join(__dirname, '..', '..', '..');
+
+function log(msg) {
+  // eslint-disable-next-line no-console
+  console.log(`[${new Date().toISOString()}] ${msg}`);
+}
+
+// NOTE: default docker compose hosts, ports and credentials
+const configPath = path.join(rootDir, 'hosts_config.json');
+const hostsConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+
+Object.keys(hostsConfig).forEach(key => {
   if (!process.env[key]) {
-    process.env[key] = DEFAULT_ENV_VALUES[key];
+    process.env[key] = hostsConfig[key];
   }
 });
+
+if (!isCI()) {
+  const checksumPath = path.join(__dirname, '.currencies-checksum');
+  const hash = crypto.createHash('md5');
+  hash.update(fs.readFileSync(path.join(rootDir, 'currencies.json'), 'utf8'));
+  hashTemplates(__dirname, hash);
+  const currentHash = hash.digest('hex');
+
+  let needsRegen = true;
+  try {
+    needsRegen = fs.readFileSync(checksumPath, 'utf8').trim() !== currentHash;
+  } catch (_) {
+    // checksum file doesn't exist yet → first run
+  }
+
+  if (needsRegen) {
+    log('[INFO] Test folders out of date — regenerating...');
+    execSync('node bin/create-version-test-folders.js', { cwd: rootDir, stdio: 'inherit' });
+    fs.writeFileSync(checksumPath, currentHash);
+  }
+}
+
+if (process.env.SKIP_TGZ !== 'true') {
+  const testDir = __dirname;
+  const preinstallScript = path.join(testDir, 'preinstall.sh');
+
+  if (fs.existsSync(preinstallScript)) {
+    const tgzChecksumPath = path.join(testDir, '.tgz-checksum');
+    const tgzLockPath = path.join(testDir, '.tgz-lock');
+    const preinstalledArchive = path.join(testDir, 'preinstalled-node-modules', 'node_modules.tar.gz');
+    const srcDirs = ['collector', 'core', 'shared-metrics'].map(p => path.join(rootDir, 'packages', p, 'src'));
+    const tgzHash = hashDirectories(srcDirs);
+
+    let needsTgzRegen = true;
+    try {
+      needsTgzRegen = fs.readFileSync(tgzChecksumPath, 'utf8').trim() !== tgzHash || !fs.existsSync(preinstalledArchive);
+    } catch (_) {
+      // first run
+    }
+
+    if (needsTgzRegen) {
+      const regenerate = () => {
+        log('[INFO] Source changed — regenerating tgz packages and preinstalled node_modules...');
+        execSync(`bash "${preinstallScript}"`, { cwd: testDir, stdio: 'inherit' });
+        fs.writeFileSync(tgzChecksumPath, tgzHash);
+      };
+
+      if (isCI()) {
+        const isStillNeeded = () => {
+          try {
+            return fs.readFileSync(tgzChecksumPath, 'utf8').trim() !== tgzHash || !fs.existsSync(preinstalledArchive);
+          } catch (_) {
+            return true;
+          }
+        };
+
+        acquireLock(tgzLockPath, regenerate, isStillNeeded);
+      } else {
+        regenerate();
+      }
+    } else {
+      log('[INFO] tgz packages and preinstalled node_modules up to date, skipping generation.');
+    }
+  }
+}
+
+function hashDirectories(dirs) {
+  const h = crypto.createHash('md5');
+  dirs.forEach(dir => hashDir(dir, h));
+  return h.digest('hex');
+}
+
+function hashDir(dir, h) {
+  if (!fs.existsSync(dir)) return;
+  fs.readdirSync(dir, { withFileTypes: true }).forEach(entry => {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      hashDir(full, h);
+    } else {
+      h.update(fs.readFileSync(full));
+    }
+  });
+}
+
+function hashTemplates(dir, h) {
+  fs.readdirSync(dir, { withFileTypes: true })
+    .filter(entry => entry.name !== 'node_modules' && !entry.name.startsWith('_v'))
+    .forEach(entry => {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        hashTemplates(full, h);
+      } else if (entry.name === 'package.json.template' || entry.name === 'modes.json') {
+        h.update(fs.readFileSync(full, 'utf8'));
+      } else if (entry.name === 'test_base.js') {
+        h.update(full);
+      }
+    });
+}
+
+/**
+ * Acquires a file-based lock for exclusive access.
+ * If lock is held by another process, waits until it's released.
+ *
+ * @param {string} lockPath - Path to the lock file
+ * @param {Function} callback - Function to execute while holding the lock
+ * @param {Function} [isStillNeeded] - If provided, checked after waiting. Skips lock acquisition if returns false.
+ */
+function acquireLock(lockPath, callback, isStillNeeded) {
+  const maxWaitTime = 10 * 60 * 1000;
+  const checkInterval = 1000 * 5;
+  const startTime = Date.now();
+  const lockTimeout = 15 * 60 * 1000;
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    if (Date.now() - startTime > maxWaitTime) {
+      throw new Error(`Timeout waiting for lock at ${lockPath}`);
+    }
+
+    if (fs.existsSync(lockPath)) {
+      try {
+        const lockData = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
+        const lockAge = Date.now() - lockData.timestamp;
+
+        if (lockAge > lockTimeout) {
+          log('[WARN] Removing stale lock file');
+          try { fs.unlinkSync(lockPath); } catch (_) { /* already removed */ }
+          continue;
+        }
+      } catch (err) {
+        if (err instanceof SyntaxError) {
+          try { fs.unlinkSync(lockPath); } catch (_) { /* already removed */ }
+          continue;
+        }
+        throw err;
+      }
+
+      log('[INFO] Waiting for another process to finish generation...');
+      execSync(`sleep ${checkInterval / 1000}`);
+      continue;
+    }
+
+    // After waiting, check if work is still needed before acquiring
+    if (isStillNeeded && !isStillNeeded()) {
+      log('[INFO] Another process already completed the generation.');
+      return;
+    }
+
+    // Try to acquire lock
+    try {
+      fs.writeFileSync(lockPath, JSON.stringify({ timestamp: Date.now(), pid: process.pid }), { flag: 'wx' });
+      log('[INFO] Lock acquired, starting generation...');
+    } catch (_) {
+      // Another process acquired it first, retry
+      continue;
+    }
+
+    try {
+      callback();
+    } finally {
+      try {
+        fs.unlinkSync(lockPath);
+        log('[INFO] Lock released.');
+      } catch (_) { /* already removed */ }
+    }
+
+    return;
+  }
+}

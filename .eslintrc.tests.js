@@ -24,6 +24,8 @@ module.exports = {
     'instana/no-unsafe-require': 'off',
     // tests can freely require dependencies from other packages via relative path
     'monorepo-cop/no-relative-import-outside-package': 'off',
-    'no-unused-expressions': 'off'
+    'no-unused-expressions': 'off',
+    'no-console': 'off',
+    'max-len': 'off'
   }
 };

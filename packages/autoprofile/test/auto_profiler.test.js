@@ -6,7 +6,7 @@
 'use strict';
 
 const assert = require('assert');
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('AutoProfiler', () => {

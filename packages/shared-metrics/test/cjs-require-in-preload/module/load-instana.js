@@ -4,4 +4,4 @@
 
 'use strict';
 
-require('../../../../collector/src')();
+require('@_local/collector/src')();

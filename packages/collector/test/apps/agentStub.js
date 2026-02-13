@@ -17,8 +17,7 @@ const express = require('express');
 const _ = require('lodash');
 // const morgan = require('morgan');
 const app = express();
-
-const deepMerge = require('../../../core/src/util/deepMerge');
+const deepMerge = require('@_local/core/src/util/deepMerge');
 
 const logger = bunyan.createLogger({ name: 'agent-stub', pid: process.pid });
 
@@ -327,6 +326,7 @@ app.delete('/', (req, res) => {
   receivedData = resetReceivedData();
   discoveries = {};
   requests = {};
+  agentLogs.length = 0;
   res.sendStatus(200);
 });
 
@@ -398,9 +398,14 @@ app.post('/request/:pid', (req, res) => {
   res.send({ status: 'OK' });
 });
 
-app.listen(port, () => {
-  logger.info('Agent stub listening on port: %s', port);
-});
+app
+  .listen(port, () => {
+    logger.info('Agent stub listening on port: %s', port);
+  })
+  .on('error', err => {
+    logger.error('Agent stub failed to start on port %s: %s', port, err.message);
+    process.exit(1);
+  });
 
 function aggregateMetrics(entityId, snapshotUpdate) {
   if (!receivedData.aggregatedMetrics[entityId]) {

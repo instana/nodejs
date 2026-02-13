@@ -24,5 +24,5 @@
 
   // Skipping autoprofile doesn’t work because TS still type-checks imported files.
   // TODO: fix in INSTA-65031
-  "exclude": ["node_modules", "packages/shared-metrics/test", "packages/autoprofile"]
+  "exclude": ["node_modules", "packages/autoprofile", "**/test"]
 }

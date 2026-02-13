@@ -8,12 +8,12 @@
 const { inspect } = require('util');
 const { expect } = require('chai');
 const path = require('path');
-const constants = require('@instana/core').tracing.constants;
+const constants = require('@_local/core').tracing.constants;
 
 const Control = require('../Control');
-const expectExactlyOneMatching = require('../../../core/test/test_util/expectExactlyOneMatching');
-const config = require('@instana/core/test/config');
-const { isCI } = require('@instana/core/test/test_util');
+const expectExactlyOneMatching = require('@_local/core/test/test_util/expectExactlyOneMatching');
+const config = require('@_local/core/test/config');
+const { isCI } = require('@_local/core/test/test_util');
 
 const functionName = 'functionName';
 const unqualifiedArn = `arn:aws:lambda:us-east-2:767398002385:function:${functionName}`;

@@ -6,7 +6,7 @@ spec:
   {{sidecars}}
   envFrom:
     - configMapRef:
-        name: environment-properties  
+        name: environment-properties
   params:
     - name: node-version
       value: $(params.node-version)
@@ -23,7 +23,7 @@ spec:
     - name: coverage
       value: $(params.coverage)
     - name: prerelease
-      value: $(params.prerelease) 
+      value: $(params.prerelease)
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -44,7 +44,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: $(params.continuous-delivery-context-secret)
-              key: "AZURE_REDIS_CLUSTER_PWD"              
+              key: "AZURE_REDIS_CLUSTER_PWD"
         - name: DB2_CONNECTION_STR
           valueFrom:
             secretKeyRef:
@@ -69,12 +69,15 @@ spec:
       imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
+        AVAILABLE_SIDECARS="{{availableSidecars}}"
+        SIDECAR_COUNTS="{{sidecarCounts}}"
         ARTIFACTS_PATH="$(workspaces.output.path)"
+
         cd $ARTIFACTS_PATH
 
         BASE_REVISION=$(git rev-parse origin/main)
         CIRCLE_COMPARE_URL=""
-        MODIFIED_FILES=""
+        # MODIFIED_FILES=""
         GIT_COMMIT_DESC=""
 
         if [ "$(params.prerelease)" == "true" ]; then
@@ -88,21 +91,21 @@ spec:
 
         if [ -n "$(params.revision)" ]; then
           CIRCLE_COMPARE_URL="$(params.repository)/compare/$BASE_REVISION..$(params.revision)"
-          MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+          # MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
           GIT_COMMIT_DESC=$(git log --format=%B -n 1 $(params.revision))
         fi
 
         echo "BASE_REVISION: $BASE_REVISION"
         echo "CIRCLE_COMPARE_URL: $CIRCLE_COMPARE_URL"
-        echo "MODIFIED_FILES: $MODIFIED_FILES"
+        # echo "MODIFIED_FILES: $MODIFIED_FILES"
         echo "GIT_COMMIT_DESC: $GIT_COMMIT_DESC"
 
         if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]'{{condition}}; then
           echo "Skipping group."
-          touch "{{groupName}}.succeeded"
+          touch "{{sanitizedGroupName}}.succeeded"
           exit 0
         fi
-        
+
         export CI=true
         export GCP_PROJECT="k8s-brewery"
         export AZURE_SQL_USERNAME="admin@instana@nodejs-team-db-server"
@@ -115,47 +118,59 @@ spec:
           export RUN_ESM=true
 
           if ! echo "{{groupName}}" | grep -q 'ci:collector'; then
-            echo "Skipping tests because groupName does not contain 'ci:collector'."
-            touch "{{groupName}}.succeeded"
+            echo "Skipping tests because group does not support ESM."
+            touch "{{sanitizedGroupName}}.succeeded"
             exit 0
           fi
         fi
 
+        if [ "{{claimTests}}" == "true" ]; then
+          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*.test.js" "{{totalTasks}}" "$ARTIFACTS_PATH" "$SIDECAR_COUNTS")
+
+          if [ -z "$CLAIMED_TESTS" ]; then
+            echo "No tests to claim for this task"
+            touch "{{sanitizedGroupName}}.succeeded"
+            exit 0
+          fi
+
+          echo "Claimed tests: $CLAIMED_TESTS"
+
+          # Write mapping to shared file (printed by tasks-results)
+          SHORT_NAMES=$(echo "$CLAIMED_TESTS" | tr ' ' '\n' | sed 's|.*/currencies/||; s|.*/misc/||; s|.*/unit/||; s|/test\.js$||' | tr '\n' ', ' | sed 's/,$//')
+          echo "{{sanitizedGroupName}}: $SHORT_NAMES" >> "$ARTIFACTS_PATH/test-mapping.txt"
+        fi
+
+        rm -f "{{sanitizedGroupName}}.succeeded" "{{sanitizedGroupName}}.failed"
+
         retry=1
-        while [ $retry -le 3 ]; do
+        LAST_EXIT=1
+        while [ $retry -le 2 ]; do
+          LAST_EXIT=0
           if [ "$(params.coverage)" == "true" ]; then
-            if [[ {{split}} =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT={{split}} CI_TEST_SPLIT_CURRENT={{splitNumber}} npm run coverage-ci --npm_command="{{groupName}}" --report_dir="{{sanitizedGroupName}}"
+            if [ "{{claimTests}}" == "true" ]; then
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="{{split}}" CI_TEST_SPLIT_CURRENT="{{splitNumber}}" npm run coverage-ci --npm_command="{{groupName}}" --report_dir="{{sanitizedGroupName}}" || LAST_EXIT=$?
             else
-               npm run coverage-ci --npm_command="{{groupName}}" --report_dir="{{sanitizedGroupName}}"
+              CI_TEST_SPLIT="{{split}}" CI_TEST_SPLIT_CURRENT="{{splitNumber}}" npm run coverage-ci --npm_command="{{groupName}}" --report_dir="{{sanitizedGroupName}}" || LAST_EXIT=$?
             fi
           else
-            if [[ {{split}} =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT={{split}} CI_TEST_SPLIT_CURRENT={{splitNumber}} npx lerna run "{{subname}}" --stream --scope="{{scope}}"
+            if [ "{{claimTests}}" == "true" ]; then
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="{{split}}" CI_TEST_SPLIT_CURRENT="{{splitNumber}}" npm run "{{groupName}}" || LAST_EXIT=$?
             else
-              npm run "{{groupName}}"
+              CI_TEST_SPLIT="{{split}}" CI_TEST_SPLIT_CURRENT="{{splitNumber}}" npm run "{{groupName}}" || LAST_EXIT=$?
             fi
-          fi          
+          fi
 
-          if [ $? -eq 0 ]; then
-            if [[ {{split}} =~ ^[0-9]+$ ]]; then
-              touch "{{subname}}.succeeded"
-            else
-              touch "{{groupName}}.succeeded"
-            fi
-
+          if [ $LAST_EXIT -eq 0 ]; then
+            touch "{{sanitizedGroupName}}.succeeded"
             break
           else
-            if [ $retry -eq 3 ]; then
-              if [[ {{split}} =~ ^[0-9]+$ ]]; then
-                touch "{{subname}}.failed"
-              else
-                touch "{{groupName}}.failed"
-              fi
-
-              exit 1
-            fi
-
+            echo "Attempt $retry failed with exit code $LAST_EXIT"
             retry=$((retry + 1))
           fi
         done
+
+        if [ ! -f "{{sanitizedGroupName}}.succeeded" ]; then
+          echo "All $((retry - 1)) retries failed for {{sanitizedGroupName}}"
+          touch "{{sanitizedGroupName}}.failed"
+          exit 1
+        fi

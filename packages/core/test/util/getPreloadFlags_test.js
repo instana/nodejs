@@ -31,29 +31,29 @@ describe('util.getPreloadFlags', () => {
 
   it('should return relevant flags from NODE_OPTIONS', () => {
     process.env.NODE_OPTIONS =
-      "INSTANA_DEBUG=true node --require '@instana/collector/src/immediate.js' ./something/src/index.js";
+      "INSTANA_DEBUG=true node --require '@_local/collector/src/immediate.js' ./something/src/index.js";
 
     const result = preloadFlags.get();
 
-    expect(result).equal("--require '@instana/collector/src/immediate.js'");
+    expect(result).equal("--require '@_local/collector/src/immediate.js'");
   });
 
   it('should return relevant flags from execArgv', () => {
-    process.execArgv = ['--require', '@instana/collector/src/immediate.js'];
+    process.execArgv = ['--require', '@_local/collector/src/immediate.js'];
 
     const result = preloadFlags.get();
 
-    expect(result).equal('--require @instana/collector/src/immediate.js');
+    expect(result).equal('--require @_local/collector/src/immediate.js');
   });
 
   it('should return relevant flags from both NODE_OPTIONS and execArgv', () => {
     process.env.NODE_OPTIONS = '--require /path/to/some/file';
-    process.execArgv = ['--import', '/path/to/instana/node_modules/@instana/collector/esm-register.mjs'];
+    process.execArgv = ['--import', '/path/to/instana/node_modules/@_local/collector/esm-register.mjs'];
 
     const result = preloadFlags.get();
 
     expect(result).equal(
-      '--require /path/to/some/file, --import /path/to/instana/node_modules/@instana/collector/esm-register.mjs'
+      '--require /path/to/some/file, --import /path/to/instana/node_modules/@_local/collector/esm-register.mjs'
     );
   });
 

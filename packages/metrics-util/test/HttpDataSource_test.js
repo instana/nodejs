@@ -9,9 +9,9 @@ const path = require('path');
 const { fork } = require('child_process');
 const { expect } = require('chai');
 
-const portfinder = require('@instana/collector/test/test_util/portfinder');
-const { delay, retry } = require('../../core/test/test_util');
-const config = require('@instana/core/test/config');
+const portfinder = require('@_local/collector/test/test_util/portfinder');
+const { delay, retry } = require('@_local/core/test/test_util');
+const config = require('@_local/core/test/config');
 
 const HttpDataSource = require('../src/HttpDataSource');
 

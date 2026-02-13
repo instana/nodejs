@@ -195,7 +195,7 @@ spec:
           workspace: artifacts
     - name: autoprofile-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: autoprofile
       params:
@@ -220,7 +220,7 @@ spec:
           workspace: artifacts
     - name: aws-fargate-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: aws-fargate
       params:
@@ -245,7 +245,7 @@ spec:
           workspace: artifacts
     - name: aws-lambda-split-2-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: aws-lambda-split-2
       params:
@@ -270,7 +270,7 @@ spec:
           workspace: artifacts
     - name: aws-lambda-split-3-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: aws-lambda-split-3
       params:
@@ -295,7 +295,7 @@ spec:
           workspace: artifacts
     - name: aws-lambda-split-4-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: aws-lambda-split-4
       params:
@@ -320,7 +320,7 @@ spec:
           workspace: artifacts
     - name: aws-lambda-split-5-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: aws-lambda-split-5
       params:
@@ -345,7 +345,7 @@ spec:
           workspace: artifacts
     - name: aws-lambda-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: aws-lambda
       params:
@@ -370,7 +370,7 @@ spec:
           workspace: artifacts
     - name: azure-container-services-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: azure-container-services
       params:
@@ -393,11 +393,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-general-task
+    - name: collector-1-redis-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-general
+        name: collector-1-redis
       params:
         - name: node-version
           value: $(params.node-version)
@@ -418,11 +418,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-cloud-aws-v2-split-2-task
+    - name: collector-10-redis-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-cloud-aws-v2-split-2
+        name: collector-10-redis
       params:
         - name: node-version
           value: $(params.node-version)
@@ -443,11 +443,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-cloud-aws-v2-split-3-task
+    - name: collector-11-redis-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-cloud-aws-v2-split-3
+        name: collector-11-redis
       params:
         - name: node-version
           value: $(params.node-version)
@@ -468,11 +468,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-cloud-aws-v2-task
+    - name: collector-12-redis-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-cloud-aws-v2
+        name: collector-12-redis
       params:
         - name: node-version
           value: $(params.node-version)
@@ -493,11 +493,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-cloud-aws-v3-split-2-task
+    - name: collector-13-redis-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-cloud-aws-v3-split-2
+        name: collector-13-redis
       params:
         - name: node-version
           value: $(params.node-version)
@@ -518,11 +518,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-cloud-aws-v3-split-3-task
+    - name: collector-14-redis-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-cloud-aws-v3-split-3
+        name: collector-14-redis
       params:
         - name: node-version
           value: $(params.node-version)
@@ -543,11 +543,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-cloud-aws-v3-task
+    - name: collector-15-redis-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-cloud-aws-v3
+        name: collector-15-redis
       params:
         - name: node-version
           value: $(params.node-version)
@@ -568,11 +568,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-cloud-azure-task
+    - name: collector-16-redis-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-cloud-azure
+        name: collector-16-redis
       params:
         - name: node-version
           value: $(params.node-version)
@@ -593,11 +593,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-cloud-gcp-task
+    - name: collector-17-redis-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-cloud-gcp
+        name: collector-17-redis
       params:
         - name: node-version
           value: $(params.node-version)
@@ -618,11 +618,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-database-split-10-task
+    - name: collector-18-redis-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-database-split-10
+        name: collector-18-redis
       params:
         - name: node-version
           value: $(params.node-version)
@@ -643,11 +643,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-database-split-2-task
+    - name: collector-19-redis-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-database-split-2
+        name: collector-19-redis
       params:
         - name: node-version
           value: $(params.node-version)
@@ -668,11 +668,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-database-split-3-task
+    - name: collector-2-redis-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-database-split-3
+        name: collector-2-redis
       params:
         - name: node-version
           value: $(params.node-version)
@@ -693,11 +693,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-database-split-4-task
+    - name: collector-20-redis-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-database-split-4
+        name: collector-20-redis
       params:
         - name: node-version
           value: $(params.node-version)
@@ -718,11 +718,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-database-split-5-task
+    - name: collector-21-kafka-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-database-split-5
+        name: collector-21-kafka
       params:
         - name: node-version
           value: $(params.node-version)
@@ -743,11 +743,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-database-split-6-task
+    - name: collector-22-kafka-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-database-split-6
+        name: collector-22-kafka
       params:
         - name: node-version
           value: $(params.node-version)
@@ -768,11 +768,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-database-split-7-task
+    - name: collector-23-kafka-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-database-split-7
+        name: collector-23-kafka
       params:
         - name: node-version
           value: $(params.node-version)
@@ -793,11 +793,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-database-split-8-task
+    - name: collector-24-kafka-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-database-split-8
+        name: collector-24-kafka
       params:
         - name: node-version
           value: $(params.node-version)
@@ -818,11 +818,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-database-split-9-task
+    - name: collector-25-kafka-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-database-split-9
+        name: collector-25-kafka
       params:
         - name: node-version
           value: $(params.node-version)
@@ -843,11 +843,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-database-task
+    - name: collector-26-kafka-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-database
+        name: collector-26-kafka
       params:
         - name: node-version
           value: $(params.node-version)
@@ -868,11 +868,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-frameworks-task
+    - name: collector-27-postgres-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-frameworks
+        name: collector-27-postgres
       params:
         - name: node-version
           value: $(params.node-version)
@@ -893,11 +893,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-general-task
+    - name: collector-28-postgres-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-general
+        name: collector-28-postgres
       params:
         - name: node-version
           value: $(params.node-version)
@@ -918,11 +918,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-logging-task
+    - name: collector-29-postgres-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-logging
+        name: collector-29-postgres
       params:
         - name: node-version
           value: $(params.node-version)
@@ -943,11 +943,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-messaging-split-2-task
+    - name: collector-3-redis-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-messaging-split-2
+        name: collector-3-redis
       params:
         - name: node-version
           value: $(params.node-version)
@@ -968,11 +968,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-messaging-split-3-task
+    - name: collector-30-elasticsearch-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-messaging-split-3
+        name: collector-30-elasticsearch
       params:
         - name: node-version
           value: $(params.node-version)
@@ -993,11 +993,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-messaging-split-4-task
+    - name: collector-31-elasticsearch-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-messaging-split-4
+        name: collector-31-elasticsearch
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1018,11 +1018,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-messaging-split-5-task
+    - name: collector-32-mongodb-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-messaging-split-5
+        name: collector-32-mongodb
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1043,11 +1043,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-messaging-split-6-task
+    - name: collector-33-couchbase-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-messaging-split-6
+        name: collector-33-couchbase
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1068,11 +1068,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-messaging-task
+    - name: collector-34-rabbitmq-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-messaging
+        name: collector-34-rabbitmq
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1093,11 +1093,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-misc-task
+    - name: collector-35-nats-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-misc
+        name: collector-35-nats
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1118,11 +1118,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-protocols-split-2-task
+    - name: collector-36-mysql-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-protocols-split-2
+        name: collector-36-mysql
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1143,11 +1143,211 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-protocols-task
+    - name: collector-37-localstack-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
-        name: collector-tracing-protocols
+        name: collector-37-localstack
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-38-memcached-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-38-memcached
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-39-oracledb-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-39-oracledb
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-4-redis-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-4-redis
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-5-redis-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-5-redis
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-6-redis-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-6-redis
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-7-redis-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-7-redis
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-8-redis-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-8-redis
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-9-redis-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-9-redis
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1170,7 +1370,7 @@ spec:
           workspace: artifacts
     - name: core-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: core
       params:
@@ -1195,7 +1395,7 @@ spec:
           workspace: artifacts
     - name: google-cloud-run-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: google-cloud-run
       params:
@@ -1220,7 +1420,7 @@ spec:
           workspace: artifacts
     - name: metrics-util-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: metrics-util
       params:
@@ -1245,7 +1445,7 @@ spec:
           workspace: artifacts
     - name: opentelemetry-exporter-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: opentelemetry-exporter
       params:
@@ -1270,7 +1470,7 @@ spec:
           workspace: artifacts
     - name: opentelemetry-sampler-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: opentelemetry-sampler
       params:
@@ -1295,7 +1495,7 @@ spec:
           workspace: artifacts
     - name: serverless-collector-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: serverless-collector
       params:
@@ -1320,7 +1520,7 @@ spec:
           workspace: artifacts
     - name: serverless-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: serverless
       params:
@@ -1345,7 +1545,7 @@ spec:
           workspace: artifacts
     - name: shared-metrics-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: shared-metrics
       params:

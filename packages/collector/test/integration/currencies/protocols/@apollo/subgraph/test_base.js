@@ -1,0 +1,335 @@
+/*
+ * (c) Copyright IBM Corp. 2021
+ */
+
+'use strict';
+
+const { expect } = require('chai');
+
+const constants = require('@_local/core').tracing.constants;
+const config = require('@_local/core/test/config');
+const testUtils = require('@_local/core/test/test_util');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
+const globalAgent = require('@_local/collector/test/globalAgent');
+
+const agentControls = globalAgent.instance;
+
+module.exports = function (name, version, isLatest) {
+  this.timeout(config.getTestTimeout() * 5);
+  globalAgent.setUpCleanUpHooks();
+
+  [true, false].forEach(withError => {
+    describe(`queries (with error: ${withError})`, function () {
+      let accountServiceControls;
+      let inventoryServiceControls;
+      let productsServiceControls;
+      let reviewsServiceControls;
+      let gatewayControls;
+      let clientControls;
+
+      before(async () => {
+        const commonEnv = {
+          LIBRARY_LATEST: isLatest,
+          LIBRARY_VERSION: version,
+          LIBRARY_NAME: name
+        };
+
+        accountServiceControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'services/accounts/index',
+          useGlobalAgent: true,
+          env: commonEnv
+        });
+        inventoryServiceControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'services/inventory/index',
+          useGlobalAgent: true,
+          env: commonEnv
+        });
+        productsServiceControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'services/products/index',
+          useGlobalAgent: true,
+          env: commonEnv
+        });
+        reviewsServiceControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'services/reviews/index',
+          useGlobalAgent: true,
+          env: commonEnv
+        });
+        gatewayControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'gateway',
+          useGlobalAgent: true,
+          env: {
+            ...commonEnv,
+            SERVICE_PORT_ACCOUNTS: accountServiceControls.getPort(),
+            SERVICE_PORT_INVENTORY: inventoryServiceControls.getPort(),
+            SERVICE_PORT_PRODUCTS: productsServiceControls.getPort(),
+            SERVICE_PORT_REVIEWS: reviewsServiceControls.getPort()
+          }
+        });
+        clientControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'client',
+          useGlobalAgent: true,
+          env: {
+            ...commonEnv,
+            SERVER_PORT: gatewayControls.getPort()
+          }
+        });
+
+        await accountServiceControls.startAndWaitForAgentConnection();
+        await inventoryServiceControls.startAndWaitForAgentConnection();
+        await productsServiceControls.startAndWaitForAgentConnection();
+        await reviewsServiceControls.startAndWaitForAgentConnection();
+        await gatewayControls.startAndWaitForAgentConnection();
+        await clientControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await accountServiceControls.stop();
+        await inventoryServiceControls.stop();
+        await productsServiceControls.stop();
+        await reviewsServiceControls.stop();
+        await gatewayControls.stop();
+        await clientControls.stop();
+      });
+
+      it(`must trace a query (with error: ${withError})`, () => {
+        const queryParams = withError ? 'withError=yes' : null;
+        const url = queryParams ? `/query?${queryParams}` : '/query';
+
+        return clientControls
+          .sendRequest({
+            method: 'POST',
+            path: url
+          })
+          .then(response => {
+            verifyQueryResponse(response, { withError });
+
+            return testUtils.retry(() => {
+              return agentControls.getSpans().then(spans => {
+                if (withError) {
+                  expect(spans.length).to.equal(5);
+                } else {
+                  expect(spans.length).to.equal(11);
+                }
+                return verifySpansForQuery(
+                  {
+                    gatewayControls,
+                    clientControls,
+                    inventoryServiceControls,
+                    accountServiceControls,
+                    reviewsServiceControls,
+                    productsServiceControls
+                  },
+                  { withError },
+                  spans
+                );
+              });
+            });
+          });
+      });
+    });
+  });
+
+  function verifyQueryResponse(response, testConfig) {
+    const { withError } = testConfig;
+    expect(response).to.be.an('object');
+
+    if (withError) {
+      expect(response.errors).to.have.lengthOf(1);
+    } else {
+      const { data } = response;
+      expect(data).to.be.an('object');
+      const { me } = data;
+      expect(me)
+        .to.be.an('object')
+        .that.deep.includes({
+          username: '@ada',
+          reviews: [
+            { body: 'Love it!', product: { name: 'Table', upc: '1', inStock: true } },
+            { body: 'Too expensive.', product: { name: 'Couch', upc: '2', inStock: false } }
+          ]
+        });
+    }
+  }
+
+  function verifySpansForQuery(allControls, testConfig, spans) {
+    const {
+      gatewayControls,
+      reviewsServiceControls,
+      productsServiceControls,
+      clientControls,
+      inventoryServiceControls,
+      accountServiceControls
+    } = allControls;
+
+    const { withError } = testConfig;
+    const httpEntryInClientApp = verifyHttpEntry(clientControls, spans);
+    const httpExitFromClientApp = verifyHttpExit(
+      httpEntryInClientApp,
+      clientControls,
+      gatewayControls.getPort(),
+      spans
+    );
+    const graphQLQueryEntryInGateway = verifyGraphQLGatewayEntry(httpExitFromClientApp, allControls, testConfig, spans);
+
+    const httpExitFromGatewayToAccounts = verifyHttpExit(
+      graphQLQueryEntryInGateway,
+      gatewayControls,
+      accountServiceControls.getPort(),
+      spans
+    );
+
+    verifyGraphQLAccountEntry(httpExitFromGatewayToAccounts, allControls, testConfig, spans);
+
+    if (!withError) {
+      const httpExitFromGatewayToInventory = verifyHttpExit(
+        graphQLQueryEntryInGateway,
+        gatewayControls,
+        inventoryServiceControls.getPort(),
+        spans
+      );
+      verifyGraphQLInventoryEntry(httpExitFromGatewayToInventory, allControls, testConfig, spans);
+
+      const httpExitFromGatewayToProducts = verifyHttpExit(
+        graphQLQueryEntryInGateway,
+        gatewayControls,
+        productsServiceControls.getPort(),
+        spans
+      );
+      verifyGraphQLProductsEntry(httpExitFromGatewayToProducts, allControls, testConfig, spans);
+
+      const httpExitFromGatewayToReviews = verifyHttpExit(
+        graphQLQueryEntryInGateway,
+        gatewayControls,
+        reviewsServiceControls.getPort(),
+        spans
+      );
+      verifyGraphQLReviewsEntry(httpExitFromGatewayToReviews, allControls, testConfig, spans);
+    }
+
+    const allGraphQLSpans = spans
+      .filter(s => s.n === 'graphql.server')
+      .filter(s => !['GetServiceDefinition', 'IntrospectionQuery'].includes(s.data.graphql.operationName))
+      .map(s => ({
+        n: s.n,
+        t: s.t,
+        s: s.s,
+        p: s.p,
+        k: s.k,
+        f: s.f,
+        ec: s.ec,
+        error: s.error,
+        data: s.data
+      }));
+    const expectedGraphQLSpans = withError ? 1 : 4;
+    if (allGraphQLSpans.length !== expectedGraphQLSpans) {
+      // eslint-disable-next-line no-console
+      allGraphQLSpans.forEach(s => console.log(JSON.stringify(s, null, 2)));
+    }
+    expect(allGraphQLSpans).to.have.lengthOf(expectedGraphQLSpans);
+  }
+
+  function verifyHttpEntry(source, spans) {
+    return testUtils.expectAtLeastOneMatching(spans, [
+      span => expect(span.n).to.equal('node.http.server'),
+      span => expect(span.k).to.equal(constants.ENTRY),
+      span => expect(span.p).to.not.exist,
+      span => expect(span.f.e).to.equal(String(source.getPid())),
+      span => expect(span.data.http.method).to.equal('POST'),
+      span => expect(span.data.http.url).to.equal('/query')
+    ]);
+  }
+
+  function verifyHttpExit(parentSpan, source, targetPort, spans) {
+    return testUtils.expectAtLeastOneMatching(spans, [
+      span => expect(span.n).to.equal('node.http.client'),
+      span => expect(span.k).to.equal(constants.EXIT),
+      span => expect(span.t).to.equal(parentSpan.t),
+      span => expect(span.f.e).to.equal(String(source.getPid())),
+      span => expect(span.data.http.url).to.match(new RegExp(`${targetPort}/graphql`)),
+      span => expect(span.data.http.method).to.equal('POST')
+    ]);
+  }
+
+  function verifyGraphQLGatewayEntry(parentSpan, allControls, testConfig, spans) {
+    const { gatewayControls } = allControls;
+    const entrySpans = spans.filter(span => span.k === 1 && span.n === 'graphql.server');
+    return testUtils.expectAtLeastOneMatching(entrySpans, span => {
+      verifyGraphQLQueryEntry(span, parentSpan, gatewayControls, testConfig);
+      expect(span.data.graphql.operationName).to.not.exist;
+      expect(span.data.graphql.fields.me).to.deep.equal(['__typename', 'id', 'username']);
+      expect(span.data.graphql.args.me).to.deep.equal(['withError']);
+    });
+  }
+
+  function verifyGraphQLAccountEntry(parentSpan, allControls, testConfig, spans) {
+    const { accountServiceControls } = allControls;
+    return testUtils.expectAtLeastOneMatching(spans, span => {
+      verifyGraphQLQueryEntry(span, parentSpan, accountServiceControls, testConfig);
+      expect(span.data.graphql.operationName).to.not.exist;
+      expect(span.data.graphql.fields.me).to.deep.equal(['__typename', 'id', 'username']);
+      expect(span.data.graphql.args.me).to.deep.equal(['withError']);
+    });
+  }
+
+  function verifyGraphQLInventoryEntry(parentSpan, allControls, testConfig, spans) {
+    const { inventoryServiceControls } = allControls;
+    return testUtils.expectAtLeastOneMatching(spans, span => {
+      verifyGraphQLQueryEntry(span, parentSpan, inventoryServiceControls, testConfig);
+      expect(span.data.graphql.operationName).to.not.exist;
+      expect(span.data.graphql.fields._entities).to.deep.equal([]);
+      expect(span.data.graphql.args._entities).to.deep.equal(['representations']);
+    });
+  }
+
+  function verifyGraphQLProductsEntry(parentSpan, allControls, testConfig, spans) {
+    const { productsServiceControls } = allControls;
+    return testUtils.expectAtLeastOneMatching(spans, span => {
+      verifyGraphQLQueryEntry(span, parentSpan, productsServiceControls, testConfig);
+      expect(span.data.graphql.operationName).to.not.exist;
+      expect(span.data.graphql.fields._entities).to.deep.equal([]);
+      expect(span.data.graphql.args._entities).to.deep.equal(['representations']);
+    });
+  }
+
+  function verifyGraphQLReviewsEntry(parentSpan, allControls, testConfig, spans) {
+    const { reviewsServiceControls } = allControls;
+    return testUtils.expectAtLeastOneMatching(spans, span => {
+      verifyGraphQLQueryEntry(span, parentSpan, reviewsServiceControls, testConfig);
+      expect(span.data.graphql.operationName).to.not.exist;
+      expect(span.data.graphql.fields._entities).to.deep.equal([]);
+      expect(span.data.graphql.args._entities).to.deep.equal(['representations']);
+    });
+  }
+
+  function verifyGraphQLQueryEntry(span, parentSpan, source, testConfig) {
+    const { withError } = testConfig;
+    expect(span.n).to.equal('graphql.server');
+    expect(span.k).to.equal(constants.ENTRY);
+    expect(span.t).to.equal(parentSpan.t);
+    expect(span.ts).to.be.a('number');
+    expect(span.d).to.be.a('number');
+    expect(span.stack).to.be.an('array');
+    expect(span.data.graphql).to.exist;
+    expect(span.data.graphql.operationType).to.equal('query');
+
+    if (withError) {
+      expect(span.ec).to.equal(1);
+      expect(span.error).to.not.exist;
+      expect(span.data.graphql.errors).to.equal('Deliberately throwing an error in account service.');
+    } else {
+      expect(span.ec).to.equal(0);
+      expect(span.error).to.not.exist;
+      expect(span.data.graphql.errors).to.not.exist;
+    }
+  }
+};

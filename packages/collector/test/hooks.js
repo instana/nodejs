@@ -11,9 +11,9 @@
 //
 // The globalAgent module manages an agent stub instance that can be used globally for all tests.
 const path = require('path');
-const isCI = require('@instana/core/test/test_util/is_ci');
-const config = require('@instana/core/test/config');
-const { checkESMApp } = require('@instana/core/test/test_util');
+const isCI = require('@_local/core/test/test_util/is_ci');
+const config = require('@_local/core/test/config');
+const { checkESMApp } = require('@_local/core/test/test_util');
 
 exports.mochaHooks = {
   async beforeAll() {
@@ -38,6 +38,8 @@ exports.mochaHooks = {
       const folderPath = path.dirname(testFile);
       const esmApp = checkESMApp({ dirPath: folderPath });
 
+      // TODO: if there is multiple apps in one folder, all apps need to be
+      //       support esm, because `checkESMApp` only finds app.mjs.
       if (!esmApp) {
         this.skip();
         return;

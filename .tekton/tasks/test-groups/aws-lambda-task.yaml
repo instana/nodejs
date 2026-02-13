@@ -6,7 +6,7 @@ spec:
   sidecars:
   envFrom:
     - configMapRef:
-        name: environment-properties  
+        name: environment-properties
   params:
     - name: node-version
       value: $(params.node-version)
@@ -23,7 +23,7 @@ spec:
     - name: coverage
       value: $(params.coverage)
     - name: prerelease
-      value: $(params.prerelease) 
+      value: $(params.prerelease)
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -44,7 +44,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: $(params.continuous-delivery-context-secret)
-              key: "AZURE_REDIS_CLUSTER_PWD"              
+              key: "AZURE_REDIS_CLUSTER_PWD"
         - name: DB2_CONNECTION_STR
           valueFrom:
             secretKeyRef:
@@ -69,11 +69,13 @@ spec:
       imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
+        AVAILABLE_SIDECARS=""
+        SIDECAR_COUNTS=""
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         BASE_REVISION=$(git rev-parse origin/main)
         CIRCLE_COMPARE_URL=""
-        MODIFIED_FILES=""
+        # MODIFIED_FILES=""
         GIT_COMMIT_DESC=""
         if [ "$(params.prerelease)" == "true" ]; then
           source bin/install-prerelease.sh
@@ -84,16 +86,16 @@ spec:
         fi
         if [ -n "$(params.revision)" ]; then
           CIRCLE_COMPARE_URL="$(params.repository)/compare/$BASE_REVISION..$(params.revision)"
-          MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+          # MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
           GIT_COMMIT_DESC=$(git log --format=%B -n 1 $(params.revision))
         fi
         echo "BASE_REVISION: $BASE_REVISION"
         echo "CIRCLE_COMPARE_URL: $CIRCLE_COMPARE_URL"
-        echo "MODIFIED_FILES: $MODIFIED_FILES"
+        # echo "MODIFIED_FILES: $MODIFIED_FILES"
         echo "GIT_COMMIT_DESC: $GIT_COMMIT_DESC"
         if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && ! echo "$MODIFIED_FILES" | grep -q "packages/aws-lambda"; then
           echo "Skipping group."
-          touch "test:ci:aws-lambda.succeeded"
+          touch "aws-lambda.succeeded"
           exit 0
         fi
         export CI=true
@@ -106,42 +108,51 @@ spec:
         if [ "$(params.esm)" == "true" ]; then
           export RUN_ESM=true
           if ! echo "test:ci:aws-lambda" | grep -q 'ci:collector'; then
-            echo "Skipping tests because groupName does not contain 'ci:collector'."
-            touch "test:ci:aws-lambda.succeeded"
+            echo "Skipping tests because group does not support ESM."
+            touch "aws-lambda.succeeded"
             exit 0
           fi
         fi
+        if [ "false" == "true" ]; then
+          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*.test.js" "5" "$ARTIFACTS_PATH" "$SIDECAR_COUNTS")
+          if [ -z "$CLAIMED_TESTS" ]; then
+            echo "No tests to claim for this task"
+            touch "aws-lambda.succeeded"
+            exit 0
+          fi
+          echo "Claimed tests: $CLAIMED_TESTS"
+          # Write mapping to shared file (printed by tasks-results)
+          SHORT_NAMES=$(echo "$CLAIMED_TESTS" | tr ' ' '\n' | sed 's|.*/currencies/||; s|.*/misc/||; s|.*/unit/||; s|/test\.js$||' | tr '\n' ', ' | sed 's/,$//')
+          echo "aws-lambda: $SHORT_NAMES" >> "$ARTIFACTS_PATH/test-mapping.txt"
+        fi
+        rm -f "aws-lambda.succeeded" "aws-lambda.failed"
         retry=1
-        while [ $retry -le 3 ]; do
+        LAST_EXIT=1
+        while [ $retry -le 2 ]; do
+          LAST_EXIT=0
           if [ "$(params.coverage)" == "true" ]; then
-            if [[ 5 =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT=5 CI_TEST_SPLIT_CURRENT=1 npm run coverage-ci --npm_command="test:ci:aws-lambda" --report_dir="aws-lambda"
+            if [ "false" == "true" ]; then
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="5" CI_TEST_SPLIT_CURRENT="1" npm run coverage-ci --npm_command="test:ci:aws-lambda" --report_dir="aws-lambda" || LAST_EXIT=$?
             else
-               npm run coverage-ci --npm_command="test:ci:aws-lambda" --report_dir="aws-lambda"
+              CI_TEST_SPLIT="5" CI_TEST_SPLIT_CURRENT="1" npm run coverage-ci --npm_command="test:ci:aws-lambda" --report_dir="aws-lambda" || LAST_EXIT=$?
             fi
           else
-            if [[ 5 =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT=5 CI_TEST_SPLIT_CURRENT=1 npx lerna run "test:ci" --stream --scope="@instana/aws-lambda"
+            if [ "false" == "true" ]; then
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="5" CI_TEST_SPLIT_CURRENT="1" npm run "test:ci:aws-lambda" || LAST_EXIT=$?
             else
-              npm run "test:ci:aws-lambda"
+              CI_TEST_SPLIT="5" CI_TEST_SPLIT_CURRENT="1" npm run "test:ci:aws-lambda" || LAST_EXIT=$?
             fi
-          fi          
-          if [ $? -eq 0 ]; then
-            if [[ 5 =~ ^[0-9]+$ ]]; then
-              touch "test:ci.succeeded"
-            else
-              touch "test:ci:aws-lambda.succeeded"
-            fi
+          fi
+          if [ $LAST_EXIT -eq 0 ]; then
+            touch "aws-lambda.succeeded"
             break
           else
-            if [ $retry -eq 3 ]; then
-              if [[ 5 =~ ^[0-9]+$ ]]; then
-                touch "test:ci.failed"
-              else
-                touch "test:ci:aws-lambda.failed"
-              fi
-              exit 1
-            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT"
             retry=$((retry + 1))
           fi
         done
+        if [ ! -f "aws-lambda.succeeded" ]; then
+          echo "All $((retry - 1)) retries failed for aws-lambda"
+          touch "aws-lambda.failed"
+          exit 1
+        fi

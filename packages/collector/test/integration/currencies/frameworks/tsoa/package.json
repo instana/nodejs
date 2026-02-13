@@ -1,0 +1,10 @@
+{
+  "main": "build/src/server.js",
+  "scripts": {
+    "build": "rm -rf ./build && tsoa spec-and-routes && tsc --outDir ./build --experimentalDecorators",
+    "start": "node build/src/server.js"
+  },
+  "dependencies": {
+    "@tsoa/runtime": "*"
+  }
+}

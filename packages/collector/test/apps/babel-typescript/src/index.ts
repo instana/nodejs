@@ -13,7 +13,7 @@
 // statments will be put after the imports. As a consequence, the import for `express` in this example will be placed
 // before the `instana();` call. You will end up with something like this in your transpiled file:
 //
-//     var _instana = _interopRequireDefault(require("@instana/collector"));
+//     var _instana = _interopRequireDefault(require("@_local/collector"));
 //
 //     var _express = _interopRequireDefault(require("express"));
 //

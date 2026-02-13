@@ -10,8 +10,8 @@
 const { expect } = require('chai');
 const { fail } = expect;
 
-const config = require('@instana/core/test/config');
-const { delay, retry } = require('../../core/test/test_util');
+const config = require('@_local/core/test/config');
+const { delay, retry } = require('@_local/core/test/test_util');
 
 const DataSource = require('../src/DataSource');
 

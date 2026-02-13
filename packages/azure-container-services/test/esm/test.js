@@ -6,13 +6,13 @@
 
 const { expect } = require('chai');
 const path = require('path');
-const constants = require('@instana/core').tracing.constants;
+const constants = require('@_local/core').tracing.constants;
 const Control = require('../Control');
-const { expectExactlyOneMatching } = require('@instana/core/test/test_util');
-const config = require('@instana/core/test/config');
-const retry = require('@instana/core/test/test_util/retry');
+const { expectExactlyOneMatching } = require('@_local/core/test/test_util');
+const config = require('@_local/core/test/config');
+const retry = require('@_local/core/test/test_util/retry');
 const { delay } = require('bluebird');
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const entityId = '/subscriptions/instana/resourceGroups/East US/providers/Microsoft.Web/sites/test-app';
 const containerAppPath = path.join(__dirname, './app.mjs');
 const instanaAgentKey = 'azure-container-service-dummy-key';

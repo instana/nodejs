@@ -5,7 +5,7 @@
 
 'use strict';
 
-const testUtil = require('@instana/core/test/test_util');
+const testUtil = require('@_local/core/test/test_util');
 const secrets = require('../src/secrets');
 const expect = require('chai').expect;
 

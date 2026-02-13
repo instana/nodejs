@@ -12,7 +12,7 @@ process.on('SIGTERM', () => {
 
 const express = require('express');
 
-const getAppPort = require('@instana/collector/test/test_util/app-port');
+const getAppPort = require('@_local/collector/test/test_util/app-port');
 const port = getAppPort();
 
 const app = express();

@@ -8,7 +8,7 @@
 'use strict';
 
 const instana = require('../..');
-const delay = require('../../../core/test/test_util/delay');
+const delay = require('@_local/core/test/test_util/delay');
 
 const DELAY = process.env.DELAY || 1000;
 const ITERATIONS = process.env.ITERATIONS || 10;

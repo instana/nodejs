@@ -22,8 +22,8 @@ const morgan = require('morgan');
 const path = require('path');
 const pino = require('pino')();
 
-const { sendToParent } = require('../../../core/test/test_util');
-const deepMerge = require('../../../core/src/util/deepMerge');
+const { sendToParent } = require('@_local/core/test/test_util');
+const deepMerge = require('@_local/core/src/util/deepMerge');
 
 const logPrefix = 'backend-stub';
 const logger = pino.child({ name: logPrefix, pid: process.pid });

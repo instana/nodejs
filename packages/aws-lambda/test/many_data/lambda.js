@@ -5,7 +5,7 @@
 'use strict';
 
 const instana = require('../..');
-const core = require('../../../core');
+const core = require('@_local/core');
 
 const http = require('http');
 const url = process.env.DOWNSTREAM_DUMMY_URL;

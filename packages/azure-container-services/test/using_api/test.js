@@ -6,12 +6,12 @@
 
 const expect = require('chai').expect;
 const path = require('path');
-const constants = require('@instana/core').tracing.constants;
+const constants = require('@_local/core').tracing.constants;
 
 const Control = require('../Control');
-const { expectExactlyOneMatching } = require('../../../core/test/test_util');
-const config = require('@instana/core/test/config');
-const retry = require('@instana/core/test/test_util/retry');
+const { expectExactlyOneMatching } = require('@_local/core/test/test_util');
+const config = require('@_local/core/test/config');
+const retry = require('@_local/core/test/test_util/retry');
 
 const entityId = '/subscriptions/instana/resourceGroups/East US/providers/Microsoft.Web/sites/test-app';
 const containerAppPath = path.join(__dirname, './app');

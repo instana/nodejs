@@ -9,8 +9,8 @@ const fs = require('fs');
 const path = require('path');
 const spawn = require('child_process').spawn;
 const portfinder = require('../test_util/portfinder');
-const testUtils = require('../../../core/test/test_util');
-const config = require('../../../core/test/config');
+const testUtils = require('@_local/core/test/test_util');
+const config = require('@_local/core/test/config');
 const agentControls = require('../globalAgent').instance;
 
 const sslDir = path.join(__dirname, 'ssl');

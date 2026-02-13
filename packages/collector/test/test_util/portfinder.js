@@ -17,6 +17,9 @@ let myPortRange;
 const ports = {};
 const { execSync } = require('child_process');
 
+// Ports blocked by undici/fetch (subset of Chromium unsafe ports in range 3000-9000)
+const BLOCKED_PORTS = new Set([3659, 4045, 4190, 5060, 5061, 6000, 6566, 6665, 6666, 6667, 6668, 6669, 6679, 6697]);
+
 /*
 const net = require('net');
 // const deasync = require('deasync');
@@ -139,9 +142,9 @@ module.exports = function findPort(minPort) {
 
     port = Number(port);
 
-    if (ports[port]) {
+    if (ports[port] || BLOCKED_PORTS.has(port)) {
       // eslint-disable-next-line no-console
-      console.log('Port is already taken by this process', port);
+      if (ports[port]) console.log('Port is already taken by this process', port);
       return findPort(port + Math.round(Math.random(100) * 100));
     }
 

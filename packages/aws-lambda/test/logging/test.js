@@ -8,7 +8,7 @@
 const { expect } = require('chai');
 const path = require('path');
 const Control = require('../Control');
-const config = require('@instana/core/test/config');
+const config = require('@_local/core/test/config');
 const instanaAgentKey = 'aws-lambda-dummy-key';
 const timeout = 1000 * 5;
 

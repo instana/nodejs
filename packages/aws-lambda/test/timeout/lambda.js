@@ -9,7 +9,7 @@
 
 const instana = require('../..');
 
-const delay = require('../../../core/test/test_util/delay');
+const delay = require('@_local/core/test/test_util/delay');
 
 if (!process.env.DELAY) {
   throw new Error('This Lambda requires the environment variable DELAY to be set.');

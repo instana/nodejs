@@ -20,10 +20,10 @@ process.on('SIGTERM', () => {
 
 const http = require('http');
 
-const { delay, sendToParent } = require('../../../core/test/test_util');
+const { delay, sendToParent } = require('@_local/core/test/test_util');
 const instana = require('../..');
 
-const getAppPort = require('@instana/collector/test/test_util/app-port');
+const getAppPort = require('@_local/collector/test/test_util/app-port');
 const port = getAppPort();
 
 const app = new http.Server();

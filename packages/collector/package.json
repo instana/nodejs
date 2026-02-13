@@ -35,21 +35,11 @@
   },
   "scripts": {
     "audit": "npm audit --omit=dev",
-    "test": "USE_OPENTRACING_DEBUG_IMPL=true mocha --config=test/.mocharc.js --require test/hooks.js --sort $(find test -iname '*test.js')",
+    "test": "USE_OPENTRACING_DEBUG_IMPL=true mocha --config=test/.mocharc.js --require test/hooks.js --sort $(find test -iname '*.test.js' -not -path '*/_v*/*')",
     "test:debug": "WITH_STDOUT=true npm run test --",
-    "test:ci:general": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js 'test/**/*test.js' --exclude 'test/tracing/**/*test.js'",
-    "test:ci:tracing:frameworks": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js 'test/tracing/frameworks/**/*test.js'",
-    "test:ci:tracing:database": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js $(bash ./scripts/ci-get-test-files.sh 'test/tracing/databases/**/*test.js')",
-    "test:ci:tracing:messaging": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js $(bash ./scripts/ci-get-test-files.sh 'test/tracing/messaging/**/*test.js')",
-    "test:ci:tracing:protocols": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js $(bash ./scripts/ci-get-test-files.sh 'test/tracing/protocols/**/*test.js')",
-    "test:ci:tracing:cloud:aws:v2": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js $(bash ./scripts/ci-get-test-files.sh 'test/tracing/cloud/aws-sdk/v2/**/*test.js')",
-    "test:ci:tracing:cloud:aws:v3": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js $(bash ./scripts/ci-get-test-files.sh 'test/tracing/cloud/aws-sdk/v3/**/*test.js')",
-    "test:ci:tracing:cloud:azure": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js 'test/tracing/cloud/azure/**/*test.js'",
-    "test:ci:tracing:cloud:gcp": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js 'test/tracing/cloud/gcp/**/*test.js'",
-    "test:ci:tracing:misc": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js 'test/tracing/misc/**/*test.js'",
-    "test:ci:tracing:logging": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js 'test/tracing/logging/**/*test.js'",
-    "test:ci:tracing:general": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js 'test/tracing/**/*test.js' --exclude 'test/tracing/misc/**/*test.js' --exclude 'test/tracing/logging/**/*test.js' --exclude 'test/tracing/databases/**/*test.js' --exclude 'test/tracing/frameworks/**/*test.js' --exclude 'test/tracing/cloud/**/*test.js' --exclude 'test/tracing/protocols/**/*test.js' --exclude 'test/tracing/messaging/**/*test.js'",
-    "test:ci:long-running": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js test/profiling/test.js test/agentCommunication_test.js",
+    "test:debug:files": "WITH_STDOUT=true USE_OPENTRACING_DEBUG_IMPL=true mocha --config=test/.mocharc.js --require test/hooks.js --sort",
+    "test:ci": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js $TEST_FILES",
+    "test:ci:long-running": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js test/integration/misc/long_*/**/*.test.js",
     "lint": "eslint src test",
     "verify": "npm run lint && npm test",
     "agent-stub": "AGENT_PORT=3210 node test/apps/agentStub.js",
@@ -88,9 +78,5 @@
   },
   "optionalDependencies": {
     "@instana/autoprofile": "5.2.2"
-  },
-  "devDependencies": {
-    "opentracing": "^0.14.5",
-    "typeorm": "^0.3.28"
   }
 }

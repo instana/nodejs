@@ -6,8 +6,8 @@
 
 const { fork } = require('child_process');
 
-const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
-const portfinder = require('../../collector/test/test_util/portfinder');
+const AbstractServerlessControl = require('@_local/serverless/test/util/AbstractServerlessControl');
+const portfinder = require('@_local/collector/test/test_util/portfinder');
 
 class Control extends AbstractServerlessControl {
   constructor(opts) {

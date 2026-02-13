@@ -7,8 +7,8 @@
 const sinon = require('sinon');
 const semver = require('semver');
 const expect = require('chai').expect;
-const instana = require('@instana/aws-lambda');
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const instana = require('@_local/aws-lambda');
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
 
 describe('esm wrapper', function () {
   if (!supportedVersion(process.versions.node)) {

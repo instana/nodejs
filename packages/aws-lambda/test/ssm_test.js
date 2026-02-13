@@ -4,8 +4,8 @@
 
 'use strict';
 
-const mock = require('@instana/core/test/test_util/mockRequire');
-const { createFakeLogger, delay } = require('@instana/core/test/test_util');
+const mock = require('@_local/core/test/test_util/mockRequire');
+const { createFakeLogger, delay } = require('@_local/core/test/test_util');
 const sinon = require('sinon');
 const expect = require('chai').expect;
 const ssm = require('../src/ssm');

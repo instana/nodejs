@@ -11,8 +11,8 @@
 //
 // The globalAgent module manages an agent stub instance that can be used globally for all tests.
 
-const { startGlobalAgent, stopGlobalAgent } = require('../../collector/test/globalAgent');
-const config = require('@instana/core/test/config');
+const { startGlobalAgent, stopGlobalAgent } = require('@_local/collector/test/globalAgent');
+const config = require('@_local/core/test/config');
 
 exports.mochaHooks = {
   async beforeAll() {

@@ -17,10 +17,10 @@ process.on('SIGTERM', () => {
 
 const path = require('path');
 
-const { sendToParent } = require('../../../core/test/test_util');
+const { sendToParent } = require('@_local/core/test/test_util');
 
 const logPrefix = `aws-lambda-runtime-mock (${process.pid})`;
-const log = require('../../../serverless/test/util/log')(logPrefix);
+const log = require('@_local/serverless/test/util/log')(logPrefix);
 
 const uncaughtExceptionEventName = 'uncaughtException';
 

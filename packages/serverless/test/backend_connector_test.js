@@ -8,10 +8,10 @@ const expect = require('chai').expect;
 const sinon = require('sinon');
 const backendConnector = require('../src/backend_connector');
 const uninstrumentedHttp = require('../src/uninstrumentedHttp');
-const testConfig = require('../../core/test/config');
-const delay = require('../../core/test/test_util/delay');
-const retry = require('../../core/test/test_util/retry');
-const { createFakeLogger } = require('../../core/test/test_util');
+const testConfig = require('@_local/core/test/config');
+const delay = require('@_local/core/test/test_util/delay');
+const retry = require('@_local/core/test/test_util/retry');
+const { createFakeLogger } = require('@_local/core/test/test_util');
 const environmentUtil = require('../src/environment');
 
 const sendBundle = async () => {

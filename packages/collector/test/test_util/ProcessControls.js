@@ -11,10 +11,9 @@ const _ = require('lodash');
 const fork = require('child_process').fork;
 const fs = require('fs');
 const path = require('path');
-
-const config = require('../../../core/test/config');
+const config = require('@_local/core/test/config');
 const http2Promise = require('./http2Promise');
-const testUtils = require('../../../core/test/test_util');
+const testUtils = require('@_local/core/test/test_util');
 const globalAgent = require('../globalAgent');
 const portFinder = require('./portfinder');
 const sslDir = path.join(__dirname, '..', 'apps', 'ssl');
@@ -24,6 +23,7 @@ class ProcessControls {
   /**
    * @typedef {Object} ProcessControlsOptions
    * @property {string} [appPath]
+   * @property {string} [appName]
    * @property {string} [cwd]
    * @property {number} [port]
    * @property {string} [dirname]
@@ -43,46 +43,50 @@ class ProcessControls {
    * @param {ProcessControlsOptions} opts
    */
   constructor(opts = {}) {
-    if (!opts.appPath && !opts.dirname) {
-      throw new Error('Missing mandatory config option, either appPath or dirname needs to be provided.');
-    }
-    if (opts.appPath && opts.dirname) {
-      throw new Error('Invalid config, appPath and dirname are mutually exclusive.');
+    if (!opts.dirname) {
+      throw new Error('[ProcessControls] dirname is required');
     }
 
-    if (!opts.appPath && opts.dirname) {
-      opts.appPath = path.join(opts.dirname, 'app.js');
+    if (!opts.cwd) {
+      opts.cwd = opts.dirname;
     }
 
     if (process.env.RUN_ESM && !opts.execArgv) {
       const esmLoader = [
-        `--import=${opts.esmLoaderPath ? opts.esmLoaderPath : path.join(__dirname, '..', '..', 'esm-register.mjs')}`
+        `--import=${opts.esmLoaderPath ? opts.esmLoaderPath : path.join(opts.cwd, 'node_modules', '@instana', 'collector', 'esm-register.mjs')}`
       ];
 
       try {
-        // Custom appPath is provided, use that. here we check the exact file name for esm app
-        if (opts?.appPath) {
-          const updatedPath = opts.appPath.endsWith('.js')
-            ? opts.appPath.replace(/\.js$/, '.mjs')
-            : `${opts.appPath}.mjs`;
-
-          const esmApp = testUtils.checkESMApp({ appPath: updatedPath });
+        if (opts?.appName) {
+          const appName = opts.appName.endsWith('.mjs') ? opts.appName : `${opts.appName}.mjs`;
+          const appPath = path.join(opts.cwd, appName);
+          const esmApp = testUtils.checkESMApp({ appPath });
 
           if (esmApp) {
             opts.execArgv = esmLoader;
-            opts.appPath = updatedPath;
+            opts.appPath = appPath;
           }
-        } else if (opts?.dirname) {
-          const esmApp = testUtils.checkESMApp({ appPath: path.join(opts.dirname, 'app.mjs') });
+        } else {
+          const appPath = path.join(opts.cwd, 'app.mjs');
+          const esmApp = testUtils.checkESMApp({ appPath });
           if (esmApp) {
             opts.execArgv = esmLoader;
-            opts.appPath = path.join(opts.dirname, 'app.mjs');
+            opts.appPath = appPath;
           }
         }
       } catch (err) {
         // eslint-disable-next-line no-console
-        console.log('Unable to load the target app.mjs', err);
+        console.log('[ProcessControls] Unable to load the target app.mjs', err);
       }
+    }
+
+    if (!opts.appPath) {
+      if (process.env.RUN_ESM) {
+        console.log('[ProcessControls] No ESM app found.');
+        this.noESMApp = true;
+      }
+
+      opts.appPath = path.join(opts.dirname, opts.appName ? opts.appName : 'app.js');
     }
 
     this.collectorUninitialized = opts.collectorUninitialized;
@@ -140,6 +144,7 @@ class ProcessControls {
       process.env,
       {
         APP_PORT: this.port,
+        APP_CWD: this.cwd,
         INSTANA_AGENT_PORT: agentPort,
         INSTANA_LOG_LEVEL: 'warn',
         INSTANA_TRACING_DISABLE: !this.tracingEnabled,
@@ -148,7 +153,9 @@ class ProcessControls {
         INSTANA_FIRE_MONITORING_EVENT_DURATION_IN_MS: 500,
         INSTANA_RETRY_AGENT_CONNECTION_IN_MS: 500,
         APP_USES_HTTPS: this.appUsesHttps ? 'true' : 'false',
-        INSTANA_DISABLE_USE_OPENTELEMETRY: !this.enableOtelIntegration
+        INSTANA_DISABLE_USE_OPENTELEMETRY: !this.enableOtelIntegration,
+        LIBRARY_VERSION: process.env.LIBRARY_VERSION,
+        LIBRARY_NAME: process.env.LIBRARY_NAME
       },
       opts.env
     );
@@ -165,6 +172,8 @@ class ProcessControls {
   }
 
   async start(retryTime, until, skipWaitUntilServerIsUp = false) {
+    if (this.noESMApp) return;
+
     const that = this;
     this.receivedIpcMessages = [];
 
@@ -182,6 +191,10 @@ class ProcessControls {
     }
     if (this.execArgv) {
       forkConfig.execArgv = this.execArgv;
+    }
+
+    if (!forkConfig.execArgv) {
+      forkConfig.execArgv = [];
     }
 
     this.process = this.args ? fork(this.appPath, this.args || [], forkConfig) : fork(this.appPath, forkConfig);
@@ -217,6 +230,7 @@ class ProcessControls {
   }
 
   async waitUntilServerIsUp(retryTime, until) {
+    if (this.noESMApp) return;
     try {
       await testUtils.retry(
         async () => {
@@ -237,7 +251,7 @@ class ProcessControls {
       console.log('[ProcessControls] server is up.');
     } catch (err) {
       // eslint-disable-next-line no-console
-      console.log(`[ProcessControls] error: ${err}`);
+      console.log(`[ProcessControls] error: ${err}${err.cause ? ` | cause: ${err.cause}` : ''}`);
       throw err;
     }
   }
@@ -247,10 +261,11 @@ class ProcessControls {
   }
 
   async startAndWaitForAgentConnection(retryTime, until) {
+    if (this.noESMApp) return;
+
     // eslint-disable-next-line no-console
     console.log(
-      `[ProcessControls] start with port: ${this.getPort()}, agentPort: ${this.agentControls.getPort()}, appPath: ${
-        this.appPath
+      `[ProcessControls] start with port: ${this.getPort()}, agentPort: ${this.agentControls.getPort()}, appPath: ${this.appPath
       }`
     );
 
@@ -260,13 +275,13 @@ class ProcessControls {
 
     // eslint-disable-next-line no-console
     console.log(
-      `[ProcessControls] started with port: ${this.getPort()}, agentPort: ${this.agentControls.getPort()}, appPath: ${
-        this.appPath
+      `[ProcessControls] started with port: ${this.getPort()}, agentPort: ${this.agentControls.getPort()}, appPath: ${this.appPath
       }, pid: ${this.process.pid}`
     );
   }
 
   async waitForAgentConnection() {
+    if (this.noESMApp) return;
     await this.agentControls.waitUntilAppIsCompletelyInitialized(this.getPid());
   }
 
@@ -294,6 +309,7 @@ class ProcessControls {
    * }} The request options
    */
   async sendRequest(opts = {}) {
+    if (this.noESMApp) return Promise.resolve();
     const requestOpts = Object.assign({}, opts);
     const resolveWithFullResponse = requestOpts.resolveWithFullResponse;
     const checkStatusCode = requestOpts.checkStatusCode;
@@ -412,10 +428,11 @@ class ProcessControls {
     return `${this.appUsesHttps || this.http2 ? 'https' : 'http'}://${
       // eslint-disable-next-line no-unneeded-ternary
       embedCredentialsInUrl ? embedCredentialsInUrl : ''
-    }localhost:${this.port}`;
+      }localhost:${this.port}`;
   }
 
   sendViaIpc(message) {
+    if (this.noESMApp) return;
     this.process.send(message);
   }
 
@@ -433,8 +450,7 @@ class ProcessControls {
 
     // eslint-disable-next-line no-console
     console.log(
-      `[ProcessControls] stopping with port: ${this.getPort()}, agentPort: ${
-        this.agentControls && this.agentControls.getPort && this.agentControls.getPort()
+      `[ProcessControls] stopping with port: ${this.getPort()}, agentPort: ${this.agentControls && this.agentControls.getPort && this.agentControls.getPort()
       }, appPath: ${this.appPath}, pid: ${this.process.pid}`
     );
 
@@ -444,8 +460,7 @@ class ProcessControls {
 
         // eslint-disable-next-line no-console
         console.log(
-          `[ProcessControls] stopped with port: ${this.getPort()}, agentPort: ${
-            this.agentControls && this.agentControls.getPort && this.agentControls.getPort()
+          `[ProcessControls] stopped with port: ${this.getPort()}, agentPort: ${this.agentControls && this.agentControls.getPort && this.agentControls.getPort()
           }, appPath: ${this.appPath}, pid: ${this.process.pid}`
         );
 
