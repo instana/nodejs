@@ -696,7 +696,8 @@
     "core": false,
     "versions": [
       {
-        "v": "15.3.0"
+        "v": "15.3.0",
+        "node": ">=20"
       },
       {
         "v": "14.0.0"
@@ -1152,7 +1153,8 @@
     "versions": [
       {
         "v": "7.3.0",
-        "optional": true
+        "optional": true,
+        "nodeConstraints": ">=20.19.0"
       },
       {
         "v": "6.19.0"
