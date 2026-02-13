@@ -1006,7 +1006,7 @@ module.exports = function (name, version, isLatest) {
 
   async function verifyJobCreatedAFile(filename, testId) {
     const readFilePromise = new Promise((resolve, reject) => {
-      fs.readFile(path.join(versionDir, filename), (err, data) => {
+      fs.readFile(path.join(__dirname, filename), (err, data) => {
         if (err) {
           return reject(err);
         }
