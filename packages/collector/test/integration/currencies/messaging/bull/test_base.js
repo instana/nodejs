@@ -34,10 +34,6 @@ const retryTime = 1000;
 module.exports = function (name, version, isLatest) {
   this.timeout(config.getTestTimeout() * 3);
 
-  const inVersionDir = path.basename(__dirname).startsWith('_v')
-    || path.basename(path.dirname(__dirname)).startsWith('_v');
-  const versionDir = inVersionDir ? __dirname : path.join(__dirname, `_v${version}`);
-
   const commonEnv = {
     LIBRARY_LATEST: isLatest,
     LIBRARY_VERSION: version,
@@ -47,10 +43,10 @@ module.exports = function (name, version, isLatest) {
   const customAgentControls = new AgentStubControls();
 
   before(async () => {
-    const files = fs.readdirSync(versionDir);
+    const files = fs.readdirSync(__dirname);
     files.forEach(f => {
       if (f.startsWith('file-created-by-job') && f.endsWith('.json')) {
-        fs.unlinkSync(path.join(versionDir, f));
+        fs.unlinkSync(path.join(__dirname, f));
       }
     });
 
@@ -69,7 +65,7 @@ module.exports = function (name, version, isLatest) {
     before(async () => {
       senderControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'sender.js',
+        appName: 'sender',
         agentControls: customAgentControls,
         env: {
           ...commonEnv,
@@ -102,7 +98,7 @@ module.exports = function (name, version, isLatest) {
         before(async () => {
           receiverControls = new ProcessControls({
             dirname: __dirname,
-            appName: 'receiver.js',
+            appName: 'receiver',
             agentControls: customAgentControls,
             env: {
               ...commonEnv,
@@ -344,7 +340,7 @@ module.exports = function (name, version, isLatest) {
       before(async () => {
         receiverControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'receiver.js',
+          appName: 'receiver',
           agentControls: customAgentControls,
           env: {
             ...commonEnv,
@@ -749,7 +745,7 @@ module.exports = function (name, version, isLatest) {
       before(async () => {
         senderControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'sender.js',
+          appName: 'sender',
           agentControls: customAgentControls,
           tracingEnabled: false,
           env: {
@@ -782,7 +778,7 @@ module.exports = function (name, version, isLatest) {
         before(async () => {
           receiverControls = new ProcessControls({
             dirname: __dirname,
-            appName: 'receiver.js',
+            appName: 'receiver',
             agentControls: customAgentControls,
             tracingEnabled: false,
             env: {

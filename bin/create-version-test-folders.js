@@ -158,9 +158,12 @@ function rmDir(dirPath) {
 }
 
 function cleanupCopiedFiles(files) {
+  console.log('[ChildProcess] Starting cleanup of copied files...');
   files.forEach(f => {
+    // console.log(\`[ChildProcess] Removing \${f}\`);
     rmDir(f);
   });
+  console.log('[ChildProcess] Cleanup finished');
 }
 
 ${esmOnly
@@ -192,8 +195,8 @@ mochaSuiteFn(suiteTitle, function () {
   const cleanup = () => cleanupCopiedFiles(copiedFiles);
   after(() => cleanup());
   process.once('exit', cleanup);
-  process.once('SIGINT', () => { cleanup(); process.exit(130); });
-  process.once('SIGTERM', () => { cleanup(); process.exit(143); });
+  process.once('SIGINT', cleanup);
+  process.once('SIGTERM', cleanup);
 
   before(async function () {
     const installTimeout = config.getNPMInstallTimeout();
