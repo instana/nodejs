@@ -38,6 +38,8 @@ exports.mochaHooks = {
       const folderPath = path.dirname(testFile);
       const esmApp = checkESMApp({ dirPath: folderPath });
 
+      // TODO: if there is multiple apps in one folder, all apps need to be
+      //       support esm, because `checkESMApp` only finds app.mjs.
       if (!esmApp) {
         this.skip();
         return;

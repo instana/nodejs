@@ -1252,7 +1252,8 @@ module.exports = function (name, version, isLatest) {
           env: {
             DB2_CONN_STR,
             DB2_DATABASE_NAME,
-            DB2_TABLE_NAME_1: TABLE_NAME_1
+            DB2_TABLE_NAME_1: TABLE_NAME_1,
+            INSTANA_TRACING_ALLOW_ROOT_EXIT_SPAN: 'true'
           }
         });
 
