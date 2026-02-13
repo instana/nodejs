@@ -292,14 +292,12 @@ exports.branchExists = (branchName, cwd) => {
 exports.prepareGitEnvironment = (branchName, cwd, isMainBranch, isDryRun) => {
   if (!isDryRun) {
     execSync('git checkout main', { cwd });
-    execSync('npm i --no-audit', { cwd });
 
     if (!isMainBranch) {
       execSync(`git checkout -b ${branchName}`, { cwd });
     }
   } else {
     console.log('[DRY RUN] git checkout main');
-    console.log('[DRY RUN] npm i --no-audit');
 
     if (!isMainBranch) {
       console.log(`[DRY RUN] git checkout -b ${branchName}`);
@@ -323,10 +321,10 @@ exports.commitAndCreatePR = options => {
   const { packageName, currentVersion, newVersion, branchName, cwd, skipPush, prTitle, isDryRun } = options;
 
   if (!isDryRun) {
-    execSync("git add '*package.json' package-lock.json", { cwd });
+    execSync("git add 'currencies.json'", { cwd });
     execSync(`git commit -m "build: bumped ${packageName} from ${currentVersion} to ${newVersion}"`, { cwd });
   } else {
-    console.log("[DRY RUN] git add '*package.json' package-lock.json");
+    console.log("[DRY RUN] git add 'currencies.json'");
     console.log(`[DRY RUN] git commit -m "build: bumped ${packageName} from ${currentVersion} to ${newVersion}"`);
   }
 
