@@ -104,7 +104,11 @@ currencies.forEach(currency => {
     currency.versions.splice(installedVersionIndex, 0, newVersionObj);
   }
 
-  fs.writeFileSync(path.join(__dirname, '..', '..', '..', 'currencies.json'), JSON.stringify(currencies, null, 2));
+  if (!DRY_RUN) {
+    fs.writeFileSync(path.join(__dirname, '..', '..', '..', 'currencies.json'), JSON.stringify(currencies, null, 2));
+  } else {
+    console.log(`[DRY RUN] Updated currencies.json with ${currency.name} version ${latestVersion}`);
+  }
 
   if (MAJOR_UPDATES_MODE) {
     utils.commitAndCreatePR({
@@ -117,7 +121,12 @@ currencies.forEach(currency => {
       prTitle: `[Currency Bot] Bumped ${currency.name} from ${installedVersion} to ${latestVersion}`
     });
   } else if (!DRY_RUN) {
-    execSync(`git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`, { cwd });
+    try {
+      execSync("git add 'currencies.json'", { cwd });
+      execSync(`git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`, { cwd });
+    } catch (error) {
+      console.error(`Failed to commit changes: ${error.message}`);
+    }
   } else {
     // eslint-disable-next-line max-len
     console.log(
@@ -130,10 +139,14 @@ currencies.forEach(currency => {
 if (!MAJOR_UPDATES_MODE) {
   if (utils.hasCommits(branchName, cwd)) {
     if (!SKIP_PUSH) {
-      execSync(`git push origin ${branchName} --no-verify`, { cwd });
-      // eslint-disable-next-line max-len
-      const prTitle = '[Currency Bot] Bumped patch/minor dependencies';
-      execSync(`gh pr create --base main --head ${branchName} --title "${prTitle}" --body "Tada!"`, { cwd });
+      try {
+        execSync(`git push origin ${branchName} --no-verify`, { cwd });
+        // eslint-disable-next-line max-len
+        const prTitle = '[Currency Bot] Bumped patch/minor dependencies';
+        execSync(`gh pr create --base main --head ${branchName} --title "${prTitle}" --body "Tada!"`, { cwd });
+      } catch (error) {
+        console.error(`Failed to push changes: ${error.message}`);
+      }
     }
   } else {
     console.log(`Branch ${branchName} has no commits.`);
