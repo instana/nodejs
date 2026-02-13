@@ -1592,8 +1592,6 @@ spec:
         - name: pr-payload
           value: $(params.pr-payload)
     - name: set-tests-running-final
-      runAfter:
-        - tasks-results
       taskRef:
         name: git-set-commit-status
       workspaces:

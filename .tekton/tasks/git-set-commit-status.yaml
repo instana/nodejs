@@ -236,6 +236,7 @@ spec:
         import json
         import os
         import sys
+        import time
         import urllib.request
         import urllib.parse
 
@@ -251,24 +252,42 @@ spec:
           previous_step[prop[0]] = prop[1].strip()
         f.close()
 
-        # extract the build properties in their own structure
-        build={}
-        if os.path.exists("/artifacts/$(params.build-properties)"):
-          if os.environ["PIPELINE_DEBUG"] == "1":
-            print("$(params.build-properties):")
-          f = open("/artifacts/$(params.build-properties)", "r")
-          for x in f:
-              if os.environ["PIPELINE_DEBUG"] == "1":
-                print(x)
-              prop = x.split("=", 1)
-              build[prop[0]] = prop[1].strip()
-          f.close()
+        def read_build_properties():
+          build={}
+          if os.path.exists("/artifacts/$(params.build-properties)"):
+            if os.environ["PIPELINE_DEBUG"] == "1":
+              print("$(params.build-properties):")
+            f = open("/artifacts/$(params.build-properties)", "r")
+            for x in f:
+                if os.environ["PIPELINE_DEBUG"] == "1":
+                  print(x)
+                prop = x.split("=", 1)
+                build[prop[0]] = prop[1].strip()
+            f.close()
+          return build
 
         # find the state
         state = "$(params.state)"
         if "$(params.state-var)" != "":
-          print("Looking for state in $(params.build-properties)")
-          state = build["$(params.state-var)"]
+          state_var = "$(params.state-var)"
+          print("Waiting for " + state_var + " in $(params.build-properties)")
+          timeout = 600
+          interval = 10
+          elapsed = 0
+          while elapsed < timeout:
+            build = read_build_properties()
+            if state_var in build:
+              state = build[state_var]
+              print("Found " + state_var + "=" + state + " after " + str(elapsed) + "s")
+              break
+            print("Key " + state_var + " not found yet, retrying in " + str(interval) + "s (" + str(elapsed) + "s elapsed)")
+            time.sleep(interval)
+            elapsed += interval
+          else:
+            print("Timeout waiting for " + state_var + " after " + str(timeout) + "s, defaulting to failed")
+            state = "failed"
+        else:
+          build = read_build_properties()
 
         # If state is one of PipelineRun Taks execution status convert it to a generic state one
         if state == "Succeeded":
