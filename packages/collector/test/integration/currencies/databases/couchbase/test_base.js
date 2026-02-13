@@ -181,7 +181,6 @@ module.exports = function (name, version, isLatest, mode) {
     await controls.stop();
   });
 
-
   // TODO: https://jsw.ibm.com/browse/INSTA-57559
   describe.skip(mode, function () {
     it('[crud] must trace get', () =>
