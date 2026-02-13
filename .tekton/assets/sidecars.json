@@ -202,7 +202,7 @@
     },
     {
       "name": "couchbase",
-      "image": "couchbase/server:7.6.7",
+      "image": "public.ecr.aws/docker/library/couchbase:7.6.7",
       "readinessProbe": {
         "httpGet": {
           "path": "/",

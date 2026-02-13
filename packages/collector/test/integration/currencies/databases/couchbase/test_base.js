@@ -7,12 +7,7 @@
 const expect = require('chai').expect;
 const constants = require('@_local/core').tracing.constants;
 const config = require('@_local/core/test/config');
-const {
-  retry,
-  delay,
-  expectExactlyOneMatching,
-  expectExactlyNMatching
-} = require('@_local/core/test/test_util');
+const { retry, delay, expectExactlyOneMatching, expectExactlyNMatching } = require('@_local/core/test/test_util');
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 const globalAgent = require('@_local/collector/test/globalAgent');
 
@@ -180,6 +175,11 @@ module.exports = function (name, version, isLatest, mode) {
   after(async () => {
     await controls.stop();
   });
+
+  console.log('\n');
+  console.log('###########################################');
+  console.log('ATTENTION: Right now we manually skip couchbase tests due to instability.');
+  console.log('###########################################');
 
   // TODO: https://jsw.ibm.com/browse/INSTA-57559
   describe.skip(mode, function () {

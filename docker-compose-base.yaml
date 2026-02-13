@@ -45,7 +45,7 @@ services:
       - 27017:27017
 
   couchbase:
-    image: couchbase/server:7.6.7
+    image: public.ecr.aws/docker/library/couchbase:7.6.7
     hostname: couchbase
     ports:
       - '8091-8096:8091-8096'
