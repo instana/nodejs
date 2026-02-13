@@ -845,7 +845,7 @@ module.exports = function (name, version, isLatest) {
     before(async () => {
       senderControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'sender.js',
+        appName: 'sender',
         agentControls: customAgentControls,
         env: {
           ...commonEnv,
@@ -877,7 +877,7 @@ module.exports = function (name, version, isLatest) {
       before(async () => {
         receiverControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'receiver.js',
+          appName: 'receiver',
           agentControls: customAgentControls,
           env: {
             ...commonEnv,
@@ -940,7 +940,7 @@ module.exports = function (name, version, isLatest) {
     before(async () => {
       controls = new ProcessControls({
         dirname: __dirname,
-        appName: 'allowRootExitSpanApp.js',
+        appName: 'allowRootExitSpanApp',
         agentControls: customAgentControls,
         env: {
           ...commonEnv,
