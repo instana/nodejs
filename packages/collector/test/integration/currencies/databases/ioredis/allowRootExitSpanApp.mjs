@@ -11,7 +11,7 @@ process.on('SIGTERM', () => {
 });
 
 import ioredis from 'ioredis';
-import { delay } from '@_local/core/test/test_util';
+import delay from '@_local/core/test/test_util/delay.js';
 
 const logPrefix = `IORedis allowRootExitSpan App (${process.pid}):\t`;
 
