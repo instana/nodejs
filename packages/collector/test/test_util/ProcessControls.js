@@ -229,6 +229,7 @@ class ProcessControls {
   }
 
   async waitUntilServerIsUp(retryTime, until) {
+    if (this.noESMApp) return;
     try {
       await testUtils.retry(
         async () => {
@@ -259,6 +260,8 @@ class ProcessControls {
   }
 
   async startAndWaitForAgentConnection(retryTime, until) {
+    if (this.noESMApp) return;
+
     // eslint-disable-next-line no-console
     console.log(
       `[ProcessControls] start with port: ${this.getPort()}, agentPort: ${this.agentControls.getPort()}, appPath: ${this.appPath
@@ -277,6 +280,7 @@ class ProcessControls {
   }
 
   async waitForAgentConnection() {
+    if (this.noESMApp) return;
     await this.agentControls.waitUntilAppIsCompletelyInitialized(this.getPid());
   }
 
@@ -426,6 +430,7 @@ class ProcessControls {
   }
 
   sendViaIpc(message) {
+    if (this.noESMApp) return;
     this.process.send(message);
   }
 
