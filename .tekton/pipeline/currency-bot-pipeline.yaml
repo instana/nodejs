@@ -93,6 +93,8 @@ spec:
         - name: output
           workspace: artifacts
     - name: update-currencies
+      runAfter:
+        - git-fetch-repo
       taskRef:
         name: update-currencies
       params:
