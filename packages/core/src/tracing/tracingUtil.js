@@ -413,40 +413,19 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
 };
 
 /**
- * Handles and logs a debug message and marks the span as incomplete
- * when the instrumented function returns an unexpected value(not a promise)
+ * Handles and logs a debug message when the instrumented function returns an unexpected value(not a promise)
  *
  * @param {*} returnValue - The return value from the instrumented function
- * @param {import('../core').InstanaBaseSpan} targetSpan - The span to mark as incomplete
  * @param {string} spanName - The name of the span (e.g., 'redis', 'postgres', 'mysql')
  * @param {string} operationContext - Additional context about the operation (e.g., 'query', 'command')
  * @returns {boolean} - Returns true if the return value was unexpected (not a promise), false otherwise
  */
-exports.handleUnexpectedReturnValue = function handleUnexpectedReturnValue(
-  returnValue,
-  targetSpan,
-  spanName,
-  operationContext
-) {
-  if (typeof returnValue?.then === 'function') {
-    return false;
-  }
-
-  // Case: This is the unexpected case where returnValue is not a promise
+exports.handleUnexpectedReturnValue = function handleUnexpectedReturnValue(returnValue, spanName, operationContext) {
   logger.debug(
     `${spanName} instrumentation: Unexpected return value from ${operationContext}. ` +
       `Expected a promise but got: ${typeof returnValue}. ` +
       'This indicates an unsupported library behavior.'
   );
-
-  // using sdk custom tags, we mark this span as incomplete
-  targetSpan.data = targetSpan.data || {};
-  targetSpan.data.sdk = targetSpan.data.sdk || {};
-  targetSpan.data.sdk.custom = targetSpan.data.sdk.custom || {};
-  targetSpan.data.sdk.custom.tags = targetSpan.data.sdk.custom.tags || {};
-
-  targetSpan.data.sdk.custom.tags.incomplete = true;
-  targetSpan.data.sdk.custom.tags.incompleteReason = 'unexpected_return_type';
 
   return true;
 };

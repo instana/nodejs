@@ -97,7 +97,7 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
           return error;
         });
     } else {
-      tracingUtil.handleUnexpectedReturnValue(promise, span, 'pg', 'query');
+      tracingUtil.handleUnexpectedReturnValue(promise, 'pg', 'query');
       finishSpan(null, span);
     }
     return promise;
