@@ -248,7 +248,13 @@ mochaSuiteFn(suiteTitle, function () {
     }
           break;
         } catch (err) {
-          if (isCleaning || err.signal === 'SIGINT' || err.signal === 'SIGTERM' || err.status === 130 || err.status === 143) {
+          if (
+            isCleaning ||
+            err.signal === 'SIGINT' ||
+            err.signal === 'SIGTERM' ||
+            err.status === 130 ||
+            err.status === 143
+          ) {
              throw err;
           }
 

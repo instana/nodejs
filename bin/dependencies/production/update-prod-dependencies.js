@@ -112,7 +112,7 @@ Object.entries(dependencyMap).some(([dep, usageList]) => {
 
     const prCreated = utils.commitAndCreatePR({
       packageName: dep,
-      files: `'*package.json' 'package-lock.json'`,
+      files: "'*package.json' package-lock.json",
       currentVersion: currentVersion,
       newVersion: latestVersion,
       branchName,
