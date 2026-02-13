@@ -44,7 +44,7 @@ module.exports = function (name, version, isLatest) {
     before(async () => {
       sdkControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'sdkApp1.js',
+        appName: 'sdkApp1',
         useGlobalAgent: true,
         env: commonEnv
       });
@@ -68,7 +68,7 @@ module.exports = function (name, version, isLatest) {
     before(async () => {
       sdkControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'sdkApp2.js',
+        appName: 'sdkApp2',
         useGlobalAgent: true,
         env: commonEnv
       });
@@ -99,7 +99,7 @@ module.exports = function (name, version, isLatest) {
     before(async () => {
       agentControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'allowRootExitSpanApp.js',
+        appName: 'allowRootExitSpanApp',
         useGlobalAgent: true,
         env: {
           ...commonEnv,
@@ -128,7 +128,7 @@ module.exports = function (name, version, isLatest) {
     before(async () => {
       agentControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'allowRootExitSpanApp.js',
+        appName: 'allowRootExitSpanApp',
         useGlobalAgent: true,
         env: {
           ...commonEnv,
@@ -170,13 +170,13 @@ module.exports = function (name, version, isLatest) {
         serverControls = new ProcessControls({
           agentControls: customAgentControls,
           dirname: __dirname,
-          appName: 'serverApp.js',
+          appName: 'serverApp',
           appUsesHttps: false
         });
 
         clientControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'clientApp.js',
+          appName: 'clientApp',
           agentControls: customAgentControls,
           appUsesHttps: false,
           env: {
@@ -221,14 +221,14 @@ module.exports = function (name, version, isLatest) {
       before(async () => {
         serverControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'serverApp.js',
+          appName: 'serverApp',
           useGlobalAgent: true,
           appUsesHttps: false
         });
 
         clientControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'clientApp.js',
+          appName: 'clientApp',
           useGlobalAgent: true,
           appUsesHttps: false,
           env: {
@@ -274,14 +274,14 @@ module.exports = function (name, version, isLatest) {
       before(async () => {
         serverControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'serverApp.js',
+          appName: 'serverApp',
           useGlobalAgent: true,
           appUsesHttps: false
         });
 
         clientControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'clientApp.js',
+          appName: 'clientApp',
           useGlobalAgent: true,
           appUsesHttps: false,
           env: {
@@ -342,13 +342,13 @@ module.exports = function (name, version, isLatest) {
         serverControls = new ProcessControls({
           agentControls: customAgentControls,
           dirname: __dirname,
-          appName: 'serverApp.js',
+          appName: 'serverApp',
           appUsesHttps: false
         });
 
         clientControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'clientApp.js',
+          appName: 'clientApp',
           agentControls: customAgentControls,
           appUsesHttps: false,
           env: {
@@ -395,14 +395,14 @@ module.exports = function (name, version, isLatest) {
       before(async () => {
         serverControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'serverApp.js',
+          appName: 'serverApp',
           useGlobalAgent: true,
           appUsesHttps: false
         });
 
         clientControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'clientApp.js',
+          appName: 'clientApp',
           useGlobalAgent: true,
           appUsesHttps: false,
           env: {
@@ -454,13 +454,13 @@ module.exports = function (name, version, isLatest) {
     before(async () => {
       serverControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'serverApp.js',
+        appName: 'serverApp',
         useGlobalAgent: true,
         appUsesHttps
       });
       clientControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'clientApp.js',
+        appName: 'clientApp',
         useGlobalAgent: true,
         appUsesHttps,
         env: {
@@ -969,13 +969,13 @@ module.exports = function (name, version, isLatest) {
       before(async () => {
         serverControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'serverApp.js',
+          appName: 'serverApp',
           useGlobalAgent: true,
           appUsesHttps
         });
         clientControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'clientApp.js',
+          appName: 'clientApp',
           useGlobalAgent: true,
           appUsesHttps,
           env: {
@@ -1117,9 +1117,8 @@ module.exports = function (name, version, isLatest) {
   }
 
   function serverUrl(appUsesHttps, urlShouldContainRedactedCredentials, path_, serverControls) {
-    return `http${appUsesHttps ? 's' : ''}://${
-      urlShouldContainRedactedCredentials ? '<redacted>:<redacted>@' : ''
-    }${`localhost:${serverControls.getPort()}`}${path_}`;
+    return `http${appUsesHttps ? 's' : ''}://${urlShouldContainRedactedCredentials ? '<redacted>:<redacted>@' : ''
+      }${`localhost:${serverControls.getPort()}`}${path_}`;
   }
 
   function checkQuery(span, withQuery) {

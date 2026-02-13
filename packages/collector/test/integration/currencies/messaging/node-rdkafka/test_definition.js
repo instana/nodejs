@@ -66,7 +66,7 @@ module.exports.run = function ({
               beforeEach(async () => {
                 consumerControls = new ProcessControls({
                   dirname: __dirname,
-                  appName: 'consumer.js',
+                  appName: 'consumer',
                   useGlobalAgent: true,
                   env: {
                     ...libraryEnv,
@@ -77,7 +77,7 @@ module.exports.run = function ({
 
                 producerControls = new ProcessControls({
                   dirname: __dirname,
-                  appName: 'producer.js',
+                  appName: 'producer',
                   useGlobalAgent: true,
                   env: {
                     ...libraryEnv,
@@ -298,13 +298,13 @@ module.exports.run = function ({
     before(async () => {
       producerControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'producer.js',
+        appName: 'producer',
         useGlobalAgent: true,
         env: { ...libraryEnv }
       });
       consumerControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'consumer.js',
+        appName: 'consumer',
         useGlobalAgent: true,
         env: { ...libraryEnv }
       });
@@ -360,13 +360,13 @@ module.exports.run = function ({
 
       producerControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'producer.js',
+        appName: 'producer',
         agentControls: customAgentControls,
         env: { ...libraryEnv }
       });
       consumerControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'consumer.js',
+        appName: 'consumer',
         agentControls: customAgentControls,
         env: { ...libraryEnv }
       });
@@ -420,7 +420,7 @@ module.exports.run = function ({
     before(async () => {
       producerControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'producer.js',
+        appName: 'producer',
         useGlobalAgent: true,
         env: {
           ...libraryEnv,
@@ -429,7 +429,7 @@ module.exports.run = function ({
       });
       consumerControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'consumer.js',
+        appName: 'consumer',
         useGlobalAgent: true,
         env: { ...libraryEnv }
       });
@@ -487,13 +487,13 @@ module.exports.run = function ({
 
       producerControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'producer.js',
+        appName: 'producer',
         agentControls: customAgentControls,
         env: { ...libraryEnv }
       });
       consumerControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'consumer.js',
+        appName: 'consumer',
         agentControls: customAgentControls,
         env: { ...libraryEnv }
       });
@@ -546,7 +546,7 @@ module.exports.run = function ({
     before(async () => {
       producerControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'producer.js',
+        appName: 'producer',
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {
@@ -576,7 +576,7 @@ module.exports.run = function ({
       before(async () => {
         consumerControls = new ProcessControls({
           dirname: __dirname,
-        appName: 'consumer.js',
+          appName: 'consumer',
           useGlobalAgent: true,
           tracingEnabled: false,
           env: {
@@ -624,7 +624,7 @@ module.exports.run = function ({
     before(async () => {
       producerControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'producer.js',
+        appName: 'producer',
         useGlobalAgent: true,
         env: {
           ...libraryEnv,
@@ -652,7 +652,7 @@ module.exports.run = function ({
       before(async () => {
         receiverControls = new ProcessControls({
           dirname: __dirname,
-        appName: 'consumer.js',
+          appName: 'consumer',
           useGlobalAgent: true,
           env: {
             ...libraryEnv,
@@ -714,13 +714,13 @@ module.exports.run = function ({
 
           producerControls = new ProcessControls({
             dirname: __dirname,
-        appName: 'producer.js',
+            appName: 'producer',
             agentControls: customAgentControls,
             env: { ...libraryEnv }
           });
           consumerControls = new ProcessControls({
             dirname: __dirname,
-        appName: 'consumer.js',
+            appName: 'consumer',
             agentControls: customAgentControls,
             env: { ...libraryEnv }
           });
@@ -786,13 +786,13 @@ module.exports.run = function ({
 
         producerControls = new ProcessControls({
           dirname: __dirname,
-        appName: 'producer.js',
+          appName: 'producer',
           agentControls: customAgentControls,
           env: { ...libraryEnv }
         });
         consumerControls = new ProcessControls({
           dirname: __dirname,
-        appName: 'consumer.js',
+          appName: 'consumer',
           agentControls: customAgentControls,
           env: { ...libraryEnv }
         });

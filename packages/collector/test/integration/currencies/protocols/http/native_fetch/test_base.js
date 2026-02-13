@@ -30,12 +30,12 @@ module.exports = function (name, version, isLatest) {
   before(async () => {
     serverControls = new ProcessControls({
       dirname: __dirname,
-      appName: 'serverApp.js',
+      appName: 'serverApp',
       useGlobalAgent: true
     });
     clientControls = new ProcessControls({
       dirname: __dirname,
-      appName: 'clientApp.js',
+      appName: 'clientApp',
       useGlobalAgent: true,
       env: {
         ...commonEnv,
@@ -123,9 +123,8 @@ module.exports = function (name, version, isLatest) {
             }
           }
 
-          const label = `must trace fetch(${resourceType}${
-            withOptions ? ', options' : ''
-          }) (${method}${methodViaLabel})`;
+          const label = `must trace fetch(${resourceType}${withOptions ? ', options' : ''
+            }) (${method}${methodViaLabel})`;
 
           it(label, async () => {
             const response = await clientControls.sendRequest({
@@ -178,7 +177,7 @@ module.exports = function (name, version, isLatest) {
   describe('conflicting HTTP methods', () => {
     it(
       'must trace fetch(request-object, options) and the HTTP method from options must take precedence over the ' +
-        'Request object',
+      'Request object',
       async () => {
         const response = await clientControls.sendRequest({
           path: constructPath({
@@ -382,7 +381,7 @@ module.exports = function (name, version, isLatest) {
 
     it(
       'must capture headers from the Request object and from the options object, and the headers from the options ' +
-        'object must take precedence over the Request object',
+      'object must take precedence over the Request object',
       async () => {
         const response = await clientControls.sendRequest({
           path: constructPath({
@@ -507,7 +506,7 @@ module.exports = function (name, version, isLatest) {
     before(async () => {
       agentControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'allowRootExitSpanApp.js',
+        appName: 'allowRootExitSpanApp',
         useGlobalAgent: true,
         env: {
           ...commonEnv,
@@ -537,7 +536,7 @@ module.exports = function (name, version, isLatest) {
     before(async () => {
       agentControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'allowRootExitSpanApp.js',
+        appName: 'allowRootExitSpanApp',
         useGlobalAgent: true,
         env: {
           ...commonEnv,
@@ -565,13 +564,13 @@ module.exports = function (name, version, isLatest) {
     before(async () => {
       customServerControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'serverApp.js',
+        appName: 'serverApp',
         useGlobalAgent: true
       });
 
       customClientControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'clientApp.js',
+        appName: 'clientApp',
         useGlobalAgent: true,
         env: {
           ...commonEnv,

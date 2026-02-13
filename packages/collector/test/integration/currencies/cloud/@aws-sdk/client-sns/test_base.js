@@ -43,7 +43,7 @@ function start() {
   this.timeout(config.getTestTimeout() * 4);
 
   if (!supportedVersion(process.versions.node)) {
-    it.skip(`npm: ${libraryEnv.LIBRARY_VERSION}`, () => {});
+    it.skip(`npm: ${libraryEnv.LIBRARY_VERSION}`, () => { });
     return;
   }
 
@@ -82,7 +82,7 @@ function start() {
       before(async () => {
         receiverControls = new ProcessControls({
           dirname: path.join(baseDir, '../client-sqs'),
-          appName: 'receiver.js',
+          appName: 'receiver',
           useGlobalAgent: true,
           env: {
             AWS_ENDPOINT: process.env.INSTANA_CONNECT_LOCALSTACK_AWS,
@@ -93,7 +93,7 @@ function start() {
 
         appControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'app.js',
+          appName: 'app',
           useGlobalAgent: true,
           env: {
             ...libraryEnv
@@ -173,7 +173,7 @@ function start() {
       before(async () => {
         receiverControls = new ProcessControls({
           dirname: path.join(baseDir, '../client-sqs'),
-          appName: 'receiver.js',
+          appName: 'receiver',
           useGlobalAgent: true,
           env: {
             AWS_ENDPOINT: process.env.INSTANA_CONNECT_LOCALSTACK_AWS,
@@ -184,7 +184,7 @@ function start() {
 
         appControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'app.js',
+          appName: 'app',
           useGlobalAgent: true,
           env: {
             ...libraryEnv
@@ -237,7 +237,7 @@ function start() {
       before(async () => {
         receiverControls = new ProcessControls({
           dirname: path.join(baseDir, '../client-sqs'),
-          appName: 'receiver.js',
+          appName: 'receiver',
           useGlobalAgent: true,
           tracingEnabled: false,
           env: {
@@ -249,7 +249,7 @@ function start() {
 
         appControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'app.js',
+          appName: 'app',
           useGlobalAgent: true,
           env: {
             ...libraryEnv

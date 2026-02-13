@@ -64,7 +64,7 @@ module.exports = function (libraryEnv) {
         });
         receiverControls = new ProcessControls({
           dirname: __dirname,
-          appName: '../sqs/receiveMessage.js',
+          appName: '../sqs/receiveMessage',
           useGlobalAgent: true,
           env: {
             SQS_RECEIVE_METHOD: 'callback',
@@ -194,7 +194,7 @@ module.exports = function (libraryEnv) {
       before(async () => {
         appControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'app.js',
+          appName: 'app',
           useGlobalAgent: true,
           tracingEnabled: false,
           env: {
@@ -243,7 +243,7 @@ module.exports = function (libraryEnv) {
       before(async () => {
         appControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'app.js',
+          appName: 'app',
           useGlobalAgent: true,
           env: {
             AWS_SNS_TOPIC_ARN: topicArn,

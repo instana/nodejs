@@ -38,7 +38,7 @@ module.exports = function (name, version, isLatest) {
       before(async () => {
         producerControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'producer.js',
+          appName: 'producer',
           useGlobalAgent: true,
           env: {
             ...commonEnv,
@@ -47,7 +47,7 @@ module.exports = function (name, version, isLatest) {
         });
         consumerControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'consumer.js',
+          appName: 'consumer',
           useGlobalAgent: true,
           env: {
             ...commonEnv
@@ -130,7 +130,7 @@ module.exports = function (name, version, isLatest) {
       before(async () => {
         producerControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'producer.js',
+          appName: 'producer',
           useGlobalAgent: true,
           env: {
             ...commonEnv,
@@ -139,7 +139,7 @@ module.exports = function (name, version, isLatest) {
         });
         consumerControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'consumer.js',
+          appName: 'consumer',
           useGlobalAgent: true,
           env: {
             ...commonEnv,
@@ -233,7 +233,7 @@ module.exports = function (name, version, isLatest) {
     before(async () => {
       producerControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'producer.js',
+        appName: 'producer',
         useGlobalAgent: true,
         env: {
           ...commonEnv,
@@ -242,7 +242,7 @@ module.exports = function (name, version, isLatest) {
       });
       consumerControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'consumer.js',
+        appName: 'consumer',
         useGlobalAgent: true,
         env: {
           ...commonEnv,

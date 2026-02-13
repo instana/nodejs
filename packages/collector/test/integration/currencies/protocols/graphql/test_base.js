@@ -62,7 +62,7 @@ module.exports = function (name, version, isLatest) {
                   });
                   clientControls = new ProcessControls({
                     dirname: __dirname,
-                    appName: 'client.js',
+                    appName: 'client',
                     useGlobalAgent: true,
                     env: {
                       LIBRARY_VERSION: version,
@@ -277,7 +277,7 @@ module.exports = function (name, version, isLatest) {
             });
             clientControls = new ProcessControls({
               dirname: __dirname,
-              appName: 'client.js',
+              appName: 'client',
               useGlobalAgent: true,
               env: {
                 LIBRARY_VERSION: version,
@@ -333,7 +333,7 @@ module.exports = function (name, version, isLatest) {
 
             clientControls = new ProcessControls({
               dirname: __dirname,
-              appName: 'client.js',
+              appName: 'client',
               useGlobalAgent: true,
               env: {
                 LIBRARY_VERSION: version,
@@ -383,7 +383,7 @@ module.exports = function (name, version, isLatest) {
         before(async () => {
           serverControls = new ProcessControls({
             dirname: __dirname,
-            appName: 'apolloServer.js',
+            appName: 'apolloServer',
             useGlobalAgent: true,
             env: {
               LIBRARY_VERSION: version,
@@ -393,7 +393,7 @@ module.exports = function (name, version, isLatest) {
           });
           clientControls1 = new ProcessControls({
             dirname: __dirname,
-            appName: 'client.js',
+            appName: 'client',
             useGlobalAgent: true,
             env: {
               LIBRARY_VERSION: version,
@@ -405,7 +405,7 @@ module.exports = function (name, version, isLatest) {
 
           clientControls2 = new ProcessControls({
             dirname: __dirname,
-            appName: 'client.js',
+            appName: 'client',
             useGlobalAgent: true,
             env: {
               LIBRARY_VERSION: version,
@@ -485,7 +485,7 @@ module.exports = function (name, version, isLatest) {
       before(async () => {
         serverControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'apolloServer.js',
+          appName: 'apolloServer',
           useGlobalAgent: true,
           env: {
             LIBRARY_VERSION: version,
@@ -495,7 +495,7 @@ module.exports = function (name, version, isLatest) {
         });
         clientControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'client.js',
+          appName: 'client',
           useGlobalAgent: true,
           env: {
             LIBRARY_VERSION: version,
@@ -559,7 +559,7 @@ module.exports = function (name, version, isLatest) {
       before(async () => {
         serverControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'apolloServer.js',
+          appName: 'apolloServer',
           useGlobalAgent: true,
           env: {
             LIBRARY_VERSION: version,
@@ -570,7 +570,7 @@ module.exports = function (name, version, isLatest) {
 
         clientControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'client.js',
+          appName: 'client',
           useGlobalAgent: true,
           env: {
             LIBRARY_VERSION: version,
@@ -619,7 +619,7 @@ module.exports = function (name, version, isLatest) {
       before(async () => {
         serverControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'rawGraphQLServer.js',
+          appName: 'rawGraphQLServer',
           useGlobalAgent: true,
           tracingEnabled: false,
           env: {
@@ -630,7 +630,7 @@ module.exports = function (name, version, isLatest) {
         });
         clientControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'client.js',
+          appName: 'client',
           useGlobalAgent: true,
           tracingEnabled: false,
           env: {
@@ -679,7 +679,7 @@ module.exports = function (name, version, isLatest) {
       before(async () => {
         serverControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'rawGraphQLServer.js',
+          appName: 'rawGraphQLServer',
           useGlobalAgent: true,
           env: {
             LIBRARY_VERSION: version,
@@ -690,7 +690,7 @@ module.exports = function (name, version, isLatest) {
         });
         clientControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'client.js',
+          appName: 'client',
           useGlobalAgent: true,
           env: {
             LIBRARY_VERSION: version,
@@ -797,12 +797,12 @@ function checkSubscriptionUpdatesAndSpans(client1, client2, triggerUpdateVia) {
     const msg1 = receivedUpdatesClient1[0];
     expect(msg1).to.equal(
       'character updated: ' +
-        '{"data":{"characterUpdated":{"id":"1","name":"Updated Name","profession":"Updated Profession"}}}'
+      '{"data":{"characterUpdated":{"id":"1","name":"Updated Name","profession":"Updated Profession"}}}'
     );
     const msg2 = receivedUpdatesClient2[0];
     expect(msg2).to.equal(
       'character updated: ' +
-        '{"data":{"characterUpdated":{"id":"1","name":"Updated Name","profession":"Updated Profession"}}}'
+      '{"data":{"characterUpdated":{"id":"1","name":"Updated Name","profession":"Updated Profession"}}}'
     );
 
     return agentControls.getSpans().then(spans => {

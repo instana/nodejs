@@ -37,7 +37,7 @@ module.exports = function (name, version, isLatest) {
     before(async () => {
       publisherControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'publisher.js',
+        appName: 'publisher',
         useGlobalAgent: true,
         env: {
           LIBRARY_VERSION: version,
@@ -47,7 +47,7 @@ module.exports = function (name, version, isLatest) {
       });
       subscriberControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'subscriber.js',
+        appName: 'subscriber',
         useGlobalAgent: true,
         env: {
           LIBRARY_VERSION: version,
@@ -307,7 +307,7 @@ module.exports = function (name, version, isLatest) {
     before(async () => {
       publisherControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'publisher.js',
+        appName: 'publisher',
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {
@@ -318,7 +318,7 @@ module.exports = function (name, version, isLatest) {
       });
       subscriberControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'subscriber.js',
+        appName: 'subscriber',
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {

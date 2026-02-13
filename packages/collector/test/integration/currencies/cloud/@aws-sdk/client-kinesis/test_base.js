@@ -75,7 +75,7 @@ function start() {
       before(async () => {
         appControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'app.js',
+          appName: 'app',
           useGlobalAgent: true,
           env: {
             ...libraryEnv,
@@ -187,7 +187,7 @@ function start() {
       before(async () => {
         appControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'app.js',
+          appName: 'app',
           useGlobalAgent: true,
           tracingEnabled: false,
           env: {
@@ -244,7 +244,7 @@ function start() {
       before(async () => {
         appControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'app.js',
+          appName: 'app',
           useGlobalAgent: true,
           env: {
             ...libraryEnv,

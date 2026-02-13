@@ -39,14 +39,14 @@ module.exports = function (name, version, isLatest) {
     before(async function () {
       serverControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'server.js',
+        appName: 'server',
         useGlobalAgent: true,
         env: commonEnv
       });
 
       clientControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'client.js',
+        appName: 'client',
         useGlobalAgent: true,
         env: commonEnv
       });
@@ -120,14 +120,14 @@ module.exports = function (name, version, isLatest) {
     before(async function () {
       serverControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'server.js',
+        appName: 'server',
         useGlobalAgent: true,
         env: commonEnv
       });
 
       clientControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'client.js',
+        appName: 'client',
         useGlobalAgent: true,
         env: commonEnv
       });
@@ -177,7 +177,7 @@ module.exports = function (name, version, isLatest) {
     before(async function () {
       serverControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'server.js',
+        appName: 'server',
         useGlobalAgent: true,
         env: {
           ...commonEnv,
@@ -187,7 +187,7 @@ module.exports = function (name, version, isLatest) {
 
       clientControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'client.js',
+        appName: 'client',
         useGlobalAgent: true,
         env: {
           ...commonEnv,
@@ -241,14 +241,14 @@ module.exports = function (name, version, isLatest) {
     before(async function () {
       serverControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'server.js',
+        appName: 'server',
         useGlobalAgent: true,
         env: commonEnv
       });
 
       clientControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'client.js',
+        appName: 'client',
         useGlobalAgent: true,
         env: commonEnv
       });

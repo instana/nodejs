@@ -38,14 +38,14 @@ module.exports = function (name, version, isLatest) {
 
     serverControls = new ProcessControls({
       dirname: __dirname,
-      appName: 'server.js',
+      appName: 'server',
       http2: true,
       agentControls
     });
 
     clientControls = new ProcessControls({
       dirname: __dirname,
-      appName: 'client.js',
+      appName: 'client',
       http2: true,
       agentControls,
       forcePortSearching: true,
@@ -276,7 +276,7 @@ module.exports = function (name, version, isLatest) {
 
     it(
       'must not append another key-value pair when the (string) Server-Timing header already has intid: ' +
-        'Custom server-timing string',
+      'Custom server-timing string',
       () =>
         serverControls
           .sendRequest({
@@ -291,7 +291,7 @@ module.exports = function (name, version, isLatest) {
 
     it(
       'must not append another key-value pair when the (array) Server-Timing header already has intid: ' +
-        'Custom server-timing string',
+      'Custom server-timing string',
       () =>
         serverControls
           .sendRequest({
@@ -372,14 +372,14 @@ module.exports = function (name, version, isLatest) {
     before(async () => {
       cusomServerControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'server.js',
+        appName: 'server',
         http2: true,
         agentControls
       });
 
       customClientControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'client.js',
+        appName: 'client',
         http2: true,
         useGlobalAgent: true,
         forcePortSearching: true,

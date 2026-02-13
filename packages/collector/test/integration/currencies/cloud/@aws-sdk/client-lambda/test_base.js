@@ -29,7 +29,7 @@ async function start() {
   this.timeout(config.getTestTimeout() * 20);
 
   if (!supportedVersion(process.versions.node)) {
-    it.skip('unsupported node version', () => {});
+    it.skip('unsupported node version', () => { });
     return;
   }
   const { isLocalStackDisabled } = require('./utils');
@@ -66,7 +66,7 @@ async function start() {
       before(async () => {
         appControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'app.js',
+          appName: 'app',
           useGlobalAgent: true,
           env: { ...libraryEnv, ...envConfig }
         });
@@ -148,7 +148,7 @@ async function start() {
       before(async () => {
         appControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'app.js',
+          appName: 'app',
           useGlobalAgent: true,
           tracingEnabled: false,
           env: { ...libraryEnv, ...envConfig }
@@ -192,7 +192,7 @@ async function start() {
       before(async () => {
         appControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'app.js',
+          appName: 'app',
           useGlobalAgent: true,
           env: { ...libraryEnv, ...envConfig }
         });

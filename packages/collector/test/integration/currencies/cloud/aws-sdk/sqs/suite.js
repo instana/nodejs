@@ -107,7 +107,7 @@ module.exports = function (libraryEnv) {
       before(async () => {
         senderControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'sendMessage.js',
+          appName: 'sendMessage',
           useGlobalAgent: true,
           env: {
             AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`,
@@ -116,7 +116,7 @@ module.exports = function (libraryEnv) {
         });
         senderControlsSQSConsumer = new ProcessControls({
           dirname: __dirname,
-          appName: 'sendMessage.js',
+          appName: 'sendMessage',
           useGlobalAgent: true,
           env: {
             AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
@@ -125,7 +125,7 @@ module.exports = function (libraryEnv) {
         });
         senderControlsBatch = new ProcessControls({
           dirname: __dirname,
-          appName: 'sendMessage.js',
+          appName: 'sendMessage',
           useGlobalAgent: true,
           env: {
             AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-batch`,
@@ -161,7 +161,7 @@ module.exports = function (libraryEnv) {
           before(async () => {
             receiverControls = new ProcessControls({
               dirname: __dirname,
-              appName: 'receiveMessage.js',
+              appName: 'receiveMessage',
               useGlobalAgent: true,
               env: {
                 SQS_RECEIVE_METHOD: sqsReceiveMethod,
@@ -217,7 +217,7 @@ module.exports = function (libraryEnv) {
           before(async () => {
             receiverControls = new ProcessControls({
               dirname: __dirname,
-              appName: 'receiveMessage.js',
+              appName: 'receiveMessage',
               useGlobalAgent: true,
               env: {
                 SQS_RECEIVE_METHOD: sqsReceiveMethod,
@@ -244,7 +244,7 @@ module.exports = function (libraryEnv) {
 
           it(
             `consecutive receiveMessage calls via ${sqsReceiveMethod} in the same event loop tick should not ` +
-              'trigger a warning',
+            'trigger a warning',
             async () => {
               retry(async () => {
                 const numberOfMessagePolls = await receiverControls.sendRequest({
@@ -272,7 +272,7 @@ module.exports = function (libraryEnv) {
         before(async () => {
           receiverControls = new ProcessControls({
             dirname: __dirname,
-            appName: 'receiveMessage.js',
+            appName: 'receiveMessage',
             useGlobalAgent: true,
             env: {
               SQS_RECEIVE_METHOD: 'async',
@@ -327,7 +327,7 @@ module.exports = function (libraryEnv) {
           before(async () => {
             sqsConsumerControls = new ProcessControls({
               dirname: __dirname,
-              appName: 'sqs-consumer.js',
+              appName: 'sqs-consumer',
               useGlobalAgent: true,
               env: {
                 AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
@@ -368,7 +368,7 @@ module.exports = function (libraryEnv) {
           before(async () => {
             sqsConsumerControls = new ProcessControls({
               dirname: __dirname,
-              appName: 'sqs-consumer.js',
+              appName: 'sqs-consumer',
               useGlobalAgent: true,
               env: {
                 AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
@@ -413,7 +413,7 @@ module.exports = function (libraryEnv) {
             before(async () => {
               receiverControls = new ProcessControls({
                 dirname: __dirname,
-                appName: 'receiveMessage.js',
+                appName: 'receiveMessage',
                 useGlobalAgent: true,
                 env: {
                   SQS_RECEIVE_METHOD: sqsReceiveMethod,
@@ -554,7 +554,7 @@ module.exports = function (libraryEnv) {
       before(async () => {
         senderControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'sendMessage.js',
+          appName: 'sendMessage',
           useGlobalAgent: true,
           tracingEnabled: false,
           env: {
@@ -585,7 +585,7 @@ module.exports = function (libraryEnv) {
         before(async () => {
           receiverControls = new ProcessControls({
             dirname: __dirname,
-            appName: 'receiveMessage.js',
+            appName: 'receiveMessage',
             useGlobalAgent: true,
             tracingEnabled: false,
             env: {
@@ -633,7 +633,7 @@ module.exports = function (libraryEnv) {
       before(async () => {
         senderControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'sendMessage.js',
+          appName: 'sendMessage',
           useGlobalAgent: true,
           env: {
             AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`,
@@ -663,7 +663,7 @@ module.exports = function (libraryEnv) {
         before(async () => {
           receiverControls = new ProcessControls({
             dirname: __dirname,
-            appName: 'receiveMessage.js',
+            appName: 'receiveMessage',
             useGlobalAgent: true,
             env: {
               SQS_RECEIVE_METHOD: receivingMethod,
@@ -715,7 +715,7 @@ module.exports = function (libraryEnv) {
       before(async () => {
         receiverControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'receiveMessage.js',
+          appName: 'receiveMessage',
           useGlobalAgent: true,
           env: {
             SQS_RECEIVE_METHOD: 'callback',

@@ -36,31 +36,31 @@ module.exports = function (name, version, isLatest) {
 
         accountServiceControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'services/accounts/index.js',
+          appName: 'services/accounts/index',
           useGlobalAgent: true,
           env: commonEnv
         });
         inventoryServiceControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'services/inventory/index.js',
+          appName: 'services/inventory/index',
           useGlobalAgent: true,
           env: commonEnv
         });
         productsServiceControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'services/products/index.js',
+          appName: 'services/products/index',
           useGlobalAgent: true,
           env: commonEnv
         });
         reviewsServiceControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'services/reviews/index.js',
+          appName: 'services/reviews/index',
           useGlobalAgent: true,
           env: commonEnv
         });
         gatewayControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'gateway.js',
+          appName: 'gateway',
           useGlobalAgent: true,
           env: {
             ...commonEnv,
@@ -72,7 +72,7 @@ module.exports = function (name, version, isLatest) {
         });
         clientControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'client.js',
+          appName: 'client',
           useGlobalAgent: true,
           env: {
             ...commonEnv,

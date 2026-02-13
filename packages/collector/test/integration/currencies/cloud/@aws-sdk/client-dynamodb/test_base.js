@@ -59,7 +59,7 @@ function start(reducedTestSuite = false) {
       before(async () => {
         appControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'app.js',
+          appName: 'app',
           useGlobalAgent: true,
           env: {
             ...libraryEnv,
@@ -116,7 +116,7 @@ function start(reducedTestSuite = false) {
       before(async () => {
         appControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'app.js',
+          appName: 'app',
           useGlobalAgent: true,
           env: {
             ...libraryEnv,
@@ -165,7 +165,7 @@ function start(reducedTestSuite = false) {
       before(async () => {
         appControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'app.js',
+          appName: 'app',
           useGlobalAgent: true,
           env: {
             ...libraryEnv,
@@ -279,7 +279,7 @@ function start(reducedTestSuite = false) {
       before(async () => {
         appControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'app.js',
+          appName: 'app',
           useGlobalAgent: true,
           env: {
             ...libraryEnv,
@@ -363,7 +363,7 @@ function start(reducedTestSuite = false) {
           controls = new ProcessControls({
             agentControls: customAgentControls,
             dirname: __dirname,
-            appName: 'app.js',
+            appName: 'app',
             env: {
               ...libraryEnv,
               AWS_DYNAMODB_TABLE_NAME: tableName
@@ -415,7 +415,7 @@ function start(reducedTestSuite = false) {
           appControls = new ProcessControls({
             useGlobalAgent: true,
             dirname: __dirname,
-            appName: 'app.js',
+            appName: 'app',
             env: {
               ...libraryEnv,
               AWS_DYNAMODB_TABLE_NAME: tableName,

@@ -30,7 +30,7 @@ module.exports = function (name, version, isLatest) {
     before(async () => {
       publisherControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'publisher.js',
+        appName: 'publisher',
         useGlobalAgent: true,
         env: {
           LIBRARY_VERSION: version,
@@ -40,7 +40,7 @@ module.exports = function (name, version, isLatest) {
       });
       subscriberControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'subscriber.js',
+        appName: 'subscriber',
         useGlobalAgent: true,
         env: {
           LIBRARY_VERSION: version,
@@ -130,7 +130,7 @@ module.exports = function (name, version, isLatest) {
 
         it(
           `must record an exit span for nats.${publishMethod} ` +
-            `(callback: ${withCallback}, reply: ${withReply}, error: ${withError})`,
+          `(callback: ${withCallback}, reply: ${withReply}, error: ${withError})`,
           () => {
             publishMethod = publishMethod === 'requestOne' ? 'request' : publishMethod;
             const url = queryParams ? `/${publishMethod}?${queryParams}` : `/${publishMethod}`;
@@ -199,11 +199,11 @@ module.exports = function (name, version, isLatest) {
 
                       !isV2
                         ? expectations.push(span =>
-                            expect(span.data.nats.error).to.equal('NatsError: Subject must be supplied')
-                          )
+                          expect(span.data.nats.error).to.equal('NatsError: Subject must be supplied')
+                        )
                         : expectations.push(span =>
-                            expect(span.data.nats.error).to.equal('NatsError: BAD_SUBJECT')
-                          );
+                          expect(span.data.nats.error).to.equal('NatsError: BAD_SUBJECT')
+                        );
                     } else {
                       expectations.push(span => expect(span.ec).to.equal(0));
                       expectations.push(span => expect(span.data.nats.error).to.not.exist);
@@ -462,7 +462,7 @@ module.exports = function (name, version, isLatest) {
     before(async () => {
       publisherControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'publisher.js',
+        appName: 'publisher',
         useGlobalAgent: true,
         env: {
           LIBRARY_VERSION: version,
@@ -513,7 +513,7 @@ module.exports = function (name, version, isLatest) {
     before(async () => {
       publisherControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'publisher.js',
+        appName: 'publisher',
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {
@@ -524,7 +524,7 @@ module.exports = function (name, version, isLatest) {
       });
       subscriberControls = new ProcessControls({
         dirname: __dirname,
-        appName: 'subscriber.js',
+        appName: 'subscriber',
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {

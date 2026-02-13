@@ -20,7 +20,7 @@ module.exports = function (name, version, isLatest) {
   before(async () => {
     controls = new ProcessControls({
       dirname: __dirname,
-      appName: 'build/src/server.js',
+      appName: 'build/src/server',
       useGlobalAgent: true,
       env: {
         LIBRARY_LATEST: isLatest,

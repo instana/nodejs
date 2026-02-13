@@ -79,7 +79,7 @@ function start() {
       before(async () => {
         senderControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'sender.js',
+          appName: 'sender',
           useGlobalAgent: true,
           env: {
             ...libraryEnv,
@@ -88,7 +88,7 @@ function start() {
         });
         senderControlsSQSConsumer = new ProcessControls({
           dirname: __dirname,
-          appName: 'sender.js',
+          appName: 'sender',
           useGlobalAgent: true,
           env: {
             ...libraryEnv,
@@ -97,7 +97,7 @@ function start() {
         });
         senderControlsBatch = new ProcessControls({
           dirname: __dirname,
-          appName: 'sender.js',
+          appName: 'sender',
           useGlobalAgent: true,
           env: {
             ...libraryEnv,
@@ -133,7 +133,7 @@ function start() {
           before(async () => {
             receiverControls = new ProcessControls({
               dirname: __dirname,
-              appName: 'receiver.js',
+              appName: 'receiver',
               useGlobalAgent: true,
               env: {
                 ...libraryEnv,
@@ -190,7 +190,7 @@ function start() {
           before(async () => {
             receiverControls = new ProcessControls({
               dirname: __dirname,
-              appName: 'receiver.js',
+              appName: 'receiver',
               useGlobalAgent: true,
               env: {
                 ...libraryEnv,
@@ -217,7 +217,7 @@ function start() {
 
           it(
             `consecutive receiveMessage calls via ${sqsReceiveMethod} in the same event loop tick should not ` +
-              'trigger a warning',
+            'trigger a warning',
             async () => {
               retry(async () => {
                 const numberOfMessagePolls = await receiverControls.sendRequest({
@@ -246,7 +246,7 @@ function start() {
           before(async () => {
             sqsConsumerControls = new ProcessControls({
               dirname: __dirname,
-              appName: 'sqs-consumer.js',
+              appName: 'sqs-consumer',
               useGlobalAgent: true,
               env: {
                 ...libraryEnv,
@@ -309,7 +309,7 @@ function start() {
           before(async () => {
             sqsConsumerControls = new ProcessControls({
               dirname: __dirname,
-              appName: 'sqs-consumer.js',
+              appName: 'sqs-consumer',
               useGlobalAgent: true,
               env: {
                 ...libraryEnv,
@@ -374,7 +374,7 @@ function start() {
           before(async () => {
             sqsConsumerControls = new ProcessControls({
               dirname: __dirname,
-              appName: 'sqs-consumer.js',
+              appName: 'sqs-consumer',
               useGlobalAgent: true,
               env: {
                 ...libraryEnv,
@@ -426,7 +426,7 @@ function start() {
             before(async () => {
               receiverControls = new ProcessControls({
                 dirname: __dirname,
-                appName: 'receiver.js',
+                appName: 'receiver',
                 useGlobalAgent: true,
                 env: {
                   ...libraryEnv,
@@ -481,7 +481,7 @@ function start() {
       before(async () => {
         senderControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'sender.js',
+          appName: 'sender',
           useGlobalAgent: true,
           tracingEnabled: false,
           env: {
@@ -513,7 +513,7 @@ function start() {
         before(async () => {
           receiverControls = new ProcessControls({
             dirname: __dirname,
-            appName: 'receiver.js',
+            appName: 'receiver',
             useGlobalAgent: true,
             tracingEnabled: false,
             env: {
@@ -564,7 +564,7 @@ function start() {
       before(async () => {
         senderControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'sender.js',
+          appName: 'sender',
           useGlobalAgent: true,
           env: {
             ...libraryEnv,
@@ -594,7 +594,7 @@ function start() {
         before(async () => {
           receiverControls = new ProcessControls({
             dirname: __dirname,
-            appName: 'receiver.js',
+            appName: 'receiver',
             useGlobalAgent: true,
             env: {
               ...libraryEnv,
@@ -649,7 +649,7 @@ function start() {
       before(async () => {
         receiverControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'receiver.js',
+          appName: 'receiver',
           useGlobalAgent: true,
           env: {
             ...libraryEnv,
@@ -698,7 +698,7 @@ function start() {
       before(async () => {
         senderControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'sender.js',
+          appName: 'sender',
           useGlobalAgent: true,
           env: {
             ...libraryEnv,
@@ -707,7 +707,7 @@ function start() {
         });
         receiverControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'receiver.js',
+          appName: 'receiver',
           useGlobalAgent: true,
           env: {
             ...libraryEnv,

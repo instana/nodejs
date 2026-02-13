@@ -30,12 +30,12 @@ module.exports = function (name, version, isLatest) {
   before(async () => {
     serverControls = new ProcessControls({
       dirname: __dirname,
-      appName: 'serverApp.js',
+      appName: 'serverApp',
       useGlobalAgent: true
     });
     clientControls = new ProcessControls({
       dirname: __dirname,
-      appName: 'superagentApp.js',
+      appName: 'superagentApp',
       useGlobalAgent: true,
       env: {
         ...commonEnv,

@@ -37,34 +37,218 @@ module.exports = function (name, version, isLatest, mode) {
   const agentControls = globalAgent.instance;
 
   if (!mode || mode === 'default') {
-  describe('tracing enabled ', function () {
-    const nextUseEachBatch = getCircularList([false, true]);
-    const nextError = getCircularList([false, 'consumer']);
+    describe('tracing enabled ', function () {
+      const nextUseEachBatch = getCircularList([false, true]);
+      const nextError = getCircularList([false, 'consumer']);
 
-    [false, true].forEach(useSendBatch => {
-      const useEachBatch = nextUseEachBatch();
-      const error = nextError();
+      [false, true].forEach(useSendBatch => {
+        const useEachBatch = nextUseEachBatch();
+        const error = nextError();
 
-      describe(
-        `kafkajs, ${useSendBatch ? 'sendBatch' : 'sendMessage'} => ` +
+        describe(
+          `kafkajs, ${useSendBatch ? 'sendBatch' : 'sendMessage'} => ` +
           `${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`,
-        () => {
-          let producerControls;
+          () => {
+            let producerControls;
+            let consumerControls;
+
+            before(async () => {
+              consumerControls = new ProcessControls({
+                dirname: __dirname,
+                appName: 'consumer',
+                useGlobalAgent: true,
+                env: { ...libraryEnv }
+              });
+
+              producerControls = new ProcessControls({
+                dirname: __dirname,
+                appName: 'producer',
+                useGlobalAgent: true,
+                env: { ...libraryEnv }
+              });
+
+              await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+              await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+            });
+
+            beforeEach(async () => {
+              await agentControls.clearReceivedTraceData();
+            });
+
+            after(async () => {
+              await producerControls.stop();
+              await consumerControls.stop();
+            });
+
+            beforeEach(async () => {
+              await resetMessages(consumerControls);
+            });
+
+            afterEach(async () => {
+              await resetMessages(consumerControls);
+            });
+
+            it(`must trace sending and receiving and keep trace continuity, ${useSendBatch ? 'sendBatch' : 'sendMessage'
+              } => ${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`, async () => {
+                const parameters = {
+                  error,
+                  useSendBatch,
+                  useEachBatch
+                };
+
+                await producerControls.sendRequest({
+                  method: 'POST',
+                  path: '/send-messages',
+                  simple: true,
+                  body: JSON.stringify({
+                    key: 'someKey',
+                    value: 'someMessage',
+                    error,
+                    useSendBatch,
+                    useEachBatch
+                  }),
+                  headers: {
+                    'Content-Type': 'application/json'
+                  }
+                });
+
+                await retry(async () => {
+                  const messages = await getMessages(consumerControls);
+                  checkMessages(messages, parameters);
+                  const spans = await agentControls.getSpans();
+                  const httpEntry = verifyHttpEntry(spans);
+                  verifyKafkaExits(spans, httpEntry, parameters);
+                  verifyFollowUpHttpExit(spans, httpEntry);
+                });
+              });
+
+            if (error === false) {
+              // we do not need dedicated suppression tests for error conditions
+              it('must not trace when suppressed', async () => {
+                const parameters = { error, useSendBatch, useEachBatch };
+
+                await producerControls.sendRequest({
+                  method: 'POST',
+                  path: '/send-messages',
+                  simple: true,
+                  suppressTracing: true,
+                  body: JSON.stringify({
+                    key: 'someKey',
+                    value: 'someMessage',
+                    error,
+                    useSendBatch,
+                    useEachBatch
+                  }),
+                  headers: {
+                    'Content-Type': 'application/json'
+                  }
+                });
+
+                await retry(async () => {
+                  const messages = await getMessages(consumerControls);
+                  checkMessages(messages, parameters);
+                  await delay(1000);
+                  const spans = await agentControls.getSpans();
+                  expect(spans).to.have.lengthOf(0);
+                });
+              });
+            }
+          }
+        );
+      });
+    });
+
+    describe('with error in producer ', function () {
+      const error = 'producer';
+      const useEachBatch = false;
+
+      [false, true].forEach(useSendBatch => {
+        describe(
+          `kafkajs, ${useSendBatch ? 'sendBatch' : 'sendMessage'} => ` +
+          `${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`,
+          () => {
+            let producerControls;
+
+            before(async () => {
+              producerControls = new ProcessControls({
+                dirname: __dirname,
+                appName: 'producer',
+                useGlobalAgent: true,
+                env: { ...libraryEnv }
+              });
+
+              await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+            });
+
+            beforeEach(async () => {
+              await agentControls.clearReceivedTraceData();
+            });
+
+            after(async () => {
+              await producerControls.stop();
+            });
+
+            it(`must trace attempts to send a message when an error happens in the producer (${useSendBatch ? 'sendBatch' : 'sendMessage'
+              }, error: ${error})`, async () => {
+                const parameters = {
+                  error,
+                  useSendBatch,
+                  useEachBatch
+                };
+
+                await producerControls.sendRequest({
+                  method: 'POST',
+                  path: '/send-messages',
+                  simple: true,
+                  body: JSON.stringify({
+                    key: 'someKey',
+                    value: 'someMessage',
+                    error,
+                    useSendBatch,
+                    useEachBatch
+                  }),
+                  headers: {
+                    'Content-Type': 'application/json'
+                  }
+                });
+
+                await retry(async () => {
+                  const spans = await agentControls.getSpans();
+                  const httpEntry = verifyHttpEntry(spans);
+                  verifyKafkaExits(spans, httpEntry, parameters);
+                  verifyFollowUpHttpExit(spans, httpEntry);
+                });
+              });
+          }
+        );
+      });
+    });
+
+    describe('tracing enabled, but trace correlation disabled', function () {
+      const nextUseEachBatch = getCircularList([false, true]);
+
+      [false, true].forEach(useSendBatch => {
+        const useEachBatch = nextUseEachBatch();
+
+        describe(`useEachBatch: ${useEachBatch}, useSendBatch: ${useSendBatch}`, function () {
           let consumerControls;
+          let producerControls;
 
           before(async () => {
             consumerControls = new ProcessControls({
               dirname: __dirname,
-              appName: 'consumer.js',
+              appName: 'consumer',
               useGlobalAgent: true,
               env: { ...libraryEnv }
             });
-
             producerControls = new ProcessControls({
               dirname: __dirname,
-              appName: 'producer.js',
+              appName: 'producer',
               useGlobalAgent: true,
-              env: { ...libraryEnv }
+              env: {
+                ...libraryEnv,
+                INSTANA_KAFKA_TRACE_CORRELATION: 'false'
+              }
             });
 
             await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
@@ -88,11 +272,9 @@ module.exports = function (name, version, isLatest, mode) {
             await resetMessages(consumerControls);
           });
 
-          it(`must trace sending and receiving and keep trace continuity, ${
-            useSendBatch ? 'sendBatch' : 'sendMessage'
-          } => ${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`, async () => {
+          it('must trace sending and receiving but will not keep trace continuity', async () => {
             const parameters = {
-              error,
+              kafkaCorrelation: 'correlation-disabled',
               useSendBatch,
               useEachBatch
             };
@@ -104,7 +286,6 @@ module.exports = function (name, version, isLatest, mode) {
               body: JSON.stringify({
                 key: 'someKey',
                 value: 'someMessage',
-                error,
                 useSendBatch,
                 useEachBatch
               }),
@@ -123,89 +304,17 @@ module.exports = function (name, version, isLatest, mode) {
             });
           });
 
-          if (error === false) {
-            // we do not need dedicated suppression tests for error conditions
-            it('must not trace when suppressed', async () => {
-              const parameters = { error, useSendBatch, useEachBatch };
-
-              await producerControls.sendRequest({
-                method: 'POST',
-                path: '/send-messages',
-                simple: true,
-                suppressTracing: true,
-                body: JSON.stringify({
-                  key: 'someKey',
-                  value: 'someMessage',
-                  error,
-                  useSendBatch,
-                  useEachBatch
-                }),
-                headers: {
-                  'Content-Type': 'application/json'
-                }
-              });
-
-              await retry(async () => {
-                const messages = await getMessages(consumerControls);
-                checkMessages(messages, parameters);
-                await delay(1000);
-                const spans = await agentControls.getSpans();
-                expect(spans).to.have.lengthOf(0);
-              });
-            });
-          }
-        }
-      );
-    });
-  });
-
-  describe('with error in producer ', function () {
-    const error = 'producer';
-    const useEachBatch = false;
-
-    [false, true].forEach(useSendBatch => {
-      describe(
-        `kafkajs, ${useSendBatch ? 'sendBatch' : 'sendMessage'} => ` +
-          `${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`,
-        () => {
-          let producerControls;
-
-          before(async () => {
-            producerControls = new ProcessControls({
-              dirname: __dirname,
-              appName: 'producer.js',
-              useGlobalAgent: true,
-              env: { ...libraryEnv }
-            });
-
-            await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
-          });
-
-          beforeEach(async () => {
-            await agentControls.clearReceivedTraceData();
-          });
-
-          after(async () => {
-            await producerControls.stop();
-          });
-
-          it(`must trace attempts to send a message when an error happens in the producer (${
-            useSendBatch ? 'sendBatch' : 'sendMessage'
-          }, error: ${error})`, async () => {
-            const parameters = {
-              error,
-              useSendBatch,
-              useEachBatch
-            };
+          it('must not trace Kafka exits when suppressed (but will trace Kafka entries)', async () => {
+            const parameters = { kafkaCorrelation: 'correlation-disabled', useSendBatch, useEachBatch };
 
             await producerControls.sendRequest({
               method: 'POST',
               path: '/send-messages',
               simple: true,
+              suppressTracing: true,
               body: JSON.stringify({
                 key: 'someKey',
                 value: 'someMessage',
-                error,
                 useSendBatch,
                 useEachBatch
               }),
@@ -215,177 +324,208 @@ module.exports = function (name, version, isLatest, mode) {
             });
 
             await retry(async () => {
+              const messages = await getMessages(consumerControls);
+              checkMessages(messages, parameters);
               const spans = await agentControls.getSpans();
-              const httpEntry = verifyHttpEntry(spans);
-              verifyKafkaExits(spans, httpEntry, parameters);
-              verifyFollowUpHttpExit(spans, httpEntry);
+              // There should be no HTTP entries and also no Kafka exits.
+              expect(getSpansByName(spans, 'node.http.server')).to.be.empty;
+              expect(getSpansByName(spans, 'kafka').filter(span => span.k === 2)).to.be.empty;
+              // However, since we disabled Kafka trace correlation headers, the suppression flag is not added to
+              // Kafka message, thus, each incoming Kafka message will start a new trace with a Kafka entry as its
+              // root span.
+              verifyKafkaRootEntries(spans, parameters);
             });
+          });
+        });
+      });
+    });
+
+    describe('disable trace correlation from agent config', function () {
+      const customAgentControls = new AgentStubControls();
+
+      let consumerControls;
+      let producerControls;
+
+      before(async () => {
+        await customAgentControls.startAgent({
+          kafkaConfig: { traceCorrelation: false }
+        });
+
+        consumerControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'consumer',
+          agentControls: customAgentControls,
+          env: { ...libraryEnv }
+        });
+        producerControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'producer',
+          agentControls: customAgentControls,
+          env: { ...libraryEnv }
+        });
+
+        await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+        await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+      });
+
+      beforeEach(async () => {
+        await customAgentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await customAgentControls.stopAgent();
+        await producerControls.stop();
+        await consumerControls.stop();
+      });
+
+      const kafkaCorrelation = 'correlation-disabled';
+
+      it(
+        'must trace sending and receiving but will not keep trace continuity ' +
+        '(trace correlation disabled from agent config)',
+        async () => {
+          await producerControls.sendRequest({
+            method: 'POST',
+            path: '/send-messages',
+            simple: true,
+            body: JSON.stringify({
+              key: 'someKey',
+              value: 'someMessage'
+            }),
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+
+          await retry(async () => {
+            const messages = await getMessages(consumerControls);
+            checkMessages(messages, { kafkaCorrelation });
+            const spans = await customAgentControls.getSpans();
+            const httpEntry = verifyHttpEntry(spans);
+            verifyKafkaExits(spans, httpEntry, { kafkaCorrelation });
+            verifyFollowUpHttpExit(spans, httpEntry);
           });
         }
       );
     });
-  });
 
-  describe('tracing enabled, but trace correlation disabled', function () {
-    const nextUseEachBatch = getCircularList([false, true]);
+    describe('tracing disabled', () => {
+      let consumerControls;
+      let producerControls;
 
-    [false, true].forEach(useSendBatch => {
-      const useEachBatch = nextUseEachBatch();
-
-      describe(`useEachBatch: ${useEachBatch}, useSendBatch: ${useSendBatch}`, function () {
-        let consumerControls;
-        let producerControls;
-
-        before(async () => {
-          consumerControls = new ProcessControls({
-            dirname: __dirname,
-              appName: 'consumer.js',
-            useGlobalAgent: true,
-            env: { ...libraryEnv }
-          });
-          producerControls = new ProcessControls({
-            dirname: __dirname,
-              appName: 'producer.js',
-            useGlobalAgent: true,
-            env: {
-              ...libraryEnv,
-              INSTANA_KAFKA_TRACE_CORRELATION: 'false'
-            }
-          });
-
-          await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
-          await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+      before(async () => {
+        consumerControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'consumer',
+          useGlobalAgent: true,
+          tracingEnabled: false,
+          env: { ...libraryEnv }
+        });
+        producerControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'producer',
+          useGlobalAgent: true,
+          tracingEnabled: false,
+          env: { ...libraryEnv }
         });
 
-        beforeEach(async () => {
-          await agentControls.clearReceivedTraceData();
+        await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+        await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await producerControls.stop();
+        await consumerControls.stop();
+      });
+
+      beforeEach(async () => {
+        await resetMessages(consumerControls);
+      });
+
+      afterEach(async () => {
+        await resetMessages(consumerControls);
+      });
+
+      it('must not trace when disabled', async () => {
+        const parameters = {
+          kafkaCorrelation: 'tracing-disabled',
+          error: false,
+          useSendBatch: false,
+          useEachBatch: false
+        };
+
+        await producerControls.sendRequest({
+          method: 'POST',
+          path: '/send-messages',
+          simple: true,
+          error: false,
+          body: JSON.stringify({
+            key: 'someKey',
+            value: 'someMessage',
+            useSendBatch: false,
+            useEachBatch: false
+          }),
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
 
-        after(async () => {
-          await producerControls.stop();
-          await consumerControls.stop();
-        });
-
-        beforeEach(async () => {
-          await resetMessages(consumerControls);
-        });
-
-        afterEach(async () => {
-          await resetMessages(consumerControls);
-        });
-
-        it('must trace sending and receiving but will not keep trace continuity', async () => {
-          const parameters = {
-            kafkaCorrelation: 'correlation-disabled',
-            useSendBatch,
-            useEachBatch
-          };
-
-          await producerControls.sendRequest({
-            method: 'POST',
-            path: '/send-messages',
-            simple: true,
-            body: JSON.stringify({
-              key: 'someKey',
-              value: 'someMessage',
-              useSendBatch,
-              useEachBatch
-            }),
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          });
-
-          await retry(async () => {
-            const messages = await getMessages(consumerControls);
-            checkMessages(messages, parameters);
-            const spans = await agentControls.getSpans();
-            const httpEntry = verifyHttpEntry(spans);
-            verifyKafkaExits(spans, httpEntry, parameters);
-            verifyFollowUpHttpExit(spans, httpEntry);
-          });
-        });
-
-        it('must not trace Kafka exits when suppressed (but will trace Kafka entries)', async () => {
-          const parameters = { kafkaCorrelation: 'correlation-disabled', useSendBatch, useEachBatch };
-
-          await producerControls.sendRequest({
-            method: 'POST',
-            path: '/send-messages',
-            simple: true,
-            suppressTracing: true,
-            body: JSON.stringify({
-              key: 'someKey',
-              value: 'someMessage',
-              useSendBatch,
-              useEachBatch
-            }),
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          });
-
-          await retry(async () => {
-            const messages = await getMessages(consumerControls);
-            checkMessages(messages, parameters);
-            const spans = await agentControls.getSpans();
-            // There should be no HTTP entries and also no Kafka exits.
-            expect(getSpansByName(spans, 'node.http.server')).to.be.empty;
-            expect(getSpansByName(spans, 'kafka').filter(span => span.k === 2)).to.be.empty;
-            // However, since we disabled Kafka trace correlation headers, the suppression flag is not added to
-            // Kafka message, thus, each incoming Kafka message will start a new trace with a Kafka entry as its
-            // root span.
-            verifyKafkaRootEntries(spans, parameters);
-          });
+        await retry(async () => {
+          const messages = await getMessages(consumerControls);
+          checkMessages(messages, parameters);
+          await delay(1000);
+          const spans = await agentControls.getSpans();
+          expect(spans).to.have.lengthOf(0);
         });
       });
     });
-  });
 
-  describe('disable trace correlation from agent config', function () {
-    const customAgentControls = new AgentStubControls();
+    describe('must cope with non-standard length trace and span IDs', () => {
+      // regression test for https://github.com/instana/nodejs/issues/833
 
-    let consumerControls;
-    let producerControls;
+      let consumerControls;
+      let producerControls;
 
-    before(async () => {
-      await customAgentControls.startAgent({
-        kafkaConfig: { traceCorrelation: false }
+      before(async () => {
+        consumerControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'consumer',
+          useGlobalAgent: true,
+          env: { ...libraryEnv }
+        });
+        producerControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'producer',
+          useGlobalAgent: true,
+          env: { ...libraryEnv }
+        });
+
+        await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+        await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
       });
 
-      consumerControls = new ProcessControls({
-        dirname: __dirname,
-              appName: 'consumer.js',
-        agentControls: customAgentControls,
-        env: { ...libraryEnv }
-      });
-      producerControls = new ProcessControls({
-        dirname: __dirname,
-              appName: 'producer.js',
-        agentControls: customAgentControls,
-        env: { ...libraryEnv }
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
-      await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
-      await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
-    });
+      after(async () => {
+        await producerControls.stop();
+        await consumerControls.stop();
+      });
 
-    beforeEach(async () => {
-      await customAgentControls.clearReceivedTraceData();
-    });
+      beforeEach(async () => {
+        await resetMessages(consumerControls);
+      });
 
-    after(async () => {
-      await customAgentControls.stopAgent();
-      await producerControls.stop();
-      await consumerControls.stop();
-    });
+      afterEach(async () => {
+        await resetMessages(consumerControls);
+      });
 
-    const kafkaCorrelation = 'correlation-disabled';
-
-    it(
-      'must trace sending and receiving but will not keep trace continuity ' +
-        '(trace correlation disabled from agent config)',
-      async () => {
+      it('must pad short incoming trace and span IDs', async () => {
         await producerControls.sendRequest({
           method: 'POST',
           path: '/send-messages',
@@ -395,346 +535,421 @@ module.exports = function (name, version, isLatest, mode) {
             value: 'someMessage'
           }),
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-INSTANA-T': '1234',
+            'X-INSTANA-S': '5678'
           }
         });
 
         await retry(async () => {
           const messages = await getMessages(consumerControls);
-          checkMessages(messages, { kafkaCorrelation });
-          const spans = await customAgentControls.getSpans();
-          const httpEntry = verifyHttpEntry(spans);
-          verifyKafkaExits(spans, httpEntry, { kafkaCorrelation });
+          checkMessages(messages);
+          const spans = await agentControls.getSpans();
+          const httpEntry = verifyHttpEntry(spans, {
+            traceId: '0000000000001234',
+            parentSpanId: '0000000000005678'
+          });
+          verifyKafkaExits(spans, httpEntry);
           verifyFollowUpHttpExit(spans, httpEntry);
         });
-      }
-    );
-  });
-
-  describe('tracing disabled', () => {
-    let consumerControls;
-    let producerControls;
-
-    before(async () => {
-      consumerControls = new ProcessControls({
-        dirname: __dirname,
-              appName: 'consumer.js',
-        useGlobalAgent: true,
-        tracingEnabled: false,
-        env: { ...libraryEnv }
-      });
-      producerControls = new ProcessControls({
-        dirname: __dirname,
-              appName: 'producer.js',
-        useGlobalAgent: true,
-        tracingEnabled: false,
-        env: { ...libraryEnv }
-      });
-
-      await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
-      await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
-    });
-
-    beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
-    });
-
-    after(async () => {
-      await producerControls.stop();
-      await consumerControls.stop();
-    });
-
-    beforeEach(async () => {
-      await resetMessages(consumerControls);
-    });
-
-    afterEach(async () => {
-      await resetMessages(consumerControls);
-    });
-
-    it('must not trace when disabled', async () => {
-      const parameters = {
-        kafkaCorrelation: 'tracing-disabled',
-        error: false,
-        useSendBatch: false,
-        useEachBatch: false
-      };
-
-      await producerControls.sendRequest({
-        method: 'POST',
-        path: '/send-messages',
-        simple: true,
-        error: false,
-        body: JSON.stringify({
-          key: 'someKey',
-          value: 'someMessage',
-          useSendBatch: false,
-          useEachBatch: false
-        }),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      await retry(async () => {
-        const messages = await getMessages(consumerControls);
-        checkMessages(messages, parameters);
-        await delay(1000);
-        const spans = await agentControls.getSpans();
-        expect(spans).to.have.lengthOf(0);
       });
     });
-  });
-
-  describe('must cope with non-standard length trace and span IDs', () => {
-    // regression test for https://github.com/instana/nodejs/issues/833
-
-    let consumerControls;
-    let producerControls;
-
-    before(async () => {
-      consumerControls = new ProcessControls({
-        dirname: __dirname,
-              appName: 'consumer.js',
-        useGlobalAgent: true,
-        env: { ...libraryEnv }
-      });
-      producerControls = new ProcessControls({
-        dirname: __dirname,
-              appName: 'producer.js',
-        useGlobalAgent: true,
-        env: { ...libraryEnv }
-      });
-
-      await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
-      await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
-    });
-
-    beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
-    });
-
-    after(async () => {
-      await producerControls.stop();
-      await consumerControls.stop();
-    });
-
-    beforeEach(async () => {
-      await resetMessages(consumerControls);
-    });
-
-    afterEach(async () => {
-      await resetMessages(consumerControls);
-    });
-
-    it('must pad short incoming trace and span IDs', async () => {
-      await producerControls.sendRequest({
-        method: 'POST',
-        path: '/send-messages',
-        simple: true,
-        body: JSON.stringify({
-          key: 'someKey',
-          value: 'someMessage'
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-          'X-INSTANA-T': '1234',
-          'X-INSTANA-S': '5678'
-        }
-      });
-
-      await retry(async () => {
-        const messages = await getMessages(consumerControls);
-        checkMessages(messages);
-        const spans = await agentControls.getSpans();
-        const httpEntry = verifyHttpEntry(spans, {
-          traceId: '0000000000001234',
-          parentSpanId: '0000000000005678'
-        });
-        verifyKafkaExits(spans, httpEntry);
-        verifyFollowUpHttpExit(spans, httpEntry);
-      });
-    });
-  });
   } // end mode: default
 
   if (!mode || mode === 'ignoreEndpoints') {
-  describe('ignore endpoints configuration', () => {
-    let producerControls;
-    let consumerControls;
+    describe('ignore endpoints configuration', () => {
+      let producerControls;
+      let consumerControls;
 
-    describe('via agent configuration', () => {
-      this.timeout(config.getTestTimeout() * 2);
-      const customAgentControls = new AgentStubControls();
-      describe('when Kafka produce (send) is ignored', () => {
-        before(async () => {
-          await customAgentControls.startAgent({ ignoreEndpoints: { kafka: ['send'] } });
+      describe('via agent configuration', () => {
+        this.timeout(config.getTestTimeout() * 2);
+        const customAgentControls = new AgentStubControls();
+        describe('when Kafka produce (send) is ignored', () => {
+          before(async () => {
+            await customAgentControls.startAgent({ ignoreEndpoints: { kafka: ['send'] } });
 
-          producerControls = new ProcessControls({
-            dirname: __dirname,
-              appName: 'producer.js',
-            agentControls: customAgentControls,
-            env: { ...libraryEnv }
-          });
-          consumerControls = new ProcessControls({
-            dirname: __dirname,
-              appName: 'consumer.js',
-            agentControls: customAgentControls,
-            env: { ...libraryEnv }
-          });
+            producerControls = new ProcessControls({
+              dirname: __dirname,
+              appName: 'producer',
+              agentControls: customAgentControls,
+              env: { ...libraryEnv }
+            });
+            consumerControls = new ProcessControls({
+              dirname: __dirname,
+              appName: 'consumer',
+              agentControls: customAgentControls,
+              env: { ...libraryEnv }
+            });
 
-          await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
-          await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
-        });
-
-        beforeEach(async () => {
-          await agentControls.clearReceivedTraceData();
-        });
-
-        after(async () => {
-          await customAgentControls.stopAgent();
-          await producerControls.stop();
-          await consumerControls.stop();
-        });
-
-        afterEach(async () => {
-          await producerControls.clearIpcMessages();
-          await consumerControls.clearIpcMessages();
-        });
-
-        it('should ignore Kafka exit spans and downstream calls', async () => {
-          await producerControls.sendRequest({
-            method: 'POST',
-            path: '/send-messages',
-            body: JSON.stringify({ key: 'someKey', value: 'someMessage', useSendBatch: false }),
-            headers: { 'Content-Type': 'application/json' }
+            await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+            await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
           });
 
-          await retry(async () => {
-            const spans = await customAgentControls.getSpans();
-            // 1 x http server
-            // 1 x http client
-            expect(spans.length).to.equal(2);
+          beforeEach(async () => {
+            await agentControls.clearReceivedTraceData();
+          });
 
-            // Flow: HTTP(traced)
-            //       ├── Kafka Produce (ignored)
-            //       │      └── Kafka Consume(ignored) → HTTP (ignored)
-            //       └── HTTP exit (traced)
-            // Since Kafka produce is ignored, the produce call and all subsequent downstream calls are ignored.
-            const spanNames = spans.map(span => span.n);
-            expect(spanNames).to.include('node.http.server');
-            expect(spanNames).to.include('node.http.client');
-            expect(spanNames).to.not.include('kafka');
+          after(async () => {
+            await customAgentControls.stopAgent();
+            await producerControls.stop();
+            await consumerControls.stop();
+          });
+
+          afterEach(async () => {
+            await producerControls.clearIpcMessages();
+            await consumerControls.clearIpcMessages();
+          });
+
+          it('should ignore Kafka exit spans and downstream calls', async () => {
+            await producerControls.sendRequest({
+              method: 'POST',
+              path: '/send-messages',
+              body: JSON.stringify({ key: 'someKey', value: 'someMessage', useSendBatch: false }),
+              headers: { 'Content-Type': 'application/json' }
+            });
+
+            await retry(async () => {
+              const spans = await customAgentControls.getSpans();
+              // 1 x http server
+              // 1 x http client
+              expect(spans.length).to.equal(2);
+
+              // Flow: HTTP(traced)
+              //       ├── Kafka Produce (ignored)
+              //       │      └── Kafka Consume(ignored) → HTTP (ignored)
+              //       └── HTTP exit (traced)
+              // Since Kafka produce is ignored, the produce call and all subsequent downstream calls are ignored.
+              const spanNames = spans.map(span => span.n);
+              expect(spanNames).to.include('node.http.server');
+              expect(spanNames).to.include('node.http.client');
+              expect(spanNames).to.not.include('kafka');
+            });
+          });
+        });
+
+        describe('when Kafka consume is ignored', () => {
+          before(async () => {
+            await customAgentControls.startAgent({ ignoreEndpoints: { kafka: ['consume'] } });
+
+            producerControls = new ProcessControls({
+              dirname: __dirname,
+              appName: 'producer',
+              agentControls: customAgentControls,
+              env: { ...libraryEnv }
+            });
+            consumerControls = new ProcessControls({
+              dirname: __dirname,
+              appName: 'consumer',
+              agentControls: customAgentControls,
+              env: { ...libraryEnv }
+            });
+
+            await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+            await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+          });
+
+          beforeEach(async () => {
+            await agentControls.clearReceivedTraceData();
+          });
+
+          after(async () => {
+            await customAgentControls.stopAgent();
+            await producerControls.stop();
+            await consumerControls.stop();
+          });
+
+          afterEach(async () => {
+            await producerControls.clearIpcMessages();
+            await consumerControls.clearIpcMessages();
+          });
+
+          it('should ignore Kafka consume and downstream spans but capture kafka send', async () => {
+            await producerControls.sendRequest({
+              method: 'POST',
+              path: '/send-messages',
+              body: JSON.stringify({ key: 'someKey', value: 'someMessage', useSendBatch: false }),
+              headers: { 'Content-Type': 'application/json' }
+            });
+
+            await retry(async () => {
+              const spans = await customAgentControls.getSpans();
+              // 1 x http server
+              // 1 x http client
+              // 1 x kafka send
+              expect(spans.length).to.equal(3);
+
+              // Flow: HTTP entry
+              //       ├── Kafka Produce (traced)
+              //       │      └── Kafka Consume → HTTP (ignored)
+              //       └── HTTP exit (traced)
+              // Kafka send will be captured, since Kafka consume is ignored,
+              // the consume call and all its subsequent downstream calls will also be ignored.
+              const spanNames = spans.map(span => span.n);
+              expect(spanNames).to.include('node.http.server');
+              expect(spanNames).to.include('node.http.client');
+              expect(spanNames).to.include('kafka');
+
+              // Kafka send exists but consume is ignored
+              expect(spans.some(span => span.n === 'kafka' && span.data.kafka?.access === 'send')).to.be.true;
+              expect(spans.some(span => span.n === 'kafka' && span.data.kafka?.access === 'consume')).to.be.false;
+            });
+          });
+        });
+
+        describe('when all Kafka topics are ignored', () => {
+          before(async () => {
+            await customAgentControls.startAgent({ ignoreEndpoints: { kafka: [{ endpoints: ['*'] }] } });
+
+            producerControls = new ProcessControls({
+              dirname: __dirname,
+              appName: 'producer',
+              agentControls: customAgentControls,
+              env: { ...libraryEnv }
+            });
+            consumerControls = new ProcessControls({
+              dirname: __dirname,
+              appName: 'consumer',
+              agentControls: customAgentControls,
+              env: { ...libraryEnv }
+            });
+
+            await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+            await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+          });
+
+          beforeEach(async () => {
+            await agentControls.clearReceivedTraceData();
+          });
+
+          after(async () => {
+            await customAgentControls.stopAgent();
+            await producerControls.stop();
+            await consumerControls.stop();
+          });
+
+          afterEach(async () => {
+            await producerControls.clearIpcMessages();
+            await consumerControls.clearIpcMessages();
+          });
+
+          it('should ignore all Kafka traces and downstream calls', async () => {
+            await producerControls.sendRequest({
+              method: 'POST',
+              path: '/send-messages',
+              body: JSON.stringify({ key: 'someKey', value: 'someMessage', useSendBatch: true }),
+              headers: { 'Content-Type': 'application/json' }
+            });
+
+            await retry(async () => {
+              const spans = await customAgentControls.getSpans();
+              // 1 x http server
+              // 1 x http client
+              expect(spans.length).to.equal(2);
+
+              // Flow: HTTP
+              //       ├── Kafka Produce (ignored)
+              //       │      └── Kafka Consume → HTTP (ignored)
+              //       └── HTTP exit (traced)
+              const spanNames = spans.map(span => span.n);
+              expect(spanNames).to.include('node.http.server');
+              expect(spanNames).to.include('node.http.client');
+              expect(spanNames).to.not.include('kafka');
+            });
+          });
+        });
+
+        describe('when kafka messages produced via sendBatch (batching)', () => {
+          describe('when not all topics in sendBatch are listed in the ignore config', () => {
+            before(async () => {
+              await customAgentControls.startAgent({
+                ignoreEndpoints: { kafka: [{ methods: ['send'], endpoints: ['test-topic-2'] }] }
+              });
+
+              producerControls = new ProcessControls({
+                dirname: __dirname,
+                appName: 'producer',
+                agentControls: customAgentControls,
+                env: { ...libraryEnv }
+              });
+              consumerControls = new ProcessControls({
+                dirname: __dirname,
+                appName: 'consumer',
+                agentControls: customAgentControls,
+                env: { ...libraryEnv }
+              });
+
+              await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+              await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+            });
+
+            beforeEach(async () => {
+              await agentControls.clearReceivedTraceData();
+            });
+
+            after(async () => {
+              await customAgentControls.stopAgent();
+              await producerControls.stop();
+              await consumerControls.stop();
+            });
+
+            afterEach(async () => {
+              await producerControls.clearIpcMessages();
+              await consumerControls.clearIpcMessages();
+            });
+
+            it('should not ignore the sendBatch call and its downstream calls', async () => {
+              await producerControls.sendRequest({
+                method: 'POST',
+                path: '/send-messages',
+                body: JSON.stringify({ key: 'someKey', value: 'someMessage', useSendBatch: true }),
+                headers: { 'Content-Type': 'application/json' }
+              });
+
+              await retry(async () => {
+                const spans = await customAgentControls.getSpans();
+
+                // 1 x Kafka sendBatch (kafka:send)
+                // 1 x HTTP server request (/send-messages)
+                // 4 x HTTP client requests (3 from consumers, 1 from producer)
+                // 3 x Kafka consumes (test-topic-1: 2 messages, test-topic-2: 1 message)
+                expect(spans.length).to.equal(9);
+
+                // Flow:
+                // HTTP request
+                //         ├── Kafka Produce (sendBatch) (traced)
+                //         │       └── 3 x Kafka Consume  (traced) → 3 x HTTP (from consumers)  (traced)
+                //         └── HTTP exit  (traced)
+                const spanNames = spans.map(span => span.n);
+                expect(spanNames).to.include('node.http.server');
+                expect(spanNames).to.include('node.http.client');
+                expect(spanNames).to.include('kafka');
+
+                const kafkaSpans = spans.filter(span => span.n === 'kafka');
+                expect(kafkaSpans).to.have.lengthOf(4); // 1 send, 3 consume
+
+                const kafkaSendSpan = kafkaSpans.find(span => span.data.kafka.access === 'send');
+                expect(kafkaSendSpan).to.exist;
+                expect(kafkaSendSpan.data.kafka.service).to.include('test-topic-1');
+                expect(kafkaSendSpan.data.kafka.service).to.include('test-topic-2');
+
+                const kafkaConsumeSpans = kafkaSpans.filter(span => span.data.kafka.access === 'consume');
+                expect(kafkaConsumeSpans).to.have.lengthOf(3);
+
+                const consumedTopics = kafkaConsumeSpans.map(span => span.data.kafka.service);
+                expect(consumedTopics).to.include('test-topic-1');
+                expect(consumedTopics).to.include('test-topic-2');
+              });
+            });
+          });
+
+          describe('when all topics in sendBatch are listed in the ignore config', () => {
+            before(async () => {
+              await customAgentControls.startAgent({
+                ignoreEndpoints: {
+                  kafka: [{ methods: ['send'], endpoints: ['test-topic-1', 'test-topic-2'] }]
+                }
+              });
+
+              producerControls = new ProcessControls({
+                dirname: __dirname,
+                appName: 'producer',
+                agentControls: customAgentControls,
+                env: { ...libraryEnv }
+              });
+              consumerControls = new ProcessControls({
+                dirname: __dirname,
+                appName: 'consumer',
+                agentControls: customAgentControls,
+                env: { ...libraryEnv }
+              });
+
+              await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+              await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+            });
+
+            beforeEach(async () => {
+              await agentControls.clearReceivedTraceData();
+            });
+
+            after(async () => {
+              await customAgentControls.stopAgent();
+              await producerControls.stop();
+              await consumerControls.stop();
+            });
+
+            afterEach(async () => {
+              await producerControls.clearIpcMessages();
+              await consumerControls.clearIpcMessages();
+            });
+
+            it('should ignore the sendBatch call and its downstream calls', async () => {
+              await producerControls.sendRequest({
+                method: 'POST',
+                path: '/send-messages',
+                body: JSON.stringify({ key: 'someKey', value: 'someMessage', useSendBatch: true }),
+                headers: { 'Content-Type': 'application/json' }
+              });
+
+              await retry(async () => {
+                const spans = await customAgentControls.getSpans();
+
+                // 1 x HTTP server request (/send-messages)
+                // 1 x HTTP client request (from producer)
+                // Kafka sendBatch and all consumer traces should be ignored.
+                expect(spans.length).to.equal(2);
+
+                // Flow:
+                // HTTP request(traced)
+                //        ├── Kafka Produce (sendBatch) (ignored)
+                //        │       └── 3 x Kafka Consume(ignored) → 3 x HTTP (ignored, from consumers)
+                //        └── HTTP exit(traced)
+                const spanNames = spans.map(span => span.n);
+                expect(spanNames).to.include('node.http.server');
+                expect(spanNames).to.include('node.http.client');
+                expect(spanNames).to.not.include('kafka');
+              });
+            });
           });
         });
       });
 
-      describe('when Kafka consume is ignored', () => {
+      describe('via INSTANA_IGNORE_ENDPOINTS_PATH', () => {
         before(async () => {
-          await customAgentControls.startAgent({ ignoreEndpoints: { kafka: ['consume'] } });
+          consumerControls = new ProcessControls({
+            dirname: __dirname,
+            appName: 'consumer',
+            useGlobalAgent: true,
+            env: { ...libraryEnv, INSTANA_IGNORE_ENDPOINTS_PATH: path.join(__dirname, 'files', 'tracing.yaml') }
+          });
 
           producerControls = new ProcessControls({
             dirname: __dirname,
-              appName: 'producer.js',
-            agentControls: customAgentControls,
-            env: { ...libraryEnv }
-          });
-          consumerControls = new ProcessControls({
-            dirname: __dirname,
-              appName: 'consumer.js',
-            agentControls: customAgentControls,
-            env: { ...libraryEnv }
+            appName: 'producer',
+            useGlobalAgent: true,
+            env: { ...libraryEnv, INSTANA_IGNORE_ENDPOINTS_PATH: path.join(__dirname, 'files', 'tracing.yaml') }
           });
 
-          await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
-          await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+          await Promise.all([
+            consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil()),
+            producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil())
+          ]);
         });
 
         beforeEach(async () => {
           await agentControls.clearReceivedTraceData();
-        });
-
-        after(async () => {
-          await customAgentControls.stopAgent();
-          await producerControls.stop();
-          await consumerControls.stop();
+          await resetMessages(consumerControls);
         });
 
         afterEach(async () => {
-          await producerControls.clearIpcMessages();
-          await consumerControls.clearIpcMessages();
-        });
-
-        it('should ignore Kafka consume and downstream spans but capture kafka send', async () => {
-          await producerControls.sendRequest({
-            method: 'POST',
-            path: '/send-messages',
-            body: JSON.stringify({ key: 'someKey', value: 'someMessage', useSendBatch: false }),
-            headers: { 'Content-Type': 'application/json' }
-          });
-
-          await retry(async () => {
-            const spans = await customAgentControls.getSpans();
-            // 1 x http server
-            // 1 x http client
-            // 1 x kafka send
-            expect(spans.length).to.equal(3);
-
-            // Flow: HTTP entry
-            //       ├── Kafka Produce (traced)
-            //       │      └── Kafka Consume → HTTP (ignored)
-            //       └── HTTP exit (traced)
-            // Kafka send will be captured, since Kafka consume is ignored,
-            // the consume call and all its subsequent downstream calls will also be ignored.
-            const spanNames = spans.map(span => span.n);
-            expect(spanNames).to.include('node.http.server');
-            expect(spanNames).to.include('node.http.client');
-            expect(spanNames).to.include('kafka');
-
-            // Kafka send exists but consume is ignored
-            expect(spans.some(span => span.n === 'kafka' && span.data.kafka?.access === 'send')).to.be.true;
-            expect(spans.some(span => span.n === 'kafka' && span.data.kafka?.access === 'consume')).to.be.false;
-          });
-        });
-      });
-
-      describe('when all Kafka topics are ignored', () => {
-        before(async () => {
-          await customAgentControls.startAgent({ ignoreEndpoints: { kafka: [{ endpoints: ['*'] }] } });
-
-          producerControls = new ProcessControls({
-            dirname: __dirname,
-              appName: 'producer.js',
-            agentControls: customAgentControls,
-            env: { ...libraryEnv }
-          });
-          consumerControls = new ProcessControls({
-            dirname: __dirname,
-              appName: 'consumer.js',
-            agentControls: customAgentControls,
-            env: { ...libraryEnv }
-          });
-
-          await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
-          await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
-        });
-
-        beforeEach(async () => {
+          await resetMessages(consumerControls);
           await agentControls.clearReceivedTraceData();
         });
 
         after(async () => {
-          await customAgentControls.stopAgent();
-          await producerControls.stop();
-          await consumerControls.stop();
+          await Promise.all([producerControls.stop(), consumerControls.stop()]);
         });
 
-        afterEach(async () => {
-          await producerControls.clearIpcMessages();
-          await consumerControls.clearIpcMessages();
-        });
-
-        it('should ignore all Kafka traces and downstream calls', async () => {
+        it('should ignore traces based on configuration file', async () => {
           await producerControls.sendRequest({
             method: 'POST',
             path: '/send-messages',
@@ -743,15 +958,9 @@ module.exports = function (name, version, isLatest, mode) {
           });
 
           await retry(async () => {
-            const spans = await customAgentControls.getSpans();
-            // 1 x http server
-            // 1 x http client
+            const spans = await agentControls.getSpans();
             expect(spans.length).to.equal(2);
 
-            // Flow: HTTP
-            //       ├── Kafka Produce (ignored)
-            //       │      └── Kafka Consume → HTTP (ignored)
-            //       └── HTTP exit (traced)
             const spanNames = spans.map(span => span.n);
             expect(spanNames).to.include('node.http.server');
             expect(spanNames).to.include('node.http.client');
@@ -760,517 +969,23 @@ module.exports = function (name, version, isLatest, mode) {
         });
       });
 
-      describe('when kafka messages produced via sendBatch (batching)', () => {
-        describe('when not all topics in sendBatch are listed in the ignore config', () => {
-          before(async () => {
-            await customAgentControls.startAgent({
-              ignoreEndpoints: { kafka: [{ methods: ['send'], endpoints: ['test-topic-2'] }] }
-            });
-
-            producerControls = new ProcessControls({
-              dirname: __dirname,
-              appName: 'producer.js',
-              agentControls: customAgentControls,
-              env: { ...libraryEnv }
-            });
-            consumerControls = new ProcessControls({
-              dirname: __dirname,
-              appName: 'consumer.js',
-              agentControls: customAgentControls,
-              env: { ...libraryEnv }
-            });
-
-            await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
-            await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
-          });
-
-          beforeEach(async () => {
-            await agentControls.clearReceivedTraceData();
-          });
-
-          after(async () => {
-            await customAgentControls.stopAgent();
-            await producerControls.stop();
-            await consumerControls.stop();
-          });
-
-          afterEach(async () => {
-            await producerControls.clearIpcMessages();
-            await consumerControls.clearIpcMessages();
-          });
-
-          it('should not ignore the sendBatch call and its downstream calls', async () => {
-            await producerControls.sendRequest({
-              method: 'POST',
-              path: '/send-messages',
-              body: JSON.stringify({ key: 'someKey', value: 'someMessage', useSendBatch: true }),
-              headers: { 'Content-Type': 'application/json' }
-            });
-
-            await retry(async () => {
-              const spans = await customAgentControls.getSpans();
-
-              // 1 x Kafka sendBatch (kafka:send)
-              // 1 x HTTP server request (/send-messages)
-              // 4 x HTTP client requests (3 from consumers, 1 from producer)
-              // 3 x Kafka consumes (test-topic-1: 2 messages, test-topic-2: 1 message)
-              expect(spans.length).to.equal(9);
-
-              // Flow:
-              // HTTP request
-              //         ├── Kafka Produce (sendBatch) (traced)
-              //         │       └── 3 x Kafka Consume  (traced) → 3 x HTTP (from consumers)  (traced)
-              //         └── HTTP exit  (traced)
-              const spanNames = spans.map(span => span.n);
-              expect(spanNames).to.include('node.http.server');
-              expect(spanNames).to.include('node.http.client');
-              expect(spanNames).to.include('kafka');
-
-              const kafkaSpans = spans.filter(span => span.n === 'kafka');
-              expect(kafkaSpans).to.have.lengthOf(4); // 1 send, 3 consume
-
-              const kafkaSendSpan = kafkaSpans.find(span => span.data.kafka.access === 'send');
-              expect(kafkaSendSpan).to.exist;
-              expect(kafkaSendSpan.data.kafka.service).to.include('test-topic-1');
-              expect(kafkaSendSpan.data.kafka.service).to.include('test-topic-2');
-
-              const kafkaConsumeSpans = kafkaSpans.filter(span => span.data.kafka.access === 'consume');
-              expect(kafkaConsumeSpans).to.have.lengthOf(3);
-
-              const consumedTopics = kafkaConsumeSpans.map(span => span.data.kafka.service);
-              expect(consumedTopics).to.include('test-topic-1');
-              expect(consumedTopics).to.include('test-topic-2');
-            });
-          });
-        });
-
-        describe('when all topics in sendBatch are listed in the ignore config', () => {
-          before(async () => {
-            await customAgentControls.startAgent({
-              ignoreEndpoints: {
-                kafka: [{ methods: ['send'], endpoints: ['test-topic-1', 'test-topic-2'] }]
-              }
-            });
-
-            producerControls = new ProcessControls({
-              dirname: __dirname,
-              appName: 'producer.js',
-              agentControls: customAgentControls,
-              env: { ...libraryEnv }
-            });
-            consumerControls = new ProcessControls({
-              dirname: __dirname,
-              appName: 'consumer.js',
-              agentControls: customAgentControls,
-              env: { ...libraryEnv }
-            });
-
-            await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
-            await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
-          });
-
-          beforeEach(async () => {
-            await agentControls.clearReceivedTraceData();
-          });
-
-          after(async () => {
-            await customAgentControls.stopAgent();
-            await producerControls.stop();
-            await consumerControls.stop();
-          });
-
-          afterEach(async () => {
-            await producerControls.clearIpcMessages();
-            await consumerControls.clearIpcMessages();
-          });
-
-          it('should ignore the sendBatch call and its downstream calls', async () => {
-            await producerControls.sendRequest({
-              method: 'POST',
-              path: '/send-messages',
-              body: JSON.stringify({ key: 'someKey', value: 'someMessage', useSendBatch: true }),
-              headers: { 'Content-Type': 'application/json' }
-            });
-
-            await retry(async () => {
-              const spans = await customAgentControls.getSpans();
-
-              // 1 x HTTP server request (/send-messages)
-              // 1 x HTTP client request (from producer)
-              // Kafka sendBatch and all consumer traces should be ignored.
-              expect(spans.length).to.equal(2);
-
-              // Flow:
-              // HTTP request(traced)
-              //        ├── Kafka Produce (sendBatch) (ignored)
-              //        │       └── 3 x Kafka Consume(ignored) → 3 x HTTP (ignored, from consumers)
-              //        └── HTTP exit(traced)
-              const spanNames = spans.map(span => span.n);
-              expect(spanNames).to.include('node.http.server');
-              expect(spanNames).to.include('node.http.client');
-              expect(spanNames).to.not.include('kafka');
-            });
-          });
-        });
-      });
-    });
-
-    describe('via INSTANA_IGNORE_ENDPOINTS_PATH', () => {
-      before(async () => {
-        consumerControls = new ProcessControls({
-          dirname: __dirname,
-              appName: 'consumer.js',
-          useGlobalAgent: true,
-          env: { ...libraryEnv, INSTANA_IGNORE_ENDPOINTS_PATH: path.join(__dirname, 'files', 'tracing.yaml') }
-        });
-
-        producerControls = new ProcessControls({
-          dirname: __dirname,
-              appName: 'producer.js',
-          useGlobalAgent: true,
-          env: { ...libraryEnv, INSTANA_IGNORE_ENDPOINTS_PATH: path.join(__dirname, 'files', 'tracing.yaml') }
-        });
-
-        await Promise.all([
-          consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil()),
-          producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil())
-        ]);
-      });
-
-      beforeEach(async () => {
-        await agentControls.clearReceivedTraceData();
-        await resetMessages(consumerControls);
-      });
-
-      afterEach(async () => {
-        await resetMessages(consumerControls);
-        await agentControls.clearReceivedTraceData();
-      });
-
-      after(async () => {
-        await Promise.all([producerControls.stop(), consumerControls.stop()]);
-      });
-
-      it('should ignore traces based on configuration file', async () => {
-        await producerControls.sendRequest({
-          method: 'POST',
-          path: '/send-messages',
-          body: JSON.stringify({ key: 'someKey', value: 'someMessage', useSendBatch: true }),
-          headers: { 'Content-Type': 'application/json' }
-        });
-
-        await retry(async () => {
-          const spans = await agentControls.getSpans();
-          expect(spans.length).to.equal(2);
-
-          const spanNames = spans.map(span => span.n);
-          expect(spanNames).to.include('node.http.server');
-          expect(spanNames).to.include('node.http.client');
-          expect(spanNames).to.not.include('kafka');
-        });
-      });
-    });
-
-    // Special test case for SDK, we need to test the presence of ignored span in consume call.
-    describe('SDK: ignore entry spans(consume)', function () {
-      before(async () => {
-        consumerControls = new ProcessControls({
-          dirname: __dirname,
-              appName: 'consumer.js',
-          useGlobalAgent: true,
-          env: {
-            ...libraryEnv,
-            // basic ignoring config for consume
-            INSTANA_IGNORE_ENDPOINTS: 'kafka:consume'
-          }
-        });
-
-        producerControls = new ProcessControls({
-          dirname: __dirname,
-              appName: 'producer.js',
-          useGlobalAgent: true,
-          env: { ...libraryEnv }
-        });
-
-        await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
-        await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
-      });
-
-      beforeEach(async () => {
-        await agentControls.clearReceivedTraceData();
-      });
-
-      after(async () => {
-        await producerControls.stop();
-        await consumerControls.stop();
-      });
-
-      it('should ignore consumer call and expose ignored span via instana.currentSpan()', async () => {
-        const message = {
-          key: 'someKey',
-          value: 'someMessage'
-        };
-        await producerControls.sendRequest({
-          method: 'POST',
-          path: '/send-messages',
-          simple: true,
-          body: JSON.stringify(message),
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-
-        await retry(async () => {
-          // Fetch the current span from the consumer
-          const currentSpans = await consumerControls.sendRequest({
-            method: 'GET',
-            path: '/current-span',
-            simple: true,
-            suppressTracing: true // no need to trace this call
-          });
-
-          expect(currentSpans).to.be.an('array').that.is.not.empty;
-          currentSpans.forEach(currentSpan => {
-            // The currentSpan contains an InstanaIgnoredSpan, which represents a span that has been ignored
-            // due to the configured `INSTANA_IGNORE_ENDPOINTS` setting (`kafka:consume` in this case).
-            // Even though the consumer processes the message, its span is not recorded in the agent’s collected spans.
-            // However, it can still be accessed via `instana.currentSpan()`, which returns an `InstanaIgnoredSpan`.
-            expect(currentSpan).to.have.property('spanConstructorName', 'InstanaIgnoredSpan');
-            expect(currentSpan.span).to.exist;
-            expect(currentSpan.span).to.include({
-              n: 'kafka',
-              k: 1
-            });
-            expect(currentSpan.span.data.kafka).to.include({
-              endpoints: 'test-topic-1',
-              operation: 'consume'
-            });
-          });
-
-          const spans = await agentControls.getSpans();
-
-          // 1 x HTTP server
-          // 1 x HTTP client
-          // 1 x Kafka send span (producer)
-          expect(spans).to.have.lengthOf(3);
-
-          // Flow: HTTP entry
-          //       ├── Kafka Produce (traced)
-          //       │      └── Kafka Consume → HTTP (ignored)
-          //       └── HTTP exit (traced)
-          const kafkaProducerSpan = spans.find(span => span.n === 'kafka' && span.k === 2);
-          const producerHttpSpan = spans.find(span => span.n === 'node.http.server' && span.k === 1);
-          const producerHttpExitSpan = spans.find(span => span.n === 'node.http.client' && span.k === 2);
-
-          expect(kafkaProducerSpan).to.exist;
-          expect(kafkaProducerSpan.data.kafka).to.include({
-            service: 'test-topic-1',
-            access: 'send'
-          });
-          expect(producerHttpSpan).to.exist;
-          expect(producerHttpExitSpan).to.exist;
-        });
-      });
-    });
-
-    describe('when consumer having an aditional HTTP entry call', function () {
-      before(async () => {
-        consumerControls = new ProcessControls({
-          dirname: __dirname,
-              appName: 'consumer.js',
-          useGlobalAgent: true,
-          env: {
-            ...libraryEnv,
-            // basic ignoring config for consume
-            INSTANA_IGNORE_ENDPOINTS: 'kafka:consume'
-          }
-        });
-
-        producerControls = new ProcessControls({
-          dirname: __dirname,
-              appName: 'producer.js',
-          useGlobalAgent: true,
-          env: { ...libraryEnv }
-        });
-
-        await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
-        await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
-      });
-
-      beforeEach(async () => {
-        await agentControls.clearReceivedTraceData();
-      });
-
-      after(async () => {
-        await producerControls.stop();
-        await consumerControls.stop();
-      });
-
-      it('should not ignore the HTTP entry in consumer while ignoring Kafka consume calls', async () => {
-        const message = {
-          key: 'someKey',
-          value: 'someMessage'
-        };
-        await producerControls.sendRequest({
-          method: 'POST',
-          path: '/send-messages',
-          simple: true,
-          body: JSON.stringify(message),
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-
-        await consumerControls.sendRequest({
-          method: 'GET',
-          path: '/health',
-          simple: true
-        });
-
-        await delay(200);
-        await retry(async () => {
-          const spans = await agentControls.getSpans();
-          // 2 x HTTP server (1 x consumer, 1 x producer)
-          // 1 x HTTP client (producer)
-          // 1 x Kafka send span (producer)
-          expect(spans).to.have.lengthOf(4);
-
-          // Flow: HTTP entry (producer) (traced)
-          //       ├── Kafka Produce (traced)
-          //       │      └── Kafka Consume → HTTP (ignored)
-          //       └── HTTP exit (traced)
-          //
-          //      HTTP entry (consumer) (traced)
-          const kafkaProducerSpan = spans.find(span => span.n === 'kafka' && span.k === 2);
-          const producerHttpSpan = spans.find(
-            span => span.n === 'node.http.server' && span.k === 1 && span.data.http.url === '/send-messages'
-          );
-          const producerHttpExitSpan = spans.find(span => span.n === 'node.http.client' && span.k === 2);
-          const consumerHttpSpan = spans.find(
-            span => span.n === 'node.http.server' && span.k === 1 && span.data.http.url === '/health'
-          );
-
-          expect(kafkaProducerSpan).to.exist;
-          expect(kafkaProducerSpan.data.kafka).to.include({
-            service: 'test-topic-1',
-            access: 'send'
-          });
-          expect(producerHttpSpan).to.exist;
-          expect(producerHttpExitSpan).to.exist;
-          expect(consumerHttpSpan).to.exist;
-        });
-      });
-    });
-
-    describe('when downstream suppression is disabled via INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION', function () {
-      describe('when send method is ignored', function () {
+      // Special test case for SDK, we need to test the presence of ignored span in consume call.
+      describe('SDK: ignore entry spans(consume)', function () {
         before(async () => {
           consumerControls = new ProcessControls({
             dirname: __dirname,
-              appName: 'consumer.js',
-            useGlobalAgent: true,
-            env: { ...libraryEnv }
-          });
-
-          producerControls = new ProcessControls({
-            dirname: __dirname,
-              appName: 'producer.js',
-            useGlobalAgent: true,
-            env: {
-              ...libraryEnv,
-              // basic ignoring config for send
-              INSTANA_IGNORE_ENDPOINTS: 'kafka:send',
-              INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION: true
-            }
-          });
-
-          await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
-          await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
-        });
-
-        beforeEach(async () => {
-          await agentControls.clearReceivedTraceData();
-        });
-
-        after(async () => {
-          await producerControls.stop();
-          await consumerControls.stop();
-        });
-
-        it('should ignore only the kafka call send and should trace downstream calls', async () => {
-          const message = {
-            key: 'someKey',
-            value: 'someMessage'
-          };
-          await producerControls.sendRequest({
-            method: 'POST',
-            path: '/send-messages',
-            simple: true,
-            body: JSON.stringify(message),
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          });
-
-          await consumerControls.sendRequest({
-            method: 'GET',
-            path: '/health',
-            simple: true
-          });
-
-          await delay(200);
-          await retry(async () => {
-            const spans = await agentControls.getSpans();
-
-            // 2 x HTTP server (1 x consumer, 1 x producer)
-            // 3 x HTTP client (1 x producer)(2 x consumer)
-            // 2 x Kafka consume span (consumer)
-            expect(spans).to.have.lengthOf(7);
-
-            // Flow: HTTP entry (producer) (traced)
-            //       ├── Kafka Produce (ignored)
-            //       │      └── Kafka Consume  (traced) → HTTP (traced)
-            //       └── HTTP exit (traced)
-            //
-            //      HTTP entry (consumer) (traced)
-            const kafkaConsumerSpan = spans.find(span => span.n === 'kafka' && span.k === 1);
-            const producerHttpSpan = spans.find(
-              span => span.n === 'node.http.server' && span.k === 1 && span.data.http.url === '/send-messages'
-            );
-            const producerHttpExitSpan = spans.find(span => span.n === 'node.http.client' && span.k === 2);
-            const consumerHttpSpan = spans.find(
-              span => span.n === 'node.http.server' && span.k === 1 && span.data.http.url === '/health'
-            );
-
-            expect(kafkaConsumerSpan).to.exist;
-            expect(kafkaConsumerSpan.data.kafka).to.include({
-              service: 'test-topic-1',
-              access: 'consume'
-            });
-            expect(producerHttpSpan).to.exist;
-            expect(producerHttpExitSpan).to.exist;
-            expect(consumerHttpSpan).to.exist;
-          });
-        });
-      });
-
-      describe('when consume method is ignored', function () {
-        before(async () => {
-          consumerControls = new ProcessControls({
-            dirname: __dirname,
-              appName: 'consumer.js',
+            appName: 'consumer',
             useGlobalAgent: true,
             env: {
               ...libraryEnv,
               // basic ignoring config for consume
-              INSTANA_IGNORE_ENDPOINTS: 'kafka:consume',
-              INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION: true
+              INSTANA_IGNORE_ENDPOINTS: 'kafka:consume'
             }
           });
 
           producerControls = new ProcessControls({
             dirname: __dirname,
-              appName: 'producer.js',
+            appName: 'producer',
             useGlobalAgent: true,
             env: { ...libraryEnv }
           });
@@ -1288,7 +1003,108 @@ module.exports = function (name, version, isLatest, mode) {
           await consumerControls.stop();
         });
 
-        it('should ignore consume spans while trace downstream calls', async () => {
+        it('should ignore consumer call and expose ignored span via instana.currentSpan()', async () => {
+          const message = {
+            key: 'someKey',
+            value: 'someMessage'
+          };
+          await producerControls.sendRequest({
+            method: 'POST',
+            path: '/send-messages',
+            simple: true,
+            body: JSON.stringify(message),
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+
+          await retry(async () => {
+            // Fetch the current span from the consumer
+            const currentSpans = await consumerControls.sendRequest({
+              method: 'GET',
+              path: '/current-span',
+              simple: true,
+              suppressTracing: true // no need to trace this call
+            });
+
+            expect(currentSpans).to.be.an('array').that.is.not.empty;
+            currentSpans.forEach(currentSpan => {
+              // The currentSpan contains an InstanaIgnoredSpan, which represents a span that has been ignored
+              // due to the configured `INSTANA_IGNORE_ENDPOINTS` setting (`kafka:consume` in this case).
+              // Even though the consumer processes the message, its span is not recorded in the agent’s collected spans.
+              // However, it can still be accessed via `instana.currentSpan()`, which returns an `InstanaIgnoredSpan`.
+              expect(currentSpan).to.have.property('spanConstructorName', 'InstanaIgnoredSpan');
+              expect(currentSpan.span).to.exist;
+              expect(currentSpan.span).to.include({
+                n: 'kafka',
+                k: 1
+              });
+              expect(currentSpan.span.data.kafka).to.include({
+                endpoints: 'test-topic-1',
+                operation: 'consume'
+              });
+            });
+
+            const spans = await agentControls.getSpans();
+
+            // 1 x HTTP server
+            // 1 x HTTP client
+            // 1 x Kafka send span (producer)
+            expect(spans).to.have.lengthOf(3);
+
+            // Flow: HTTP entry
+            //       ├── Kafka Produce (traced)
+            //       │      └── Kafka Consume → HTTP (ignored)
+            //       └── HTTP exit (traced)
+            const kafkaProducerSpan = spans.find(span => span.n === 'kafka' && span.k === 2);
+            const producerHttpSpan = spans.find(span => span.n === 'node.http.server' && span.k === 1);
+            const producerHttpExitSpan = spans.find(span => span.n === 'node.http.client' && span.k === 2);
+
+            expect(kafkaProducerSpan).to.exist;
+            expect(kafkaProducerSpan.data.kafka).to.include({
+              service: 'test-topic-1',
+              access: 'send'
+            });
+            expect(producerHttpSpan).to.exist;
+            expect(producerHttpExitSpan).to.exist;
+          });
+        });
+      });
+
+      describe('when consumer having an aditional HTTP entry call', function () {
+        before(async () => {
+          consumerControls = new ProcessControls({
+            dirname: __dirname,
+            appName: 'consumer',
+            useGlobalAgent: true,
+            env: {
+              ...libraryEnv,
+              // basic ignoring config for consume
+              INSTANA_IGNORE_ENDPOINTS: 'kafka:consume'
+            }
+          });
+
+          producerControls = new ProcessControls({
+            dirname: __dirname,
+            appName: 'producer',
+            useGlobalAgent: true,
+            env: { ...libraryEnv }
+          });
+
+          await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+          await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+        });
+
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
+        });
+
+        after(async () => {
+          await producerControls.stop();
+          await consumerControls.stop();
+        });
+
+        it('should not ignore the HTTP entry in consumer while ignoring Kafka consume calls', async () => {
           const message = {
             key: 'someKey',
             value: 'someMessage'
@@ -1312,19 +1128,17 @@ module.exports = function (name, version, isLatest, mode) {
           await delay(200);
           await retry(async () => {
             const spans = await agentControls.getSpans();
-
             // 2 x HTTP server (1 x consumer, 1 x producer)
-            // 3 x HTTP client (1 x producer)(2 x consumer)
-            // 1 x Kafka produce
-            expect(spans).to.have.lengthOf(6);
+            // 1 x HTTP client (producer)
+            // 1 x Kafka send span (producer)
+            expect(spans).to.have.lengthOf(4);
 
             // Flow: HTTP entry (producer) (traced)
             //       ├── Kafka Produce (traced)
-            //       │      └── Kafka Consume  (ignored) → HTTP (traced)
+            //       │      └── Kafka Consume → HTTP (ignored)
             //       └── HTTP exit (traced)
             //
             //      HTTP entry (consumer) (traced)
-            const kafkaConsumerSpan = spans.find(span => span.n === 'kafka' && span.k === 1);
             const kafkaProducerSpan = spans.find(span => span.n === 'kafka' && span.k === 2);
             const producerHttpSpan = spans.find(
               span => span.n === 'node.http.server' && span.k === 1 && span.data.http.url === '/send-messages'
@@ -1334,9 +1148,7 @@ module.exports = function (name, version, isLatest, mode) {
               span => span.n === 'node.http.server' && span.k === 1 && span.data.http.url === '/health'
             );
 
-            expect(kafkaConsumerSpan).not.exist;
             expect(kafkaProducerSpan).to.exist;
-
             expect(kafkaProducerSpan.data.kafka).to.include({
               service: 'test-topic-1',
               access: 'send'
@@ -1347,8 +1159,194 @@ module.exports = function (name, version, isLatest, mode) {
           });
         });
       });
+
+      describe('when downstream suppression is disabled via INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION', function () {
+        describe('when send method is ignored', function () {
+          before(async () => {
+            consumerControls = new ProcessControls({
+              dirname: __dirname,
+              appName: 'consumer',
+              useGlobalAgent: true,
+              env: { ...libraryEnv }
+            });
+
+            producerControls = new ProcessControls({
+              dirname: __dirname,
+              appName: 'producer',
+              useGlobalAgent: true,
+              env: {
+                ...libraryEnv,
+                // basic ignoring config for send
+                INSTANA_IGNORE_ENDPOINTS: 'kafka:send',
+                INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION: true
+              }
+            });
+
+            await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+            await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+          });
+
+          beforeEach(async () => {
+            await agentControls.clearReceivedTraceData();
+          });
+
+          after(async () => {
+            await producerControls.stop();
+            await consumerControls.stop();
+          });
+
+          it('should ignore only the kafka call send and should trace downstream calls', async () => {
+            const message = {
+              key: 'someKey',
+              value: 'someMessage'
+            };
+            await producerControls.sendRequest({
+              method: 'POST',
+              path: '/send-messages',
+              simple: true,
+              body: JSON.stringify(message),
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            });
+
+            await consumerControls.sendRequest({
+              method: 'GET',
+              path: '/health',
+              simple: true
+            });
+
+            await delay(200);
+            await retry(async () => {
+              const spans = await agentControls.getSpans();
+
+              // 2 x HTTP server (1 x consumer, 1 x producer)
+              // 3 x HTTP client (1 x producer)(2 x consumer)
+              // 2 x Kafka consume span (consumer)
+              expect(spans).to.have.lengthOf(7);
+
+              // Flow: HTTP entry (producer) (traced)
+              //       ├── Kafka Produce (ignored)
+              //       │      └── Kafka Consume  (traced) → HTTP (traced)
+              //       └── HTTP exit (traced)
+              //
+              //      HTTP entry (consumer) (traced)
+              const kafkaConsumerSpan = spans.find(span => span.n === 'kafka' && span.k === 1);
+              const producerHttpSpan = spans.find(
+                span => span.n === 'node.http.server' && span.k === 1 && span.data.http.url === '/send-messages'
+              );
+              const producerHttpExitSpan = spans.find(span => span.n === 'node.http.client' && span.k === 2);
+              const consumerHttpSpan = spans.find(
+                span => span.n === 'node.http.server' && span.k === 1 && span.data.http.url === '/health'
+              );
+
+              expect(kafkaConsumerSpan).to.exist;
+              expect(kafkaConsumerSpan.data.kafka).to.include({
+                service: 'test-topic-1',
+                access: 'consume'
+              });
+              expect(producerHttpSpan).to.exist;
+              expect(producerHttpExitSpan).to.exist;
+              expect(consumerHttpSpan).to.exist;
+            });
+          });
+        });
+
+        describe('when consume method is ignored', function () {
+          before(async () => {
+            consumerControls = new ProcessControls({
+              dirname: __dirname,
+              appName: 'consumer',
+              useGlobalAgent: true,
+              env: {
+                ...libraryEnv,
+                // basic ignoring config for consume
+                INSTANA_IGNORE_ENDPOINTS: 'kafka:consume',
+                INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION: true
+              }
+            });
+
+            producerControls = new ProcessControls({
+              dirname: __dirname,
+              appName: 'producer',
+              useGlobalAgent: true,
+              env: { ...libraryEnv }
+            });
+
+            await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+            await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+          });
+
+          beforeEach(async () => {
+            await agentControls.clearReceivedTraceData();
+          });
+
+          after(async () => {
+            await producerControls.stop();
+            await consumerControls.stop();
+          });
+
+          it('should ignore consume spans while trace downstream calls', async () => {
+            const message = {
+              key: 'someKey',
+              value: 'someMessage'
+            };
+            await producerControls.sendRequest({
+              method: 'POST',
+              path: '/send-messages',
+              simple: true,
+              body: JSON.stringify(message),
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            });
+
+            await consumerControls.sendRequest({
+              method: 'GET',
+              path: '/health',
+              simple: true
+            });
+
+            await delay(200);
+            await retry(async () => {
+              const spans = await agentControls.getSpans();
+
+              // 2 x HTTP server (1 x consumer, 1 x producer)
+              // 3 x HTTP client (1 x producer)(2 x consumer)
+              // 1 x Kafka produce
+              expect(spans).to.have.lengthOf(6);
+
+              // Flow: HTTP entry (producer) (traced)
+              //       ├── Kafka Produce (traced)
+              //       │      └── Kafka Consume  (ignored) → HTTP (traced)
+              //       └── HTTP exit (traced)
+              //
+              //      HTTP entry (consumer) (traced)
+              const kafkaConsumerSpan = spans.find(span => span.n === 'kafka' && span.k === 1);
+              const kafkaProducerSpan = spans.find(span => span.n === 'kafka' && span.k === 2);
+              const producerHttpSpan = spans.find(
+                span => span.n === 'node.http.server' && span.k === 1 && span.data.http.url === '/send-messages'
+              );
+              const producerHttpExitSpan = spans.find(span => span.n === 'node.http.client' && span.k === 2);
+              const consumerHttpSpan = spans.find(
+                span => span.n === 'node.http.server' && span.k === 1 && span.data.http.url === '/health'
+              );
+
+              expect(kafkaConsumerSpan).not.exist;
+              expect(kafkaProducerSpan).to.exist;
+
+              expect(kafkaProducerSpan.data.kafka).to.include({
+                service: 'test-topic-1',
+                access: 'send'
+              });
+              expect(producerHttpSpan).to.exist;
+              expect(producerHttpExitSpan).to.exist;
+              expect(consumerHttpSpan).to.exist;
+            });
+          });
+        });
+      });
     });
-  });
   } // end mode: ignoreEndpoints
 
   function resetMessages(consumer) {
