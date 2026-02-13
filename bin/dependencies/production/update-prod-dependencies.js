@@ -11,6 +11,7 @@ const utils = require('../utils');
 
 const BRANCH = process.env.BRANCH;
 const DRY_RUN = process.env.DRY_RUN === 'true';
+const SKIP_PUSH = process.env.SKIP_PUSH === 'true';
 const PROD_DEPS_PR_LIMIT = process.env.PROD_DEPS_PR_LIMIT || 5;
 const PROD_DEPS_ORG_PR_LIMIT = process.env.PROD_DEPS_ORG_PR_LIMIT || 2;
 const PROD_DEPS_SKIP = process.env.PROD_DEPS_SKIP ? process.env.PROD_DEPS_SKIP.split(',').map(p => p.trim()) : [];
@@ -115,6 +116,7 @@ Object.entries(dependencyMap).some(([dep, usageList]) => {
       newVersion: latestVersion,
       branchName,
       cwd,
+      skipPush: SKIP_PUSH,
       isDryRun: DRY_RUN,
       prTitle: `[Prod Dependency Bot] Bumped ${dep} from ${currentVersion} to ${latestVersion}`
     });
