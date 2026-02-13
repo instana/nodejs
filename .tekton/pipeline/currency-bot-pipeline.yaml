@@ -55,7 +55,7 @@ spec:
         - name: npm-version
           value: $(params.npm-version)
         - name: prerelease
-          value: $(params.prerelease) 
+          value: $(params.prerelease)
     - name: extract-repository-url
       taskRef:
         name: toolchain-extract-value
@@ -80,7 +80,7 @@ spec:
         - name: revision
           value: $(params.revision)
         - name: pr-number
-          value: $(params.pr-number)          
+          value: $(params.pr-number)
         - name: pipeline-debug
           value: $(params.pipeline-debug)
         - name: ibmcloud-api
@@ -91,52 +91,8 @@ spec:
           value: $(params.pr-branch)
       workspaces:
         - name: output
-          workspace: artifacts              
-    - name: install-npm-dependencies
-      runAfter:
-        - git-fetch-repo
-      taskRef:
-        name: install-npm-dependencies
-      params:
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: ibmcloud-apikey-secret-key
-          value: "apikey"
-        - name: target-branch
-          value: $(params.target-branch)
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: skip-cache
-          value: "false"
-        - name: prerelease
-          value: $(params.prerelease)
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: save-cache
-      runAfter:
-        - install-npm-dependencies
-      taskRef:
-        name: save-cache
-      params:
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: ibmcloud-apikey-secret-key
-          value: "apikey"
-        - name: target-branch
-          value: $(params.target-branch)
-        - name: node-version
-          value: $(params.node-version)
-        - name: prerelease
-          value: $(params.prerelease)
-      workspaces:
-        - name: output
           workspace: artifacts
     - name: update-currencies
-      runAfter:
-        - install-npm-dependencies
       taskRef:
         name: update-currencies
       params:
