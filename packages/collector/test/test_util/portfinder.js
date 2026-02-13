@@ -18,7 +18,7 @@ const ports = {};
 const { execSync } = require('child_process');
 
 // Ports blocked by undici/fetch (subset of Chromium unsafe ports in range 3000-9000)
-const BLOCKED_PORTS = new Set([3659, 4045, 5060, 5061, 6000, 6566, 6665, 6666, 6667, 6668, 6669, 6697]);
+const BLOCKED_PORTS = new Set([3659, 4045, 4190, 5060, 5061, 6000, 6566, 6665, 6666, 6667, 6668, 6669, 6679, 6697]);
 
 /*
 const net = require('net');
