@@ -113,6 +113,7 @@ currencies.forEach(currency => {
   if (MAJOR_UPDATES_MODE) {
     utils.commitAndCreatePR({
       packageName: currency.name,
+      files: 'currencies.json',
       currentVersion: installedVersion,
       newVersion: latestVersion,
       branchName,

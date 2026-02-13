@@ -318,13 +318,13 @@ exports.prepareGitEnvironment = (branchName, cwd, isMainBranch, isDryRun) => {
  * @returns {boolean} True if PR was created, false otherwise
  */
 exports.commitAndCreatePR = options => {
-  const { packageName, currentVersion, newVersion, branchName, cwd, skipPush, prTitle, isDryRun } = options;
+  const { packageName, currentVersion, newVersion, branchName, cwd, skipPush, prTitle, isDryRun, files } = options;
 
   if (!isDryRun) {
-    execSync("git add 'currencies.json'", { cwd });
+    execSync(`git add ${files}`, { cwd });
     execSync(`git commit -m "build: bumped ${packageName} from ${currentVersion} to ${newVersion}"`, { cwd });
   } else {
-    console.log("[DRY RUN] git add 'currencies.json'");
+    console.log(`[DRY RUN] git add ${files}`);
     console.log(`[DRY RUN] git commit -m "build: bumped ${packageName} from ${currentVersion} to ${newVersion}"`);
   }
 
