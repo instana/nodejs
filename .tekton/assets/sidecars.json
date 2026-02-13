@@ -161,11 +161,11 @@
     },
     {
       "name": "nats",
-      "image": "nats:2.9.14-linux"
+      "image": "public.ecr.aws/docker/library/nats:2.9.14-linux"
     },
     {
       "name": "nats-streaming",
-      "image": "nats-streaming:0.25.3-linux",
+      "image": "public.ecr.aws/docker/library/nats-streaming:0.25.3-linux",
       "args": ["-p", "4223", "-m", "8223"],
       "readinessProbe": {
         "httpGet": {
@@ -179,7 +179,7 @@
     },
     {
       "name": "nats-streaming-2",
-      "image": "nats-streaming:0.25.3-linux",
+      "image": "public.ecr.aws/docker/library/nats-streaming:0.25.3-linux",
       "args": ["-p", "4224", "-m", "8224"],
       "readinessProbe": {
         "httpGet": {

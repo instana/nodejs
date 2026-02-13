@@ -177,18 +177,25 @@ services:
       - 5672:5672
 
   nats:
-    image: nats:2.9.14-linux
+    image: public.ecr.aws/docker/library/nats:2.9.14-linux
     ports:
       - 4222:4222
       - 6222:6222
       - 8222:8222
 
   nats-streaming:
-    image: nats-streaming:0.25.3-linux
+    image: public.ecr.aws/docker/library/nats-streaming:0.25.3-linux
     command: -p 4223 -m 8223
     ports:
       - 4223:4223
       - 8223:8223
+
+  nats-streaming-2:
+    image: public.ecr.aws/docker/library/nats-streaming:0.25.3-linux
+    command: -p 4224 -m 8224
+    ports:
+      - 4224:4224
+      - 8224:8224
 
   memcached:
     image: memcached:1.6.9

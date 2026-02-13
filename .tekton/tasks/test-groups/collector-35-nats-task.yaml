@@ -5,10 +5,10 @@ metadata:
 spec:
   sidecars:
     - name: nats
-      image: nats:2.9.14-linux
+      image: public.ecr.aws/docker/library/nats:2.9.14-linux
       imagePullPolicy: IfNotPresent
     - name: nats-streaming
-      image: nats-streaming:0.25.3-linux
+      image: public.ecr.aws/docker/library/nats-streaming:0.25.3-linux
       imagePullPolicy: IfNotPresent
       args:
           - "-p"
@@ -23,7 +23,7 @@ spec:
           periodSeconds: 2
           timeoutSeconds: 15
     - name: nats-streaming-2
-      image: nats-streaming:0.25.3-linux
+      image: public.ecr.aws/docker/library/nats-streaming:0.25.3-linux
       imagePullPolicy: IfNotPresent
       args:
           - "-p"
