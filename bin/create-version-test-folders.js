@@ -192,11 +192,27 @@ mochaSuiteFn(suiteTitle, function () {
   this.timeout(config.getTestTimeout());
   rmDir(path.join(__dirname, 'node_modules'));
   const copiedFiles = copyParentFiles(__dirname, path.resolve(__dirname, '${relSourcePath}'));
-  const cleanup = () => cleanupCopiedFiles(copiedFiles);
+  let isCleaning = false;
+  const cleanup = () => {
+    if (isCleaning) return;
+    isCleaning = true;
+    cleanupCopiedFiles(copiedFiles);
+  };
   after(() => cleanup());
-  process.once('exit', cleanup);
-  process.once('SIGINT', cleanup);
-  process.once('SIGTERM', cleanup);
+  process.on('exit', cleanup);
+  process.on('SIGINT', () => {
+    if (isCleaning) {
+      log('[WARN] SIGINT received while cleaning up. Please wait...');
+      return;
+    }
+    cleanup();
+    process.exit(130);
+  });
+  process.on('SIGTERM', () => {
+    if (isCleaning) return;
+    cleanup();
+    process.exit(143);
+  });
 
   before(async function () {
     const installTimeout = config.getNPMInstallTimeout();
@@ -232,6 +248,10 @@ mochaSuiteFn(suiteTitle, function () {
     }
           break;
         } catch (err) {
+          if (isCleaning || err.signal === 'SIGINT' || err.signal === 'SIGTERM' || err.status === 130 || err.status === 143) {
+             throw err;
+          }
+
           if (attempt === maxRetries - 1) throw err;
           const secs = timeout / 1000;
           log(\`[WARN] npm install failed (\${err.message}), retry \${attempt + 1}/\${maxRetries} (\${secs}s)...\`);
