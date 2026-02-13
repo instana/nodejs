@@ -44,7 +44,7 @@ class ProcessControls {
    */
   constructor(opts = {}) {
     if (!opts.dirname) {
-      throw new Error('dirname is required');
+      throw new Error('[ProcessControls] dirname is required');
     }
 
     if (!opts.cwd) {
@@ -76,13 +76,13 @@ class ProcessControls {
         }
       } catch (err) {
         // eslint-disable-next-line no-console
-        console.log('Unable to load the target app.mjs', err);
+        console.log('[ProcessControls] Unable to load the target app.mjs', err);
       }
     }
 
     if (!opts.appPath) {
       if (process.env.RUN_ESM) {
-        console.log('No ESM app found.');
+        console.log('[ProcessControls] No ESM app found.');
         this.noESMApp = true;
       }
 
