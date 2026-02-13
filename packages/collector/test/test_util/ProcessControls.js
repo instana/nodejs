@@ -308,6 +308,7 @@ class ProcessControls {
    * }} The request options
    */
   async sendRequest(opts = {}) {
+    if (this.noESMApp) return Promise.resolve();
     const requestOpts = Object.assign({}, opts);
     const resolveWithFullResponse = requestOpts.resolveWithFullResponse;
     const checkStatusCode = requestOpts.checkStatusCode;

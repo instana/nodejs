@@ -26,6 +26,10 @@ for arg in "$@"; do
     WATCH=true
     shift
     ;;
+  --esm)
+    export RUN_ESM=true
+    shift
+    ;;
   --scope=*)
     SCOPE="${arg#*=}"
     shift
