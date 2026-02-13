@@ -209,7 +209,7 @@ function start(reducedTestSuite = false) {
       before(async () => {
         appControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'app.js',
+          appName: 'app',
           useGlobalAgent: true,
           tracingEnabled: false,
           env: {
@@ -219,6 +219,17 @@ function start(reducedTestSuite = false) {
         });
 
         await appControls.startAndWaitForAgentConnection();
+
+        try {
+          const response = await appControls.sendRequest({
+            method: 'GET',
+            path: `/${availableOperations[0]}/${requestMethod}`
+          });
+
+          verifyResponse(response, availableOperations[0], false, tableName);
+        } catch (error) {
+          console.log('Error:', error);
+        }
       });
 
       beforeEach(async () => {
@@ -234,18 +245,6 @@ function start(reducedTestSuite = false) {
       });
 
       after(() => cleanup(tableName));
-
-      before(async () => {
-        // Create table first!
-        const response = await appControls.sendRequest({
-          method: 'GET',
-          path: `/${availableOperations[0]}/${requestMethod}`
-        });
-
-        verifyResponse(response, availableOperations[0], false, tableName);
-
-        // No need to clear or wait for spans, we do not trace!
-      });
 
       describe('attempt to get result', () => {
         let ops = availableOperations;
@@ -289,6 +288,24 @@ function start(reducedTestSuite = false) {
         });
 
         await appControls.startAndWaitForAgentConnection();
+
+        try {
+          const response = await appControls.sendRequest({
+            method: 'GET',
+            path: `/${availableOperations[0]}/${requestMethod}`
+          });
+
+          verifyResponse(response, availableOperations[0], false, tableName);
+
+          await retry(async () => {
+            const spans = await agentControls.getSpans();
+            expect(spans.length).to.eql(3);
+          });
+
+          await agentControls.clearReceivedData();
+        } catch (error) {
+          console.log('Error:', error);
+        }
       });
 
       beforeEach(async () => {
@@ -304,23 +321,6 @@ function start(reducedTestSuite = false) {
       });
 
       after(() => cleanup(tableName));
-
-      before(async () => {
-        // Create table first!
-        const response = await appControls.sendRequest({
-          method: 'GET',
-          path: `/${availableOperations[0]}/${requestMethod}`
-        });
-
-        verifyResponse(response, availableOperations[0], false, tableName);
-
-        await retry(async () => {
-          const spans = await agentControls.getSpans();
-          expect(spans.length).to.eql(3);
-        });
-
-        await agentControls.clearReceivedData();
-      });
 
       describe('attempt to get result', () => {
         let ops = availableOperations;

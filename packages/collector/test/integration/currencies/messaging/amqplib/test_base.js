@@ -49,7 +49,7 @@ module.exports = function (name, version, isLatest) {
       before(async () => {
         controls = new ProcessControls({
           dirname: __dirname,
-          appName: 'allowRootExitSpanApp.js',
+          appName: 'allowRootExitSpanApp',
           useGlobalAgent: true,
           env: {
             ...commonEnv,

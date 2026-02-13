@@ -82,6 +82,7 @@ class ProcessControls {
 
     if (!opts.appPath) {
       if (process.env.RUN_ESM) {
+        console.log('No ESM app found.');
         this.noESMApp = true;
       }
 

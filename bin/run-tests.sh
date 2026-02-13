@@ -101,7 +101,7 @@ if [ -n "$PACKAGE" ]; then
       VERSION="v$VERSION"
     fi
 
-    if [[ $VERSION =~ ^v[0-9]+$ ]]; then
+    if [[ $VERSION =~ ^v[0-9]+(\.[0-9]+)*$ ]]; then
       FULL_VERSION=$(find "$PACKAGE_DIR" -maxdepth 1 -type d -name "_${VERSION}.*" 2>/dev/null | sed 's/.*_v//' | sort -V | tail -1)
       if [ -n "$FULL_VERSION" ]; then
         VERSION="v$FULL_VERSION"
