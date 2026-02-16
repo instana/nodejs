@@ -15,6 +15,8 @@ const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE, STACK_TRACE_MODES 
 /** @type {import('../core').GenericLogger} */
 let logger;
 const hexDecoder = new StringDecoder('hex');
+const logThrottleCache = new Map();
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 /**
  * @type {number}
  */
@@ -414,6 +416,7 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
 
 /**
  * Handles and logs a debug message when the instrumented function returns an unexpected value(not a promise)
+ * Logs are throttled to once per day per instrumentation to avoid log spam
  *
  * @param {*} returnValue - The return value from the instrumented function
  * @param {string} spanName - The name of the span (e.g., 'redis', 'postgres', 'mysql')
@@ -421,11 +424,37 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
  * @returns {boolean} - Returns true if the return value was unexpected (not a promise), false otherwise
  */
 exports.handleUnexpectedReturnValue = function handleUnexpectedReturnValue(returnValue, spanName, operationContext) {
-  logger.debug(
-    `${spanName} instrumentation: Unexpected return value from ${operationContext}. ` +
-      `Expected a promise but got: ${typeof returnValue}. ` +
-      'This indicates an unsupported library behavior.'
-  );
+  const throttleKey = `${spanName}`;
+  const now = Date.now();
+  const lastLogged = logThrottleCache.get(throttleKey);
+
+  // Only log if we haven't logged for this instrumentation in the last 24 hours
+  if (!lastLogged || now - lastLogged >= ONE_DAY_MS) {
+    logger.debug(
+      `${spanName} instrumentation: Unexpected return value from ${operationContext}. ` +
+        `Expected a promise but got: ${typeof returnValue}. ` +
+        'This indicates an unsupported library behavior.'
+    );
+
+    logThrottleCache.set(throttleKey, now);
+  }
 
   return true;
 };
+
+// TBD
+setInterval(() => {
+  const now = Date.now();
+  /** @type {string[]} */
+  const keysToDelete = [];
+
+  logThrottleCache.forEach((timestamp, key) => {
+    if (now - timestamp >= ONE_DAY_MS) {
+      keysToDelete.push(key);
+    }
+  });
+
+  keysToDelete.forEach(key => {
+    logThrottleCache.delete(key);
+  });
+}, ONE_DAY_MS).unref();
