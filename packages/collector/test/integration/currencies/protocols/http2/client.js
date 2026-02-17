@@ -61,7 +61,7 @@ function triggerDeferredRequest(method, stream) {
   setTimeout(() => {
     http2Promise.request({
       method,
-      baseUrl: 'https://example.com',
+      baseUrl: `https://localhost:${downstreamPort}`,
       path: '/?k=2'
     });
   }, 500);
@@ -69,7 +69,7 @@ function triggerDeferredRequest(method, stream) {
   http2Promise
     .request({
       method,
-      baseUrl: 'https://example.com',
+      baseUrl: `https://localhost:${downstreamPort}`,
       path: '/?k=1'
     })
     .then(response => {
