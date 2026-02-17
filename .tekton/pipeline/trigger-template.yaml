@@ -86,21 +86,13 @@ spec:
         podTemplate:
           securityContext:
             fsGroup: 65532
-          affinity:
-            podAntiAffinity:
-              requiredDuringSchedulingIgnoredDuringExecution:
-              - labelSelector:
-                  matchLabels:
-                    app.kubernetes.io/component: affinity-assistant
-                namespaceSelector: {}
-                topologyKey: kubernetes.io/hostname
           resources:
             requests:
-              cpu: "300m"
-              memory: "512Mi"
+              cpu: "2000m"
+              memory: "8Gi"
             limits:
-              cpu: "8000m"
-              memory: "12Gi"
+              cpu: "4000m"
+              memory: "16Gi"
         pipelineRef:
           name: $(params.pipeline-ref)
         workspaces:
