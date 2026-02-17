@@ -87,9 +87,10 @@ spec:
           securityContext:
             fsGroup: 65532
           affinityAssistantTemplate:
-            requests:
-              cpu: "65"
-              memory: "200Gi"
+            resources:
+              requests:
+                cpu: "65"
+                memory: "200Gi"
         pipelineRef:
           name: $(params.pipeline-ref)
         workspaces:
