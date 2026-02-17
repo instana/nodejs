@@ -337,7 +337,11 @@ module.exports = function (name, version, isLatest) {
       .then(() => {
         return retry(() =>
           agentControls.getSpans().then(spans => {
-            expect(spans.length).to.equal(3);
+            // Expected spans:
+            // 1 x entry span for the initial request
+            // 2 x deferred exit spans for calls to the internal endpoint
+            // 2 x entry spans for the corresponding deferred requests
+            expect(spans.length).to.equal(5);
 
             const entrySpan = verifyRootHttpEntry({
               spans,
@@ -348,18 +352,20 @@ module.exports = function (name, version, isLatest) {
             verifyHttpExit({
               spans,
               parent: entrySpan,
-              url: 'https://example.com:443/',
+              url: `https://localhost:${serverControls.getPort()}`,
               method: 'GET',
               expectHeaders: false,
-              params: 'k=1'
+              params: 'k=1',
+              status: 204
             });
             verifyHttpExit({
               spans,
               parent: entrySpan,
-              url: 'https://example.com:443',
+              url: `https://localhost:${serverControls.getPort()}`,
               method: 'GET',
               expectHeaders: false,
-              params: 'k=2'
+              params: 'k=2',
+              status: 204
             });
           })
         );
