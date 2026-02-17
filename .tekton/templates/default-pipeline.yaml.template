@@ -50,6 +50,9 @@ spec:
     - name: node-reservation
       taskRef:
         name: reservation-task
+      workspaces:
+        - name: output
+          workspace: artifacts
     - name: extract-repository-url
       taskRef:
         name: toolchain-extract-value
