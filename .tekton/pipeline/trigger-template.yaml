@@ -75,15 +75,6 @@ spec:
           - ReadWriteOnce
     - apiVersion: tekton.dev/v1beta1
       kind: PipelineRun
-      podTemplate:
-        securityContext:
-          fsGroup: 65532
-        resourceRequests:
-          cpu: "300m"
-          memory: "512Mi"
-        resourceLimits:
-          cpu: "8000m"
-          memory: "12Gi"
       metadata:
         name: pl-$(params.target-branch)-$(params.pl-name)
         namespace: default
@@ -92,6 +83,16 @@ spec:
         annotations:
           tekton.dev/node-version: "node-$(params.node-version)"
       spec:
+        podTemplate:
+          securityContext:
+            fsGroup: 65532
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "512Mi"
+            limits:
+              cpu: "8000m"
+              memory: "12Gi"
         pipelineRef:
           name: $(params.pipeline-ref)
         workspaces:

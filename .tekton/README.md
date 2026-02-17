@@ -23,17 +23,12 @@ data:
         - labelSelector:
             matchLabels:
               app.kubernetes.io/component: affinity-assistant
+          namespaceSelector: {}
           topologyKey: kubernetes.io/hostname
 EOF
 
 $ kubectl -n tekton-pipelines rollout restart deploy tekton-pipelines-controller
 $ kubectl -n tekton-pipelines rollout restart deploy tekton-pipelines-webhook
-```
-
-```sh
-$ kubectl patch cm feature-flags -n tekton-pipelines \
-→   -p '{"data":{"max-concurrent-runs":"6"}}'
-configmap/feature-flags patched
 ```
 
 ## Restrictions
