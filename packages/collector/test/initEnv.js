@@ -70,7 +70,12 @@ if (process.env.SKIP_TGZ !== 'true') {
     if (needsTgzRegen) {
       const regenerate = () => {
         log('[INFO] Source changed — regenerating tgz packages and preinstalled node_modules...');
-        execSync(`bash "${preinstallScript}"`, { cwd: testDir, stdio: 'inherit' });
+        const npmCachePath = path.join(rootDir, '.npm-offline-cache');
+        const env = Object.assign({}, process.env);
+        if (isCI() && fs.existsSync(npmCachePath)) {
+          env.NPM_CACHE = npmCachePath;
+        }
+        execSync(`bash "${preinstallScript}"`, { cwd: testDir, stdio: 'inherit', env });
         fs.writeFileSync(tgzChecksumPath, tgzHash);
       };
 

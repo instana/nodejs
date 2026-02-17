@@ -57,7 +57,12 @@ EOF
 
 # Install and create a precompressed archive
 echo "[INFO] Installing preinstalled node_modules..."
-npm install --production --no-optional --no-audit --progress=false
+NPM_ARGS="--production --no-optional --no-audit --progress=false"
+if [ -n "$NPM_CACHE" ]; then
+  echo "[INFO] Using global cache: $NPM_CACHE"
+  NPM_ARGS="$NPM_ARGS --cache $NPM_CACHE --prefer-offline"
+fi
+npm install $NPM_ARGS
 
 echo "[INFO] Creating preinstalled node_modules archive..."
 tar -czf "${PREINSTALLED_DIR}/node_modules.tar.gz" node_modules/
