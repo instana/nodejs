@@ -95,6 +95,10 @@ spec:
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
         fi
+        npm config set fetch-retries 5
+        npm config set fetch-retry-mintimeout 20000
+        npm config set fetch-retry-maxtimeout 120000
+        npm config set maxsockets 5
         if [ -n "$(params.revision)" ]; then
           CIRCLE_COMPARE_URL="$(params.repository)/compare/$BASE_REVISION..$(params.revision)"
           # MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
