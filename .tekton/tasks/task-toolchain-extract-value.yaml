@@ -33,10 +33,6 @@ spec:
     - name: extract-value-jq
       image: $(params.extract-value-jq-step-image)
       imagePullPolicy: IfNotPresent
-      resources:
-        requests:
-          cpu: "25"
-          memory: "100Gi"
       env:
         - name: RAW
           value: $(params.raw)
