@@ -153,7 +153,7 @@ spec:
              echo "Downloaded daily cache."
              apt-get update -y && apt-get install -y zstd
              zstd -d npm-cache.tar.zst -o npm-cache.tar
-             tar -xf npm-cache.tar -C .npm-offline-cache
+             tar -xf npm-cache.tar
              rm npm-cache.tar npm-cache.tar.zst
           else
              echo "Daily cache not found. Proceeding with empty cache."
