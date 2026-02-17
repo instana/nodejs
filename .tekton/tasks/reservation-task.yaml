@@ -15,10 +15,22 @@ spec:
           memory: "200Gi"
       script: |
         #!/bin/sh
-        echo "Blocking resources until signal is received..."
+        echo "Started resource reservation..."
 
-        while [ ! -f /artifacts/pipeline_finished ]; do
+        # 60min timeout
+        MAX_RETRIES=720
+        COUNT=0
+
+        while [ ! -f /artifacts/pipeline_finished ] && [ $COUNT -lt $MAX_RETRIES ]; do
           sleep 5
+          COUNT=$((COUNT + 1))
         done
 
-        echo "Signal received. Releasing resources."
+        if [ $COUNT -ge $MAX_RETRIES ]; then
+          echo "Timed out. No end signal received after 60 minutes. Cleaning up."
+        else
+          echo "End signal received. Cleaning up."
+          rm -f /artifacts/pipeline_finished
+        fi
+
+        echo "Resource reservation ended."
