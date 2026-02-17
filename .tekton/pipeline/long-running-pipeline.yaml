@@ -111,11 +111,11 @@ spec:
           value: "pending"
         - name: pipeline-debug
           value: $(params.pipeline-debug)               
-    - name: install-npm-dependencies
+    - name: install-project-dependencies
       runAfter:
         - git-fetch-repo
       taskRef:
-        name: install-npm-dependencies
+        name: install-project-dependencies
       params:
         - name: continuous-delivery-context-secret
           value: "secure-properties"
@@ -134,11 +134,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: save-cache
+    - name: save-project-dependencies
       runAfter:
-        - install-npm-dependencies
+        - install-project-dependencies
       taskRef:
-        name: save-cache
+        name: save-project-dependencies
       params:
         - name: continuous-delivery-context-secret
           value: "secure-properties"
@@ -155,7 +155,7 @@ spec:
           workspace: artifacts
     - name: test-ci-long-running
       runAfter:
-        - install-npm-dependencies
+        - install-project-dependencies
       taskRef:
         name: long-running-task
       params:

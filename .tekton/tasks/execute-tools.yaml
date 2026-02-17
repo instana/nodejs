@@ -131,6 +131,45 @@ spec:
         bin/clean-aws.js --service=dynamodb
         bin/clean-aws.js --service=sqs
         bin/clean-aws.js --service=kinesis        
+    - name: download-cache
+      env:
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "apikey"
+              optional: true
+      image: public.ecr.aws/docker/library/node:$(params.node-version)
+      imagePullPolicy: IfNotPresent
+      script: |
+        #!/bin/bash
+
+        ARTIFACTS_PATH="$(workspaces.output.path)"
+        cd $ARTIFACTS_PATH
+
+        # Install IBM Cloud CLI
+        echo "Installing IBM Cloud CLI..."
+        curl -fsSL https://clis.cloud.ibm.com/install/linux | sh > /dev/null
+        ibmcloud plugin install cloud-object-storage -f -r 'IBM Cloud' > /dev/null
+        ibmcloud login -a https://cloud.ibm.com -r eu-de --apikey $API_KEY
+
+        # Try to download daily cache
+        TODAY=$(date +%F)
+        CACHE_KEY="npm-cache-apps-$TODAY"
+        echo "Checking for daily cache: $CACHE_KEY"
+
+        mkdir -p .npm-offline-cache
+
+        if ibmcloud cos download --bucket npm-cache --key "$CACHE_KEY.tar.zst" "npm-cache.tar.zst"; then
+           echo "Downloaded daily cache."
+           apt-get update -y > /dev/null && apt-get install -y zstd > /dev/null
+           zstd -d npm-cache.tar.zst -o npm-cache.tar
+           tar -xf npm-cache.tar -C .npm-offline-cache
+           rm npm-cache.tar npm-cache.tar.zst
+        else
+           echo "Daily cache not found. Will populate it."
+        fi
+
     - name: generate-test-folders
       image: public.ecr.aws/docker/library/node:$(params.node-version)
       imagePullPolicy: IfNotPresent
@@ -144,4 +183,6 @@ spec:
           npm install npm@$(params.npm-version) -g
         fi
 
+        # Generate Test Folders
+        echo "Generating version test folders..."
         node bin/create-version-test-folders.js

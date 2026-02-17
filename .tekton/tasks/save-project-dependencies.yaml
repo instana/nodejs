@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: save-cache
+  name: save-project-dependencies
 spec:
   params:
     - name: continuous-delivery-context-secret
@@ -18,7 +18,7 @@ spec:
     - name: output
       mountPath: /artifacts
   steps:
-    - name: save-cache
+    - name: save-project-dependencies
       image: public.ecr.aws/docker/library/node:$(params.node-version)
       imagePullPolicy: IfNotPresent
       env:

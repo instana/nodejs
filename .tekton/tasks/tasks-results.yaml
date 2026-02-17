@@ -100,4 +100,49 @@ spec:
           fi
         fi
 
+    - name: save-global-cache
+      image: public.ecr.aws/docker/library/node:$(params.node-version)
+      imagePullPolicy: IfNotPresent
+      env:
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "apikey"
+              optional: true
+      script: |
+        #!/bin/bash
+        ARTIFACTS_PATH="$(workspaces.output.path)"
+        cd $ARTIFACTS_PATH
+
+        # Current Date Key
+        TODAY=$(date +%F)
+        CACHE_KEY="npm-cache-apps-$TODAY"
+        echo "Checking if we need to save cache: $CACHE_KEY"
+
+        if [ ! -d ".npm-offline-cache" ]; then
+          echo ".npm-offline-cache directory not found in workspace. Skipping save."
+          exit 0
+        fi
+
+        # Install IBM Cloud CLI
+        echo "Installing IBM Cloud CLI..."
+        curl -fsSL https://clis.cloud.ibm.com/install/linux | sh > /dev/null
+        ibmcloud plugin install cloud-object-storage -f -r 'IBM Cloud' > /dev/null
+        ibmcloud login -a https://cloud.ibm.com -r eu-de --apikey $API_KEY
+
+        # Check if cache exists
+        if ibmcloud cos head-object --bucket npm-cache --key "$CACHE_KEY.tar.zst" > /dev/null 2>&1; then
+          echo "Cache for today already exists. Skipping upload."
+          exit 0
+        fi
+
+        echo "Cache for today missing. Uploading..."
+        apt-get update -y > /dev/null && apt-get install -y zstd > /dev/null
+        
+        tar -cf - .npm-offline-cache | zstd -o "$CACHE_KEY.tar.zst"
+        ibmcloud cos upload --bucket npm-cache --key "$CACHE_KEY.tar.zst" --file "$CACHE_KEY.tar.zst"
+        echo "Cache uploaded."
+
+
 

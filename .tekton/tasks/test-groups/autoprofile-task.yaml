@@ -65,6 +65,12 @@ spec:
             secretKeyRef:
               name: $(params.continuous-delivery-context-secret)
               key: "AZURE_STORAGE_ACCOUNT_KEY"
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "apikey"
+              optional: true
       image: public.ecr.aws/docker/library/node:$(params.node-version)
       imagePullPolicy: IfNotPresent
       resources:
@@ -92,8 +98,28 @@ spec:
         npm config set fetch-retry-mintimeout 20000
         npm config set fetch-retry-maxtimeout 120000
         npm config set maxsockets 5
-        if [ ! -d ".npm-cache" ]; then
-          mkdir .npm-cache
+        if [ ! -d ".npm-offline-cache" ]; then
+          mkdir .npm-offline-cache
+          # Try to download daily cache
+          TODAY=$(date +%F)
+          CACHE_KEY="npm-cache-apps-$TODAY"
+          echo "Attempting to download daily cache: $CACHE_KEY"
+          # Install IBM Cloud CLI if needed (it might not be in the image, check if we need to install it or if we can use curl/wget if the bucket is public? No, it's private likely. The install-project-dependencies task installs it.)
+          # Wait, this script runs inside the test container which is `node:version`. It probably doesn't have ibmcloud cli.
+          # install-project-dependencies.yaml installs it. 
+          # We should probably do the same here.
+          curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
+          ibmcloud plugin install cloud-object-storage -f -r 'IBM Cloud'
+          ibmcloud login -a https://cloud.ibm.com -r eu-de --apikey $API_KEY
+          if ibmcloud cos download --bucket npm-cache --key "$CACHE_KEY.tar.zst" "npm-cache.tar.zst"; then
+             echo "Downloaded daily cache."
+             apt-get update -y && apt-get install -y zstd
+             zstd -d npm-cache.tar.zst -o npm-cache.tar
+             tar -xf npm-cache.tar -C .npm-offline-cache
+             rm npm-cache.tar npm-cache.tar.zst
+          else
+             echo "Daily cache not found. Proceeding with empty cache."
+          fi
         fi
         if [ -n "$(params.revision)" ]; then
           CIRCLE_COMPARE_URL="$(params.repository)/compare/$BASE_REVISION..$(params.revision)"

@@ -92,11 +92,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: install-npm-dependencies
+    - name: install-project-dependencies
       runAfter:
         - git-fetch-repo
       taskRef:
-        name: install-npm-dependencies
+        name: install-project-dependencies
       params:
         - name: continuous-delivery-context-secret
           value: "secure-properties"
@@ -115,11 +115,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: save-cache
+    - name: save-project-dependencies
       runAfter:
-        - install-npm-dependencies
+        - install-project-dependencies
       taskRef:
-        name: save-cache
+        name: save-project-dependencies
       params:
         - name: continuous-delivery-context-secret
           value: "secure-properties"
@@ -136,7 +136,7 @@ spec:
           workspace: artifacts
     - name: update-currencies
       runAfter:
-        - install-npm-dependencies
+        - install-project-dependencies
       taskRef:
         name: update-currencies
       params:
