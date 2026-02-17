@@ -47,15 +47,6 @@ spec:
   workspaces:
     - name: artifacts
   tasks:
-    - name: node-reservation
-      taskRef:
-        name: reservation-task
-      params:
-        - name: node-version
-          value: $(params.node-version)
-      workspaces:
-        - name: output
-          workspace: artifacts
     - name: extract-repository-url
       taskRef:
         name: toolchain-extract-value
