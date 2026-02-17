@@ -7,6 +7,10 @@ spec:
     - name: elasticsearch
       image: public.ecr.aws/elastic/elasticsearch:9.0.0
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "1Gi"
       env:
           - name: "discovery.type"
             value: "single-node"
@@ -77,6 +81,10 @@ spec:
               key: "AZURE_STORAGE_ACCOUNT_KEY"
       image: public.ecr.aws/docker/library/node:$(params.node-version)
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "1000m"
+          memory: "8Gi"
       script: |
         #!/bin/bash
         AVAILABLE_SIDECARS="elasticsearch"

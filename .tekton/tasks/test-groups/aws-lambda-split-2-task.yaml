@@ -67,6 +67,10 @@ spec:
               key: "AZURE_STORAGE_ACCOUNT_KEY"
       image: public.ecr.aws/docker/library/node:$(params.node-version)
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "1000m"
+          memory: "8Gi"
       script: |
         #!/bin/bash
         AVAILABLE_SIDECARS=""

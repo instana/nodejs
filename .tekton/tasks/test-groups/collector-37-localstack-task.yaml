@@ -7,6 +7,10 @@ spec:
     - name: localstack
       image: public.ecr.aws/localstack/localstack:4.5
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "1Gi"
   envFrom:
     - configMapRef:
         name: environment-properties
@@ -70,6 +74,10 @@ spec:
               key: "AZURE_STORAGE_ACCOUNT_KEY"
       image: public.ecr.aws/docker/library/node:$(params.node-version)
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "1000m"
+          memory: "8Gi"
       script: |
         #!/bin/bash
         AVAILABLE_SIDECARS="localstack"

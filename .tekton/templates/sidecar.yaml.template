@@ -1,7 +1,11 @@
     - name: {{name}}
       image: {{image}}
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "1Gi"
       {{args}}
-      {{env}}      
+      {{env}}
       {{command}}
       {{readinessProbe}}

@@ -7,9 +7,17 @@ spec:
     - name: nats
       image: public.ecr.aws/docker/library/nats:2.9.14-linux
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "1Gi"
     - name: nats-streaming
       image: public.ecr.aws/docker/library/nats-streaming:0.25.3-linux
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "1Gi"
       args:
           - "-p"
           - "4223"
@@ -25,6 +33,10 @@ spec:
     - name: nats-streaming-2
       image: public.ecr.aws/docker/library/nats-streaming:0.25.3-linux
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "1Gi"
       args:
           - "-p"
           - "4224"
@@ -100,6 +112,10 @@ spec:
               key: "AZURE_STORAGE_ACCOUNT_KEY"
       image: public.ecr.aws/docker/library/node:$(params.node-version)
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "1000m"
+          memory: "8Gi"
       script: |
         #!/bin/bash
         AVAILABLE_SIDECARS="nats,nats-streaming,nats-streaming-2"

@@ -7,6 +7,10 @@ spec:
     - name: couchbase
       image: public.ecr.aws/docker/library/couchbase:7.6.7
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "1Gi"
       readinessProbe:
           httpGet:
             path: / 
@@ -77,6 +81,10 @@ spec:
               key: "AZURE_STORAGE_ACCOUNT_KEY"
       image: public.ecr.aws/docker/library/node:$(params.node-version)
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "1000m"
+          memory: "8Gi"
       script: |
         #!/bin/bash
         AVAILABLE_SIDECARS="couchbase"

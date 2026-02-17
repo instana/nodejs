@@ -7,6 +7,10 @@ spec:
     - name: mysql
       image: public.ecr.aws/docker/library/mysql:8.0.26
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "1Gi"
       args:
           - "--default-authentication-plugin=mysql_native_password"
       env:
@@ -92,6 +96,10 @@ spec:
               key: "AZURE_STORAGE_ACCOUNT_KEY"
       image: public.ecr.aws/docker/library/node:$(params.node-version)
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "1000m"
+          memory: "8Gi"
       script: |
         #!/bin/bash
         AVAILABLE_SIDECARS="mysql"

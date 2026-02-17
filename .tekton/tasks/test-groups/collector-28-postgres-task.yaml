@@ -7,6 +7,10 @@ spec:
     - name: postgres
       image: public.ecr.aws/docker/library/postgres:15.15
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "1Gi"
       env:
           - name: "POSTGRES_USER"
             value: "node"
@@ -86,6 +90,10 @@ spec:
               key: "AZURE_STORAGE_ACCOUNT_KEY"
       image: public.ecr.aws/docker/library/node:$(params.node-version)
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "1000m"
+          memory: "8Gi"
       script: |
         #!/bin/bash
         AVAILABLE_SIDECARS="postgres"

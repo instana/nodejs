@@ -7,9 +7,17 @@ spec:
     - name: redis
       image: public.ecr.aws/docker/library/redis:7.4.3
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "1Gi"
     - name: redis-slave
       image: public.ecr.aws/docker/library/redis:7.4.3
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "1Gi"
       args:
           - "redis-server"
           - "--replicaof"
@@ -20,6 +28,10 @@ spec:
     - name: redis-sentinel
       image: public.ecr.aws/docker/library/redis:7.4.3
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "1Gi"
       args:
           - "sh"
           - "-c"
@@ -93,6 +105,10 @@ spec:
               key: "AZURE_STORAGE_ACCOUNT_KEY"
       image: public.ecr.aws/docker/library/node:$(params.node-version)
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "1000m"
+          memory: "8Gi"
       script: |
         #!/bin/bash
         AVAILABLE_SIDECARS="redis,redis-slave,redis-sentinel"

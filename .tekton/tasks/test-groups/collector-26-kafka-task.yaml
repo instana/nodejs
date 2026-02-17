@@ -7,6 +7,10 @@ spec:
     - name: zookeeper
       image: confluentinc/cp-zookeeper:7.9.1
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "1Gi"
       env:
           - name: "ZOOKEEPER_CLIENT_PORT"
             value: "2181"
@@ -19,6 +23,10 @@ spec:
     - name: kafka
       image: confluentinc/cp-kafka:7.9.1
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "1Gi"
       env:
           - name: "KAFKA_BROKER_ID"
             value: "1"
@@ -43,6 +51,10 @@ spec:
     - name: kafka-topics
       image: confluentinc/cp-kafka:7.9.1
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "1Gi"
       args:
           - "-lc"
           - "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
@@ -51,6 +63,10 @@ spec:
     - name: schema-registry
       image: confluentinc/cp-schema-registry:7.9.0
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "1Gi"
       env:
           - name: "SCHEMA_REGISTRY_HOST_NAME"
             value: "schema-registry"
@@ -132,6 +148,10 @@ spec:
               key: "AZURE_STORAGE_ACCOUNT_KEY"
       image: public.ecr.aws/docker/library/node:$(params.node-version)
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "1000m"
+          memory: "8Gi"
       script: |
         #!/bin/bash
         AVAILABLE_SIDECARS="zookeeper,kafka,kafka-topics,schema-registry"

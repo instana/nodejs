@@ -86,11 +86,6 @@ spec:
         podTemplate:
           securityContext:
             fsGroup: 65532
-          affinityAssistantTemplate:
-            resources:
-              requests:
-                cpu: "65"
-                memory: "200Gi"
         pipelineRef:
           name: $(params.pipeline-ref)
         workspaces:

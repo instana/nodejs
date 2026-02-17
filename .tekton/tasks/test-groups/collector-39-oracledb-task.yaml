@@ -7,6 +7,10 @@ spec:
     - name: oracledb
       image: container-registry.oracle.com/database/free:23.6.0.0-lite
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "1Gi"
       env:
           - name: "ORACLE_PWD"
             value: "teamnodejspassword"
@@ -73,6 +77,10 @@ spec:
               key: "AZURE_STORAGE_ACCOUNT_KEY"
       image: public.ecr.aws/docker/library/node:$(params.node-version)
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "1000m"
+          memory: "8Gi"
       script: |
         #!/bin/bash
         AVAILABLE_SIDECARS="oracledb"
