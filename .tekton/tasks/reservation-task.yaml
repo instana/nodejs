@@ -1,0 +1,24 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: reservation-task
+spec:
+  workspaces:
+    - name: output
+      mountPath: /artifacts
+  steps:
+    - name: sleep-and-hold
+      image: alpine:latest
+      resources:
+        requests:
+          cpu: "70"
+          memory: "200Gi"
+      script: |
+        #!/bin/sh
+        echo "Blocking resources until signal is received..."
+
+        while [ ! -f /artifacts/pipeline_finished ]; do
+          sleep 5
+        done
+
+        echo "Signal received. Releasing resources."

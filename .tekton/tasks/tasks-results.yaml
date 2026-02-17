@@ -50,6 +50,9 @@ spec:
         fi
         echo ""
 
+        echo "Sending finish pipeline signal..."
+        touch "$ARTIFACTS_PATH/pipeline_finished"
+
         # Not generic yet. We only support claimed tests for the collector package.
         echo "=== Post-flight: Verify claimed tests ==="
         VERIFY_EXIT=0
@@ -99,3 +102,5 @@ spec:
             sonar -Dsonar.token=$SONAR_TOKEN
           fi
         fi
+
+

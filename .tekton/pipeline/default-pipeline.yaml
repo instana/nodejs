@@ -47,6 +47,9 @@ spec:
   workspaces:
     - name: artifacts
   tasks:
+    - name: node-reservation
+      taskRef:
+        name: reservation-task
     - name: extract-repository-url
       taskRef:
         name: toolchain-extract-value
@@ -71,7 +74,7 @@ spec:
         - name: revision
           value: $(params.commit-id)
         - name: pr-number
-          value: $(params.pr-number)          
+          value: $(params.pr-number)
         - name: pipeline-debug
           value: $(params.pipeline-debug)
         - name: ibmcloud-api
@@ -90,14 +93,14 @@ spec:
         name: echo-env
       workspaces:
         - name: output
-          workspace: artifacts        
+          workspace: artifacts
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version) 
+          value: $(params.npm-version)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
     - name: set-tests-running-start
       runAfter:
         - git-fetch-repo
@@ -105,7 +108,7 @@ spec:
         name: git-set-commit-status
       workspaces:
         - name: output
-          workspace: artifacts        
+          workspace: artifacts
       params:
         - name: repository
           value: $(params.repository)
@@ -118,7 +121,7 @@ spec:
         - name: state
           value: "pending"
         - name: pipeline-debug
-          value: $(params.pipeline-debug)               
+          value: $(params.pipeline-debug)
     - name: install-npm-dependencies
       runAfter:
         - git-fetch-repo
@@ -136,9 +139,9 @@ spec:
         - name: npm-version
           value: $(params.npm-version)
         - name: skip-cache
-          value: $(params.skip-cache)                  
+          value: $(params.skip-cache)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
@@ -183,7 +186,7 @@ spec:
         name: execute-tools
       params:
         - name: node-version
-          value: $(params.node-version)   
+          value: $(params.node-version)
         - name: npm-version
           value: $(params.npm-version)
         - name: target-branch
@@ -1569,7 +1572,7 @@ spec:
         - name: output
           workspace: artifacts
 
-  finally: 
+  finally:
     - name: tasks-results
       taskRef:
         name: tasks-results
@@ -1578,11 +1581,11 @@ spec:
           workspace: artifacts
       params:
         - name: node-version
-          value: $(params.node-version)      
+          value: $(params.node-version)
         - name: coverage
-          value: $(params.coverage)    
+          value: $(params.coverage)
         - name: continuous-delivery-context-secret
-          value: "secure-properties"  
+          value: "secure-properties"
         - name: pr-number
           value: $(params.pr-number)
         - name: pr-branch
