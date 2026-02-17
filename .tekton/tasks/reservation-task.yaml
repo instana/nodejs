@@ -15,7 +15,7 @@ spec:
       imagePullPolicy: IfNotPresent
       resources:
         requests:
-          cpu: "70"
+          cpu: "40"
           memory: "200Gi"
       script: |
         #!/bin/sh
