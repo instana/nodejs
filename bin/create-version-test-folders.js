@@ -231,7 +231,7 @@ mochaSuiteFn(suiteTitle, function () {
       preinstalledMod.extractPreinstalledPackages(__dirname, { timeout: installTimeout - 1000 });
 
       log('[INFO] Running npm install for ${suiteName}@${displayVersion}...');
-      const npmCmd = 'npm install--cache ${rootDir}/.npm-offline-cache ' +
+      const npmCmd = 'npm install --cache ${rootDir}/.npm-offline-cache ' +
   '--prefer-offline --no-package-lock --no-audit --prefix ./ --no-progress';
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {${isOptional
