@@ -21,7 +21,14 @@ const { tracing, coreConfig } = instanaCore;
 const { tracingHeaders, constants, spanBuffer } = tracing;
 
 const lambdaConfigDefaults = {
-  tracing: { forceTransmissionStartingAt: 25, transmissionDelay: 100, initialTransmissionDelay: 100 }
+  // Preload OpenTelemetry deps to avoid lazy loading overhead
+  // See https://jsw.ibm.com/browse/INSTA-71262
+  preloadOpentelemetry: true,
+  tracing: {
+    forceTransmissionStartingAt: 25,
+    transmissionDelay: 100,
+    initialTransmissionDelay: 100
+  }
 };
 
 // Node.js 24+ removed support for callback-based handlers (3 parameters).

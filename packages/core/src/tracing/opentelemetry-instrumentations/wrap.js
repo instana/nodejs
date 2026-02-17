@@ -5,10 +5,6 @@
 
 'use strict';
 
-const { AsyncHooksContextManager } = require('@opentelemetry/context-async-hooks');
-const { W3CTraceContextPropagator, hrTimeDuration, hrTimeToMilliseconds } = require('@opentelemetry/core');
-const api = require('@opentelemetry/api');
-const { BasicTracerProvider } = require('@opentelemetry/sdk-trace-base');
 const utils = require('./utils');
 const constants = require('../constants');
 const supportedVersion = require('../supportedVersion');
@@ -27,6 +23,60 @@ const instrumentations = {
   '@instana/instrumentation-confluent-kafka-javascript': { name: 'confluent-kafka' }
 };
 
+let AsyncHooksContextManager;
+let W3CTraceContextPropagator;
+let hrTimeDuration;
+let hrTimeToMilliseconds;
+let api;
+let BasicTracerProvider;
+let coreModule;
+
+function initOtelCoreDependencies() {
+  api = api || require('@opentelemetry/api');
+  coreModule = coreModule || require('@opentelemetry/core');
+  AsyncHooksContextManager =
+    AsyncHooksContextManager || require('@opentelemetry/context-async-hooks').AsyncHooksContextManager;
+  BasicTracerProvider = BasicTracerProvider || require('@opentelemetry/sdk-trace-base').BasicTracerProvider;
+
+  W3CTraceContextPropagator = coreModule.W3CTraceContextPropagator;
+  hrTimeDuration = coreModule.hrTimeDuration;
+  hrTimeToMilliseconds = coreModule.hrTimeToMilliseconds;
+}
+
+function getInstrumentation(instr) {
+  if (!instr.module) {
+    instr.module = require(`./${instr.name}`);
+  }
+  return instr.module;
+}
+
+function preInitInstrumentations() {
+  Object.values(instrumentations).forEach(instr => {
+    const instrumentation = getInstrumentation(instr);
+    instrumentation.preInit?.();
+  });
+}
+
+function initInstrumentations(cls) {
+  Object.values(instrumentations).forEach(instr => {
+    const instrumentation = getInstrumentation(instr);
+    instrumentation.init?.({ cls, api: api });
+  });
+}
+
+module.exports.preInit = config => {
+  if (!supportedVersion(process.versions.node)) {
+    return;
+  }
+
+  if (!config?.preloadOpentelemetry) {
+    return;
+  }
+
+  initOtelCoreDependencies();
+  preInitInstrumentations();
+};
+
 // NOTE: using a logger might create a recursive execution
 //       logger.debug -> creates fs call -> calls transformToInstanaSpan -> calls logger.debug
 //       use uninstrumented logger, but useless for production
@@ -35,12 +85,8 @@ module.exports.init = (_config, cls) => {
     return;
   }
 
-  Object.keys(instrumentations).forEach(k => {
-    const value = instrumentations[k];
-    const instrumentation = require(`./${value.name}`);
-    instrumentation.init({ cls, api: api });
-    value.module = instrumentation;
-  });
+  initOtelCoreDependencies();
+  initInstrumentations(cls);
 
   const prepareData = (otelSpan, instrumentation) => {
     const obj = {

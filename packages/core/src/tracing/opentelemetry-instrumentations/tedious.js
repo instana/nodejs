@@ -6,11 +6,22 @@
 
 const constants = require('../constants');
 
+let TediousInstrumentation;
+
+function initInstrumentation() {
+  TediousInstrumentation =
+    TediousInstrumentation || require('@opentelemetry/instrumentation-tedious').TediousInstrumentation;
+}
+
+module.exports.preInit = () => {
+  initInstrumentation();
+};
+
 module.exports.init = () => {
   // Opentelemetry only supports tedious version >=1.11.0 and <=15, please refer the following link
   // for more details: https://www.npmjs.com/package/@opentelemetry/instrumentation-tedious#supported-versions
 
-  const { TediousInstrumentation } = require('@opentelemetry/instrumentation-tedious');
+  initInstrumentation();
 
   const instrumentation = new TediousInstrumentation();
 

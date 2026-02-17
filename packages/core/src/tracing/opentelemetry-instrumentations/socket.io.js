@@ -6,7 +6,19 @@
 
 const constants = require('../constants');
 
+let SocketIoInstrumentation;
+
+function initInstrumentation() {
+  SocketIoInstrumentation =
+    SocketIoInstrumentation || require('@opentelemetry/instrumentation-socket.io').SocketIoInstrumentation;
+}
+
 const isOnEvent = otelSpan => otelSpan.name.indexOf('receive') !== -1;
+
+exports.preInit = () => {
+  initInstrumentation();
+};
+
 /**
  * socket.io-client is not instrumented.
  * We can easily instrument socket.io-client by instrumenting @socket.io/component-emitter
@@ -18,7 +30,7 @@ const isOnEvent = otelSpan => otelSpan.name.indexOf('receive') !== -1;
  * headers or meta data, only payload!
  */
 exports.init = () => {
-  const { SocketIoInstrumentation } = require('@opentelemetry/instrumentation-socket.io');
+  initInstrumentation();
   const instrumentation = new SocketIoInstrumentation();
 
   if (!instrumentation.getConfig().enabled) {
