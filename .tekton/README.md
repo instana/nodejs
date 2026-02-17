@@ -8,29 +8,6 @@
 - Limit 1 pipeline per node (not reliable, but its running okay).
 - We need ~96 CPU for 1 pipeline run.
 
-```sh
-cat <<'EOF' | kubectl -n tekton-pipelines apply -f -
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: config-artifact-pvc
-  namespace: tekton-pipelines
-data:
-  affinityAssistant.podTemplate: |
-    affinity:
-      podAntiAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-        - labelSelector:
-            matchLabels:
-              app.kubernetes.io/component: affinity-assistant
-          namespaceSelector: {}
-          topologyKey: kubernetes.io/hostname
-EOF
-
-$ kubectl -n tekton-pipelines rollout restart deploy tekton-pipelines-controller
-$ kubectl -n tekton-pipelines rollout restart deploy tekton-pipelines-webhook
-```
-
 ## Restrictions
 
 - Slashes in branch names is not allowed.

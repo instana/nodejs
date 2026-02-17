@@ -86,6 +86,14 @@ spec:
         podTemplate:
           securityContext:
             fsGroup: 65532
+          affinity:
+            podAntiAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/component: affinity-assistant
+                namespaceSelector: {}
+                topologyKey: kubernetes.io/hostname
           resources:
             requests:
               cpu: "300m"
