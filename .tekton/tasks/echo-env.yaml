@@ -9,7 +9,7 @@ spec:
     - name: npm-version
       value: $(params.npm-version)
     - name: prerelease
-      value: $(params.prerelease)   
+      value: $(params.prerelease)
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -23,7 +23,7 @@ spec:
         cd $ARTIFACTS_PATH
 
         if [ "$(params.prerelease)" == "true" ]; then
-          source bin/install-prerelease.sh 
+          source bin/install-prerelease.sh
         fi
 
         if [ -n "$(params.npm-version)" ]; then
@@ -37,3 +37,6 @@ spec:
         echo "Make version: $(make --version 2>/dev/null | head -n 1 || echo 'Make not found')"
         echo "GCC version: $(gcc --version 2>/dev/null | head -n 1 || echo 'GCC not found')"
         echo "Node-gyp global version: $(node-gyp --version 2>/dev/null || echo 'Node-gyp not found')"
+
+        echo "NPM config list:"
+        npm config list
