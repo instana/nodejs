@@ -185,4 +185,4 @@ spec:
 
         # Generate Test Folders
         echo "Generating version test folders..."
-        node bin/create-version-test-folders.js
+        CI=true node bin/create-version-test-folders.js
