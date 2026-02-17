@@ -10,7 +10,7 @@ const os = require('os');
 const rootDir = path.resolve(__dirname, '..', '..', '..', '..');
 const SEMAPHORE_DIR = path.join(rootDir, '.npm-install-semaphore');
 
-const MAX_CONCURRENT = 3;
+const MAX_CONCURRENT = 4;
 const MAX_WAIT = 10 * 60 * 1000;
 const STALE_TIMEOUT = 5 * 60 * 1000;
 const LOG_INTERVAL = 10000;

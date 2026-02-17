@@ -102,6 +102,9 @@ spec:
         npm config set fetch-retry-mintimeout 20000
         npm config set fetch-retry-maxtimeout 120000
         npm config set maxsockets 5
+        if [ ! -d ".npm-cache" ]; then
+          mkdir .npm-cache
+        fi
         if [ -n "$(params.revision)" ]; then
           CIRCLE_COMPARE_URL="$(params.repository)/compare/$BASE_REVISION..$(params.revision)"
           # MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
