@@ -3,12 +3,16 @@ kind: Task
 metadata:
   name: reservation-task
 spec:
+  params:
+    - name: node-version
+      value: $(params.node-version)
   workspaces:
     - name: output
       mountPath: /artifacts
   steps:
     - name: sleep-and-hold
-      image: alpine:latest
+      image: public.ecr.aws/docker/library/node:$(params.node-version)
+      imagePullPolicy: IfNotPresent
       resources:
         requests:
           cpu: "70"

@@ -50,6 +50,9 @@ spec:
     - name: node-reservation
       taskRef:
         name: reservation-task
+      params:
+        - name: node-version
+          value: $(params.node-version)
       workspaces:
         - name: output
           workspace: artifacts
