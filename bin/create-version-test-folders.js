@@ -218,7 +218,7 @@ mochaSuiteFn(suiteTitle, function () {
     const installTimeout = config.getNPMInstallTimeout();
     const maxRetries = 3;
     const semaphoreWait = process.env.CI ? 10 * 60 * 1000 : 0;
-    this.timeout(8 * 60 * 1000 + semaphoreWait);
+    this.timeout(15 * 60 * 1000 + semaphoreWait);
 
     log('[INFO] Setting up dependencies for ${suiteName}@${displayVersion}...');
     const slot = process.env.CI ? await installSemaphore.acquireSlot(log) : undefined;
@@ -234,7 +234,7 @@ mochaSuiteFn(suiteTitle, function () {
       const npmCmd = 'npm install --no-package-lock --no-audit --prefix ./ --no-progress';
       for (let attempt = 0; attempt < maxRetries; attempt++) {${isOptional
       ? `
-        const timeout = 180 * 1000;`
+        const timeout = 5 * 60 * 1000;`
       : `
         const timeout = (60 + attempt * 30) * 1000;`
     }
