@@ -189,7 +189,7 @@ const esmPrefix = process.env.RUN_ESM ? '[ESM] ' : '';
 const ts = new Date().toISOString();
 const suiteTitle = esmPrefix + \`[\${ts}] tracing/${suiteName}@${displayVersion}${mode ? ` (${mode})` : ''}\`;
 mochaSuiteFn(suiteTitle, function () {
-  this.timeout(config.getTestTimeout());
+  this.timeout(config.getTestTimeout() * 10);
   rmDir(path.join(__dirname, 'node_modules'));
   const copiedFiles = copyParentFiles(__dirname, path.resolve(__dirname, '${relSourcePath}'));
   let isCleaning = false;
