@@ -231,38 +231,38 @@ mochaSuiteFn(suiteTitle, function () {
       preinstalledMod.extractPreinstalledPackages(__dirname, { timeout: installTimeout - 1000 });
 
       log('[INFO] Running npm install for ${suiteName}@${displayVersion}...');
-      const npmCmd = 'npm install --cache ${rootDir}/.npm-offline-cache ' +
-      '--prefer-offline --no-package-lock --no-audit --prefix ./ --no-progress';
+      const npmCmd = 'npm install--cache ${rootDir}/.npm-offline-cache ' +
+  '--prefer-offline --no-package-lock --no-audit --prefix ./ --no-progress';
 
-      for (let attempt = 0; attempt < maxRetries; attempt++) {${isOptional
+  for (let attempt = 0; attempt < maxRetries; attempt++) {${isOptional
       ? `
         const timeout = 5 * 60 * 1000;`
       : `
         const timeout = (120 + attempt * 30) * 1000;`
     }
-        try {
-          execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });${isOptional
+    try {
+      execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });${isOptional
       ? `
           if (!fs.existsSync(path.join(__dirname, 'node_modules', '${suiteName}'))) {
             throw new Error('${suiteName} not found after install');
           }`
       : ''
     }
-          break;
-        } catch (err) {
-          if (
-            isCleaning ||
-            err.signal === 'SIGINT' ||
-            err.signal === 'SIGTERM' ||
-            err.status === 130 ||
-            err.status === 143
-          ) {
-             throw err;
-          }
+      break;
+    } catch (err) {
+      if (
+        isCleaning ||
+        err.signal === 'SIGINT' ||
+        err.signal === 'SIGTERM' ||
+        err.status === 130 ||
+        err.status === 143
+      ) {
+        throw err;
+      }
 
-          if (attempt === maxRetries - 1) throw err;
-          const secs = timeout / 1000;
-          log(\`[WARN] npm install failed (\${err.message}), retry \${attempt + 1}/\${maxRetries} (\${secs}s)...\`);
+      if (attempt === maxRetries - 1) throw err;
+      const secs = timeout / 1000;
+      log(\`[WARN] npm install failed (\${err.message}), retry \${attempt + 1}/\${maxRetries} (\${secs}s)...\`);
           rmDir(path.join(__dirname, 'node_modules'));
         }
       }
