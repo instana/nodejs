@@ -66,7 +66,7 @@
     "detect-libc": "^2.1.2",
     "event-loop-lag": "^1.4.0",
     "semver": "^7.7.3",
-    "tar": "^7.5.7"
+    "tar": "^7.5.9"
   },
   "devDependencies": {
     "@types/tar": "^6.1.6"
