@@ -40,7 +40,7 @@ services:
             redis-server /etc/sentinel.conf --sentinel'
 
   mongo:
-    image: mongo:8.0.8
+    image: public.ecr.aws/docker/library/mongo:8.0.8
     ports:
       - 27017:27017
 
@@ -171,7 +171,7 @@ services:
       MSSQL_SA_PASSWORD: stanCanHazMsSQL1
 
   rabbitmq:
-    image: rabbitmq:3.7.8-alpine
+    image: public.ecr.aws/docker/library/rabbitmq:3.13.7-alpine
     ports:
       - 5671:5671
       - 5672:5672
