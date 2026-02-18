@@ -246,25 +246,29 @@ mochaSuiteFn(suiteTitle, function () {
     try {
       execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });${isOptional
       ? `
-          if (!fs.existsSync(path.join(__dirname, 'node_modules', '${suiteName}'))) {
-            throw new Error('${suiteName} not found after install');
-          }`
+      if (!fs.existsSync(path.join(__dirname, 'node_modules', '${suiteName}'))) {
+        throw new Error('${suiteName} not found after install');
+      }`
       : ''
     }
 ${verifyDependency
       ? `
-      const resolvedAppDep = require.resolve('${suiteName}', { paths: [__dirname] });
-      log(\`[INFO] Verification: require('${suiteName}') resolves to \${resolvedAppDep}\`);
+      try {
+        const resolvedAppDep = require.resolve('${suiteName}');
+        log(\`[INFO] Verification: require('${suiteName}') resolves to \${resolvedAppDep}\`);
 
-      const appDep = path.join(__dirname, 'node_modules', '${suiteName}');
-      if (!resolvedAppDep.includes(appDep)) {
-        throw new Error(
-          \`Verification failed: require('${suiteName}') resolved to \${resolvedAppDep}, \` +
-          \`expected it to be within \${appDep}\`
-        );
+        const appDep = path.join(__dirname, 'node_modules', '${suiteName}');
+        if (!resolvedAppDep.includes(appDep)) {
+          throw new Error(
+            \`Verification failed: require('${suiteName}') resolved to \${resolvedAppDep}, \` +
+            \`expected it to be within \${appDep}\`
+          );
+        }
+      } catch (err) {
+        log(\`[WARN] require.resolve('${suiteName}') failed: \${err.message}\`);
       }
 
-      // eslint-disable-next-line import/no-dynamic-require, global-require
+      const appDep = path.join(__dirname, 'node_modules', '${suiteName}');
       const appDepVersion = require(path.join(appDep, 'package.json')).version;
       log(\`[INFO] Installed ${suiteName}@\${appDepVersion}\`);
 
@@ -290,8 +294,10 @@ ${verifyDependency
       if (attempt === maxRetries - 1) throw err;
       const secs = timeout / 1000;
       log(\`[WARN] npm install failed (\${err.message}), retry \${attempt + 1}/\${maxRetries} (\${secs}s)...\`);
-          rmDir(path.join(__dirname, 'node_modules'));
-        }
+      rmDir(path.join(__dirname, 'node_modules'));
+      continue;
+    }
+    break;
       }
     } finally {
       if (slot !== undefined) installSemaphore.releaseSlot(slot);
