@@ -166,15 +166,17 @@ function cleanupCopiedFiles(files) {
   console.log('[ChildProcess] Cleanup finished');
 }
 
-${esmOnly
-      ? `if (!process.env.RUN_ESM) {
+${
+  esmOnly
+    ? `if (!process.env.RUN_ESM) {
   it.skip('tracing/${suiteName}@${displayVersion} (ESM-only, set RUN_ESM=true)');
   return;
 }
 
 `
-      : ''
-    }${nodeConstraint
+    : ''
+}${
+    nodeConstraint
       ? `// eslint-disable-next-line global-require
 if (!require('semver').satisfies(process.versions.node, '${nodeConstraint}')) {
   it.skip('tracing/${suiteName}@${displayVersion} skipped (requires node ${nodeConstraint})');
@@ -183,11 +185,11 @@ if (!require('semver').satisfies(process.versions.node, '${nodeConstraint}')) {
 
 `
       : ''
-    }function log(msg) { console.log(\`[\${new Date().toISOString()}] \${msg}\`); }
+  }function log(msg) { console.log(\`[\${new Date().toISOString()}] \${msg}\`); }
 
 const esmPrefix = process.env.RUN_ESM ? '[ESM] ' : '';
 const ts = new Date().toISOString();
-const suiteTitle = esmPrefix + \`[\${ts}] tracing/${suiteName}@${displayVersion}${mode ? ` (${mode})` : ''}\`;
+const suiteTitle = \`\${esmPrefix}[\${ts}] tracing/${suiteName}@${displayVersion}${mode ? ` (${mode})` : ''}\`;
 mochaSuiteFn(suiteTitle, function () {
   this.timeout(config.getTestTimeout() * 10);
   rmDir(path.join(__dirname, 'node_modules'));
@@ -236,20 +238,22 @@ mochaSuiteFn(suiteTitle, function () {
         '--no-package-lock --no-audit --prefix ./ --no-progress' :
         'npm install --no-package-lock --no-audit --prefix ./ --no-progress';
 
-  for (let attempt = 0; attempt < maxRetries; attempt++) {${isOptional
+  for (let attempt = 0; attempt < maxRetries; attempt++) {${
+    isOptional
       ? `
         const timeout = 5 * 60 * 1000;`
       : `
         const timeout = (120 + attempt * 30) * 1000;`
-    }
+  }
     try {
-      execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });${isOptional
-      ? `
+      execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });${
+        isOptional
+          ? `
           if (!fs.existsSync(path.join(__dirname, 'node_modules', '${suiteName}'))) {
             throw new Error('${suiteName} not found after install');
           }`
-      : ''
-    }
+          : ''
+      }
       break;
     } catch (err) {
       if (
