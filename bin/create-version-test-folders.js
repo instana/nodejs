@@ -253,21 +253,24 @@ mochaSuiteFn(suiteTitle, function () {
     }
 ${verifyDependency
       ? `
-      const appDep = path.join(__dirname, 'node_modules', '${suiteName}');
-      if (!fs.existsSync(appDep)) {
-        throw new Error(\`Installing ${suiteName} failed - directory not found: \${appDep}\`);
-      }
-      // eslint-disable-next-line import/no-dynamic-require, global-require
-      const appDepVersion = require(path.join(appDep, 'package.json')).version;
-      log(\`[INFO] Installed ${suiteName}@\${appDepVersion}\`);
-
-      const resolvedAppDep = require.resolve('${suiteName}');
+      const resolvedAppDep = require.resolve('${suiteName}', { paths: [__dirname] });
       log(\`[INFO] Verification: require('${suiteName}') resolves to \${resolvedAppDep}\`);
 
+      const appDep = path.join(__dirname, 'node_modules', '${suiteName}');
       if (!resolvedAppDep.includes(appDep)) {
         throw new Error(
           \`Verification failed: require('${suiteName}') resolved to \${resolvedAppDep}, \` +
           \`expected it to be within \${appDep}\`
+        );
+      }
+
+      // eslint-disable-next-line import/no-dynamic-require, global-require
+      const appDepVersion = require(path.join(appDep, 'package.json')).version;
+      log(\`[INFO] Installed ${suiteName}@\${appDepVersion}\`);
+
+      if (appDepVersion !== '${rawVersion}') {
+        throw new Error(
+          \`Installed version \${appDepVersion} does not match expected version ${rawVersion}\`
         );
       }
 `
