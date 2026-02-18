@@ -98,7 +98,8 @@ function generateTestWrapper({
   mode,
   sourceDepth,
   nodeConstraint,
-  isOptional
+  isOptional,
+  verifyDependency
 }) {
   const currentYear = new Date().getFullYear();
   const relSourcePath = sourceDepth === 2 ? '../..' : '..';
@@ -166,17 +167,15 @@ function cleanupCopiedFiles(files) {
   console.log('[ChildProcess] Cleanup finished');
 }
 
-${
-  esmOnly
-    ? `if (!process.env.RUN_ESM) {
+${esmOnly
+      ? `if (!process.env.RUN_ESM) {
   it.skip('tracing/${suiteName}@${displayVersion} (ESM-only, set RUN_ESM=true)');
   return;
 }
 
 `
-    : ''
-}${
-    nodeConstraint
+      : ''
+    }${nodeConstraint
       ? `// eslint-disable-next-line global-require
 if (!require('semver').satisfies(process.versions.node, '${nodeConstraint}')) {
   it.skip('tracing/${suiteName}@${displayVersion} skipped (requires node ${nodeConstraint})');
@@ -185,7 +184,7 @@ if (!require('semver').satisfies(process.versions.node, '${nodeConstraint}')) {
 
 `
       : ''
-  }function log(msg) { console.log(\`[\${new Date().toISOString()}] \${msg}\`); }
+    }function log(msg) { console.log(\`[\${new Date().toISOString()}] \${msg}\`); }
 
 const esmPrefix = process.env.RUN_ESM ? '[ESM] ' : '';
 const ts = new Date().toISOString();
@@ -238,23 +237,42 @@ mochaSuiteFn(suiteTitle, function () {
         '--no-package-lock --no-audit --prefix ./ --no-progress' :
         'npm install --no-package-lock --no-audit --prefix ./ --no-progress';
 
-  for (let attempt = 0; attempt < maxRetries; attempt++) {${
-    isOptional
+  for (let attempt = 0; attempt < maxRetries; attempt++) {${isOptional
       ? `
         const timeout = 5 * 60 * 1000;`
       : `
         const timeout = (120 + attempt * 30) * 1000;`
-  }
+    }
     try {
-      execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });${
-        isOptional
-          ? `
+      execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });${isOptional
+      ? `
           if (!fs.existsSync(path.join(__dirname, 'node_modules', '${suiteName}'))) {
             throw new Error('${suiteName} not found after install');
           }`
-          : ''
+      : ''
+    }
+${verifyDependency
+      ? `
+      const appDep = path.join(__dirname, 'node_modules', '${suiteName}');
+      if (!fs.existsSync(appDep)) {
+        throw new Error(\`Installing ${suiteName} failed - directory not found: \${appDep}\`);
       }
-      break;
+      // eslint-disable-next-line import/no-dynamic-require, global-require
+      const appDepVersion = require(path.join(appDep, 'package.json')).version;
+      log(\`[INFO] Installed ${suiteName}@\${appDepVersion}\`);
+
+      const resolvedAppDep = require.resolve('${suiteName}');
+      log(\`[INFO] Verification: require('${suiteName}') resolves to \${resolvedAppDep}\`);
+
+      if (!resolvedAppDep.includes(appDep)) {
+        throw new Error(
+          \`Verification failed: require('${suiteName}') resolved to \${resolvedAppDep}, \` +
+          \`expected it to be within \${appDep}\`
+        );
+      }
+`
+      : ''
+    }      break;
     } catch (err) {
       if (
         isCleaning ||
@@ -399,7 +417,8 @@ function main() {
             mode,
             sourceDepth: hasModes ? 2 : 1,
             nodeConstraint,
-            isOptional
+            isOptional,
+            verifyDependency: true
           });
           const fileName = mode ? `${mode}.test.js` : 'default.test.js';
           fs.writeFileSync(path.join(targetDir, fileName), testContent);
@@ -439,7 +458,8 @@ function main() {
       isLatest: true,
       esmOnly: false,
       mode: null,
-      sourceDepth: 1
+      sourceDepth: 1,
+      verifyDependency: false
     });
     fs.writeFileSync(path.join(versionDir, 'default.test.js'), testContent);
 

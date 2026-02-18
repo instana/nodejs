@@ -46,6 +46,8 @@ if (!isCI()) {
     log('[INFO] Test folders out of date — regenerating...');
     execSync('node bin/create-version-test-folders.js', { cwd: rootDir, stdio: 'inherit' });
     fs.writeFileSync(checksumPath, currentHash);
+  } else {
+    log('[INFO] Test folders up to date, skipping generation.');
   }
 }
 
