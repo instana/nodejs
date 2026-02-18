@@ -272,7 +272,7 @@ ${verifyDependency
       const appDepVersion = require(path.join(appDep, 'package.json')).version;
       log(\`[INFO] Installed ${suiteName}@\${appDepVersion}\`);
 
-      if (appDepVersion !== '${rawVersion}') {
+      if (appDepVersion.replace(/^v/, '') !== '${rawVersion}'.replace(/^v/, '')) {
         throw new Error(
           \`Installed version \${appDepVersion} does not match expected version ${rawVersion}\`
         );
