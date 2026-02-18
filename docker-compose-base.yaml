@@ -138,7 +138,7 @@ services:
     restart: "no"
 
   mysql:
-    image: mysql:8.0.26
+    image: public.ecr.aws/docker/library/mysql:8.0.26
     platform: linux/amd64
     ports:
       - 3306:3306
