@@ -323,16 +323,17 @@ function createTgzSymlinks(targetDir) {
 function mergeTemplate(target, templatePath) {
   if (!templatePath || !fs.existsSync(templatePath)) return;
   const template = JSON.parse(fs.readFileSync(templatePath, 'utf8'));
-  for (const [key, value] of Object.entries(template)) {
+  Object.entries(template).forEach(([key, value]) => {
     if (typeof value === 'object' && !Array.isArray(value) && typeof target[key] === 'object') {
       Object.assign(target[key], value);
     } else {
       target[key] = value;
     }
-  }
+  });
 }
 
-function generatePackageJson({ testDir, versionDir, pkgName, currencyName, currencyVersion, isOptional, majorVersion }) {
+function generatePackageJson(opts) {
+  const { testDir, versionDir, pkgName, currencyName, currencyVersion, isOptional, majorVersion } = opts;
   const packageJsonTemplatePath = path.join(testDir, 'package.json.template');
   const packageJsonPath = path.join(testDir, 'package.json');
   let versionPackageJson = { name: pkgName };
