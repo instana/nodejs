@@ -254,12 +254,16 @@ ${
   verifyDependency
     ? `
       const appDep = path.join(__dirname, 'node_modules', '${suiteName}');
-      if (!fs.existsSync(path.join(appDep, 'package.json'))) {
-        throw new Error(\`Verification failed: \${appDep}/package.json not found\`);
+      const resolved = require.resolve('${suiteName}/package.json');
+      if (!resolved.startsWith(appDep)) {
+        throw new Error(
+          \`Verification failed: ${suiteName}/package.json resolved to \${resolved}, \` +
+          \`expected it within \${appDep}\`
+        );
       }
-      log(\`[INFO] Path validation successful: ${suiteName} is installed in \${appDep}\`);
+      log(\`[INFO] Path validation successful: \${resolved}\`);
 
-      const appDepVersion = require(path.join(appDep, 'package.json')).version;
+      const appDepVersion = require(resolved).version;
 
       if (appDepVersion.replace(/^v/, '') !== '${rawVersion}'.replace(/^v/, '')) {
         throw new Error(
@@ -293,8 +297,6 @@ ${
     } finally {
       if (slot !== undefined) installSemaphore.releaseSlot(slot);
     }
-
-    log('[INFO] Done setting up dependencies for ${suiteName}@${displayVersion}');
   });
 
   // eslint-disable-next-line global-require,import/no-dynamic-require,import/extensions
