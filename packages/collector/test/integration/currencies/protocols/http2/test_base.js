@@ -29,10 +29,7 @@ module.exports = function (name, version, isLatest) {
 
   before(async () => {
     await agentControls.startAgent({
-      extraHeaders: [
-        'X-My-Request-Header',
-        'X-My-Response-Header'
-      ],
+      extraHeaders: ['X-My-Request-Header', 'X-My-Response-Header'],
       secretsList: ['remove']
     });
 
@@ -91,11 +88,7 @@ module.exports = function (name, version, isLatest) {
           const responsePayload = JSON.parse(res.body);
           expect(responsePayload.message).to.equal('Ohai HTTP2!');
 
-          return retry(() =>
-            agentControls
-              .getSpans()
-              .then(spans => verifySpans(spans, 'GET', false, withQuery))
-          );
+          return retry(() => agentControls.getSpans().then(spans => verifySpans(spans, 'GET', false, withQuery)));
         }));
   });
 
@@ -113,11 +106,7 @@ module.exports = function (name, version, isLatest) {
           const responsePayload = JSON.parse(res.body);
           expect(responsePayload.message).to.equal('Ohai HTTP2!');
 
-          return retry(() =>
-            agentControls
-              .getSpans()
-              .then(spans => verifySpans(spans, method, false, false))
-          );
+          return retry(() => agentControls.getSpans().then(spans => verifySpans(spans, method, false, false)));
         }));
   });
 
@@ -134,9 +123,7 @@ module.exports = function (name, version, isLatest) {
         const responsePayload = JSON.parse(res.body);
         expect(responsePayload.message).to.equal('Oops!');
 
-        return retry(() =>
-          agentControls.getSpans().then(spans => verifySpans(spans, 'GET', true, false))
-        );
+        return retry(() => agentControls.getSpans().then(spans => verifySpans(spans, 'GET', true, false)));
       }));
 
   it('must suppress', () =>
@@ -276,7 +263,7 @@ module.exports = function (name, version, isLatest) {
 
     it(
       'must not append another key-value pair when the (string) Server-Timing header already has intid: ' +
-      'Custom server-timing string',
+        'Custom server-timing string',
       () =>
         serverControls
           .sendRequest({
@@ -291,7 +278,7 @@ module.exports = function (name, version, isLatest) {
 
     it(
       'must not append another key-value pair when the (array) Server-Timing header already has intid: ' +
-      'Custom server-timing string',
+        'Custom server-timing string',
       () =>
         serverControls
           .sendRequest({
@@ -471,7 +458,13 @@ module.exports = function (name, version, isLatest) {
   }
 
   function verifyRootHttpEntry({
-    spans, host, url, method = 'GET', status = 200, erroneous = false, synthetic = false
+    spans,
+    host,
+    url,
+    method = 'GET',
+    status = 200,
+    erroneous = false,
+    synthetic = false
   }) {
     return verifyHttpEntry({
       spans,
@@ -487,7 +480,15 @@ module.exports = function (name, version, isLatest) {
   }
 
   function verifyHttpEntry({
-    spans, parent, host, url, method = 'GET', expectHeaders = true, status = 200, erroneous = false, synthetic = false
+    spans,
+    parent,
+    host,
+    url,
+    method = 'GET',
+    expectHeaders = true,
+    status = 200,
+    erroneous = false,
+    synthetic = false
   }) {
     let expectations = [
       span => expect(span.n).to.equal('node.http.server'),
@@ -533,8 +534,15 @@ module.exports = function (name, version, isLatest) {
   }
 
   function verifyHttpExit({
-    spans, parent, url, method = 'GET', expectHeaders = true, status = 200,
-    erroneous = false, synthetic = false, params = null
+    spans,
+    parent,
+    url,
+    method = 'GET',
+    expectHeaders = true,
+    status = 200,
+    erroneous = false,
+    synthetic = false,
+    params = null
   }) {
     let expectations = [
       span => expect(span.n).to.equal('node.http.client'),

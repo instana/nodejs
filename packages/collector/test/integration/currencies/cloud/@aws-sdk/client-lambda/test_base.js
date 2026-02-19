@@ -29,7 +29,7 @@ async function start() {
   this.timeout(config.getTestTimeout() * 20);
 
   if (!supportedVersion(process.versions.node)) {
-    it.skip('unsupported node version', () => { });
+    it.skip('unsupported node version', () => {});
     return;
   }
   const { isLocalStackDisabled } = require('./utils');

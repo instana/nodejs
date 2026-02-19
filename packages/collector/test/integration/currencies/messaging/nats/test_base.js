@@ -130,7 +130,7 @@ module.exports = function (name, version, isLatest) {
 
         it(
           `must record an exit span for nats.${publishMethod} ` +
-          `(callback: ${withCallback}, reply: ${withReply}, error: ${withError})`,
+            `(callback: ${withCallback}, reply: ${withReply}, error: ${withError})`,
           () => {
             publishMethod = publishMethod === 'requestOne' ? 'request' : publishMethod;
             const url = queryParams ? `/${publishMethod}?${queryParams}` : `/${publishMethod}`;
@@ -144,9 +144,7 @@ module.exports = function (name, version, isLatest) {
               .then(res => {
                 if (withError) {
                   if (typeof res === 'string') {
-                    !isV2
-                      ? expect(res).to.equal('Subject must be supplied')
-                      : expect(res).to.equal('BAD_SUBJECT');
+                    !isV2 ? expect(res).to.equal('Subject must be supplied') : expect(res).to.equal('BAD_SUBJECT');
                   } else if (typeof res === 'object') {
                     expect(res.code).to.equal('NatsError: BAD_SUBJECT');
                     expect(res.message).to.equal('NatsError: Subject must be supplied');
@@ -199,11 +197,9 @@ module.exports = function (name, version, isLatest) {
 
                       !isV2
                         ? expectations.push(span =>
-                          expect(span.data.nats.error).to.equal('NatsError: Subject must be supplied')
-                        )
-                        : expectations.push(span =>
-                          expect(span.data.nats.error).to.equal('NatsError: BAD_SUBJECT')
-                        );
+                            expect(span.data.nats.error).to.equal('NatsError: Subject must be supplied')
+                          )
+                        : expectations.push(span => expect(span.data.nats.error).to.equal('NatsError: BAD_SUBJECT'));
                     } else {
                       expectations.push(span => expect(span.ec).to.equal(0));
                       expectations.push(span => expect(span.data.nats.error).to.not.exist);
@@ -236,10 +232,7 @@ module.exports = function (name, version, isLatest) {
       });
 
       function testSubscribe(withError) {
-        const queryParams = [
-          'subscribeTest=true',
-          withError ? 'withError=yes' : null
-        ]
+        const queryParams = ['subscribeTest=true', withError ? 'withError=yes' : null]
           .filter(param => !!param)
           .join('&');
 
@@ -348,9 +341,7 @@ module.exports = function (name, version, isLatest) {
 
                   const expectations = [
                     span =>
-                      isV2
-                        ? expect(span.t).to.equal(httpEntrySpan.t)
-                        : expect(span.t).to.not.equal(httpEntrySpan.t),
+                      isV2 ? expect(span.t).to.equal(httpEntrySpan.t) : expect(span.t).to.not.equal(httpEntrySpan.t),
                     span => (isV2 ? expect(span.p).to.exist : expect(span.p).to.not.exist),
                     span => expect(span.k).to.equal(constants.ENTRY),
                     span => expect(span.n).to.equal('nats'),
@@ -381,9 +372,7 @@ module.exports = function (name, version, isLatest) {
                     span => expect(span.n).to.equal('node.http.client'),
                     span => expect(span.f.e).to.equal(String(subscriberControls.getPid())),
                     span =>
-                      isV2
-                        ? expect(span.t).to.equal(httpEntrySpan.t)
-                        : expect(span.t).to.not.equal(httpEntrySpan.t),
+                      isV2 ? expect(span.t).to.equal(httpEntrySpan.t) : expect(span.t).to.not.equal(httpEntrySpan.t),
                     span => expect(span.p).to.equal(natsEntry.s)
                   ]);
                 });

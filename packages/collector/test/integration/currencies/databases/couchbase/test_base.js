@@ -150,7 +150,7 @@ module.exports = function (name, version, isLatest, mode) {
 
   // TODO: https://jsw.ibm.com/browse/INSTA-57559
   if (isCI()) {
-    it.skip('Skipping couchbase tests due to random failures', () => { });
+    it.skip('Skipping couchbase tests due to random failures', () => {});
     return;
   }
 

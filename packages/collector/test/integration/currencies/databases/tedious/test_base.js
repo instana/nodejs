@@ -6,12 +6,7 @@
 
 const expect = require('chai').expect;
 const config = require('@_local/core/test/config');
-const {
-  retry,
-  verifyHttpRootEntry,
-  verifyExitSpan,
-  delay
-} = require('@_local/core/test/test_util');
+const { retry, verifyHttpRootEntry, verifyExitSpan, delay } = require('@_local/core/test/test_util');
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 const globalAgent = require('@_local/collector/test/globalAgent');
 

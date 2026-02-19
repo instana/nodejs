@@ -244,7 +244,7 @@ module.exports = function (libraryEnv) {
 
           it(
             `consecutive receiveMessage calls via ${sqsReceiveMethod} in the same event loop tick should not ` +
-            'trigger a warning',
+              'trigger a warning',
             async () => {
               retry(async () => {
                 const numberOfMessagePolls = await receiverControls.sendRequest({

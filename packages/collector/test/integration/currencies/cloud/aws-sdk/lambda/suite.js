@@ -106,7 +106,8 @@ module.exports = function (libraryEnv) {
           pid: String(controls.getPid()),
           extraTests: [
             span => expect(span.data[SPAN_NAME].function).to.equal(functionName),
-            span => expect(span.data[SPAN_NAME].type).to.equal(span.data[SPAN_NAME].type ? 'RequestResponse' : undefined),
+            span =>
+              expect(span.data[SPAN_NAME].type).to.equal(span.data[SPAN_NAME].type ? 'RequestResponse' : undefined),
             span => {
               if (operation === 'invoke' && !withError) {
                 const clientContextString = Buffer.from(response.data.clientContext || '', 'base64').toString();

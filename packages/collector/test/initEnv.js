@@ -62,7 +62,8 @@ if (process.env.SKIP_TGZ !== 'true') {
 
     let needsTgzRegen = true;
     try {
-      needsTgzRegen = fs.readFileSync(tgzChecksumPath, 'utf8').trim() !== tgzHash || !fs.existsSync(preinstalledArchive);
+      needsTgzRegen =
+        fs.readFileSync(tgzChecksumPath, 'utf8').trim() !== tgzHash || !fs.existsSync(preinstalledArchive);
     } catch (_) {
       // first run
     }
@@ -158,12 +159,20 @@ function acquireLock(lockPath, callback, isStillNeeded) {
 
         if (lockAge > lockTimeout) {
           log('[WARN] Removing stale lock file');
-          try { fs.unlinkSync(lockPath); } catch (_) { /* already removed */ }
+          try {
+            fs.unlinkSync(lockPath);
+          } catch (_) {
+            /* already removed */
+          }
           continue;
         }
       } catch (err) {
         if (err instanceof SyntaxError) {
-          try { fs.unlinkSync(lockPath); } catch (_) { /* already removed */ }
+          try {
+            fs.unlinkSync(lockPath);
+          } catch (_) {
+            /* already removed */
+          }
           continue;
         }
         throw err;
@@ -195,7 +204,9 @@ function acquireLock(lockPath, callback, isStillNeeded) {
       try {
         fs.unlinkSync(lockPath);
         log('[INFO] Lock released.');
-      } catch (_) { /* already removed */ }
+      } catch (_) {
+        /* already removed */
+      }
     }
 
     return;

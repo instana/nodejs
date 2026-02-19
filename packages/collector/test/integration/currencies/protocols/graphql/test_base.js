@@ -797,12 +797,12 @@ function checkSubscriptionUpdatesAndSpans(client1, client2, triggerUpdateVia) {
     const msg1 = receivedUpdatesClient1[0];
     expect(msg1).to.equal(
       'character updated: ' +
-      '{"data":{"characterUpdated":{"id":"1","name":"Updated Name","profession":"Updated Profession"}}}'
+        '{"data":{"characterUpdated":{"id":"1","name":"Updated Name","profession":"Updated Profession"}}}'
     );
     const msg2 = receivedUpdatesClient2[0];
     expect(msg2).to.equal(
       'character updated: ' +
-      '{"data":{"characterUpdated":{"id":"1","name":"Updated Name","profession":"Updated Profession"}}}'
+        '{"data":{"characterUpdated":{"id":"1","name":"Updated Name","profession":"Updated Profession"}}}'
     );
 
     return agentControls.getSpans().then(spans => {

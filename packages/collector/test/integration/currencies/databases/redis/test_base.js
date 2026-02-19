@@ -176,8 +176,7 @@ module.exports = function (name, version, isLatest, mode) {
       controls = new ProcessControls({
         dirname: __dirname,
         useGlobalAgent: true,
-        appName:
-          isLegacyVersion ? 'legacyApp' : 'app',
+        appName: isLegacyVersion ? 'legacyApp' : 'app',
         env: {
           LIBRARY_LATEST: isLatest,
           LIBRARY_VERSION: version,
@@ -551,12 +550,10 @@ module.exports = function (name, version, isLatest, mode) {
                   span => verifyConnection(mode, span),
                   span =>
                     isV3
-                      ? expect(span.data.redis.error).to.contain(
-                        "ERR wrong number of arguments for 'hget' command"
-                      )
+                      ? expect(span.data.redis.error).to.contain("ERR wrong number of arguments for 'hget' command")
                       : expect(span.data.redis.error).to.contain(
-                        'EXECABORT Transaction discarded because of previous errors.'
-                      ),
+                          'EXECABORT Transaction discarded because of previous errors.'
+                        ),
                   span => expect(span.data.redis.command).to.equal('multi'),
                   span =>
                     isLegacyVersion
@@ -955,10 +952,7 @@ module.exports = function (name, version, isLatest, mode) {
         controls = new ProcessControls({
           agentControls: customAgentControls,
           dirname: __dirname,
-          appName:
-            isLegacyVersion
-              ? 'legacyApp'
-              : 'app',
+          appName: isLegacyVersion ? 'legacyApp' : 'app',
           env: {
             LIBRARY_LATEST: isLatest,
             LIBRARY_VERSION: version,
@@ -1010,10 +1004,7 @@ module.exports = function (name, version, isLatest, mode) {
         controls = new ProcessControls({
           dirname: __dirname,
           useGlobalAgent: true,
-          appName:
-            isLegacyVersion
-              ? 'legacyApp'
-              : 'app',
+          appName: isLegacyVersion ? 'legacyApp' : 'app',
           env: {
             LIBRARY_LATEST: isLatest,
             LIBRARY_VERSION: version,
@@ -1117,10 +1108,7 @@ module.exports = function (name, version, isLatest, mode) {
         controls = new ProcessControls({
           dirname: __dirname,
           useGlobalAgent: true,
-          appName:
-            isLegacyVersion
-              ? 'legacyApp'
-              : 'app',
+          appName: isLegacyVersion ? 'legacyApp' : 'app',
           env: {
             LIBRARY_LATEST: isLatest,
             LIBRARY_VERSION: version,
@@ -1207,10 +1195,7 @@ module.exports = function (name, version, isLatest, mode) {
           controls = new ProcessControls({
             dirname: __dirname,
             useGlobalAgent: true,
-            appName:
-              isLegacyVersion
-                ? 'legacyApp'
-                : 'app',
+            appName: isLegacyVersion ? 'legacyApp' : 'app',
             env: {
               LIBRARY_LATEST: isLatest,
               LIBRARY_VERSION: version,

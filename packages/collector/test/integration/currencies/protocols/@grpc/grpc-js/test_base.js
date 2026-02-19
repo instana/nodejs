@@ -109,8 +109,7 @@ module.exports = function (name, version, isLatest) {
     it('must mark bidi streaming as erroneous', () =>
       runTest('/bidi-stream', serverControls, clientControls, null, false, true));
 
-    it('must cancel bidi streaming', () =>
-      runTest('/bidi-stream', serverControls, clientControls, null, true, false));
+    it('must cancel bidi streaming', () => runTest('/bidi-stream', serverControls, clientControls, null, true, false));
   });
 
   describe('suppressed', function () {
@@ -333,7 +332,10 @@ module.exports = function (name, version, isLatest) {
 
   function checkTrace(serverControls, clientControls, spans, url, cancel, erroneous) {
     const httpEntry = expectExactlyOneMatching(spans, checkHttpEntry({ url }));
-    const grpcExit = expectExactlyOneMatching(spans, checkGrpcClientSpan({ httpEntry, clientControls, url, erroneous }));
+    const grpcExit = expectExactlyOneMatching(
+      spans,
+      checkGrpcClientSpan({ httpEntry, clientControls, url, erroneous })
+    );
 
     if (!cancel || url === '/server-stream' || url === '/bidi-stream') {
       const grpcEntry = expectExactlyOneMatching(

@@ -1,6 +1,6 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+'use strict';
+Object.defineProperty(exports, '__esModule', { value: true });
 require('@instana/collector')();
-const app_1 = require("./app");
+const app_1 = require('./app');
 const port = require('@_local/collector/test/test_util/app-port')();
 app_1.app.listen(port, () => console.log(`Example app listening at http://localhost:${port}`));

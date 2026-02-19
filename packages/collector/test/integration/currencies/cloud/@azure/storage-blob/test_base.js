@@ -39,12 +39,10 @@ function start() {
   const connStr = `DefaultEndpointsProtocol=https;AccountName=${storageAccount};AccountKey=${accountKey};${endPoint}`;
 
   // Resolve @azure/storage-blob from the version folder's node_modules
-  const inVersionDir = path.basename(__dirname).startsWith('_v')
-    || path.basename(path.dirname(__dirname)).startsWith('_v');
+  const inVersionDir =
+    path.basename(__dirname).startsWith('_v') || path.basename(path.dirname(__dirname)).startsWith('_v');
   const versionBase = inVersionDir ? __dirname : path.join(__dirname, `_v${libraryEnv.LIBRARY_VERSION}`);
-  const versionRequire = createRequire(
-    path.join(versionBase, 'package.json')
-  );
+  const versionRequire = createRequire(path.join(versionBase, 'package.json'));
   const { BlobServiceClient } = versionRequire('@azure/storage-blob');
 
   const blobServiceClient = BlobServiceClient.fromConnectionString(connStr);
@@ -405,9 +403,7 @@ function start() {
         span => expect(span.ec).to.equal(withError ? 1 : 0),
         span => expect(span.data).to.exist,
         span =>
-          withError
-            ? expect(span.data[spanName].error).to.exist
-            : expect(span.data[spanName].error).to.be.undefined,
+          withError ? expect(span.data[spanName].error).to.exist : expect(span.data[spanName].error).to.be.undefined,
         span => expect(span.data[dataProperty || spanName]).to.be.an('object'),
         span => expect(span.data[dataProperty || spanName].accountName).to.exist,
         span => expect(span.data[dataProperty || spanName].blobName).to.exist,

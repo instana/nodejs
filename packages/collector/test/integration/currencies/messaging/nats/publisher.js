@@ -204,9 +204,7 @@ app.post('/request', async (req, res) => {
   };
 
   const natsPublishMethod =
-    requestOne && !IS_LATEST
-      ? natsClient.requestOne.bind(natsClient)
-      : natsClient.request.bind(natsClient);
+    requestOne && !IS_LATEST ? natsClient.requestOne.bind(natsClient) : natsClient.request.bind(natsClient);
 
   if (withError) {
     try {

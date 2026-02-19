@@ -75,12 +75,12 @@ async function connect() {
   log('Creating stored procedure');
   await new sql.Request().batch(
     `CREATE PROCEDURE ${procedureName}` +
-    '    @username nvarchar(40) ' +
-    'AS' +
-    '    SET NOCOUNT ON;' +
-    '    SELECT name, email' +
-    `    FROM ${userTable}` +
-    '    WHERE name = @username;'
+      '    @username nvarchar(40) ' +
+      'AS' +
+      '    SET NOCOUNT ON;' +
+      '    SELECT name, email' +
+      `    FROM ${userTable}` +
+      '    WHERE name = @username;'
   );
   log('Created stored procedure');
   preparedStatementGlobal = new sql.PreparedStatement();

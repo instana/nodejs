@@ -444,7 +444,8 @@ module.exports = function (name, version, isLatest) {
                     span => expect(span.f.e).to.equal(String(controls.getPid())),
                     span => expect(span.f.h).to.equal('agent-stub-uuid'),
                     span => expect(span.data.db2.stmt).to.equal(`SELECT * FROM ${TABLE_NAME_1}`),
-                    span => expect(span.data.db2.dsn).to.equal(`${EXPECTED_DB2_CONN_STR};DATABASE=${DB2_DATABASE_NAME}`),
+                    span =>
+                      expect(span.data.db2.dsn).to.equal(`${EXPECTED_DB2_CONN_STR};DATABASE=${DB2_DATABASE_NAME}`),
                     span => expect(span.async).to.not.exist,
                     span =>
                       expect(span.data.db2.error).to.eql(
@@ -548,7 +549,8 @@ module.exports = function (name, version, isLatest) {
                       expect(span.data.db2.stmt).to.equal(
                         `insert into ${TABLE_NAME_1} (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`
                       ),
-                    span => expect(span.data.db2.dsn).to.equal(`${EXPECTED_DB2_CONN_STR};DATABASE=${DB2_DATABASE_NAME}`),
+                    span =>
+                      expect(span.data.db2.dsn).to.equal(`${EXPECTED_DB2_CONN_STR};DATABASE=${DB2_DATABASE_NAME}`),
                     span => expect(span.async).to.not.exist,
                     span => expect(span.data.db2.error).to.not.exist,
                     span => expect(span.ec).to.equal(0)
@@ -580,7 +582,8 @@ module.exports = function (name, version, isLatest) {
                     span => expect(span.f.h).to.equal('agent-stub-uuid'),
                     span =>
                       expect(span.data.db2.stmt).to.equal(`insert into ${TABLE_NAME_1} values (3, null, 'something')`),
-                    span => expect(span.data.db2.dsn).to.equal(`${EXPECTED_DB2_CONN_STR};DATABASE=${DB2_DATABASE_NAME}`),
+                    span =>
+                      expect(span.data.db2.dsn).to.equal(`${EXPECTED_DB2_CONN_STR};DATABASE=${DB2_DATABASE_NAME}`),
                     span => expect(span.async).to.not.exist,
                     span => expect(span.data.db2.error).to.not.exist,
                     span => expect(span.ec).to.equal(0)

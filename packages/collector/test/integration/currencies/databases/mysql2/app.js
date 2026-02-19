@@ -180,9 +180,7 @@ app.post('/error', (req, res) => {
 });
 
 app.listen(port, () => {
-  log(
-    `Listening on port: ${port} (driver: mysql2, access: ${accessFunction}, promises: ${usePromises})`
-  );
+  log(`Listening on port: ${port} (driver: mysql2, access: ${accessFunction}, promises: ${usePromises})`);
 });
 
 function fetchValues(req, res) {

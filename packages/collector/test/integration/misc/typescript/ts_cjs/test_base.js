@@ -17,83 +17,83 @@ module.exports = function () {
     this.timeout(config.getTestTimeout() * 5);
 
     describe('[CASE 1]', () => {
-    globalAgent.setUpCleanUpHooks();
-    const agentControls = globalAgent.instance;
+      globalAgent.setUpCleanUpHooks();
+      const agentControls = globalAgent.instance;
 
-    let controls;
+      let controls;
 
-    beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
-    });
-
-    before(async () => {
-      execSync('npm run build', { cwd: __dirname, stdio: 'inherit' });
-
-      controls = new ProcessControls({
-        dirname: __dirname,
-        appName: 'dist/app_1',
-        useGlobalAgent: true,
-        execArgv: ['--require', path.join(__dirname, 'node_modules', '@instana', 'collector', 'src', 'immediate.js')]
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
-      await controls.startAndWaitForAgentConnection();
-    });
+      before(async () => {
+        execSync('npm run build', { cwd: __dirname, stdio: 'inherit' });
 
-    after(async () => {
-      await controls.stop();
-    });
+        controls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'dist/app_1',
+          useGlobalAgent: true,
+          execArgv: ['--require', path.join(__dirname, 'node_modules', '@instana', 'collector', 'src', 'immediate.js')]
+        });
 
-    it('[app_1] should be able to load Instana SDK', async () => {
-      await controls.sendRequest({
-        method: 'GET',
-        path: '/request'
+        await controls.startAndWaitForAgentConnection();
       });
 
-      await testUtils.retry(async () => {
-        const spans = await controls.agentControls.getSpans();
-        expect(spans.length).to.equal(2);
-      });
-    });
-  });
-
-  describe('[CASE 2]', () => {
-    globalAgent.setUpCleanUpHooks();
-    const agentControls = globalAgent.instance;
-
-    let controls;
-
-    beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
-    });
-
-    before(async () => {
-      execSync('npm run build', { cwd: __dirname, stdio: 'inherit' });
-
-      controls = new ProcessControls({
-        dirname: __dirname,
-        appName: 'dist/app_2',
-        useGlobalAgent: true,
-        execArgv: ['--require', path.join(__dirname, 'node_modules', '@instana', 'collector', 'src', 'immediate.js')]
+      after(async () => {
+        await controls.stop();
       });
 
-      await controls.startAndWaitForAgentConnection();
-    });
+      it('[app_1] should be able to load Instana SDK', async () => {
+        await controls.sendRequest({
+          method: 'GET',
+          path: '/request'
+        });
 
-    after(async () => {
-      await controls.stop();
-    });
-
-    it('[app_2] should be able to load Instana SDK', async () => {
-      await controls.sendRequest({
-        method: 'GET',
-        path: '/request'
-      });
-
-      await testUtils.retry(async () => {
-        const spans = await controls.agentControls.getSpans();
-        expect(spans.length).to.equal(2);
+        await testUtils.retry(async () => {
+          const spans = await controls.agentControls.getSpans();
+          expect(spans.length).to.equal(2);
+        });
       });
     });
-  });
+
+    describe('[CASE 2]', () => {
+      globalAgent.setUpCleanUpHooks();
+      const agentControls = globalAgent.instance;
+
+      let controls;
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      before(async () => {
+        execSync('npm run build', { cwd: __dirname, stdio: 'inherit' });
+
+        controls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'dist/app_2',
+          useGlobalAgent: true,
+          execArgv: ['--require', path.join(__dirname, 'node_modules', '@instana', 'collector', 'src', 'immediate.js')]
+        });
+
+        await controls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await controls.stop();
+      });
+
+      it('[app_2] should be able to load Instana SDK', async () => {
+        await controls.sendRequest({
+          method: 'GET',
+          path: '/request'
+        });
+
+        await testUtils.retry(async () => {
+          const spans = await controls.agentControls.getSpans();
+          expect(spans.length).to.equal(2);
+        });
+      });
+    });
   });
 };

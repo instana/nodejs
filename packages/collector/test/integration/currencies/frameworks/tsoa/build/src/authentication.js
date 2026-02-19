@@ -1,11 +1,11 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+'use strict';
+Object.defineProperty(exports, '__esModule', { value: true });
 exports.expressAuthentication = void 0;
 class CustomError extends Error {
-    constructor(msg) {
-        super(msg);
-        this.status = 401;
-    }
+  constructor(msg) {
+    super(msg);
+    this.status = 401;
+  }
 }
 /*
 export function expressAuthentication(request: express.Request, securityName: string, scopes?: string[]): Promise<any> {
@@ -21,9 +21,9 @@ export function expressAuthentication(request: express.Request, securityName: st
 }
 */
 async function expressAuthentication(request, securityName, scopes) {
-    if (securityName === 'yyy') {
-        const err = new CustomError('no way');
-        throw err;
-    }
+  if (securityName === 'yyy') {
+    const err = new CustomError('no way');
+    throw err;
+  }
 }
 exports.expressAuthentication = expressAuthentication;

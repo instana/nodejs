@@ -47,7 +47,7 @@ module.exports = function (name, version, isLatest, mode) {
 
         describe(
           `kafkajs, ${useSendBatch ? 'sendBatch' : 'sendMessage'} => ` +
-          `${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`,
+            `${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`,
           () => {
             let producerControls;
             let consumerControls;
@@ -88,39 +88,40 @@ module.exports = function (name, version, isLatest, mode) {
               await resetMessages(consumerControls);
             });
 
-            it(`must trace sending and receiving and keep trace continuity, ${useSendBatch ? 'sendBatch' : 'sendMessage'
-              } => ${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`, async () => {
-                const parameters = {
+            it(`must trace sending and receiving and keep trace continuity, ${
+              useSendBatch ? 'sendBatch' : 'sendMessage'
+            } => ${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`, async () => {
+              const parameters = {
+                error,
+                useSendBatch,
+                useEachBatch
+              };
+
+              await producerControls.sendRequest({
+                method: 'POST',
+                path: '/send-messages',
+                simple: true,
+                body: JSON.stringify({
+                  key: 'someKey',
+                  value: 'someMessage',
                   error,
                   useSendBatch,
                   useEachBatch
-                };
-
-                await producerControls.sendRequest({
-                  method: 'POST',
-                  path: '/send-messages',
-                  simple: true,
-                  body: JSON.stringify({
-                    key: 'someKey',
-                    value: 'someMessage',
-                    error,
-                    useSendBatch,
-                    useEachBatch
-                  }),
-                  headers: {
-                    'Content-Type': 'application/json'
-                  }
-                });
-
-                await retry(async () => {
-                  const messages = await getMessages(consumerControls);
-                  checkMessages(messages, parameters);
-                  const spans = await agentControls.getSpans();
-                  const httpEntry = verifyHttpEntry(spans);
-                  verifyKafkaExits(spans, httpEntry, parameters);
-                  verifyFollowUpHttpExit(spans, httpEntry);
-                });
+                }),
+                headers: {
+                  'Content-Type': 'application/json'
+                }
               });
+
+              await retry(async () => {
+                const messages = await getMessages(consumerControls);
+                checkMessages(messages, parameters);
+                const spans = await agentControls.getSpans();
+                const httpEntry = verifyHttpEntry(spans);
+                verifyKafkaExits(spans, httpEntry, parameters);
+                verifyFollowUpHttpExit(spans, httpEntry);
+              });
+            });
 
             if (error === false) {
               // we do not need dedicated suppression tests for error conditions
@@ -165,7 +166,7 @@ module.exports = function (name, version, isLatest, mode) {
       [false, true].forEach(useSendBatch => {
         describe(
           `kafkajs, ${useSendBatch ? 'sendBatch' : 'sendMessage'} => ` +
-          `${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`,
+            `${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`,
           () => {
             let producerControls;
 
@@ -188,37 +189,38 @@ module.exports = function (name, version, isLatest, mode) {
               await producerControls.stop();
             });
 
-            it(`must trace attempts to send a message when an error happens in the producer (${useSendBatch ? 'sendBatch' : 'sendMessage'
-              }, error: ${error})`, async () => {
-                const parameters = {
+            it(`must trace attempts to send a message when an error happens in the producer (${
+              useSendBatch ? 'sendBatch' : 'sendMessage'
+            }, error: ${error})`, async () => {
+              const parameters = {
+                error,
+                useSendBatch,
+                useEachBatch
+              };
+
+              await producerControls.sendRequest({
+                method: 'POST',
+                path: '/send-messages',
+                simple: true,
+                body: JSON.stringify({
+                  key: 'someKey',
+                  value: 'someMessage',
                   error,
                   useSendBatch,
                   useEachBatch
-                };
-
-                await producerControls.sendRequest({
-                  method: 'POST',
-                  path: '/send-messages',
-                  simple: true,
-                  body: JSON.stringify({
-                    key: 'someKey',
-                    value: 'someMessage',
-                    error,
-                    useSendBatch,
-                    useEachBatch
-                  }),
-                  headers: {
-                    'Content-Type': 'application/json'
-                  }
-                });
-
-                await retry(async () => {
-                  const spans = await agentControls.getSpans();
-                  const httpEntry = verifyHttpEntry(spans);
-                  verifyKafkaExits(spans, httpEntry, parameters);
-                  verifyFollowUpHttpExit(spans, httpEntry);
-                });
+                }),
+                headers: {
+                  'Content-Type': 'application/json'
+                }
               });
+
+              await retry(async () => {
+                const spans = await agentControls.getSpans();
+                const httpEntry = verifyHttpEntry(spans);
+                verifyKafkaExits(spans, httpEntry, parameters);
+                verifyFollowUpHttpExit(spans, httpEntry);
+              });
+            });
           }
         );
       });
@@ -382,7 +384,7 @@ module.exports = function (name, version, isLatest, mode) {
 
       it(
         'must trace sending and receiving but will not keep trace continuity ' +
-        '(trace correlation disabled from agent config)',
+          '(trace correlation disabled from agent config)',
         async () => {
           await producerControls.sendRequest({
             method: 'POST',

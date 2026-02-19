@@ -863,7 +863,9 @@ module.exports = function (name, version, isLatest) {
                 span => expect(span.k).to.equal(constants.EXIT),
                 span => expect(span.data.http.header).to.exist,
                 span =>
-                  expect(span.data.http.header['x-my-exit-response-header']).to.equal('x-my-exit-response-header-value'),
+                  expect(span.data.http.header['x-my-exit-response-header']).to.equal(
+                    'x-my-exit-response-header-value'
+                  ),
                 span => expect(span.data.http.url).to.match(/\/request-only-opts/)
               ]);
             })
@@ -919,7 +921,8 @@ module.exports = function (name, version, isLatest) {
               expectExactlyOneMatching(spans, [
                 span => expect(span.n).to.equal('node.http.server'),
                 span => expect(span.k).to.equal(constants.ENTRY),
-                span => expect(span.data.http.url).to.eq('/matrix-params/ACDKey=1:00000:00000;ANI=00000111;DN=00000111'),
+                span =>
+                  expect(span.data.http.url).to.eq('/matrix-params/ACDKey=1:00000:00000;ANI=00000111;DN=00000111'),
                 span => expect(span.data.http.status).to.eq(200)
               ]);
             })
@@ -1101,7 +1104,15 @@ module.exports = function (name, version, isLatest) {
     return expectExactlyOneMatching(spans, expectations);
   }
 
-  function verifyHttpExit({ spans, parent, url = '/', method = 'GET', status = 200, synthetic = false, params = null }) {
+  function verifyHttpExit({
+    spans,
+    parent,
+    url = '/',
+    method = 'GET',
+    status = 200,
+    synthetic = false,
+    params = null
+  }) {
     return expectExactlyOneMatching(spans, [
       span => expect(span.n).to.equal('node.http.client'),
       span => expect(span.k).to.equal(constants.EXIT),
@@ -1117,8 +1128,9 @@ module.exports = function (name, version, isLatest) {
   }
 
   function serverUrl(appUsesHttps, urlShouldContainRedactedCredentials, path_, serverControls) {
-    return `http${appUsesHttps ? 's' : ''}://${urlShouldContainRedactedCredentials ? '<redacted>:<redacted>@' : ''
-      }${`localhost:${serverControls.getPort()}`}${path_}`;
+    return `http${appUsesHttps ? 's' : ''}://${
+      urlShouldContainRedactedCredentials ? '<redacted>:<redacted>@' : ''
+    }${`localhost:${serverControls.getPort()}`}${path_}`;
   }
 
   function checkQuery(span, withQuery) {

@@ -21,7 +21,7 @@ module.exports = async function connect(redis, log, tries = 0) {
   if (!process.env.AZURE_REDIS_CLUSTER || !process.env.AZURE_REDIS_CLUSTER_PWD) {
     log(
       'Please set the environment variables AZURE_REDIS_CLUSTER and AZURE_REDIS_CLUSTER_PWD ' +
-      'to connect to the cloud redis cluster.'
+        'to connect to the cloud redis cluster.'
     );
 
     process.exit(1);

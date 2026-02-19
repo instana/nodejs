@@ -21,18 +21,23 @@ const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const port = require('@_local/collector/test/test_util/app-port')();
 
-const sequelize = new Sequelize(process.env.INSTANA_CONNECT_POSTGRES_DB, process.env.INSTANA_CONNECT_POSTGRES_USER, process.env.INSTANA_CONNECT_POSTGRES_PASSWORD, {
-  host: process.env.INSTANA_CONNECT_POSTGRES_HOST,
-  dialect: 'postgres',
-  // whether to use pg-native under the hood
-  native: process.env.USE_PG_NATIVE,
-  pool: {
-    max: 5,
-    min: 0,
-    acquire: 30000,
-    idle: 10000
+const sequelize = new Sequelize(
+  process.env.INSTANA_CONNECT_POSTGRES_DB,
+  process.env.INSTANA_CONNECT_POSTGRES_USER,
+  process.env.INSTANA_CONNECT_POSTGRES_PASSWORD,
+  {
+    host: process.env.INSTANA_CONNECT_POSTGRES_HOST,
+    dialect: 'postgres',
+    // whether to use pg-native under the hood
+    native: process.env.USE_PG_NATIVE,
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 30000,
+      idle: 10000
+    }
   }
-});
+);
 
 const app = express();
 const logPrefix = `Express/Postgres/Sequelize App (${process.pid}):\t`;

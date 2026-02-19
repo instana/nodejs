@@ -26,9 +26,7 @@ const app = express();
 const isLatest = process.env.LIBRARY_LATEST === 'true';
 const redisVersion = process.env.LIBRARY_VERSION;
 const isConnectedViaPool = process.env.REDIS_SETUP_TYPE === 'pool';
-const logPrefix =
-  `Redis App (version: ${redisVersion}, ` +
-  `setup type: ${process.env.REDIS_SETUP_TYPE}, pid: ${process.pid}):\t`;
+const logPrefix = `Redis App (version: ${redisVersion}, setup type: ${process.env.REDIS_SETUP_TYPE}, pid: ${process.pid}):\t`;
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 let connectedToRedis = false;

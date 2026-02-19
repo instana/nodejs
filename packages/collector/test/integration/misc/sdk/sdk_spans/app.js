@@ -381,9 +381,7 @@ app.post('/callback/create-exit-synchronous-result', function createExitCallback
 const collectorDir = path.dirname(require.resolve('@_local/collector/package.json'));
 
 function getFile(req) {
-  return req.query.error
-    ? path.resolve(collectorDir, 'does-not-exist')
-    : path.resolve(collectorDir, 'LICENSE');
+  return req.query.error ? path.resolve(collectorDir, 'does-not-exist') : path.resolve(collectorDir, 'LICENSE');
 }
 
 function createSpansWithEventEmitter(message) {
