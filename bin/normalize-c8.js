@@ -45,6 +45,17 @@ files.forEach(file => {
     const content = JSON.parse(fs.readFileSync(sourcePath, 'utf-8'));
 
     if (content.result) {
+      content.result = content.result.filter(entry => {
+        if (!entry.url) return true;
+        const filePath = entry.url.replace(/^file:\/\//, '');
+        try {
+          fs.statSync(filePath);
+          return true;
+        } catch {
+          return false;
+        }
+      });
+
       content.result.forEach(entry => {
         if (entry.url) {
           if (entry.url.startsWith('node:')) {
