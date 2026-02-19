@@ -263,7 +263,7 @@ ${
       }
       log(\`[INFO] Path validation successful: \${resolved}\`);
 
-      const appDepVersion = require(resolved).version;
+      const appDepVersion = JSON.parse(fs.readFileSync(resolved, 'utf8')).version;
 
       if (appDepVersion.replace(/^v/, '') !== '${rawVersion}'.replace(/^v/, '')) {
         throw new Error(
