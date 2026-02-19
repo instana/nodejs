@@ -4,7 +4,6 @@
 # (c) Copyright IBM Corp. 2023
 #######################################
 
-
 # This script builds a test image that can be used as an Azure container service.
 # You can use the Instana Node.js Azure base image from various sources, such as a published production image,
 # an image from your local Docker registry, or an image from an Azure container registry with pre-release images.
@@ -34,7 +33,7 @@
 # Use -eox to display better output
 set -eo pipefail
 
-cd `dirname $BASH_SOURCE`
+cd $(dirname $BASH_SOURCE)
 
 source utils
 
@@ -64,9 +63,9 @@ fi
 
 if [[ $INSTANA_LAYER_MODE = local ]]; then
   echo Building local Instana layer first.
-  pushd ../instana-azure-container-services > /dev/null
+  pushd ../instana-azure-container-services >/dev/null
   ./build.sh local
-  popd > /dev/null
+  popd >/dev/null
 else
   echo Not building local Instana layer.
 fi

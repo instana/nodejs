@@ -49,7 +49,7 @@ _runcollector_build_cache() {
         fi
       fi
     done
-  } | sort -u > "$_RUNCOLLECTOR_CACHE_FILE"
+  } | sort -u >"$_RUNCOLLECTOR_CACHE_FILE"
 }
 
 # Find the package directory for a given package name
@@ -117,7 +117,7 @@ _runcollector_completions() {
   # Determine which argument we're completing (skip flags like -nw)
   local arg_index=0
   local pkg_arg=""
-  for (( i=1; i<COMP_CWORD; i++ )); do
+  for ((i = 1; i < COMP_CWORD; i++)); do
     local w="${COMP_WORDS[$i]}"
     [[ "$w" == -* ]] && continue
     arg_index=$((arg_index + 1))

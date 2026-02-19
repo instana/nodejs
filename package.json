@@ -39,6 +39,7 @@
     "audit": "lerna run audit --stream",
     "commit": "cz",
     "doctoc": "doctoc README.md packages/collector/README.md",
+    "format:sh": "find . -name \"*.sh\" -not -path \"*/node_modules/*\" -not -path \"*/dockerfile-examples/*\" -not -path \"*/example-apps/*\" -exec shfmt -w {} +",
     "lint": "eslint .*.js *.js && npm run typecheck && lerna run lint --stream && eslint misc && eslint dockerfile-examples && eslint bin",
     "tekton:lint": "npx @ibm/tekton-lint .tekton/**/**/*.yaml .tekton/**/*.yaml .tekton/*.yaml",
     "postinstall": "chmod +x ./node_modules/husky/lib/bin.js && husky install && lerna run node_modules:exists",

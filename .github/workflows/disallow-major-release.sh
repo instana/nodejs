@@ -24,4 +24,3 @@ if [[ $RELEASE_TYPE != minor ]] && [[ $RELEASE_TYPE != patch ]]; then
   echo "Error: Unexpected release type: $RELEASE_TYPE, expected major, minor or patch."
   exit 1
 fi
-

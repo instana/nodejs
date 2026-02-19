@@ -7,7 +7,7 @@
 
 set -eEuo pipefail
 
-cd `dirname $BASH_SOURCE`/..
+cd $(dirname $BASH_SOURCE)/..
 
 if [[ ! -f .env ]]; then
   echo .env file is missing
@@ -34,4 +34,3 @@ docker build \
 docker push $ecr_repository/$image_tag
 
 echo "docker build exit status: $?"
-

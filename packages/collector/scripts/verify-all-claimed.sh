@@ -9,7 +9,7 @@ ENV_PREFIX="INSTANA_CONNECT_"
 ARTIFACTS_PATH="${1:-/artifacts}"
 CLAIMED_FILE="$ARTIFACTS_PATH/claimed-tests.txt"
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 cd "$SCRIPT_DIR/.." || exit 1
 
 if [ ! -f "$CLAIMED_FILE" ]; then
@@ -21,7 +21,7 @@ fi
 TEST_PATTERN="${2:-test/**/*.test.js}"
 ALL_TESTS=$(find "$(pwd)" -path "*$TEST_PATTERN" -name "*.test.js" -not -path "*/node_modules/*" -not -path "*/long_*/*" | sort)
 TOTAL=$(echo "$ALL_TESTS" | wc -l | tr -d ' ')
-CLAIMED_COUNT=$(wc -l < "$CLAIMED_FILE" | tr -d ' ')
+CLAIMED_COUNT=$(wc -l <"$CLAIMED_FILE" | tr -d ' ')
 
 echo "=== Verify Claimed Tests ==="
 echo "Expected: $TOTAL test files"
@@ -33,7 +33,7 @@ while IFS= read -r test_file; do
     echo "  UNCLAIMED: $test_file"
     MISSING=$((MISSING + 1))
   fi
-done <<< "$ALL_TESTS"
+done <<<"$ALL_TESTS"
 
 # Check for duplicates (a test claimed by multiple runners)
 DUPES=$(sort "$CLAIMED_FILE" | uniq -d)
@@ -43,7 +43,7 @@ if [ -n "$DUPES" ]; then
     COUNT=$(grep -cF "$dupe" "$CLAIMED_FILE")
     echo "  DUPLICATE ($COUNT×): $dupe"
     DUPE_COUNT=$((DUPE_COUNT + 1))
-  done <<< "$DUPES"
+  done <<<"$DUPES"
 fi
 
 FAILED=0

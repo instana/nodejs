@@ -7,7 +7,7 @@
 
 set -eo pipefail
 
-cd `dirname $BASH_SOURCE`/..
+cd $(dirname $BASH_SOURCE)/..
 
 # Note: fd needs to be installed, see https://github.com/sharkdp/fd
 fd --extension sh \
@@ -18,4 +18,3 @@ fd --extension sh \
 
 fd --extension js \
   --exec bash -c 'fileCreationYear=$(git log --name-only --pretty="format:" --follow {} | sort -u | xargs git log --reverse --date="format:%Y" --pretty=format:%ad -- | head -n1); bin/add-header-js.sh {} $fileCreationYear'
-

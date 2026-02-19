@@ -19,7 +19,7 @@
 
 set -eo pipefail
 
-cd `dirname $BASH_SOURCE`
+cd $(dirname $BASH_SOURCE)
 
 source utils
 
@@ -46,4 +46,3 @@ setImageTag $image_tag_prefix $NODEJS_VERSION $LINUX_DISTRIBUTION $INSTANA_LAYER
 
 echo "Pushing image $image_tag to $gcr_repository"
 docker push $gcr_repository/$image_tag
-

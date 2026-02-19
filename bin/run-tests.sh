@@ -75,9 +75,9 @@ TEST_BASE_DIR="packages/${SCOPE_PKG_NAME}/test"
 if [ -n "$PACKAGE" ]; then
   # Normalize package name for scoped packages (e.g., @redis/client -> redis_client)
   NORMALIZED_PACKAGE=$(normalize_folder_name "$PACKAGE")
-  
+
   PACKAGE_DIR=$(find "$TEST_BASE_DIR" -type d \( -path "*/$PACKAGE" -o -path "*/$NORMALIZED_PACKAGE" \) ! -path "*/node_modules/*" ! -path "*/_v*" 2>/dev/null | head -1)
-  
+
   if [ -z "$PACKAGE_DIR" ]; then
     # No directory found — try matching a test file by name (e.g. cmdline -> cmdline.test.js or cmdline_test.js)
     MATCH_FILE=$(find "$TEST_BASE_DIR" -type f \( -name "${PACKAGE}.test.js" -o -name "${PACKAGE}_test.js" -o -name "${PACKAGE}.test.mjs" -o -name "${PACKAGE}_test.mjs" \) ! -path "*/node_modules/*" ! -path "*/_v*" 2>/dev/null | head -1)
@@ -91,9 +91,9 @@ if [ -n "$PACKAGE" ]; then
     echo "Error: Test folder or file for '$PACKAGE' not found"
     exit 1
   fi
-  
+
   ACTUAL_PACKAGE=$(basename "$PACKAGE_DIR")
-  
+
   AVAILABLE_VERSIONS=$(find "$PACKAGE_DIR" -maxdepth 1 -type d -name "_v*" 2>/dev/null | sed 's/.*_v/v/' | sort -V | tr '\n' ', ' | sed 's/,$//')
 
   if [ -n "$VERSION" ]; then
@@ -114,65 +114,64 @@ if [ -n "$PACKAGE" ]; then
     fi
 
     GREP_PATTERN="$ACTUAL_PACKAGE@$VERSION"
-    
+
     # Check for test files in the version directory
     SEARCH_PATTERN="*.test.js"
     if [ -n "$TEST_NAME_FILTER" ]; then
-        SEARCH_PATTERN="*${TEST_NAME_FILTER}*.test.js"
+      SEARCH_PATTERN="*${TEST_NAME_FILTER}*.test.js"
     fi
     FOUND_FILES=$(find "$PACKAGE_DIR/_${VERSION}" -maxdepth 2 -name "$SEARCH_PATTERN" ! -name "test_base.js")
     if [ -n "$FOUND_FILES" ]; then
-        TEST_FILES=$(echo "$FOUND_FILES" | tr '\n' ' ')
+      TEST_FILES=$(echo "$FOUND_FILES" | tr '\n' ' ')
     fi
 
   else
     HIGHEST_VERSION=$(find "$PACKAGE_DIR" -maxdepth 1 -type d -name "_v*" 2>/dev/null | sed 's/.*_v//' | sort -V | tail -1)
     if [ -n "$HIGHEST_VERSION" ]; then
       GREP_PATTERN="$ACTUAL_PACKAGE@v$HIGHEST_VERSION"
-      
+
       # Check for test files in the highest version directory
       SEARCH_PATTERN="*.test.js"
       if [ -n "$TEST_NAME_FILTER" ]; then
-          SEARCH_PATTERN="*${TEST_NAME_FILTER}*.test.js"
+        SEARCH_PATTERN="*${TEST_NAME_FILTER}*.test.js"
       fi
       FOUND_FILES=$(find "$PACKAGE_DIR/_v${HIGHEST_VERSION}" -maxdepth 2 -name "$SEARCH_PATTERN" ! -name "test_base.js")
       if [ -n "$FOUND_FILES" ]; then
-          TEST_FILES=$(echo "$FOUND_FILES" | tr '\n' ' ')
+        TEST_FILES=$(echo "$FOUND_FILES" | tr '\n' ' ')
       fi
 
     else
       GREP_PATTERN="$ACTUAL_PACKAGE@v"
-      
+
       # Fallback for non-versioned packages (supports both *.test.js and *_test.js conventions)
       if [ -f "$PACKAGE_DIR/default.test.js" ]; then
-          TEST_FILES="$PACKAGE_DIR/default.test.js"
+        TEST_FILES="$PACKAGE_DIR/default.test.js"
       elif [ -f "$PACKAGE_DIR/test.js" ]; then
-          TEST_FILES="$PACKAGE_DIR/test.js"
+        TEST_FILES="$PACKAGE_DIR/test.js"
       else
-          TEST_FILES=$(find "$PACKAGE_DIR" \( -name "*.test.js" -o -name "*_test.js" \) ! -path "*/node_modules/*" ! -name "test_base.js" | tr '\n' ' ')
+        TEST_FILES=$(find "$PACKAGE_DIR" \( -name "*.test.js" -o -name "*_test.js" \) ! -path "*/node_modules/*" ! -name "test_base.js" | tr '\n' ' ')
       fi
     fi
   fi
-  
+
   if [ -n "$TEST_FILES" ]; then
-      # Make paths relative to the package directory for the npm script
-      RELATIVE_TEST_FILES=$(echo "$TEST_FILES" | sed "s|packages/${SCOPE_PKG_NAME}/||g")
-      
-      # Use test:debug:files to run only the specific files
-      npm_command="npm run test:debug:files -- $RELATIVE_TEST_FILES"
-      
-      
-      # We still pass grep pattern just in case, though mocha might not need it if we pass specific files
-      # But usually filtering by file is enough.
-      # args="-- --grep \"$GREP_PATTERN\" $args"
-      
-      echo "Running tests for $ACTUAL_PACKAGE${VERSION:+ version $VERSION}"
-      echo "Target files: $RELATIVE_TEST_FILES"
+    # Make paths relative to the package directory for the npm script
+    RELATIVE_TEST_FILES=$(echo "$TEST_FILES" | sed "s|packages/${SCOPE_PKG_NAME}/||g")
+
+    # Use test:debug:files to run only the specific files
+    npm_command="npm run test:debug:files -- $RELATIVE_TEST_FILES"
+
+    # We still pass grep pattern just in case, though mocha might not need it if we pass specific files
+    # But usually filtering by file is enough.
+    # args="-- --grep \"$GREP_PATTERN\" $args"
+
+    echo "Running tests for $ACTUAL_PACKAGE${VERSION:+ version $VERSION}"
+    echo "Target files: $RELATIVE_TEST_FILES"
   else
-      # If we couldn't determine specific files, fall back to old behavior but warn
-      args="-- --grep \"$GREP_PATTERN\" $args"
-      echo "Running tests for $ACTUAL_PACKAGE${VERSION:+ version $VERSION} (grep pattern: $GREP_PATTERN)"
-      echo "Warning: Could not identify specific test files, running full suite with filter."
+    # If we couldn't determine specific files, fall back to old behavior but warn
+    args="-- --grep \"$GREP_PATTERN\" $args"
+    echo "Running tests for $ACTUAL_PACKAGE${VERSION:+ version $VERSION} (grep pattern: $GREP_PATTERN)"
+    echo "Warning: Could not identify specific test files, running full suite with filter."
   fi
 
 else

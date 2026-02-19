@@ -50,7 +50,7 @@ TESTS_WITH_DEPS=0
 TESTS_GENERIC=0
 # Mapping: "test_path|service1,service2" per line
 DEP_MAP_FILE="$ARTIFACTS_DIR/dep-map.txt"
-> "$DEP_MAP_FILE"
+>"$DEP_MAP_FILE"
 
 while IFS= read -r test_file; do
   TEST_DIR=$(dirname "$test_file")
@@ -59,13 +59,13 @@ while IFS= read -r test_file; do
   if [ -n "$SERVICES" ]; then
     TESTS_WITH_DEPS=$((TESTS_WITH_DEPS + 1))
     ALL_REQUIRED_SERVICES="$ALL_REQUIRED_SERVICES $(echo "$SERVICES" | tr ',' ' ')"
-    echo "$test_file|$SERVICES" >> "$DEP_MAP_FILE"
+    echo "$test_file|$SERVICES" >>"$DEP_MAP_FILE"
     echo "  [deps: $SERVICES] $test_file"
   else
     echo "  [generic] $test_file"
     TESTS_GENERIC=$((TESTS_GENERIC + 1))
   fi
-done <<< "$ALL_INTEGRATION"
+done <<<"$ALL_INTEGRATION"
 
 UNIQUE_SERVICES=$(echo "$ALL_REQUIRED_SERVICES" | tr -s ' ' '\n' | sort -u | grep -v '^$' | tr '\n' ',' | sed 's/,$//')
 
@@ -98,7 +98,7 @@ rmdir "$ARTIFACTS_DIR/.test-claim.lock.dir" 2>/dev/null
 
 for i in $(seq 1 $NUM_TASKS); do
   TASK_OUTPUT=$(bash "scripts/claim-tests.sh" "$UNIQUE_SERVICES" "$PATTERN" "$NUM_TASKS" "$ARTIFACTS_DIR")
-  echo "$TASK_OUTPUT" > "$ARTIFACTS_DIR/task-${i}.txt"
+  echo "$TASK_OUTPUT" >"$ARTIFACTS_DIR/task-${i}.txt"
 done
 
 CLAIMED=$(cat "$ARTIFACTS_DIR/claimed-tests.txt" 2>/dev/null | wc -l | tr -d ' ')
@@ -116,14 +116,14 @@ else
     if ! grep -qF "$test_file" "$ARTIFACTS_DIR/claimed-tests.txt" 2>/dev/null; then
       echo "  MISSING: $test_file"
     fi
-  done <<< "$ALL_INTEGRATION"
+  done <<<"$ALL_INTEGRATION"
 fi
 
 # Check per-task and per-sidecar distribution
 echo ""
 echo "Per-task overview:"
 
-TESTS_PER_TASK=$(( (TOTAL_INTEGRATION + NUM_TASKS - 1) / NUM_TASKS ))
+TESTS_PER_TASK=$(((TOTAL_INTEGRATION + NUM_TASKS - 1) / NUM_TASKS))
 
 for i in $(seq 1 $NUM_TASKS); do
   TASK_FILE="$ARTIFACTS_DIR/task-${i}.txt"
@@ -135,7 +135,7 @@ for i in $(seq 1 $NUM_TASKS); do
     if grep -qF "$dep_test" "$TASK_FILE" 2>/dev/null; then
       TASK_DEP_COUNT=$((TASK_DEP_COUNT + 1))
     fi
-  done < "$DEP_MAP_FILE"
+  done <"$DEP_MAP_FILE"
 
   TASK_GENERIC=$((TASK_TOTAL - TASK_DEP_COUNT))
   echo "  Task $i: $TASK_TOTAL total ($TASK_DEP_COUNT deps, $TASK_GENERIC generic)"
@@ -149,7 +149,7 @@ QUOTA_OK=true
 for service in $(echo "$UNIQUE_SERVICES" | tr ',' '\n'); do
   # Total tests for this service
   SERVICE_TOTAL=$(grep "|.*${service}" "$DEP_MAP_FILE" | wc -l | tr -d ' ')
-  QUOTA=$(( (SERVICE_TOTAL + NUM_TASKS - 1) / NUM_TASKS ))
+  QUOTA=$(((SERVICE_TOTAL + NUM_TASKS - 1) / NUM_TASKS))
 
   DETAIL=""
   for i in $(seq 1 $NUM_TASKS); do
@@ -164,13 +164,13 @@ for service in $(echo "$UNIQUE_SERVICES" | tr ',' '\n'); do
           TASK_SERVICE_COUNT=$((TASK_SERVICE_COUNT + 1))
         fi
       fi
-    done < "$DEP_MAP_FILE"
+    done <"$DEP_MAP_FILE"
 
     DETAIL="${DETAIL} T${i}=${TASK_SERVICE_COUNT}"
 
     if [ "$TASK_SERVICE_COUNT" -gt "$QUOTA" ]; then
       QUOTA_OK=false
-      DETAIL="${DETAIL}(!)";
+      DETAIL="${DETAIL}(!)"
     fi
   done
 
@@ -198,7 +198,7 @@ rmdir "$ARTIFACTS_DIR/.test-claim.lock.dir" 2>/dev/null
 export SIDECAR_COUNTS=""
 
 for i in $(seq 1 $NUM_TASKS); do
-  bash "scripts/claim-tests.sh" "" "$PATTERN" "$NUM_TASKS" "$ARTIFACTS_DIR" > /dev/null
+  bash "scripts/claim-tests.sh" "" "$PATTERN" "$NUM_TASKS" "$ARTIFACTS_DIR" >/dev/null
 done
 
 CLAIMED_NO_SIDECAR=$(cat "$ARTIFACTS_DIR/claimed-tests.txt" 2>/dev/null | wc -l | tr -d ' ')

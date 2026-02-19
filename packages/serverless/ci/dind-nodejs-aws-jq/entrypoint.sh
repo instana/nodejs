@@ -100,7 +100,7 @@ start_docker() {
 
   # Pass through `--garden-mtu` from gardian container
   if [[ "${docker_opts}" != *'--mtu'* ]]; then
-    local mtu="$(cat /sys/class/net/$(ip route get 8.8.8.8|awk '{ print $5 }')/mtu)"
+    local mtu="$(cat /sys/class/net/$(ip route get 8.8.8.8 | awk '{ print $5 }')/mtu)"
     docker_opts+=" --mtu ${mtu}"
   fi
 
@@ -114,7 +114,7 @@ start_docker() {
 
   echo >&2 "Starting Docker..."
   dockerd ${docker_opts} &>"${DOCKERD_LOG_FILE}" &
-  echo "$!" > "${DOCKERD_PID_FILE}"
+  echo "$!" >"${DOCKERD_PID_FILE}"
 }
 
 # Wait for docker daemon to be healthy
@@ -123,9 +123,9 @@ await_docker() {
   local timeout="${DOCKERD_TIMEOUT}"
   echo >&2 "Waiting ${timeout} seconds for Docker to be available..."
   local start=${SECONDS}
-  timeout=$(( timeout + start ))
+  timeout=$((timeout + start))
   until docker info &>/dev/null; do
-    if (( SECONDS >= timeout )); then
+    if ((SECONDS >= timeout)); then
       echo >&2 'Timed out trying to connect to docker daemon.'
       if [[ -f "${DOCKERD_LOG_FILE}" ]]; then
         echo >&2 '---DOCKERD LOGS---'
@@ -143,7 +143,7 @@ await_docker() {
     fi
     sleep 1
   done
-  local duration=$(( SECONDS - start ))
+  local duration=$((SECONDS - start))
   echo >&2 "Docker available after ${duration} seconds."
 }
 
@@ -161,7 +161,7 @@ stop_docker() {
   local start=${SECONDS}
   echo >&2 "Waiting for Docker daemon to exit..."
   wait ${docker_pid}
-  local duration=$(( SECONDS - start ))
+  local duration=$((SECONDS - start))
   echo >&2 "Docker exited after ${duration} seconds."
 }
 
@@ -175,4 +175,3 @@ if [[ "$#" != "0" ]]; then
 else
   bash --login
 fi
-

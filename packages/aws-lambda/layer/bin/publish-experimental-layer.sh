@@ -14,7 +14,7 @@ if [[ -z $REGIONS ]]; then
   REGIONS=us-east-2
 fi
 
-cd `dirname $BASH_SOURCE`
+cd $(dirname $BASH_SOURCE)
 
 BUILD_LAYER_WITH=local \
   LAYER_NAME=$LAYER_NAME \

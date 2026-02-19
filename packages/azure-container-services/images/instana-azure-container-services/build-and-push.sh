@@ -22,7 +22,7 @@
 # Use -eox to display better output
 set -eo pipefail
 
-cd `dirname $BASH_SOURCE`
+cd $(dirname $BASH_SOURCE)
 
 source utils
 

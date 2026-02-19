@@ -24,8 +24,8 @@ IFS=$'\n' sorted=($(printf "%s\n" $files | sort))
 unset IFS
 
 total=${#sorted[@]}
-perGroup=$(( (total + MAX_SPLIT - 1) / MAX_SPLIT ))
-start=$(( (SPLIT - 1) * perGroup ))
+perGroup=$(((total + MAX_SPLIT - 1) / MAX_SPLIT))
+start=$(((SPLIT - 1) * perGroup))
 
 for ((i = start; i < start + perGroup && i < total; i++)); do
   echo "${sorted[$i]}"

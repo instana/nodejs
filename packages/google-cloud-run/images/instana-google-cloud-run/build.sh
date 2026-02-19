@@ -33,7 +33,7 @@
 
 set -eo pipefail
 
-cd `dirname $BASH_SOURCE`
+cd $(dirname $BASH_SOURCE)
 
 source utils
 
@@ -75,35 +75,35 @@ echo "Building $image_tag from $dockerfile"
 if [[ $build_mode = local ]]; then
   rm -rf instana-*.tgz
 
-  pushd ../../../core > /dev/null
+  pushd ../../../core >/dev/null
   rm -f instana-core-*.tgz
   npm pack
   mv instana-core-*.tgz ../google-cloud-run/images/instana-google-cloud-run/instana-core.tgz
-  popd > /dev/null
+  popd >/dev/null
 
-  pushd ../../../serverless > /dev/null
+  pushd ../../../serverless >/dev/null
   rm -f instana-serverless-*.tgz
   npm pack
   mv instana-serverless-*.tgz ../google-cloud-run/images/instana-google-cloud-run/instana-serverless.tgz
-  popd > /dev/null
+  popd >/dev/null
 
-  pushd ../../../shared-metrics > /dev/null
+  pushd ../../../shared-metrics >/dev/null
   rm -f instana-shared-metrics-*.tgz
   npm pack
   mv instana-shared-metrics-*.tgz ../google-cloud-run/images/instana-google-cloud-run/instana-shared-metrics.tgz
-  popd > /dev/null
+  popd >/dev/null
 
-  pushd ../../../metrics-util > /dev/null
+  pushd ../../../metrics-util >/dev/null
   rm -f instana-metrics-util-*.tgz
   npm pack
   mv instana-metrics-util-*.tgz ../google-cloud-run/images/instana-google-cloud-run/instana-metrics-util.tgz
-  popd > /dev/null
+  popd >/dev/null
 
-  pushd ../.. > /dev/null
+  pushd ../.. >/dev/null
   rm -f instana-google-cloud-run-*.tgz
   npm pack
   mv instana-google-cloud-run-*.tgz images/instana-google-cloud-run/instana-google-cloud-run.tgz
-  popd > /dev/null
+  popd >/dev/null
 
   cp package.json.local package.json
 elif [[ $build_mode = npm ]]; then

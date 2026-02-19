@@ -7,7 +7,7 @@
 
 set -eo pipefail
 
-cd `dirname $BASH_SOURCE`/..
+cd $(dirname $BASH_SOURCE)/..
 
 command -v aws >/dev/null 2>&1 || {
   cat <<EOF >&2
@@ -33,7 +33,7 @@ fi
 REGIONS=$(aws ssm get-parameters-by-path --path /aws/service/global-infrastructure/services/lambda/regions --output text --query "Parameters[].Value" | tr '\t' '\n' | sort)
 
 # us-gov-* only available to US government agencies, U.S. government etc.
-# cn-* (china regions) completely disconnected from normal AWS account. 
+# cn-* (china regions) completely disconnected from normal AWS account.
 SKIPPED_REGIONS=$'cn-north-1\ncn-northwest-1\nus-gov-east-1\nus-gov-west-1'
 
 while read -r region; do
@@ -44,20 +44,19 @@ while read -r region; do
       skip=1
       break
     fi
-  done <<< "$SKIPPED_REGIONS"
+  done <<<"$SKIPPED_REGIONS"
 
   if [[ $skip -eq 1 ]]; then
     echo "$region: skipped"
   else
-    lambda_layer_version=$( \
+    lambda_layer_version=$(
       AWS_PAGER="" aws --region $region \
         lambda list-layer-versions \
         --layer-name $LAYER_NAME \
-        --output json \
-        | jq '.LayerVersions[0].Version' \
+        --output json |
+        jq '.LayerVersions[0].Version'
     )
 
     echo $region: $lambda_layer_version
   fi
-done <<< "$REGIONS"
-
+done <<<"$REGIONS"

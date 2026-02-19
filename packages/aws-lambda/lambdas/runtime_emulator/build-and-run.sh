@@ -7,7 +7,7 @@
 
 set -eo pipefail
 
-cd `dirname $BASH_SOURCE`
+cd $(dirname $BASH_SOURCE)
 
 source utils
 
@@ -30,15 +30,15 @@ fi
 
 if [[ $INSTANA_LAYER_MODE = local ]]; then
   echo Building local Instana Lambda layer as a container image first.
-  pushd ../../layer > /dev/null
+  pushd ../../layer >/dev/null
   BUILD_LAYER_WITH=local \
-  LAYER_NAME=instana-nodejs-$INSTANA_LAYER_MODE \
-  REGIONS=us-east-2 \
-  DOCKER_IMAGE_NAME=instana-aws-lambda-nodejs-local \
-  SKIP_AWS_PUBLISH_LAYER=true \
-  SKIP_DOCKER_IMAGE_PUSH=true \
-  bin/publish-layer.sh
-  popd > /dev/null
+    LAYER_NAME=instana-nodejs-$INSTANA_LAYER_MODE \
+    REGIONS=us-east-2 \
+    DOCKER_IMAGE_NAME=instana-aws-lambda-nodejs-local \
+    SKIP_AWS_PUBLISH_LAYER=true \
+    SKIP_DOCKER_IMAGE_PUSH=true \
+    bin/publish-layer.sh
+  popd >/dev/null
 else
   echo Not building the local Instana Lambda layer.
 fi
@@ -72,11 +72,10 @@ docker run \
   --env INSTANA_LAMBDA_EXTENSION_LOG_LEVEL=$instana_lambda_extension_log_level \
   --env INSTANA_TIMEOUT=$instana_timeout \
   --env INSTANA_ENDPOINT_URL=$instana_endpoint_url \
-  --env INSTANA_AGENT_KEY=$instana_agent_key \
-  # Use the line below if you want to test ES modules. Also checkout the Dockerfile
-  #--env LAMBDA_HANDLER='esm/app.handler' \
-  --env LAMBDA_HANDLER=app.handler \
+  --env INSTANA_AGENT_KEY=$instana_agent_key
+# Use the line below if you want to test ES modules. Also checkout the Dockerfile
+#--env LAMBDA_HANDLER='esm/app.handler' \
+--env LAMBDA_HANDLER=app.handler \
   -p 9000:8080 \
   --name $container_name \
   $image_tag
-
