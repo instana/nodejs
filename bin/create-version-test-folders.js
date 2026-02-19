@@ -299,7 +299,9 @@ ${
       } catch (err) {
         const detail = (err.stderr || '').trim();
         if (err.status === 1) {
-          throw new Error(\`Verification failed: ${suiteName} resolved to \${detail}, expected under __dirname/node_modules\`);
+          throw new Error(
+            \`Verification failed: ${suiteName} resolved to \${detail}, expected under __dirname/node_modules\`
+          );
         } else if (err.status === 2) {
           throw new Error(\`Verification failed: installed version \${detail} does not match expected ${rawVersion}\`);
         }
