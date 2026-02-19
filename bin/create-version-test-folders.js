@@ -234,32 +234,56 @@ mochaSuiteFn(suiteTitle, function () {
         '--no-package-lock --no-audit --prefix ./ --no-progress' :
         'npm install --no-package-lock --no-audit --prefix ./ --no-progress';
 
-  for (let attempt = 0; attempt < maxRetries; attempt++) {${
-    isOptional
-      ? `
-        const timeout = 5 * 60 * 1000;`
-      : `
-        const timeout = (120 + attempt * 30) * 1000;`
-  }
-    try {
-      execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });${
+      for (let attempt = 0; attempt < maxRetries; attempt++) {${
         isOptional
           ? `
-      if (!fs.existsSync(path.join(__dirname, 'node_modules', '${suiteName}'))) {
-        throw new Error('${suiteName} not found after install');
-      }`
-          : ''
+            const timeout = 5 * 60 * 1000;`
+          : `
+            const timeout = (120 + attempt * 30) * 1000;`
       }
+        try {
+          execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });${
+            isOptional
+              ? `
+          if (!fs.existsSync(path.join(__dirname, 'node_modules', '${suiteName}'))) {
+            throw new Error('${suiteName} not found after install');
+          }`
+              : ''
+          }
+          break;
+        } catch (err) {
+          console.log(\`[ERROR] npm install failed on attempt \${attempt + 1}: \${err.message}\`);
+
+          if (
+            isCleaning ||
+            err.signal === 'SIGINT' ||
+            err.signal === 'SIGTERM' ||
+            err.status === 130 ||
+            err.status === 143
+          ) {
+            throw err;
+          }
+
+          if (attempt === maxRetries - 1) throw err;
+          const secs = timeout / 1000;
+          log(\`[WARN] npm install failed (\${err.message}), retry \${attempt + 1}/\${maxRetries} (\${secs}s)...\`);
+          rmDir(path.join(__dirname, 'node_modules'));
+          continue;
+        }
+      }
+
 ${
   verifyDependency
     ? `
+      // Verification is performed after npm install succeeds
       const appDep = path.join(__dirname, 'node_modules', '${suiteName}');
 
+      console.log(\`[INFO] Verifying installed ${suiteName}\`);
       let resolved;
       try {
         resolved = require.resolve('${suiteName}');
       } catch (err) {
-        throw err;
+        throw new Error(\`Failed to resolve ${suiteName} after install: \${err.message}\`);
       }
 
       const marker = path.join('node_modules', '${suiteName}');
@@ -285,27 +309,7 @@ ${
       log(\`[INFO] Version validation successful: ${suiteName}@\${appDepVersion}\`);
 `
     : ''
-}      break;
-    } catch (err) {
-      if (
-        isCleaning ||
-        err.signal === 'SIGINT' ||
-        err.signal === 'SIGTERM' ||
-        err.status === 130 ||
-        err.status === 143
-      ) {
-        throw err;
-      }
-
-      if (attempt === maxRetries - 1) throw err;
-      const secs = timeout / 1000;
-      log(\`[WARN] npm install failed (\${err.message}), retry \${attempt + 1}/\${maxRetries} (\${secs}s)...\`);
-      rmDir(path.join(__dirname, 'node_modules'));
-      continue;
-    }
-    break;
-      }
-    } finally {
+}    } finally {
       if (slot !== undefined) installSemaphore.releaseSlot(slot);
     }
   });
@@ -446,6 +450,7 @@ function main() {
         const hasModes = modes.length > 1 || (modes.length === 1 && modes[0] !== null);
         const isOptional = typeof versionObj === 'object' && versionObj.optional === true;
         const nodeConstraint = typeof versionObj === 'object' ? versionObj.node || '' : '';
+        const skipValidation = typeof versionObj === 'object' && versionObj.skipValidation === true;
 
         modes.forEach(mode => {
           // When modes exist, each mode gets its own subdirectory for isolation
@@ -466,7 +471,7 @@ function main() {
             sourceDepth: hasModes ? 2 : 1,
             nodeConstraint,
             isOptional,
-            verifyDependency: true
+            verifyDependency: !skipValidation
           });
           const fileName = mode ? `${mode}.test.js` : 'default.test.js';
           fs.writeFileSync(path.join(targetDir, fileName), testContent);
