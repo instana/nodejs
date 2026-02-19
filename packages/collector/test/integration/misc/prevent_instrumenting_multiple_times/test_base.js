@@ -19,10 +19,17 @@ module.exports = function (name, version) {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  const inVersionDir = path.basename(__dirname).startsWith('_v')
-    || path.basename(path.dirname(__dirname)).startsWith('_v');
+  const inVersionDir =
+    path.basename(__dirname).startsWith('_v') || path.basename(path.dirname(__dirname)).startsWith('_v');
   const versionDir = inVersionDir ? __dirname : path.join(__dirname, `_v${version}`);
-  const pathToSeparateInstanaCollector = path.join(versionDir, 'node_modules', '@instana', 'collector', 'src', 'immediate');
+  const pathToSeparateInstanaCollector = path.join(
+    versionDir,
+    'node_modules',
+    '@instana',
+    'collector',
+    'src',
+    'immediate'
+  );
   let controls;
 
   before(async () => {

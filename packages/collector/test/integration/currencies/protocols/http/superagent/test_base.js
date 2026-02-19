@@ -69,11 +69,7 @@ module.exports = function (name, version, isLatest) {
       })
       .then(() =>
         retry(() =>
-          globalAgent.instance
-            .getSpans()
-            .then(spans =>
-              verifySuperagentSpans(spans, '/callback', '/request-url-opts')
-            )
+          globalAgent.instance.getSpans().then(spans => verifySuperagentSpans(spans, '/callback', '/request-url-opts'))
         )
       ));
 
@@ -85,9 +81,7 @@ module.exports = function (name, version, isLatest) {
       })
       .then(() =>
         retry(() =>
-          globalAgent.instance
-            .getSpans()
-            .then(spans => verifySuperagentSpans(spans, '/then', '/request-url-opts'))
+          globalAgent.instance.getSpans().then(spans => verifySuperagentSpans(spans, '/then', '/request-url-opts'))
         )
       ));
 
@@ -99,9 +93,7 @@ module.exports = function (name, version, isLatest) {
       })
       .then(() =>
         retry(() =>
-          globalAgent.instance
-            .getSpans()
-            .then(spans => verifySuperagentSpans(spans, '/catch', '/does-not-exist'))
+          globalAgent.instance.getSpans().then(spans => verifySuperagentSpans(spans, '/catch', '/does-not-exist'))
         )
       ));
 
@@ -113,9 +105,7 @@ module.exports = function (name, version, isLatest) {
       })
       .then(() =>
         retry(() =>
-          globalAgent.instance
-            .getSpans()
-            .then(spans => verifySuperagentSpans(spans, '/await', '/request-url-opts'))
+          globalAgent.instance.getSpans().then(spans => verifySuperagentSpans(spans, '/await', '/request-url-opts'))
         )
       ));
 
@@ -127,11 +117,7 @@ module.exports = function (name, version, isLatest) {
       })
       .then(() =>
         retry(() =>
-          globalAgent.instance
-            .getSpans()
-            .then(spans =>
-              verifySuperagentSpans(spans, '/await-fail', '/does-not-exist')
-            )
+          globalAgent.instance.getSpans().then(spans => verifySuperagentSpans(spans, '/await-fail', '/does-not-exist'))
         )
       ));
 

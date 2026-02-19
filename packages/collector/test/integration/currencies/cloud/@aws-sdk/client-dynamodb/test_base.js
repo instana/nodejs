@@ -575,6 +575,6 @@ module.exports = function (name, version, isLatest, mode) {
   requestMethod = mode || 'default-style';
 
   // For v2-style and cb-style modes, use reducedTestSuite
-  const reducedTestSuite = (mode === 'v2-style' || mode === 'cb-style');
+  const reducedTestSuite = mode === 'v2-style' || mode === 'cb-style';
   return start.call(this, reducedTestSuite);
 };

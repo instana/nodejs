@@ -418,7 +418,7 @@ module.exports = function (name, version, isLatest) {
                 span,
                 writeEntry,
                 'The incoming tabular data stream (TDS) remote procedure call (RPC) protocol stream is ' +
-                'incorrect. Parameter 3 ("@email"): Data type 0xE7 has an invalid data length or metadata length.'
+                  'incorrect. Parameter 3 ("@email"): Data type 0xE7 has an invalid data length or metadata length.'
               );
               expect(span.data.mssql.stmt).to.equal(
                 `INSERT INTO ${userTable} (name, email) VALUES (@username, @email)`
@@ -449,7 +449,7 @@ module.exports = function (name, version, isLatest) {
                 span,
                 writeEntry,
                 'The incoming tabular data stream (TDS) remote procedure call (RPC) protocol stream is ' +
-                'incorrect. Parameter 3 ("@email"): Data type 0xE7 has an invalid data length or metadata length.'
+                  'incorrect. Parameter 3 ("@email"): Data type 0xE7 has an invalid data length or metadata length.'
               );
               expect(span.data.mssql.stmt).to.equal(
                 `INSERT INTO ${userTable} (name, email) VALUES (@username, @email)`

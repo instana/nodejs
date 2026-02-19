@@ -123,8 +123,9 @@ module.exports = function (name, version, isLatest) {
             }
           }
 
-          const label = `must trace fetch(${resourceType}${withOptions ? ', options' : ''
-            }) (${method}${methodViaLabel})`;
+          const label = `must trace fetch(${resourceType}${
+            withOptions ? ', options' : ''
+          }) (${method}${methodViaLabel})`;
 
           it(label, async () => {
             const response = await clientControls.sendRequest({
@@ -177,7 +178,7 @@ module.exports = function (name, version, isLatest) {
   describe('conflicting HTTP methods', () => {
     it(
       'must trace fetch(request-object, options) and the HTTP method from options must take precedence over the ' +
-      'Request object',
+        'Request object',
       async () => {
         const response = await clientControls.sendRequest({
           path: constructPath({
@@ -381,7 +382,7 @@ module.exports = function (name, version, isLatest) {
 
     it(
       'must capture headers from the Request object and from the options object, and the headers from the options ' +
-      'object must take precedence over the Request object',
+        'object must take precedence over the Request object',
       async () => {
         const response = await clientControls.sendRequest({
           path: constructPath({
@@ -771,7 +772,14 @@ module.exports = function (name, version, isLatest) {
   }
 
   function verifyHttpEntry({
-    spans, parent, host, url = '/', method = 'GET', status = 200, withError, abortedByClient
+    spans,
+    parent,
+    host,
+    url = '/',
+    method = 'GET',
+    status = 200,
+    withError,
+    abortedByClient
   }) {
     let expectations = [
       span => expect(span.n).to.equal('node.http.server'),

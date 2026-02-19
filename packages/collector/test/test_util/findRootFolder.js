@@ -6,7 +6,7 @@
 
 function findRootFolder() {
   const path = require('path');
-const fs = require('fs');
+  const fs = require('fs');
 
   let currentDir = __dirname;
   while (currentDir !== path.dirname(currentDir)) {

@@ -205,6 +205,4 @@ availableOperations.forEach(op => {
   });
 });
 
-app.listen(port, () =>
-  log(`AWS SDK v3 S3 app listening to port ${port}`)
-);
+app.listen(port, () => log(`AWS SDK v3 S3 app listening to port ${port}`));

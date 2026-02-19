@@ -9,13 +9,7 @@ const path = require('path');
 const constants = require('@_local/core').tracing.constants;
 
 const Control = require('../Control');
-const {
-  retry,
-  expectExactlyNMatching,
-  expectExactlyOneMatching,
-  delay,
-  isCI
-} = require('@_local/core/test/test_util');
+const { retry, expectExactlyNMatching, expectExactlyOneMatching, delay, isCI } = require('@_local/core/test/test_util');
 const config = require('@_local/core/test/config');
 
 const functionName = 'functionName';

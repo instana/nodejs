@@ -22,8 +22,8 @@ const constants = require('@_local/core').tracing.constants;
 let utils;
 
 // Resolve the base directory (works from both the original dir and _v* copies)
-const inVersionDir = path.basename(__dirname).startsWith('_v')
-  || path.basename(path.dirname(__dirname)).startsWith('_v');
+const inVersionDir =
+  path.basename(__dirname).startsWith('_v') || path.basename(path.dirname(__dirname)).startsWith('_v');
 const baseDir = inVersionDir ? path.resolve(__dirname, '..') : __dirname;
 
 let topicArn;
@@ -43,7 +43,7 @@ function start() {
   this.timeout(config.getTestTimeout() * 4);
 
   if (!supportedVersion(process.versions.node)) {
-    it.skip(`npm: ${libraryEnv.LIBRARY_VERSION}`, () => { });
+    it.skip(`npm: ${libraryEnv.LIBRARY_VERSION}`, () => {});
     return;
   }
 

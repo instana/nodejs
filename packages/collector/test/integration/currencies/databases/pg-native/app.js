@@ -28,8 +28,9 @@ let connected = false;
 
 const client = new Client();
 client.connect(
-  `host=${process.env.INSTANA_CONNECT_POSTGRES_HOST || 'localhost'} port=5432 dbname=${process.env.INSTANA_CONNECT_POSTGRES_DB} user=${process.env.INSTANA_CONNECT_POSTGRES_USER
-  } password=${process.env.INSTANA_CONNECT_POSTGRES_PASSWORD}`,
+  `host=${process.env.INSTANA_CONNECT_POSTGRES_HOST || 'localhost'} port=5432 dbname=${
+    process.env.INSTANA_CONNECT_POSTGRES_DB
+  } user=${process.env.INSTANA_CONNECT_POSTGRES_USER} password=${process.env.INSTANA_CONNECT_POSTGRES_PASSWORD}`,
   err => {
     if (err) {
       return log('Cannot connect to PostgreSQL database', err);

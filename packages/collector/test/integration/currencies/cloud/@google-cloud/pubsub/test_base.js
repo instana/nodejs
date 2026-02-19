@@ -39,7 +39,7 @@ function start() {
       it('configuration for Google Cloud Platform is missing', () => {
         fail(
           'Please set GCP_PROJECT and GOOGLE_APPLICATION_CREDENTIALS (or GOOGLE_APPLICATION_CREDENTIALS_CONTENT)' +
-          ' to enable GCP tests.'
+            ' to enable GCP tests.'
         );
       });
     });
@@ -115,22 +115,19 @@ function start() {
         const mochaTestFn = apiVariant === 'callback' && withError === 'publisher' ? it.skip : it;
 
         // It's not clear how to trigger a non-sync error in the publisher, so we skip that combination.
-        mochaTestFn(
-          `must trace google cloud pubsub publish and subscribe (${apiVariant}, error: ${withError})`,
-          () => {
-            const apiPath = `/publish-${apiVariant}`;
-            const queryParams = [withError ? `withError=${withError}` : null].filter(param => !!param).join('&');
-            const apiPathWithQuery = queryParams ? `${apiPath}?${queryParams}` : `${apiPath}`;
+        mochaTestFn(`must trace google cloud pubsub publish and subscribe (${apiVariant}, error: ${withError})`, () => {
+          const apiPath = `/publish-${apiVariant}`;
+          const queryParams = [withError ? `withError=${withError}` : null].filter(param => !!param).join('&');
+          const apiPathWithQuery = queryParams ? `${apiPath}?${queryParams}` : `${apiPath}`;
 
-            return publisherControls
-              .sendRequest({
-                method: 'POST',
-                path: apiPathWithQuery,
-                simple: withError !== 'publisher'
-              })
-              .then(response => verify(response, apiPath, withError));
-          }
-        );
+          return publisherControls
+            .sendRequest({
+              method: 'POST',
+              path: apiPathWithQuery,
+              simple: withError !== 'publisher'
+            })
+            .then(response => verify(response, apiPath, withError));
+        });
       });
     });
 

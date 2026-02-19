@@ -74,37 +74,35 @@ module.exports = function () {
     }
 
     function verifyMinimalDelay(agentControls, controls) {
-      return (
-        delay(3000)
-          .then(() => agentControls.getSpans())
-          .then(spans => {
-            if (spans.length > 0) {
-              // eslint-disable-next-line no-console
-              console.log(JSON.stringify(spans, null, 2));
-            }
-            return expect(spans).to.be.empty;
-          })
-          .then(() =>
-            retry(() =>
-              agentControls.getSpans().then(spans => {
-                expect(spans).to.have.lengthOf(1);
-                const span = spans[0];
-                expect(span.n).to.equal('node.http.server');
-                expect(span.k).to.equal(constants.ENTRY);
-                expect(span.async).to.not.exist;
-                expect(span.error).to.not.exist;
-                expect(span.ec).to.equal(0);
-                expect(span.t).to.be.a('string');
-                expect(span.s).to.be.a('string');
-                expect(span.p).to.not.exist;
-                expect(span.data.http.method).to.equal('GET');
-                expect(span.data.http.url).to.equal('/');
-                expect(span.data.http.status).to.equal(200);
-                expect(span.data.http.host).to.equal(`localhost:${controls.getPort()}`);
-              })
-            )
+      return delay(3000)
+        .then(() => agentControls.getSpans())
+        .then(spans => {
+          if (spans.length > 0) {
+            // eslint-disable-next-line no-console
+            console.log(JSON.stringify(spans, null, 2));
+          }
+          return expect(spans).to.be.empty;
+        })
+        .then(() =>
+          retry(() =>
+            agentControls.getSpans().then(spans => {
+              expect(spans).to.have.lengthOf(1);
+              const span = spans[0];
+              expect(span.n).to.equal('node.http.server');
+              expect(span.k).to.equal(constants.ENTRY);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
+              expect(span.t).to.be.a('string');
+              expect(span.s).to.be.a('string');
+              expect(span.p).to.not.exist;
+              expect(span.data.http.method).to.equal('GET');
+              expect(span.data.http.url).to.equal('/');
+              expect(span.data.http.status).to.equal(200);
+              expect(span.data.http.host).to.equal(`localhost:${controls.getPort()}`);
+            })
           )
-      );
+        );
     }
 
     function verifyNoMinimalDelay(agentControls, controls) {

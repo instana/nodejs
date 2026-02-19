@@ -53,7 +53,11 @@ class ProcessControls {
 
     if (process.env.RUN_ESM && !opts.execArgv) {
       const esmLoader = [
-        `--import=${opts.esmLoaderPath ? opts.esmLoaderPath : path.join(opts.cwd, 'node_modules', '@instana', 'collector', 'esm-register.mjs')}`
+        `--import=${
+          opts.esmLoaderPath
+            ? opts.esmLoaderPath
+            : path.join(opts.cwd, 'node_modules', '@instana', 'collector', 'esm-register.mjs')
+        }`
       ];
 
       try {
@@ -265,7 +269,8 @@ class ProcessControls {
 
     // eslint-disable-next-line no-console
     console.log(
-      `[ProcessControls] start with port: ${this.getPort()}, agentPort: ${this.agentControls.getPort()}, appPath: ${this.appPath
+      `[ProcessControls] start with port: ${this.getPort()}, agentPort: ${this.agentControls.getPort()}, appPath: ${
+        this.appPath
       }`
     );
 
@@ -275,7 +280,8 @@ class ProcessControls {
 
     // eslint-disable-next-line no-console
     console.log(
-      `[ProcessControls] started with port: ${this.getPort()}, agentPort: ${this.agentControls.getPort()}, appPath: ${this.appPath
+      `[ProcessControls] started with port: ${this.getPort()}, agentPort: ${this.agentControls.getPort()}, appPath: ${
+        this.appPath
       }, pid: ${this.process.pid}`
     );
   }
@@ -428,7 +434,7 @@ class ProcessControls {
     return `${this.appUsesHttps || this.http2 ? 'https' : 'http'}://${
       // eslint-disable-next-line no-unneeded-ternary
       embedCredentialsInUrl ? embedCredentialsInUrl : ''
-      }localhost:${this.port}`;
+    }localhost:${this.port}`;
   }
 
   sendViaIpc(message) {
@@ -450,7 +456,8 @@ class ProcessControls {
 
     // eslint-disable-next-line no-console
     console.log(
-      `[ProcessControls] stopping with port: ${this.getPort()}, agentPort: ${this.agentControls && this.agentControls.getPort && this.agentControls.getPort()
+      `[ProcessControls] stopping with port: ${this.getPort()}, agentPort: ${
+        this.agentControls && this.agentControls.getPort && this.agentControls.getPort()
       }, appPath: ${this.appPath}, pid: ${this.process.pid}`
     );
 
@@ -460,7 +467,8 @@ class ProcessControls {
 
         // eslint-disable-next-line no-console
         console.log(
-          `[ProcessControls] stopped with port: ${this.getPort()}, agentPort: ${this.agentControls && this.agentControls.getPort && this.agentControls.getPort()
+          `[ProcessControls] stopped with port: ${this.getPort()}, agentPort: ${
+            this.agentControls && this.agentControls.getPort && this.agentControls.getPort()
           }, appPath: ${this.appPath}, pid: ${this.process.pid}`
         );
 

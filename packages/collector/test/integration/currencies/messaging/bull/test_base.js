@@ -966,10 +966,7 @@ module.exports = function (name, version, isLatest) {
         expect(spans.length).to.be.eql(2);
 
         expectExactlyOneMatching(spans, [span => expect(span.n).to.equal('bull'), span => expect(span.k).to.equal(2)]);
-        expectExactlyOneMatching(spans, [
-          span => expect(span.n).to.equal('redis'),
-          span => expect(span.k).to.equal(2)
-        ]);
+        expectExactlyOneMatching(spans, [span => expect(span.n).to.equal('redis'), span => expect(span.k).to.equal(2)]);
       });
     });
   });

@@ -15,316 +15,316 @@ const ProcessControls = require('@_local/collector/test/test_util/ProcessControl
 const globalAgent = require('@_local/collector/test/globalAgent');
 
 module.exports = function (name, version, isLatest) {
-    this.timeout(config.getTestTimeout() * 10);
+  this.timeout(config.getTestTimeout() * 10);
 
-    globalAgent.setUpCleanUpHooks();
-    const agentControls = globalAgent.instance;
+  globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
 
-    const drivers = ['mysql2', 'mysql2/promises'];
-    const executionModes = [false, true];
+  const drivers = ['mysql2', 'mysql2/promises'];
+  const executionModes = [false, true];
 
-    // NOTE: There is no need to run the ESM APP for all versions.
-    // TODO: Support for mocking `import` in ESM apps is planned under INSTA-788.
-    if (process.env.RUN_ESM && !isLatest) return;
+  // NOTE: There is no need to run the ESM APP for all versions.
+  // TODO: Support for mocking `import` in ESM apps is planned under INSTA-788.
+  if (process.env.RUN_ESM && !isLatest) return;
 
-    drivers.forEach(driverMode => {
-        executionModes.forEach(useExecute => {
-            registerSuite.call(this, driverMode, useExecute);
-        });
+  drivers.forEach(driverMode => {
+    executionModes.forEach(useExecute => {
+      registerSuite.call(this, driverMode, useExecute);
+    });
+  });
+
+  function registerSuite(driverMode, useExecute) {
+    describe(`driver mode: ${driverMode}, access function: ${useExecute ? 'execute' : 'query'}`, () => {
+      const env = {
+        DRIVER_MODE: driverMode,
+        LIBRARY_VERSION: version,
+        LIBRARY_NAME: name,
+        LIBRARY_LATEST: isLatest
+      };
+
+      if (useExecute) {
+        env.USE_EXECUTE = 'true';
+      }
+
+      test(env);
     });
 
-    function registerSuite(driverMode, useExecute) {
-        describe(`driver mode: ${driverMode}, access function: ${useExecute ? 'execute' : 'query'}`, () => {
-            const env = {
-                DRIVER_MODE: driverMode,
-                LIBRARY_VERSION: version,
-                LIBRARY_NAME: name,
-                LIBRARY_LATEST: isLatest
-            };
+    describe('suppressed', function () {
+      const env = {
+        DRIVER_MODE: driverMode,
+        LIBRARY_VERSION: version,
+        LIBRARY_NAME: name,
+        LIBRARY_LATEST: isLatest
+      };
+      if (useExecute) {
+        env.USE_EXECUTE = 'true';
+      }
+      let controls;
 
-            if (useExecute) {
-                env.USE_EXECUTE = 'true';
+      before(async () => {
+        controls = new ProcessControls({
+          dirname: __dirname,
+          useGlobalAgent: true,
+          env
+        });
+
+        await controls.startAndWaitForAgentConnection(5000, Date.now() * 30 * 1000);
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await controls.stop();
+      });
+
+      afterEach(async () => {
+        await controls.clearIpcMessages();
+      });
+
+      it('should not trace', async function () {
+        await controls.sendRequest({
+          method: 'POST',
+          path: '/values',
+          qs: {
+            value: 42
+          },
+          suppressTracing: true
+        });
+
+        return testUtils
+          .retry(() => testUtils.delay(1000))
+          .then(() => agentControls.getSpans())
+          .then(spans => {
+            if (spans.length > 0) {
+              fail(`Unexpected spans ${testUtils.stringifyItems(spans)}.`);
             }
+          });
+      });
+    });
+  }
 
-            test(env);
-        });
+  function test(env) {
+    let controls;
 
-        describe('suppressed', function () {
-            const env = {
-                DRIVER_MODE: driverMode,
-                LIBRARY_VERSION: version,
-                LIBRARY_NAME: name,
-                LIBRARY_LATEST: isLatest
-            };
-            if (useExecute) {
-                env.USE_EXECUTE = 'true';
-            }
-            let controls;
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env
+      });
 
-            before(async () => {
-                controls = new ProcessControls({
-                    dirname: __dirname,
-                    useGlobalAgent: true,
-                    env
-                });
+      await controls.startAndWaitForAgentConnection(5000, Date.now() * 30 * 1000);
+    });
 
-                await controls.startAndWaitForAgentConnection(5000, Date.now() * 30 * 1000);
-            });
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
 
-            beforeEach(async () => {
-                await agentControls.clearReceivedTraceData();
-            });
+    after(async () => {
+      await controls.stop();
+    });
 
-            after(async () => {
-                await controls.stop();
-            });
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
 
-            afterEach(async () => {
-                await controls.clearIpcMessages();
-            });
+    it('must trace queries', () =>
+      controls
+        .sendRequest({
+          method: 'POST',
+          path: '/values',
+          qs: {
+            value: 42
+          }
+        })
+        .then(() =>
+          testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              expect(spans.length).to.equal(2);
+              const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.f.e).to.equal(String(controls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid')
+              ]);
 
-            it('should not trace', async function () {
-                await controls.sendRequest({
-                    method: 'POST',
-                    path: '/values',
-                    qs: {
-                        value: 42
-                    },
-                    suppressTracing: true
-                });
+              testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.t).to.equal(entrySpan.t),
+                span => expect(span.p).to.equal(entrySpan.s),
+                span => expect(span.n).to.equal('mysql'),
+                span => expect(span.k).to.equal(constants.EXIT),
+                span => expect(span.f.e).to.equal(String(controls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.async).to.not.exist,
+                span => expect(span.error).to.not.exist,
+                span => expect(span.ec).to.equal(0),
+                span => expect(span.data.mysql.stmt).to.equal('INSERT INTO random_values (value) VALUES (?)')
+              ]);
+            })
+          )
+        ));
 
-                return testUtils
-                    .retry(() => testUtils.delay(1000))
-                    .then(() => agentControls.getSpans())
-                    .then(spans => {
-                        if (spans.length > 0) {
-                            fail(`Unexpected spans ${testUtils.stringifyItems(spans)}.`);
-                        }
-                    });
-            });
-        });
-    }
+    it('must trace insert and get queries', () =>
+      controls
+        .sendRequest({
+          method: 'POST',
+          path: '/values',
+          qs: {
+            value: 43
+          }
+        })
+        .then(() =>
+          controls.sendRequest({
+            method: 'GET',
+            path: '/values'
+          })
+        )
+        .then(values => {
+          expect(values).to.contain(43);
 
-    function test(env) {
-        let controls;
+          return testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              expect(spans.length).to.equal(4);
+              const postEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.f.e).to.equal(String(controls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.data.http.method).to.equal('POST')
+              ]);
+              testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.t).to.equal(postEntrySpan.t),
+                span => expect(span.p).to.equal(postEntrySpan.s),
+                span => expect(span.n).to.equal('mysql'),
+                span => expect(span.k).to.equal(constants.EXIT),
+                span => expect(span.f.e).to.equal(String(controls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.async).to.not.exist,
+                span => expect(span.error).to.not.exist,
+                span => expect(span.ec).to.equal(0),
+                span => expect(span.data.mysql.stmt).to.equal('INSERT INTO random_values (value) VALUES (?)'),
+                span => expect(span.data.mysql.host).to.equal(process.env.INSTANA_CONNECT_MYSQL_HOST),
+                span => expect(span.data.mysql.port).to.equal(Number(process.env.INSTANA_CONNECT_MYSQL_PORT)),
+                span => expect(span.data.mysql.user).to.equal(process.env.INSTANA_CONNECT_MYSQL_USER),
+                span => expect(span.data.mysql.db).to.equal(process.env.INSTANA_CONNECT_MYSQL_DB)
+              ]);
+              const getEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.f.e).to.equal(String(controls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.data.http.method).to.equal('GET')
+              ]);
+              testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.t).to.equal(getEntrySpan.t),
+                span => expect(span.p).to.equal(getEntrySpan.s),
+                span => expect(span.n).to.equal('mysql'),
+                span => expect(span.k).to.equal(constants.EXIT),
+                span => expect(span.f.e).to.equal(String(controls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.async).to.not.exist,
+                span => expect(span.error).to.not.exist,
+                span => expect(span.ec).to.equal(0),
+                span => expect(span.data.mysql.stmt).to.equal('SELECT value FROM random_values'),
+                span => expect(span.data.mysql.host).to.equal(process.env.INSTANA_CONNECT_MYSQL_HOST),
+                span => expect(span.data.mysql.port).to.equal(Number(process.env.INSTANA_CONNECT_MYSQL_PORT)),
+                span => expect(span.data.mysql.user).to.equal(process.env.INSTANA_CONNECT_MYSQL_USER),
+                span => expect(span.data.mysql.db).to.equal(process.env.INSTANA_CONNECT_MYSQL_DB)
+              ]);
+            })
+          );
+        }));
 
-        before(async () => {
-            controls = new ProcessControls({
-                dirname: __dirname,
-                useGlobalAgent: true,
-                env
-            });
+    it('must keep the tracing context', () =>
+      controls
+        .sendRequest({
+          method: 'POST',
+          path: '/valuesAndCall',
+          qs: {
+            value: 1302
+          }
+        })
+        .then(spanContext => {
+          expect(spanContext).to.exist;
+          expect(spanContext.s).to.exist;
+          expect(spanContext.t).to.exist;
 
-            await controls.startAndWaitForAgentConnection(5000, Date.now() * 30 * 1000);
-        });
+          return testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              expect(spans.length).to.equal(3);
+              const postEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.f.e).to.equal(String(controls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.data.http.method).to.equal('POST')
+              ]);
 
-        beforeEach(async () => {
-            await agentControls.clearReceivedTraceData();
-        });
+              testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.t).to.equal(postEntrySpan.t),
+                span => expect(span.p).to.equal(postEntrySpan.s),
+                span => expect(span.n).to.equal('mysql'),
+                span => expect(span.k).to.equal(constants.EXIT),
+                span => expect(span.f.e).to.equal(String(controls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.async).to.not.exist,
+                span => expect(span.error).to.not.exist,
+                span => expect(span.ec).to.equal(0),
+                span => expect(span.data.mysql.stmt).to.equal('INSERT INTO random_values (value) VALUES (?)'),
+                span => expect(span.data.mysql.host).to.equal(process.env.INSTANA_CONNECT_MYSQL_HOST),
+                span => expect(span.data.mysql.port).to.equal(Number(process.env.INSTANA_CONNECT_MYSQL_PORT)),
+                span => expect(span.data.mysql.user).to.equal(process.env.INSTANA_CONNECT_MYSQL_USER),
+                span => expect(span.data.mysql.db).to.equal(process.env.INSTANA_CONNECT_MYSQL_DB)
+              ]);
 
-        after(async () => {
-            await controls.stop();
-        });
+              testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.t).to.equal(postEntrySpan.t),
+                span => expect(span.p).to.equal(postEntrySpan.s),
+                span => expect(span.n).to.equal('node.http.client'),
+                span => expect(span.k).to.equal(constants.EXIT),
+                span => expect(span.f.e).to.equal(String(controls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.async).to.not.exist,
+                span => expect(span.error).to.not.exist,
+                span => expect(span.ec).to.equal(0),
+                span => expect(span.data.http.method).to.equal('GET'),
+                span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/),
+                span => expect(span.data.http.status).to.equal(200),
+                span => expect(span.t).to.equal(spanContext.t),
+                span => expect(span.p).to.equal(spanContext.s)
+              ]);
+            })
+          );
+        }));
 
-        afterEach(async () => {
-            await controls.clearIpcMessages();
-        });
+    it('must replace stack trace with error stack when query fails', () =>
+      controls
+        .sendRequest({
+          method: 'POST',
+          path: '/error'
+        })
+        .then(() =>
+          testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              expect(spans.length).to.equal(2);
+              const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.f.e).to.equal(String(controls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid')
+              ]);
 
-        it('must trace queries', () =>
-            controls
-                .sendRequest({
-                    method: 'POST',
-                    path: '/values',
-                    qs: {
-                        value: 42
-                    }
-                })
-                .then(() =>
-                    testUtils.retry(() =>
-                        agentControls.getSpans().then(spans => {
-                            expect(spans.length).to.equal(2);
-                            const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
-                                span => expect(span.n).to.equal('node.http.server'),
-                                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                                span => expect(span.f.h).to.equal('agent-stub-uuid')
-                            ]);
+              const mysqlSpan = testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.t).to.equal(entrySpan.t),
+                span => expect(span.p).to.equal(entrySpan.s),
+                span => expect(span.n).to.equal('mysql'),
+                span => expect(span.k).to.equal(constants.EXIT),
+                span => expect(span.f.e).to.equal(String(controls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.ec).to.equal(1),
+                span => expect(span.data.mysql.error).to.exist
+              ]);
 
-                            testUtils.expectAtLeastOneMatching(spans, [
-                                span => expect(span.t).to.equal(entrySpan.t),
-                                span => expect(span.p).to.equal(entrySpan.s),
-                                span => expect(span.n).to.equal('mysql'),
-                                span => expect(span.k).to.equal(constants.EXIT),
-                                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                                span => expect(span.async).to.not.exist,
-                                span => expect(span.error).to.not.exist,
-                                span => expect(span.ec).to.equal(0),
-                                span => expect(span.data.mysql.stmt).to.equal('INSERT INTO random_values (value) VALUES (?)')
-                            ]);
-                        })
-                    )
-                ));
-
-        it('must trace insert and get queries', () =>
-            controls
-                .sendRequest({
-                    method: 'POST',
-                    path: '/values',
-                    qs: {
-                        value: 43
-                    }
-                })
-                .then(() =>
-                    controls.sendRequest({
-                        method: 'GET',
-                        path: '/values'
-                    })
-                )
-                .then(values => {
-                    expect(values).to.contain(43);
-
-                    return testUtils.retry(() =>
-                        agentControls.getSpans().then(spans => {
-                            expect(spans.length).to.equal(4);
-                            const postEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
-                                span => expect(span.n).to.equal('node.http.server'),
-                                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                                span => expect(span.data.http.method).to.equal('POST')
-                            ]);
-                            testUtils.expectAtLeastOneMatching(spans, [
-                                span => expect(span.t).to.equal(postEntrySpan.t),
-                                span => expect(span.p).to.equal(postEntrySpan.s),
-                                span => expect(span.n).to.equal('mysql'),
-                                span => expect(span.k).to.equal(constants.EXIT),
-                                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                                span => expect(span.async).to.not.exist,
-                                span => expect(span.error).to.not.exist,
-                                span => expect(span.ec).to.equal(0),
-                                span => expect(span.data.mysql.stmt).to.equal('INSERT INTO random_values (value) VALUES (?)'),
-                                span => expect(span.data.mysql.host).to.equal(process.env.INSTANA_CONNECT_MYSQL_HOST),
-                                span => expect(span.data.mysql.port).to.equal(Number(process.env.INSTANA_CONNECT_MYSQL_PORT)),
-                                span => expect(span.data.mysql.user).to.equal(process.env.INSTANA_CONNECT_MYSQL_USER),
-                                span => expect(span.data.mysql.db).to.equal(process.env.INSTANA_CONNECT_MYSQL_DB)
-                            ]);
-                            const getEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
-                                span => expect(span.n).to.equal('node.http.server'),
-                                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                                span => expect(span.data.http.method).to.equal('GET')
-                            ]);
-                            testUtils.expectAtLeastOneMatching(spans, [
-                                span => expect(span.t).to.equal(getEntrySpan.t),
-                                span => expect(span.p).to.equal(getEntrySpan.s),
-                                span => expect(span.n).to.equal('mysql'),
-                                span => expect(span.k).to.equal(constants.EXIT),
-                                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                                span => expect(span.async).to.not.exist,
-                                span => expect(span.error).to.not.exist,
-                                span => expect(span.ec).to.equal(0),
-                                span => expect(span.data.mysql.stmt).to.equal('SELECT value FROM random_values'),
-                                span => expect(span.data.mysql.host).to.equal(process.env.INSTANA_CONNECT_MYSQL_HOST),
-                                span => expect(span.data.mysql.port).to.equal(Number(process.env.INSTANA_CONNECT_MYSQL_PORT)),
-                                span => expect(span.data.mysql.user).to.equal(process.env.INSTANA_CONNECT_MYSQL_USER),
-                                span => expect(span.data.mysql.db).to.equal(process.env.INSTANA_CONNECT_MYSQL_DB)
-                            ]);
-                        })
-                    );
-                }));
-
-        it('must keep the tracing context', () =>
-            controls
-                .sendRequest({
-                    method: 'POST',
-                    path: '/valuesAndCall',
-                    qs: {
-                        value: 1302
-                    }
-                })
-                .then(spanContext => {
-                    expect(spanContext).to.exist;
-                    expect(spanContext.s).to.exist;
-                    expect(spanContext.t).to.exist;
-
-                    return testUtils.retry(() =>
-                        agentControls.getSpans().then(spans => {
-                            expect(spans.length).to.equal(3);
-                            const postEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
-                                span => expect(span.n).to.equal('node.http.server'),
-                                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                                span => expect(span.data.http.method).to.equal('POST')
-                            ]);
-
-                            testUtils.expectAtLeastOneMatching(spans, [
-                                span => expect(span.t).to.equal(postEntrySpan.t),
-                                span => expect(span.p).to.equal(postEntrySpan.s),
-                                span => expect(span.n).to.equal('mysql'),
-                                span => expect(span.k).to.equal(constants.EXIT),
-                                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                                span => expect(span.async).to.not.exist,
-                                span => expect(span.error).to.not.exist,
-                                span => expect(span.ec).to.equal(0),
-                                span => expect(span.data.mysql.stmt).to.equal('INSERT INTO random_values (value) VALUES (?)'),
-                                span => expect(span.data.mysql.host).to.equal(process.env.INSTANA_CONNECT_MYSQL_HOST),
-                                span => expect(span.data.mysql.port).to.equal(Number(process.env.INSTANA_CONNECT_MYSQL_PORT)),
-                                span => expect(span.data.mysql.user).to.equal(process.env.INSTANA_CONNECT_MYSQL_USER),
-                                span => expect(span.data.mysql.db).to.equal(process.env.INSTANA_CONNECT_MYSQL_DB)
-                            ]);
-
-                            testUtils.expectAtLeastOneMatching(spans, [
-                                span => expect(span.t).to.equal(postEntrySpan.t),
-                                span => expect(span.p).to.equal(postEntrySpan.s),
-                                span => expect(span.n).to.equal('node.http.client'),
-                                span => expect(span.k).to.equal(constants.EXIT),
-                                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                                span => expect(span.async).to.not.exist,
-                                span => expect(span.error).to.not.exist,
-                                span => expect(span.ec).to.equal(0),
-                                span => expect(span.data.http.method).to.equal('GET'),
-                                span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/),
-                                span => expect(span.data.http.status).to.equal(200),
-                                span => expect(span.t).to.equal(spanContext.t),
-                                span => expect(span.p).to.equal(spanContext.s)
-                            ]);
-                        })
-                    );
-                }));
-
-        it('must replace stack trace with error stack when query fails', () =>
-            controls
-                .sendRequest({
-                    method: 'POST',
-                    path: '/error'
-                })
-                .then(() =>
-                    testUtils.retry(() =>
-                        agentControls.getSpans().then(spans => {
-                            expect(spans.length).to.equal(2);
-                            const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
-                                span => expect(span.n).to.equal('node.http.server'),
-                                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                                span => expect(span.f.h).to.equal('agent-stub-uuid')
-                            ]);
-
-                            const mysqlSpan = testUtils.expectAtLeastOneMatching(spans, [
-                                span => expect(span.t).to.equal(entrySpan.t),
-                                span => expect(span.p).to.equal(entrySpan.s),
-                                span => expect(span.n).to.equal('mysql'),
-                                span => expect(span.k).to.equal(constants.EXIT),
-                                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                                span => expect(span.ec).to.equal(1),
-                                span => expect(span.data.mysql.error).to.exist
-                            ]);
-
-                            expect(mysqlSpan.stack).to.exist;
-                        })
-                    )
-                ));
-    }
+              expect(mysqlSpan.stack).to.exist;
+            })
+          )
+        ));
+  }
 };
