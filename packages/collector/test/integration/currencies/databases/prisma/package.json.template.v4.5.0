@@ -1,0 +1,5 @@
+{
+    "dependencies": {
+        "@prisma/client": "4.5.0"
+    }
+}

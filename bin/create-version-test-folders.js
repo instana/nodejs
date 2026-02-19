@@ -127,7 +127,7 @@ function copyParentFiles(dir, sourceDir) {
       !e.name.startsWith('_v') &&
       e.name !== 'node_modules' &&
       e.name !== 'package.json' &&
-      e.name !== 'package.json.template' &&
+      !e.name.startsWith('package.json.template') &&
       e.name !== 'modes.json'
     )
     .forEach(e => {
@@ -253,30 +253,21 @@ mochaSuiteFn(suiteTitle, function () {
 ${
   verifyDependency
     ? `
-      try {
-        const resolvedAppDep = require.resolve('${suiteName}');
-        log(\`[INFO] Verification: require('${suiteName}') resolves to \${resolvedAppDep}\`);
-
-        const appDep = path.join(__dirname, 'node_modules', '${suiteName}');
-        if (!resolvedAppDep.includes(appDep)) {
-          throw new Error(
-            \`Verification failed: require('${suiteName}') resolved to \${resolvedAppDep}, \` +
-            \`expected it to be within \${appDep}\`
-          );
-        }
-      } catch (err) {
-        log(\`[WARN] require.resolve('${suiteName}') failed: \${err.message}\`);
-      }
-
       const appDep = path.join(__dirname, 'node_modules', '${suiteName}');
+      if (!fs.existsSync(path.join(appDep, 'package.json'))) {
+        throw new Error(\`Verification failed: \${appDep}/package.json not found\`);
+      }
+      log(\`[INFO] Path validation successful: ${suiteName} is installed in \${appDep}\`);
+
       const appDepVersion = require(path.join(appDep, 'package.json')).version;
-      log(\`[INFO] Installed ${suiteName}@\${appDepVersion}\`);
 
       if (appDepVersion.replace(/^v/, '') !== '${rawVersion}'.replace(/^v/, '')) {
         throw new Error(
           \`Installed version \${appDepVersion} does not match expected version ${rawVersion}\`
         );
       }
+
+      log(\`[INFO] Version validation successful: ${suiteName}@\${appDepVersion}\`);
 `
     : ''
 }      break;
@@ -329,7 +320,19 @@ function createTgzSymlinks(targetDir) {
   });
 }
 
-function generatePackageJson({ testDir, versionDir, pkgName, currencyName, currencyVersion, isOptional }) {
+function mergeTemplate(target, templatePath) {
+  if (!templatePath || !fs.existsSync(templatePath)) return;
+  const template = JSON.parse(fs.readFileSync(templatePath, 'utf8'));
+  for (const [key, value] of Object.entries(template)) {
+    if (typeof value === 'object' && !Array.isArray(value) && typeof target[key] === 'object') {
+      Object.assign(target[key], value);
+    } else {
+      target[key] = value;
+    }
+  }
+}
+
+function generatePackageJson({ testDir, versionDir, pkgName, currencyName, currencyVersion, isOptional, majorVersion }) {
   const packageJsonTemplatePath = path.join(testDir, 'package.json.template');
   const packageJsonPath = path.join(testDir, 'package.json');
   let versionPackageJson = { name: pkgName };
@@ -340,6 +343,13 @@ function generatePackageJson({ testDir, versionDir, pkgName, currencyName, curre
   } else if (fs.existsSync(packageJsonPath)) {
     const templatePackageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
     versionPackageJson = Object.assign(versionPackageJson, templatePackageJson);
+  }
+
+  if (majorVersion != null) {
+    mergeTemplate(versionPackageJson, path.join(testDir, `package.json.template.v${majorVersion}`));
+  }
+  if (currencyVersion) {
+    mergeTemplate(versionPackageJson, path.join(testDir, `package.json.template.v${currencyVersion}`));
   }
 
   if (!versionPackageJson.dependencies) {
@@ -453,7 +463,8 @@ function main() {
             pkgName: `${currency.name}-v${majorVersion}`,
             currencyName: currency.name,
             currencyVersion: version,
-            isOptional
+            isOptional,
+            majorVersion
           });
         });
       });
