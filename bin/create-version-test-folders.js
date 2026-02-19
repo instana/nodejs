@@ -254,16 +254,27 @@ ${
   verifyDependency
     ? `
       const appDep = path.join(__dirname, 'node_modules', '${suiteName}');
-      const resolved = require.resolve('${suiteName}/package.json');
-      if (!resolved.startsWith(appDep)) {
+
+      let resolved;
+      try {
+        resolved = require.resolve('${suiteName}');
+      } catch (err) {
+        throw err;
+      }
+
+      const marker = path.join('node_modules', '${suiteName}');
+      resolved = resolved.substring(0, resolved.lastIndexOf(marker) + marker.length);
+
+      if (resolved !== appDep) {
         throw new Error(
-          \`Verification failed: ${suiteName}/package.json resolved to \${resolved}, \` +
-          \`expected it within \${appDep}\`
+          \`Verification failed: ${suiteName} resolved to \${resolved}, \` +
+          \`expected \${appDep}\`
         );
       }
       log(\`[INFO] Path validation successful: \${resolved}\`);
 
-      const appDepVersion = JSON.parse(fs.readFileSync(resolved, 'utf8')).version;
+      const appDepPkgJson = path.join(appDep, 'package.json');
+      const appDepVersion = JSON.parse(fs.readFileSync(appDepPkgJson, 'utf8')).version;
 
       if (appDepVersion.replace(/^v/, '') !== '${rawVersion}'.replace(/^v/, '')) {
         throw new Error(
