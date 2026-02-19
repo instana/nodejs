@@ -98,7 +98,8 @@ function generateTestWrapper({
   mode,
   sourceDepth,
   nodeConstraint,
-  isOptional
+  isOptional,
+  verifyDependency
 }) {
   const currentYear = new Date().getFullYear();
   const relSourcePath = sourceDepth === 2 ? '../..' : '..';
@@ -111,7 +112,7 @@ function generateTestWrapper({
 
 /** THIS IS A GENERATED FILE. DO NOT MODIFY IT. */
 
-const { execSync } = require('child_process');
+const { execSync, execFileSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const config = require('@_local/core/test/config');
@@ -126,7 +127,7 @@ function copyParentFiles(dir, sourceDir) {
       !e.name.startsWith('_v') &&
       e.name !== 'node_modules' &&
       e.name !== 'package.json' &&
-      e.name !== 'package.json.template' &&
+      !e.name.startsWith('package.json.template') &&
       e.name !== 'modes.json'
     )
     .forEach(e => {
@@ -222,15 +223,10 @@ mochaSuiteFn(suiteTitle, function () {
     const semaphoreWait = process.env.CI ? 10 * 60 * 1000 : 0;
     this.timeout(15 * 60 * 1000 + semaphoreWait);
 
-    log('[INFO] Setting up dependencies for ${suiteName}@${displayVersion}...');
     const slot = process.env.CI ? await installSemaphore.acquireSlot(log) : undefined;
     if (slot !== undefined) log(\`[INFO] Acquired install slot \${slot}\`);
     try {
       rmDir(path.join(__dirname, 'node_modules'));
-
-      // eslint-disable-next-line global-require,import/no-dynamic-require
-      const preinstalledMod = require('@_local/collector/test/test_util/preinstalled-node-modules');
-      preinstalledMod.extractPreinstalledPackages(__dirname, { timeout: installTimeout - 1000 });
 
       log('[INFO] Running npm install for ${suiteName}@${displayVersion}...');
       const npmCmd = process.env.CI ?
@@ -238,45 +234,84 @@ mochaSuiteFn(suiteTitle, function () {
         '--no-package-lock --no-audit --prefix ./ --no-progress' :
         'npm install --no-package-lock --no-audit --prefix ./ --no-progress';
 
-  for (let attempt = 0; attempt < maxRetries; attempt++) {${
-    isOptional
-      ? `
-        const timeout = 5 * 60 * 1000;`
-      : `
-        const timeout = (120 + attempt * 30) * 1000;`
-  }
-    try {
-      execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });${
+      for (let attempt = 0; attempt < maxRetries; attempt++) {${
         isOptional
           ? `
+            const timeout = 5 * 60 * 1000;`
+          : `
+            const timeout = (120 + attempt * 30) * 1000;`
+      }
+        try {
+          execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });${
+            isOptional
+              ? `
           if (!fs.existsSync(path.join(__dirname, 'node_modules', '${suiteName}'))) {
             throw new Error('${suiteName} not found after install');
           }`
-          : ''
-      }
-      break;
-    } catch (err) {
-      if (
-        isCleaning ||
-        err.signal === 'SIGINT' ||
-        err.signal === 'SIGTERM' ||
-        err.status === 130 ||
-        err.status === 143
-      ) {
-        throw err;
-      }
+              : ''
+          }
+          break;
+        } catch (err) {
+          console.log(\`[ERROR] npm install failed on attempt \${attempt + 1}: \${err.message}\`);
 
-      if (attempt === maxRetries - 1) throw err;
-      const secs = timeout / 1000;
-      log(\`[WARN] npm install failed (\${err.message}), retry \${attempt + 1}/\${maxRetries} (\${secs}s)...\`);
+          if (
+            isCleaning ||
+            err.signal === 'SIGINT' ||
+            err.signal === 'SIGTERM' ||
+            err.status === 130 ||
+            err.status === 143
+          ) {
+            throw err;
+          }
+
+          if (attempt === maxRetries - 1) throw err;
+          const secs = timeout / 1000;
+          log(\`[WARN] npm install failed (\${err.message}), retry \${attempt + 1}/\${maxRetries} (\${secs}s)...\`);
           rmDir(path.join(__dirname, 'node_modules'));
+          continue;
         }
       }
-    } finally {
+
+${
+  verifyDependency
+    ? `
+      log(\`[INFO] Verifying installed ${suiteName}\`);
+      try {
+        const verifyScript = [
+          "const p=require('path'),f=require('fs');",
+          "let r=require.resolve('${suiteName}');",
+          "const m=p.join('node_modules','${suiteName}');",
+          "r=r.substring(0,r.lastIndexOf(m)+m.length);",
+          "const e=p.join(process.cwd(),'node_modules','${suiteName}');",
+          "if(r!==e){process.stderr.write(r);process.exit(1)}",
+          "const v=JSON.parse(f.readFileSync(p.join(e,'package.json'),'utf8')).version;",
+          "if(v.replace(/^v/,'')!=='${rawVersion}'.replace(/^v/,'')){process.stderr.write(v);process.exit(2)}",
+          "process.stdout.write(r+'|'+v);"
+        ].join('');
+        const result = execFileSync('node', ['-e', verifyScript], {
+          cwd: __dirname,
+          encoding: 'utf8',
+          timeout: 10000
+        });
+        const [resolvedPath, resolvedVersion] = result.trim().split('|');
+        log(\`[INFO] Path validation successful: \${resolvedPath}\`);
+        log(\`[INFO] Version validation successful: ${suiteName}@\${resolvedVersion}\`);
+      } catch (err) {
+        const detail = (err.stderr || '').trim();
+        if (err.status === 1) {
+          throw new Error(
+            \`Verification failed: ${suiteName} resolved to \${detail}, expected under __dirname/node_modules\`
+          );
+        } else if (err.status === 2) {
+          throw new Error(\`Verification failed: installed version \${detail} does not match expected ${rawVersion}\`);
+        }
+        throw new Error(\`Verification failed: \${err.message}\`);
+      }
+`
+    : ''
+}    } finally {
       if (slot !== undefined) installSemaphore.releaseSlot(slot);
     }
-
-    log('[INFO] Done setting up dependencies for ${suiteName}@${displayVersion}');
   });
 
   // eslint-disable-next-line global-require,import/no-dynamic-require,import/extensions
@@ -286,7 +321,36 @@ mochaSuiteFn(suiteTitle, function () {
 `;
 }
 
-function generatePackageJson({ testDir, versionDir, pkgName, currencyName, currencyVersion, isOptional }) {
+const tgzDir = path.join(collectorTestDir, 'instana-tgz');
+const tgzFiles = ['collector.tgz', 'core.tgz', 'shared-metrics.tgz'];
+
+function createTgzSymlinks(targetDir) {
+  tgzFiles.forEach(tgz => {
+    const linkPath = path.join(targetDir, tgz);
+    const target = path.relative(targetDir, path.join(tgzDir, tgz));
+    try {
+      fs.unlinkSync(linkPath);
+    } catch (_) {
+      /* not found */
+    }
+    fs.symlinkSync(target, linkPath);
+  });
+}
+
+function mergeTemplate(target, templatePath) {
+  if (!templatePath || !fs.existsSync(templatePath)) return;
+  const template = JSON.parse(fs.readFileSync(templatePath, 'utf8'));
+  Object.entries(template).forEach(([key, value]) => {
+    if (typeof value === 'object' && !Array.isArray(value) && typeof target[key] === 'object') {
+      Object.assign(target[key], value);
+    } else {
+      target[key] = value;
+    }
+  });
+}
+
+function generatePackageJson(opts) {
+  const { testDir, versionDir, pkgName, currencyName, currencyVersion, isOptional, majorVersion } = opts;
   const packageJsonTemplatePath = path.join(testDir, 'package.json.template');
   const packageJsonPath = path.join(testDir, 'package.json');
   let versionPackageJson = { name: pkgName };
@@ -299,16 +363,20 @@ function generatePackageJson({ testDir, versionDir, pkgName, currencyName, curre
     versionPackageJson = Object.assign(versionPackageJson, templatePackageJson);
   }
 
+  if (majorVersion != null) {
+    mergeTemplate(versionPackageJson, path.join(testDir, `package.json.template.v${majorVersion}`));
+  }
+  if (currencyVersion) {
+    mergeTemplate(versionPackageJson, path.join(testDir, `package.json.template.v${currencyVersion}`));
+  }
+
   if (!versionPackageJson.dependencies) {
     versionPackageJson.dependencies = {};
   }
 
-  const tgzDir = path.join(collectorTestDir, 'instana-tgz');
-  const relativeTgzPath = path.relative(versionDir, tgzDir).replace(/\\/g, '/');
-
-  versionPackageJson.dependencies['@instana/collector'] = `file:${relativeTgzPath}/collector.tgz`;
-  versionPackageJson.dependencies['@instana/core'] = `file:${relativeTgzPath}/core.tgz`;
-  versionPackageJson.dependencies['@instana/shared-metrics'] = `file:${relativeTgzPath}/shared-metrics.tgz`;
+  versionPackageJson.dependencies['@instana/collector'] = 'file:./collector.tgz';
+  versionPackageJson.dependencies['@instana/core'] = 'file:./core.tgz';
+  versionPackageJson.dependencies['@instana/shared-metrics'] = 'file:./shared-metrics.tgz';
 
   if (currencyName && currencyVersion) {
     if (isOptional) {
@@ -382,6 +450,7 @@ function main() {
         const hasModes = modes.length > 1 || (modes.length === 1 && modes[0] !== null);
         const isOptional = typeof versionObj === 'object' && versionObj.optional === true;
         const nodeConstraint = typeof versionObj === 'object' ? versionObj.node || '' : '';
+        const skipValidation = typeof versionObj === 'object' && versionObj.skipValidation === true;
 
         modes.forEach(mode => {
           // When modes exist, each mode gets its own subdirectory for isolation
@@ -389,6 +458,8 @@ function main() {
           if (hasModes && !fs.existsSync(targetDir)) {
             fs.mkdirSync(targetDir, { recursive: true });
           }
+
+          createTgzSymlinks(targetDir);
 
           const testContent = generateTestWrapper({
             suiteName: currency.name,
@@ -399,7 +470,8 @@ function main() {
             mode,
             sourceDepth: hasModes ? 2 : 1,
             nodeConstraint,
-            isOptional
+            isOptional,
+            verifyDependency: !skipValidation
           });
           const fileName = mode ? `${mode}.test.js` : 'default.test.js';
           fs.writeFileSync(path.join(targetDir, fileName), testContent);
@@ -410,7 +482,8 @@ function main() {
             pkgName: `${currency.name}-v${majorVersion}`,
             currencyName: currency.name,
             currencyVersion: version,
-            isOptional
+            isOptional,
+            majorVersion
           });
         });
       });
@@ -432,6 +505,8 @@ function main() {
       fs.mkdirSync(versionDir, { recursive: true });
     }
 
+    createTgzSymlinks(versionDir);
+
     const testContent = generateTestWrapper({
       suiteName: dirName,
       displayVersion: version,
@@ -439,7 +514,8 @@ function main() {
       isLatest: true,
       esmOnly: false,
       mode: null,
-      sourceDepth: 1
+      sourceDepth: 1,
+      verifyDependency: false
     });
     fs.writeFileSync(path.join(versionDir, 'default.test.js'), testContent);
 

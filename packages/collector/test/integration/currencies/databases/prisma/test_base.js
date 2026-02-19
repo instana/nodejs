@@ -5,11 +5,9 @@
 'use strict';
 
 const expect = require('chai').expect;
-const fs = require('fs').promises;
+const fsPromises = require('fs').promises;
 const path = require('path');
 const recursiveCopy = require('recursive-copy');
-const rimraf = require('util').promisify(require('rimraf'));
-
 const semver = require('semver');
 const config = require('@_local/core/test/config');
 const { retry, verifyHttpRootEntry, verifyExitSpan } = require('@_local/core/test/test_util');
@@ -40,65 +38,32 @@ module.exports = function (name, version, isLatest, mode) {
   }
 
   before(async () => {
-    await executeAsync('rm -rf node_modules', appDir);
-    await executeAsync('mkdir -p node_modules', appDir);
-
-    const versionToInstall = version;
-
-    try {
-      await executeAsync(`npm install prisma@${versionToInstall}`, appDir);
-    } catch (err) {
-      // ignore
-    }
-
-    try {
-      await executeAsync(`npm i @prisma/client@${versionToInstall}`, appDir);
-    } catch (err) {
-      // ignore
-    }
-
-    // Install db adapters for Prisma v7+
-    // https://www.prisma.io/docs/orm/more/upgrade-guides/upgrading-versions/upgrading-to-prisma-7
-    if (isV7) {
-      const adapter =
-        provider === 'postgresql'
-          ? `@prisma/adapter-pg@${versionToInstall}`
-          : `@prisma/adapter-better-sqlite3@${versionToInstall}`;
-
-      try {
-        await executeAsync(`npm i ${adapter}`, appDir);
-      } catch {
-        // ignore errors
-      }
-    }
-  });
-
-  // Set up Prisma stuff for the provider we want to test with (either sqlite or postgresql).
-  before(async () => {
     // Starting with v7, the migrations no longer reads the url directly from the schema.
     // Instead, it expects the url to be defined in prisma.config files
     const schemaSuffix = !isV7 ? `${provider}.legacy` : provider;
     const schemaSourceFile = path.join(appDir, 'prisma', `schema.prisma.${schemaSuffix}`);
 
-    await fs.rm(schemaTargetFile, { force: true });
-    await fs.copyFile(schemaSourceFile, schemaTargetFile);
+    await fsPromises.rm(schemaTargetFile, { force: true });
+    await fsPromises.copyFile(schemaSourceFile, schemaTargetFile);
 
     const migrationsSourceDir = path.join(appDir, 'prisma', `migrations-${provider}`);
-    await rimraf(migrationsTargetDir);
+    await fsPromises.rm(migrationsTargetDir, { force: true, recursive: true });
     await recursiveCopy(migrationsSourceDir, migrationsTargetDir);
 
     // Run the prisma client tooling to generate the database client access code.
     // See https://www.prisma.io/docs/reference/api-reference/command-reference#generate
     const prismaConfig = isV7 ? `--config prisma-${provider}.config.js` : '';
+    console.log(`Running npx prisma generate ${prismaConfig} in ${appDir}`);
     await executeAsync(`npx prisma generate ${prismaConfig}`, appDir);
 
+    console.log(`Running npx prisma migrate reset --force ${prismaConfig} in ${appDir}`);
     // Run database migrations to create the table
     await executeAsync(`npx prisma migrate reset --force ${prismaConfig}`, appDir);
   });
 
   after(async () => {
-    await fs.rm(schemaTargetFile, { force: true });
-    await rimraf(migrationsTargetDir);
+    await fsPromises.rm(schemaTargetFile, { force: true });
+    await fsPromises.rm(migrationsTargetDir, { force: true, recursive: true });
   });
 
   globalAgent.setUpCleanUpHooks();

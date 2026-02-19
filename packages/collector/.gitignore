@@ -20,4 +20,3 @@ test/instana-tgz
 test/**/_v*
 test/**/package-lock.json
 test/.*-checksum
-test/preinstalled-node-modules

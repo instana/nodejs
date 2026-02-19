@@ -46,6 +46,8 @@ if (!isCI()) {
     log('[INFO] Test folders out of date — regenerating...');
     execSync('node bin/create-version-test-folders.js', { cwd: rootDir, stdio: 'inherit' });
     fs.writeFileSync(checksumPath, currentHash);
+  } else {
+    log('[INFO] Test folders up to date, skipping generation.');
   }
 }
 
@@ -56,34 +58,33 @@ if (process.env.SKIP_TGZ !== 'true') {
   if (fs.existsSync(preinstallScript)) {
     const tgzChecksumPath = path.join(testDir, '.tgz-checksum');
     const tgzLockPath = path.join(testDir, '.tgz-lock');
-    const preinstalledArchive = path.join(testDir, 'preinstalled-node-modules', 'node_modules.tar.gz');
+    const tgzDir = path.join(testDir, 'instana-tgz');
     const srcDirs = ['collector', 'core', 'shared-metrics'].map(p => path.join(rootDir, 'packages', p, 'src'));
     const tgzHash = hashDirectories(srcDirs);
 
     let needsTgzRegen = true;
     try {
       needsTgzRegen =
-        fs.readFileSync(tgzChecksumPath, 'utf8').trim() !== tgzHash || !fs.existsSync(preinstalledArchive);
+        fs.readFileSync(tgzChecksumPath, 'utf8').trim() !== tgzHash ||
+        !fs.existsSync(path.join(tgzDir, 'collector.tgz'));
     } catch (_) {
       // first run
     }
 
     if (needsTgzRegen) {
       const regenerate = () => {
-        log('[INFO] Source changed — regenerating tgz packages and preinstalled node_modules...');
-        const npmCachePath = path.join(rootDir, '.npm-offline-cache');
-        const env = Object.assign({}, process.env);
-        if (isCI() && fs.existsSync(npmCachePath)) {
-          env.NPM_CACHE = npmCachePath;
-        }
-        execSync(`bash "${preinstallScript}"`, { cwd: testDir, stdio: 'inherit', env });
+        log('[INFO] Source changed — regenerating tgz packages...');
+        execSync(`bash "${preinstallScript}"`, { cwd: testDir, stdio: 'inherit' });
         fs.writeFileSync(tgzChecksumPath, tgzHash);
       };
 
       if (isCI()) {
         const isStillNeeded = () => {
           try {
-            return fs.readFileSync(tgzChecksumPath, 'utf8').trim() !== tgzHash || !fs.existsSync(preinstalledArchive);
+            return (
+              fs.readFileSync(tgzChecksumPath, 'utf8').trim() !== tgzHash ||
+              !fs.existsSync(path.join(tgzDir, 'collector.tgz'))
+            );
           } catch (_) {
             return true;
           }
@@ -94,7 +95,7 @@ if (process.env.SKIP_TGZ !== 'true') {
         regenerate();
       }
     } else {
-      log('[INFO] tgz packages and preinstalled node_modules up to date, skipping generation.');
+      log('[INFO] tgz packages up to date, skipping generation.');
     }
   }
 }

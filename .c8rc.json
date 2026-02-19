@@ -6,6 +6,7 @@
     "bin",
     ".tekton",
     "misc",
-    "**/test"
+    "**/test",
+    ".npm-offline-cache"
   ]
 }
