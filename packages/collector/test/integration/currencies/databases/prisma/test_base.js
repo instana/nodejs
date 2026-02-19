@@ -5,12 +5,9 @@
 'use strict';
 
 const expect = require('chai').expect;
-const fs = require('fs');
 const fsPromises = require('fs').promises;
 const path = require('path');
 const recursiveCopy = require('recursive-copy');
-const rimraf = require('util').promisify(require('rimraf'));
-
 const semver = require('semver');
 const config = require('@_local/core/test/config');
 const { retry, verifyHttpRootEntry, verifyExitSpan } = require('@_local/core/test/test_util');
