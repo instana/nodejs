@@ -112,7 +112,7 @@ function generateTestWrapper({
 
 /** THIS IS A GENERATED FILE. DO NOT MODIFY IT. */
 
-const { execSync } = require('child_process');
+const { execSync, execFileSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const config = require('@_local/core/test/config');
@@ -275,38 +275,36 @@ mochaSuiteFn(suiteTitle, function () {
 ${
   verifyDependency
     ? `
-      // Verification is performed after npm install succeeds
-      const appDep = path.join(__dirname, 'node_modules', '${suiteName}');
-
-      console.log(\`[INFO] Verifying installed ${suiteName}\`);
-      let resolved;
+      log(\`[INFO] Verifying installed ${suiteName}\`);
       try {
-        resolved = require.resolve('${suiteName}');
+        const verifyScript = [
+          "const p=require('path'),f=require('fs');",
+          "let r=require.resolve('${suiteName}');",
+          "const m=p.join('node_modules','${suiteName}');",
+          "r=r.substring(0,r.lastIndexOf(m)+m.length);",
+          "const e=p.join(process.cwd(),'node_modules','${suiteName}');",
+          "if(r!==e){process.stderr.write(r);process.exit(1)}",
+          "const v=JSON.parse(f.readFileSync(p.join(e,'package.json'),'utf8')).version;",
+          "if(v.replace(/^v/,'')!=='${rawVersion}'.replace(/^v/,'')){process.stderr.write(v);process.exit(2)}",
+          "process.stdout.write(r+'|'+v);"
+        ].join('');
+        const result = execFileSync('node', ['-e', verifyScript], {
+          cwd: __dirname,
+          encoding: 'utf8',
+          timeout: 10000
+        });
+        const [resolvedPath, resolvedVersion] = result.trim().split('|');
+        log(\`[INFO] Path validation successful: \${resolvedPath}\`);
+        log(\`[INFO] Version validation successful: ${suiteName}@\${resolvedVersion}\`);
       } catch (err) {
-        throw new Error(\`Failed to resolve ${suiteName} after install: \${err.message}\`);
+        const detail = (err.stderr || '').trim();
+        if (err.status === 1) {
+          throw new Error(\`Verification failed: ${suiteName} resolved to \${detail}, expected under __dirname/node_modules\`);
+        } else if (err.status === 2) {
+          throw new Error(\`Verification failed: installed version \${detail} does not match expected ${rawVersion}\`);
+        }
+        throw new Error(\`Verification failed: \${err.message}\`);
       }
-
-      const marker = path.join('node_modules', '${suiteName}');
-      resolved = resolved.substring(0, resolved.lastIndexOf(marker) + marker.length);
-
-      if (resolved !== appDep) {
-        throw new Error(
-          \`Verification failed: ${suiteName} resolved to \${resolved}, \` +
-          \`expected \${appDep}\`
-        );
-      }
-      log(\`[INFO] Path validation successful: \${resolved}\`);
-
-      const appDepPkgJson = path.join(appDep, 'package.json');
-      const appDepVersion = JSON.parse(fs.readFileSync(appDepPkgJson, 'utf8')).version;
-
-      if (appDepVersion.replace(/^v/, '') !== '${rawVersion}'.replace(/^v/, '')) {
-        throw new Error(
-          \`Installed version \${appDepVersion} does not match expected version ${rawVersion}\`
-        );
-      }
-
-      log(\`[INFO] Version validation successful: ${suiteName}@\${appDepVersion}\`);
 `
     : ''
 }    } finally {
