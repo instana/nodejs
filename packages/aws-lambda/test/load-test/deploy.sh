@@ -79,14 +79,17 @@ printf "####\n\n"
 
 if [[ -z $NO_PROMPT ]]; then
   while true; do
-      read -p "Do you wish to continue (yes or no)? " yn
-      case $yn in
-          [Yy]* ) echo "Let's go!"; break;;
-          [Nn]* ) exit 1;;
-          * ) echo "Please answer yes or no.";;
-      esac
+    read -p "Do you wish to continue (yes or no)? " yn
+    case $yn in
+    [Yy]*)
+      echo "Let's go!"
+      break
+      ;;
+    [Nn]*) exit 1 ;;
+    *) echo "Please answer yes or no." ;;
+    esac
   done
-fi  
+fi
 
 cd ../lambdas
 echo "Creating zip file for 'many-spans' lambda..."
@@ -118,5 +121,3 @@ else
   FUNCTION_NAME_PREFIX=$FUNCTION_NAME_PREFIX TIMEOUT=60 FUNCTION_URL=true REGION=$REGION bin/deploy-zip.sh zip/many-spans.zip
   sleep 5
 fi
-
-

@@ -14,8 +14,7 @@ if [[ -z "${1-}" ]]; then
   exit 1
 fi
 
-cd `dirname $BASH_SOURCE`/..
+cd $(dirname $BASH_SOURCE)/..
 
 bin/create-zip.sh $1
 bin/deploy-zip.sh $1
-

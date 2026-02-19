@@ -34,7 +34,7 @@
 # use -eox to see better output
 set -eo pipefail
 
-cd `dirname $BASH_SOURCE`
+cd $(dirname $BASH_SOURCE)
 
 source utils
 
@@ -80,35 +80,35 @@ echo "Building $image_tag from $dockerfile"
 if [[ $build_mode = local ]]; then
   rm -rf instana-*.tgz
 
-  pushd ../../../core > /dev/null
+  pushd ../../../core >/dev/null
   rm -f instana-core-*.tgz
   npm pack
   mv instana-core-*.tgz ../aws-fargate/images/instana-aws-fargate/instana-core.tgz
-  popd > /dev/null
+  popd >/dev/null
 
-  pushd ../../../serverless > /dev/null
+  pushd ../../../serverless >/dev/null
   rm -f instana-serverless-*.tgz
   npm pack
   mv instana-serverless-*.tgz ../aws-fargate/images/instana-aws-fargate/instana-serverless.tgz
-  popd > /dev/null
+  popd >/dev/null
 
-  pushd ../../../shared-metrics > /dev/null
+  pushd ../../../shared-metrics >/dev/null
   rm -f instana-shared-metrics-*.tgz
   npm pack
   mv instana-shared-metrics-*.tgz ../aws-fargate/images/instana-aws-fargate/instana-shared-metrics.tgz
-  popd > /dev/null
+  popd >/dev/null
 
-  pushd ../../../metrics-util > /dev/null
+  pushd ../../../metrics-util >/dev/null
   rm -f instana-metrics-util-*.tgz
   npm pack
   mv instana-metrics-util-*.tgz ../aws-fargate/images/instana-aws-fargate/instana-metrics-util.tgz
-  popd > /dev/null
+  popd >/dev/null
 
-  pushd ../.. > /dev/null
+  pushd ../.. >/dev/null
   rm -f instana-aws-fargate-*.tgz
   npm pack
   mv instana-aws-fargate-*.tgz images/instana-aws-fargate/instana-aws-fargate.tgz
-  popd > /dev/null
+  popd >/dev/null
 
   cp package.json.local package.json
 elif [[ $build_mode = npm ]]; then

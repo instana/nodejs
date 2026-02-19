@@ -5,7 +5,6 @@
 # (c) Copyright Instana Inc. and contributors 2020
 #######################################
 
-
 # This script builds a test image that can be used as a Google Cloud Run service. You can either use the Instana
 # Node.js Google Cloud Run base image from one of various sources (published production image, image from your local
 # Docker registry or test base image from internal ICR registry). You would usually not call this script
@@ -37,7 +36,7 @@
 
 set -eo pipefail
 
-cd `dirname $BASH_SOURCE`
+cd $(dirname $BASH_SOURCE)
 
 source utils
 
@@ -67,9 +66,9 @@ fi
 
 if [[ $INSTANA_LAYER_MODE = local ]]; then
   echo Building local Instana layer first.
-  pushd ../instana-google-cloud-run > /dev/null
+  pushd ../instana-google-cloud-run >/dev/null
   ./build.sh local
-  popd > /dev/null
+  popd >/dev/null
 else
   echo Not building local Instana layer.
 fi
@@ -93,4 +92,3 @@ docker build \
   -t $gcr_repository/$image_tag \
   .
 echo "docker build exit status: $?"
-

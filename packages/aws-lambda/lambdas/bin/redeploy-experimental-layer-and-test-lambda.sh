@@ -7,7 +7,7 @@
 
 set -eEuo pipefail
 
-cd `dirname $BASH_SOURCE`/..
+cd $(dirname $BASH_SOURCE)/..
 
 pwd
 
@@ -29,4 +29,3 @@ echo "Re-building and deploying test Lambda:"
 BUILD_LAMBDAS_WITH=layer LAYER_VERSION=$LAYER_VERSION LAYER_ARN=arn:aws:lambda:$REGION:$AWS_ACCNT:layer:$LAYER_NAME:$LAYER_VERSION bin/rebuild-redeploy.sh simple-nodejs-lambda
 
 echo "Done!"
-

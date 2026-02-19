@@ -5,32 +5,30 @@ set -eo pipefail
 # (c) Copyright Instana Inc. and contributors 2020
 #######################################
 
-
-cd `dirname $BASH_SOURCE`
+cd $(dirname $BASH_SOURCE)
 
 # We intentionally skip defining Node.js v25 because:
 # - Node.js v21,v23 and v25 are non-LTS releases with a short support window.
 # - Excluding these helps reduces the overall package size.
 # - Most users remain on stable LTS versions such as 22,24, etc.
-declare -A ABI_VERSIONS=( \
-  ["108"]="18.18" \
-  ["115"]="20.19" \
+declare -A ABI_VERSIONS=(
+  ["108"]="18.18"
+  ["115"]="20.19"
   # ["120"]="21.2" \
-  ["127"]="22.0" \
+  ["127"]="22.0"
   # ["131"]="23.0" \
-  ["137"]="24.0" 
+  ["137"]="24.0"
   # ["141"]="25.0"  # Non-LTS (skipped intentionally)
-  )
+)
 
-
-LIBC_VARIANTS=( \
-  "glibc" \
+LIBC_VARIANTS=(
+  "glibc"
   "musl"
 )
 
-LINUX_ARCHS=( \
-  "x64" \
-  "arm64" \
+LINUX_ARCHS=(
+  "x64"
+  "arm64"
   "s390x"
 )
 
@@ -60,14 +58,12 @@ if [[ -z "$BUILD_FOR_MACOS" ]]; then
 
 fi
 
-
 #########
 # MacOS #
 #########
 
 # Precompiled versions of the native addons for MacOS are neither added to version control nor are they part of the
 # published packages. They are only built locally for test purposes.
-
 
 if [[ ! -z "$BUILD_FOR_MACOS" ]]; then
   if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -82,18 +78,21 @@ if [[ ! -z "$BUILD_FOR_MACOS" ]]; then
 
     # Finding the native arch of host machine
     case "$(uname -m)" in
-      x86_64|amd64) ARCH="x64" ;;
-      arm64|aarch64) ARCH="arm64" ;;
-      *) echo "Not supported arch type: $(uname -m)" >&2; exit 1 ;;
+    x86_64 | amd64) ARCH="x64" ;;
+    arm64 | aarch64) ARCH="arm64" ;;
+    *)
+      echo "Not supported arch type: $(uname -m)" >&2
+      exit 1
+      ;;
     esac
-    
+
     source ./build-and-copy-node-modules-darwin
 
     for ABI_VERSION in ${!ABI_VERSIONS[@]}; do
       NODEJS_VERSION=${ABI_VERSIONS[$ABI_VERSION]}
       buildAndCopyModulesDarwin $ABI_VERSION $NODEJS_VERSION $ARCH
     done
- 
+
   else
     echo Native addons for MacOS can only be built on MacOS.
     exit 1

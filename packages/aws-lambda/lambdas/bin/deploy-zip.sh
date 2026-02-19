@@ -72,7 +72,7 @@ if [[ -z $MEMORY_SIZE ]]; then
 fi
 
 if [[ -z $LAYER_ARN ]]; then
-  LAYER_INFO=$( curl https://lambda-layers.instana.io/instana-nodejs?region=$REGION 2> /dev/null )
+  LAYER_INFO=$(curl https://lambda-layers.instana.io/instana-nodejs?region=$REGION 2>/dev/null)
   LAYER_VERSION=$(echo $LAYER_INFO | jq .version)
   LAYER_ARN=$(echo $LAYER_INFO | jq .arn)
   # remove surrounding quotes from ARN as it trips up the aws lambda update-function-configuration command
@@ -86,7 +86,7 @@ fi
 
 set +e
 needs_layer=0
-unzip -l $lambda_zip_file | grep node_modules/@instana/aws-lambda/package.json > /dev/null
+unzip -l $lambda_zip_file | grep node_modules/@instana/aws-lambda/package.json >/dev/null
 needs_layer=$?
 set -e
 
@@ -114,14 +114,17 @@ printf "####\n\n"
 
 if [[ -z $NO_PROMPT ]]; then
   while true; do
-      read -p "Do you wish to continue (yes or no)? " yn
-      case $yn in
-          [Yy]* ) echo "Let's go!"; break;;
-          [Nn]* ) exit 1;;
-          * ) echo "Please answer yes or no.";;
-      esac
+    read -p "Do you wish to continue (yes or no)? " yn
+    case $yn in
+    [Yy]*)
+      echo "Let's go!"
+      break
+      ;;
+    [Nn]*) exit 1 ;;
+    *) echo "Please answer yes or no." ;;
+    esac
   done
-fi  
+fi
 
 echo
 echo "Found zip file: $lambda_zip_file"
@@ -130,7 +133,7 @@ echo
 
 echo "Checking if function exists..."
 
-if aws lambda get-function --function-name $function_name --region $REGION > /dev/null 2>&1; then
+if aws lambda get-function --function-name $function_name --region $REGION >/dev/null 2>&1; then
   echo "Function exists. Updating code..."
   AWS_PAGER="" aws lambda update-function-code \
     --function-name $function_name \
@@ -170,7 +173,7 @@ if [[ $FUNCTION_URL == true ]]; then
       --action "lambda:InvokeFunctionUrl" \
       --region $REGION \
       --function-url-auth-type NONE
-    
+
     url_config=$(aws lambda get-function-url-config --function-name $function_name --region $REGION 2>&1)
     echo $url_config
   fi
@@ -181,9 +184,9 @@ if [[ $needs_layer == 0 ]]; then
   echo "The zip file $lambda_zip_file seems to contain the package @instana/aws-lambda, so I won't add the Lambda layer to it. I'll check if it currently has a layer that needs to be removed."
 
   current_layers=$(AWS_PAGER="" aws --region $REGION lambda get-function-configuration \
-      --function-name $function_name \
-      --output json \
-      | jq ".Layers")
+    --function-name $function_name \
+    --output json |
+    jq ".Layers")
 
   if [[ "$current_layers" =~ ":instana-nodejs:" ]]; then
     echo "This lambda function definition currently has the Instana layer configured, removing it now. I'll also set the standard handler index.handler (just in in case the auto-wrap handler had been configured previously)."
@@ -200,9 +203,9 @@ else
 
   # Current layers of the target function!
   current_layers=$(AWS_PAGER="" aws --region $REGION lambda get-function-configuration \
-      --function-name $function_name \
-      --output json \
-      | jq ".Layers")
+    --function-name $function_name \
+    --output json |
+    jq ".Layers")
 
   if [[ "$current_layers" =~ $LAYER_ARN ]]; then
     echo This lambda function definition already has the specified version of the Instana layer, doing nothing.

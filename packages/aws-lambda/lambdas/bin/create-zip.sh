@@ -7,9 +7,9 @@
 
 set -eEuo pipefail
 
-cd `dirname $BASH_SOURCE`/.. && pwd
+cd $(dirname $BASH_SOURCE)/.. && pwd
 
-pushd .. > /dev/null
+pushd .. >/dev/null
 
 if [[ -z "${1-}" ]]; then
   echo "Usage $0 <lambda-folder-name>"
@@ -78,7 +78,7 @@ else
   exit 1
 fi
 
-popd > /dev/null
+popd >/dev/null
 
 echo "Creating $1.zip with build option $BUILD_LAMBDAS_WITH."
 
@@ -92,4 +92,3 @@ fi
 echo
 echo NOTE: When switching between BUILD_LAMBDAS_WITH=layer on one hand and BUILD_LAMBDAS_WITH=npm or BUILD_LAMBDAS_WITH=local on the other hand, you might need to add \(or remove\) instana.wrap\(\) to \(from\) the individual Lambda handler functions!
 echo
-

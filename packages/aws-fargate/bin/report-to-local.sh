@@ -7,7 +7,7 @@
 
 set -eo pipefail
 
-cd `dirname $BASH_SOURCE`/../../..
+cd $(dirname $BASH_SOURCE)/../../..
 
 echo "Using INSTANA_ENDPOINT_URL, INSTANA_AGENT_KEY from packages/aws-fargate/images/test-images/.env."
 echo

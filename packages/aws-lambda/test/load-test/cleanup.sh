@@ -16,4 +16,3 @@ aws lambda delete-function-url-config --function-name teamnodejstracer-many-span
 aws lambda delete-function --function-name teamnodejstracer-many-spans --region $REGION || true
 aws lambda delete-function-url-config --function-name teamnodejstracer-released-many-spans --region $REGION || true
 aws lambda delete-function --function-name teamnodejstracer-released-many-spans --region $REGION || true
-

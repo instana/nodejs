@@ -7,7 +7,7 @@
 
 set -eo pipefail
 
-cd `dirname $BASH_SOURCE`
+cd $(dirname $BASH_SOURCE)
 
 if [[ ! -f .env ]]; then
   echo .env file is missing
@@ -31,4 +31,3 @@ echo "Building $dockerfile -> $imagetag with Node version $NODEJS_VERSION"
 
 docker build --build-arg NODEJS_VERSION=$NODEJS_VERSION -f $dockerfile -t $imagetag -t $ecr_repository/$imagetag .
 echo "docker build exit status: $?"
-

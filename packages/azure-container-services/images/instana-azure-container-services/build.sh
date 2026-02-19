@@ -6,7 +6,7 @@
 
 # This script is exclusively used locally for building test versions of the container image.
 # The production image on icr.io is built and published via Concourse (see serverless/ci/pipeline.yml).
- # Note that the Dockerfile-npm and package.json.npm are used for the production image.
+# Note that the Dockerfile-npm and package.json.npm are used for the production image.
 
 # Use cases for this script:
 # - Build an Azure base container image from local sources, including modifications.
@@ -20,7 +20,7 @@
 # - $1: Build mode:
 #     - local: Builds the container image from your local machine, including all local modifications.
 #     - npm: Downloads @instana/azure-container-services from the npm registry and includes that in the image. Local modifications or
-#       commits not included in the release are ignored. 
+#       commits not included in the release are ignored.
 #       The corresponding Dockerfile-npm and package.json.npm file are used for the production image.
 # - $2: npm dist tag:
 #     - latest (this is the default)
@@ -30,7 +30,7 @@
 # Use -eox to display better output
 set -eo pipefail
 
-cd `dirname $BASH_SOURCE`
+cd $(dirname $BASH_SOURCE)
 
 source utils
 
@@ -75,28 +75,28 @@ if [[ $build_mode = local ]]; then
   rm -rf instana-*.tgz
 
   # Pack and move core and serverless packages
-  pushd ../../../core > /dev/null
+  pushd ../../../core >/dev/null
   rm -f instana-core-*.tgz
   npm pack
   mv instana-core-*.tgz ../azure-container-services/images/instana-azure-container-services/instana-core.tgz
-  popd > /dev/null
+  popd >/dev/null
 
-  pushd ../../../serverless > /dev/null
+  pushd ../../../serverless >/dev/null
   rm -f instana-serverless-*.tgz
   npm pack
   mv instana-serverless-*.tgz ../azure-container-services/images/instana-azure-container-services/instana-serverless.tgz
-  popd > /dev/null
+  popd >/dev/null
 
-  pushd ../.. > /dev/null
+  pushd ../.. >/dev/null
   rm -f instana-azure-container-services-*.tgz
   npm pack
   mv instana-azure-container-services-*.tgz images/instana-azure-container-services/instana-azure-container-services.tgz
-  popd > /dev/null
+  popd >/dev/null
 
   cp package.json.local package.json
 # Handle npm build mode
 elif [[ $build_mode = npm ]]; then
-    if [[ -n $npm_tag ]]; then
+  if [[ -n $npm_tag ]]; then
     package_version=$(npm show @instana/azure-container-services@$npm_tag version)
   else
     package_version=$(npm show @instana/azure-container-services version)

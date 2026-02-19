@@ -5,8 +5,7 @@
 # (c) Copyright Instana Inc. and contributors 2020
 #######################################
 
-
-# This script builds a test image that can be used as a Fargate task. You can either use the Instana 
+# This script builds a test image that can be used as a Fargate task. You can either use the Instana
 # Node.js Fargate base image from one of various sources (published production image, image from your local
 # Docker registry, image from an AWS ECR registry with pre-release images). You would usually not call this script
 # directly but either use ./build-and-push.sh to directly push the built image to a registry to use it in an actual
@@ -42,7 +41,7 @@
 # use -eox to see better output
 set -eo pipefail
 
-cd `dirname $BASH_SOURCE`
+cd $(dirname $BASH_SOURCE)
 
 source utils
 
@@ -72,9 +71,9 @@ fi
 
 if [[ $INSTANA_LAYER_MODE = local ]]; then
   echo Building local Instana layer first.
-  pushd ../instana-aws-fargate > /dev/null
+  pushd ../instana-aws-fargate >/dev/null
   ./build.sh local
-  popd > /dev/null
+  popd >/dev/null
 else
   echo Not building local Instana layer.
 fi
@@ -98,4 +97,3 @@ docker build \
   -t $ecr_repository/$image_tag \
   .
 echo "docker build exit status: $?"
-
