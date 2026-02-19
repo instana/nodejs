@@ -23,10 +23,6 @@ module.exports = function (name, version, isLatest) {
   const drivers = ['mysql2', 'mysql2/promises'];
   const executionModes = [false, true];
 
-  // NOTE: There is no need to run the ESM APP for all versions.
-  // TODO: Support for mocking `import` in ESM apps is planned under INSTA-788.
-  if (process.env.RUN_ESM && !isLatest) return;
-
   drivers.forEach(driverMode => {
     executionModes.forEach(useExecute => {
       registerSuite.call(this, driverMode, useExecute);
