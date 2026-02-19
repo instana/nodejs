@@ -76,7 +76,15 @@ if [ -n "$PACKAGE" ]; then
   # Normalize package name for scoped packages (e.g., @redis/client -> redis_client)
   NORMALIZED_PACKAGE=$(normalize_folder_name "$PACKAGE")
 
-  PACKAGE_DIR=$(find "$TEST_BASE_DIR" -type d \( -path "*/$PACKAGE" -o -path "*/$NORMALIZED_PACKAGE" \) ! -path "*/node_modules/*" ! -path "*/_v*" 2>/dev/null | head -1)
+  PACKAGE_DIR=""
+  while IFS= read -r _candidate; do
+    [ -z "$_candidate" ] && continue
+    if ls "$_candidate"/_v* &>/dev/null; then
+      PACKAGE_DIR="$_candidate"
+      break
+    fi
+    [ -z "$PACKAGE_DIR" ] && PACKAGE_DIR="$_candidate"
+  done < <(find "$TEST_BASE_DIR" -type d \( -path "*/$PACKAGE" -o -path "*/$NORMALIZED_PACKAGE" \) ! -path "*/node_modules/*" ! -path "*/_v*" 2>/dev/null)
 
   if [ -z "$PACKAGE_DIR" ]; then
     # No directory found — try matching a test file by name (e.g. cmdline -> cmdline.test.js or cmdline_test.js)

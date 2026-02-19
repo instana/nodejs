@@ -227,10 +227,6 @@ mochaSuiteFn(suiteTitle, function () {
     try {
       rmDir(path.join(__dirname, 'node_modules'));
 
-      // eslint-disable-next-line global-require,import/no-dynamic-require
-      const preinstalledMod = require('@_local/collector/test/test_util/preinstalled-node-modules');
-      preinstalledMod.extractPreinstalledPackages(__dirname, { timeout: installTimeout - 1000 });
-
       log('[INFO] Running npm install for ${suiteName}@${displayVersion}...');
       const npmCmd = process.env.CI ?
         'npm install --cache ${rootDir}/.npm-offline-cache --prefer-offline ' +
@@ -313,6 +309,18 @@ ${verifyDependency
 `;
 }
 
+const tgzDir = path.join(collectorTestDir, 'instana-tgz');
+const tgzFiles = ['collector.tgz', 'core.tgz', 'shared-metrics.tgz'];
+
+function createTgzSymlinks(targetDir) {
+  tgzFiles.forEach(tgz => {
+    const linkPath = path.join(targetDir, tgz);
+    const target = path.relative(targetDir, path.join(tgzDir, tgz));
+    try { fs.unlinkSync(linkPath); } catch (_) { /* not found */ }
+    fs.symlinkSync(target, linkPath);
+  });
+}
+
 function generatePackageJson({ testDir, versionDir, pkgName, currencyName, currencyVersion, isOptional }) {
   const packageJsonTemplatePath = path.join(testDir, 'package.json.template');
   const packageJsonPath = path.join(testDir, 'package.json');
@@ -330,12 +338,9 @@ function generatePackageJson({ testDir, versionDir, pkgName, currencyName, curre
     versionPackageJson.dependencies = {};
   }
 
-  const tgzDir = path.join(collectorTestDir, 'instana-tgz');
-  const relativeTgzPath = path.relative(versionDir, tgzDir).replace(/\\/g, '/');
-
-  versionPackageJson.dependencies['@instana/collector'] = `file:${relativeTgzPath}/collector.tgz`;
-  versionPackageJson.dependencies['@instana/core'] = `file:${relativeTgzPath}/core.tgz`;
-  versionPackageJson.dependencies['@instana/shared-metrics'] = `file:${relativeTgzPath}/shared-metrics.tgz`;
+  versionPackageJson.dependencies['@instana/collector'] = 'file:./collector.tgz';
+  versionPackageJson.dependencies['@instana/core'] = 'file:./core.tgz';
+  versionPackageJson.dependencies['@instana/shared-metrics'] = 'file:./shared-metrics.tgz';
 
   if (currencyName && currencyVersion) {
     if (isOptional) {
@@ -417,6 +422,8 @@ function main() {
             fs.mkdirSync(targetDir, { recursive: true });
           }
 
+          createTgzSymlinks(targetDir);
+
           const testContent = generateTestWrapper({
             suiteName: currency.name,
             displayVersion: dirName.substring(1),
@@ -459,6 +466,8 @@ function main() {
     if (!fs.existsSync(versionDir)) {
       fs.mkdirSync(versionDir, { recursive: true });
     }
+
+    createTgzSymlinks(versionDir);
 
     const testContent = generateTestWrapper({
       suiteName: dirName,
