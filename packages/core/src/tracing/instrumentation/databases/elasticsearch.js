@@ -29,7 +29,7 @@ exports.init = function init(config) {
 const connectionUrlCache = {};
 
 function instrument(es, esModuleFilename) {
-  // v8
+  // >= v8
   if (es.SniffingTransport) {
     const OriginalClient = es.Client;
     es.Client = function InstanaClient() {
@@ -47,13 +47,26 @@ function instrument(es, esModuleFilename) {
 
     instrumentTransport(es);
   } else {
-    const ESAPI = tracingUtil.requireModuleFromApplicationUnderMonitoringSafely(esModuleFilename, '..', 'api');
+    // v7
 
-    if (isConstructor(ESAPI)) {
-      instrumentTransport(es);
-    } else {
-      instrumentApiLayer(es, ESAPI);
+    // CASE: `requireModuleFromApplicationUnderMonitoringSafely` will trigger another sync require call in requireHook
+    //        before the module gets marked as instrumented to avoid double instrumentation. `es` will be the ESAPI file
+    //        which we required below in line 69.
+    if (!es.Client) {
+      return;
     }
+
+    const parentName = Object.getPrototypeOf(es.Client).name;
+
+    // 7.9.1: Client: [class Client extends ESAPI]
+    if (parentName !== '') {
+      instrumentTransport(es);
+      return;
+    }
+
+    // 7.9.0: Client: [class Client]
+    const ESAPI = tracingUtil.requireModuleFromApplicationUnderMonitoringSafely(esModuleFilename, '..', 'api');
+    instrumentApiLayer(es, ESAPI);
   }
 }
 
