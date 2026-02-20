@@ -68,7 +68,7 @@
     "latestVersion": "",
     "cloudNative": true,
     "isBeta": false,
-    "ignoreUpdates": true,
+    "ignoreUpdates": false,
     "note": "",
     "core": false,
     "versions": [
@@ -196,7 +196,7 @@
     "latestVersion": "",
     "cloudNative": true,
     "isBeta": false,
-    "ignoreUpdates": true,
+    "ignoreUpdates": false,
     "note": "",
     "core": false,
     "versions": [
