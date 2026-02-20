@@ -43,7 +43,7 @@ module.exports = function (name, version, isLatest) {
     `@elastic/elasticsearch@${version}/` + `instrumentation flavor: ${instrumentationFlavor}`,
     function () {
       this.timeout(Math.max(config.getTestTimeout() * 4, 30000));
-      const indicesKey = isLatest ? 'Indices.refresh' : 'indices.refresh';
+      const indicesKey = semver.major(version) >= 8 ? 'Indices.refresh' : 'indices.refresh';
 
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
