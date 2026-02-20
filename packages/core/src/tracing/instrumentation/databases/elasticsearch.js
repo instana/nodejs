@@ -547,10 +547,6 @@ function getParentByPath(action, obj, path) {
   return getParentByPath(action, obj[path[0]], path.slice(1));
 }
 
-function isConstructor(ESAPI) {
-  return ESAPI && typeof ESAPI.toString === 'function' && ESAPI.toString().includes('this[');
-}
-
 exports.activate = function activate() {
   isActive = true;
 };
