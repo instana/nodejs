@@ -411,3 +411,21 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
     logger.error('Failed to set error details on span:', err);
   }
 };
+
+/**
+ * Handles and logs a trace message when the instrumented function returns an unexpected value(not a promise)
+ *
+ * @param {*} returnValue - The return value from the instrumented function
+ * @param {string} spanName - The name of the span (e.g., 'redis', 'postgres', 'mysql')
+ * @param {string} operationContext - Additional context about the operation (e.g., 'query', 'command')
+ * @returns {boolean} - Returns true if the return value was unexpected (not a promise), false otherwise
+ */
+exports.handleUnexpectedReturnValue = function handleUnexpectedReturnValue(returnValue, spanName, operationContext) {
+  logger.trace(
+    `${spanName} instrumentation: Unexpected return value from ${operationContext}. ` +
+      `Expected a promise but got: ${typeof returnValue}. ` +
+      'This indicates an unsupported library behavior.'
+  );
+
+  return true;
+};

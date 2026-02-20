@@ -82,9 +82,11 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
         return originalCallback.apply(this, arguments);
       };
       argsForOriginalQuery[callbackIndex] = cls.ns.bind(wrappedCallback);
+      return originalQuery.apply(ctx, argsForOriginalQuery);
     }
 
     const promise = originalQuery.apply(ctx, argsForOriginalQuery);
+
     if (promise && typeof promise.then === 'function') {
       promise
         .then(value => {
@@ -95,6 +97,9 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
           finishSpan(error, span);
           return error;
         });
+    } else {
+      tracingUtil.handleUnexpectedReturnValue(promise, exports.spanName, 'query');
+      finishSpan(null, span);
     }
     return promise;
   });
