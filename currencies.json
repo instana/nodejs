@@ -411,7 +411,7 @@
     "core": false,
     "versions": [
       {
-        "v": "4.6.0",
+        "v": "4.6.1",
         "optional": true,
         "node": "24"
       },
