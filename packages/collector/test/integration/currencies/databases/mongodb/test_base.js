@@ -26,9 +26,6 @@ module.exports = function (name, version, isLatest) {
     return;
   }
 
-  // NOTE: There is no need to run the ESM APP for all versions.
-  if (process.env.RUN_ESM && !isLatest) return;
-
   const timeout = USE_ATLAS ? config.getTestTimeout() * 2 : config.getTestTimeout();
   this.timeout(timeout);
 
