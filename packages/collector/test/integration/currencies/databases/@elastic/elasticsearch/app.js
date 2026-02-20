@@ -20,12 +20,11 @@ require('@instana/collector')();
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-
 const { Client } = require('@elastic/elasticsearch');
 const port = require('@_local/collector/test/test_util/app-port')();
 
 const app = express();
-const logPrefix = `Elasticsearch ${process.env.ELASTIC_VERSION} (${process.pid}):\t`;
+const logPrefix = `Elasticsearch ${process.env.LIBRARY_VERSION} (${process.pid}):\t`;
 const isLatest = process.env.LIBRARY_LATEST === 'true';
 
 if (process.env.WITH_STDOUT) {
