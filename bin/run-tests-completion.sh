@@ -13,7 +13,15 @@
 #   source ~/dev/instana/nodejs/bin/run-tests-completion.sh
 #######################################
 
-_RUNCOLLECTOR_REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)"
+# Get script directory (works in both bash and zsh)
+if [ -n "$ZSH_VERSION" ]; then
+  # In zsh, use $0 which contains the sourced file path
+  _RUNCOLLECTOR_REPO_ROOT="$(cd "$(dirname "$0")/.." 2>/dev/null && pwd)"
+elif [ -n "$BASH_VERSION" ]; then
+  _RUNCOLLECTOR_REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)"
+else
+  _RUNCOLLECTOR_REPO_ROOT="$(cd "$(dirname "$0")/.." 2>/dev/null && pwd)"
+fi
 _RUNCOLLECTOR_CACHE_FILE="/tmp/.runcollector-packages-cache"
 
 _runcollector_build_cache() {
@@ -166,5 +174,101 @@ _runcollector_completions() {
 # Build cache on source (<1s with -prune)
 _runcollector_build_cache
 
-complete -o nospace -F _runcollector_completions runcollector
-complete -o nospace -F _runcollector_completions runcollector-nw
+# complete -o nospace -F _runcollector_completions runcollector
+# complete -o nospace -F _runcollector_completions runcollector-nw
+
+#######################################
+# Completion Registration (Bash + Zsh)
+#######################################
+
+# ---- Zsh completion ----
+if [ -n "$ZSH_VERSION" ]; then
+  echo "ZSH_VERSION is set to: $ZSH_VERSION"
+  autoload -Uz compinit 2>/dev/null
+  compinit 2>/dev/null
+
+  _runcollector_completions_zsh() {
+    local cur="${words[CURRENT]}"
+
+    _runcollector_maybe_refresh_cache
+
+    # Determine which argument we're completing (skip flags like -nw)
+    local arg_index=0
+    local pkg_arg=""
+    local i
+    for ((i = 2; i < CURRENT; i++)); do
+      local w="${words[$i]}"
+      [[ "$w" == -* ]] && continue
+      arg_index=$((arg_index + 1))
+      if [ "$arg_index" -eq 1 ]; then
+        pkg_arg="$w"
+      fi
+    done
+
+    # Mode completion: second non-flag argument
+    if [ "$arg_index" -ge 1 ] && [[ "$cur" != *"@"* || "$cur" == @* ]]; then
+      local pkg="${pkg_arg%%@*}"
+      local pkg_dir
+      pkg_dir=$(_runcollector_find_pkg_dir "$pkg")
+      if [ -n "$pkg_dir" ]; then
+        local modes_output
+        modes_output=$(_runcollector_get_modes "$pkg_dir")
+        if [ -n "$modes_output" ]; then
+          local -a modes
+          while IFS= read -r mode; do
+            [ -n "$mode" ] && modes+=("$mode")
+          done <<<"$modes_output"
+          if [ ${#modes[@]} -gt 0 ]; then
+            _describe 'mode' modes
+            return 0
+          fi
+        fi
+      fi
+    fi
+
+    # Version completion: package@<TAB>
+    if [[ "$cur" == *"@"* ]] && [[ "$cur" != @* ]]; then
+      local pkg="${cur%%@*}"
+      local pkg_dir
+      pkg_dir=$(_runcollector_find_pkg_dir "$pkg")
+      if [ -n "$pkg_dir" ]; then
+        local -a completions
+        while IFS= read -r v; do
+          [ -n "$v" ] && completions+=("${pkg}@${v}")
+        done < <(find "$pkg_dir" -maxdepth 1 -type d -name "_v*" 2>/dev/null | sed 's/.*_v//' | sort -V)
+        if [ ${#completions[@]} -gt 0 ]; then
+          _describe 'package@version' completions
+          return 0
+        fi
+      fi
+    fi
+
+    # Package completion: first argument
+    if [ -s "$_RUNCOLLECTOR_CACHE_FILE" ]; then
+      local -a packages
+      while IFS= read -r pkg; do
+        [ -n "$pkg" ] && packages+=("$pkg")
+      done <"$_RUNCOLLECTOR_CACHE_FILE"
+      if [ ${#packages[@]} -gt 0 ]; then
+        _describe 'package' packages
+        return 0
+      fi
+    fi
+
+    return 1
+  }
+
+  # Register completion for commands and aliases
+  compdef _runcollector_completions_zsh runcollector
+  compdef _runcollector_completions_zsh runcollector-nw
+
+  # Enable completion for aliases
+  setopt complete_aliases
+fi
+
+# ---- Bash completion ----
+if [ -n "$BASH_VERSION" ]; then
+  echo "BASH_VERSION is set to: $BASH_VERSION"
+  complete -o nospace -F _runcollector_completions runcollector
+  complete -o nospace -F _runcollector_completions runcollector-nw
+fi
