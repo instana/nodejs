@@ -29,6 +29,9 @@ module.exports = function (name, version, isLatest) {
    *
    * The words "transport" and "api" try to describe the different
    * mechanismn we use in core/src/tracing/instrumentation/databases/elasticsearch.js
+   *
+   * Breaking changes between 8x and 9x:
+   * https://www.elastic.co/docs/release-notes/elasticsearch/clients/javascript#elasticsearch-javascript-client-9.0.0-release-notes
    */
   let instrumentationFlavor;
 
