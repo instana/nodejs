@@ -82,6 +82,7 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
         return originalCallback.apply(this, arguments);
       };
       argsForOriginalQuery[callbackIndex] = cls.ns.bind(wrappedCallback);
+      return originalQuery.apply(ctx, argsForOriginalQuery);
     }
 
     const promise = originalQuery.apply(ctx, argsForOriginalQuery);
