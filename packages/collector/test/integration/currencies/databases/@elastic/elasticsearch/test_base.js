@@ -23,6 +23,8 @@ const ProcessControls = require('@_local/collector/test/test_util/ProcessControl
 const globalAgent = require('@_local/collector/test/globalAgent');
 
 module.exports = function (name, version, isLatest) {
+  const isGreaterThanOrEqualTo8 = semver.major(version) >= 8;
+
   /**
    * transport: instrumentation >= 7.9.1
    * api: instrumentation < 7.9.1
@@ -46,7 +48,7 @@ module.exports = function (name, version, isLatest) {
     `@elastic/elasticsearch@${version}/` + `instrumentation flavor: ${instrumentationFlavor}`,
     function () {
       this.timeout(Math.max(config.getTestTimeout() * 4, 30000));
-      const indicesKey = semver.major(version) >= 8 ? 'Indices.refresh' : 'indices.refresh';
+      const indicesKey = isGreaterThanOrEqualTo8 ? 'Indices.refresh' : 'indices.refresh';
 
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
@@ -155,7 +157,7 @@ module.exports = function (name, version, isLatest) {
             expect(res1.error).to.not.exist;
             expect(res1.response).to.exist;
 
-            if (isLatest) {
+            if (isGreaterThanOrEqualTo8) {
               expect(res1.response.body.result).to.equal('created');
             } else {
               expect(res1.response.statusCode).to.equal(201);
@@ -509,7 +511,7 @@ module.exports = function (name, version, isLatest) {
           }
         });
 
-        if (isLatest) {
+        if (isGreaterThanOrEqualTo8) {
           expect(response.response1).to.equal('created');
           expect(response.response2).to.equal('created');
         } else {
