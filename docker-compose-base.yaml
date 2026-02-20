@@ -51,18 +51,10 @@ services:
       - '8091-8096:8091-8096'
       - '11210:11210'
 
-  # Elasticsearch 7 compatible with client v7
-  # elasticsearch:
-  #  image: docker.elastic.co/elasticsearch/elasticsearch:7.6.2
-  #  ports:
-  #    - 9200:9200
-  #  environment:
-  #    discovery.type: single-node
-  #    ES_JAVA_OPTS: "-Xms500m -Xmx500m"
 
   # Elasticsearch 9 compatible with client v7 & v9
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
+    image: public.ecr.aws/elastic/elasticsearch:9.0.0
     ports:
       - 9200:9200
     environment:
@@ -198,7 +190,7 @@ services:
       - 8224:8224
 
   memcached:
-    image: memcached:1.6.9
+    image: public.ecr.aws/docker/library/memcached:1.6.9
     ports:
       - 11211:11211
 
@@ -230,7 +222,7 @@ services:
 
   localstack:
     container_name: "${LOCALSTACK_DOCKER_NAME:-localstack-main}"
-    image: localstack/localstack:latest
+    image: public.ecr.aws/localstack/localstack:latest
     hostname: localstack
     ports:
       - "4566:4566"            # LocalStack Gateway
