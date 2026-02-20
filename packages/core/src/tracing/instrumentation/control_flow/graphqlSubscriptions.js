@@ -8,6 +8,7 @@
 const shimmer = require('../../shimmer');
 
 const hook = require('../../../util/hook');
+const tracingUtil = require('../../tracingUtil');
 const cls = require('../../cls');
 
 let isActive = false;
@@ -62,18 +63,29 @@ function shimPushValue(originalFunction) {
 function shimPullValue(originalFunction) {
   return function () {
     const pullPromise = originalFunction.apply(this, arguments);
-    return pullPromise.then(result => {
-      if (result && result.value && result.value[CLS_CONTEXT_SYMBOL]) {
-        const clsContext = result.value[CLS_CONTEXT_SYMBOL];
-        if (isActive && clsContext) {
-          cls.ns.enter(clsContext);
-          setImmediate(() => {
-            cls.ns.exit(clsContext);
-          });
+
+    if (pullPromise && typeof pullPromise.then === 'function') {
+      return pullPromise.then(result => {
+        if (result && result.value && result.value[CLS_CONTEXT_SYMBOL]) {
+          const clsContext = result.value[CLS_CONTEXT_SYMBOL];
+          if (isActive && clsContext) {
+            cls.ns.enter(clsContext);
+            setImmediate(() => {
+              cls.ns.exit(clsContext);
+            });
+          }
         }
+        return result;
+      });
+    } else {
+      // will the context change ? Maybe check and remove this case
+      const span = cls.getCurrentSpan();
+      if (span) {
+        tracingUtil.handleUnexpectedReturnValue(pullPromise, span, 'graphql.subscription', 'pull value');
       }
-      return result;
-    });
+    }
+
+    return pullPromise;
   };
 }
 

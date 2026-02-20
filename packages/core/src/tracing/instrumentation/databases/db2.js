@@ -314,6 +314,7 @@ function instrumentQueryHelper(ctx, originalArgs, originalFunction, stmt, isAsyn
       return originalFunction.apply(ctx, originalArgs);
     }
 
+    // Case 4: Handle synchronous validation errors for promise-based calls
     const resultPromise = originalFunction.apply(ctx, originalArgs);
 
     if (resultPromise && typeof resultPromise.then === 'function' && typeof resultPromise.catch === 'function') {
@@ -328,9 +329,12 @@ function instrumentQueryHelper(ctx, originalArgs, originalFunction, stmt, isAsyn
           finishSpan(ctx, null, span);
           return err;
         });
-
-      return resultPromise;
+    } else {
+      tracingUtil.handleUnexpectedReturnValue(resultPromise, span, 'ibmdb2', 'query');
+      finishSpan(ctx, null, span);
     }
+
+    return resultPromise;
   });
 }
 

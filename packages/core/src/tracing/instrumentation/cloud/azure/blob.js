@@ -87,7 +87,8 @@ function instrumentingOperation({
       op
     };
     const promise = originalQuery.apply(ctx, argsForOriginalQuery);
-    if (promise && typeof promise.then === 'function') {
+
+    if (promise && typeof promise?.then === 'function') {
       promise
         .then(value => {
           finishSpan(null, span);
@@ -97,6 +98,9 @@ function instrumentingOperation({
           finishSpan(error, span);
           return error;
         });
+    } else {
+      tracingUtil.handleUnexpectedReturnValue(promise, span, 'azstorage', 'blob operation');
+      finishSpan(null, span);
     }
     return promise;
   });

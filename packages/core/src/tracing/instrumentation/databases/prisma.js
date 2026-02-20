@@ -166,11 +166,13 @@ function instrumentedRequest(ctx, originalRequest, argsForOriginalRequest) {
       provider: providerAndDataSourceUri.provider,
       url: providerAndDataSourceUri.dataSourceUrl
     };
+
     const requestPromise = originalRequest.apply(ctx, argsForOriginalRequest);
+
     if (!requestPromise && typeof requestPromise.then !== 'function') {
       span.cancel();
       return requestPromise;
-    } else {
+    } else if (typeof requestPromise?.then === 'function') {
       return requestPromise
         .then(value => {
           finishSpan(null, span);
@@ -180,6 +182,10 @@ function instrumentedRequest(ctx, originalRequest, argsForOriginalRequest) {
           finishSpan(error, span);
           return error;
         });
+    } else {
+      tracingUtil.handleUnexpectedReturnValue(requestPromise, span, 'prisma', '_request');
+      finishSpan(null, span);
+      return requestPromise;
     }
   });
 }

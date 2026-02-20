@@ -95,6 +95,8 @@ class InstanaAWSDynamoDB extends InstanaAWSProduct {
           .catch(() => {
             /* silently ignore failed attempts to get the region */
           });
+      } else {
+        tracingUtil.handleUnexpectedReturnValue(regionPromise, span, this.spanName, 'config.region()');
       }
     }
   }

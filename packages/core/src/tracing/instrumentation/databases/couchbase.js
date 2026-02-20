@@ -77,7 +77,7 @@ function instrumentConnect(originalConnect) {
 
     const prom = originalConnect.apply(originalThis, originalArgs);
 
-    if (prom && prom.then) {
+    if (prom && typeof prom.then === 'function') {
       prom.then(cluster => {
         instrumentCluster(cluster, connectionStr);
         return cluster;
@@ -426,7 +426,7 @@ function instrumentTransactions(cluster, connectionStr) {
 
                   const result = originalFn.apply(this, arguments);
 
-                  if (result.then && result.catch) {
+                  if (result && result?.then && result?.catch) {
                     result
                       .then(() => {
                         span.d = Date.now() - span.ts;
@@ -486,9 +486,19 @@ function instrumentOperation({ connectionStr, bucketName, getBucketTypeFn, sql, 
       const { originalCallback, callbackIndex } = tracingUtil.findCallback(originalArgs);
 
       if (callbackIndex < 0) {
-        const prom = original.apply(originalThis, originalArgs);
+        // Case 4: Handle synchronous validation errors for promise-based calls
+        let prom;
+        try {
+          prom = original.apply(originalThis, originalArgs);
+        } catch (syncError) {
+          span.ec = 1;
+          tracingUtil.setErrorDetails(span, syncError, 'couchbase');
+          span.d = Date.now() - span.ts;
+          span.transmit();
+          throw syncError;
+        }
 
-        if (prom.then && prom.catch) {
+        if (typeof prom?.then === 'function' && typeof prom?.catch === 'function') {
           prom
             .then(result => {
               if (resultHandler) {
@@ -505,27 +515,42 @@ function instrumentOperation({ connectionStr, bucketName, getBucketTypeFn, sql, 
               span.d = Date.now() - span.ts;
               span.transmit();
             });
+        } else if (prom !== undefined) {
+          // Case 5: Use utility function
+          tracingUtil.handleUnexpectedReturnValue(prom, span, 'couchbase', 'operation');
+
+          span.d = Date.now() - span.ts;
+          span.transmit();
         }
 
         return prom;
       } else {
-        originalArgs[callbackIndex] = cls.ns.bind(function instanaCallback(err, result) {
-          if (err) {
-            span.ec = 1;
-            tracingUtil.setErrorDetails(span, err, 'couchbase');
-          }
+        // Case 4: Handle synchronous validation errors for callback-based calls
+        try {
+          originalArgs[callbackIndex] = cls.ns.bind(function instanaCallback(err, result) {
+            if (err) {
+              span.ec = 1;
+              tracingUtil.setErrorDetails(span, err, 'couchbase');
+            }
 
-          if (resultHandler) {
-            resultHandler(span, result);
-          }
+            if (resultHandler) {
+              resultHandler(span, result);
+            }
 
+            span.d = Date.now() - span.ts;
+            span.transmit();
+
+            return originalCallback.apply(this, arguments);
+          });
+
+          return original.apply(originalThis, originalArgs);
+        } catch (syncError) {
+          span.ec = 1;
+          tracingUtil.setErrorDetails(span, syncError, 'couchbase');
           span.d = Date.now() - span.ts;
           span.transmit();
-
-          return originalCallback.apply(this, arguments);
-        });
-
-        return original.apply(originalThis, originalArgs);
+          throw syncError;
+        }
       }
     });
   };
