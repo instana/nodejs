@@ -20,12 +20,13 @@ require('@instana/collector')();
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
+const semver = require('semver');
 const { Client } = require('@elastic/elasticsearch');
 const port = require('@_local/collector/test/test_util/app-port')();
 
 const app = express();
 const logPrefix = `Elasticsearch ${process.env.LIBRARY_VERSION} (${process.pid}):\t`;
-const isLatest = process.env.LIBRARY_LATEST === 'true';
+const isLatest = semver.major(process.env.LIBRARY_VERSION) >= 8;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
