@@ -105,32 +105,59 @@ if [ -n "$PACKAGE" ]; then
   AVAILABLE_VERSIONS=$(find "$PACKAGE_DIR" -maxdepth 1 -type d -name "_v*" 2>/dev/null | sed 's/.*_v/v/' | sort -V | tr '\n' ', ' | sed 's/,$//')
 
   if [ -n "$VERSION" ]; then
-    if [[ ! $VERSION =~ ^v ]]; then
-      VERSION="v$VERSION"
-    fi
+    if [ "$VERSION" = "all" ]; then
+      ALL_VERSION_DIRS=$(find "$PACKAGE_DIR" -maxdepth 1 -type d -name "_v*" 2>/dev/null | sort -V)
 
-    if [[ $VERSION =~ ^v[0-9]+(\.[0-9]+)*$ ]]; then
-      FULL_VERSION=$(find "$PACKAGE_DIR" -maxdepth 1 -type d -name "_${VERSION}.*" 2>/dev/null | sed 's/.*_v//' | sort -V | tail -1)
-      if [ -n "$FULL_VERSION" ]; then
-        VERSION="v$FULL_VERSION"
+      if [ -z "$ALL_VERSION_DIRS" ]; then
+        echo "Error: No versioned directories found for '$PACKAGE'. Available versions: $AVAILABLE_VERSIONS"
+        exit 1
       fi
-    fi
 
-    if [ ! -d "$PACKAGE_DIR/_${VERSION}" ]; then
-      echo "Error: Version not found. We only have: $AVAILABLE_VERSIONS"
-      exit 1
-    fi
+      echo "Running tests for all versions of $ACTUAL_PACKAGE"
+      echo "Available versions: $AVAILABLE_VERSIONS"
 
-    GREP_PATTERN="$ACTUAL_PACKAGE@$VERSION"
+      SEARCH_PATTERN="*.test.js"
+      if [ -n "$TEST_NAME_FILTER" ]; then
+        SEARCH_PATTERN="*${TEST_NAME_FILTER}*.test.js"
+      fi
 
-    # Check for test files in the version directory
-    SEARCH_PATTERN="*.test.js"
-    if [ -n "$TEST_NAME_FILTER" ]; then
-      SEARCH_PATTERN="*${TEST_NAME_FILTER}*.test.js"
-    fi
-    FOUND_FILES=$(find "$PACKAGE_DIR/_${VERSION}" -maxdepth 2 -name "$SEARCH_PATTERN" ! -name "test_base.js")
-    if [ -n "$FOUND_FILES" ]; then
-      TEST_FILES=$(echo "$FOUND_FILES" | tr '\n' ' ')
+      for VERSION_DIR in $ALL_VERSION_DIRS; do
+        FOUND_FILES=$(find "$VERSION_DIR" -maxdepth 2 -name "$SEARCH_PATTERN" ! -name "test_base.js")
+        if [ -n "$FOUND_FILES" ]; then
+          TEST_FILES="$TEST_FILES $FOUND_FILES"
+        fi
+      done
+
+      GREP_PATTERN="$ACTUAL_PACKAGE@v"
+
+    else
+      if [[ ! $VERSION =~ ^v ]]; then
+        VERSION="v$VERSION"
+      fi
+
+      if [[ $VERSION =~ ^v[0-9]+(\.[0-9]+)*$ ]]; then
+        FULL_VERSION=$(find "$PACKAGE_DIR" -maxdepth 1 -type d -name "_${VERSION}.*" 2>/dev/null | sed 's/.*_v//' | sort -V | tail -1)
+        if [ -n "$FULL_VERSION" ]; then
+          VERSION="v$FULL_VERSION"
+        fi
+      fi
+
+      if [ ! -d "$PACKAGE_DIR/_${VERSION}" ]; then
+        echo "Error: Version not found. We only have: $AVAILABLE_VERSIONS"
+        exit 1
+      fi
+
+      GREP_PATTERN="$ACTUAL_PACKAGE@$VERSION"
+
+      # Check for test files in the version directory
+      SEARCH_PATTERN="*.test.js"
+      if [ -n "$TEST_NAME_FILTER" ]; then
+        SEARCH_PATTERN="*${TEST_NAME_FILTER}*.test.js"
+      fi
+      FOUND_FILES=$(find "$PACKAGE_DIR/_${VERSION}" -maxdepth 2 -name "$SEARCH_PATTERN" ! -name "test_base.js")
+      if [ -n "$FOUND_FILES" ]; then
+        TEST_FILES=$(echo "$FOUND_FILES" | tr '\n' ' ')
+      fi
     fi
 
   else
