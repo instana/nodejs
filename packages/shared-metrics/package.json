@@ -74,5 +74,13 @@
   "optionalDependencies": {
     "event-loop-stats": "1.4.1",
     "gcstats.js": "1.0.0"
+  },
+  "overrides": {
+    "gcstats.js": {
+      "nan": "^2.22.0"
+    },
+    "event-loop-stats": {
+      "nan": "^2.22.0"
+    }
   }
 }
