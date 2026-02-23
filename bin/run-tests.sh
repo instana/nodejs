@@ -60,6 +60,11 @@ for arg in "$@"; do
   esac
 done
 
+# Regenerate test folders if needed
+if [ "$SCOPE" = "@instana/collector" ]; then
+  node "$(dirname "$0")/sync-test-folders.js"
+fi
+
 args=""
 
 if [ "$WATCH" = true ]; then
@@ -72,10 +77,6 @@ npm_command="npm run test:debug"
 SCOPE_PKG_NAME="${SCOPE#@instana/}"
 TEST_BASE_DIR="packages/${SCOPE_PKG_NAME}/test"
 
-# Pre-check: Ensure test folders are generated before mocha tries to load files
-if [ -f "currencies.json" ] && [ -f "$TEST_BASE_DIR/initEnv.js" ]; then
-  node -e "require('./$TEST_BASE_DIR/initEnv.js')" 2>/dev/null || true
-fi
 
 if [ -n "$PACKAGE" ]; then
   # Normalize package name for scoped packages (e.g., @redis/client -> redis_client)
