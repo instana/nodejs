@@ -65,6 +65,36 @@ module.exports = function (name, version, isLatest) {
         )
       ));
 
+  it('must collect bind variables from parameterized queries', () =>
+    controls
+      .sendRequest({
+        method: 'GET',
+        path: '/bind-variables-test'
+      })
+      .then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables-test');
+
+            // Verify first query with string and array parameters
+            const selectQuery = getSpansByName(spans, 'postgres').find(
+              span => span.data.pg.stmt === 'SELECT * FROM users WHERE name = $1 AND email = $2'
+            );
+            expect(selectQuery).to.exist;
+            expect(selectQuery.data.pg.bindValues).to.exist;
+            expect(selectQuery.data.pg.bindValues).to.deep.equal(['testuser', 'test@example.com']);
+
+            // Verify second query with config object containing values
+            const insertQuery = getSpansByName(spans, 'postgres').find(
+              span => span.data.pg.stmt === 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *'
+            );
+            expect(insertQuery).to.exist;
+            expect(insertQuery.data.pg.bindValues).to.exist;
+            expect(insertQuery.data.pg.bindValues).to.deep.equal(['bindtest', 'bindtest@example.com']);
+          })
+        )
+      ));
+
   it('must trace pooled select now', () =>
     controls
       .sendRequest({

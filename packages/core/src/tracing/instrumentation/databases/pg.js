@@ -58,6 +58,19 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
       kind: constants.EXIT
     });
     span.stack = tracingUtil.getStackTrace(instrumentedQuery);
+
+    // Extract bind variables/parameters
+    let bindValues;
+    if (typeof config === 'string') {
+      // Query is a string, parameters might be in argsForOriginalQuery[1]
+      if (argsForOriginalQuery.length > 1 && Array.isArray(argsForOriginalQuery[1])) {
+        bindValues = argsForOriginalQuery[1];
+      }
+    } else if (config && config.values) {
+      // Query config object with values property
+      bindValues = config.values;
+    }
+
     span.data.pg = {
       stmt: tracingUtil.shortenDatabaseStatement(typeof config === 'string' ? config : config.text),
       host,
@@ -65,6 +78,10 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
       user,
       db
     };
+
+    if (bindValues && bindValues.length > 0) {
+      span.data.pg.bindValues = bindValues;
+    }
 
     let originalCallback;
     let callbackIndex = -1;
