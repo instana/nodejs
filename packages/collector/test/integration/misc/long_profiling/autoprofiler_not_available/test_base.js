@@ -4,7 +4,6 @@
 
 'use strict';
 
-const os = require('os');
 const { expect } = require('chai');
 const { execSync } = require('child_process');
 const { retry } = require('@_local/core/test/test_util');
@@ -17,31 +16,19 @@ module.exports = function () {
 
   const agentControls = new AgentStubControls();
   let controls;
-  let tmpDir;
 
   before(async () => {
-    tmpDir = os.tmpdir();
-
-    execSync('./prepare.sh', { cwd: __dirname, stdio: 'inherit' });
-    execSync(`mv ./*.tgz ${tmpDir}`, { cwd: __dirname, stdio: 'inherit' });
-    execSync(`cp app.js ${tmpDir}`, { cwd: __dirname, stdio: 'inherit' });
-
-    execSync('npm install --no-save --no-package-lock --prefix ./ ./core.tgz', {
-      cwd: tmpDir,
-      stdio: 'inherit'
-    });
-
-    execSync('npm install --no-save --no-package-lock --prefix ./ ./collector.tgz', {
-      cwd: tmpDir,
-      stdio: 'inherit'
-    });
-
-    execSync('rm -rf node_modules/@_local/autoprofile', { cwd: tmpDir, stdio: 'inherit' });
+    console.log(`Removing @instana/autoprofile dependency from ${__dirname}`);
+    // If you remove the whole folder "node_modules/@instana/autoprofile",
+    // npm will load packages/autoprofile from the workspace root.
+    // One possible solution is to install the app version folders in a tmp folder
+    // and symlink the folders to the test folders.
+    execSync('rm -rf node_modules/@instana/autoprofile/index.js', { cwd: __dirname, stdio: 'inherit' });
 
     await agentControls.startAgent();
 
     controls = new ProcessControls({
-      dirname: tmpDir,
+      dirname: __dirname,
       agentControls,
       env: {
         INSTANA_AUTO_PROFILE: true
