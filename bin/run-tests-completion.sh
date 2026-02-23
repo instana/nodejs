@@ -9,8 +9,9 @@
 #   runcollector-nw <package> <TAB>          (mode completion)
 #   runcollector-nw <package>@<version> <TAB> (mode completion)
 #
-# Source this file in your .bashrc:
-#   source ~/dev/instana/nodejs/bin/run-tests-completion.sh
+# Source this file in your .bashrc or .zshrc:
+#   source ~/path/to/instana/nodejs/bin/run-tests-completion.sh
+#
 #######################################
 
 # Get script directory (works in both bash and zsh)
@@ -26,19 +27,22 @@ _RUNCOLLECTOR_CACHE_FILE="/tmp/.runcollector-packages-cache"
 
 _runcollector_build_cache() {
   local test_base="$_RUNCOLLECTOR_REPO_ROOT/packages/collector/test"
+  local excluded_dirs="test|integration|unit|misc|metrics|currencies|databases|messaging|protocols|logging|frameworks|cloud"
 
   {
     # Directories containing test_base.js
     find "$test_base" -name node_modules -prune -o -path "*/_v*" -prune -o -name "test_base.js" -print 2>/dev/null | while IFS= read -r f; do
-      local d name parent grandparent
+      local d name parent
       d=$(dirname "$f")
       name=$(basename "$d")
       parent=$(basename "$(dirname "$d")")
+
+      # Handle scoped packages (e.g., @elastic/elasticsearch)
       [[ "$parent" == @* ]] && name="$parent/$name"
       echo "$name"
-      # Also store parent/name for nested directories (e.g. sdk/allowRootExitSpans)
-      grandparent=$(basename "$(dirname "$(dirname "$d")")")
-      if [[ "$parent" != @* && "$parent" != "test" && "$parent" != "integration" && "$parent" != "unit" && "$parent" != "misc" && "$parent" != "metrics" && "$parent" != "currencies" && "$parent" != "databases" && "$parent" != "messaging" && "$parent" != "protocols" && "$parent" != "logging" && "$parent" != "frameworks" && "$parent" != "cloud" ]]; then
+
+      # Also store parent/name for nested directories (e.g., sdk/allowRootExitSpans)
+      if [[ "$parent" != @* ]] && ! echo "$parent" | grep -qE "^($excluded_dirs)$"; then
         echo "$parent/$name"
       fi
     done
@@ -49,10 +53,11 @@ _runcollector_build_cache() {
       d=$(dirname "$f")
       name=$(basename "$d")
       parent=$(basename "$(dirname "$d")")
+
       # Skip if directory is directly under a known category
-      if [[ "$name" != "test" && "$name" != "integration" && "$name" != "unit" ]]; then
+      if ! echo "$name" | grep -qE "^($excluded_dirs)$"; then
         echo "$name"
-        if [[ "$parent" != @* && "$parent" != "test" && "$parent" != "integration" && "$parent" != "unit" && "$parent" != "misc" && "$parent" != "metrics" && "$parent" != "currencies" && "$parent" != "databases" && "$parent" != "messaging" && "$parent" != "protocols" && "$parent" != "logging" && "$parent" != "frameworks" && "$parent" != "cloud" ]]; then
+        if [[ "$parent" != @* ]] && ! echo "$parent" | grep -qE "^($excluded_dirs)$"; then
           echo "$parent/$name"
         fi
       fi
@@ -171,19 +176,14 @@ _runcollector_completions() {
   COMP_WORDBREAKS="$old_wordbreaks"
 }
 
-# Build cache on source (<1s with -prune)
-_runcollector_build_cache
-
-# complete -o nospace -F _runcollector_completions runcollector
-# complete -o nospace -F _runcollector_completions runcollector-nw
-
 #######################################
 # Completion Registration (Bash + Zsh)
 #######################################
 
-# ---- Zsh completion ----
+# Build cache on source (<1s with -prune)
+_runcollector_build_cache
+
 if [ -n "$ZSH_VERSION" ]; then
-  echo "ZSH_VERSION is set to: $ZSH_VERSION"
   autoload -Uz compinit 2>/dev/null
   compinit 2>/dev/null
 
@@ -262,13 +262,8 @@ if [ -n "$ZSH_VERSION" ]; then
   compdef _runcollector_completions_zsh runcollector
   compdef _runcollector_completions_zsh runcollector-nw
 
-  # Enable completion for aliases
   setopt complete_aliases
-fi
-
-# ---- Bash completion ----
-if [ -n "$BASH_VERSION" ]; then
-  echo "BASH_VERSION is set to: $BASH_VERSION"
+elif [ -n "$BASH_VERSION" ]; then
   complete -o nospace -F _runcollector_completions runcollector
   complete -o nospace -F _runcollector_completions runcollector-nw
 fi
