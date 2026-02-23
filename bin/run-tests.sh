@@ -77,7 +77,6 @@ npm_command="npm run test:debug"
 SCOPE_PKG_NAME="${SCOPE#@instana/}"
 TEST_BASE_DIR="packages/${SCOPE_PKG_NAME}/test"
 
-
 if [ -n "$PACKAGE" ]; then
   # Normalize package name for scoped packages (e.g., @redis/client -> redis_client)
   NORMALIZED_PACKAGE=$(normalize_folder_name "$PACKAGE")

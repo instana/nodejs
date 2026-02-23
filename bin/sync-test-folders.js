@@ -48,7 +48,7 @@ function main() {
   try {
     needsRegen = fs.readFileSync(checksumPath, 'utf8').trim() !== currentHash;
   } catch (_) {
-    // ignore
+    // checksum file doesn't exist yet → first run
   }
 
   if (needsRegen) {
