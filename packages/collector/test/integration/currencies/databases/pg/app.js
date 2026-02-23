@@ -105,6 +105,19 @@ app.get('/parameterized-query', async (req, res) => {
   res.json({});
 });
 
+app.get('/bind-variables-test', async (req, res) => {
+  // Test with string query and array parameters
+  await client.query('SELECT * FROM users WHERE name = $1 AND email = $2', ['testuser', 'test@example.com']);
+
+  // Test with config object containing values
+  await pool.query({
+    text: 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *',
+    values: ['bindtest', 'bindtest@example.com']
+  });
+
+  res.json({ success: true });
+});
+
 app.get('/pool-string-insert', (req, res) => {
   const insert = 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *';
   const values = ['beaker', 'beaker@muppets.com'];
