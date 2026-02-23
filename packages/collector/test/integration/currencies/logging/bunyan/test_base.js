@@ -76,10 +76,10 @@ module.exports = function (name, version, isLatest) {
     it('must trace fatal', () => runTest('fatal', true, 'Fatal message - should be traced.', controls));
 
     it("must capture an error object's message", () =>
-      runTest('error-object-only', true, 'This is an error.', controls));
+      runTest('error-object-only', true, 'Error: This is an error.', controls));
 
     it("must capture a nested error object's message", async () => {
-      await runTest('nested-error-object-only', true, 'This is a nested error.', controls);
+      await runTest('nested-error-object-only', true, 'Error: This is a nested error.', controls);
     });
 
     it('must serialize random object', () => runTest('error-random-object-only', true, '{"foo":"[Object]"}', controls));
@@ -96,14 +96,19 @@ module.exports = function (name, version, isLatest) {
       ));
 
     it("must capture an error object's message and an additional string", () =>
-      runTest('error-object-and-string', true, 'This is an error. -- Error message - should be traced.', controls));
+      runTest(
+        'error-object-and-string',
+        true,
+        'Error: This is an error. -- Error message - should be traced.',
+        controls
+      ));
 
     it("must capture a nested error object's message and an additional string", () =>
       runTest(
         'nested-error-object-and-string',
         true,
         // eslint-disable-next-line max-len
-        'This is a nested error. -- Error message - should be traced.',
+        'Error: This is a nested error. -- Error message - should be traced.',
         controls
       ));
 
