@@ -176,11 +176,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: generate-test-folders-task
+    - name: prepare-test-env-task
       runAfter:
         - install-project-dependencies
       taskRef:
-        name: generate-test-folders
+        name: prepare-test-env
       params:
         - name: node-version
           value: $(params.node-version)
@@ -208,7 +208,7 @@ spec:
           workspace: artifacts
     - name: autoprofile-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: autoprofile
       params:
@@ -234,7 +234,7 @@ spec:
 
     - name: aws-fargate-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: aws-fargate
       params:
@@ -260,7 +260,7 @@ spec:
 
     - name: aws-lambda-split-2-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: aws-lambda-split-2
       params:
@@ -286,7 +286,7 @@ spec:
 
     - name: aws-lambda-split-3-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: aws-lambda-split-3
       params:
@@ -312,7 +312,7 @@ spec:
 
     - name: aws-lambda-split-4-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: aws-lambda-split-4
       params:
@@ -338,7 +338,7 @@ spec:
 
     - name: aws-lambda-split-5-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: aws-lambda-split-5
       params:
@@ -364,7 +364,7 @@ spec:
 
     - name: aws-lambda-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: aws-lambda
       params:
@@ -390,7 +390,7 @@ spec:
 
     - name: azure-container-services-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: azure-container-services
       params:
@@ -416,7 +416,7 @@ spec:
 
     - name: collector-1-redis-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-1-redis
       params:
@@ -442,7 +442,7 @@ spec:
 
     - name: collector-10-redis-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-10-redis
       params:
@@ -468,7 +468,7 @@ spec:
 
     - name: collector-11-redis-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-11-redis
       params:
@@ -494,7 +494,7 @@ spec:
 
     - name: collector-12-redis-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-12-redis
       params:
@@ -520,7 +520,7 @@ spec:
 
     - name: collector-13-redis-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-13-redis
       params:
@@ -546,7 +546,7 @@ spec:
 
     - name: collector-14-redis-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-14-redis
       params:
@@ -572,7 +572,7 @@ spec:
 
     - name: collector-15-redis-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-15-redis
       params:
@@ -598,7 +598,7 @@ spec:
 
     - name: collector-16-redis-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-16-redis
       params:
@@ -624,7 +624,7 @@ spec:
 
     - name: collector-17-redis-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-17-redis
       params:
@@ -650,7 +650,7 @@ spec:
 
     - name: collector-18-redis-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-18-redis
       params:
@@ -676,7 +676,7 @@ spec:
 
     - name: collector-19-redis-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-19-redis
       params:
@@ -702,7 +702,7 @@ spec:
 
     - name: collector-2-redis-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-2-redis
       params:
@@ -728,7 +728,7 @@ spec:
 
     - name: collector-20-redis-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-20-redis
       params:
@@ -754,7 +754,7 @@ spec:
 
     - name: collector-21-kafka-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-21-kafka
       params:
@@ -780,7 +780,7 @@ spec:
 
     - name: collector-22-kafka-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-22-kafka
       params:
@@ -806,7 +806,7 @@ spec:
 
     - name: collector-23-kafka-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-23-kafka
       params:
@@ -832,7 +832,7 @@ spec:
 
     - name: collector-24-kafka-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-24-kafka
       params:
@@ -858,7 +858,7 @@ spec:
 
     - name: collector-25-kafka-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-25-kafka
       params:
@@ -884,7 +884,7 @@ spec:
 
     - name: collector-26-kafka-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-26-kafka
       params:
@@ -910,7 +910,7 @@ spec:
 
     - name: collector-27-postgres-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-27-postgres
       params:
@@ -936,7 +936,7 @@ spec:
 
     - name: collector-28-postgres-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-28-postgres
       params:
@@ -962,7 +962,7 @@ spec:
 
     - name: collector-29-postgres-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-29-postgres
       params:
@@ -988,7 +988,7 @@ spec:
 
     - name: collector-3-redis-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-3-redis
       params:
@@ -1014,7 +1014,7 @@ spec:
 
     - name: collector-30-elasticsearch-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-30-elasticsearch
       params:
@@ -1040,7 +1040,7 @@ spec:
 
     - name: collector-31-elasticsearch-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-31-elasticsearch
       params:
@@ -1066,7 +1066,7 @@ spec:
 
     - name: collector-32-mongodb-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-32-mongodb
       params:
@@ -1092,7 +1092,7 @@ spec:
 
     - name: collector-33-couchbase-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-33-couchbase
       params:
@@ -1118,7 +1118,7 @@ spec:
 
     - name: collector-34-rabbitmq-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-34-rabbitmq
       params:
@@ -1144,7 +1144,7 @@ spec:
 
     - name: collector-35-nats-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-35-nats
       params:
@@ -1170,7 +1170,7 @@ spec:
 
     - name: collector-36-mysql-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-36-mysql
       params:
@@ -1196,7 +1196,7 @@ spec:
 
     - name: collector-37-localstack-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-37-localstack
       params:
@@ -1222,7 +1222,7 @@ spec:
 
     - name: collector-38-memcached-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-38-memcached
       params:
@@ -1248,7 +1248,7 @@ spec:
 
     - name: collector-39-oracledb-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-39-oracledb
       params:
@@ -1274,7 +1274,7 @@ spec:
 
     - name: collector-4-redis-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-4-redis
       params:
@@ -1300,7 +1300,7 @@ spec:
 
     - name: collector-5-redis-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-5-redis
       params:
@@ -1326,7 +1326,7 @@ spec:
 
     - name: collector-6-redis-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-6-redis
       params:
@@ -1352,7 +1352,7 @@ spec:
 
     - name: collector-7-redis-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-7-redis
       params:
@@ -1378,7 +1378,7 @@ spec:
 
     - name: collector-8-redis-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-8-redis
       params:
@@ -1404,7 +1404,7 @@ spec:
 
     - name: collector-9-redis-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: collector-9-redis
       params:
@@ -1430,7 +1430,7 @@ spec:
 
     - name: core-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: core
       params:
@@ -1456,7 +1456,7 @@ spec:
 
     - name: google-cloud-run-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: google-cloud-run
       params:
@@ -1482,7 +1482,7 @@ spec:
 
     - name: metrics-util-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: metrics-util
       params:
@@ -1508,7 +1508,7 @@ spec:
 
     - name: opentelemetry-exporter-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: opentelemetry-exporter
       params:
@@ -1534,7 +1534,7 @@ spec:
 
     - name: opentelemetry-sampler-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: opentelemetry-sampler
       params:
@@ -1560,7 +1560,7 @@ spec:
 
     - name: serverless-collector-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: serverless-collector
       params:
@@ -1586,7 +1586,7 @@ spec:
 
     - name: serverless-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: serverless
       params:
@@ -1612,7 +1612,7 @@ spec:
 
     - name: shared-metrics-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: shared-metrics
       params:

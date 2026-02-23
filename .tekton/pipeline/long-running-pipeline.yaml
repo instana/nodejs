@@ -153,11 +153,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: generate-test-folders-task
+    - name: prepare-test-env-task
       runAfter:
         - install-project-dependencies
       taskRef:
-        name: generate-test-folders
+        name: prepare-test-env
       params:
         - name: node-version
           value: $(params.node-version)
@@ -168,7 +168,7 @@ spec:
           workspace: artifacts
     - name: test-ci-long-running
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: long-running-task
       params:

@@ -1,6 +1,6 @@
     - name: {{name}}-task
       runAfter:
-        - generate-test-folders-task
+        - prepare-test-env-task
       taskRef:
         name: {{name}}
       params:

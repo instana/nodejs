@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: generate-test-folders
+  name: prepare-test-env
 spec:
   params:
     - name: node-version
@@ -12,6 +12,17 @@ spec:
     - name: output
       mountPath: /artifacts
   steps:
+    - name: pre-cache-dependencies
+      image: public.ecr.aws/docker/library/node:$(params.node-version)
+      imagePullPolicy: IfNotPresent
+      script: |
+        #!/bin/bash
+
+        ARTIFACTS_PATH="$(workspaces.output.path)"
+        cd $ARTIFACTS_PATH
+
+        mkdir -p .npm-offline-cache
+        node bin/pre-cache-dependencies.js
     - name: generate-test-folders
       image: public.ecr.aws/docker/library/node:$(params.node-version)
       imagePullPolicy: IfNotPresent
