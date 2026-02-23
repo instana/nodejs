@@ -14,7 +14,7 @@ spec:
     - name: target-branch
       value: $(params.target-branch)
     - name: continuous-delivery-context-secret
-      value: $(params.continuous-delivery-context-secret)      
+      value: $(params.continuous-delivery-context-secret)
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -24,7 +24,7 @@ spec:
       imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
-        
+
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
@@ -39,7 +39,7 @@ spec:
         else
           touch audit.failed
           exit 1
-        fi        
+        fi
     - name: lint
       image: public.ecr.aws/docker/library/node:$(params.node-version)
       imagePullPolicy: IfNotPresent
@@ -130,7 +130,7 @@ spec:
          bin/clean-aws.js --service=s3
         bin/clean-aws.js --service=dynamodb
         bin/clean-aws.js --service=sqs
-        bin/clean-aws.js --service=kinesis        
+        bin/clean-aws.js --service=kinesis
     - name: pre-cache-dependencies
       image: public.ecr.aws/docker/library/node:$(params.node-version)
       imagePullPolicy: IfNotPresent
@@ -142,20 +142,3 @@ spec:
 
         mkdir -p .npm-offline-cache
         node bin/pre-cache-dependencies.js
-
-    - name: generate-test-folders
-      image: public.ecr.aws/docker/library/node:$(params.node-version)
-      imagePullPolicy: IfNotPresent
-      script: |
-        #!/bin/bash
-
-        ARTIFACTS_PATH="$(workspaces.output.path)"
-        cd $ARTIFACTS_PATH
-
-        if [ -n "$(params.npm-version)" ]; then
-          npm install npm@$(params.npm-version) -g
-        fi
-
-        # Generate Test Folders
-        echo "Generating version test folders..."
-        CI=true node bin/create-version-test-folders.js

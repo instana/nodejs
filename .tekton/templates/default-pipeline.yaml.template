@@ -176,6 +176,19 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
+    - name: generate-test-folders-task
+      runAfter:
+        - install-project-dependencies
+      taskRef:
+        name: generate-test-folders
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)
+      workspaces:
+        - name: output
+          workspace: artifacts
     - name: execute-tools
       runAfter:
         - install-project-dependencies

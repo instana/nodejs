@@ -176,6 +176,19 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
+    - name: generate-test-folders-task
+      runAfter:
+        - install-project-dependencies
+      taskRef:
+        name: generate-test-folders
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)
+      workspaces:
+        - name: output
+          workspace: artifacts
     - name: execute-tools
       runAfter:
         - install-project-dependencies
@@ -195,14 +208,14 @@ spec:
           workspace: artifacts
     - name: autoprofile-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: autoprofile
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -214,20 +227,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: aws-fargate-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: aws-fargate
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -239,20 +253,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: aws-lambda-split-2-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: aws-lambda-split-2
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -264,20 +279,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: aws-lambda-split-3-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: aws-lambda-split-3
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -289,20 +305,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: aws-lambda-split-4-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: aws-lambda-split-4
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -314,20 +331,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: aws-lambda-split-5-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: aws-lambda-split-5
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -339,20 +357,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: aws-lambda-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: aws-lambda
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -364,20 +383,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: azure-container-services-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: azure-container-services
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -389,20 +409,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-1-redis-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-1-redis
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -414,20 +435,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-10-redis-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-10-redis
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -439,20 +461,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-11-redis-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-11-redis
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -464,20 +487,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-12-redis-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-12-redis
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -489,20 +513,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-13-redis-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-13-redis
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -514,20 +539,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-14-redis-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-14-redis
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -539,20 +565,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-15-redis-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-15-redis
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -564,20 +591,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-16-redis-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-16-redis
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -589,20 +617,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-17-redis-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-17-redis
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -614,20 +643,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-18-redis-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-18-redis
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -639,20 +669,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-19-redis-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-19-redis
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -664,20 +695,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-2-redis-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-2-redis
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -689,20 +721,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-20-redis-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-20-redis
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -714,20 +747,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-21-kafka-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-21-kafka
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -739,20 +773,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-22-kafka-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-22-kafka
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -764,20 +799,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-23-kafka-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-23-kafka
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -789,20 +825,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-24-kafka-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-24-kafka
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -814,20 +851,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-25-kafka-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-25-kafka
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -839,20 +877,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-26-kafka-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-26-kafka
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -864,20 +903,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-27-postgres-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-27-postgres
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -889,20 +929,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-28-postgres-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-28-postgres
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -914,20 +955,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-29-postgres-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-29-postgres
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -939,20 +981,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-3-redis-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-3-redis
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -964,20 +1007,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-30-elasticsearch-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-30-elasticsearch
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -989,20 +1033,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-31-elasticsearch-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-31-elasticsearch
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -1014,20 +1059,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-32-mongodb-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-32-mongodb
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -1039,20 +1085,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-33-couchbase-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-33-couchbase
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -1064,20 +1111,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-34-rabbitmq-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-34-rabbitmq
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -1089,20 +1137,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-35-nats-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-35-nats
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -1114,20 +1163,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-36-mysql-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-36-mysql
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -1139,20 +1189,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-37-localstack-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-37-localstack
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -1164,20 +1215,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-38-memcached-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-38-memcached
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -1189,20 +1241,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-39-oracledb-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-39-oracledb
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -1214,20 +1267,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-4-redis-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-4-redis
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -1239,20 +1293,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-5-redis-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-5-redis
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -1264,20 +1319,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-6-redis-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-6-redis
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -1289,20 +1345,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-7-redis-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-7-redis
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -1314,20 +1371,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-8-redis-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-8-redis
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -1339,20 +1397,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: collector-9-redis-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: collector-9-redis
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -1364,20 +1423,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: core-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: core
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -1389,20 +1449,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: google-cloud-run-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: google-cloud-run
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -1414,20 +1475,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: metrics-util-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: metrics-util
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -1439,20 +1501,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: opentelemetry-exporter-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: opentelemetry-exporter
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -1464,20 +1527,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: opentelemetry-sampler-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: opentelemetry-sampler
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -1489,20 +1553,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: serverless-collector-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: serverless-collector
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -1514,20 +1579,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: serverless-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: serverless
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -1539,20 +1605,21 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
     - name: shared-metrics-task
       runAfter:
-        - execute-tools
+        - generate-test-folders-task
       taskRef:
         name: shared-metrics
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
         - name: repository
           value: $(params.repository)
         - name: revision
@@ -1564,10 +1631,11 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts
+
 
   finally:
     - name: tasks-results
