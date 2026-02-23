@@ -67,27 +67,17 @@ function instrumentedLog(ctx, originalLog, originalArgs, markAsError) {
 
     if (typeof fields === 'string') {
       message = fields;
-    } else if (fields && typeof fields.message === 'string' && typeof message === 'string') {
-      message = `${fields.message} -- ${message}`;
+    } else if (fields instanceof Error) {
+      const errorMessage = tracingUtil.extractErrorMessage(fields);
+      message = typeof message === 'string' ? `${errorMessage} -- ${message}` : errorMessage;
+    } else if (fields?.err instanceof Error) {
+      const errorMessage = tracingUtil.extractErrorMessage(fields.err);
+      message = typeof message === 'string' ? `${errorMessage} -- ${message}` : errorMessage;
+    } else if (fields?.err && typeof fields.err.message === 'string') {
+      message = typeof message === 'string' ? `${fields.err.message} -- ${message}` : fields.err.message;
     } else if (fields && typeof fields.message === 'string') {
-      message = fields.message;
-    } else if (
-      fields &&
-      fields.err &&
-      typeof fields.err === 'object' &&
-      typeof fields.err.message === 'string' &&
-      typeof message === 'string'
-    ) {
-      // Support for fields.err.message based on the last example given in
-      // https://github.com/trentm/node-bunyan#log-method-api - quote: "To pass in an Error *and* other fields, use the
-      // `err` field name for the Error instance..."
-      message = `${fields.err.message} -- ${message}`;
-    } else if (fields && fields.err && typeof fields.err === 'object' && typeof fields.err.message === 'string') {
-      message = fields.err.message;
-    } else if (typeof fields === 'object') {
-      // CASE: we try our best to serialize logged objects
-      //       we do not want to directly call JSON.stringify because we do not know how big the object is and
-      //       there might be possible circular dependencies in the object.
+      message = typeof message === 'string' ? `${fields.message} -- ${message}` : fields.message;
+    } else if (fields && typeof fields === 'object') {
       const maxNoOfKeys = 100;
       const obj = {};
 
