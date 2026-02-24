@@ -4,37 +4,67 @@
 
 'use strict';
 
-const instana = require('@instana/aws-lambda');
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const localUtils = require('./utils');
-// eslint-disable-next-line instana/no-unsafe-require
-const semver = require('semver');
-
-// NOTE: The esm handler can be used for Lambdas with commonjs or es module.
-//       See https://github.com/nodejs/node/pull/35249
-if (!supportedVersion(process.versions.node)) {
-  throw new localUtils.errors.lambda.ImportModuleError(
-    `Your Lambda function is using ${process.versions.node}. This version is not supported.` +
-      'Please use a layer version which is compatible with your Node.js version.' +
-      'See https://www.ibm.com/docs/en/instana-observability/current?topic=lambda-aws-native-tracing-nodejs'
-  );
-}
+let instana;
+let supportedVersion;
+let localUtils;
+let semver;
+let wrappedHandler;
+let initStartTime;
 
 // Node.js 24+ removed support for callback-based handlers (3 parameters).
 // For Node.js < 24, we preserve the callback signature for backward compatibility.
-const latestRuntime = semver.gte(process.version, '24.0.0');
+function isLatestRuntime() {
+  if (!semver) {
+    // eslint-disable-next-line instana/no-unsafe-require
+    semver = require('semver');
+  }
+  return semver.gte(process.version, '24.0.0');
+}
 
-if (latestRuntime) {
+async function initializeHandler() {
+  if (wrappedHandler) {
+    return wrappedHandler;
+  }
+
+  initStartTime = Date.now();
+
+  instana = require('@instana/aws-lambda');
+  supportedVersion = require('@instana/core').tracing.supportedVersion;
+  localUtils = require('./utils');
+
+  const loadTime = Date.now() - initStartTime;
+  // eslint-disable-next-line no-console
+  console.log(`[Instana ESM] Dependencies loaded in ${loadTime}ms`);
+
+  // NOTE: The esm handler can be used for Lambdas with commonjs or es module.
+  //       See https://github.com/nodejs/node/pull/35249
+  if (!supportedVersion(process.versions.node)) {
+    throw new localUtils.errors.lambda.ImportModuleError(
+      `Your Lambda function is using ${process.versions.node}. This version is not supported.` +
+        'Please use a layer version which is compatible with your Node.js version.' +
+        'See https://www.ibm.com/docs/en/instana-observability/current?topic=lambda-aws-native-tracing-nodejs'
+    );
+  }
+
+  const targetHandler = await loadTargetHandlerFunction();
+  wrappedHandler = instana.wrap(targetHandler);
+
+  const totalTime = Date.now() - initStartTime;
+  // eslint-disable-next-line no-console
+  console.log(`[Instana ESM] Handler initialization completed in ${totalTime}ms`);
+
+  return wrappedHandler;
+}
+
+if (isLatestRuntime()) {
   exports.handler = async function instanaAutowrapHandler(event, context) {
-    const targetHandler = await loadTargetHandlerFunction();
-    const wrappedHandler = instana.wrap(targetHandler);
-    return wrappedHandler(event, context);
+    const handler = await initializeHandler();
+    return handler(event, context);
   };
 } else {
   exports.handler = async function instanaAutowrapHandler(event, context, callback) {
-    const targetHandler = await loadTargetHandlerFunction();
-    const wrappedHandler = instana.wrap(targetHandler);
-    return wrappedHandler(event, context, callback);
+    const handler = await initializeHandler();
+    return handler(event, context, callback);
   };
 }
 

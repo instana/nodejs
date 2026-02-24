@@ -5,29 +5,56 @@
 
 'use strict';
 
-const instana = require('@instana/aws-lambda');
-// eslint-disable-next-line instana/no-unsafe-require
-const semver = require('semver');
-const localUtils = require('./utils');
-
+let instana;
+let semver;
+let localUtils;
 let wrappedHandler;
 let capturedError;
+let initStartTime;
 
-if (!wrappedHandler) {
-  try {
-    const targetHandler = loadTargetHandlerFunction();
-    wrappedHandler = instana.wrap(targetHandler);
-  } catch (e) {
-    capturedError = e;
-  }
-}
 // Node.js 24+ removed support for callback-based handlers (3 parameters).
 // For Node.js < 24, we preserve the callback signature for backward compatibility.
-const latestRuntime = semver.gte(process.version, '24.0.0');
+function isLatestRuntime() {
+  if (!semver) {
+    // eslint-disable-next-line instana/no-unsafe-require
+    semver = require('semver');
+  }
+  return semver.gte(process.version, '24.0.0');
+}
 
-if (latestRuntime) {
+function initializeHandler() {
+  if (wrappedHandler || capturedError) {
+    return;
+  }
+
+  try {
+    initStartTime = Date.now();
+
+    instana = require('@instana/aws-lambda');
+    localUtils = require('./utils');
+
+    const loadTime = Date.now() - initStartTime;
+    // eslint-disable-next-line no-console
+    console.log(`[Instana] Dependencies loaded in ${loadTime}ms`);
+
+    const targetHandler = loadTargetHandlerFunction();
+    wrappedHandler = instana.wrap(targetHandler);
+
+    const totalTime = Date.now() - initStartTime;
+    // eslint-disable-next-line no-console
+    console.log(`[Instana] Handler initialization completed in ${totalTime}ms`);
+  } catch (e) {
+    capturedError = e;
+    // eslint-disable-next-line no-console
+    console.error('[Instana] Handler initialization failed:', e.message);
+  }
+}
+
+if (isLatestRuntime()) {
   exports.handler = async function instanaAutowrapHandler(event, context) {
-    if (!wrappedHandler) {
+    initializeHandler();
+
+    if (capturedError) {
       throw capturedError;
     }
 
@@ -35,7 +62,11 @@ if (latestRuntime) {
   };
 } else {
   exports.handler = function instanaAutowrapHandler(event, context, callback) {
-    if (!wrappedHandler) return callback(capturedError);
+    initializeHandler();
+
+    if (capturedError) {
+      return callback(capturedError);
+    }
 
     return wrappedHandler(event, context, callback);
   };
