@@ -434,6 +434,11 @@ function stringifyWhenNecessary(obj) {
   return tracingUtil.shortenDatabaseStatement(JSON.stringify(obj));
 }
 
+function finishSpan(span) {
+  span.d = Date.now() - span.ts;
+  span.transmit();
+}
+
 function createWrappedCallback(span, originalCallback) {
   return cls.ns.bind(function (error) {
     if (error) {
@@ -441,9 +446,7 @@ function createWrappedCallback(span, originalCallback) {
       tracingUtil.setErrorDetails(span, error, 'mongo');
     }
 
-    span.d = Date.now() - span.ts;
-    span.transmit();
-
+    finishSpan(span);
     return originalCallback.apply(this, arguments);
   });
 }
@@ -460,22 +463,18 @@ function handleCallbackOrPromise(ctx, originalArgs, originalFunction, span) {
   if (resultPromise && typeof resultPromise.then === 'function') {
     resultPromise
       .then(result => {
-        span.d = Date.now() - span.ts;
-        span.transmit();
+        finishSpan(span);
         return result;
       })
       .catch(err => {
         span.ec = 1;
         tracingUtil.setErrorDetails(span, err, 'mongo');
-        span.d = Date.now() - span.ts;
-        span.transmit();
+        finishSpan(span);
         return err;
       });
   } else {
     tracingUtil.handleUnexpectedReturnValue(resultPromise, exports.spanName, 'command');
-
-    span.d = Date.now() - span.ts;
-    span.transmit();
+    finishSpan(span);
   }
 
   return resultPromise;
