@@ -67,7 +67,7 @@
     },
     {
       "name": "kafka",
-      "image": "confluentinc/cp-kafka:7.9.1",
+      "image": "us.icr.io/instana-tracer-nodejs/confluentinc-cp-kafka:7.9.0",
       "env": [
         { "name": "KAFKA_BROKER_ID", "value": "1" },
         { "name": "KAFKA_ZOOKEEPER_CONNECT", "value": "localhost:2181" },
