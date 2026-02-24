@@ -232,7 +232,7 @@ mochaSuiteFn(suiteTitle, function () {
       const npmCmd = process.env.CI ?
         'npm install --cache ${rootDir}/.npm-offline-cache --prefer-offline ' +
         '--no-package-lock --no-audit --prefix ./ --no-progress' :
-        'npm install --no-package-lock --force --no-audit --prefix ./ --no-progress';
+        'npm install --no-package-lock --no-audit --prefix ./ --no-progress';
 
       for (let attempt = 0; attempt < maxRetries; attempt++) {${
         isOptional
