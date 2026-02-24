@@ -1,5 +1,10 @@
 {
   "dependencies": {
-    "semver": "latest"
+    "@apollo/server": "latest",
+    "@as-integrations/express5": "latest",
+    "graphql-ws": "latest",
+    "pino": "latest",
+    "semver": "latest",
+    "ws": "latest"
   }
 }
