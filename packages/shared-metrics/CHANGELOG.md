@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [5.2.3](https://github.com/instana/nodejs/compare/v5.2.2...v5.2.3) (2026-02-24)
+
+
+### Bug Fixes
+
+* **shared-metrics:** bumped tar from v7.5.7 to v7.5.9 ([#2347](https://github.com/instana/nodejs/issues/2347)) ([3c413c1](https://github.com/instana/nodejs/commit/3c413c125f07d186c122f1a31eabca8fa0921067))
+
+
+
+
+
 ## [5.2.2](https://github.com/instana/nodejs/compare/v5.2.1...v5.2.2) (2026-02-02)
 
 

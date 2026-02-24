@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [5.2.3](https://github.com/instana/nodejs/compare/v5.2.2...v5.2.3) (2026-02-24)
+
+
+### Bug Fixes
+
+* **aws-lambda:** reduced cold start duration ([#2321](https://github.com/instana/nodejs/issues/2321)) ([566a284](https://github.com/instana/nodejs/commit/566a284626199348d7d9c545fff4e04295b81d2f))
+* bumped @opentelemetry/instrumentation-socket.io from 0.55.1 to 0.57.0 ([#2320](https://github.com/instana/nodejs/issues/2320)) ([c3cecb7](https://github.com/instana/nodejs/commit/c3cecb7e3cd78ef4baa817ccdc32e28bcd6fc890))
+* bumped nan from 2.24.0 to 2.25.0 ([#2319](https://github.com/instana/nodejs/issues/2319)) ([1f655e3](https://github.com/instana/nodejs/commit/1f655e357df244fc5ef42765b286693fd5f62925))
+* **elasticsearch:** resolved "Cannot find module" ([#2358](https://github.com/instana/nodejs/issues/2358)) ([ca47b00](https://github.com/instana/nodejs/commit/ca47b000170d2237417d546545d2cf52732642d6))
+* handled non-promise return from instrumented pg calls ([#2335](https://github.com/instana/nodejs/issues/2335)) ([f7a8b8d](https://github.com/instana/nodejs/commit/f7a8b8d80c0e5577e4f5e9004d5d3041ca6aea8e))
+* **shared-metrics:** bumped tar from v7.5.7 to v7.5.9 ([#2347](https://github.com/instana/nodejs/issues/2347)) ([3c413c1](https://github.com/instana/nodejs/commit/3c413c125f07d186c122f1a31eabca8fa0921067))
+
+
+
+
+
 ## [5.2.2](https://github.com/instana/nodejs/compare/v5.2.1...v5.2.2) (2026-02-02)
 
 
