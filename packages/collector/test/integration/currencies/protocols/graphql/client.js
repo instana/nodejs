@@ -19,26 +19,9 @@ const express = require('express');
 const morgan = require('morgan');
 
 const { v4: uuid } = require('uuid');
-const ws = require('ws');
-
-/**
- * See
- *
- * https://github.com/apollographql/apollo-server/issues/6058
- * https://www.apollographql.com/docs/apollo-server/data/subscriptions/#the-graphql-ws-transport-library
- * https://github.com/apollographql/apollo-server/
- *    blob/apollo-server-express%402.24.1/packages/apollo-server-core/src/ApolloServer.ts#L39
- *    blob/apollo-server-express%402.24.1/packages/apollo-server-core/src/ApolloServer.ts#L898
- *
- * Subscriptions no longer working from GraphQL v15 using subscriptions-transport-ws
- * Furtermore subscriptions-transport-ws is no longer maintained
- */
-const { createClient } = require('graphql-ws');
 
 const serverPort = process.env.SERVER_PORT;
-const serverBaseUrl = `http://127.0.0.1:${serverPort}`;
-const serverGraphQLEndpoint = `${serverBaseUrl}/graphql`;
-const serverWsGraphQLUrl = `ws://127.0.0.1:${serverPort}/graphql`;
+const serverGraphQLEndpoint = `http://127.0.0.1:${serverPort}/graphql`;
 
 const app = express();
 const port = require('@_local/collector/test/test_util/app-port')();
@@ -94,42 +77,6 @@ app.post('/mutation', (req, res) =>
     id: 4,
     name: 'The Investigator',
     profession: 'Zombie Protomolecule Hallucination'
-  })
-);
-
-app.post('/subscription', (req, res) => establishSubscription(req, res));
-
-app.post('/publish-update-via-http', async (req, res) => {
-  try {
-    const response = await fetch(`${serverBaseUrl}/publish-update`, {
-      method: 'POST',
-      url: `${serverBaseUrl}/publish-update`,
-      body: JSON.stringify({
-        id: req.body?.id || 1,
-        name: req.body?.name || 'Updated Name',
-        profession: req.body?.profession || 'Updated Profession'
-      }),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (response.status !== 200) {
-      throw new Error(`Failed to publish update: ${response.statusText}`);
-    }
-
-    res.send(response.json());
-  } catch (err) {
-    log(err);
-    res.status(500).send(err.message);
-  }
-});
-
-app.post('/publish-update-via-graphql', (req, res) =>
-  runMutation(req, res, {
-    id: req.query.id || 1,
-    name: 'Updated Name',
-    profession: 'Updated Profession'
   })
 );
 
@@ -248,33 +195,6 @@ function runMutation(req, res, input) {
       log(e);
       res.sendStatus(500);
     });
-}
-
-function establishSubscription(req, res) {
-  const client = createClient({
-    url: serverWsGraphQLUrl,
-    webSocketImpl: ws
-  });
-
-  client.subscribe(
-    {
-      query: 'subscription onCharacterUpdated { characterUpdated (id: "1") { id name profession } }'
-    },
-    {
-      next: data => {
-        if (process.send) {
-          process.send(`character updated: ${JSON.stringify(data)}`);
-        }
-      },
-      error: err => {
-        if (process.send) {
-          process.send(`character updated error: ${err.message}`);
-        }
-      }
-    }
-  );
-
-  res.sendStatus(204);
 }
 
 app.listen(port, () => {

@@ -5,13 +5,11 @@
 'use strict';
 
 const graphQL = require('graphql');
-const graphqlSubscriptions = require('graphql-subscriptions');
 const data = require('./data');
 // Pino log spans are used to verify that follow up calls are traced correctly in a GraphQL entry.
 const pinoLogger = require('pino')();
 
 module.exports = function exportSchema() {
-  const pubsub = new graphqlSubscriptions.PubSub();
 
   function logAndResolve(logMsg, value) {
     pinoLogger.warn(logMsg);
@@ -181,35 +179,7 @@ module.exports = function exportSchema() {
             character.name = name;
             character.profession = profession;
             pinoLogger.warn(`update: ${character.id}: ${character.name} ${character.profession}`);
-            pubsub.publish('characterUpdated', {
-              characterUpdated: character
-            });
             return { name, profession };
-          }
-        }
-      }
-    }),
-
-    subscription: new graphQL.GraphQLObjectType({
-      name: 'Subscription',
-      fields: {
-        characterUpdated: {
-          type: CharacterType,
-          args: {
-            id: {
-              type: graphQL.GraphQLString
-            }
-          },
-          subscribe: (__, { id }) => {
-            pinoLogger.warn(`subscribe: ${id}`);
-
-            // for graphql-subscriptions, asyncIterator is replaced with asyncIterableIterator in v3
-            if (pubsub?.asyncIterableIterator) {
-              return pubsub.asyncIterableIterator('characterUpdated');
-            } else {
-              // v2 or lesser
-              return pubsub.asyncIterator('characterUpdated');
-            }
           }
         }
       }
@@ -218,7 +188,6 @@ module.exports = function exportSchema() {
 
   return {
     schema,
-    pinoLogger,
-    pubsub
+    pinoLogger
   };
 };
