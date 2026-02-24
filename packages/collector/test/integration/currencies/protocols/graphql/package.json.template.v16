@@ -1,8 +1,0 @@
-{
-  "dependencies": {
-    "@apollo/server": "latest",
-    "@as-integrations/express5": "latest",
-    "amqplib": "latest",
-    "pino": "latest"
-  }
-}
