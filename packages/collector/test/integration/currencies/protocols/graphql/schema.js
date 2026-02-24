@@ -10,7 +10,6 @@ const data = require('./data');
 const pinoLogger = require('pino')();
 
 module.exports = function exportSchema() {
-
   function logAndResolve(logMsg, value) {
     pinoLogger.warn(logMsg);
     return Promise.resolve(value);
