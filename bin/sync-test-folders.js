@@ -26,7 +26,7 @@ function hashTemplates(dir, h) {
       const full = path.join(dir, entry.name);
       if (entry.isDirectory()) {
         hashTemplates(full, h);
-      } else if (entry.name === 'package.json.template' || entry.name === 'modes.json') {
+      } else if (entry.name.startsWith('package.json.template') || entry.name === 'modes.json') {
         h.update(fs.readFileSync(full, 'utf8'));
       } else if (entry.name === 'test_base.js') {
         h.update(full);
