@@ -17,10 +17,13 @@ const { ApolloServer } = require('@apollo/server');
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
+const { WebSocketServer } = require('ws');
+const { useServer } = require('graphql-ws/use/ws');
 
 const { expressMiddleware } = require('@as-integrations/express5');
 
-const { schema } = require('./schema')();
+const { schema, pubsub, pinoLogger } = require('./schema')();
+const data = require('./data');
 
 const port = require('@_local/collector/test/test_util/app-port')();
 const app = express();
@@ -37,6 +40,27 @@ app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
+app.post('/publish-update', (req, res) => {
+  let { id, name, profession } = req.body;
+  if (id == null) {
+    id = 4;
+  }
+  if (typeof id === 'string') {
+    id = parseInt(id, 10);
+  }
+  if (isNaN(id) || id <= 0) {
+    id = 4;
+  }
+  const character = data.characters[id - 1];
+  character.name = name;
+  character.profession = profession;
+  pinoLogger.warn(`update: ${character.id}: ${character.name} ${character.profession}`);
+  pubsub.publish('characterUpdated', {
+    characterUpdated: character
+  });
+  res.send(character);
+});
+
 const apolloServer = new ApolloServer({
   schema
 });
@@ -46,8 +70,15 @@ const apolloServer = new ApolloServer({
 
   app.use('/graphql', expressMiddleware(apolloServer));
 
-  app.listen({ port }, () => {
-    log(`Listening on ${port}, GraphQL endpoint: http://localhost:${port}/graphql`);
+  const httpServer = app.listen({ port }, () => {
+    log(`Listening on ${port} (HTTP & Websocket), GraphQL endpoint: http://localhost:${port}/graphql`);
+
+    const wsServer = new WebSocketServer({
+      server: httpServer,
+      path: '/graphql'
+    });
+
+    useServer({ schema }, wsServer);
   });
 })();
 
