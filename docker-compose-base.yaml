@@ -196,7 +196,7 @@ services:
 
   # https://hub.docker.com/r/ibmcom/db2
   db2:
-    image: ibmcom/db2
+    image: icr.io/db2_community/db2
     platform: linux/amd64
     privileged: true
     ports:
