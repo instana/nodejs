@@ -105,7 +105,7 @@ function instrumentSendCommand(original) {
         );
       } else {
         tracingUtil.handleUnexpectedReturnValue(command.promise, exports.spanName, `command "${command.name}"`);
-        callback(null);
+        onResult();
       }
 
       return original.apply(client, argsForOriginal);
