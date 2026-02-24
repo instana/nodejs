@@ -60,6 +60,11 @@ for arg in "$@"; do
   esac
 done
 
+# Regenerate test folders if needed
+if [ "$SCOPE" = "@instana/collector" ]; then
+  node "$(dirname "$0")/sync-test-folders.js"
+fi
+
 args=""
 
 if [ "$WATCH" = true ]; then
