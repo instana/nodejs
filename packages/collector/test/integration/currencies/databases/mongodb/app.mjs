@@ -12,7 +12,7 @@ process.on('SIGTERM', () => {
 });
 
 import semver from 'semver';
-import MongoClient from 'mongodb';
+import { MongoClient } from 'mongodb';
 import bodyParser from 'body-parser';
 import express from 'express';
 import morgan from 'morgan';
@@ -70,7 +70,7 @@ if (process.env.USE_LEGACY_3_X_CONNECTION_MECHANISM) {
   });
 } else if (!isLegacy) {
   (async () => {
-    const client = new MongoClient.MongoClient(connectString);
+    const client = new MongoClient(connectString);
     await client.connect();
     db = client.db('myproject');
     collection = db.collection('mydocs');
