@@ -5,7 +5,7 @@ metadata:
 spec:
   sidecars:
     - name: zookeeper
-      image: confluentinc/cp-zookeeper:7.9.1
+      image: us.icr.io/instana-tracer-nodejs/confluentinc-cp-zookeeper:7.9.1
       imagePullPolicy: IfNotPresent
       resources:
         requests:
@@ -21,7 +21,7 @@ spec:
           periodSeconds: 2
           timeoutSeconds: 30
     - name: kafka
-      image: confluentinc/cp-kafka:7.9.1
+      image: us.icr.io/instana-tracer-nodejs/confluentinc-cp-kafka:7.9.1
       imagePullPolicy: IfNotPresent
       resources:
         requests:
@@ -49,7 +49,7 @@ spec:
           periodSeconds: 2
           timeoutSeconds: 60
     - name: kafka-topics
-      image: confluentinc/cp-kafka:7.9.1
+      image: us.icr.io/instana-tracer-nodejs/confluentinc-cp-kafka:7.9.1
       imagePullPolicy: IfNotPresent
       resources:
         requests:
@@ -61,7 +61,7 @@ spec:
       command:
           - "/bin/bash"
     - name: schema-registry
-      image: confluentinc/cp-schema-registry:7.9.0
+      image: us.icr.io/instana-tracer-nodejs/confluentinc-cp-schema-registry:7.9.1
       imagePullPolicy: IfNotPresent
       resources:
         requests:
