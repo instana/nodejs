@@ -2,6 +2,7 @@ version: '2'
 services:
   oracledb:
     image: container-registry.oracle.com/database/free:23.6.0.0-lite
+    pull_policy: if_not_present
     container_name: oracle-free
     ports:
       - "1521:1521"
@@ -11,12 +12,14 @@ services:
 
   redis:
     image: public.ecr.aws/docker/library/redis:7.4.3
+    pull_policy: if_not_present
     ports:
       - 6379:6379
 
  # sentinel test setup
   redis-slave:
     image: public.ecr.aws/docker/library/redis:7.4.3
+    pull_policy: if_not_present
     network_mode: host
     command:
       [
@@ -30,6 +33,7 @@ services:
 
   redis-sentinel:
     image: public.ecr.aws/docker/library/redis:7.4.3
+    pull_policy: if_not_present
     network_mode: host
     command: >
       sh -c 'echo "sentinel monitor mymaster 127.0.0.1 6379 1" > /etc/sentinel.conf &&
@@ -41,11 +45,13 @@ services:
 
   mongo:
     image: public.ecr.aws/docker/library/mongo:8.0.8
+    pull_policy: if_not_present
     ports:
       - 27017:27017
 
   couchbase:
     image: public.ecr.aws/docker/library/couchbase:7.6.7
+    pull_policy: if_not_present
     hostname: couchbase
     ports:
       - '8091-8096:8091-8096'
@@ -55,6 +61,7 @@ services:
   # Elasticsearch 9 compatible with client v7 & v9
   elasticsearch:
     image: public.ecr.aws/elastic/elasticsearch:9.0.0
+    pull_policy: if_not_present
     ports:
       - 9200:9200
     environment:
@@ -63,7 +70,8 @@ services:
       xpack.security.enabled: 'false'
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.9.1
+    image: public.ecr.aws/aktosecurity/confluentinc-cp-zookeeper:7.9.2-1-ubi8
+    pull_policy: if_not_present
     container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -71,23 +79,24 @@ services:
     ports:
       - "2181:2181"
 
-  schema-registry:
-    image: confluentinc/cp-schema-registry:7.9.1
-    hostname: schema-registry
-    depends_on:
-      - kafka
-    ports:
-      - "8081:8081"
-    environment:
-      SCHEMA_REGISTRY_HOST_NAME: schema-registry
-      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: 'zookeeper:2181'
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "PLAINTEXT://kafka:29092"
-      SCHEMA_REGISTRY_DEBUG: 'true'
+  # schema-registry:
+  #   image: confluentinc/cp-schema-registry:7.9.1
+  #   hostname: schema-registry
+  #   depends_on:
+  #     - kafka
+  #   ports:
+  #     - "8081:8081"
+  #   environment:
+  #     SCHEMA_REGISTRY_HOST_NAME: schema-registry
+  #     SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: 'zookeeper:2181'
+  #     SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "PLAINTEXT://kafka:29092"
+  #     SCHEMA_REGISTRY_DEBUG: 'true'
 
   kafka:
     # v7 = Kafka v3.9.x
     # https://docs.confluent.io/platform/current/installation/versions-interoperability.html
-    image: confluentinc/cp-kafka:7.9.1
+    image: public.ecr.aws/aktosecurity/confluentinc-cp-kafka:7.9.1-1-ubi8
+    pull_policy: if_not_present
     hostname: kafka
     ports:
       - "9092:9092"
@@ -104,7 +113,8 @@ services:
       KAFKA_DEFAULT_REPLICATION_FACTOR: 1
 
   kafka-topics:
-    image: confluentinc/cp-kafka:7.9.1
+    image: public.ecr.aws/aktosecurity/confluentinc-cp-kafka:7.9.1-1-ubi8
+    pull_policy: if_not_present
     entrypoint: "/bin/bash"
     command:
       - -lc
@@ -131,6 +141,7 @@ services:
 
   mysql:
     image: public.ecr.aws/docker/library/mysql:8.0.26
+    pull_policy: if_not_present
     platform: linux/amd64
     ports:
       - 3306:3306
@@ -146,6 +157,7 @@ services:
 
   postgres:
     image: public.ecr.aws/docker/library/postgres:15.15
+    pull_policy: if_not_present
     ports:
       - 5432:5432
     environment:
@@ -155,6 +167,7 @@ services:
 
   mssql:
     image: mcr.microsoft.com/azure-sql-edge:1.0.7
+    pull_policy: if_not_present
     platform: linux/arm64
     ports:
       - 1433:1433
@@ -164,12 +177,14 @@ services:
 
   rabbitmq:
     image: public.ecr.aws/docker/library/rabbitmq:3.13.7-alpine
+    pull_policy: if_not_present
     ports:
       - 5671:5671
       - 5672:5672
 
   nats:
     image: public.ecr.aws/docker/library/nats:2.9.14-linux
+    pull_policy: if_not_present
     ports:
       - 4222:4222
       - 6222:6222
@@ -177,6 +192,7 @@ services:
 
   nats-streaming:
     image: public.ecr.aws/docker/library/nats-streaming:0.25.3-linux
+    pull_policy: if_not_present
     command: -p 4223 -m 8223
     ports:
       - 4223:4223
@@ -184,6 +200,7 @@ services:
 
   nats-streaming-2:
     image: public.ecr.aws/docker/library/nats-streaming:0.25.3-linux
+    pull_policy: if_not_present
     command: -p 4224 -m 8224
     ports:
       - 4224:4224
@@ -191,12 +208,14 @@ services:
 
   memcached:
     image: public.ecr.aws/docker/library/memcached:1.6.9
+    pull_policy: if_not_present
     ports:
       - 11211:11211
 
   # https://hub.docker.com/r/ibmcom/db2
   db2:
     image: icr.io/db2_community/db2
+    pull_policy: if_not_present
     platform: linux/amd64
     privileged: true
     ports:
@@ -223,6 +242,7 @@ services:
   localstack:
     container_name: "${LOCALSTACK_DOCKER_NAME:-localstack-main}"
     image: public.ecr.aws/localstack/localstack:4.5
+    pull_policy: if_not_present
     hostname: localstack
     ports:
       - "4566:4566"            # LocalStack Gateway
