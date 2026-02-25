@@ -196,38 +196,36 @@ module.exports = function (name, version, isLatest) {
         });
 
         it(`must trace updates for subscriptions (via: ${triggerUpdateVia})`, () => {
-          return (
-            Promise.all([
-              clientControls1.sendRequest({
-                method: 'POST',
-                path: '/subscription?id=1'
-              }),
-              clientControls2.sendRequest({
-                method: 'POST',
-                path: '/subscription?id=1'
-              })
-            ])
-              .then(() => delay(1000))
-              .then(() => {
-                switch (triggerUpdateVia) {
-                  case 'http':
-                    return clientControls1.sendRequest({
-                      method: 'POST',
-                      path: '/publish-update-via-http'
-                    });
-                  case 'graphql':
-                    return clientControls2.sendRequest({
-                      method: 'POST',
-                      path: '/publish-update-via-graphql'
-                    });
-                  default:
-                    throw new Error(`Unknown triggerUpdateVia option: ${triggerUpdateVia}`);
-                }
-              })
-              .then(() => {
-                return checkSubscriptionUpdatesAndSpans(clientControls1, clientControls2, triggerUpdateVia);
-              })
-          );
+          return Promise.all([
+            clientControls1.sendRequest({
+              method: 'POST',
+              path: '/subscription?id=1'
+            }),
+            clientControls2.sendRequest({
+              method: 'POST',
+              path: '/subscription?id=1'
+            })
+          ])
+            .then(() => delay(1000))
+            .then(() => {
+              switch (triggerUpdateVia) {
+                case 'http':
+                  return clientControls1.sendRequest({
+                    method: 'POST',
+                    path: '/publish-update-via-http'
+                  });
+                case 'graphql':
+                  return clientControls2.sendRequest({
+                    method: 'POST',
+                    path: '/publish-update-via-graphql'
+                  });
+                default:
+                  throw new Error(`Unknown triggerUpdateVia option: ${triggerUpdateVia}`);
+              }
+            })
+            .then(() => {
+              return checkSubscriptionUpdatesAndSpans(clientControls1, clientControls2, triggerUpdateVia);
+            });
         });
       });
     });
