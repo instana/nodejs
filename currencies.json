@@ -1158,7 +1158,7 @@
     "core": false,
     "versions": [
       {
-        "v": "7.4.1",
+        "v": "7.4.2",
         "optional": true,
         "node": ">=20.19.0 <23 || >=24",
         "skipValidation": true
