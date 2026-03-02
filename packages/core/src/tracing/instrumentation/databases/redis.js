@@ -511,18 +511,13 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
       if (err) {
         span.ec = 1;
 
-        if (err.message) {
-          span.data.redis.error = err.message;
-        } else if (Array.isArray(err) && err.length) {
-          span.data.redis.error = err[0].message;
+        if (Array.isArray(err) && err.length) {
+          span.data.redis.error = tracingUtil.extractErrorMessage(err[0]);
+        } else if (err.errors && err.errors.length) {
+          // v3 = provides sub errors
+          span.data.redis.error = err.errors.map(subErr => tracingUtil.extractErrorMessage(subErr)).join('\n');
         } else {
-          span.data.redis.error = 'Unknown error';
-        }
-
-        // v3 = provides sub errors
-        if (err.errors && err.errors.length) {
-          // TODO: Not updating now as special case
-          span.data.redis.error = err.errors.map(subErr => subErr.message).join('\n');
+          span.data.redis.error = tracingUtil.extractErrorMessage(err);
         }
       }
 

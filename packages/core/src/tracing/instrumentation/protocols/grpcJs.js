@@ -110,7 +110,7 @@ function modifyArgs(name, originalArgs, span) {
       span.d = Date.now() - span.ts;
 
       if (err) {
-        const errorMessage = err.details || err.message;
+        const errorMessage = tracingUtil.extractErrorMessage(err);
         if (typeof errorMessage === 'string' && errorMessage.toLowerCase().includes('cancelled')) {
           // No-op, we do not want to mark cancelled calls as erroneous.
         } else {
@@ -420,7 +420,7 @@ function instrumentedClientMethod(
 
       call.on('error', err => {
         span.d = Date.now() - span.ts;
-        const errorMessage = err.details || err.message;
+        const errorMessage = tracingUtil.extractErrorMessage(err);
         if (typeof errorMessage === 'string' && errorMessage.toLowerCase().includes('cancelled')) {
           // No-op, we do not want to mark cancelled calls as erroneous.
         } else {

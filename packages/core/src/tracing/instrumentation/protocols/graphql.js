@@ -299,7 +299,7 @@ function finishSpan(span, result) {
 function finishWithException(span, err) {
   span.ec = 1;
   span.d = Date.now() - span.ts;
-  span.data.graphql.errors = err.message;
+  span.data.graphql.errors = tracingUtil.extractErrorMessage(err);
   if (!span.postponeTransmit) {
     span.transmit();
   }
