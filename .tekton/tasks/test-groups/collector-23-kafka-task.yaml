@@ -5,7 +5,7 @@ metadata:
 spec:
   sidecars:
     - name: zookeeper
-      image:  public.ecr.aws/aktosecurity/confluentinc-cp-zookeeper:7.9.2-1-ubi8
+      image:  public.ecr.aws/aktosecurity/confluentinc-cp-zookeeper:7.9.4-1-ubi8
       imagePullPolicy: IfNotPresent
       resources:
         requests:
@@ -21,7 +21,7 @@ spec:
           periodSeconds: 2
           timeoutSeconds: 30
     - name: kafka
-      image: public.ecr.aws/aktosecurity/confluentinc-cp-kafka:7.9.1-1-ubi8
+      image: public.ecr.aws/aktosecurity/confluentinc-cp-kafka:7.9.4-1-ubi8
       imagePullPolicy: IfNotPresent
       resources:
         requests:
@@ -49,7 +49,7 @@ spec:
           periodSeconds: 2
           timeoutSeconds: 60
     - name: kafka-topics
-      image: public.ecr.aws/aktosecurity/confluentinc-cp-kafka:7.9.1-1-ubi8
+      image: public.ecr.aws/aktosecurity/confluentinc-cp-kafka:7.9.4-1-ubi8
       imagePullPolicy: IfNotPresent
       resources:
         requests:

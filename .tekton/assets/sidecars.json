@@ -31,7 +31,7 @@
     },
     {
       "name": "zookeeper",
-      "image": " public.ecr.aws/aktosecurity/confluentinc-cp-zookeeper:7.9.2-1-ubi8",
+      "image": " public.ecr.aws/aktosecurity/confluentinc-cp-zookeeper:7.9.4-1-ubi8",
       "env": [{ "name": "ZOOKEEPER_CLIENT_PORT", "value": "2181" }],
       "readinessProbe": {
         "tcpSocket": {
@@ -44,7 +44,7 @@
     },
     {
       "name": "kafka",
-      "image": "public.ecr.aws/aktosecurity/confluentinc-cp-kafka:7.9.1-1-ubi8",
+      "image": "public.ecr.aws/aktosecurity/confluentinc-cp-kafka:7.9.4-1-ubi8",
       "env": [
         { "name": "KAFKA_BROKER_ID", "value": "1" },
         { "name": "KAFKA_ZOOKEEPER_CONNECT", "value": "localhost:2181" },
@@ -74,7 +74,7 @@
     },
     {
       "name": "kafka-topics",
-      "image": "public.ecr.aws/aktosecurity/confluentinc-cp-kafka:7.9.1-1-ubi8",
+      "image": "public.ecr.aws/aktosecurity/confluentinc-cp-kafka:7.9.4-1-ubi8",
       "command": ["/bin/bash"],
       "args": [
         "-lc",

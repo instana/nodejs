@@ -70,7 +70,7 @@ services:
       xpack.security.enabled: 'false'
 
   zookeeper:
-    image: public.ecr.aws/aktosecurity/confluentinc-cp-zookeeper:7.9.2-1-ubi8
+    image: public.ecr.aws/aktosecurity/confluentinc-cp-zookeeper:7.9.4-1-ubi8
     pull_policy: if_not_present
     container_name: zookeeper
     environment:
@@ -79,23 +79,10 @@ services:
     ports:
       - "2181:2181"
 
-  # schema-registry:
-  #   image: confluentinc/cp-schema-registry:7.9.1
-  #   hostname: schema-registry
-  #   depends_on:
-  #     - kafka
-  #   ports:
-  #     - "8081:8081"
-  #   environment:
-  #     SCHEMA_REGISTRY_HOST_NAME: schema-registry
-  #     SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: 'zookeeper:2181'
-  #     SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "PLAINTEXT://kafka:29092"
-  #     SCHEMA_REGISTRY_DEBUG: 'true'
-
   kafka:
     # v7 = Kafka v3.9.x
     # https://docs.confluent.io/platform/current/installation/versions-interoperability.html
-    image: public.ecr.aws/aktosecurity/confluentinc-cp-kafka:7.9.1-1-ubi8
+    image: public.ecr.aws/aktosecurity/confluentinc-cp-kafka:7.9.4-1-ubi8
     pull_policy: if_not_present
     hostname: kafka
     ports:
@@ -113,7 +100,7 @@ services:
       KAFKA_DEFAULT_REPLICATION_FACTOR: 1
 
   kafka-topics:
-    image: public.ecr.aws/aktosecurity/confluentinc-cp-kafka:7.9.1-1-ubi8
+    image: public.ecr.aws/aktosecurity/confluentinc-cp-kafka:7.9.4-1-ubi8
     pull_policy: if_not_present
     entrypoint: "/bin/bash"
     command:
