@@ -5,7 +5,7 @@ metadata:
 spec:
   sidecars:
     - name: zookeeper
-      image: confluentinc/cp-zookeeper:7.9.1
+      image:  public.ecr.aws/aktosecurity/confluentinc-cp-zookeeper:7.9.4-1-ubi8
       imagePullPolicy: IfNotPresent
       resources:
         requests:
@@ -21,7 +21,7 @@ spec:
           periodSeconds: 2
           timeoutSeconds: 30
     - name: kafka
-      image: confluentinc/cp-kafka:7.9.1
+      image: public.ecr.aws/aktosecurity/confluentinc-cp-kafka:7.9.4-1-ubi8
       imagePullPolicy: IfNotPresent
       resources:
         requests:
@@ -49,7 +49,7 @@ spec:
           periodSeconds: 2
           timeoutSeconds: 60
     - name: kafka-topics
-      image: confluentinc/cp-kafka:7.9.1
+      image: public.ecr.aws/aktosecurity/confluentinc-cp-kafka:7.9.4-1-ubi8
       imagePullPolicy: IfNotPresent
       resources:
         requests:
@@ -60,31 +60,6 @@ spec:
           - "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
       command:
           - "/bin/bash"
-    - name: schema-registry
-      image: confluentinc/cp-schema-registry:7.9.0
-      imagePullPolicy: IfNotPresent
-      resources:
-        requests:
-          cpu: "500m"
-          memory: "1Gi"
-      env:
-          - name: "SCHEMA_REGISTRY_HOST_NAME"
-            value: "schema-registry"
-          - name: "SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL"
-            value: "0.0.0.0:2181"
-          - name: "SCHEMA_REGISTRY_LISTENERS"
-            value: "http://0.0.0.0:8081"
-          - name: "SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS"
-            value: "PLAINTEXT://0.0.0.0:29092"
-          - name: "SCHEMA_REGISTRY_DEBUG"
-            value: "true"
-      readinessProbe:
-          httpGet:
-            path: / 
-            port: 8081 
-          initialDelaySeconds: 5
-          periodSeconds: 2
-          timeoutSeconds: 60
   envFrom:
     - configMapRef:
         name: environment-properties
@@ -160,8 +135,8 @@ spec:
           memory: "8Gi"
       script: |
         #!/bin/bash
-        AVAILABLE_SIDECARS="zookeeper,kafka,kafka-topics,schema-registry"
-        SIDECAR_COUNTS="redis=20,redis-slave=20,redis-sentinel=20,zookeeper=6,kafka=6,kafka-topics=6,schema-registry=6,postgres=3,elasticsearch=2,mongodb=1,couchbase=1,rabbitmq=1,nats=1,nats-streaming=1,nats-streaming-2=1,mysql=1,localstack=1,memcached=1,oracledb=1"
+        AVAILABLE_SIDECARS="zookeeper,kafka,kafka-topics"
+        SIDECAR_COUNTS="redis=20,redis-slave=20,redis-sentinel=20,zookeeper=6,kafka=6,kafka-topics=6,postgres=3,elasticsearch=2,mongodb=1,couchbase=1,rabbitmq=1,nats=1,nats-streaming=1,nats-streaming-2=1,mysql=1,localstack=1,memcached=1,oracledb=1"
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         BASE_REVISION=$(git rev-parse origin/main)

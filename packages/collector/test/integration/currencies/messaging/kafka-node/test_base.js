@@ -18,7 +18,7 @@ const agentControls = globalAgent.instance;
 // FYI: officially deprecated. No release since 6 years. But still very
 //      high usage on npm trends. We will drop in any upcoming major release.
 
-// node bin/start-test-containers.js --zookeeper --kafka --schema-registry --kafka-topics
+// node bin/start-test-containers.js --zookeeper --kafka --kafka-topics
 module.exports = function (name, version, isLatest) {
   this.timeout(config.getTestTimeout() * 2);
 

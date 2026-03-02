@@ -44,7 +44,7 @@ function verifyHttpExit(spans, parentSpan) {
   ]);
 }
 
-// node bin/start-test-containers.js --zookeeper --kafka --schema-registry --kafka-topics
+// node bin/start-test-containers.js --zookeeper --kafka --kafka-topics
 // Note: Node v25 does not currently support confluent-kafka
 //       https://github.com/confluentinc/confluent-kafka-javascript/issues/397
 module.exports = function (name, version, isLatest) {

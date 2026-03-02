@@ -9,7 +9,7 @@ const path = require('path');
 
 const sidecarGroups = {
   redis: ['redis', 'redis-slave', 'redis-sentinel'],
-  kafka: ['zookeeper', 'kafka', 'kafka-topics', 'schema-registry'],
+  kafka: ['zookeeper', 'kafka', 'kafka-topics'],
   nats: ['nats', 'nats-streaming', 'nats-streaming-2']
 };
 
@@ -213,7 +213,10 @@ function renderSidecar(sidecarName) {
 function generateTask(taskName, sidecars, options = {}) {
   const templateContent = fs.readFileSync(path.join(__dirname, 'templates/test-task.yaml.template'), 'utf-8');
 
-  const sidecarYaml = sidecars.map(s => renderSidecar(s)).filter(Boolean).join('\n');
+  const sidecarYaml = sidecars
+    .map(s => renderSidecar(s))
+    .filter(Boolean)
+    .join('\n');
   const availableSidecars = sidecars.join(',');
   const claimTests = options.scope === '@instana/collector' ? 'true' : 'false';
   const totalTasks = options.split || '1';
@@ -318,11 +321,7 @@ function updatePipelineCollectorEntries(tasks) {
     );
   }
 
-  const result = [
-    ...lines.slice(0, firstCollectorLine),
-    ...newEntries,
-    ...lines.slice(afterLastCollectorLine)
-  ];
+  const result = [...lines.slice(0, firstCollectorLine), ...newEntries, ...lines.slice(afterLastCollectorLine)];
 
   fs.writeFileSync(pipelinePath, result.join('\n'));
   console.log(`Updated pipeline with ${tasks.length} collector task entries`);
@@ -352,7 +351,9 @@ for (const [groupName, config] of Object.entries(packages)) {
         sidecarCounts[s] = (sidecarCounts[s] || 0) + 1;
       });
     });
-    const sidecarCountsStr = Object.entries(sidecarCounts).map(([k, v]) => `${k}=${v}`).join(',');
+    const sidecarCountsStr = Object.entries(sidecarCounts)
+      .map(([k, v]) => `${k}=${v}`)
+      .join(',');
 
     const collectorTasks_ = [];
 
@@ -380,7 +381,10 @@ for (const [groupName, config] of Object.entries(packages)) {
     const runs = config.split ? Array.from({ length: config.split }, (_, i) => i + 1) : [1];
 
     for (const number of runs) {
-      let sanitizedGroupName = groupName.replace(/:/g, '-').replace(/^test-/, '').replace(/^ci-/, '');
+      let sanitizedGroupName = groupName
+        .replace(/:/g, '-')
+        .replace(/^test-/, '')
+        .replace(/^ci-/, '');
 
       if (number > 1) {
         sanitizedGroupName = `${sanitizedGroupName}-split-${number}`;
@@ -401,4 +405,3 @@ for (const [groupName, config] of Object.entries(packages)) {
 }
 
 console.log('\nDone!');
-
