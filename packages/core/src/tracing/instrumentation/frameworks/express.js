@@ -68,7 +68,7 @@ function shimExpressHandle(realHandle) {
 
 function wrapExpress4HandleFn(fn) {
   return function wrappedHandleFn(err) {
-    if (err && err.message && err.stack) {
+    if (err && (err.message || err.cause) && err.stack) {
       annotateHttpEntrySpanWithError(err);
     }
     return fn.apply(this, arguments);
