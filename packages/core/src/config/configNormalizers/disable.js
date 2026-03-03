@@ -19,48 +19,62 @@ exports.init = function init(_config) {
  * Handles environment variables, and array inputs.
  *
  * Precedence order (highest to lowest):
- * 1. `tracing.disable`
- * 2. Environment variables (`INSTANA_TRACING_DISABLE*`)
+ * 1. Environment variables (`INSTANA_TRACING_DISABLE*`)
+ * 2. `tracing.disable` (in-code config)
  *
  * @param {import('../../config').InstanaConfig} config
  */
 exports.normalize = function normalize(config) {
   if (!config?.tracing) config.tracing = {};
   try {
-    // Disable all tracing if explicitly set  'disable' to true
+    // Check environment variables
+    const envDisableConfig = getDisableFromEnv();
+    if (envDisableConfig) {
+      if (envDisableConfig === true) {
+        return true;
+      }
+      // Normalize instrumentations and groups from env
+      if (envDisableConfig?.instrumentations) {
+        envDisableConfig.instrumentations = normalizeArray(envDisableConfig.instrumentations);
+      }
+      if (envDisableConfig?.groups) {
+        envDisableConfig.groups = normalizeArray(envDisableConfig.groups);
+      }
+      return envDisableConfig;
+    }
+
+    // Check in-code config
     if (config.tracing.disable === true) {
       logger?.info('Tracing has been disabled via "tracing.disable: true" configuration.');
       return true;
     }
-    const hasDisableConfig = isDisableConfigNonEmpty(config);
 
+    const hasDisableConfig = isDisableConfigNonEmpty(config);
     if (hasDisableConfig) {
       logger?.info(
         `Tracing selectively disabled as per "tracing.disable" configuration: ${JSON.stringify(config.tracing.disable)}`
       );
+
+      const disableConfig = config.tracing.disable;
+
+      // Handle if tracing.disable is an array
+      if (Array.isArray(disableConfig)) {
+        return categorizeDisableEntries(disableConfig);
+      }
+
+      // Normalize instrumentations and groups
+      if (typeof disableConfig === 'object' && disableConfig !== null) {
+        if (disableConfig.instrumentations) {
+          disableConfig.instrumentations = normalizeArray(disableConfig.instrumentations);
+        }
+        if (disableConfig.groups) {
+          disableConfig.groups = normalizeArray(disableConfig.groups);
+        }
+      }
+
+      return disableConfig;
     }
-
-    // Fallback to environment variables if `disable` is not explicitly configured
-    const disableConfig = isDisableConfigNonEmpty(config) ? config.tracing.disable : getDisableFromEnv();
-
-    if (!disableConfig) return {};
-
-    if (disableConfig === true) return true;
-
-    // Normalize instrumentations and groups
-    if (disableConfig?.instrumentations) {
-      disableConfig.instrumentations = normalizeArray(disableConfig.instrumentations);
-    }
-    if (disableConfig?.groups) {
-      disableConfig.groups = normalizeArray(disableConfig.groups);
-    }
-
-    // Handle if tracing.disable is an array
-    if (Array.isArray(disableConfig)) {
-      return categorizeDisableEntries(disableConfig);
-    }
-
-    return disableConfig || {};
+    return {};
   } catch (error) {
     // Fallback to an empty disable config on error
     logger?.debug(`Error while normalizing tracing.disable config: ${error?.message} ${error?.stack}`);
