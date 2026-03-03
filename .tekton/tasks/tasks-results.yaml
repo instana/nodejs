@@ -69,8 +69,7 @@ spec:
           npx eslint packages/ -f json -o eslint-report.json || true
 
           echo "Installing SonarCloud scanner..."
-          # 4.3.3 is broken and does not ship a global binary!
-          npm install -g @sonar/scan@4.3.2
+          npm install -g @sonar/scan
 
           if [ -n "$(params.pr-number)" ]; then
             echo '$(params.pr-payload)' > pr.json
