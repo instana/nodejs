@@ -79,6 +79,10 @@ exports.removeQueue = async url => {
   });
 };
 
+exports.removeTopic = async arn => {
+  await snsClient.send(new sns.DeleteTopicCommand({ TopicArn: arn }));
+};
+
 exports.generateQueueName = () => {
   let queueName = 'nodejs-team';
 

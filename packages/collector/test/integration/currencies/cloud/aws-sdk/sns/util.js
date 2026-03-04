@@ -49,20 +49,25 @@ exports.createSQSQueue = function createSQSQueue(queueName, topicName) {
 /**
  * Attempts to delete a previous created topic and SQS subscriber queue before the test starts
  * @param {string} topicArn
+ * @param {string} queueURL
  */
 exports.cleanup = async function (topicArn, queueURL) {
   try {
-    await sns
-      .deleteTopic({
-        TopicArn: topicArn
-      })
-      .promise();
+    if (topicArn) {
+      await sns
+        .deleteTopic({
+          TopicArn: topicArn
+        })
+        .promise();
+    }
 
-    await sqs
-      .deleteQueue({
-        QueueUrl: queueURL
-      })
-      .promise();
+    if (queueURL) {
+      await sqs
+        .deleteQueue({
+          QueueUrl: queueURL
+        })
+        .promise();
+    }
   } catch (err) {
     return Promise.resolve('Error cleaning up the topic and queue', err);
   }
