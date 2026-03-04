@@ -429,3 +429,149 @@ exports.handleUnexpectedReturnValue = function handleUnexpectedReturnValue(retur
 
   return true;
 };
+
+/**
+ * Masks a single bind variable value to protect sensitive data.
+ * Strategy:
+ * - Preserves exact length of original value for strings
+ * - For length <= 3: mask completely with asterisks
+ * - For length 4-5: show first and last character
+ * - For length > 5: show first 2 and last 2 characters
+ * - Special handling for objects, arrays, buffers, and other types
+ * - For JSON objects/arrays: masks individual values while preserving structure
+ *
+ * @param {*} value - The bind variable value to mask
+ * @returns {string} - The masked value
+ */
+function maskBindValue(value) {
+  // Handle null and undefined
+  if (value === null) {
+    return '<null>';
+  }
+  if (value === undefined) {
+    return '<undefined>';
+  }
+
+  // Handle Buffer (binary data like images, files)
+  if (Buffer.isBuffer(value)) {
+    return `<Buffer ${value.length} bytes>`;
+  }
+
+  // Handle Date objects
+  if (value instanceof Date) {
+    const dateStr = value.toISOString();
+    return maskString(dateStr);
+  }
+
+  // Handle Arrays
+  if (Array.isArray(value)) {
+    try {
+      return maskJsonStructure(value);
+    } catch (e) {
+      return '<Array [circular]>';
+    }
+  }
+
+  // Handle Objects (including JSON)
+  if (typeof value === 'object') {
+    try {
+      return maskJsonStructure(value);
+    } catch (e) {
+      // Handle circular references or non-serializable objects
+      return '<Object [circular]>';
+    }
+  }
+
+  // Handle primitive types (string, number, boolean, bigint, symbol)
+  return maskString(String(value));
+}
+
+/**
+ * Masks JSON objects and arrays by masking individual values while preserving structure.
+ * Example: {"theme":"dark","notifications":true} -> {"t***e":"d**k","no*********ns":"t**e"}
+ * @param {*} obj - The object or array to mask
+ * @returns {string} - JSON string with masked values
+ */
+function maskJsonStructure(obj) {
+  // Check for circular references
+  const seen = new WeakSet();
+
+  /**
+   * @param {*} value
+   * @returns {*}
+   */
+  function maskRecursive(value) {
+    // Handle primitives
+    if (value === null) return null;
+    if (value === undefined) return null;
+    if (typeof value === 'string') return maskString(value);
+    if (typeof value === 'number') return maskString(String(value));
+    if (typeof value === 'boolean') return maskString(String(value));
+
+    // Handle objects and arrays
+    if (typeof value === 'object') {
+      // Check for circular reference
+      if (seen.has(value)) {
+        throw new Error('Circular reference detected');
+      }
+      seen.add(value);
+
+      if (Array.isArray(value)) {
+        return value.map(item => maskRecursive(item));
+      }
+
+      /** @type {Record<string, any>} */
+      const masked = {};
+      Object.keys(value).forEach(key => {
+        // Mask both keys and values
+        const maskedKey = maskString(key);
+        masked[maskedKey] = maskRecursive(value[key]);
+      });
+      return masked;
+    }
+
+    return value;
+  }
+
+  const masked = maskRecursive(obj);
+  return JSON.stringify(masked);
+}
+
+/**
+ * Masks a string value preserving its exact length.
+ * @param {string} strValue - The string to mask
+ * @returns {string} - The masked string
+ */
+function maskString(strValue) {
+  const len = strValue.length;
+
+  // For very short values (0-3 chars), mask completely
+  if (len <= 3) {
+    return '*'.repeat(len);
+  }
+
+  // For length 4-5: show first and last character, mask the middle
+  if (len <= 5) {
+    const numAsterisks = len - 2;
+    return strValue[0] + '*'.repeat(numAsterisks) + strValue[len - 1];
+  }
+
+  // For length > 5: show first 2 and last 2 characters, mask the middle
+  const numAsterisks = len - 4;
+  return strValue.substring(0, 2) + '*'.repeat(numAsterisks) + strValue.substring(len - 2);
+}
+
+/**
+ * Masks an array of bind variable values to protect sensitive data.
+ * Each value is masked individually with appropriate handling for different types.
+ *
+ * @param {Array<*>} params - Array of bind variable values
+ * @returns {Array<string>} - Array of masked values
+ */
+exports.maskBindVariables = function maskBindVariables(params) {
+  if (!Array.isArray(params)) {
+    return params;
+  }
+
+  return params.map(maskBindValue);
+};
