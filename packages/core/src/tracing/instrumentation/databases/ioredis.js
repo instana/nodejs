@@ -97,11 +97,16 @@ function instrumentSendCommand(original) {
       span.stack = tracingUtil.getStackTrace(wrappedInternalSendCommand);
 
       callback = cls.ns.bind(onResult);
-      command.promise.then(
-        // make sure that the first parameter is never truthy
-        callback.bind(null, null),
-        callback
-      );
+      if (typeof command.promise?.then === 'function') {
+        command.promise.then(
+          // make sure that the first parameter is never truthy
+          callback.bind(null, null),
+          callback
+        );
+      } else {
+        tracingUtil.handleUnexpectedReturnValue(command.promise, exports.spanName, `command "${command.name}"`);
+        onResult();
+      }
 
       return original.apply(client, argsForOriginal);
 
