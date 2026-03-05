@@ -28,7 +28,7 @@ const inVersionDir =
 const baseDir = inVersionDir ? path.resolve(__dirname, '..') : __dirname;
 
 let topicArn;
-const topicName = `nodejs-team-${semver.major(process.versions.node)}`;
+const topicName = `nodejs-team-v3-${semver.major(process.versions.node)}`;
 const availableStyles = ['default', 'callback', 'v2'];
 const availableCommands = {
   PublishCommand: {

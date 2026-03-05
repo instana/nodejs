@@ -27,7 +27,7 @@ const { verifyHttpRootEntry, verifyHttpExit } = require('@_local/core/test/test_
 const defaultPrefix = 'https://sqs.us-east-2.amazonaws.com/767398002385/';
 const queueUrlPrefix = process.env.SQS_QUEUE_URL_PREFIX || defaultPrefix;
 const queueNamePrefix = process.env.SQS_QUEUE_NAME || 'nodejs-team';
-const queueName = `${queueNamePrefix}-${semver.major(process.versions.node)}}`;
+const queueName = `${queueNamePrefix}-${semver.major(process.versions.node)}`;
 const queueURL = `${queueUrlPrefix}${queueName}`;
 
 const sendingMethods = ['callback', 'promise'];
