@@ -22,7 +22,7 @@ const {
 } = require('@_local/core/test/test_util/common_verifications');
 const { promisifyNonSequentialCases } = require('../promisify_non_sequential');
 
-const topicAndQueueName = `nodejs-team-sns-${semver.major(process.versions.node)}`;
+const topicAndQueueName = `nodejs-team-v2-${semver.major(process.versions.node)}`;
 const topicArn = `arn:aws:sns:us-east-2:767398002385:${topicAndQueueName}`;
 const sqsQueueUrl = `https://sqs.us-east-2.amazonaws.com/767398002385/${topicAndQueueName}`;
 
