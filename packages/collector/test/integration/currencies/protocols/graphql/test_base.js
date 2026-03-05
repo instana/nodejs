@@ -21,7 +21,7 @@ const globalAgent = require('@_local/collector/test/globalAgent');
 
 const agentControls = globalAgent.instance;
 
-module.exports = function (name, version, isLatest) {
+module.exports = function (name, version, isLatest, mode) {
   this.timeout(config.getTestTimeout() * 5);
 
   if (!supportedVersion(process.versions.node)) {
@@ -33,286 +33,284 @@ module.exports = function (name, version, isLatest) {
 
     const useAlias = Math.random >= 0.5;
 
-    ['raw', 'apollo'].forEach(type => {
-      describe(`${type} queries`, function () {
-        ['amqp', 'http'].forEach(communicationProtocol => {
-          if (type === 'apollo' && communicationProtocol === 'amqp') {
-            return it.skip('Test scenario Apollo & AMPQ is not supported.');
-          }
+    describe(`${mode} queries`, function () {
+      ['amqp', 'http'].forEach(communicationProtocol => {
+        if (mode === 'apollo' && communicationProtocol === 'amqp') {
+          return it.skip('Test scenario Apollo & AMPQ is not supported.');
+        }
 
-          [false, true].forEach(withError => {
-            [false, true].forEach(queryShorthand => {
-              // eslint-disable-next-line max-len
-              const title = `withError: ${withError} queryShorthand: ${queryShorthand} useAlias: ${useAlias} communicationProtocol: ${communicationProtocol}`;
+        [false, true].forEach(withError => {
+          [false, true].forEach(queryShorthand => {
+            // eslint-disable-next-line max-len
+            const title = `withError: ${withError} queryShorthand: ${queryShorthand} useAlias: ${useAlias} communicationProtocol: ${communicationProtocol}`;
 
-              describe(title, function () {
-                let serverControls;
-                let clientControls;
+            describe(title, function () {
+              let serverControls;
+              let clientControls;
 
-                before(async () => {
-                  serverControls = new ProcessControls({
-                    dirname: __dirname,
-                    appName: type === 'raw' ? 'rawGraphQLServer.js' : 'apolloServer.js',
-                    useGlobalAgent: true,
-                    env: {
-                      LIBRARY_VERSION: version,
-                      LIBRARY_NAME: name,
-                      LIBRARY_LATEST: isLatest
-                    }
-                  });
-                  clientControls = new ProcessControls({
-                    dirname: __dirname,
-                    appName: 'client',
-                    useGlobalAgent: true,
-                    env: {
-                      LIBRARY_VERSION: version,
-                      LIBRARY_NAME: name,
-                      LIBRARY_LATEST: isLatest,
-                      SERVER_PORT: serverControls.getPort()
-                    }
-                  });
-
-                  await serverControls.startAndWaitForAgentConnection();
-                  await clientControls.startAndWaitForAgentConnection();
+              before(async () => {
+                serverControls = new ProcessControls({
+                  dirname: __dirname,
+                  appName: mode === 'raw' ? 'rawGraphQLServer.js' : 'apolloServer.js',
+                  useGlobalAgent: true,
+                  env: {
+                    LIBRARY_VERSION: version,
+                    LIBRARY_NAME: name,
+                    LIBRARY_LATEST: isLatest
+                  }
+                });
+                clientControls = new ProcessControls({
+                  dirname: __dirname,
+                  appName: 'client',
+                  useGlobalAgent: true,
+                  env: {
+                    LIBRARY_VERSION: version,
+                    LIBRARY_NAME: name,
+                    LIBRARY_LATEST: isLatest,
+                    SERVER_PORT: serverControls.getPort()
+                  }
                 });
 
-                beforeEach(async () => {
-                  await agentControls.clearReceivedTraceData();
-                });
+                await serverControls.startAndWaitForAgentConnection();
+                await clientControls.startAndWaitForAgentConnection();
+              });
 
-                after(async () => {
-                  await serverControls.stop();
-                  await clientControls.stop();
-                });
+              beforeEach(async () => {
+                await agentControls.clearReceivedTraceData();
+              });
 
-                it.skip('must trace a query with a value resolver', () => {
-                  const resolverType = 'value';
-                  const multipleEntities = null;
+              after(async () => {
+                await serverControls.stop();
+                await clientControls.stop();
+              });
 
-                  const queryParams = [
-                    withError ? 'withError=yes' : null,
-                    queryShorthand ? 'queryShorthand=yes' : null,
-                    multipleEntities ? 'multipleEntities=yes' : null,
-                    useAlias ? 'useAlias=yes' : null,
-                    `communicationProtocol=${communicationProtocol}`
-                  ]
-                    .filter(param => !!param)
-                    .join('&');
+              it.skip('must trace a query with a value resolver', () => {
+                const resolverType = 'value';
+                const multipleEntities = null;
 
-                  const url = queryParams ? `/${resolverType}?${queryParams}` : `/${resolverType}`;
+                const queryParams = [
+                  withError ? 'withError=yes' : null,
+                  queryShorthand ? 'queryShorthand=yes' : null,
+                  multipleEntities ? 'multipleEntities=yes' : null,
+                  useAlias ? 'useAlias=yes' : null,
+                  `communicationProtocol=${communicationProtocol}`
+                ]
+                  .filter(param => !!param)
+                  .join('&');
 
-                  return clientControls
-                    .sendRequest({
-                      method: 'POST',
-                      path: url
-                    })
-                    .then(response => {
-                      const entityName = withError ? `${resolverType}Error` : resolverType;
-                      const entityNameWithAlias = useAlias ? `${entityName}Alias` : entityName;
+                const url = queryParams ? `/${resolverType}?${queryParams}` : `/${resolverType}`;
 
-                      checkQueryResponse(entityNameWithAlias, withError, null, response);
+                return clientControls
+                  .sendRequest({
+                    method: 'POST',
+                    path: url
+                  })
+                  .then(response => {
+                    const entityName = withError ? `${resolverType}Error` : resolverType;
+                    const entityNameWithAlias = useAlias ? `${entityName}Alias` : entityName;
 
-                      return retry(() => {
-                        return agentControls.getSpans().then(spans => {
-                          return verifySpansForQuery(
-                            {
-                              resolverType,
-                              entityName,
-                              withError,
-                              queryShorthand,
-                              multipleEntities,
-                              communicationProtocol
-                            },
-                            spans
-                          );
-                        });
+                    checkQueryResponse(entityNameWithAlias, withError, null, response);
+
+                    return retry(() => {
+                      return agentControls.getSpans().then(spans => {
+                        return verifySpansForQuery(
+                          {
+                            resolverType,
+                            entityName,
+                            withError,
+                            queryShorthand,
+                            multipleEntities,
+                            communicationProtocol
+                          },
+                          spans
+                        );
                       });
                     });
-                });
+                  });
+              });
 
-                it('must trace a query with a promise resolver', () => {
-                  const resolverType = 'promise';
-                  const multipleEntities = null;
+              it('must trace a query with a promise resolver', () => {
+                const resolverType = 'promise';
+                const multipleEntities = null;
 
-                  const queryParams = [
-                    withError ? 'withError=yes' : null,
-                    queryShorthand ? 'queryShorthand=yes' : null,
-                    multipleEntities ? 'multipleEntities=yes' : null,
-                    useAlias ? 'useAlias=yes' : null,
-                    `communicationProtocol=${communicationProtocol}`
-                  ]
-                    .filter(param => !!param)
-                    .join('&');
+                const queryParams = [
+                  withError ? 'withError=yes' : null,
+                  queryShorthand ? 'queryShorthand=yes' : null,
+                  multipleEntities ? 'multipleEntities=yes' : null,
+                  useAlias ? 'useAlias=yes' : null,
+                  `communicationProtocol=${communicationProtocol}`
+                ]
+                  .filter(param => !!param)
+                  .join('&');
 
-                  const url = queryParams ? `/${resolverType}?${queryParams}` : `/${resolverType}`;
+                const url = queryParams ? `/${resolverType}?${queryParams}` : `/${resolverType}`;
 
-                  return clientControls
-                    .sendRequest({
-                      method: 'POST',
-                      path: url
-                    })
-                    .then(response => {
-                      const entityName = withError ? `${resolverType}Error` : resolverType;
-                      const entityNameWithAlias = useAlias ? `${entityName}Alias` : entityName;
+                return clientControls
+                  .sendRequest({
+                    method: 'POST',
+                    path: url
+                  })
+                  .then(response => {
+                    const entityName = withError ? `${resolverType}Error` : resolverType;
+                    const entityNameWithAlias = useAlias ? `${entityName}Alias` : entityName;
 
-                      checkQueryResponse(entityNameWithAlias, withError, null, response);
+                    checkQueryResponse(entityNameWithAlias, withError, null, response);
 
-                      return retry(() =>
-                        agentControls.getSpans().then(
-                          verifySpansForQuery.bind(null, {
-                            resolverType,
-                            entityName,
-                            withError,
-                            queryShorthand,
-                            multipleEntities,
-                            communicationProtocol
-                          })
-                        )
-                      );
-                    });
-                });
+                    return retry(() =>
+                      agentControls.getSpans().then(
+                        verifySpansForQuery.bind(null, {
+                          resolverType,
+                          entityName,
+                          withError,
+                          queryShorthand,
+                          multipleEntities,
+                          communicationProtocol
+                        })
+                      )
+                    );
+                  });
+              });
 
-                it('must trace a query which resolves to an array of promises', () => {
-                  const resolverType = 'array';
-                  const multipleEntities = null;
+              it('must trace a query which resolves to an array of promises', () => {
+                const resolverType = 'array';
+                const multipleEntities = null;
 
-                  const queryParams = [
-                    withError ? 'withError=yes' : null,
-                    queryShorthand ? 'queryShorthand=yes' : null,
-                    multipleEntities ? 'multipleEntities=yes' : null,
-                    useAlias ? 'useAlias=yes' : null,
-                    `communicationProtocol=${communicationProtocol}`
-                  ]
-                    .filter(param => !!param)
-                    .join('&');
+                const queryParams = [
+                  withError ? 'withError=yes' : null,
+                  queryShorthand ? 'queryShorthand=yes' : null,
+                  multipleEntities ? 'multipleEntities=yes' : null,
+                  useAlias ? 'useAlias=yes' : null,
+                  `communicationProtocol=${communicationProtocol}`
+                ]
+                  .filter(param => !!param)
+                  .join('&');
 
-                  const url = queryParams ? `/${resolverType}?${queryParams}` : `/${resolverType}`;
+                const url = queryParams ? `/${resolverType}?${queryParams}` : `/${resolverType}`;
 
-                  return clientControls
-                    .sendRequest({
-                      method: 'POST',
-                      path: url
-                    })
-                    .then(response => {
-                      const entityName = withError ? `${resolverType}Error` : resolverType;
-                      const entityNameWithAlias = useAlias ? `${entityName}Alias` : entityName;
+                return clientControls
+                  .sendRequest({
+                    method: 'POST',
+                    path: url
+                  })
+                  .then(response => {
+                    const entityName = withError ? `${resolverType}Error` : resolverType;
+                    const entityNameWithAlias = useAlias ? `${entityName}Alias` : entityName;
 
-                      checkQueryResponse(entityNameWithAlias, withError, null, response);
+                    checkQueryResponse(entityNameWithAlias, withError, null, response);
 
-                      return retry(() =>
-                        agentControls.getSpans().then(
-                          verifySpansForQuery.bind(null, {
-                            resolverType,
-                            entityName,
-                            withError,
-                            queryShorthand,
-                            multipleEntities,
-                            communicationProtocol
-                          })
-                        )
-                      );
-                    });
-                });
+                    return retry(() =>
+                      agentControls.getSpans().then(
+                        verifySpansForQuery.bind(null, {
+                          resolverType,
+                          entityName,
+                          withError,
+                          queryShorthand,
+                          multipleEntities,
+                          communicationProtocol
+                        })
+                      )
+                    );
+                  });
+              });
 
-                it('must trace a query with multiple entities', () => {
-                  const resolverType = 'array';
-                  const multipleEntities = true;
+              it('must trace a query with multiple entities', () => {
+                const resolverType = 'array';
+                const multipleEntities = true;
 
-                  const queryParams = [
-                    withError ? 'withError=yes' : null,
-                    queryShorthand ? 'queryShorthand=yes' : null,
-                    multipleEntities ? 'multipleEntities=yes' : null,
-                    useAlias ? 'useAlias=yes' : null,
-                    `communicationProtocol=${communicationProtocol}`
-                  ]
-                    .filter(param => !!param)
-                    .join('&');
+                const queryParams = [
+                  withError ? 'withError=yes' : null,
+                  queryShorthand ? 'queryShorthand=yes' : null,
+                  multipleEntities ? 'multipleEntities=yes' : null,
+                  useAlias ? 'useAlias=yes' : null,
+                  `communicationProtocol=${communicationProtocol}`
+                ]
+                  .filter(param => !!param)
+                  .join('&');
 
-                  const url = queryParams ? `/${resolverType}?${queryParams}` : `/${resolverType}`;
+                const url = queryParams ? `/${resolverType}?${queryParams}` : `/${resolverType}`;
 
-                  return clientControls
-                    .sendRequest({
-                      method: 'POST',
-                      path: url
-                    })
-                    .then(response => {
-                      const entityName = withError ? `${resolverType}Error` : resolverType;
-                      const entityNameWithAlias = useAlias ? `${entityName}Alias` : entityName;
+                return clientControls
+                  .sendRequest({
+                    method: 'POST',
+                    path: url
+                  })
+                  .then(response => {
+                    const entityName = withError ? `${resolverType}Error` : resolverType;
+                    const entityNameWithAlias = useAlias ? `${entityName}Alias` : entityName;
 
-                      checkQueryResponse(entityNameWithAlias, withError, null, response);
+                    checkQueryResponse(entityNameWithAlias, withError, null, response);
 
-                      return retry(() =>
-                        agentControls.getSpans().then(
-                          verifySpansForQuery.bind(null, {
-                            resolverType,
-                            entityName,
-                            withError,
-                            queryShorthand,
-                            multipleEntities,
-                            communicationProtocol
-                          })
-                        )
-                      );
-                    });
-                });
+                    return retry(() =>
+                      agentControls.getSpans().then(
+                        verifySpansForQuery.bind(null, {
+                          resolverType,
+                          entityName,
+                          withError,
+                          queryShorthand,
+                          multipleEntities,
+                          communicationProtocol
+                        })
+                      )
+                    );
+                  });
               });
             });
           });
         });
+      });
 
-        describe(`${type}: mutations`, function () {
-          let serverControls;
-          let clientControls;
+      describe(`${mode}: mutations`, function () {
+        let serverControls;
+        let clientControls;
 
-          before(async () => {
-            serverControls = new ProcessControls({
-              dirname: __dirname,
-              appName: type === 'raw' ? 'rawGraphQLServer.js' : 'apolloServer.js',
-              useGlobalAgent: true,
-              env: {
-                LIBRARY_VERSION: version,
-                LIBRARY_NAME: name,
-                LIBRARY_LATEST: isLatest
-              }
+        before(async () => {
+          serverControls = new ProcessControls({
+            dirname: __dirname,
+            appName: mode === 'raw' ? 'rawGraphQLServer.js' : 'apolloServer.js',
+            useGlobalAgent: true,
+            env: {
+              LIBRARY_VERSION: version,
+              LIBRARY_NAME: name,
+              LIBRARY_LATEST: isLatest
+            }
+          });
+          clientControls = new ProcessControls({
+            dirname: __dirname,
+            appName: 'client',
+            useGlobalAgent: true,
+            env: {
+              LIBRARY_VERSION: version,
+              LIBRARY_NAME: name,
+              LIBRARY_LATEST: isLatest,
+              SERVER_PORT: serverControls.getPort()
+            }
+          });
+
+          await serverControls.startAndWaitForAgentConnection();
+          await clientControls.startAndWaitForAgentConnection();
+        });
+
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
+        });
+
+        after(async () => {
+          await serverControls.stop();
+          await clientControls.stop();
+        });
+
+        it('must trace a mutation', () => {
+          const url = '/mutation';
+
+          return clientControls
+            .sendRequest({
+              method: 'POST',
+              path: url
+            })
+            .then(response => {
+              checkMutationResponse(response);
+              return retry(() => agentControls.getSpans().then(verifySpansForMutation));
             });
-            clientControls = new ProcessControls({
-              dirname: __dirname,
-              appName: 'client',
-              useGlobalAgent: true,
-              env: {
-                LIBRARY_VERSION: version,
-                LIBRARY_NAME: name,
-                LIBRARY_LATEST: isLatest,
-                SERVER_PORT: serverControls.getPort()
-              }
-            });
-
-            await serverControls.startAndWaitForAgentConnection();
-            await clientControls.startAndWaitForAgentConnection();
-          });
-
-          beforeEach(async () => {
-            await agentControls.clearReceivedTraceData();
-          });
-
-          after(async () => {
-            await serverControls.stop();
-            await clientControls.stop();
-          });
-
-          it('must trace a mutation', () => {
-            const url = '/mutation';
-
-            return clientControls
-              .sendRequest({
-                method: 'POST',
-                path: url
-              })
-              .then(response => {
-                checkMutationResponse(response);
-                return retry(() => agentControls.getSpans().then(verifySpansForMutation));
-              });
-          });
         });
       });
     });
