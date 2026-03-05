@@ -931,7 +931,7 @@
     "core": false,
     "versions": [
       {
-        "v": "3.6.0",
+        "v": "3.7.0",
         "optional": true,
         "node": "<25"
       }
