@@ -83,7 +83,7 @@ exports.removeTopic = async arn => {
 };
 
 exports.generateQueueName = () => {
-  let queueName = 'nodejs-team-sqs';
+  let queueName = 'nodejs-team';
 
   if (process.env.SQS_QUEUE_NAME) {
     queueName = `${process.env.SQS_QUEUE_NAME}-${semver.major(process.versions.node)}`;
