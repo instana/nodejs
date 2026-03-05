@@ -4,6 +4,7 @@
 
 'use strict';
 
+const semver = require('semver');
 const { expect } = require('chai');
 const { fail } = expect;
 const qs = require('querystring');
@@ -27,7 +28,7 @@ const inVersionDir =
 const baseDir = inVersionDir ? path.resolve(__dirname, '..') : __dirname;
 
 let topicArn;
-const topicName = 'MyNodeTopicArn';
+const topicName = `nodejs-team-v3-${semver.major(process.versions.node)}`;
 const availableStyles = ['default', 'callback', 'v2'];
 const availableCommands = {
   PublishCommand: {
@@ -66,12 +67,20 @@ function start() {
   });
 
   after(async () => {
-    // CASE: queue was not created in before hook
-    if (!queueUrl) {
-      return;
+    if (topicArn) {
+      try {
+        await utils.removeTopic(topicArn);
+      } catch (err) {
+        console.error('Error removing SNS topic:', err.message);
+      }
     }
-
-    await utils.removeQueue(queueUrl);
+    if (queueUrl) {
+      try {
+        await utils.removeQueue(queueUrl);
+      } catch (err) {
+        console.error('Error removing SQS queue:', err.message);
+      }
+    }
   });
 
   describe(`npm: ${libraryEnv.LIBRARY_VERSION}`, function () {

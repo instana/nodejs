@@ -4,7 +4,6 @@
 
 'use strict';
 
-const uuid = require('uuid');
 const semver = require('semver');
 const awsSdk3 = require('@aws-sdk/client-sqs');
 const sns = require('@aws-sdk/client-sns');
@@ -79,14 +78,18 @@ exports.removeQueue = async url => {
   });
 };
 
+exports.removeTopic = async arn => {
+  await snsClient.send(new sns.DeleteTopicCommand({ TopicArn: arn }));
+};
+
 exports.generateQueueName = () => {
   let queueName = 'nodejs-team';
 
   if (process.env.SQS_QUEUE_NAME) {
-    queueName = `${process.env.SQS_QUEUE_NAME}-v3-${semver.major(process.versions.node)}-${uuid.v4()}`;
+    queueName = `${process.env.SQS_QUEUE_NAME}-${semver.major(process.versions.node)}`;
+  } else {
+    queueName = `${queueName}-${semver.major(process.versions.node)}`;
   }
 
-  const randomNumber = Math.floor(Math.random() * 1000);
-  queueName = `${queueName}-${randomNumber}`;
   return queueName;
 };
