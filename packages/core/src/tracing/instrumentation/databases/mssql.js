@@ -88,7 +88,7 @@ function instrumentedMethod(ctx, originalFunction, originalArgs, stackTraceRef, 
     }
 
     const promise = originalFunction.apply(ctx, originalArgs);
-    if (typeof promise.then === 'function') {
+    if (typeof promise?.then === 'function') {
       promise
         .then(value => {
           finishSpan(null, span);
@@ -98,6 +98,9 @@ function instrumentedMethod(ctx, originalFunction, originalArgs, stackTraceRef, 
           finishSpan(error, span);
           return error;
         });
+    } else {
+      tracingUtil.handleUnexpectedReturnValue(promise, exports.spanName, command);
+      finishSpan(null, span);
     }
     return promise;
   });
