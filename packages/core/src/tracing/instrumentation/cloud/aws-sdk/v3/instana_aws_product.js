@@ -5,6 +5,8 @@
 
 'use strict';
 
+const tracingUtil = require('../../../../tracingUtil');
+
 class InstanaAWSProduct {
   /**
    * @param {string} spanName
@@ -49,7 +51,7 @@ class InstanaAWSProduct {
     if (err) {
       span.ec = 1;
       if (span.data?.[this.spanName]) {
-        span.data[this.spanName].error = err.message || err.code || JSON.stringify(err);
+        span.data[this.spanName].error = tracingUtil.extractErrorMessage(err);
       }
     }
   }
