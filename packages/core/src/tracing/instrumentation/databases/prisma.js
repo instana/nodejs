@@ -167,7 +167,8 @@ function instrumentedRequest(ctx, originalRequest, argsForOriginalRequest) {
       url: providerAndDataSourceUri.dataSourceUrl
     };
     const requestPromise = originalRequest.apply(ctx, argsForOriginalRequest);
-    if (!requestPromise && typeof requestPromise.then !== 'function') {
+    if (!requestPromise || typeof requestPromise.then !== 'function') {
+      tracingUtil.handleUnexpectedReturnValue(requestPromise, 'prisma', `${params.model}.${params.action}`);
       span.cancel();
       return requestPromise;
     } else {
