@@ -10,6 +10,7 @@ const shimmer = require('../../shimmer');
 const hook = require('../../../util/hook');
 const httpServer = require('../protocols/httpServer');
 const cls = require('../../cls');
+const tracingUtil = require('../../tracingUtil');
 
 let logger;
 let active = false;
@@ -61,15 +62,19 @@ function instrumentedRoutes(thisContext, originalRoutes, originalArgs) {
   const instrumentedDispatch = function (ctx, next) {
     if (active && cls.isTracing()) {
       const dispatchResult = dispatch.apply(this, arguments);
-      return dispatchResult.then(resolvedValue => {
-        if (ctx.matched && ctx.matched.length && ctx.matched.length > 0) {
-          const matchedRouteLayers = ctx.matched.slice();
-          matchedRouteLayers.sort(byLeastSpecificLayer);
-          const mostSpecificPath = normalizeLayerPath(matchedRouteLayers[matchedRouteLayers.length - 1].path);
-          annotateHttpEntrySpanWithPathTemplate(mostSpecificPath);
-        }
-        return resolvedValue;
-      });
+      if (typeof dispatchResult?.then === 'function') {
+        return dispatchResult.then(resolvedValue => {
+          if (ctx.matched && ctx.matched.length && ctx.matched.length > 0) {
+            const matchedRouteLayers = ctx.matched.slice();
+            matchedRouteLayers.sort(byLeastSpecificLayer);
+            const mostSpecificPath = normalizeLayerPath(matchedRouteLayers[matchedRouteLayers.length - 1].path);
+            annotateHttpEntrySpanWithPathTemplate(mostSpecificPath);
+          }
+          return resolvedValue;
+        });
+      } else {
+        tracingUtil.handleUnexpectedReturnValue(dispatchResult, exports.spanName, 'router dispatch');
+      }
     } else {
       return dispatch.apply(this, arguments);
     }
