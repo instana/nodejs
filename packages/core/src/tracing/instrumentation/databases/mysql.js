@@ -182,20 +182,29 @@ function instrumentedAccessFunction(
     if (isPromiseImpl) {
       const resultPromise = originalFunction.apply(ctx, originalArgs);
 
-      resultPromise
-        .then(result => {
-          span.d = Date.now() - span.ts;
-          span.transmit();
-          return result;
-        })
-        .catch(error => {
-          span.ec = 1;
-          tracingUtil.setErrorDetails(span, error, exports.spanName);
+      if (typeof resultPromise?.then === 'function') {
+        resultPromise
+          .then(result => {
+            span.d = Date.now() - span.ts;
+            span.transmit();
+            return result;
+          })
+          .catch(error => {
+            span.ec = 1;
+            tracingUtil.setErrorDetails(span, error, exports.spanName);
 
-          span.d = Date.now() - span.ts;
-          span.transmit();
-          return error;
-        });
+            span.d = Date.now() - span.ts;
+            span.transmit();
+            return error;
+          });
+      } else {
+        tracingUtil.handleUnexpectedReturnValue(
+          resultPromise,
+          exports.spanName,
+          typeof statementOrOpts === 'string' ? statementOrOpts : statementOrOpts.sql
+        );
+        onResult();
+      }
       return resultPromise;
     }
 
