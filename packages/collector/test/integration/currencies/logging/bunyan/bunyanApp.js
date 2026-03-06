@@ -100,6 +100,27 @@ app.get('/child-error', (req, res) => {
   finish(res);
 });
 
+app.get('/error-with-cause', (req, res) => {
+  const causeError = new Error('This is the cause error');
+  const mainError = new Error('This is the main error', { cause: causeError });
+  logger.error(mainError);
+  finish(res);
+});
+
+app.get('/error-with-cause-and-extra-string', (req, res) => {
+  const causeError = new Error('This is the cause error');
+  const mainError = new Error('This is the main error', { cause: causeError });
+  logger.error(mainError, 'Error message - should be traced.');
+  finish(res);
+});
+
+app.get('/nested-error-with-cause', (req, res) => {
+  const causeError = new Error('This is the cause error');
+  const mainError = new Error('This is the main error', { cause: causeError });
+  logger.error({ foo: 'bar', err: mainError }, 'Error message - should be traced.');
+  finish(res);
+});
+
 function finish(res) {
   fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
     res.sendStatus(200);
