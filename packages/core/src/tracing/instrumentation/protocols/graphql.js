@@ -277,6 +277,7 @@ function runOriginalAndFinish(originalFunction, originalThis, originalArgs, span
   } else {
     // The GraphQL operation returned a value instead of a promise - that means, the resolver finished synchronously. We
     // can finish the span immediately.
+    tracingUtil.handleUnexpectedReturnValue(result, exports.spanName, 'graphql.operation');
     finishSpan(span, result);
     return result;
   }
@@ -349,6 +350,10 @@ function shimApolloGatewayExecuteQueryPlanFunction(originalFunction) {
           throw err;
         }
       );
+    } else {
+      tracingUtil.handleUnexpectedReturnValue(resultPromise, exports.spanName, 'graphql.execute');
+      delete activeEntrySpan.postponeTransmitApolloGateway;
+      finishSpan(activeEntrySpan, {});
     }
     return resultPromise;
   };
