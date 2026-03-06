@@ -85,6 +85,7 @@ function instrumentedMethod(ctx, originalFunction, originalArgs, stackTraceRef, 
         return originalCallback.apply(this, arguments);
       };
       originalArgs[1] = cls.ns.bind(wrappedCallback);
+      return originalFunction.apply(ctx, originalArgs);
     }
 
     const promise = originalFunction.apply(ctx, originalArgs);
