@@ -76,10 +76,10 @@ module.exports = function (name, version, isLatest) {
     it('must trace fatal', () => runTest('fatal', true, 'Fatal message - should be traced.', controls));
 
     it("must capture an error object's message", () =>
-      runTest('error-object-only', true, 'This is an error.', controls));
+      runTest('error-object-only', true, 'Error: This is an error.', controls));
 
     it("must capture a nested error object's message", async () => {
-      await runTest('nested-error-object-only', true, 'This is a nested error.', controls);
+      await runTest('nested-error-object-only', true, 'Error: This is a nested error.', controls);
     });
 
     it('must serialize random object', () => runTest('error-random-object-only', true, '{"foo":"[Object]"}', controls));
@@ -96,14 +96,19 @@ module.exports = function (name, version, isLatest) {
       ));
 
     it("must capture an error object's message and an additional string", () =>
-      runTest('error-object-and-string', true, 'This is an error. -- Error message - should be traced.', controls));
+      runTest(
+        'error-object-and-string',
+        true,
+        'Error: This is an error. -- Error message - should be traced.',
+        controls
+      ));
 
     it("must capture a nested error object's message and an additional string", () =>
       runTest(
         'nested-error-object-and-string',
         true,
         // eslint-disable-next-line max-len
-        'This is a nested error. -- Error message - should be traced.',
+        'Error: This is a nested error. -- Error message - should be traced.',
         controls
       ));
 
@@ -117,6 +122,25 @@ module.exports = function (name, version, isLatest) {
 
     it('must trace child logger error', () =>
       runTest('child-error', true, 'Child logger error message - should be traced.', controls));
+
+    it('must trace an error with cause property', () =>
+      runTest('error-with-cause', true, 'Error: This is the cause error', controls));
+
+    it('must trace an error with cause property and extra string', () =>
+      runTest(
+        'error-with-cause-and-extra-string',
+        true,
+        'Error: This is the cause error -- Error message - should be traced.',
+        controls
+      ));
+
+    it('must trace a nested error with cause property and extra string', () =>
+      runTest(
+        'nested-error-with-cause',
+        true,
+        'Error: This is the cause error -- Error message - should be traced.',
+        controls
+      ));
 
     it('[suppression] should not trace', async function () {
       await trigger('warn', controls, { 'X-INSTANA-L': '0' });
