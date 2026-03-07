@@ -23,7 +23,7 @@ module.exports = {
     sourceType: 'script'
   },
 
-  plugins: ['header', 'instana', 'mocha', 'monorepo-cop'],
+  plugins: ['@tony.ganchev/header', 'instana', 'mocha', 'monorepo-cop'],
 
   rules: {
     'arrow-body-style': 'off',
@@ -36,15 +36,16 @@ module.exports = {
     'func-names': 'off',
     'function-paren-newline': 'off',
     'global-require': 'off',
-    'header/header': [
+    '@tony.ganchev/header/header': [
       'error',
-      'block',
-      [
-        { pattern: '' },
-        { pattern: ' \\(c\\) Copyright IBM Corp. \\d{4}' },
-        { pattern: '(?: \\(c\\) Copyright Instana Inc. and contributors \\d{4})?' },
-        { pattern: '' }
-      ]
+      {
+        header: {
+          commentType: 'block',
+          lines: [
+            /\n \* \(c\) Copyright IBM Corp. \d{4}\n(?:\n \(c\) Copyright Instana Inc. and contributors \d{4}\n)? /
+          ]
+        }
+      }
     ],
     'implicit-arrow-linebreak': 'off',
     'import/newline-after-import': 'off',
