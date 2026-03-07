@@ -1,3 +1,4 @@
+/* eslint-disable @tony.ganchev/header/header */
 /*
  * This is a vendored copy of https://github.com/othiym23/emitter-listener, including the modifications from
  * https://github.com/othiym23/emitter-listener/pull/7.
@@ -20,8 +21,6 @@
  * property names.
  */
 // @ts-nocheck - not going to add type checking to a temporarily vendored dependency.
-
-/* eslint-disable header/header */
 
 'use strict';
 

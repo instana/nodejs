@@ -23,10 +23,10 @@ fs.readFile('website.txt', 'utf8', (err, data) => {
   const integrityMatch = data.match(integrityRegex);
 
   const eumContent = `/* eslint-disable no-undef */
-  /* eslint-disable header/header */
-  
+  /* eslint-disable @tony.ganchev/header/header */
+
   'use strict';
-  
+
   (function (s, t, a, n) {
     if (!s[t]) {
       s[t] = a;
@@ -38,7 +38,7 @@ fs.readFile('website.txt', 'utf8', (err, data) => {
       n.l = 1 * new Date();
     }
   })(window, 'InstanaEumObject', 'ineum');
-  
+
   // Replace these placeholders with actual values
   ineum('reportingUrl', '${reportingUrlMatch[1] || ''}');
   ineum('key', '${keyMatch[1] || ''}');
@@ -47,24 +47,24 @@ fs.readFile('website.txt', 'utf8', (err, data) => {
 
   const sdkContent = `/* eslint-disable no-console */
   /* eslint-disable no-undef */
-  /* eslint-disable header/header */
-  
+  /* eslint-disable @tony.ganchev/header/header */
+
   'use strict';
-  
+
   const script = document.createElement('script');
   script.defer = true;
   script.crossOrigin = 'anonymous';
   script.src = 'https://eum.instana.io/1.7.2/eum.min.js';
   script.integrity = '${integrityMatch[1] || ''}';
-  
+
   // Append the script tag to the document's head or body
   document.head.appendChild(script);
-  
+
   // Optional: You can listen to the 'load' event to handle when the script has fully loaded
   script.onload = () => {
     console.log('Script loaded Instana SDK successfully');
   };
-  
+
   script.onerror = () => {
     console.error('Script Instana SDK failed to load');
   };
