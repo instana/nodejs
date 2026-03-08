@@ -41,9 +41,12 @@ module.exports = {
       {
         header: {
           commentType: 'block',
-          lines: [
-            /\n \* \(c\) Copyright IBM Corp. \d{4}\n(?:\n \(c\) Copyright Instana Inc. and contributors \d{4}\n)? /
-          ]
+          lines: [{
+            pattern: '^\\r?\\n' +
+              ' \\* \\(c\\) Copyright IBM Corp\\. \\d{4}\\r?\\n' +
+              '(?: \\* \\(c\\) Copyright Instana Inc\\. and contributors( \\d{4})?\\r?\\n)?' +
+              ' $'
+          }]
         }
       }
     ],
