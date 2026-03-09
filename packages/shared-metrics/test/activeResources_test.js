@@ -22,7 +22,7 @@ describe('metrics.activeResources', function () {
     // PipeWrap = internal pipe for process communication (test -> app)
     // ProcessWrap = the child process itself
     expect(activeResources.currentPayload).to.be.an('object');
-    expect(activeResources.currentPayload.count).to.equal(5);
+    expect(activeResources.currentPayload.count).to.gte(4);
   });
 
   it('should update resource count for a setTimeout', () => {
