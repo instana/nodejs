@@ -11,28 +11,50 @@ const fs = require('fs');
 
 const config = require('@_local/core/test/config');
 const testUtils = require('@_local/core/test/test_util');
+const { isCI } = require('@_local/core/test/test_util');
 const activeResources = require('../src/activeResources');
 
 describe('metrics.activeResources', function () {
   this.timeout(config.getTestTimeout());
 
   it('should export active resource count', () => {
+    // The resources returned by Node depend on how the process is started.
+    //
+    // Local terminal example:
     // [ 'TTYWrap', 'TTYWrap', 'TTYWrap', 'PipeWrap', 'ProcessWrap' ]
-    // CI: [ 'PipeWrap', 'PipeWrap', 'PipeWrap', 'ProcessWrap' ]
-    // Teletypewriter = stdin, stdout, stderr
+    //
+    // CI environments usually pipe stdio instead of attaching a TTY:
+    // [ 'PipeWrap', 'PipeWrap', 'PipeWrap', 'ProcessWrap' ]
+    //
+    // TTYWrap = stdin, stdout, stderr attached to a terminal
     // PipeWrap = internal pipe for process communication (test -> app)
     // ProcessWrap = the child process itself
     expect(activeResources.currentPayload).to.be.an('object');
-    expect(activeResources.currentPayload.count).to.gte(4);
+    if (!isCI()) {
+      expect(activeResources.currentPayload.count).to.be.at.least(5);
+    } else {
+      expect(activeResources.currentPayload.count).to.gte(4);
+    }
   });
 
   it('should update resource count for a setTimeout', () => {
     const timeoutHandle = setTimeout(() => {}, 100);
-
-    // [ 'TTYWrap', 'TTYWrap', 'TTYWrap', 'PipeWrap', 'ProcessWrap', 'Timeout' ]
-    // CI: [ 'PipeWrap', 'PipeWrap', 'PipeWrap', 'ProcessWrap', 'Timeout' ]
+    // Node attach stdin/stdout/stderr differently depending on environment.
+    // Local terminals usually create TTYWrap resources, while CI environments
+    // often use PipeWrap. Because of this, the total resource count can vary.
+    //
+    // Example outputs:
+    // Local: [ 'TTYWrap', 'TTYWrap', 'TTYWrap', 'PipeWrap', 'ProcessWrap', 'Timeout' ]
+    // CI:    [ 'PipeWrap', 'PipeWrap', 'PipeWrap', 'ProcessWrap', 'Timeout' ]
+    // TTYWrap = stdin, stdout, stderr
+    // PipeWrap = internal pipe for process communication (test -> app)
+    // ProcessWrap = the child process itself
     expect(activeResources.currentPayload).to.be.an('object');
-    expect(activeResources.currentPayload.count).to.gte(5);
+    if (!isCI()) {
+      expect(activeResources.currentPayload.count).to.be.at.least(6);
+    } else {
+      expect(activeResources.currentPayload.count).to.gte(5);
+    }
     clearTimeout(timeoutHandle);
   });
 
