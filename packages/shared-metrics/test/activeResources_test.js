@@ -45,10 +45,6 @@ describe('metrics.activeResources', function () {
   });
 
   describe('with net client/server', () => {
-    /* eslint-disable max-len */
-    // Inspired by
-    // https://github.com/nodejs/node/blob/01422769775a2ce7dfef8aa6dbda2d326f002e13/test/parallel/test-process-getactivehandles.js
-
     const maxClients = 8;
     /** @type {*} */
     let server;

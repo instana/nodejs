@@ -45,8 +45,7 @@ module.exports = function () {
         agentControls.getAllMetrics(controls.getPid()),
         agentControls.getAggregatedMetrics(controls.getPid())
       ]).then(([allMetrics, aggregated]) => {
-        expect(findMetric(allMetrics, ['activeHandles'])).to.exist;
-        expect(findMetric(allMetrics, ['activeRequests'])).to.exist;
+        expect(findMetric(allMetrics, ['activeResources.count'])).to.exist;
 
         const args = findMetric(allMetrics, ['args']);
         expect(args).to.be.an('array');

@@ -44,8 +44,7 @@ describe('core data source', function () {
       const rawData = dataSource.getRawData();
       expect(semver.valid(rawData.sensorVersion)).to.exist;
       expect(rawData.versions).to.be.an('object');
-      expect(rawData.activeHandles).to.be.a('number');
-      expect(rawData.activeRequests).to.be.a('number');
+      expect(rawData.activeResources.count).to.be.a('number');
       expect(rawData.args).to.be.an('array');
       expect(rawData.dependencies).to.be.an('object');
     });
@@ -62,8 +61,7 @@ describe('core data source', function () {
       expect(emittedData).to.exist;
       expect(semver.valid(emittedData.sensorVersion)).to.exist;
       expect(emittedData.versions).to.be.an('object');
-      expect(emittedData.activeHandles).to.be.a('number');
-      expect(emittedData.activeRequests).to.be.a('number');
+      expect(emittedData.activeResources.count).to.be.a('number');
       expect(emittedData.args).to.be.an('array');
       expect(emittedData.dependencies).to.be.an('object');
     });
