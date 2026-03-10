@@ -97,6 +97,9 @@ function instrumentingOperation({
           finishSpan(error, span);
           return error;
         });
+    } else {
+      tracingUtil.handleUnexpectedReturnValue(promise, exports.spanName, operation);
+      finishSpan(null, span);
     }
     return promise;
   });
