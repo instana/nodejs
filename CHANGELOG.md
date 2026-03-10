@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.3.0](https://github.com/instana/nodejs/compare/v5.2.3...v5.3.0) (2026-03-10)
+
+
+### Bug Fixes
+
+* added safety promise checks in redis, mongodb ([#2363](https://github.com/instana/nodejs/issues/2363)) ([479bb87](https://github.com/instana/nodejs/commit/479bb87c892bd9b9c72cf8063539550f20efdaa3))
+* bumped @opentelemetry/core from 2.5.1 to 2.6.0 ([#2396](https://github.com/instana/nodejs/issues/2396)) ([c6dc4c2](https://github.com/instana/nodejs/commit/c6dc4c2d60ff3890f348e2b1d51c1cec6b277aa5))
+* bumped @opentelemetry/instrumentation-fs from 0.28.0 to 0.32.0 ([#2397](https://github.com/instana/nodejs/issues/2397)) ([9023179](https://github.com/instana/nodejs/commit/90231793d8a6993e4465b1b87f5850da2a62dc1c))
+* bumped @opentelemetry/instrumentation-restify from 0.56.0 to 0.57.0 ([#2380](https://github.com/instana/nodejs/issues/2380)) ([3d32dac](https://github.com/instana/nodejs/commit/3d32dac20a596d99ac9dd9108b9cb4be74a4a5c4))
+* bumped @opentelemetry/instrumentation-socket.io from 0.57.0 to 0.59.0 ([#2381](https://github.com/instana/nodejs/issues/2381)) ([4da53dd](https://github.com/instana/nodejs/commit/4da53ddc430a8714ea20a48a41df3a7b2eb358fe))
+* bumped semver from 7.7.3 to 7.7.4 ([#2368](https://github.com/instana/nodejs/issues/2368)) ([4480e12](https://github.com/instana/nodejs/commit/4480e1234b4e2929b315762c3521e65833afec4a))
+* **shared-metrics:** bumped tar from v7.5.9 to v7.5.10 ([#2389](https://github.com/instana/nodejs/issues/2389)) ([26e511b](https://github.com/instana/nodejs/commit/26e511b67bdb20f7581f723f4ce737fc9f716b25))
+
+
+### Features
+
+* **bunyan:** added support for error.cause  ([#2331](https://github.com/instana/nodejs/issues/2331)) ([db8ef3d](https://github.com/instana/nodejs/commit/db8ef3dc16cfe214f7f1b5ab0d987206b20068ce))
+
+
+
+
+
 ## [5.2.3](https://github.com/instana/nodejs/compare/v5.2.2...v5.2.3) (2026-02-24)
 
 

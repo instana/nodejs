@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.3.0](https://github.com/instana/nodejs/compare/v5.2.3...v5.3.0) (2026-03-10)
+
+
+### Bug Fixes
+
+* bumped semver from 7.7.3 to 7.7.4 ([#2368](https://github.com/instana/nodejs/issues/2368)) ([4480e12](https://github.com/instana/nodejs/commit/4480e1234b4e2929b315762c3521e65833afec4a))
+
+
+### Features
+
+* **bunyan:** added support for error.cause  ([#2331](https://github.com/instana/nodejs/issues/2331)) ([db8ef3d](https://github.com/instana/nodejs/commit/db8ef3dc16cfe214f7f1b5ab0d987206b20068ce))
+
+
+
+
+
 ## [5.2.3](https://github.com/instana/nodejs/compare/v5.2.2...v5.2.3) (2026-02-24)
 
 
