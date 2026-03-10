@@ -298,7 +298,7 @@ function instrument(coreModule, forceHttps) {
       });
 
       clientRequest.on('error', err => {
-        let errorMessage = err.message || err.code;
+        let errorMessage = tracingUtil.extractErrorMessage(err);
 
         if (isTimeout) {
           errorMessage = 'Timeout exceeded';
