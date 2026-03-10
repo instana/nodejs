@@ -328,9 +328,10 @@ function instrumentQueryHelper(ctx, originalArgs, originalFunction, stmt, isAsyn
           finishSpan(ctx, null, span);
           return err;
         });
-
-      return resultPromise;
+    } else {
+      tracingUtil.handleUnexpectedReturnValue(resultPromise, exports.spanName, 'query');
     }
+    return resultPromise;
   });
 }
 

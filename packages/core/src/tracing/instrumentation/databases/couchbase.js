@@ -426,7 +426,7 @@ function instrumentTransactions(cluster, connectionStr) {
 
                   const result = originalFn.apply(this, arguments);
 
-                  if (result.then && result.catch) {
+                  if (typeof result?.then === 'function' && typeof result?.catch === 'function') {
                     result
                       .then(() => {
                         span.d = Date.now() - span.ts;
@@ -439,6 +439,7 @@ function instrumentTransactions(cluster, connectionStr) {
                         span.transmit();
                       });
                   } else {
+                    tracingUtil.handleUnexpectedReturnValue(result, exports.spanName, obj[0].sql);
                     span.cancel();
                   }
 
@@ -488,7 +489,7 @@ function instrumentOperation({ connectionStr, bucketName, getBucketTypeFn, sql, 
       if (callbackIndex < 0) {
         const prom = original.apply(originalThis, originalArgs);
 
-        if (prom.then && prom.catch) {
+        if (typeof prom?.then === 'function' && typeof prom?.catch === 'function') {
           prom
             .then(result => {
               if (resultHandler) {
@@ -505,6 +506,9 @@ function instrumentOperation({ connectionStr, bucketName, getBucketTypeFn, sql, 
               span.d = Date.now() - span.ts;
               span.transmit();
             });
+        } else {
+          tracingUtil.handleUnexpectedReturnValue(prom, exports.spanName, sql);
+          span.cancel();
         }
 
         return prom;
