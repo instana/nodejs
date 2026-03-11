@@ -58,7 +58,7 @@ describe('metrics.activeResources', function () {
     clearTimeout(timeoutHandle);
   });
 
-  it('should update requests count for a fs.open', () => {
+  it('should update resource count for a fs.open', () => {
     const initialCount = activeResources.currentPayload.count;
     const count = 13;
     for (let i = 0; i < count; i++) {
@@ -97,7 +97,7 @@ describe('metrics.activeResources', function () {
       server.close();
     });
 
-    it('should update handle count for net client and connection', () =>
+    it('should update resource count for net client and connection', () =>
       testUtils.retry(
         () =>
           new Promise((resolve, reject) => {
