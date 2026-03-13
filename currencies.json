@@ -1159,7 +1159,7 @@
     "versions": [
       {
         "v": "7.5.0",
-        "optional": true,
+        "optional": false,
         "node": ">=20.19.0 <23 || >=24",
         "skipValidation": true
       },
