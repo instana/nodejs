@@ -197,14 +197,14 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
           process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'grpc,kafkajs';
           initAndActivate({ tracing: { disable: { instrumentations: ['aws-sdk/v2'] } } });
 
-          expect(initAwsSdkv2).not.to.have.been.called;
-          expect(activateAwsSdkv2).not.to.have.been.called;
+          expect(initAwsSdkv2).to.have.been.called;
+          expect(activateAwsSdkv2).to.have.been.called;
 
           expect(initStubGrpcJs).to.have.been.called;
           expect(activateStubGrpcJs).to.have.been.called;
 
-          expect(initStubKafkaJs).to.have.been.called;
-          expect(activateStubKafkaJs).to.have.been.called;
+          expect(initStubKafkaJs).not.to.have.been.called;
+          expect(activateStubKafkaJs).not.to.have.been.called;
         });
 
         it('should disable all instrumentations in specified groups', () => {
