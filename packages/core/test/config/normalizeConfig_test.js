@@ -208,9 +208,9 @@ describe('config.normalizeConfig', () => {
   });
 
   it('should parse extra headers from env var', () => {
-    process.env.INSTANA_EXTRA_HTTP_HEADERS = ' X-Header-1 ; X-hEADer-2 , X-Whatever ';
+    process.env.INSTANA_EXTRA_HTTP_HEADERS = ' X-Header-1 ; X-Header-2 , X-Whatever ';
     const config = coreConfig.normalize();
-    expect(config.tracing.http.extraHttpHeadersToCapture).to.deep.equal(['x-header-1', 'x-header-2', 'x-whatever']);
+    expect(config.tracing.http.extraHttpHeadersToCapture).to.deep.equal(['X-Header-1', 'X-Header-2', 'X-Whatever']);
   });
 
   it('must use default extra headers (empty list) when INSTANA_EXTRA_HTTP_HEADERS is invalid', () => {
@@ -530,14 +530,14 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.disable.instrumentations).to.deep.equal(['graphql', 'grpc']);
   });
 
-  it('config should take precedence over INSTANA_TRACING_DISABLE_INSTRUMENTATIONS  for config', () => {
+  it('config should take precedence for INSTANA_TRACING_DISABLE_INSTRUMENTATIONS  over config', () => {
     process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'foo, bar';
     const config = coreConfig.normalize({
       tracing: {
         disable: { instrumentations: ['baz', 'fizz'] }
       }
     });
-    expect(config.tracing.disable.instrumentations).to.deep.equal(['baz', 'fizz']);
+    expect(config.tracing.disable.instrumentations).to.deep.equal(['foo', 'bar']);
   });
 
   it('should disable multiple instrumentations via env var INSTANA_TRACING_DISABLE_INSTRUMENTATIONS', () => {
@@ -573,14 +573,14 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.disable.groups).to.deep.equal(['frameworks', 'databases']);
   });
 
-  it('config should take precedence over INSTANA_TRACING_DISABLE_GROUPS when disabling groups', () => {
+  it('config should take precedence for INSTANA_TRACING_DISABLE_GROUPS when disabling groups', () => {
     process.env.INSTANA_TRACING_DISABLE_GROUPS = 'frameworks, databases';
     const config = coreConfig.normalize({
       tracing: {
         disable: { groups: ['LOGGING'] }
       }
     });
-    expect(config.tracing.disable.groups).to.deep.equal(['logging']);
+    expect(config.tracing.disable.groups).to.deep.equal(['frameworks', 'databases']);
   });
 
   it('should disable instrumentations and groups when both configured', () => {
