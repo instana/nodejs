@@ -228,7 +228,7 @@ if (supportedVersion(process.versions.node)) {
         'Instana tracing and monitoring for Node.js based Google Cloud Run services'
       );
 
-      expect(nodeJsData.activeHandles).to.exist;
+      expect(nodeJsData.activeResources.count).to.exist;
       expect(nodeJsData.gc.minorGcs).to.exist;
       expect(nodeJsData.gc.majorGcs).to.exist;
       expect(nodeJsData.healthchecks).to.exist;

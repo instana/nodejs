@@ -57,8 +57,9 @@ describe('Node.js processor', function () {
     coreAndSharedMetricsDataSource.getRawData.returns({
       sensorVersion: '1.2.3',
       versions: {},
-      activeHandles: 42,
-      activeRequests: 23,
+      activeResources: {
+        count: 42
+      },
       args: [],
       dependencies: {}
     });
@@ -69,8 +70,7 @@ describe('Node.js processor', function () {
       expect(processedData.pid).to.equal(42);
       expect(semver.valid(processedData.sensorVersion)).to.exist;
       expect(processedData.versions).to.be.an('object');
-      expect(processedData.activeHandles).to.be.a('number');
-      expect(processedData.activeRequests).to.be.a('number');
+      expect(processedData.activeResources.count).to.be.a('number');
       expect(processedData.args).to.be.an('array');
       expect(processedData.dependencies).to.be.an('object');
     });
@@ -88,8 +88,7 @@ describe('Node.js processor', function () {
       expect(payload.entityId).to.equal(42);
       expect(payload.data.pid).to.equal(42);
       expect(payload.data.versions).to.be.an('object');
-      expect(payload.data.activeHandles).to.be.a('number');
-      expect(payload.data.activeRequests).to.be.a('number');
+      expect(payload.data.activeResources.count).to.be.a('number');
       expect(payload.data.args).to.be.an('array');
       expect(payload.data.dependencies).to.be.an('object');
     });
@@ -101,8 +100,9 @@ describe('Node.js processor', function () {
       coreAndSharedMetricsDataSource.on.getCalls()[0].args[1]({
         sensorVersion: '1.2.3',
         versions: {},
-        activeHandles: 42,
-        activeRequests: 23,
+        activeResources: {
+          count: 42
+        },
         args: [],
         dependencies: {}
       });
@@ -120,8 +120,7 @@ describe('Node.js processor', function () {
       expect(emittedPayload.entityId).to.equal(42);
       expect(emittedPayload.data.pid).to.equal(42);
       expect(emittedPayload.data.versions).to.be.an('object');
-      expect(emittedPayload.data.activeHandles).to.be.a('number');
-      expect(emittedPayload.data.activeRequests).to.be.a('number');
+      expect(emittedPayload.data.activeResources.count).to.be.a('number');
       expect(emittedPayload.data.args).to.be.an('array');
       expect(emittedPayload.data.dependencies).to.be.an('object');
     });

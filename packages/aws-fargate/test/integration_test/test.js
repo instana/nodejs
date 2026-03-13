@@ -822,7 +822,7 @@ describe('AWS fargate integration test', function () {
     expect(nodeJsData.name).to.equal('@instana/aws-fargate');
     expect(nodeJsData.description).to.equal('Instana tracing and monitoring for Node.js based AWS Fargate tasks');
 
-    expect(nodeJsData.activeHandles).to.exist;
+    expect(nodeJsData.activeResources.count).to.exist;
     expect(nodeJsData.gc.minorGcs).to.exist;
     expect(nodeJsData.gc.majorGcs).to.exist;
     expect(nodeJsData.healthchecks).to.exist;
