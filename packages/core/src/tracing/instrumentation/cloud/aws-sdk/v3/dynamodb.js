@@ -55,18 +55,13 @@ class InstanaAWSDynamoDB extends InstanaAWSProduct {
       } else {
         const request = originalSend.apply(ctx, smithySendArgs);
 
-        if (typeof request?.then === 'function') {
-          request
-            .then(() => {
-              this.finishSpan(null, span);
-            })
-            .catch(err => {
-              this.finishSpan(err, span);
-            });
-        } else {
-          tracingUtil.handleUnexpectedReturnValue(request, this.spanName, 'send operation');
-          this.finishSpan(null, span);
-        }
+        request
+          .then(() => {
+            this.finishSpan(null, span);
+          })
+          .catch(err => {
+            this.finishSpan(err, span);
+          });
 
         return request;
       }
@@ -93,15 +88,13 @@ class InstanaAWSDynamoDB extends InstanaAWSProduct {
     if (typeof ctx.config.region === 'function') {
       const regionPromise = ctx.config.region();
       if (typeof regionPromise.then === 'function') {
-        if (typeof regionPromise?.then === 'function') {
-          regionPromise
-            .then(region => {
-              span.data[this.spanName].region = region;
-            })
-            .catch(() => {
-              /* silently ignore failed attempts to get the region */
-            });
-        }
+        regionPromise
+          .then(region => {
+            span.data[this.spanName].region = region;
+          })
+          .catch(() => {
+            /* silently ignore failed attempts to get the region */
+          });
       }
     }
   }

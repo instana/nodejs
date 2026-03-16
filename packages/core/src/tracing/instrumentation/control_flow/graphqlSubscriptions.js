@@ -9,7 +9,6 @@ const shimmer = require('../../shimmer');
 
 const hook = require('../../../util/hook');
 const cls = require('../../cls');
-const tracingUtil = require('../../tracingUtil');
 
 let isActive = false;
 
@@ -63,23 +62,18 @@ function shimPushValue(originalFunction) {
 function shimPullValue(originalFunction) {
   return function () {
     const pullPromise = originalFunction.apply(this, arguments);
-    if (typeof pullPromise?.then === 'function') {
-      return pullPromise.then(result => {
-        if (result && result.value && result.value[CLS_CONTEXT_SYMBOL]) {
-          const clsContext = result.value[CLS_CONTEXT_SYMBOL];
-          if (isActive && clsContext) {
-            cls.ns.enter(clsContext);
-            setImmediate(() => {
-              cls.ns.exit(clsContext);
-            });
-          }
+    return pullPromise.then(result => {
+      if (result && result.value && result.value[CLS_CONTEXT_SYMBOL]) {
+        const clsContext = result.value[CLS_CONTEXT_SYMBOL];
+        if (isActive && clsContext) {
+          cls.ns.enter(clsContext);
+          setImmediate(() => {
+            cls.ns.exit(clsContext);
+          });
         }
-        return result;
-      });
-    } else {
-      tracingUtil.handleUnexpectedReturnValue(pullPromise, 'graphql', 'push value');
-    }
-    return pullPromise;
+      }
+      return result;
+    });
   };
 }
 
