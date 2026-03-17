@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.4.0](https://github.com/instana/nodejs/compare/v5.3.0...v5.4.0) (2026-03-17)
+
+
+### Bug Fixes
+
+* **shared-metrics:** merged activeHandles and activeRequests into activeResources ([#2149](https://github.com/instana/nodejs/issues/2149)) ([84bd294](https://github.com/instana/nodejs/commit/84bd29491477891633ce7a0f9f4d71ebb4102c0f)), closes [/nodejs.org/api/deprecations.html#dep0161](https://github.com//nodejs.org/api/deprecations.html/issues/dep0161)
+
+
+### Features
+
+* added instrumentation support for db2 executeNonQuery ([#2413](https://github.com/instana/nodejs/issues/2413)) ([cd13d25](https://github.com/instana/nodejs/commit/cd13d250f3ea7daf98f6b2b600bf28615bd47c83))
+
+
+
+
+
 # [5.3.0](https://github.com/instana/nodejs/compare/v5.2.3...v5.3.0) (2026-03-10)
 
 

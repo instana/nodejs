@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.4.0](https://github.com/instana/nodejs/compare/v5.3.0...v5.4.0) (2026-03-17)
+
+
+### Bug Fixes
+
+* bumped @opentelemetry/instrumentation-oracledb from 0.36.0 to 0.38.0 ([#2406](https://github.com/instana/nodejs/issues/2406)) ([ee6963b](https://github.com/instana/nodejs/commit/ee6963b2ecbef01b6a91febaffdf8b1429b82531))
+* bumped @opentelemetry/instrumentation-restify from 0.57.0 to 0.58.0 ([#2407](https://github.com/instana/nodejs/issues/2407)) ([b3f3d61](https://github.com/instana/nodejs/commit/b3f3d618c4b89d7ef910db9cada29d6e60cb5fea))
+* **core:** improved handling of malformed or incomplete URLs ([#2412](https://github.com/instana/nodejs/issues/2412)) ([bec19ce](https://github.com/instana/nodejs/commit/bec19ce4b722b7221a6955f73ffe312beec9bd44))
+* **shared-metrics:** merged activeHandles and activeRequests into activeResources ([#2149](https://github.com/instana/nodejs/issues/2149)) ([84bd294](https://github.com/instana/nodejs/commit/84bd29491477891633ce7a0f9f4d71ebb4102c0f)), closes [/nodejs.org/api/deprecations.html#dep0161](https://github.com//nodejs.org/api/deprecations.html/issues/dep0161)
+* updated db instrumentations with safety promise check ([#2392](https://github.com/instana/nodejs/issues/2392)) ([fb67a0f](https://github.com/instana/nodejs/commit/fb67a0f71d74954cc14782d1dd267dd25ec3e716))
+
+
+### Features
+
+* added instrumentation support for db2 executeNonQuery ([#2413](https://github.com/instana/nodejs/issues/2413)) ([cd13d25](https://github.com/instana/nodejs/commit/cd13d250f3ea7daf98f6b2b600bf28615bd47c83))
+* added support for error.cause ([#2383](https://github.com/instana/nodejs/issues/2383)) ([af25af6](https://github.com/instana/nodejs/commit/af25af69b2046824c0af9826cbddcbbe71e7164f))
+
+
+
+
+
 # [5.3.0](https://github.com/instana/nodejs/compare/v5.2.3...v5.3.0) (2026-03-10)
 
 
