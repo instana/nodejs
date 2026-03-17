@@ -690,6 +690,27 @@ app.get('/prepare-execute-non-query-sync', (req, res) => {
   }
 });
 
+app.get('/prepare-execute-non-query-async', (req, res) => {
+  const error = req.query.error;
+
+  const stmtObject = connection.prepareSync(
+    `insert into ${DB2_TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`
+  );
+  let params = [23, null, null];
+
+  if (error) {
+    params = [];
+  }
+
+  stmtObject.executeNonQuery(params, function (err, rowCount) {
+    if (err) {
+      return res.status(error ? 200 : 500).send({ err: err.message });
+    }
+
+    res.status(200).send({ data: rowCount });
+  });
+});
+
 app.get('/query-result-async', (req, res) => {
   const txn = req.query.transaction;
   const stmt = `SELECT * FROM ${DB2_TABLE_NAME_1}`;
