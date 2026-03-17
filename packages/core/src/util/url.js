@@ -28,13 +28,18 @@ exports.sanitizeUrl = function sanitizeUrl(urlString) {
     normalizedUrl = `${nullToEmptyString(url.protocol)}${url.protocol || url.host ? '//' : ''}${
       url.username || url.password ? '<redacted>:<redacted>@' : ''
     }${nullToEmptyString(url.host)}${nullToEmptyString(url.pathname)}`;
-  } catch (e) {
+  } catch {
     // If URL parsing fails and it's a relative URL, return its path.
     // For example, if the input is "/foo?a=b", the returned value will be "/foo".
     if (typeof urlString === 'string' && urlString.startsWith('/')) {
-      return new URL(urlString, 'https://example.org/').pathname;
+      try {
+        return new URL(urlString, 'https://example.org/').pathname;
+      } catch {
+        // Improve sanitization logic (ref: INSTA-747)
+        return urlString;
+      }
     } else {
-      // This case  need adjustment for complete sanitization of the URL, reference 159741
+      // Improve sanitization logic (ref: INSTA-747)
       return urlString;
     }
   }
