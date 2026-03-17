@@ -402,6 +402,50 @@ function instrumentExecuteHelper(ctx, originalArgs, stmtObject, prepareCallParen
     });
   };
 
+  const originalExecuteNonQuery = stmtObject.executeNonQuery;
+
+  stmtObject.executeNonQuery = function instanaExecuteNonQuery() {
+    return cls.ns.runAndReturn(() => {
+      if (!canTrace()) {
+        return originalExecuteNonQuery.apply(this, arguments);
+      }
+
+      const span = createSpan(originalArgs[0], instrumentExecuteHelper, ctx._instanaConnectionString);
+
+      const args = arguments;
+      const origCallbackIndex =
+        // eslint-disable-next-line no-nested-ternary
+        args.length === 1 && typeof args[0] === 'function'
+          ? 0
+          : args.length === 2 && typeof args[1] === 'function'
+          ? 1
+          : null;
+      const origCallback = args[origCallbackIndex];
+
+      if (!origCallback) {
+        // TODO: Instrumentation is currently skipped when no callback is provided.
+        // This behavior needs to be revisited.
+        // Reference: https://jsw.ibm.com/browse/INSTA-80799
+        return originalExecuteNonQuery.apply(this, arguments);
+      }
+
+      args[origCallbackIndex] = function instanaExecuteNonQueryCallback(executeErr) {
+        if (executeErr) {
+          span.ec = 1;
+          tracingUtil.setErrorDetails(span, executeErr, 'db2');
+          finishSpan(ctx, null, span);
+          return origCallback.apply(this, arguments);
+        }
+
+        // NOTE: executeNonQuery returns row count, not a result object
+        finishSpan(ctx, null, span);
+        return origCallback.apply(this, arguments);
+      };
+
+      return originalExecuteNonQuery.apply(this, arguments);
+    });
+  };
+
   const originalExecuteSync = stmtObject.executeSync;
   stmtObject.executeSync = function instanaExecuteSync() {
     return cls.ns.runAndReturn(() => {

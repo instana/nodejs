@@ -732,6 +732,37 @@ module.exports = function (name, version, isLatest) {
           );
       });
 
+      it('prepare, executeNonQuery', function () {
+        return controls
+          .sendRequest({
+            method: 'GET',
+            path: '/prepare-execute-non-query-async'
+          })
+          .then(() =>
+            testUtils.retry(() =>
+              verifySpans(agentControls, controls, {
+                stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`
+              })
+            )
+          );
+      });
+
+      it('[with error] prepare, executeNonQuery', function () {
+        return controls
+          .sendRequest({
+            method: 'GET',
+            path: '/prepare-execute-non-query-async?error=true'
+          })
+          .then(() =>
+            testUtils.retry(() =>
+              verifySpans(agentControls, controls, {
+                stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`,
+                error: 'Error: [IBM][CLI Driver] CLI0100E  Wrong number of parameters. SQLSTATE=07001'
+              })
+            )
+          );
+      });
+
       it('must trace prepare execute mixed 1', function () {
         return controls
           .sendRequest({
