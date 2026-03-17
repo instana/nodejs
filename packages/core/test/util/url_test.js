@@ -63,5 +63,31 @@ describe('util/url', () => {
         'http://example.org/ACDKey=1:00000:00000;ANI=00000111;DN=00000111'
       );
     });
+
+    it('must return malformed URL strings unchanged', () => {
+      expect(sanitizeUrl('://bad-url')).to.equal('://bad-url');
+    });
+
+    it('must not throw when given malformed URL', () => {
+      expect(() => sanitizeUrl('://bad-url')).to.not.throw();
+    });
+
+    it('must return empty string unchanged', () => {
+      expect(sanitizeUrl('')).to.equal('');
+    });
+
+    it('must not throw for invalid URL strings', () => {
+      expect(() => sanitizeUrl('invalid:url')).to.not.throw();
+    });
+
+    it('must handle double slash "//" without throwing Invalid URL error', () => {
+      expect(() => sanitizeUrl('//')).to.not.throw();
+      expect(sanitizeUrl('//')).to.equal('//');
+    });
+
+    it('must handle triple slash "///" without throwing Invalid URL error', () => {
+      expect(() => sanitizeUrl('///')).to.not.throw();
+      expect(sanitizeUrl('///')).to.equal('///');
+    });
   });
 });

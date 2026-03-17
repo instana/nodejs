@@ -32,7 +32,12 @@ exports.sanitizeUrl = function sanitizeUrl(urlString) {
     // If URL parsing fails and it's a relative URL, return its path.
     // For example, if the input is "/foo?a=b", the returned value will be "/foo".
     if (typeof urlString === 'string' && urlString.startsWith('/')) {
-      return new URL(urlString, 'https://example.org/').pathname;
+      try {
+        return new URL(urlString, 'https://example.org/').pathname;
+      } catch (err2) {
+        // If even parsing with base URL fails, return the original string
+        return urlString;
+      }
     } else {
       // This case  need adjustment for complete sanitization of the URL, reference 159741
       return urlString;
