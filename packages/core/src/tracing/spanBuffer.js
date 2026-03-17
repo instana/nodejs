@@ -119,11 +119,8 @@ exports.activate = function activate(extraConfig) {
     return;
   }
 
-  if (extraConfig?.tracing) {
-    if (extraConfig.tracing.spanBatchingEnabled) {
-      batchingEnabled = true;
-    }
-  }
+  // Agent config is now applied in tracing.activate() via updateConfig()
+  // spanBatchingEnabled is already set in the config object with proper precedence
 
   isActive = true;
   if (activatedAt == null) {

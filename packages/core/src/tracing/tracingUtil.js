@@ -10,7 +10,7 @@ const path = require('path');
 const StringDecoder = require('string_decoder').StringDecoder;
 
 const stackTrace = require('../util/stackTrace');
-const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE, STACK_TRACE_MODES } = require('../util/constants');
+const { STACK_TRACE_MODES } = require('../util/constants');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -31,29 +31,6 @@ exports.init = function (config) {
   logger = config.logger;
   stackTraceLength = config?.tracing?.stackTraceLength;
   stackTraceMode = config?.tracing?.stackTrace;
-};
-
-/**
- * @param {import('@instana/collector/src/types/collector').AgentConfig} extraConfig
- */
-exports.activate = function activate(extraConfig) {
-  const agentTraceConfig = extraConfig?.tracing;
-
-  // Note: We check whether the already-initialized stackTraceLength equals the default value.
-  //       If it does, we can safely override it, since the user did not explicitly configure it.
-
-  // Note: If the user configured a value via env or code and also configured a different value in the agent,
-  //       but the env/code value happens to equal the default, the agent value would overwrite it.
-  //       This is a rare edge case and acceptable for now.
-
-  if (agentTraceConfig?.stackTrace && stackTraceMode === DEFAULT_STACK_TRACE_MODE) {
-    stackTraceMode = agentTraceConfig.stackTrace;
-  }
-
-  // stackTraceLength is valid when set to any number, including 0
-  if (agentTraceConfig?.stackTraceLength != null && stackTraceLength === DEFAULT_STACK_TRACE_LENGTH) {
-    stackTraceLength = agentTraceConfig.stackTraceLength;
-  }
 };
 
 /**

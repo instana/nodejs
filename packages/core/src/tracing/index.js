@@ -263,8 +263,14 @@ function initInstanaInstrumentations(_config) {
 exports.activate = function activate(extraConfig = {}) {
   if (tracingEnabled && !tracingActivated) {
     tracingActivated = true;
+
+    // Apply agent configuration with correct precedence if available
+    // This ensures: env vars > in-code config > agent config > defaults
+    if (extraConfig && Object.keys(extraConfig).length > 0) {
+      const coreConfig = require('../config');
+      config = coreConfig.updateConfig(config, extraConfig);
+    }
     coreUtil.activate(extraConfig);
-    tracingUtil.activate(extraConfig);
     spanBuffer.activate(extraConfig);
     opentracing.activate();
     sdk.activate();

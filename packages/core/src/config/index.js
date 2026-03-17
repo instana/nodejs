@@ -178,6 +178,126 @@ module.exports.normalize = (userConfig, defaultsOverride = {}) => {
 };
 
 /**
+ * Apply agent configuration to existing config with correct precedence.
+ * Only applies agent config values if the current value is still at default.
+ * Precedence: env vars > in-code config > agent config > defaults
+ * (env vars and in-code config were already applied in normalize(), so we just check if value != default)
+ *
+ * @param {InstanaConfig} currentConfig - The current normalized config
+ * @param {InstanaConfig} externalConfig - Configuration received from agent
+ * @returns {InstanaConfig} - Updated config with agent values applied where appropriate
+ */
+module.exports.updateConfig = (currentConfig, externalConfig) => {
+  if (!externalConfig || typeof externalConfig !== 'object') {
+    return currentConfig;
+  }
+
+  // Apply agent tracing config if not already set
+  if (externalConfig.tracing) {
+    currentConfig.tracing = currentConfig.tracing || {};
+
+    // Extra HTTP headers - only apply if current value is still default
+    if (externalConfig.tracing.http && externalConfig.tracing.http.extraHttpHeadersToCapture) {
+      currentConfig.tracing.http = currentConfig.tracing.http || {};
+      const currentHeaders = currentConfig.tracing.http.extraHttpHeadersToCapture || [];
+      const defaultHeaders = defaults.tracing.http.extraHttpHeadersToCapture || [];
+
+      if (JSON.stringify(currentHeaders) === JSON.stringify(defaultHeaders)) {
+        currentConfig.tracing.http.extraHttpHeadersToCapture = externalConfig.tracing.http.extraHttpHeadersToCapture;
+      }
+    }
+
+    // Kafka trace correlation - only apply if current value is still default
+    if (externalConfig.tracing.kafka && externalConfig.tracing.kafka.traceCorrelation !== undefined) {
+      currentConfig.tracing.kafka = currentConfig.tracing.kafka || {};
+      const currentValue = currentConfig.tracing.kafka.traceCorrelation;
+      const defaultValue = defaults.tracing.kafka.traceCorrelation;
+
+      if (currentValue === defaultValue) {
+        currentConfig.tracing.kafka.traceCorrelation = externalConfig.tracing.kafka.traceCorrelation;
+      }
+    }
+
+    // Span batching - only apply if current value is still default
+    if (externalConfig.tracing.spanBatchingEnabled !== undefined) {
+      const currentValue = currentConfig.tracing.spanBatchingEnabled;
+      const defaultValue = defaults.tracing.spanBatchingEnabled;
+
+      if (currentValue === defaultValue) {
+        currentConfig.tracing.spanBatchingEnabled = externalConfig.tracing.spanBatchingEnabled;
+      }
+    }
+
+    // Ignore endpoints - only apply if current value is still default (empty object)
+    if (externalConfig.tracing.ignoreEndpoints) {
+      const currentValue = currentConfig.tracing.ignoreEndpoints || {};
+      const defaultValue = defaults.tracing.ignoreEndpoints || {};
+
+      if (Object.keys(currentValue).length === Object.keys(defaultValue).length) {
+        currentConfig.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(
+          externalConfig.tracing.ignoreEndpoints
+        );
+      }
+    }
+
+    // Stack trace configuration
+    if (externalConfig.tracing.global) {
+      currentConfig.tracing.global = currentConfig.tracing.global || {};
+
+      // Stack trace mode - only apply if current value is still default
+      if (externalConfig.tracing.global.stackTrace !== undefined) {
+        const currentValue = currentConfig.tracing.stackTrace;
+        const defaultValue = defaults.tracing.stackTrace;
+
+        if (currentValue === defaultValue) {
+          const validation = validateStackTraceMode(externalConfig.tracing.global.stackTrace);
+          if (validation.isValid) {
+            const normalized = configNormalizers.stackTrace.normalizeStackTraceModeFromAgent(
+              externalConfig.tracing.global.stackTrace
+            );
+            if (normalized !== null) {
+              currentConfig.tracing.stackTrace = normalized;
+            }
+          }
+        }
+      }
+
+      // Stack trace length - only apply if current value is still default
+      if (externalConfig.tracing.global.stackTraceLength !== undefined) {
+        const currentValue = currentConfig.tracing.stackTraceLength;
+        const defaultValue = defaults.tracing.stackTraceLength;
+
+        if (currentValue === defaultValue) {
+          const validation = validateStackTraceLength(externalConfig.tracing.global.stackTraceLength);
+          if (validation.isValid) {
+            const normalized = configNormalizers.stackTrace.normalizeStackTraceLengthFromAgent(
+              externalConfig.tracing.global.stackTraceLength
+            );
+            if (normalized !== null) {
+              currentConfig.tracing.stackTraceLength = normalized;
+            }
+          }
+        }
+      }
+    }
+
+    // Disable instrumentations - only apply if current value is still default (empty object)
+    if (externalConfig.tracing.disable) {
+      const currentValue = currentConfig.tracing.disable || {};
+      const defaultValue = defaults.tracing.disable || {};
+
+      if (JSON.stringify(currentValue) === JSON.stringify(defaultValue)) {
+        currentConfig.tracing.disable = configNormalizers.disable.normalizeExternalConfig({
+          tracing: { disable: externalConfig.tracing.disable }
+        });
+      }
+    }
+  }
+
+  return currentConfig;
+};
+
+/**
  * @param {InstanaConfig} config
  */
 function normalizeServiceName(config) {
