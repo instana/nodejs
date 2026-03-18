@@ -426,28 +426,36 @@ function normalizeTracingTransmission(config) {
 function normalizeTracingHttp(config) {
   config.tracing.http = config.tracing.http || {};
 
+  let headersFromEnv;
   if (process.env.INSTANA_EXTRA_HTTP_HEADERS) {
-    config.tracing.http.extraHttpHeadersToCapture = parseHeadersEnvVar(process.env.INSTANA_EXTRA_HTTP_HEADERS);
-    return;
+    headersFromEnv = parseHeadersEnvVar(process.env.INSTANA_EXTRA_HTTP_HEADERS);
   }
 
-  if (config.tracing.http.extraHttpHeadersToCapture) {
-    if (!Array.isArray(config.tracing.http.extraHttpHeadersToCapture)) {
-      logger.warn(
-        `Invalid configuration: config.tracing.http.extraHttpHeadersToCapture is not an array, the value will be ignored: ${JSON.stringify(
-          config.tracing.http.extraHttpHeadersToCapture
-        )}`
-      );
-      config.tracing.http.extraHttpHeadersToCapture = defaults.tracing.http.extraHttpHeadersToCapture;
-      return;
-    }
-    config.tracing.http.extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture.map(
-      s => s.toLowerCase() // Node.js HTTP API turns all incoming HTTP headers into lowercase.
+  const headersFromConfig = config.tracing.http.extraHttpHeadersToCapture;
+  const isValidEnvHeaders = Array.isArray(headersFromEnv) && headersFromEnv.length > 0;
+
+  const isValidConfigHeaders = Array.isArray(headersFromConfig) && headersFromConfig.length > 0;
+
+  let resolvedHeaders;
+
+  if (isValidEnvHeaders) {
+    resolvedHeaders = headersFromEnv;
+  } else if (isValidConfigHeaders) {
+    resolvedHeaders = headersFromConfig;
+  } else {
+    resolvedHeaders = defaults.tracing.http.extraHttpHeadersToCapture;
+  }
+
+  if (!Array.isArray(resolvedHeaders)) {
+    logger.warn(
+      `Invalid configuration: extraHttpHeadersToCapture must be an array. Falling back to defaults: ${JSON.stringify(
+        resolvedHeaders
+      )}`
     );
-    return;
+    resolvedHeaders = defaults.tracing.http.extraHttpHeadersToCapture;
   }
 
-  config.tracing.http.extraHttpHeadersToCapture = defaults.tracing.http.extraHttpHeadersToCapture;
+  config.tracing.http.extraHttpHeadersToCapture = resolvedHeaders.map(h => h.toLowerCase());
 }
 
 /**
