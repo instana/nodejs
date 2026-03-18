@@ -181,7 +181,7 @@ module.exports.normalize = (userConfig, defaultsOverride = {}) => {
  * @param {InstanaConfig} config
  */
 function normalizeServiceName(config) {
-  if (config.serviceName == null && process.env['INSTANA_SERVICE_NAME']) {
+  if (process.env['INSTANA_SERVICE_NAME']) {
     logger.info(
       `Service name has been configured via environment variable INSTANA_SERVICE_NAME: ${process.env['INSTANA_SERVICE_NAME']}`
     );
@@ -201,7 +201,8 @@ function normalizeServiceName(config) {
  * @param {InstanaConfig} config
  */
 function normalizePackageJsonPath(config) {
-  if (config.packageJsonPath == null && process.env['INSTANA_PACKAGE_JSON_PATH']) {
+  // Environment variable takes precedence over config
+  if (process.env['INSTANA_PACKAGE_JSON_PATH']) {
     logger.info(
       `Package JSON path has been configured via environment variable INSTANA_PACKAGE_JSON_PATH: ${process.env['INSTANA_PACKAGE_JSON_PATH']}`
     );

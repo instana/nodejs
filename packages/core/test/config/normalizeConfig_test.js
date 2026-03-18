@@ -62,6 +62,12 @@ describe('config.normalizeConfig', () => {
     expect(config.serviceName).to.equal('very-custom-service-name');
   });
 
+  it('should give precedence to INSTANA_SERVICE_NAME env var over config', () => {
+    process.env.INSTANA_SERVICE_NAME = 'env-service-name';
+    const config = coreConfig.normalize({ serviceName: 'config-service-name' });
+    expect(config.serviceName).to.equal('env-service-name');
+  });
+
   it('should not accept non-string service name', () => {
     const config = coreConfig.normalize({ serviceName: 42 });
     expect(config.serviceName).to.not.exist;
@@ -141,6 +147,12 @@ describe('config.normalizeConfig', () => {
   it('should enable immediate tracing activation via INSTANA_TRACE_IMMEDIATELY', () => {
     process.env.INSTANA_TRACE_IMMEDIATELY = 'true';
     const config = coreConfig.normalize();
+    expect(config.tracing.activateImmediately).to.be.true;
+  });
+
+  it('should give precedence to INSTANA_TRACE_IMMEDIATELY env var over config', () => {
+    process.env.INSTANA_TRACE_IMMEDIATELY = 'true';
+    const config = coreConfig.normalize({ tracing: { activateImmediately: false } });
     expect(config.tracing.activateImmediately).to.be.true;
   });
 
@@ -694,6 +706,12 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.useOpentelemetry).to.equal(false);
   });
 
+  it('should give precedence to INSTANA_DISABLE_USE_OPENTELEMETRY env var over config', () => {
+    process.env.INSTANA_DISABLE_USE_OPENTELEMETRY = 'true';
+    const config = coreConfig.normalize({ tracing: { useOpentelemetry: true } });
+    expect(config.tracing.useOpentelemetry).to.equal(false);
+  });
+
   it('should enable opentelemetry if INSTANA_DISABLE_USE_OPENTELEMETRY is set', () => {
     process.env.INSTANA_DISABLE_USE_OPENTELEMETRY = 'false';
     const config = coreConfig.normalize();
@@ -783,6 +801,12 @@ describe('config.normalizeConfig', () => {
     expect(config.packageJsonPath).to.equal('/my/path');
   });
 
+  it('should give precedence to INSTANA_PACKAGE_JSON_PATH env var over config', () => {
+    process.env.INSTANA_PACKAGE_JSON_PATH = '/env/path';
+    const config = coreConfig.normalize({ packageJsonPath: '/config/path' });
+    expect(config.packageJsonPath).to.equal('/env/path');
+  });
+
   it('should disable allow root exit span if config is set to false', () => {
     const config = coreConfig.normalize({
       tracing: { allowRootExitSpan: false }
@@ -808,6 +832,13 @@ describe('config.normalizeConfig', () => {
     const config = coreConfig.normalize();
     expect(config.tracing.allowRootExitSpan).to.equal(true);
   });
+
+  it('should give precedence to INSTANA_ALLOW_ROOT_EXIT_SPAN env var over config', () => {
+    process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN = 'true';
+    const config = coreConfig.normalize({ tracing: { allowRootExitSpan: false } });
+    expect(config.tracing.allowRootExitSpan).to.equal(true);
+  });
+
   it('should not set ignore endpoints tracers by default', () => {
     const config = coreConfig.normalize();
     expect(config.tracing.ignoreEndpoints).to.deep.equal({});
@@ -1004,6 +1035,32 @@ describe('config.normalizeConfig', () => {
       process.env.INSTANA_IGNORE_ENDPOINTS_PATH = filePaths.missingRootKeyYamlPath;
       const config = coreConfig.normalize();
       expect(config.tracing.ignoreEndpoints).to.deep.equal({});
+    });
+
+    it('should give precedence to INSTANA_IGNORE_ENDPOINTS over config', () => {
+      process.env.INSTANA_IGNORE_ENDPOINTS = 'redis:get,set';
+      const config = coreConfig.normalize({
+        tracing: {
+          ignoreEndpoints: { dynamodb: ['query'] }
+        }
+      });
+      // Should use basic env and ignore config
+      expect(config.tracing.ignoreEndpoints).to.deep.equal({
+        redis: [{ methods: ['get', 'set'] }]
+      });
+    });
+
+    it('should use config when no env variables are set', () => {
+      const config = coreConfig.normalize({
+        tracing: {
+          ignoreEndpoints: { dynamodb: ['query'], redis: ['get'] }
+        }
+      });
+      // Should use config
+      expect(config.tracing.ignoreEndpoints).to.deep.equal({
+        dynamodb: [{ methods: ['query'] }],
+        redis: [{ methods: ['get'] }]
+      });
     });
 
     it('should return false when INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION is not set', () => {
