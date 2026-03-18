@@ -182,7 +182,12 @@ module.exports.normalize = (userConfig, defaultsOverride = {}) => {
  */
 function normalizeServiceName(config) {
   if (config.serviceName == null && process.env['INSTANA_SERVICE_NAME']) {
+    logger.info(
+      `Service name has been configured via environment variable INSTANA_SERVICE_NAME: ${process.env['INSTANA_SERVICE_NAME']}`
+    );
     config.serviceName = process.env['INSTANA_SERVICE_NAME'];
+  } else if (config.serviceName != null && typeof config.serviceName === 'string') {
+    logger.info(`Service name has been configured via config: ${config.serviceName}`);
   }
   if (config.serviceName != null && typeof config.serviceName !== 'string') {
     logger.warn(
@@ -197,7 +202,12 @@ function normalizeServiceName(config) {
  */
 function normalizePackageJsonPath(config) {
   if (config.packageJsonPath == null && process.env['INSTANA_PACKAGE_JSON_PATH']) {
+    logger.info(
+      `Package JSON path has been configured via environment variable INSTANA_PACKAGE_JSON_PATH: ${process.env['INSTANA_PACKAGE_JSON_PATH']}`
+    );
     config.packageJsonPath = process.env['INSTANA_PACKAGE_JSON_PATH'];
+  } else if (config.packageJsonPath != null && typeof config.packageJsonPath === 'string') {
+    logger.info(`Package JSON path has been configured via config: ${config.packageJsonPath}`);
   }
   if (config.packageJsonPath != null && typeof config.packageJsonPath !== 'string') {
     logger.warn(
@@ -283,6 +293,7 @@ function normalizeAllowRootExitSpan(config) {
   const INSTANA_ALLOW_ROOT_EXIT_SPAN = process.env['INSTANA_ALLOW_ROOT_EXIT_SPAN']?.toLowerCase();
 
   if (INSTANA_ALLOW_ROOT_EXIT_SPAN === '1' || INSTANA_ALLOW_ROOT_EXIT_SPAN === 'true') {
+    logger.info('Allow root exit span has been enabled via environment variable INSTANA_ALLOW_ROOT_EXIT_SPAN.');
     config.tracing.allowRootExitSpan = true;
     return;
   }
@@ -291,6 +302,7 @@ function normalizeAllowRootExitSpan(config) {
     return;
   }
   if (config.tracing.allowRootExitSpan === true) {
+    logger.info('Allow root exit span has been enabled via config.');
     return;
   }
 
@@ -303,11 +315,13 @@ function normalizeAllowRootExitSpan(config) {
  */
 function normalizeUseOpentelemetry(config) {
   if (process.env['INSTANA_DISABLE_USE_OPENTELEMETRY'] === 'true') {
+    logger.info('OpenTelemetry usage has been disabled via environment variable INSTANA_DISABLE_USE_OPENTELEMETRY.');
     config.tracing.useOpentelemetry = false;
     return;
   }
 
   if (config.tracing.useOpentelemetry === false) {
+    logger.info('OpenTelemetry usage has been disabled via config.');
     return;
   }
   if (config.tracing.useOpentelemetry === true) {
@@ -363,6 +377,7 @@ function normalizeActivateImmediately(config) {
   }
 
   if (process.env['INSTANA_TRACE_IMMEDIATELY'] === 'true') {
+    logger.info('Tracing will activate immediately via environment variable INSTANA_TRACE_IMMEDIATELY.');
     config.tracing.activateImmediately = true;
     return;
   }
@@ -784,7 +799,11 @@ function normalizeIgnoreEndpoints(config) {
     config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.fromYaml(
       process.env.INSTANA_IGNORE_ENDPOINTS_PATH
     );
-    logger.debug(`Ignore endpoints have been configured: ${JSON.stringify(config.tracing.ignoreEndpoints)}`);
+    logger.debug(
+      `Ignore endpoints have been configured via environment variable INSTANA_IGNORE_ENDPOINTS_PATH: ${JSON.stringify(
+        config.tracing.ignoreEndpoints
+      )}`
+    );
     return;
   }
 
@@ -792,7 +811,11 @@ function normalizeIgnoreEndpoints(config) {
   // Introduced in Phase 1 for basic filtering based only on operations (e.g., `redis.get`, `kafka.consume`).
   if (process.env.INSTANA_IGNORE_ENDPOINTS) {
     config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.fromEnv(process.env.INSTANA_IGNORE_ENDPOINTS);
-    logger.debug(`Ignore endpoints have been configured: ${JSON.stringify(config.tracing.ignoreEndpoints)}`);
+    logger.debug(
+      `Ignore endpoints have been configured via environment variable INSTANA_IGNORE_ENDPOINTS:: ${JSON.stringify(
+        config.tracing.ignoreEndpoints
+      )}`
+    );
     return;
   }
 
