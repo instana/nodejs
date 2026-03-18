@@ -19,8 +19,8 @@ exports.init = function init(_config) {
  * Handles environment variables, and array inputs.
  *
  * Precedence order (highest to lowest):
- * 1. Environment variables (`INSTANA_TRACING_DISABLE*`)
- * 2. `tracing.disable` (in-code config)
+ * 1. Environment variables (`INSTANA_TRACING_DISABLE`)
+ * 2. In-code config (`tracing.disable`)
  *
  * @param {import('../../config').InstanaConfig} config
  */
