@@ -43,14 +43,6 @@ exports.init = function init(config) {
   disableInstrumentation.init(config);
 };
 
-/**
- * @param {import('@instana/collector/src/types/collector').AgentConfig} extraConfig
- */
-exports.activate = function activate(extraConfig) {
-  disableInstrumentation.activate(extraConfig);
-  spanFilter.activate(extraConfig);
-};
-
 exports.applicationUnderMonitoring = applicationUnderMonitoring;
 
 /**

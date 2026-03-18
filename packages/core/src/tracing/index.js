@@ -270,8 +270,7 @@ exports.activate = function activate(extraConfig = {}) {
       const coreConfig = require('../config');
       config = coreConfig.updateConfig(config, extraConfig);
     }
-    coreUtil.activate(extraConfig);
-    spanBuffer.activate(extraConfig);
+    spanBuffer.activate();
     opentracing.activate();
     sdk.activate();
 
@@ -291,7 +290,7 @@ exports.activate = function activate(extraConfig = {}) {
             instrumentationKey
           })
         ) {
-          instrumentationModules[instrumentationKey].activate(extraConfig);
+          instrumentationModules[instrumentationKey].activate(config);
         }
       });
     }

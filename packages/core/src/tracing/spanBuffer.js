@@ -102,10 +102,7 @@ exports.init = function init(config, _downstreamConnection) {
   }
 };
 
-/**
- * @param {import('@instana/collector/src/types/collector').AgentConfig} extraConfig
- */
-exports.activate = function activate(extraConfig) {
+exports.activate = function activate() {
   if (!downstreamConnection) {
     logger.error('No downstreamConnection has been set.');
     return;
@@ -118,9 +115,6 @@ exports.activate = function activate(extraConfig) {
     logger.error('downstreamConnection.sendSpans is not a function.');
     return;
   }
-
-  // Agent config is now applied in tracing.activate() via updateConfig()
-  // spanBatchingEnabled is already set in the config object with proper precedence
 
   isActive = true;
   if (activatedAt == null) {

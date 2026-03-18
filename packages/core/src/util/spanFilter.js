@@ -18,30 +18,6 @@ function init(config) {
   }
 }
 
-/**
- * @param {import('@instana/collector/src/types/collector').AgentConfig} extraConfig
- */
-function activate(extraConfig) {
-  /**
-   * Configuration priority order:
-   * 1. In-code configuration
-   * 2. Environment variables:
-   *    - `INSTANA_IGNORE_ENDPOINTS_PATH`
-   *    - `INSTANA_IGNORE_ENDPOINTS`
-   * 3. Agent configuration (loaded later)
-   *
-   * Since the agent configuration is loaded later, we first check
-   * that `ignoreEndpoints` MUST be empty. If yes, we
-   * are allowed to fall back to the agent's configuration (`extraConfig.tracing.ignoreEndpoints`).
-   *
-   * TODO: Perform a major refactoring of configuration priority ordering in INSTA-817.
-   */
-  const isIgnoreEndpointsEmpty = !ignoreEndpoints || Object.keys(ignoreEndpoints).length === 0;
-  if (isIgnoreEndpointsEmpty && extraConfig?.tracing?.ignoreEndpoints) {
-    ignoreEndpoints = extraConfig.tracing.ignoreEndpoints;
-  }
-}
-
 // List of span types to allowed to ignore
 const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka', 'node.http.server'];
 
@@ -232,4 +208,4 @@ function parseSpanEndpoints(endpoints) {
   return [];
 }
 
-module.exports = { applyFilter, activate, init, shouldIgnore };
+module.exports = { applyFilter, init, shouldIgnore };
