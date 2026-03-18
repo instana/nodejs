@@ -201,7 +201,6 @@ function normalizeServiceName(config) {
  * @param {InstanaConfig} config
  */
 function normalizePackageJsonPath(config) {
-  // Environment variable takes precedence over config
   if (process.env['INSTANA_PACKAGE_JSON_PATH']) {
     logger.info(
       `Package JSON path has been configured via environment variable INSTANA_PACKAGE_JSON_PATH: ${process.env['INSTANA_PACKAGE_JSON_PATH']}`
@@ -470,7 +469,7 @@ function normalizeTracingHttp(config) {
     );
     resolvedHeaders = defaults.tracing.http.extraHttpHeadersToCapture;
   }
-
+  // Node.js HTTP API turns all incoming HTTP headers into lowercase.
   config.tracing.http.extraHttpHeadersToCapture = resolvedHeaders.map(h => h.toLowerCase());
 }
 

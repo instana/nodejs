@@ -1044,7 +1044,6 @@ describe('config.normalizeConfig', () => {
           ignoreEndpoints: { dynamodb: ['query'] }
         }
       });
-      // Should use basic env and ignore config
       expect(config.tracing.ignoreEndpoints).to.deep.equal({
         redis: [{ methods: ['get', 'set'] }]
       });
@@ -1056,7 +1055,6 @@ describe('config.normalizeConfig', () => {
           ignoreEndpoints: { dynamodb: ['query'], redis: ['get'] }
         }
       });
-      // Should use config
       expect(config.tracing.ignoreEndpoints).to.deep.equal({
         dynamodb: [{ methods: ['query'] }],
         redis: [{ methods: ['get'] }]
