@@ -208,9 +208,9 @@ describe('config.normalizeConfig', () => {
   });
 
   it('should parse extra headers from env var', () => {
-    process.env.INSTANA_EXTRA_HTTP_HEADERS = ' X-Header-1 ; X-Header-2 , X-Whatever ';
+    process.env.INSTANA_EXTRA_HTTP_HEADERS = ' X-Header-1 ; X-hEADer-2 , X-Whatever ';
     const config = coreConfig.normalize();
-    expect(config.tracing.http.extraHttpHeadersToCapture).to.deep.equal(['X-Header-1', 'X-Header-2', 'X-Whatever']);
+    expect(config.tracing.http.extraHttpHeadersToCapture).to.deep.equal(['x-header-1', 'x-header-2', 'x-whatever']);
   });
 
   it('must use default extra headers (empty list) when INSTANA_EXTRA_HTTP_HEADERS is invalid', () => {
