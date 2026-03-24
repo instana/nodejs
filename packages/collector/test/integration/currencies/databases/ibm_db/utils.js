@@ -8,7 +8,7 @@ module.exports.dropOrphanedTestTables = function dropOrphanedTestTables(conn) {
   try {
     const tables = conn.querySync(
       "SELECT TABNAME FROM SYSCAT.TABLES WHERE TYPE = 'T' AND TABSCHEMA = CURRENT SCHEMA" +
-        ' AND CREATE_TIME < CURRENT TIMESTAMP - 30 MINUTES'
+        ' AND CREATE_TIME < CURRENT TIMESTAMP - 120 MINUTES'
     );
     if (!(tables instanceof Array)) return;
 
