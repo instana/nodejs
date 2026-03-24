@@ -127,7 +127,4 @@ spec:
           npm install npm@$(params.npm-version) -g
         fi
 
-         bin/clean-aws.js --service=s3
-        bin/clean-aws.js --service=dynamodb
-        bin/clean-aws.js --service=sqs
-        bin/clean-aws.js --service=kinesis
+        bin/clean-aws.js
