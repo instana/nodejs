@@ -98,7 +98,6 @@ function generateTestWrapper({
   mode,
   sourceDepth,
   nodeConstraint,
-  isOptional,
   verifyDependency
 }) {
   const currentYear = new Date().getFullYear();
@@ -234,21 +233,12 @@ mochaSuiteFn(suiteTitle, function () {
         '--no-package-lock --no-audit --prefix ./ --no-progress' :
         'npm install --no-package-lock --no-audit --prefix ./ --no-progress';
 
-      for (let attempt = 0; attempt < maxRetries; attempt++) {${
-        isOptional
-          ? `
-            const timeout = 5 * 60 * 1000;`
-          : `
-            const timeout = (120 + attempt * 30) * 1000;`
-      }
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        const timeout = 5 * 60 * 1000;
         try {
-          execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });${
-            isOptional
-              ? `
+          execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });
           if (!fs.existsSync(path.join(__dirname, 'node_modules', '${suiteName}'))) {
             throw new Error('${suiteName} not found after install');
-          }`
-              : ''
           }
           break;
         } catch (err) {
@@ -470,7 +460,6 @@ function main() {
             mode,
             sourceDepth: hasModes ? 2 : 1,
             nodeConstraint,
-            isOptional,
             verifyDependency: !skipValidation
           });
           const fileName = mode ? `${mode}.test.js` : 'default.test.js';
