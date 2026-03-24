@@ -89,7 +89,7 @@ async function connect(connectionStr) {
   /* eslint-disable no-console */
   connection = await connect(`${connStr1};DATABASE=${DB2_DATABASE_NAME}`);
 
-  dropOrphanedTestTables(connection, console.log);
+  dropOrphanedTestTables(connection);
 
   connection.querySync(`drop table ${DB2_TABLE_NAME_1} if exists`);
   const result = connection.querySync(

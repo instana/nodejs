@@ -61,7 +61,7 @@ async function connect(connectionStr) {
   await delay(1000 * 2);
   connection = await connect(`${connStr1};DATABASE=${DB2_DATABASE_NAME}`);
 
-  dropOrphanedTestTables(connection, log);
+  dropOrphanedTestTables(connection);
 
   connection.querySync(`drop table ${DB2_TABLE_NAME_1} if exists`);
 
