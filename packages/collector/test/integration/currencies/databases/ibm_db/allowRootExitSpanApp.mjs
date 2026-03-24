@@ -13,6 +13,10 @@ process.on('SIGTERM', () => {
 import { promisify } from 'util';
 import ibmdb from 'ibm_db';
 import delay from '@_local/core/test/test_util/delay.js';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const { dropOrphanedTestTables } = require('./utils.js');
 
 const logPrefix = `DB2 Allow Root Exit Span App (${process.pid}):\t`;
 
@@ -53,6 +57,8 @@ async function connect(connectionStr) {
 (async function openConnections() {
   await delay(1000 * 2);
   connection = await connect(`${connStr1};DATABASE=${DB2_DATABASE_NAME}`);
+
+  dropOrphanedTestTables(connection, log);
 
   connection.querySync(`drop table ${DB2_TABLE_NAME_1} if exists`);
 

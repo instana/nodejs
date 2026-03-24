@@ -20,6 +20,10 @@ import testUtil from '@_local/core/test/test_util/index.js';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import getAppPort from '@_local/collector/test/test_util/app-port.js';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const { dropOrphanedTestTables } = require('./utils.js');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -84,6 +88,8 @@ async function connect(connectionStr) {
 (async function openConnections() {
   /* eslint-disable no-console */
   connection = await connect(`${connStr1};DATABASE=${DB2_DATABASE_NAME}`);
+
+  dropOrphanedTestTables(connection, console.log);
 
   connection.querySync(`drop table ${DB2_TABLE_NAME_1} if exists`);
   const result = connection.querySync(
