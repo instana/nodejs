@@ -203,6 +203,10 @@ async function getTeamNodeAWSItems(apiInfo, skipDateCheck, criteria) {
 
   console.log(`Found ${rawItems[apiInfo.listProperty]?.length || 0} total items`);
 
+  if (!rawItems[apiInfo.listProperty] || rawItems[apiInfo.listProperty].length === 0) {
+    return Promise.resolve([]);
+  }
+
   const filteredItems = rawItems[apiInfo.listProperty].filter(item => {
     const _item = item[apiInfo.itemAttribute] || item;
     const searchCriteria = criteria || apiInfo.criteria;
@@ -212,8 +216,6 @@ async function getTeamNodeAWSItems(apiInfo, skipDateCheck, criteria) {
     }
     return _item.indexOf(searchCriteria) === 0;
   });
-
-  console.log(`Found ${filteredItems.length} items to cleanup`);
 
   const date = new Date();
   date.setHours(date.getHours() - 3);
