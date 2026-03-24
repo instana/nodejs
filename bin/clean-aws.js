@@ -213,7 +213,7 @@ async function getTeamNodeAWSItems(apiInfo, skipDateCheck, criteria) {
     return _item.indexOf(searchCriteria) === 0;
   });
 
-  console.log(`Found ${filteredItems.length} items matching criteria: ${criteria || apiInfo.criteria}`);
+  console.log(`Found ${filteredItems.length} items to cleanup`);
 
   const date = new Date();
   date.setHours(date.getHours() - 3);
