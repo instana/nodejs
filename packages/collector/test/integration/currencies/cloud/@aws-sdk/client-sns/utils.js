@@ -4,6 +4,7 @@
 
 'use strict';
 
+const uuid = require('uuid');
 const semver = require('semver');
 const awsSdk3 = require('@aws-sdk/client-sqs');
 const sns = require('@aws-sdk/client-sns');
@@ -86,10 +87,10 @@ exports.generateQueueName = () => {
   let queueName = 'nodejs-team';
 
   if (process.env.SQS_QUEUE_NAME) {
-    queueName = `${process.env.SQS_QUEUE_NAME}-${semver.major(process.versions.node)}`;
-  } else {
-    queueName = `${queueName}-${semver.major(process.versions.node)}`;
+    queueName = `${process.env.SQS_QUEUE_NAME}-v3-${semver.major(process.versions.node)}-${uuid.v4()}`;
   }
 
+  const randomNumber = Math.floor(Math.random() * 1000);
+  queueName = `${queueName}-${randomNumber}`;
   return queueName;
 };
