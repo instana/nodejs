@@ -298,7 +298,14 @@ function normalizeAllowRootExitSpan(config) {
     return;
   }
 
+  if (INSTANA_ALLOW_ROOT_EXIT_SPAN === '0' || INSTANA_ALLOW_ROOT_EXIT_SPAN === 'false') {
+    logger.debug('Allow root exit span has been disabled via environment variable INSTANA_ALLOW_ROOT_EXIT_SPAN.');
+    config.tracing.allowRootExitSpan = false;
+    return;
+  }
+
   if (config.tracing.allowRootExitSpan === false) {
+    logger.debug('Allow root exit span has been disabled via config.');
     return;
   }
   if (config.tracing.allowRootExitSpan === true) {
@@ -320,11 +327,18 @@ function normalizeUseOpentelemetry(config) {
     return;
   }
 
+  if (process.env['INSTANA_DISABLE_USE_OPENTELEMETRY'] === 'false') {
+    logger.debug('OpenTelemetry usage has been enabled via environment variable INSTANA_DISABLE_USE_OPENTELEMETRY.');
+    config.tracing.useOpentelemetry = true;
+    return;
+  }
+
   if (config.tracing.useOpentelemetry === false) {
     logger.debug('OpenTelemetry usage has been disabled via config.');
     return;
   }
   if (config.tracing.useOpentelemetry === true) {
+    logger.debug('OpenTelemetry usage has been enabled via config.');
     return;
   }
 
@@ -382,7 +396,16 @@ function normalizeActivateImmediately(config) {
     return;
   }
 
+  if (process.env['INSTANA_TRACE_IMMEDIATELY'] === 'false') {
+    logger.debug('Tracing will not activate immediately via environment variable INSTANA_TRACE_IMMEDIATELY.');
+    config.tracing.activateImmediately = false;
+    return;
+  }
+
   if (typeof config.tracing.activateImmediately === 'boolean') {
+    if (config.tracing.activateImmediately) {
+      logger.debug('Tracing will activate immediately via config.');
+    }
     return;
   }
 

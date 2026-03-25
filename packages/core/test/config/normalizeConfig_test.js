@@ -156,6 +156,12 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.activateImmediately).to.be.true;
   });
 
+  it('should give precedence to INSTANA_TRACE_IMMEDIATELY env var set to false over config set to true', () => {
+    process.env.INSTANA_TRACE_IMMEDIATELY = 'false';
+    const config = coreConfig.normalize({ tracing: { activateImmediately: true } });
+    expect(config.tracing.activateImmediately).to.be.false;
+  });
+
   it('should not enable immediate tracing activation when tracing is disabled in general', () => {
     const config = coreConfig.normalize({
       tracing: {
@@ -712,6 +718,12 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.useOpentelemetry).to.equal(false);
   });
 
+  it('should give precedence to INSTANA_DISABLE_USE_OPENTELEMETRY env var set to false over config set to false', () => {
+    process.env.INSTANA_DISABLE_USE_OPENTELEMETRY = 'false';
+    const config = coreConfig.normalize({ tracing: { useOpentelemetry: false } });
+    expect(config.tracing.useOpentelemetry).to.equal(true);
+  });
+
   it('should enable opentelemetry if INSTANA_DISABLE_USE_OPENTELEMETRY is set', () => {
     process.env.INSTANA_DISABLE_USE_OPENTELEMETRY = 'false';
     const config = coreConfig.normalize();
@@ -821,16 +833,22 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.allowRootExitSpan).to.equal(true);
   });
 
-  it('should disable allow root exit span if INSTANA_ALLOW_ROOT_EXIT_SPAN is not set', () => {
+  it('should disable allow root exit span if INSTANA_ALLOW_ROOT_EXIT_SPAN is set to false', () => {
     process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN = false;
     const config = coreConfig.normalize();
     expect(config.tracing.allowRootExitSpan).to.equal(false);
   });
 
-  it('should enable allow root exit span if INSTANA_ALLOW_ROOT_EXIT_SPAN is set', () => {
+  it('should enable allow root exit span if INSTANA_ALLOW_ROOT_EXIT_SPAN is set to true', () => {
     process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN = true;
     const config = coreConfig.normalize();
     expect(config.tracing.allowRootExitSpan).to.equal(true);
+  });
+
+  it('should give precedence to INSTANA_ALLOW_ROOT_EXIT_SPAN is set to false even config is set to true', () => {
+    process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN = 'false';
+    const config = coreConfig.normalize({ tracing: { allowRootExitSpan: true } });
+    expect(config.tracing.allowRootExitSpan).to.equal(false);
   });
 
   it('should give precedence to INSTANA_ALLOW_ROOT_EXIT_SPAN env var over config', () => {
