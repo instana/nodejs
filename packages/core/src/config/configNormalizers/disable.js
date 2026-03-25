@@ -119,7 +119,12 @@ function getDisableFromEnv() {
       return true;
     }
 
-    if (envVarValue !== 'false' && envVarValue !== '') {
+    if (envVarValue === 'false') {
+      logger?.debug('Tracing has been enabled via environment variable "INSTANA_TRACING_DISABLE=false".');
+      return {};
+    }
+
+    if (envVarValue !== '') {
       const categorized = categorizeDisableEntries(parseEnvVar(envVarValue));
       if (categorized?.instrumentations?.length) {
         disable.instrumentations = categorized.instrumentations;
