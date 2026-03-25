@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [5.4.1](https://github.com/instana/nodejs/compare/v5.4.0...v5.4.1) (2026-03-25)
+
+
+### Bug Fixes
+
+* bumped nan from 2.25.0 to 2.26.2 ([#2417](https://github.com/instana/nodejs/issues/2417)) ([62364be](https://github.com/instana/nodejs/commit/62364be41be488ea3fc4ca3f21fd40c0f6c487a6))
+* **lambda-extension:** recognized SSM parameter configuration ([#2426](https://github.com/instana/nodejs/issues/2426)) ([7440fd0](https://github.com/instana/nodejs/commit/7440fd0cddf05ee34337b54980fe0aba8f75e67d)), closes [#2425](https://github.com/instana/nodejs/issues/2425)
+
+
+
+
+
 # [5.4.0](https://github.com/instana/nodejs/compare/v5.3.0...v5.4.0) (2026-03-17)
 
 
