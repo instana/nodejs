@@ -14,6 +14,7 @@ module.exports.dropOrphanedTestTables = function dropOrphanedTestTables(conn) {
 
     tables
       .filter(row => /^[A-Z]{8}$/.test(row.TABNAME))
+      .slice(0, 50)
       .forEach(row => {
         try {
           const result = conn.querySync(`DROP TABLE ${row.TABNAME}`);
