@@ -634,7 +634,7 @@ function normalizeSpanBatchingEnabled(config) {
     config.tracing.spanBatchingEnabled = false;
     return;
   }
-  
+
   if (config.tracing.spanBatchingEnabled != null) {
     if (typeof config.tracing.spanBatchingEnabled === 'boolean') {
       if (config.tracing.spanBatchingEnabled) {
@@ -657,19 +657,12 @@ function normalizeSpanBatchingEnabled(config) {
  * @param {InstanaConfig} config
  */
 function normalizeDisableW3cTraceCorrelation(config) {
-  if (process.env['INSTANA_DISABLE_W3C_TRACE_CORRELATION'] === 'true') {
+  // any non-empty string will disable, even "false"!
+  if (process.env['INSTANA_DISABLE_W3C_TRACE_CORRELATION']) {
     logger.debug(
       'W3C trace correlation has been disabled via environment variable INSTANA_DISABLE_W3C_TRACE_CORRELATION.'
     );
     config.tracing.disableW3cTraceCorrelation = true;
-    return;
-  }
-
-  if (process.env['INSTANA_DISABLE_W3C_TRACE_CORRELATION'] === 'false') {
-    logger.debug(
-      'W3C trace correlation has been enabled via environment variable INSTANA_DISABLE_W3C_TRACE_CORRELATION.'
-    );
-    config.tracing.disableW3cTraceCorrelation = false;
     return;
   }
 
