@@ -217,6 +217,8 @@ async function getTeamNodeAWSItems(apiInfo, skipDateCheck, criteria) {
     return _item.indexOf(searchCriteria) === 0;
   });
 
+  console.log(`Found ${filteredItems.length} items to delete.`);
+
   const date = new Date();
   date.setHours(date.getHours() - 3);
 
