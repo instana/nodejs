@@ -16,10 +16,14 @@ module.exports.dropOrphanedTestTables = function dropOrphanedTestTables(conn) {
       .filter(row => /^[A-Z]{8}$/.test(row.TABNAME))
       .forEach(row => {
         try {
-          conn.querySync(`DROP TABLE ${row.TABNAME}`);
-          console.log(`Dropped orphaned table: ${row.TABNAME}`);
+          const result = conn.querySync(`DROP TABLE ${row.TABNAME}`);
+          if (result instanceof Array) {
+            console.log(`Dropped orphaned table: ${row.TABNAME}`);
+          } else {
+            console.log(`Failed to drop table ${row.TABNAME}: ${result}`);
+          }
         } catch (e) {
-          // ignore individual drop failures
+          console.log(`Failed to drop table ${row.TABNAME}: ${e.message}`);
         }
       });
   } catch (e) {
