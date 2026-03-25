@@ -1,7 +1,7 @@
 {
-    "dependencies": {
-        "@prisma/client": "latest",
-        "@prisma/adapter-pg": "latest",
-        "@prisma/adapter-better-sqlite3": "latest"
-    }
+  "dependencies": {
+    "@prisma/client": "CURRENCY_VERSION",
+    "@prisma/adapter-pg": "CURRENCY_VERSION",
+    "@prisma/adapter-better-sqlite3": "CURRENCY_VERSION"
+  }
 }
