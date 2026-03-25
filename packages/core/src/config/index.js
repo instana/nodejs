@@ -273,6 +273,12 @@ function normalizeTracingEnabled(config) {
     return;
   }
 
+  if (process.env['INSTANA_TRACING_DISABLE'] === 'false') {
+    logger.debug('Tracing has been enabled via environment variable INSTANA_TRACING_DISABLE.');
+    config.tracing.enabled = true;
+    return;
+  }
+
   if (config.tracing.enabled === false) {
     logger.debug('Not enabling tracing as it is explicitly disabled via config.');
     return;
@@ -623,6 +629,12 @@ function normalizeSpanBatchingEnabled(config) {
     return;
   }
 
+  if (process.env['INSTANA_SPANBATCHING_ENABLED'] === 'false') {
+    logger.debug('Span batching is disabled via environment variable INSTANA_SPANBATCHING_ENABLED.');
+    config.tracing.spanBatchingEnabled = false;
+    return;
+  }
+  
   if (config.tracing.spanBatchingEnabled != null) {
     if (typeof config.tracing.spanBatchingEnabled === 'boolean') {
       if (config.tracing.spanBatchingEnabled) {
@@ -645,11 +657,19 @@ function normalizeSpanBatchingEnabled(config) {
  * @param {InstanaConfig} config
  */
 function normalizeDisableW3cTraceCorrelation(config) {
-  if (process.env['INSTANA_DISABLE_W3C_TRACE_CORRELATION']) {
+  if (process.env['INSTANA_DISABLE_W3C_TRACE_CORRELATION'] === 'true') {
     logger.debug(
       'W3C trace correlation has been disabled via environment variable INSTANA_DISABLE_W3C_TRACE_CORRELATION.'
     );
     config.tracing.disableW3cTraceCorrelation = true;
+    return;
+  }
+
+  if (process.env['INSTANA_DISABLE_W3C_TRACE_CORRELATION'] === 'false') {
+    logger.debug(
+      'W3C trace correlation has been enabled via environment variable INSTANA_DISABLE_W3C_TRACE_CORRELATION.'
+    );
+    config.tracing.disableW3cTraceCorrelation = false;
     return;
   }
 
@@ -673,6 +693,12 @@ function normalizeTracingKafka(config) {
   ) {
     logger.debug('Kafka trace correlation has been disabled via environment variable INSTANA_KAFKA_TRACE_CORRELATION.');
     config.tracing.kafka.traceCorrelation = false;
+  } else if (
+    process.env['INSTANA_KAFKA_TRACE_CORRELATION'] != null &&
+    process.env['INSTANA_KAFKA_TRACE_CORRELATION'].toLowerCase() === 'true'
+  ) {
+    logger.debug('Kafka trace correlation has been enabled via environment variable INSTANA_KAFKA_TRACE_CORRELATION.');
+    config.tracing.kafka.traceCorrelation = true;
   } else if (config.tracing.kafka.traceCorrelation === false) {
     logger.debug('Kafka trace correlation has been disabled via config.');
   } else {
@@ -862,6 +888,14 @@ function normalizeIgnoreEndpointsDisableSuppression(config) {
     return;
   }
 
+  if (process.env['INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION'] === 'false') {
+    logger.debug(
+      'Enabling downstream suppression for ignoring endpoints feature via environment variable "INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION".'
+    );
+    config.tracing.ignoreEndpointsDisableSuppression = false;
+    return;
+  }
+
   if (config.tracing.ignoreEndpointsDisableSuppression === true) {
     logger.debug(
       'Disabling downstream suppression for ignoring endpoints feature as it is explicitly disabled via config.'
@@ -883,6 +917,12 @@ function normalizeDisableEOLEvents(config) {
       'Disabling EOL events as it is explicitly disabled via environment variable "INSTANA_TRACING_DISABLE_EOL_EVENTS".'
     );
     config.tracing.disableEOLEvents = true;
+    return;
+  }
+
+  if (process.env['INSTANA_TRACING_DISABLE_EOL_EVENTS'] === 'false') {
+    logger.debug('Enabling EOL events via environment variable "INSTANA_TRACING_DISABLE_EOL_EVENTS".');
+    config.tracing.disableEOLEvents = false;
     return;
   }
 
