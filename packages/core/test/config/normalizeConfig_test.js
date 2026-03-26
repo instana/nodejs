@@ -20,6 +20,7 @@ describe('config.normalizeConfig', () => {
   afterEach(resetEnv);
 
   function resetEnv() {
+    delete process.env.INSTANA_TRACING_DISABLE;
     delete process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS;
     delete process.env.INSTANA_TRACING_DISABLE_GROUPS;
     delete process.env.INSTANA_TRACING_DISABLE_EOL_EVENTS;
@@ -62,6 +63,12 @@ describe('config.normalizeConfig', () => {
     expect(config.serviceName).to.equal('very-custom-service-name');
   });
 
+  it('should give precedence to INSTANA_SERVICE_NAME env var over config', () => {
+    process.env.INSTANA_SERVICE_NAME = 'env-service-name';
+    const config = coreConfig.normalize({ serviceName: 'config-service-name' });
+    expect(config.serviceName).to.equal('env-service-name');
+  });
+
   it('should not accept non-string service name', () => {
     const config = coreConfig.normalize({ serviceName: 42 });
     expect(config.serviceName).to.not.exist;
@@ -95,6 +102,12 @@ describe('config.normalizeConfig', () => {
       }
     });
     expect(config.metrics.timeBetweenHealthcheckCalls).to.equal(9876);
+  });
+
+  it('should give precedence to INSTANA_TRACING_DISABLE env var set to false over config set to false', () => {
+    process.env.INSTANA_TRACING_DISABLE = 'false';
+    const config = coreConfig.normalize({ tracing: { enabled: false } });
+    expect(config.tracing.enabled).to.be.true;
   });
 
   it('should disable tracing with enabled: false', () => {
@@ -142,6 +155,18 @@ describe('config.normalizeConfig', () => {
     process.env.INSTANA_TRACE_IMMEDIATELY = 'true';
     const config = coreConfig.normalize();
     expect(config.tracing.activateImmediately).to.be.true;
+  });
+
+  it('should give precedence to INSTANA_TRACE_IMMEDIATELY env var over config', () => {
+    process.env.INSTANA_TRACE_IMMEDIATELY = 'true';
+    const config = coreConfig.normalize({ tracing: { activateImmediately: false } });
+    expect(config.tracing.activateImmediately).to.be.true;
+  });
+
+  it('should give precedence to INSTANA_TRACE_IMMEDIATELY env var set to false over config set to true', () => {
+    process.env.INSTANA_TRACE_IMMEDIATELY = 'false';
+    const config = coreConfig.normalize({ tracing: { activateImmediately: true } });
+    expect(config.tracing.activateImmediately).to.be.false;
   });
 
   it('should not enable immediate tracing activation when tracing is disabled in general', () => {
@@ -530,14 +555,14 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.disable.instrumentations).to.deep.equal(['graphql', 'grpc']);
   });
 
-  it('config should take precedence over INSTANA_TRACING_DISABLE_INSTRUMENTATIONS  for config', () => {
+  it('config should take precedence for INSTANA_TRACING_DISABLE_INSTRUMENTATIONS  over config', () => {
     process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'foo, bar';
     const config = coreConfig.normalize({
       tracing: {
         disable: { instrumentations: ['baz', 'fizz'] }
       }
     });
-    expect(config.tracing.disable.instrumentations).to.deep.equal(['baz', 'fizz']);
+    expect(config.tracing.disable.instrumentations).to.deep.equal(['foo', 'bar']);
   });
 
   it('should disable multiple instrumentations via env var INSTANA_TRACING_DISABLE_INSTRUMENTATIONS', () => {
@@ -573,14 +598,14 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.disable.groups).to.deep.equal(['frameworks', 'databases']);
   });
 
-  it('config should take precedence over INSTANA_TRACING_DISABLE_GROUPS when disabling groups', () => {
+  it('config should take precedence for INSTANA_TRACING_DISABLE_GROUPS when disabling groups', () => {
     process.env.INSTANA_TRACING_DISABLE_GROUPS = 'frameworks, databases';
     const config = coreConfig.normalize({
       tracing: {
         disable: { groups: ['LOGGING'] }
       }
     });
-    expect(config.tracing.disable.groups).to.deep.equal(['logging']);
+    expect(config.tracing.disable.groups).to.deep.equal(['frameworks', 'databases']);
   });
 
   it('should disable instrumentations and groups when both configured', () => {
@@ -633,6 +658,12 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.spanBatchingEnabled).to.be.true;
   });
 
+  it('should give precedence to INSTANA_SPANBATCHING_ENABLED env var set to false over config set to true', () => {
+    process.env.INSTANA_SPANBATCHING_ENABLED = 'false';
+    const config = coreConfig.normalize({ tracing: { spanBatchingEnabled: true } });
+    expect(config.tracing.spanBatchingEnabled).to.be.false;
+  });
+
   it('should ignore non-boolean span batching config value', () => {
     const config = coreConfig.normalize({ tracing: { spanBatchingEnabled: 73 } });
     // test needs to be updated once we switch to opt-out
@@ -658,8 +689,20 @@ describe('config.normalizeConfig', () => {
   });
 
   it('should disable W3C trace correlation via INSTANA_DISABLE_W3C_TRACE_CORRELATION', () => {
+    process.env.INSTANA_DISABLE_W3C_TRACE_CORRELATION = 'true';
+    const config = coreConfig.normalize();
+    expect(config.tracing.disableW3cTraceCorrelation).to.be.true;
+  });
+
+  it('should disable W3C trace correlation via INSTANA_DISABLE_W3C_TRACE_CORRELATION with any non-empty string', () => {
     process.env.INSTANA_DISABLE_W3C_TRACE_CORRELATION = 'false'; // any non-empty string will disable, even "false"!
     const config = coreConfig.normalize();
+    expect(config.tracing.disableW3cTraceCorrelation).to.be.true;
+  });
+
+  it('should give precedence to INSTANA_DISABLE_W3C_TRACE_CORRELATION env var over config', () => {
+    process.env.INSTANA_DISABLE_W3C_TRACE_CORRELATION = 'anything';
+    const config = coreConfig.normalize({ tracing: { disableW3cTraceCorrelation: false } });
     expect(config.tracing.disableW3cTraceCorrelation).to.be.true;
   });
 
@@ -672,6 +715,12 @@ describe('config.normalizeConfig', () => {
     process.env.INSTANA_KAFKA_TRACE_CORRELATION = 'false';
     const config = coreConfig.normalize();
     expect(config.tracing.kafka.traceCorrelation).to.be.false;
+  });
+
+  it('should give precedence to INSTANA_KAFKA_TRACE_CORRELATION env var set to true over config set to false', () => {
+    process.env.INSTANA_KAFKA_TRACE_CORRELATION = 'true';
+    const config = coreConfig.normalize({ tracing: { kafka: { traceCorrelation: false } } });
+    expect(config.tracing.kafka.traceCorrelation).to.be.true;
   });
 
   it('should disable opentelemetry if config is set', () => {
@@ -692,6 +741,18 @@ describe('config.normalizeConfig', () => {
     process.env.INSTANA_DISABLE_USE_OPENTELEMETRY = 'true';
     const config = coreConfig.normalize();
     expect(config.tracing.useOpentelemetry).to.equal(false);
+  });
+
+  it('should give precedence to INSTANA_DISABLE_USE_OPENTELEMETRY env var over config', () => {
+    process.env.INSTANA_DISABLE_USE_OPENTELEMETRY = 'true';
+    const config = coreConfig.normalize({ tracing: { useOpentelemetry: true } });
+    expect(config.tracing.useOpentelemetry).to.equal(false);
+  });
+
+  it('should give precedence to INSTANA_DISABLE_USE_OPENTELEMETRY env var set to false over config set to false', () => {
+    process.env.INSTANA_DISABLE_USE_OPENTELEMETRY = 'false';
+    const config = coreConfig.normalize({ tracing: { useOpentelemetry: false } });
+    expect(config.tracing.useOpentelemetry).to.equal(true);
   });
 
   it('should enable opentelemetry if INSTANA_DISABLE_USE_OPENTELEMETRY is set', () => {
@@ -783,6 +844,12 @@ describe('config.normalizeConfig', () => {
     expect(config.packageJsonPath).to.equal('/my/path');
   });
 
+  it('should give precedence to INSTANA_PACKAGE_JSON_PATH env var over config', () => {
+    process.env.INSTANA_PACKAGE_JSON_PATH = '/env/path';
+    const config = coreConfig.normalize({ packageJsonPath: '/config/path' });
+    expect(config.packageJsonPath).to.equal('/env/path');
+  });
+
   it('should disable allow root exit span if config is set to false', () => {
     const config = coreConfig.normalize({
       tracing: { allowRootExitSpan: false }
@@ -797,17 +864,30 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.allowRootExitSpan).to.equal(true);
   });
 
-  it('should disable allow root exit span if INSTANA_ALLOW_ROOT_EXIT_SPAN is not set', () => {
+  it('should disable allow root exit span if INSTANA_ALLOW_ROOT_EXIT_SPAN is set to false', () => {
     process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN = false;
     const config = coreConfig.normalize();
     expect(config.tracing.allowRootExitSpan).to.equal(false);
   });
 
-  it('should enable allow root exit span if INSTANA_ALLOW_ROOT_EXIT_SPAN is set', () => {
+  it('should enable allow root exit span if INSTANA_ALLOW_ROOT_EXIT_SPAN is set to true', () => {
     process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN = true;
     const config = coreConfig.normalize();
     expect(config.tracing.allowRootExitSpan).to.equal(true);
   });
+
+  it('should give precedence to INSTANA_ALLOW_ROOT_EXIT_SPAN is set to false even config is set to true', () => {
+    process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN = 'false';
+    const config = coreConfig.normalize({ tracing: { allowRootExitSpan: true } });
+    expect(config.tracing.allowRootExitSpan).to.equal(false);
+  });
+
+  it('should give precedence to INSTANA_ALLOW_ROOT_EXIT_SPAN env var over config', () => {
+    process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN = 'true';
+    const config = coreConfig.normalize({ tracing: { allowRootExitSpan: false } });
+    expect(config.tracing.allowRootExitSpan).to.equal(true);
+  });
+
   it('should not set ignore endpoints tracers by default', () => {
     const config = coreConfig.normalize();
     expect(config.tracing.ignoreEndpoints).to.deep.equal({});
@@ -1006,6 +1086,30 @@ describe('config.normalizeConfig', () => {
       expect(config.tracing.ignoreEndpoints).to.deep.equal({});
     });
 
+    it('should give precedence to INSTANA_IGNORE_ENDPOINTS over config', () => {
+      process.env.INSTANA_IGNORE_ENDPOINTS = 'redis:get,set';
+      const config = coreConfig.normalize({
+        tracing: {
+          ignoreEndpoints: { dynamodb: ['query'] }
+        }
+      });
+      expect(config.tracing.ignoreEndpoints).to.deep.equal({
+        redis: [{ methods: ['get', 'set'] }]
+      });
+    });
+
+    it('should use config when no env variables are set', () => {
+      const config = coreConfig.normalize({
+        tracing: {
+          ignoreEndpoints: { dynamodb: ['query'], redis: ['get'] }
+        }
+      });
+      expect(config.tracing.ignoreEndpoints).to.deep.equal({
+        dynamodb: [{ methods: ['query'] }],
+        redis: [{ methods: ['get'] }]
+      });
+    });
+
     it('should return false when INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION is not set', () => {
       const config = coreConfig.normalize();
       expect(config.tracing.ignoreEndpointsDisableSuppression).to.equal(false);
@@ -1032,6 +1136,18 @@ describe('config.normalizeConfig', () => {
       process.env.INSTANA_TRACING_DISABLE_EOL_EVENTS = 'false';
       const config = coreConfig.normalize();
       expect(config.tracing.disableEOLEvents).to.equal(false);
+    });
+
+    it('should give precedence to INSTANA_TRACING_DISABLE_EOL_EVENTS env var set to false over config set to true', () => {
+      process.env.INSTANA_TRACING_DISABLE_EOL_EVENTS = 'false';
+      const config = coreConfig.normalize({ tracing: { disableEOLEvents: true } });
+      expect(config.tracing.disableEOLEvents).to.equal(false);
+    });
+
+    it('should give precedence to INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION env var set to false over config set to true', () => {
+      process.env.INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION = 'false';
+      const config = coreConfig.normalize({ tracing: { ignoreEndpointsDisableSuppression: true } });
+      expect(config.tracing.ignoreEndpointsDisableSuppression).to.equal(false);
     });
 
     it('should return false when INSTANA_TRACING_DISABLE_EOL_EVENTS is set to any other value', () => {

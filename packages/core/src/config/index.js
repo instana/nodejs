@@ -181,8 +181,13 @@ module.exports.normalize = (userConfig, defaultsOverride = {}) => {
  * @param {InstanaConfig} config
  */
 function normalizeServiceName(config) {
-  if (config.serviceName == null && process.env['INSTANA_SERVICE_NAME']) {
+  if (process.env['INSTANA_SERVICE_NAME']) {
+    logger.debug(
+      `Service name has been configured via environment variable INSTANA_SERVICE_NAME: ${process.env['INSTANA_SERVICE_NAME']}`
+    );
     config.serviceName = process.env['INSTANA_SERVICE_NAME'];
+  } else if (config.serviceName != null && typeof config.serviceName === 'string') {
+    logger.debug(`Service name has been configured via config: ${config.serviceName}`);
   }
   if (config.serviceName != null && typeof config.serviceName !== 'string') {
     logger.warn(
@@ -196,8 +201,13 @@ function normalizeServiceName(config) {
  * @param {InstanaConfig} config
  */
 function normalizePackageJsonPath(config) {
-  if (config.packageJsonPath == null && process.env['INSTANA_PACKAGE_JSON_PATH']) {
+  if (process.env['INSTANA_PACKAGE_JSON_PATH']) {
+    logger.debug(
+      `Package JSON path has been configured via environment variable INSTANA_PACKAGE_JSON_PATH: ${process.env['INSTANA_PACKAGE_JSON_PATH']}`
+    );
     config.packageJsonPath = process.env['INSTANA_PACKAGE_JSON_PATH'];
+  } else if (config.packageJsonPath != null && typeof config.packageJsonPath === 'string') {
+    logger.debug(`Package JSON path has been configured via config: ${config.packageJsonPath}`);
   }
   if (config.packageJsonPath != null && typeof config.packageJsonPath !== 'string') {
     logger.warn(
@@ -257,8 +267,20 @@ function normalizeTracingConfig(config) {
  * @param {InstanaConfig} config
  */
 function normalizeTracingEnabled(config) {
+  if (process.env['INSTANA_TRACING_DISABLE'] === 'true') {
+    logger.debug('Not enabling tracing as it is explicitly disabled via environment variable INSTANA_TRACING_DISABLE.');
+    config.tracing.enabled = false;
+    return;
+  }
+
+  if (process.env['INSTANA_TRACING_DISABLE'] === 'false') {
+    logger.debug('Tracing has been enabled via environment variable INSTANA_TRACING_DISABLE.');
+    config.tracing.enabled = true;
+    return;
+  }
+
   if (config.tracing.enabled === false) {
-    logger.info('Not enabling tracing as it is explicitly disabled via config.');
+    logger.debug('Not enabling tracing as it is explicitly disabled via config.');
     return;
   }
   if (config.tracing.enabled === true) {
@@ -274,20 +296,30 @@ function normalizeTracingEnabled(config) {
  */
 
 function normalizeAllowRootExitSpan(config) {
+  const INSTANA_ALLOW_ROOT_EXIT_SPAN = process.env['INSTANA_ALLOW_ROOT_EXIT_SPAN']?.toLowerCase();
+
+  if (INSTANA_ALLOW_ROOT_EXIT_SPAN === '1' || INSTANA_ALLOW_ROOT_EXIT_SPAN === 'true') {
+    logger.debug('Allow root exit span has been enabled via environment variable INSTANA_ALLOW_ROOT_EXIT_SPAN.');
+    config.tracing.allowRootExitSpan = true;
+    return;
+  }
+
+  if (INSTANA_ALLOW_ROOT_EXIT_SPAN === '0' || INSTANA_ALLOW_ROOT_EXIT_SPAN === 'false') {
+    logger.debug('Allow root exit span has been disabled via environment variable INSTANA_ALLOW_ROOT_EXIT_SPAN.');
+    config.tracing.allowRootExitSpan = false;
+    return;
+  }
+
   if (config.tracing.allowRootExitSpan === false) {
+    logger.debug('Allow root exit span has been disabled via config.');
     return;
   }
   if (config.tracing.allowRootExitSpan === true) {
+    logger.debug('Allow root exit span has been enabled via config.');
     return;
   }
 
-  const INSTANA_ALLOW_ROOT_EXIT_SPAN = process.env['INSTANA_ALLOW_ROOT_EXIT_SPAN']?.toLowerCase();
-
-  config.tracing.allowRootExitSpan =
-    INSTANA_ALLOW_ROOT_EXIT_SPAN === '1' ||
-    INSTANA_ALLOW_ROOT_EXIT_SPAN === 'true' ||
-    defaults.tracing.allowRootExitSpan;
-  return;
+  config.tracing.allowRootExitSpan = defaults.tracing.allowRootExitSpan;
 }
 
 /**
@@ -295,14 +327,24 @@ function normalizeAllowRootExitSpan(config) {
  * @param {InstanaConfig} config
  */
 function normalizeUseOpentelemetry(config) {
+  if (process.env['INSTANA_DISABLE_USE_OPENTELEMETRY'] === 'true') {
+    logger.debug('OpenTelemetry usage has been disabled via environment variable INSTANA_DISABLE_USE_OPENTELEMETRY.');
+    config.tracing.useOpentelemetry = false;
+    return;
+  }
+
+  if (process.env['INSTANA_DISABLE_USE_OPENTELEMETRY'] === 'false') {
+    logger.debug('OpenTelemetry usage has been enabled via environment variable INSTANA_DISABLE_USE_OPENTELEMETRY.');
+    config.tracing.useOpentelemetry = true;
+    return;
+  }
+
   if (config.tracing.useOpentelemetry === false) {
+    logger.debug('OpenTelemetry usage has been disabled via config.');
     return;
   }
   if (config.tracing.useOpentelemetry === true) {
-    return;
-  }
-  if (process.env['INSTANA_DISABLE_USE_OPENTELEMETRY'] === 'true') {
-    config.tracing.useOpentelemetry = false;
+    logger.debug('OpenTelemetry usage has been enabled via config.');
     return;
   }
 
@@ -314,21 +356,21 @@ function normalizeUseOpentelemetry(config) {
  */
 function normalizeAutomaticTracingEnabled(config) {
   if (!config.tracing.enabled) {
-    logger.info('Not enabling automatic tracing as tracing in general is explicitly disabled via config.');
-    config.tracing.automaticTracingEnabled = false;
-    return;
-  }
-
-  if (config.tracing.automaticTracingEnabled === false) {
-    logger.info('Not enabling automatic tracing as it is explicitly disabled via config.');
+    logger.debug('Not enabling automatic tracing as tracing in general is explicitly disabled.');
     config.tracing.automaticTracingEnabled = false;
     return;
   }
 
   if (process.env['INSTANA_DISABLE_AUTO_INSTR'] === 'true') {
-    logger.info(
+    logger.debug(
       'Not enabling automatic tracing as it is explicitly disabled via environment variable INSTANA_DISABLE_AUTO_INSTR.'
     );
+    config.tracing.automaticTracingEnabled = false;
+    return;
+  }
+
+  if (config.tracing.automaticTracingEnabled === false) {
+    logger.debug('Not enabling automatic tracing as it is explicitly disabled via config.');
     config.tracing.automaticTracingEnabled = false;
     return;
   }
@@ -354,12 +396,22 @@ function normalizeActivateImmediately(config) {
     return;
   }
 
-  if (typeof config.tracing.activateImmediately === 'boolean') {
+  if (process.env['INSTANA_TRACE_IMMEDIATELY'] === 'true') {
+    logger.debug('Tracing will activate immediately via environment variable INSTANA_TRACE_IMMEDIATELY.');
+    config.tracing.activateImmediately = true;
     return;
   }
 
-  if (process.env['INSTANA_TRACE_IMMEDIATELY'] === 'true') {
-    config.tracing.activateImmediately = true;
+  if (process.env['INSTANA_TRACE_IMMEDIATELY'] === 'false') {
+    logger.debug('Tracing will not activate immediately via environment variable INSTANA_TRACE_IMMEDIATELY.');
+    config.tracing.activateImmediately = false;
+    return;
+  }
+
+  if (typeof config.tracing.activateImmediately === 'boolean') {
+    if (config.tracing.activateImmediately) {
+      logger.debug('Tracing will activate immediately via config.');
+    }
     return;
   }
 
@@ -418,32 +470,36 @@ function normalizeTracingTransmission(config) {
 function normalizeTracingHttp(config) {
   config.tracing.http = config.tracing.http || {};
 
-  let fromEnvVar;
+  let headersFromEnv;
   if (process.env.INSTANA_EXTRA_HTTP_HEADERS) {
-    fromEnvVar = parseHeadersEnvVar(process.env.INSTANA_EXTRA_HTTP_HEADERS);
+    headersFromEnv = parseHeadersEnvVar(process.env.INSTANA_EXTRA_HTTP_HEADERS);
   }
 
-  if (!config.tracing.http.extraHttpHeadersToCapture && !fromEnvVar) {
-    config.tracing.http.extraHttpHeadersToCapture = defaults.tracing.http.extraHttpHeadersToCapture;
-    return;
-  } else if (!config.tracing.http.extraHttpHeadersToCapture && fromEnvVar) {
-    config.tracing.http.extraHttpHeadersToCapture = fromEnvVar;
+  const headersFromConfig = config.tracing.http.extraHttpHeadersToCapture;
+  const isValidEnvHeaders = Array.isArray(headersFromEnv) && headersFromEnv.length > 0;
+
+  const isValidConfigHeaders = Array.isArray(headersFromConfig) && headersFromConfig.length > 0;
+
+  let resolvedHeaders;
+
+  if (isValidEnvHeaders) {
+    resolvedHeaders = headersFromEnv;
+  } else if (isValidConfigHeaders) {
+    resolvedHeaders = headersFromConfig;
+  } else {
+    resolvedHeaders = defaults.tracing.http.extraHttpHeadersToCapture;
   }
-  if (!Array.isArray(config.tracing.http.extraHttpHeadersToCapture)) {
+
+  if (!Array.isArray(resolvedHeaders)) {
     logger.warn(
-      `Invalid configuration: config.tracing.http.extraHttpHeadersToCapture is not an array, the value will be ignored: ${JSON.stringify(
-        config.tracing.http.extraHttpHeadersToCapture
+      `Invalid configuration: extraHttpHeadersToCapture must be an array. Falling back to defaults: ${JSON.stringify(
+        resolvedHeaders
       )}`
     );
-    config.tracing.http.extraHttpHeadersToCapture = defaults.tracing.http.extraHttpHeadersToCapture;
-    return;
+    resolvedHeaders = defaults.tracing.http.extraHttpHeadersToCapture;
   }
-
-  config.tracing.http.extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture.map(
-    (
-      s // Node.js HTTP API turns all incoming HTTP headers into lowercase.
-    ) => s.toLowerCase()
-  );
+  // Node.js HTTP API turns all incoming HTTP headers into lowercase.
+  config.tracing.http.extraHttpHeadersToCapture = resolvedHeaders.map(h => h.toLowerCase());
 }
 
 /**
@@ -567,10 +623,22 @@ function normalizeDisableTracing(config) {
  * @param {InstanaConfig} config
  */
 function normalizeSpanBatchingEnabled(config) {
+  if (process.env['INSTANA_SPANBATCHING_ENABLED'] === 'true') {
+    logger.debug('Span batching is enabled via environment variable INSTANA_SPANBATCHING_ENABLED.');
+    config.tracing.spanBatchingEnabled = true;
+    return;
+  }
+
+  if (process.env['INSTANA_SPANBATCHING_ENABLED'] === 'false') {
+    logger.debug('Span batching is disabled via environment variable INSTANA_SPANBATCHING_ENABLED.');
+    config.tracing.spanBatchingEnabled = false;
+    return;
+  }
+
   if (config.tracing.spanBatchingEnabled != null) {
     if (typeof config.tracing.spanBatchingEnabled === 'boolean') {
       if (config.tracing.spanBatchingEnabled) {
-        logger.info('Span batching is enabled via config.');
+        logger.debug('Span batching is enabled via config.');
       }
       return;
     } else {
@@ -582,12 +650,6 @@ function normalizeSpanBatchingEnabled(config) {
     }
   }
 
-  if (process.env['INSTANA_SPANBATCHING_ENABLED'] === 'true') {
-    logger.info('Span batching is enabled via environment variable INSTANA_SPANBATCHING_ENABLED.');
-    config.tracing.spanBatchingEnabled = true;
-    return;
-  }
-
   config.tracing.spanBatchingEnabled = defaults.tracing.spanBatchingEnabled;
 }
 
@@ -595,15 +657,17 @@ function normalizeSpanBatchingEnabled(config) {
  * @param {InstanaConfig} config
  */
 function normalizeDisableW3cTraceCorrelation(config) {
-  if (config.tracing.disableW3cTraceCorrelation === true) {
-    logger.info('W3C trace correlation has been disabled via config.');
-    return;
-  }
+  // any non-empty string will disable, even "false"!
   if (process.env['INSTANA_DISABLE_W3C_TRACE_CORRELATION']) {
-    logger.info(
+    logger.debug(
       'W3C trace correlation has been disabled via environment variable INSTANA_DISABLE_W3C_TRACE_CORRELATION.'
     );
     config.tracing.disableW3cTraceCorrelation = true;
+    return;
+  }
+
+  if (config.tracing.disableW3cTraceCorrelation === true) {
+    logger.debug('W3C trace correlation has been disabled via config.');
     return;
   }
 
@@ -616,14 +680,20 @@ function normalizeDisableW3cTraceCorrelation(config) {
 function normalizeTracingKafka(config) {
   config.tracing.kafka = config.tracing.kafka || {};
 
-  if (config.tracing.kafka.traceCorrelation === false) {
-    logger.info('Kafka trace correlation has been disabled via config.');
-  } else if (
+  if (
     process.env['INSTANA_KAFKA_TRACE_CORRELATION'] != null &&
     process.env['INSTANA_KAFKA_TRACE_CORRELATION'].toLowerCase() === 'false'
   ) {
-    logger.info('Kafka trace correlation has been disabled via environment variable INSTANA_KAFKA_TRACE_CORRELATION.');
+    logger.debug('Kafka trace correlation has been disabled via environment variable INSTANA_KAFKA_TRACE_CORRELATION.');
     config.tracing.kafka.traceCorrelation = false;
+  } else if (
+    process.env['INSTANA_KAFKA_TRACE_CORRELATION'] != null &&
+    process.env['INSTANA_KAFKA_TRACE_CORRELATION'].toLowerCase() === 'true'
+  ) {
+    logger.debug('Kafka trace correlation has been enabled via environment variable INSTANA_KAFKA_TRACE_CORRELATION.');
+    config.tracing.kafka.traceCorrelation = true;
+  } else if (config.tracing.kafka.traceCorrelation === false) {
+    logger.debug('Kafka trace correlation has been disabled via config.');
   } else {
     config.tracing.kafka.traceCorrelation = defaults.tracing.kafka.traceCorrelation;
   }
@@ -643,8 +713,8 @@ function normalizeSecrets(config) {
     fromEnvVar = parseSecretsEnvVar(process.env.INSTANA_SECRETS);
   }
 
-  config.secrets.matcherMode = config.secrets.matcherMode || fromEnvVar.matcherMode || defaults.secrets.matcherMode;
-  config.secrets.keywords = config.secrets.keywords || fromEnvVar.keywords || defaults.secrets.keywords;
+  config.secrets.matcherMode = fromEnvVar.matcherMode || config.secrets.matcherMode || defaults.secrets.matcherMode;
+  config.secrets.keywords = fromEnvVar.keywords || config.secrets.keywords || defaults.secrets.keywords;
 
   if (typeof config.secrets.matcherMode !== 'string') {
     logger.warn(
@@ -722,22 +792,28 @@ function parseSecretsEnvVar(envVarValue) {
  */
 function normalizeSingleValue(configValue, defaultValue, configPath, envVarKey) {
   const envVarVal = process.env[envVarKey];
-  let originalValue = configValue;
-  if (configValue == null && envVarVal == null) {
-    return defaultValue;
-  } else if (configValue == null && envVarVal != null) {
-    originalValue = envVarVal;
-    configValue = parseInt(originalValue, 10);
+
+  if (envVarVal != null) {
+    const parsed = parseInt(envVarVal, 10);
+    if (typeof parsed !== 'number' || isNaN(parsed)) {
+      logger.warn(
+        `The value of ${envVarKey} ("${envVarVal}") is not numerical or cannot be parsed to a numerical value. Assuming the default value ${defaultValue}.`
+      );
+      return defaultValue;
+    }
+    return parsed;
   }
 
-  if (typeof configValue !== 'number' || isNaN(configValue)) {
-    logger.warn(
-      `The value of ${configPath} (or ${envVarKey}) ("${originalValue}") is ' +
-        'not numerical or cannot be parsed to a numerical value. Assuming the default value ${defaultValue}.`
-    );
-    return defaultValue;
+  if (configValue != null) {
+    if (typeof configValue !== 'number' || isNaN(configValue)) {
+      logger.warn(
+        `The value of ${configPath} ("${configValue}") is not numerical or cannot be parsed to a numerical value. Assuming the default value ${defaultValue}.`
+      );
+      return defaultValue;
+    }
+    return configValue;
   }
-  return configValue;
+  return defaultValue;
 }
 /**
  * @param {InstanaConfig} config
@@ -758,30 +834,36 @@ function normalizeIgnoreEndpoints(config) {
     config.tracing.ignoreEndpoints = {};
     return;
   }
-  // Case 1: Use in-code configuration if available
-  if (Object.keys(ignoreEndpointsConfig).length) {
-    config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
-    logger.debug(`Ignore endpoints have been configured: ${JSON.stringify(config.tracing.ignoreEndpoints)}`);
-    return;
-  }
 
-  // Case 2: Load from a YAML file if `INSTANA_IGNORE_ENDPOINTS_PATH` is set
+  // Case 1: Load from a YAML file if `INSTANA_IGNORE_ENDPOINTS_PATH` is set (highest env var priority)
   // Introduced in Phase 2 for advanced filtering based on both methods and endpoints.
-  // Also supports basic filtering for endpoints.
   if (process.env.INSTANA_IGNORE_ENDPOINTS_PATH) {
     config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.fromYaml(
       process.env.INSTANA_IGNORE_ENDPOINTS_PATH
     );
-
-    logger.debug(`Ignore endpoints have been configured: ${JSON.stringify(config.tracing.ignoreEndpoints)}`);
+    logger.debug(
+      `Ignore endpoints have been configured via environment variable INSTANA_IGNORE_ENDPOINTS_PATH: ${JSON.stringify(
+        config.tracing.ignoreEndpoints
+      )}`
+    );
     return;
   }
 
-  // Case 3: Load from the `INSTANA_IGNORE_ENDPOINTS` environment variable
+  // Case 2: Load from the `INSTANA_IGNORE_ENDPOINTS` environment variable
   // Introduced in Phase 1 for basic filtering based only on operations (e.g., `redis.get`, `kafka.consume`).
-  // Provides a simple way to configure ignored operations via environment variables.
   if (process.env.INSTANA_IGNORE_ENDPOINTS) {
     config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.fromEnv(process.env.INSTANA_IGNORE_ENDPOINTS);
+    logger.debug(
+      `Ignore endpoints have been configured via environment variable INSTANA_IGNORE_ENDPOINTS:: ${JSON.stringify(
+        config.tracing.ignoreEndpoints
+      )}`
+    );
+    return;
+  }
+
+  // Case 3: Use in-code configuration if available
+  if (Object.keys(ignoreEndpointsConfig).length) {
+    config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
     logger.debug(`Ignore endpoints have been configured: ${JSON.stringify(config.tracing.ignoreEndpoints)}`);
     return;
   }
@@ -792,10 +874,25 @@ function normalizeIgnoreEndpoints(config) {
  */
 function normalizeIgnoreEndpointsDisableSuppression(config) {
   if (process.env['INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION'] === 'true') {
-    logger.info(
+    logger.debug(
       'Disabling downstream suppression for ignoring endpoints feature as it is explicitly disabled via environment variable "INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION".'
     );
     config.tracing.ignoreEndpointsDisableSuppression = true;
+    return;
+  }
+
+  if (process.env['INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION'] === 'false') {
+    logger.debug(
+      'Enabling downstream suppression for ignoring endpoints feature via environment variable "INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION".'
+    );
+    config.tracing.ignoreEndpointsDisableSuppression = false;
+    return;
+  }
+
+  if (config.tracing.ignoreEndpointsDisableSuppression === true) {
+    logger.debug(
+      'Disabling downstream suppression for ignoring endpoints feature as it is explicitly disabled via config.'
+    );
     return;
   }
 
@@ -809,10 +906,22 @@ function normalizeDisableEOLEvents(config) {
   config.tracing = config.tracing || {};
 
   if (process.env['INSTANA_TRACING_DISABLE_EOL_EVENTS'] === 'true') {
-    logger.info(
+    logger.debug(
       'Disabling EOL events as it is explicitly disabled via environment variable "INSTANA_TRACING_DISABLE_EOL_EVENTS".'
     );
     config.tracing.disableEOLEvents = true;
+    return;
+  }
+
+  // TODO: a helper function rewrite the pattern of env var parsing for boolean values, as this is repeated multiple times across different config options.
+  if (process.env['INSTANA_TRACING_DISABLE_EOL_EVENTS'] === 'false') {
+    logger.debug('Enabling EOL events via environment variable "INSTANA_TRACING_DISABLE_EOL_EVENTS".');
+    config.tracing.disableEOLEvents = false;
+    return;
+  }
+
+  if (config.tracing.disableEOLEvents === true) {
+    logger.debug('Disabling EOL events as it is explicitly disabled via config.');
     return;
   }
 
