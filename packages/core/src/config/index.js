@@ -13,7 +13,7 @@ const configValidators = require('./configValidators');
 const deepMerge = require('../util/deepMerge');
 const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE } = require('../util/constants');
 const { validateStackTraceMode, validateStackTraceLength } = require('./configValidators/stackTraceValidation');
-const { resolveNumericConfig } = require('./util');
+const util = require('./util');
 
 /**
  * @typedef {Object} InstanaTracingOption
@@ -218,7 +218,7 @@ function normalizeMetricsConfig(config) {
     config.metrics = {};
   }
 
-  config.metrics.transmissionDelay = resolveNumericConfig({
+  config.metrics.transmissionDelay = util.resolveNumericConfig({
     envVar: 'INSTANA_METRICS_TRANSMISSION_DELAY',
     configValue: config.metrics.transmissionDelay,
     defaultValue: defaults.metrics.transmissionDelay,
@@ -374,7 +374,7 @@ function normalizeActivateImmediately(config) {
 function normalizeTracingTransmission(config) {
   config.tracing.maxBufferedSpans = config.tracing.maxBufferedSpans || defaults.tracing.maxBufferedSpans;
 
-  config.tracing.transmissionDelay = resolveNumericConfig({
+  config.tracing.transmissionDelay = util.resolveNumericConfig({
     envVar: 'INSTANA_TRACING_TRANSMISSION_DELAY',
     configValue: config.tracing.transmissionDelay,
     defaultValue: defaults.tracing.transmissionDelay,
@@ -399,14 +399,14 @@ function normalizeTracingTransmission(config) {
     }
   }
 
-  config.tracing.forceTransmissionStartingAt = resolveNumericConfig({
+  config.tracing.forceTransmissionStartingAt = util.resolveNumericConfig({
     envVar: 'INSTANA_FORCE_TRANSMISSION_STARTING_AT',
     configValue: config.tracing.forceTransmissionStartingAt,
     defaultValue: defaults.tracing.forceTransmissionStartingAt,
     configPath: 'config.tracing.forceTransmissionStartingAt'
   });
 
-  config.tracing.initialTransmissionDelay = resolveNumericConfig({
+  config.tracing.initialTransmissionDelay = util.resolveNumericConfig({
     envVar: 'INSTANA_TRACING_INITIAL_TRANSMISSION_DELAY',
     configValue: config.tracing.initialTransmissionDelay,
     defaultValue: defaults.tracing.initialTransmissionDelay,

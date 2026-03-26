@@ -22,7 +22,7 @@ exports.init = _logger => {
  * @param {string} params.configPath
  * @returns {number}
  */
-function resolveNumericConfig({ envVar, configValue, defaultValue, configPath }) {
+exports.resolveNumericConfig = function resolveNumericConfig({ envVar, configValue, defaultValue, configPath }) {
   const envRaw = process.env[envVar];
 
   /** @param {number|string|null|undefined} val */
@@ -52,6 +52,4 @@ function resolveNumericConfig({ envVar, configValue, defaultValue, configPath })
   }
 
   return defaultValue;
-}
-
-exports.resolveNumericConfig = resolveNumericConfig;
+};
