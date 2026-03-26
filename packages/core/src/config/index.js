@@ -13,6 +13,7 @@ const configValidators = require('./configValidators');
 const deepMerge = require('../util/deepMerge');
 const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE } = require('../util/constants');
 const { validateStackTraceMode, validateStackTraceLength } = require('./configValidators/stackTraceValidation');
+const { resolveNumericConfig } = require('./util');
 
 /**
  * @typedef {Object} InstanaTracingOption
@@ -141,6 +142,7 @@ module.exports.configValidators = configValidators;
 module.exports.init = _logger => {
   logger = _logger;
   configNormalizers.init({ logger });
+  require('./util').init(logger);
 };
 
 /**
@@ -711,46 +713,6 @@ function parseSecretsEnvVar(envVarValue) {
     matcherMode: parsedMatcherMode,
     keywords: keywordsArray
   };
-}
-
-/**
- * @param {Object} params
- * @param {string} params.envVar
- * @param {number|string|undefined|null} params.configValue
- * @param {number} params.defaultValue
- * @param {string} params.configPath
- * @returns {number}
- */
-function resolveNumericConfig({ envVar, configValue, defaultValue, configPath }) {
-  const envRaw = process.env[envVar];
-
-  /** @param {number|string|null|undefined} val */
-  const toValidNumber = val => {
-    const num = typeof val === 'number' ? val : Number(val);
-    return isNaN(num) ? undefined : num;
-  };
-
-  if (envRaw != null) {
-    const envParsed = toValidNumber(envRaw);
-    if (envParsed !== undefined) {
-      return envParsed;
-    }
-
-    logger.warn(`Invalid numeric value from env:${envVar}: "${envRaw}". Ignoring and checking config value.`);
-  }
-
-  if (configValue != null) {
-    const configParsed = toValidNumber(configValue);
-    if (configParsed !== undefined) {
-      return configParsed;
-    }
-
-    logger.warn(
-      `Invalid numeric value for ${configPath} from config: "${configValue}". Falling back to default: ${defaultValue}.`
-    );
-  }
-
-  return defaultValue;
 }
 
 /**
