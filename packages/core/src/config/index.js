@@ -7,7 +7,6 @@
 
 'use strict';
 
-const supportedTracingVersion = require('../tracing/supportedVersion');
 const configNormalizers = require('./configNormalizers');
 const configValidators = require('./configValidators');
 const deepMerge = require('../util/deepMerge');
