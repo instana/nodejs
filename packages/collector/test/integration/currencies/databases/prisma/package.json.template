@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "@prisma/client": "CURRENCY_VERSION"
+    "@prisma/client": "{{CURRENCY_VERSION}}"
   }
 }

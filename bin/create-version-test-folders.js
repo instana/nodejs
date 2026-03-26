@@ -235,13 +235,9 @@ mochaSuiteFn(suiteTitle, function () {
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         const timeout = 5 * 60 * 1000;
         try {
-          execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });${
-            verifyDependency
-              ? `
+          execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });
           if (!fs.existsSync(path.join(__dirname, 'node_modules', '${suiteName}'))) {
             throw new Error('${suiteName} not found after install');
-          }`
-              : ''
           }
           break;
         } catch (err) {
@@ -298,9 +294,11 @@ function mergeTemplate(target, templatePath, currencyVersion) {
 
   let templateContent = fs.readFileSync(templatePath, 'utf8');
 
-  // Replace placeholders before parsing
+  // Replace {{CURRENCY_VERSION}} placeholder with actual version
+  // This allows template files to use {{CURRENCY_VERSION}} as a placeholder
+  // that gets replaced with the specific version being tested
   if (currencyVersion) {
-    templateContent = templateContent.replace(/CURRENCY_VERSION/g, currencyVersion);
+    templateContent = templateContent.replace(/\{\{CURRENCY_VERSION\}\}/g, currencyVersion);
   }
 
   const template = JSON.parse(templateContent);
@@ -322,8 +320,9 @@ function generatePackageJson(opts) {
   if (fs.existsSync(packageJsonTemplatePath)) {
     let templateContent = fs.readFileSync(packageJsonTemplatePath, 'utf8');
 
+    // Replace {{CURRENCY_VERSION}} placeholder with actual version in package.json template
     if (currencyVersion) {
-      templateContent = templateContent.replace(/CURRENCY_VERSION/g, currencyVersion);
+      templateContent = templateContent.replace(/\{\{CURRENCY_VERSION\}\}/g, currencyVersion);
     }
 
     const templatePackageJson = JSON.parse(templateContent);
