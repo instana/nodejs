@@ -552,6 +552,8 @@ function normalizeDisableW3cTraceCorrelation(config) {
  * @param {InstanaConfig} config
  */
 function normalizeTracingKafka(config) {
+  config.tracing.kafka = config.tracing.kafka || {};
+
   config.tracing.kafka.traceCorrelation = util.resolveBooleanConfig({
     envVar: 'INSTANA_KAFKA_TRACE_CORRELATION',
     configValue: config.tracing.kafka.traceCorrelation,
