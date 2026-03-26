@@ -201,7 +201,7 @@ const snsInfo = {
 async function getTeamNodeAWSItems(apiInfo, skipDateCheck, criteria) {
   const rawItems = await apiInfo.api.send(new apiInfo.listCommand({}));
 
-  console.log(`Found ${rawItems[apiInfo.listProperty]?.length || 0} total items`);
+  console.log(`Found ${rawItems[apiInfo.listProperty]?.length || 0} total ${apiInfo.name} resources in account`);
 
   if (!rawItems[apiInfo.listProperty] || rawItems[apiInfo.listProperty].length === 0) {
     return Promise.resolve([]);
@@ -217,7 +217,11 @@ async function getTeamNodeAWSItems(apiInfo, skipDateCheck, criteria) {
     return _item.indexOf(searchCriteria) === 0;
   });
 
-  console.log(`Found ${filteredItems.length} items to delete.`);
+  console.log(`Found ${filteredItems.length} resources matching criteria: '${criteria || apiInfo.criteria}'`);
+
+  if (filteredItems.length === 0) {
+    return Promise.resolve([]);
+  }
 
   const date = new Date();
   date.setHours(date.getHours() - 3);
@@ -228,10 +232,10 @@ async function getTeamNodeAWSItems(apiInfo, skipDateCheck, criteria) {
     });
 
     let itemsToDelete = _items;
-    // only remove items which are older than 3h
+    // only remove resources which are older than 3h
     if (!skipDateCheck) {
       itemsToDelete = _items.filter(item => item.ts < date.getTime());
-      console.log(`${itemsToDelete.length} items are older than 3 hours`);
+      console.log(`${itemsToDelete.length} of ${_items.length} resources are older than 3 hours`);
     }
 
     itemsToDelete = itemsToDelete.map(item => {
@@ -251,7 +255,7 @@ async function getTeamNodeAWSItems(apiInfo, skipDateCheck, criteria) {
       if (!skipDateCheck) {
         const beforeFilter = items2.length;
         items2 = items2.filter(item => item.ts < date.getTime());
-        console.log(`${items2.length} of ${beforeFilter} items are older than 3 hours`);
+        console.log(`${items2.length} of ${beforeFilter} resources are older than 3 hours`);
       }
 
       return items2.map(item => {
@@ -266,34 +270,34 @@ async function getTeamNodeAWSItems(apiInfo, skipDateCheck, criteria) {
 
 async function cleanupOldItems(apiInfo, dryRun, skipDateCheck, criteria) {
   try {
-    const items = await getTeamNodeAWSItems(apiInfo, skipDateCheck, criteria);
+    const resources = await getTeamNodeAWSItems(apiInfo, skipDateCheck, criteria);
 
-    if (items.length === 0) {
-      console.log(`${dryRun ? '[DRY RUN] ' : ''}No items to delete`);
+    if (resources.length === 0) {
+      console.log(`${dryRun ? '[DRY RUN] ' : ''}No resources to delete`);
       return;
     }
 
     if (dryRun) {
-      console.log(`[DRY RUN] Would have deleted ${items.length} items:`, items);
+      console.log(`[DRY RUN] Would have deleted ${resources.length} resources:`, resources);
       return;
     }
 
-    if (apiInfo.limit && items.length > apiInfo.limit) {
+    if (apiInfo.limit && resources.length > apiInfo.limit) {
       console.log(
-        `There are ${items.length} items eligible for deletion but the AWS service ` +
+        `There are ${resources.length} resources eligible for deletion but the AWS service ` +
           `is limited to delete ${apiInfo.limit} at once. ` +
-          `Deleting ${apiInfo.limit} items now. Run the script again to delete more.`
+          `Deleting ${apiInfo.limit} resources now. Run the script again to delete more.`
       );
-      items.splice(apiInfo.limit);
+      resources.splice(apiInfo.limit);
     }
 
-    const promises = items.map(async item => {
+    const promises = resources.map(async item => {
       await apiInfo.preConditionPromise(item.name);
       await apiInfo.api.send(new apiInfo.deleteCommand(apiInfo.getDeleteAttributes(item.name)));
     });
 
     await Promise.all(promises);
-    console.log(`Successfully deleted ${items.length} items:`, items);
+    console.log(`Successfully deleted ${resources.length} resources:`, resources);
   } catch (err) {
     console.log('Something went wrong:', err);
     throw err;
