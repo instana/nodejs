@@ -724,21 +724,25 @@ function parseSecretsEnvVar(envVarValue) {
 function resolveNumericConfig({ envVar, configValue, defaultValue, configPath }) {
   const envRaw = process.env[envVar];
 
-  const parse = val => (typeof val === 'number' ? val : Number(val));
+  /** @param {number|string|null|undefined} val */
+  const toValidNumber = val => {
+    const num = typeof val === 'number' ? val : Number(val);
+    return isNaN(num) ? undefined : num;
+  };
 
   if (envRaw != null) {
-    const parsedEnv = parse(envRaw);
-    if (!isNaN(parsedEnv)) {
-      return parsedEnv;
+    const envParsed = toValidNumber(envRaw);
+    if (envParsed !== undefined) {
+      return envParsed;
     }
 
     logger.warn(`Invalid numeric value from env:${envVar}: "${envRaw}". Ignoring and checking config value.`);
   }
 
   if (configValue != null) {
-    const parsedConfig = parse(configValue);
-    if (!isNaN(parsedConfig)) {
-      return parsedConfig;
+    const configParsed = toValidNumber(configValue);
+    if (configParsed !== undefined) {
+      return configParsed;
     }
 
     logger.warn(
