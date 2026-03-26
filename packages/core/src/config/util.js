@@ -110,8 +110,8 @@ exports.resolveBooleanConfig = function resolveBooleanConfig({ envVar, configVal
 };
 
 /**
- * Resolve a boolean configuration value with inverted environment variable logic.
- * Used for "disable" flags where env var presence means false.
+ * special cases:
+ * eg: "INSTANA_DISABLE_USE_OPENTELEMETRY" where env var presence means false in the config "useOpentelemetry".
  *
  * @param {Object} params
  * @param {string} params.envVar - Environment variable name (e.g., INSTANA_DISABLE_X)
@@ -147,8 +147,8 @@ exports.resolveBooleanConfigWithInvertedEnv = function resolveBooleanConfigWithI
 };
 
 /**
- * Resolve a boolean configuration with support for truthy environment variable check.
  * Returns true if env var exists and is truthy, otherwise uses config or default.
+ * eg: "INSTANA_DISABLE_W3C_TRACE_CORRELATION" where env var presence means true in the config .
  *
  * @param {Object} params
  * @param {string} params.envVar - Environment variable name

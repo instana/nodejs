@@ -259,15 +259,12 @@ function normalizeTracingConfig(config) {
  * @param {InstanaConfig} config
  */
 function normalizeTracingEnabled(config) {
-  if (config.tracing.enabled === false) {
-    logger.info('Not enabling tracing as it is explicitly disabled via config.');
-    return;
-  }
-  if (config.tracing.enabled === true) {
-    return;
-  }
-
-  config.tracing.enabled = defaults.tracing.enabled;
+  config.tracing.enabled = util.resolveBooleanConfigWithInvertedEnv({
+    envVar: 'INSTANA_TRACING_DISABLE',
+    configValue: config.tracing.enabled,
+    defaultValue: defaults.tracing.enabled,
+    configPath: 'config.tracing.enabled'
+  });
 }
 
 /**
@@ -307,20 +304,6 @@ function normalizeAutomaticTracingEnabled(config) {
     return;
   }
 
-  if (config.tracing.automaticTracingEnabled === false) {
-    logger.info('Not enabling automatic tracing as it is explicitly disabled via config.');
-    config.tracing.automaticTracingEnabled = false;
-    return;
-  }
-
-  if (process.env['INSTANA_DISABLE_AUTO_INSTR'] === 'true') {
-    logger.info(
-      'Not enabling automatic tracing as it is explicitly disabled via environment variable INSTANA_DISABLE_AUTO_INSTR.'
-    );
-    config.tracing.automaticTracingEnabled = false;
-    return;
-  }
-
   if (!supportedTracingVersion(process.versions.node)) {
     logger.warn(
       'Not enabling automatic tracing, this is an unsupported version of Node.js. ' +
@@ -330,7 +313,12 @@ function normalizeAutomaticTracingEnabled(config) {
     return;
   }
 
-  config.tracing.automaticTracingEnabled = defaults.tracing.automaticTracingEnabled;
+  config.tracing.automaticTracingEnabled = util.resolveBooleanConfigWithInvertedEnv({
+    envVar: 'INSTANA_DISABLE_AUTO_INSTR',
+    configValue: config.tracing.automaticTracingEnabled,
+    defaultValue: defaults.tracing.automaticTracingEnabled,
+    configPath: 'config.tracing.automaticTracingEnabled'
+  });
 }
 
 /**
