@@ -1154,20 +1154,16 @@
     "versions": [
       {
         "v": "7.5.0",
-        "node": ">=20.19.0 <23 || >=24",
-        "skipValidation": true
+        "node": ">=20.19.0 <23 || >=24"
       },
       {
-        "v": "6.19.0",
-        "skipValidation": true
+        "v": "6.19.0"
       },
       {
-        "v": "4.16.2",
-        "skipValidation": true
+        "v": "4.16.2"
       },
       {
-        "v": "4.5.0",
-        "skipValidation": true
+        "v": "4.5.0"
       }
     ]
   },
