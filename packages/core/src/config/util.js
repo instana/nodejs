@@ -83,17 +83,6 @@ function parseBooleanFromEnv(envValue) {
  * @returns {boolean}
  */
 exports.resolveBooleanConfig = function resolveBooleanConfig({ envVar, configValue, defaultValue, configPath }) {
-  const envValue = process.env[envVar];
-  const envParsed = parseBooleanFromEnv(envValue);
-
-  if (envParsed !== undefined) {
-    return envParsed;
-  }
-
-  if (envValue != null) {
-    logger.warn(`Invalid boolean value for ${envValue}: "${envValue}".`);
-  }
-
   if (typeof configValue === 'boolean') {
     return configValue;
   }
@@ -104,6 +93,17 @@ exports.resolveBooleanConfig = function resolveBooleanConfig({ envVar, configVal
         configValue
       )}. Falling back to default: ${defaultValue}.`
     );
+  }
+
+  const envValue = process.env[envVar];
+  const envParsed = parseBooleanFromEnv(envValue);
+
+  if (envParsed !== undefined) {
+    return envParsed;
+  }
+
+  if (envValue != null) {
+    logger.warn(`Invalid boolean value for ${envValue}: "${envValue}".`);
   }
 
   return defaultValue;
@@ -126,13 +126,13 @@ exports.resolveBooleanConfigWithInvertedEnv = function resolveBooleanConfigWithI
   defaultValue,
   configPath
 }) {
+  if (typeof configValue === 'boolean') {
+    return configValue;
+  }
+
   const envValue = process.env[envVar];
   if (envValue === 'true') {
     return false;
-  }
-
-  if (typeof configValue === 'boolean') {
-    return configValue;
   }
 
   if (configValue != null && configPath) {
@@ -161,13 +161,13 @@ exports.resolveBooleanConfigWithTruthyEnv = function resolveBooleanConfigWithTru
   configValue,
   defaultValue
 }) {
+  if (typeof configValue === 'boolean') {
+    return configValue;
+  }
+
   const envValue = process.env[envVar];
   if (envValue) {
     return true;
-  }
-
-  if (typeof configValue === 'boolean') {
-    return configValue;
   }
 
   return defaultValue;
