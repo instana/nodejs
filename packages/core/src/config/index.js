@@ -13,6 +13,7 @@ const configValidators = require('./configValidators');
 const deepMerge = require('../util/deepMerge');
 const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE } = require('../util/constants');
 const { validateStackTraceMode, validateStackTraceLength } = require('./configValidators/stackTraceValidation');
+const util = require('./util');
 
 /**
  * @typedef {Object} InstanaTracingOption
@@ -143,6 +144,7 @@ module.exports.configValidators = configValidators;
 module.exports.init = _logger => {
   logger = _logger;
   configNormalizers.init({ logger });
+  util.init(logger);
 };
 
 /**
@@ -218,12 +220,12 @@ function normalizeMetricsConfig(config) {
     config.metrics = {};
   }
 
-  config.metrics.transmissionDelay = normalizeSingleValue(
-    config.metrics.transmissionDelay,
-    defaults.metrics.transmissionDelay,
-    'config.metrics.transmissionDelay',
-    'INSTANA_METRICS_TRANSMISSION_DELAY'
-  );
+  config.metrics.transmissionDelay = util.resolveNumericConfig({
+    envVar: 'INSTANA_METRICS_TRANSMISSION_DELAY',
+    configValue: config.metrics.transmissionDelay,
+    defaultValue: defaults.metrics.transmissionDelay,
+    configPath: 'config.metrics.transmissionDelay'
+  });
 
   // Validate max value for transmissionDelay
   if (config.metrics.transmissionDelay > transmissionDelayMaxValue) {
@@ -382,12 +384,12 @@ function normalizeActivateImmediately(config) {
 function normalizeTracingTransmission(config) {
   config.tracing.maxBufferedSpans = config.tracing.maxBufferedSpans || defaults.tracing.maxBufferedSpans;
 
-  config.tracing.transmissionDelay = normalizeSingleValue(
-    config.tracing.transmissionDelay,
-    defaults.tracing.transmissionDelay,
-    'config.tracing.transmissionDelay',
-    'INSTANA_TRACING_TRANSMISSION_DELAY'
-  );
+  config.tracing.transmissionDelay = util.resolveNumericConfig({
+    envVar: 'INSTANA_TRACING_TRANSMISSION_DELAY',
+    configValue: config.tracing.transmissionDelay,
+    defaultValue: defaults.tracing.transmissionDelay,
+    configPath: 'config.tracing.transmissionDelay'
+  });
 
   // DEPRECATED! This was never documented, but we shared it with a customer.
   if (process.env['INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS']) {
@@ -407,19 +409,19 @@ function normalizeTracingTransmission(config) {
     }
   }
 
-  config.tracing.forceTransmissionStartingAt = normalizeSingleValue(
-    config.tracing.forceTransmissionStartingAt,
-    defaults.tracing.forceTransmissionStartingAt,
-    'config.tracing.forceTransmissionStartingAt',
-    'INSTANA_FORCE_TRANSMISSION_STARTING_AT'
-  );
+  config.tracing.forceTransmissionStartingAt = util.resolveNumericConfig({
+    envVar: 'INSTANA_FORCE_TRANSMISSION_STARTING_AT',
+    configValue: config.tracing.forceTransmissionStartingAt,
+    defaultValue: defaults.tracing.forceTransmissionStartingAt,
+    configPath: 'config.tracing.forceTransmissionStartingAt'
+  });
 
-  config.tracing.initialTransmissionDelay = normalizeSingleValue(
-    config.tracing.initialTransmissionDelay,
-    defaults.tracing.initialTransmissionDelay,
-    'config.tracing.initialTransmissionDelay',
-    'INSTANA_TRACING_INITIAL_TRANSMISSION_DELAY'
-  );
+  config.tracing.initialTransmissionDelay = util.resolveNumericConfig({
+    envVar: 'INSTANA_TRACING_INITIAL_TRANSMISSION_DELAY',
+    configValue: config.tracing.initialTransmissionDelay,
+    defaultValue: defaults.tracing.initialTransmissionDelay,
+    configPath: 'config.tracing.initialTransmissionDelay'
+  });
 }
 
 /**
@@ -723,32 +725,6 @@ function parseSecretsEnvVar(envVarValue) {
   };
 }
 
-/**
- * @param {*} configValue
- * @param {*} defaultValue
- * @param {string} configPath
- * @param {string} envVarKey
- * @returns {*}
- */
-function normalizeSingleValue(configValue, defaultValue, configPath, envVarKey) {
-  const envVarVal = process.env[envVarKey];
-  let originalValue = configValue;
-  if (configValue == null && envVarVal == null) {
-    return defaultValue;
-  } else if (configValue == null && envVarVal != null) {
-    originalValue = envVarVal;
-    configValue = parseInt(originalValue, 10);
-  }
-
-  if (typeof configValue !== 'number' || isNaN(configValue)) {
-    logger.warn(
-      `The value of ${configPath} (or ${envVarKey}) ("${originalValue}") is ' +
-        'not numerical or cannot be parsed to a numerical value. Assuming the default value ${defaultValue}.`
-    );
-    return defaultValue;
-  }
-  return configValue;
-}
 /**
  * @param {InstanaConfig} config
  */
