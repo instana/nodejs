@@ -304,15 +304,6 @@ function normalizeAutomaticTracingEnabled(config) {
     return;
   }
 
-  if (!supportedTracingVersion(process.versions.node)) {
-    logger.warn(
-      'Not enabling automatic tracing, this is an unsupported version of Node.js. ' +
-        'See: https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-support-information#supported-nodejs-versions'
-    );
-    config.tracing.automaticTracingEnabled = false;
-    return;
-  }
-
   config.tracing.automaticTracingEnabled = util.resolveBooleanConfigWithInvertedEnv({
     envVar: 'INSTANA_DISABLE_AUTO_INSTR',
     configValue: config.tracing.automaticTracingEnabled,
