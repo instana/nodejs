@@ -13,9 +13,7 @@ process.on('SIGTERM', () => {
 import { promisify } from 'util';
 import ibmdb from 'ibm_db';
 import delay from '@_local/core/test/test_util/delay.js';
-import { createRequire } from 'module';
 
-const require = createRequire(import.meta.url);
 const logPrefix = `DB2 Allow Root Exit Span App (${process.pid}):\t`;
 
 const DB2_DATABASE_NAME = process.env.DB2_DATABASE_NAME || 'nodedb';
