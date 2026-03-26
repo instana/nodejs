@@ -53,3 +53,122 @@ exports.resolveNumericConfig = function resolveNumericConfig({ envVar, configVal
 
   return defaultValue;
 };
+
+/**
+ * @param {string|undefined} envValue
+ * @returns {boolean|undefined}
+ */
+function parseBooleanFromEnv(envValue) {
+  if (envValue == null) {
+    return undefined;
+  }
+
+  const normalized = envValue.toLowerCase();
+  if (normalized === 'true' || normalized === '1') {
+    return true;
+  }
+  if (normalized === 'false' || normalized === '0') {
+    return false;
+  }
+
+  return undefined;
+}
+
+/**
+ * @param {Object} params
+ * @param {string} params.envVar
+ * @param {boolean|undefined|null} params.configValue
+ * @param {boolean} params.defaultValue
+ * @param {string} [params.configPath]
+ * @returns {boolean}
+ */
+exports.resolveBooleanConfig = function resolveBooleanConfig({ envVar, configValue, defaultValue, configPath }) {
+  const envValue = process.env[envVar];
+  const envParsed = parseBooleanFromEnv(envValue);
+
+  if (envParsed !== undefined) {
+    return envParsed;
+  }
+
+  if (envValue != null) {
+    logger.warn(`Invalid boolean value for ${envValue}: "${envValue}".`);
+  }
+
+  if (typeof configValue === 'boolean') {
+    return configValue;
+  }
+
+  if (configValue != null && configPath) {
+    logger.warn(
+      `Invalid configuration: ${configPath} is not a boolean value, will be ignored: ${JSON.stringify(
+        configValue
+      )}. Falling back to default: ${defaultValue}.`
+    );
+  }
+
+  return defaultValue;
+};
+
+/**
+ * Resolve a boolean configuration value with inverted environment variable logic.
+ * Used for "disable" flags where env var presence means false.
+ *
+ * @param {Object} params
+ * @param {string} params.envVar - Environment variable name (e.g., INSTANA_DISABLE_X)
+ * @param {boolean|undefined|null} params.configValue - Config value
+ * @param {boolean} params.defaultValue - Default value
+ * @param {string} [params.configPath] - Config path for logging (optional)
+ * @returns {boolean}
+ */
+exports.resolveBooleanConfigWithInvertedEnv = function resolveBooleanConfigWithInvertedEnv({
+  envVar,
+  configValue,
+  defaultValue,
+  configPath
+}) {
+  const envValue = process.env[envVar];
+  if (envValue === 'true') {
+    return false;
+  }
+
+  if (typeof configValue === 'boolean') {
+    return configValue;
+  }
+
+  if (configValue != null && configPath) {
+    logger.warn(
+      `Invalid configuration: ${configPath} is not a boolean value, will be ignored: ${JSON.stringify(
+        configValue
+      )}. Falling back to default: ${defaultValue}.`
+    );
+  }
+
+  return defaultValue;
+};
+
+/**
+ * Resolve a boolean configuration with support for truthy environment variable check.
+ * Returns true if env var exists and is truthy, otherwise uses config or default.
+ *
+ * @param {Object} params
+ * @param {string} params.envVar - Environment variable name
+ * @param {boolean|undefined|null} params.configValue - Config value
+ * @param {boolean} params.defaultValue - Default value
+ * @returns {boolean}
+ */
+exports.resolveBooleanConfigWithTruthyEnv = function resolveBooleanConfigWithTruthyEnv({
+  envVar,
+  configValue,
+  defaultValue
+}) {
+  const envValue = process.env[envVar];
+  if (envValue) {
+    return true;
+  }
+
+  if (typeof configValue === 'boolean') {
+    return configValue;
+  }
+
+  return defaultValue;
+};

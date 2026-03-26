@@ -276,20 +276,12 @@ function normalizeTracingEnabled(config) {
  */
 
 function normalizeAllowRootExitSpan(config) {
-  if (config.tracing.allowRootExitSpan === false) {
-    return;
-  }
-  if (config.tracing.allowRootExitSpan === true) {
-    return;
-  }
-
-  const INSTANA_ALLOW_ROOT_EXIT_SPAN = process.env['INSTANA_ALLOW_ROOT_EXIT_SPAN']?.toLowerCase();
-
-  config.tracing.allowRootExitSpan =
-    INSTANA_ALLOW_ROOT_EXIT_SPAN === '1' ||
-    INSTANA_ALLOW_ROOT_EXIT_SPAN === 'true' ||
-    defaults.tracing.allowRootExitSpan;
-  return;
+  config.tracing.allowRootExitSpan = util.resolveBooleanConfig({
+    envVar: 'INSTANA_ALLOW_ROOT_EXIT_SPAN',
+    configValue: config.tracing.allowRootExitSpan,
+    defaultValue: defaults.tracing.allowRootExitSpan,
+    configPath: 'config.tracing.allowRootExitSpan'
+  });
 }
 
 /**
@@ -297,18 +289,12 @@ function normalizeAllowRootExitSpan(config) {
  * @param {InstanaConfig} config
  */
 function normalizeUseOpentelemetry(config) {
-  if (config.tracing.useOpentelemetry === false) {
-    return;
-  }
-  if (config.tracing.useOpentelemetry === true) {
-    return;
-  }
-  if (process.env['INSTANA_DISABLE_USE_OPENTELEMETRY'] === 'true') {
-    config.tracing.useOpentelemetry = false;
-    return;
-  }
-
-  config.tracing.useOpentelemetry = defaults.tracing.useOpentelemetry;
+  config.tracing.useOpentelemetry = util.resolveBooleanConfigWithInvertedEnv({
+    envVar: 'INSTANA_DISABLE_USE_OPENTELEMETRY',
+    configValue: config.tracing.useOpentelemetry,
+    defaultValue: defaults.tracing.useOpentelemetry,
+    configPath: 'config.tracing.useOpentelemetry'
+  });
 }
 
 /**
@@ -356,16 +342,12 @@ function normalizeActivateImmediately(config) {
     return;
   }
 
-  if (typeof config.tracing.activateImmediately === 'boolean') {
-    return;
-  }
-
-  if (process.env['INSTANA_TRACE_IMMEDIATELY'] === 'true') {
-    config.tracing.activateImmediately = true;
-    return;
-  }
-
-  config.tracing.activateImmediately = defaults.tracing.activateImmediately;
+  config.tracing.activateImmediately = util.resolveBooleanConfig({
+    envVar: 'INSTANA_TRACE_IMMEDIATELY',
+    configValue: config.tracing.activateImmediately,
+    defaultValue: defaults.tracing.activateImmediately,
+    configPath: 'config.tracing.activateImmediately'
+  });
 }
 
 /**
@@ -569,66 +551,35 @@ function normalizeDisableTracing(config) {
  * @param {InstanaConfig} config
  */
 function normalizeSpanBatchingEnabled(config) {
-  if (config.tracing.spanBatchingEnabled != null) {
-    if (typeof config.tracing.spanBatchingEnabled === 'boolean') {
-      if (config.tracing.spanBatchingEnabled) {
-        logger.info('Span batching is enabled via config.');
-      }
-      return;
-    } else {
-      logger.warn(
-        `Invalid configuration: config.tracing.spanBatchingEnabled is not a boolean value, will be ignored: ${JSON.stringify(
-          config.tracing.spanBatchingEnabled
-        )}`
-      );
-    }
-  }
-
-  if (process.env['INSTANA_SPANBATCHING_ENABLED'] === 'true') {
-    logger.info('Span batching is enabled via environment variable INSTANA_SPANBATCHING_ENABLED.');
-    config.tracing.spanBatchingEnabled = true;
-    return;
-  }
-
-  config.tracing.spanBatchingEnabled = defaults.tracing.spanBatchingEnabled;
+  config.tracing.spanBatchingEnabled = util.resolveBooleanConfig({
+    envVar: 'INSTANA_SPANBATCHING_ENABLED',
+    configValue: config.tracing.spanBatchingEnabled,
+    defaultValue: defaults.tracing.spanBatchingEnabled,
+    configPath: 'config.tracing.spanBatchingEnabled'
+  });
 }
 
 /**
  * @param {InstanaConfig} config
  */
 function normalizeDisableW3cTraceCorrelation(config) {
-  if (config.tracing.disableW3cTraceCorrelation === true) {
-    logger.info('W3C trace correlation has been disabled via config.');
-    return;
-  }
-  if (process.env['INSTANA_DISABLE_W3C_TRACE_CORRELATION']) {
-    logger.info(
-      'W3C trace correlation has been disabled via environment variable INSTANA_DISABLE_W3C_TRACE_CORRELATION.'
-    );
-    config.tracing.disableW3cTraceCorrelation = true;
-    return;
-  }
-
-  config.tracing.disableW3cTraceCorrelation = defaults.tracing.disableW3cTraceCorrelation;
+  config.tracing.disableW3cTraceCorrelation = util.resolveBooleanConfigWithTruthyEnv({
+    envVar: 'INSTANA_DISABLE_W3C_TRACE_CORRELATION',
+    configValue: config.tracing.disableW3cTraceCorrelation,
+    defaultValue: defaults.tracing.disableW3cTraceCorrelation
+  });
 }
 
 /**
  * @param {InstanaConfig} config
  */
 function normalizeTracingKafka(config) {
-  config.tracing.kafka = config.tracing.kafka || {};
-
-  if (config.tracing.kafka.traceCorrelation === false) {
-    logger.info('Kafka trace correlation has been disabled via config.');
-  } else if (
-    process.env['INSTANA_KAFKA_TRACE_CORRELATION'] != null &&
-    process.env['INSTANA_KAFKA_TRACE_CORRELATION'].toLowerCase() === 'false'
-  ) {
-    logger.info('Kafka trace correlation has been disabled via environment variable INSTANA_KAFKA_TRACE_CORRELATION.');
-    config.tracing.kafka.traceCorrelation = false;
-  } else {
-    config.tracing.kafka.traceCorrelation = defaults.tracing.kafka.traceCorrelation;
-  }
+  config.tracing.kafka.traceCorrelation = util.resolveBooleanConfig({
+    envVar: 'INSTANA_KAFKA_TRACE_CORRELATION',
+    configValue: config.tracing.kafka.traceCorrelation,
+    defaultValue: defaults.tracing.kafka.traceCorrelation,
+    configPath: 'config.tracing.kafka.traceCorrelation'
+  });
 }
 
 /**
@@ -767,32 +718,24 @@ function normalizeIgnoreEndpoints(config) {
  * @param {InstanaConfig} config
  */
 function normalizeIgnoreEndpointsDisableSuppression(config) {
-  if (process.env['INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION'] === 'true') {
-    logger.info(
-      'Disabling downstream suppression for ignoring endpoints feature as it is explicitly disabled via environment variable "INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION".'
-    );
-    config.tracing.ignoreEndpointsDisableSuppression = true;
-    return;
-  }
-
-  config.tracing.ignoreEndpointsDisableSuppression = defaults.tracing.ignoreEndpointsDisableSuppression;
+  config.tracing.ignoreEndpointsDisableSuppression = util.resolveBooleanConfig({
+    envVar: 'INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION',
+    configValue: config.tracing.ignoreEndpointsDisableSuppression,
+    defaultValue: defaults.tracing.ignoreEndpointsDisableSuppression,
+    configPath: 'config.tracing.ignoreEndpointsDisableSuppression'
+  });
 }
 
 /**
  * @param {InstanaConfig} config
  */
 function normalizeDisableEOLEvents(config) {
-  config.tracing = config.tracing || {};
-
-  if (process.env['INSTANA_TRACING_DISABLE_EOL_EVENTS'] === 'true') {
-    logger.info(
-      'Disabling EOL events as it is explicitly disabled via environment variable "INSTANA_TRACING_DISABLE_EOL_EVENTS".'
-    );
-    config.tracing.disableEOLEvents = true;
-    return;
-  }
-
-  config.tracing.disableEOLEvents = defaults.tracing.disableEOLEvents;
+  config.tracing.disableEOLEvents = util.resolveBooleanConfig({
+    envVar: 'INSTANA_TRACING_DISABLE_EOL_EVENTS',
+    configValue: config.tracing.disableEOLEvents,
+    defaultValue: defaults.tracing.disableEOLEvents,
+    configPath: 'config.tracing.disableEOLEvents'
+  });
 }
 
 /**
