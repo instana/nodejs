@@ -20,9 +20,7 @@ import testUtil from '@_local/core/test/test_util/index.js';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import getAppPort from '@_local/collector/test/test_util/app-port.js';
-import { createRequire } from 'module';
 
-const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
