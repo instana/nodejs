@@ -19,7 +19,6 @@ require('@instana/collector')({
 const { promisify } = require('util');
 const ibmdb = require('ibm_db');
 const { delay } = require('@_local/core/test/test_util');
-
 const logPrefix = `DB2 Allow Root Exit Span App (${process.pid}):\t`;
 
 const DB2_DATABASE_NAME = process.env.DB2_DATABASE_NAME || 'nodedb';
@@ -59,7 +58,6 @@ async function connect(connectionStr) {
 (async function openConnections() {
   await delay(1000 * 2);
   connection = await connect(`${connStr1};DATABASE=${DB2_DATABASE_NAME}`);
-
   connection.querySync(`drop table ${DB2_TABLE_NAME_1} if exists`);
 
   const result = connection.querySync(

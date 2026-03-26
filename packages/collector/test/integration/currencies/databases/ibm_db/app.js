@@ -21,6 +21,7 @@ const fs = require('fs');
 const morgan = require('morgan');
 const ibmdb = require('ibm_db');
 const { delay } = require('@_local/core/test/test_util');
+const { dropOrphanedTestTables } = require('./utils');
 
 const app = express();
 const port = require('@_local/collector/test/test_util/app-port')();
@@ -118,6 +119,9 @@ async function connect(connectionStr) {
 (async function openConnections() {
   /* eslint-disable no-console */
   connection = await connect(`${connStr1};DATABASE=${DB2_DATABASE_NAME}`);
+
+  // General cleanup of old tables.
+  dropOrphanedTestTables(connection);
 
   connection.querySync(`drop table ${DB2_TABLE_NAME_1} if exists`);
   const result = connection.querySync(

@@ -53,7 +53,6 @@ async function connect(connectionStr) {
 (async function openConnections() {
   await delay(1000 * 2);
   connection = await connect(`${connStr1};DATABASE=${DB2_DATABASE_NAME}`);
-
   connection.querySync(`drop table ${DB2_TABLE_NAME_1} if exists`);
 
   const result = connection.querySync(
