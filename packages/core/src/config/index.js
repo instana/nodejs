@@ -142,7 +142,7 @@ module.exports.configValidators = configValidators;
 module.exports.init = _logger => {
   logger = _logger;
   configNormalizers.init({ logger });
-  require('./util').init(logger);
+  util.init(logger);
 };
 
 /**
