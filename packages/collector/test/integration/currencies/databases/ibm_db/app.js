@@ -120,6 +120,7 @@ async function connect(connectionStr) {
   /* eslint-disable no-console */
   connection = await connect(`${connStr1};DATABASE=${DB2_DATABASE_NAME}`);
 
+  // General cleanup of old tables.
   dropOrphanedTestTables(connection);
 
   connection.querySync(`drop table ${DB2_TABLE_NAME_1} if exists`);
