@@ -913,6 +913,7 @@ function normalizeDisableEOLEvents(config) {
     return;
   }
 
+  // TODO: a helper function rewrite the pattern of env var parsing for boolean values, as this is repeated multiple times across different config options.
   if (process.env['INSTANA_TRACING_DISABLE_EOL_EVENTS'] === 'false') {
     logger.debug('Enabling EOL events via environment variable "INSTANA_TRACING_DISABLE_EOL_EVENTS".');
     config.tracing.disableEOLEvents = false;
