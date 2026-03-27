@@ -82,37 +82,37 @@ exports.normalize = function normalize(config, defaults) {
 function resolveMatcherMode({ configValue, envValue, defaultValue }) {
   // Validate config value first
   if (configValue !== undefined) {
-    if (typeof configValue === 'string' && allowedSecretMatchers.has(configValue)) {
+    if (isString(configValue) && allowedSecretMatchers.has(configValue)) {
       return /** @type {MatchingOption} */ (configValue);
     }
 
-    if (typeof configValue !== 'string') {
+    if (!isString(configValue)) {
       logger.warn(
         // eslint-disable-next-line max-len
-        `The value of config.secrets.matcherMode ("${configValue}") is not a string. Assuming the default value ${defaultValue}.`
+        `The value of config.secrets.matcherMode ("${configValue}") is not a string.`
       );
     } else {
       logger.warn(
         // eslint-disable-next-line max-len
-        `The value of config.secrets.matcherMode ("${configValue}") is not a supported matcher mode. Assuming the default value ${defaultValue}.`
+        `The value of config.secrets.matcherMode ("${configValue}") is not a supported matcher mode.`
       );
     }
   }
 
   // check env value
   if (envValue !== undefined) {
-    if (typeof envValue === 'string' && allowedSecretMatchers.has(envValue)) {
+    if (isString(envValue) && allowedSecretMatchers.has(envValue)) {
       return /** @type {MatchingOption} */ (envValue);
     }
-    if (typeof envValue !== 'string') {
+    if (!isString(envValue)) {
       logger.warn(
         // eslint-disable-next-line max-len
-        `The value from INSTANA_SECRETS matcherMode ("${envValue}") is not a string. Assuming the default value ${defaultValue}.`
+        `The value from INSTANA_SECRETS matcherMode ("${envValue}") is not a string.`
       );
     } else {
       logger.warn(
         // eslint-disable-next-line max-len
-        `The value from INSTANA_SECRETS matcherMode ("${envValue}") is not a supported matcher mode. Assuming the default value ${defaultValue}.`
+        `The value from INSTANA_SECRETS matcherMode ("${envValue}") is not a supported matcher mode.`
       );
     }
   }
@@ -157,7 +157,7 @@ function resolveKeywords({ configValue, envValue, defaultValue }) {
  * @returns {MatchingOption}
  */
 function parseMatcherMode(matcherMode) {
-  if (typeof matcherMode !== 'string') {
+  if (!isString(matcherMode)) {
     return /** @type {MatchingOption} */ ('contains-ignore-case');
   }
 
@@ -200,4 +200,12 @@ function parseSecretsEnvVar(envVarValue) {
     matcherMode: parsedMatcherMode,
     keywords: keywordsArray
   };
+}
+
+/**
+ * @param {*} value
+ * @returns {boolean}
+ */
+function isString(value) {
+  return typeof value === 'string';
 }
