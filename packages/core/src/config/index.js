@@ -3,16 +3,14 @@
  * (c) Copyright Instana Inc. and contributors 2019
  */
 
-/* eslint-disable */
-
 'use strict';
 
-const supportedTracingVersion = require('../tracing/supportedVersion');
 const configNormalizers = require('./configNormalizers');
 const configValidators = require('./configValidators');
 const deepMerge = require('../util/deepMerge');
 const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE } = require('../util/constants');
 const { validateStackTraceMode, validateStackTraceLength } = require('./configValidators/stackTraceValidation');
+const util = require('./util');
 
 /**
  * @typedef {Object} InstanaTracingOption
@@ -141,6 +139,7 @@ module.exports.configValidators = configValidators;
 module.exports.init = _logger => {
   logger = _logger;
   configNormalizers.init({ logger });
+  util.init(logger);
 };
 
 /**
@@ -181,8 +180,8 @@ module.exports.normalize = (userConfig, defaultsOverride = {}) => {
  * @param {InstanaConfig} config
  */
 function normalizeServiceName(config) {
-  if (config.serviceName == null && process.env['INSTANA_SERVICE_NAME']) {
-    config.serviceName = process.env['INSTANA_SERVICE_NAME'];
+  if (config.serviceName == null && process.env.INSTANA_SERVICE_NAME) {
+    config.serviceName = process.env.INSTANA_SERVICE_NAME;
   }
   if (config.serviceName != null && typeof config.serviceName !== 'string') {
     logger.warn(
@@ -196,14 +195,14 @@ function normalizeServiceName(config) {
  * @param {InstanaConfig} config
  */
 function normalizePackageJsonPath(config) {
-  if (config.packageJsonPath == null && process.env['INSTANA_PACKAGE_JSON_PATH']) {
-    config.packageJsonPath = process.env['INSTANA_PACKAGE_JSON_PATH'];
+  if (config.packageJsonPath == null && process.env.INSTANA_PACKAGE_JSON_PATH) {
+    config.packageJsonPath = process.env.INSTANA_PACKAGE_JSON_PATH;
   }
   if (config.packageJsonPath != null && typeof config.packageJsonPath !== 'string') {
     logger.warn(
+      // eslint-disable-next-line max-len
       `Invalid configuration: config.packageJsonPath is not a string, the value will be ignored: ${config.packageJsonPath}`
     );
-
     config.packageJsonPath = null;
   }
 }
@@ -216,12 +215,12 @@ function normalizeMetricsConfig(config) {
     config.metrics = {};
   }
 
-  config.metrics.transmissionDelay = normalizeSingleValue(
-    config.metrics.transmissionDelay,
-    defaults.metrics.transmissionDelay,
-    'config.metrics.transmissionDelay',
-    'INSTANA_METRICS_TRANSMISSION_DELAY'
-  );
+  config.metrics.transmissionDelay = util.resolveNumericConfig({
+    envVar: 'INSTANA_METRICS_TRANSMISSION_DELAY',
+    configValue: config.metrics.transmissionDelay,
+    defaultValue: defaults.metrics.transmissionDelay,
+    configPath: 'config.metrics.transmissionDelay'
+  });
 
   config.metrics.timeBetweenHealthcheckCalls =
     config.metrics.timeBetweenHealthcheckCalls || defaults.metrics.timeBetweenHealthcheckCalls;
@@ -257,37 +256,25 @@ function normalizeTracingConfig(config) {
  * @param {InstanaConfig} config
  */
 function normalizeTracingEnabled(config) {
-  if (config.tracing.enabled === false) {
-    logger.info('Not enabling tracing as it is explicitly disabled via config.');
-    return;
-  }
-  if (config.tracing.enabled === true) {
-    return;
-  }
-
-  config.tracing.enabled = defaults.tracing.enabled;
+  config.tracing.enabled = util.resolveBooleanConfigWithInvertedEnv({
+    envVar: 'INSTANA_TRACING_DISABLE',
+    configValue: config.tracing.enabled,
+    defaultValue: defaults.tracing.enabled,
+    configPath: 'config.tracing.enabled'
+  });
 }
 
 /**
  *
  * @param {InstanaConfig} config
  */
-
 function normalizeAllowRootExitSpan(config) {
-  if (config.tracing.allowRootExitSpan === false) {
-    return;
-  }
-  if (config.tracing.allowRootExitSpan === true) {
-    return;
-  }
-
-  const INSTANA_ALLOW_ROOT_EXIT_SPAN = process.env['INSTANA_ALLOW_ROOT_EXIT_SPAN']?.toLowerCase();
-
-  config.tracing.allowRootExitSpan =
-    INSTANA_ALLOW_ROOT_EXIT_SPAN === '1' ||
-    INSTANA_ALLOW_ROOT_EXIT_SPAN === 'true' ||
-    defaults.tracing.allowRootExitSpan;
-  return;
+  config.tracing.allowRootExitSpan = util.resolveBooleanConfig({
+    envVar: 'INSTANA_ALLOW_ROOT_EXIT_SPAN',
+    configValue: config.tracing.allowRootExitSpan,
+    defaultValue: defaults.tracing.allowRootExitSpan,
+    configPath: 'config.tracing.allowRootExitSpan'
+  });
 }
 
 /**
@@ -295,18 +282,12 @@ function normalizeAllowRootExitSpan(config) {
  * @param {InstanaConfig} config
  */
 function normalizeUseOpentelemetry(config) {
-  if (config.tracing.useOpentelemetry === false) {
-    return;
-  }
-  if (config.tracing.useOpentelemetry === true) {
-    return;
-  }
-  if (process.env['INSTANA_DISABLE_USE_OPENTELEMETRY'] === 'true') {
-    config.tracing.useOpentelemetry = false;
-    return;
-  }
-
-  config.tracing.useOpentelemetry = defaults.tracing.useOpentelemetry;
+  config.tracing.useOpentelemetry = util.resolveBooleanConfigWithInvertedEnv({
+    envVar: 'INSTANA_DISABLE_USE_OPENTELEMETRY',
+    configValue: config.tracing.useOpentelemetry,
+    defaultValue: defaults.tracing.useOpentelemetry,
+    configPath: 'config.tracing.useOpentelemetry'
+  });
 }
 
 /**
@@ -319,30 +300,12 @@ function normalizeAutomaticTracingEnabled(config) {
     return;
   }
 
-  if (config.tracing.automaticTracingEnabled === false) {
-    logger.info('Not enabling automatic tracing as it is explicitly disabled via config.');
-    config.tracing.automaticTracingEnabled = false;
-    return;
-  }
-
-  if (process.env['INSTANA_DISABLE_AUTO_INSTR'] === 'true') {
-    logger.info(
-      'Not enabling automatic tracing as it is explicitly disabled via environment variable INSTANA_DISABLE_AUTO_INSTR.'
-    );
-    config.tracing.automaticTracingEnabled = false;
-    return;
-  }
-
-  if (!supportedTracingVersion(process.versions.node)) {
-    logger.warn(
-      'Not enabling automatic tracing, this is an unsupported version of Node.js. ' +
-        'See: https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-support-information#supported-nodejs-versions'
-    );
-    config.tracing.automaticTracingEnabled = false;
-    return;
-  }
-
-  config.tracing.automaticTracingEnabled = defaults.tracing.automaticTracingEnabled;
+  config.tracing.automaticTracingEnabled = util.resolveBooleanConfigWithInvertedEnv({
+    envVar: 'INSTANA_DISABLE_AUTO_INSTR',
+    configValue: config.tracing.automaticTracingEnabled,
+    defaultValue: defaults.tracing.automaticTracingEnabled,
+    configPath: 'config.tracing.automaticTracingEnabled'
+  });
 }
 
 /**
@@ -354,16 +317,12 @@ function normalizeActivateImmediately(config) {
     return;
   }
 
-  if (typeof config.tracing.activateImmediately === 'boolean') {
-    return;
-  }
-
-  if (process.env['INSTANA_TRACE_IMMEDIATELY'] === 'true') {
-    config.tracing.activateImmediately = true;
-    return;
-  }
-
-  config.tracing.activateImmediately = defaults.tracing.activateImmediately;
+  config.tracing.activateImmediately = util.resolveBooleanConfig({
+    envVar: 'INSTANA_TRACE_IMMEDIATELY',
+    configValue: config.tracing.activateImmediately,
+    defaultValue: defaults.tracing.activateImmediately,
+    configPath: 'config.tracing.activateImmediately'
+  });
 }
 
 /**
@@ -372,44 +331,26 @@ function normalizeActivateImmediately(config) {
 function normalizeTracingTransmission(config) {
   config.tracing.maxBufferedSpans = config.tracing.maxBufferedSpans || defaults.tracing.maxBufferedSpans;
 
-  config.tracing.transmissionDelay = normalizeSingleValue(
-    config.tracing.transmissionDelay,
-    defaults.tracing.transmissionDelay,
-    'config.tracing.transmissionDelay',
-    'INSTANA_TRACING_TRANSMISSION_DELAY'
-  );
+  config.tracing.transmissionDelay = util.resolveNumericConfig({
+    envVar: 'INSTANA_TRACING_TRANSMISSION_DELAY',
+    configValue: config.tracing.transmissionDelay,
+    defaultValue: defaults.tracing.transmissionDelay,
+    configPath: 'config.tracing.transmissionDelay'
+  });
 
-  // DEPRECATED! This was never documented, but we shared it with a customer.
-  if (process.env['INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS']) {
-    logger.warn(
-      'The environment variable INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS is deprecated and will be removed in the next major release. ' +
-        'Please use INSTANA_TRACING_TRANSMISSION_DELAY instead.'
-    );
+  config.tracing.forceTransmissionStartingAt = util.resolveNumericConfig({
+    envVar: 'INSTANA_FORCE_TRANSMISSION_STARTING_AT',
+    configValue: config.tracing.forceTransmissionStartingAt,
+    defaultValue: defaults.tracing.forceTransmissionStartingAt,
+    configPath: 'config.tracing.forceTransmissionStartingAt'
+  });
 
-    config.tracing.transmissionDelay = parseInt(process.env['INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS'], 10);
-
-    if (isNaN(config.tracing.transmissionDelay)) {
-      logger.warn(
-        `The value of INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS is not a number. Falling back to the default value ${defaults.tracing.transmissionDelay}.`
-      );
-
-      config.tracing.transmissionDelay = defaults.tracing.transmissionDelay;
-    }
-  }
-
-  config.tracing.forceTransmissionStartingAt = normalizeSingleValue(
-    config.tracing.forceTransmissionStartingAt,
-    defaults.tracing.forceTransmissionStartingAt,
-    'config.tracing.forceTransmissionStartingAt',
-    'INSTANA_FORCE_TRANSMISSION_STARTING_AT'
-  );
-
-  config.tracing.initialTransmissionDelay = normalizeSingleValue(
-    config.tracing.initialTransmissionDelay,
-    defaults.tracing.initialTransmissionDelay,
-    'config.tracing.initialTransmissionDelay',
-    'INSTANA_TRACING_INITIAL_TRANSMISSION_DELAY'
-  );
+  config.tracing.initialTransmissionDelay = util.resolveNumericConfig({
+    envVar: 'INSTANA_TRACING_INITIAL_TRANSMISSION_DELAY',
+    configValue: config.tracing.initialTransmissionDelay,
+    defaultValue: defaults.tracing.initialTransmissionDelay,
+    configPath: 'config.tracing.initialTransmissionDelay'
+  });
 }
 
 /**
@@ -431,6 +372,7 @@ function normalizeTracingHttp(config) {
   }
   if (!Array.isArray(config.tracing.http.extraHttpHeadersToCapture)) {
     logger.warn(
+      // eslint-disable-next-line max-len
       `Invalid configuration: config.tracing.http.extraHttpHeadersToCapture is not an array, the value will be ignored: ${JSON.stringify(
         config.tracing.http.extraHttpHeadersToCapture
       )}`
@@ -464,8 +406,8 @@ function parseHeadersEnvVar(envVarValue) {
 function normalizeTracingStackTrace(config) {
   const tracing = config.tracing;
 
-  const envStackTrace = process.env['INSTANA_STACK_TRACE'];
-  const envStackTraceLength = process.env['INSTANA_STACK_TRACE_LENGTH'];
+  const envStackTrace = process.env.INSTANA_STACK_TRACE;
+  const envStackTraceLength = process.env.INSTANA_STACK_TRACE_LENGTH;
 
   if (envStackTrace !== undefined) {
     const result = validateStackTraceMode(envStackTrace);
@@ -519,6 +461,7 @@ function normalizeTracingStackTrace(config) {
   } else if (stackTraceConfigValue !== undefined) {
     if (isLegacyLengthDefined) {
       logger.warn(
+        // eslint-disable-next-line max-len
         '[Deprecation Warning] The configuration option config.tracing.stackTraceLength is deprecated and will be removed in a future release. ' +
           'Please use config.tracing.global.stackTraceLength instead.'
       );
@@ -567,47 +510,23 @@ function normalizeDisableTracing(config) {
  * @param {InstanaConfig} config
  */
 function normalizeSpanBatchingEnabled(config) {
-  if (config.tracing.spanBatchingEnabled != null) {
-    if (typeof config.tracing.spanBatchingEnabled === 'boolean') {
-      if (config.tracing.spanBatchingEnabled) {
-        logger.info('Span batching is enabled via config.');
-      }
-      return;
-    } else {
-      logger.warn(
-        `Invalid configuration: config.tracing.spanBatchingEnabled is not a boolean value, will be ignored: ${JSON.stringify(
-          config.tracing.spanBatchingEnabled
-        )}`
-      );
-    }
-  }
-
-  if (process.env['INSTANA_SPANBATCHING_ENABLED'] === 'true') {
-    logger.info('Span batching is enabled via environment variable INSTANA_SPANBATCHING_ENABLED.');
-    config.tracing.spanBatchingEnabled = true;
-    return;
-  }
-
-  config.tracing.spanBatchingEnabled = defaults.tracing.spanBatchingEnabled;
+  config.tracing.spanBatchingEnabled = util.resolveBooleanConfig({
+    envVar: 'INSTANA_SPANBATCHING_ENABLED',
+    configValue: config.tracing.spanBatchingEnabled,
+    defaultValue: defaults.tracing.spanBatchingEnabled,
+    configPath: 'config.tracing.spanBatchingEnabled'
+  });
 }
 
 /**
  * @param {InstanaConfig} config
  */
 function normalizeDisableW3cTraceCorrelation(config) {
-  if (config.tracing.disableW3cTraceCorrelation === true) {
-    logger.info('W3C trace correlation has been disabled via config.');
-    return;
-  }
-  if (process.env['INSTANA_DISABLE_W3C_TRACE_CORRELATION']) {
-    logger.info(
-      'W3C trace correlation has been disabled via environment variable INSTANA_DISABLE_W3C_TRACE_CORRELATION.'
-    );
-    config.tracing.disableW3cTraceCorrelation = true;
-    return;
-  }
-
-  config.tracing.disableW3cTraceCorrelation = defaults.tracing.disableW3cTraceCorrelation;
+  config.tracing.disableW3cTraceCorrelation = util.resolveBooleanConfigWithTruthyEnv({
+    envVar: 'INSTANA_DISABLE_W3C_TRACE_CORRELATION',
+    configValue: config.tracing.disableW3cTraceCorrelation,
+    defaultValue: defaults.tracing.disableW3cTraceCorrelation
+  });
 }
 
 /**
@@ -616,17 +535,12 @@ function normalizeDisableW3cTraceCorrelation(config) {
 function normalizeTracingKafka(config) {
   config.tracing.kafka = config.tracing.kafka || {};
 
-  if (config.tracing.kafka.traceCorrelation === false) {
-    logger.info('Kafka trace correlation has been disabled via config.');
-  } else if (
-    process.env['INSTANA_KAFKA_TRACE_CORRELATION'] != null &&
-    process.env['INSTANA_KAFKA_TRACE_CORRELATION'].toLowerCase() === 'false'
-  ) {
-    logger.info('Kafka trace correlation has been disabled via environment variable INSTANA_KAFKA_TRACE_CORRELATION.');
-    config.tracing.kafka.traceCorrelation = false;
-  } else {
-    config.tracing.kafka.traceCorrelation = defaults.tracing.kafka.traceCorrelation;
-  }
+  config.tracing.kafka.traceCorrelation = util.resolveBooleanConfig({
+    envVar: 'INSTANA_KAFKA_TRACE_CORRELATION',
+    configValue: config.tracing.kafka.traceCorrelation,
+    defaultValue: defaults.tracing.kafka.traceCorrelation,
+    configPath: 'config.tracing.kafka.traceCorrelation'
+  });
 }
 
 /**
@@ -648,16 +562,19 @@ function normalizeSecrets(config) {
 
   if (typeof config.secrets.matcherMode !== 'string') {
     logger.warn(
+      // eslint-disable-next-line max-len
       `The value of config.secrets.matcherMode ("${config.secrets.matcherMode}") is not a string. Assuming the default value ${defaults.secrets.matcherMode}.`
     );
     config.secrets.matcherMode = defaults.secrets.matcherMode;
   } else if (validSecretsMatcherModes.indexOf(config.secrets.matcherMode) < 0) {
     logger.warn(
+      // eslint-disable-next-line max-len
       `The value of config.secrets.matcherMode (or the matcher mode parsed from INSTANA_SECRETS) (${config.secrets.matcherMode}) is not a supported matcher mode. Assuming the default value ${defaults.secrets.matcherMode}.`
     );
     config.secrets.matcherMode = defaults.secrets.matcherMode;
   } else if (!Array.isArray(config.secrets.keywords)) {
     logger.warn(
+      // eslint-disable-next-line max-len
       `The value of config.secrets.keywords (${config.secrets.keywords}) is not an array. Assuming the default value ${defaults.secrets.keywords}.`
     );
     config.secrets.keywords = defaults.secrets.keywords;
@@ -687,7 +604,7 @@ function parseMatcherMode(matcherMode) {
  * @returns {InstanaSecretsOption}
  */
 function parseSecretsEnvVar(envVarValue) {
-  let [matcherMode, keywords] = envVarValue.split(':', 2);
+  const [matcherMode, keywords] = envVarValue.split(':', 2);
 
   const parsedMatcherMode = parseMatcherMode(matcherMode);
 
@@ -701,6 +618,7 @@ function parseSecretsEnvVar(envVarValue) {
   if (!keywords) {
     // a list of keywords (with at least one element) is mandatory for all matcher modes except "none"
     logger.warn(
+      // eslint-disable-next-line max-len
       `The value of INSTANA_SECRETS (${envVarValue}) cannot be parsed. Please use the following format: INSTANA_SECRETS=<matcher>:<secret>[,<secret>]. This setting will be ignored.`
     );
     return {};
@@ -713,32 +631,6 @@ function parseSecretsEnvVar(envVarValue) {
   };
 }
 
-/**
- * @param {*} configValue
- * @param {*} defaultValue
- * @param {string} configPath
- * @param {string} envVarKey
- * @returns {*}
- */
-function normalizeSingleValue(configValue, defaultValue, configPath, envVarKey) {
-  const envVarVal = process.env[envVarKey];
-  let originalValue = configValue;
-  if (configValue == null && envVarVal == null) {
-    return defaultValue;
-  } else if (configValue == null && envVarVal != null) {
-    originalValue = envVarVal;
-    configValue = parseInt(originalValue, 10);
-  }
-
-  if (typeof configValue !== 'number' || isNaN(configValue)) {
-    logger.warn(
-      `The value of ${configPath} (or ${envVarKey}) ("${originalValue}") is ' +
-        'not numerical or cannot be parsed to a numerical value. Assuming the default value ${defaultValue}.`
-    );
-    return defaultValue;
-  }
-  return configValue;
-}
 /**
  * @param {InstanaConfig} config
  */
@@ -783,7 +675,6 @@ function normalizeIgnoreEndpoints(config) {
   if (process.env.INSTANA_IGNORE_ENDPOINTS) {
     config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.fromEnv(process.env.INSTANA_IGNORE_ENDPOINTS);
     logger.debug(`Ignore endpoints have been configured: ${JSON.stringify(config.tracing.ignoreEndpoints)}`);
-    return;
   }
 }
 
@@ -791,32 +682,24 @@ function normalizeIgnoreEndpoints(config) {
  * @param {InstanaConfig} config
  */
 function normalizeIgnoreEndpointsDisableSuppression(config) {
-  if (process.env['INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION'] === 'true') {
-    logger.info(
-      'Disabling downstream suppression for ignoring endpoints feature as it is explicitly disabled via environment variable "INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION".'
-    );
-    config.tracing.ignoreEndpointsDisableSuppression = true;
-    return;
-  }
-
-  config.tracing.ignoreEndpointsDisableSuppression = defaults.tracing.ignoreEndpointsDisableSuppression;
+  config.tracing.ignoreEndpointsDisableSuppression = util.resolveBooleanConfig({
+    envVar: 'INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION',
+    configValue: config.tracing.ignoreEndpointsDisableSuppression,
+    defaultValue: defaults.tracing.ignoreEndpointsDisableSuppression,
+    configPath: 'config.tracing.ignoreEndpointsDisableSuppression'
+  });
 }
 
 /**
  * @param {InstanaConfig} config
  */
 function normalizeDisableEOLEvents(config) {
-  config.tracing = config.tracing || {};
-
-  if (process.env['INSTANA_TRACING_DISABLE_EOL_EVENTS'] === 'true') {
-    logger.info(
-      'Disabling EOL events as it is explicitly disabled via environment variable "INSTANA_TRACING_DISABLE_EOL_EVENTS".'
-    );
-    config.tracing.disableEOLEvents = true;
-    return;
-  }
-
-  config.tracing.disableEOLEvents = defaults.tracing.disableEOLEvents;
+  config.tracing.disableEOLEvents = util.resolveBooleanConfig({
+    envVar: 'INSTANA_TRACING_DISABLE_EOL_EVENTS',
+    configValue: config.tracing.disableEOLEvents,
+    defaultValue: defaults.tracing.disableEOLEvents,
+    configPath: 'config.tracing.disableEOLEvents'
+  });
 }
 
 /**
