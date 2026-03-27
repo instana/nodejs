@@ -68,9 +68,6 @@ const util = require('./util');
  * @property {Array<string>} [keywords]
  */
 
-/** @type {String[]} */
-const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'contains-ignore-case', 'regex', 'none'];
-
 /**
  * @typedef {Object} InstanaConfig
  * @property {string} [serviceName]
@@ -128,8 +125,6 @@ let defaults = {
   }
 };
 
-const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-ignore-case', 'contains', 'regex', 'none'];
-
 module.exports.configNormalizers = configNormalizers;
 module.exports.configValidators = configValidators;
 
@@ -171,7 +166,7 @@ module.exports.normalize = (userConfig, defaultsOverride = {}) => {
   normalizePackageJsonPath(targetConfig);
   normalizeMetricsConfig(targetConfig);
   normalizeTracingConfig(targetConfig);
-  normalizeSecrets(targetConfig);
+  normalizeSecretsConfig(targetConfig);
   normalizePreloadOpentelemetry(targetConfig);
   return targetConfig;
 };
@@ -546,89 +541,8 @@ function normalizeTracingKafka(config) {
 /**
  * @param {InstanaConfig} config
  */
-function normalizeSecrets(config) {
-  if (config.secrets == null) {
-    config.secrets = {};
-  }
-
-  /** @type {InstanaSecretsOption} */
-  let fromEnvVar = {};
-  if (process.env.INSTANA_SECRETS) {
-    fromEnvVar = parseSecretsEnvVar(process.env.INSTANA_SECRETS);
-  }
-
-  config.secrets.matcherMode = config.secrets.matcherMode || fromEnvVar.matcherMode || defaults.secrets.matcherMode;
-  config.secrets.keywords = config.secrets.keywords || fromEnvVar.keywords || defaults.secrets.keywords;
-
-  if (typeof config.secrets.matcherMode !== 'string') {
-    logger.warn(
-      // eslint-disable-next-line max-len
-      `The value of config.secrets.matcherMode ("${config.secrets.matcherMode}") is not a string. Assuming the default value ${defaults.secrets.matcherMode}.`
-    );
-    config.secrets.matcherMode = defaults.secrets.matcherMode;
-  } else if (validSecretsMatcherModes.indexOf(config.secrets.matcherMode) < 0) {
-    logger.warn(
-      // eslint-disable-next-line max-len
-      `The value of config.secrets.matcherMode (or the matcher mode parsed from INSTANA_SECRETS) (${config.secrets.matcherMode}) is not a supported matcher mode. Assuming the default value ${defaults.secrets.matcherMode}.`
-    );
-    config.secrets.matcherMode = defaults.secrets.matcherMode;
-  } else if (!Array.isArray(config.secrets.keywords)) {
-    logger.warn(
-      // eslint-disable-next-line max-len
-      `The value of config.secrets.keywords (${config.secrets.keywords}) is not an array. Assuming the default value ${defaults.secrets.keywords}.`
-    );
-    config.secrets.keywords = defaults.secrets.keywords;
-  }
-  if (config.secrets.matcherMode === 'none') {
-    config.secrets.keywords = [];
-  }
-}
-
-/**
- * @param {string} matcherMode
- * @returns {MatchingOption}
- */
-function parseMatcherMode(matcherMode) {
-  const trimmed = matcherMode.trim().toLowerCase();
-  const isSecretMatcher = allowedSecretMatchers.includes(trimmed);
-
-  if (isSecretMatcher) {
-    return /** @type {MatchingOption} */ (trimmed);
-  } else {
-    return /** @type {MatchingOption} */ 'contains-ignore-case';
-  }
-}
-
-/**
- * @param {string} envVarValue
- * @returns {InstanaSecretsOption}
- */
-function parseSecretsEnvVar(envVarValue) {
-  const [matcherMode, keywords] = envVarValue.split(':', 2);
-
-  const parsedMatcherMode = parseMatcherMode(matcherMode);
-
-  if (parsedMatcherMode === 'none') {
-    return {
-      matcherMode: parsedMatcherMode,
-      keywords: []
-    };
-  }
-
-  if (!keywords) {
-    // a list of keywords (with at least one element) is mandatory for all matcher modes except "none"
-    logger.warn(
-      // eslint-disable-next-line max-len
-      `The value of INSTANA_SECRETS (${envVarValue}) cannot be parsed. Please use the following format: INSTANA_SECRETS=<matcher>:<secret>[,<secret>]. This setting will be ignored.`
-    );
-    return {};
-  }
-
-  const keywordsArray = keywords.split(',').map(word => word.trim());
-  return {
-    matcherMode: parsedMatcherMode,
-    keywords: keywordsArray
-  };
+function normalizeSecretsConfig(config) {
+  config.secrets = configNormalizers.secrets.normalize(config.secrets, defaults.secrets);
 }
 
 /**

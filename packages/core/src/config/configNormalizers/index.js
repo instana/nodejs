@@ -6,6 +6,7 @@
 
 const disable = require('./disable');
 const ignoreEndpoints = require('./ignoreEndpoints');
+const secrets = require('./secrets');
 const stackTrace = require('./stackTrace');
 
 /**
@@ -14,8 +15,10 @@ const stackTrace = require('./stackTrace');
 exports.init = function init(config) {
   disable.init(config);
   ignoreEndpoints.init(config);
+  secrets.init(config);
 };
 
 exports.disable = disable;
 exports.ignoreEndpoints = ignoreEndpoints;
+exports.secrets = secrets;
 exports.stackTrace = stackTrace;
