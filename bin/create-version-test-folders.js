@@ -97,7 +97,8 @@ function generateTestWrapper({
   esmOnly,
   mode,
   sourceDepth,
-  nodeConstraint
+  nodeConstraint,
+  verifyDependency
 }) {
   const currentYear = new Date().getFullYear();
   const relSourcePath = sourceDepth === 2 ? '../..' : '..';
@@ -235,9 +236,13 @@ mochaSuiteFn(suiteTitle, function () {
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         const timeout = 5 * 60 * 1000;
         try {
-          execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });
+          execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });${
+            verifyDependency
+              ? `
           if (!fs.existsSync(path.join(__dirname, 'node_modules', '${suiteName}'))) {
             throw new Error('${suiteName} not found after install');
+          }`
+              : ''
           }
           break;
         } catch (err) {
@@ -261,7 +266,44 @@ mochaSuiteFn(suiteTitle, function () {
         }
       }
 
-    } finally {
+${
+  verifyDependency
+    ? `
+      log(\`[INFO] Verifying installed ${suiteName}\`);
+      try {
+        const verifyScript = [
+          "const p=require('path'),f=require('fs');",
+          "let r=require.resolve('${suiteName}');",
+          "const m=p.join('node_modules','${suiteName}');",
+          "r=r.substring(0,r.lastIndexOf(m)+m.length);",
+          "const e=p.join(process.cwd(),'node_modules','${suiteName}');",
+          "if(r!==e){process.stderr.write(r);process.exit(1)}",
+          "const v=JSON.parse(f.readFileSync(p.join(e,'package.json'),'utf8')).version;",
+          "if(v.replace(/^v/,'')!=='${rawVersion}'.replace(/^v/,'')){process.stderr.write(v);process.exit(2)}",
+          "process.stdout.write(r+'|'+v);"
+        ].join('');
+        const result = execFileSync('node', ['-e', verifyScript], {
+          cwd: __dirname,
+          encoding: 'utf8',
+          timeout: 10000
+        });
+        const [resolvedPath, resolvedVersion] = result.trim().split('|');
+        log(\`[INFO] Path validation successful: \${resolvedPath}\`);
+        log(\`[INFO] Version validation successful: ${suiteName}@\${resolvedVersion}\`);
+      } catch (err) {
+        const detail = (err.stderr || '').trim();
+        if (err.status === 1) {
+          throw new Error(
+            \`Verification failed: ${suiteName} resolved to \${detail}, expected under __dirname/node_modules\`
+          );
+        } else if (err.status === 2) {
+          throw new Error(\`Verification failed: installed version \${detail} does not match expected ${rawVersion}\`);
+        }
+        throw new Error(\`Verification failed: \${err.message}\`);
+      }
+`
+    : ''
+}    } finally {
       if (slot !== undefined) installSemaphore.releaseSlot(slot);
     }
   });
@@ -419,6 +461,7 @@ function main() {
         const hasModes = modes.length > 1 || (modes.length === 1 && modes[0] !== null);
         const isOptional = typeof versionObj === 'object' && versionObj.optional === true;
         const nodeConstraint = typeof versionObj === 'object' ? versionObj.node || '' : '';
+        const skipValidation = typeof versionObj === 'object' && versionObj.skipValidation === true;
 
         modes.forEach(mode => {
           // When modes exist, each mode gets its own subdirectory for isolation
@@ -437,7 +480,8 @@ function main() {
             esmOnly,
             mode,
             sourceDepth: hasModes ? 2 : 1,
-            nodeConstraint
+            nodeConstraint,
+            verifyDependency: !skipValidation
           });
           const fileName = mode ? `${mode}.test.js` : 'default.test.js';
           fs.writeFileSync(path.join(targetDir, fileName), testContent);
@@ -480,7 +524,8 @@ function main() {
       isLatest: true,
       esmOnly: false,
       mode: null,
-      sourceDepth: 1
+      sourceDepth: 1,
+      verifyDependency: false
     });
     fs.writeFileSync(path.join(versionDir, 'default.test.js'), testContent);
 
