@@ -3,8 +3,6 @@
  * (c) Copyright Instana Inc. and contributors 2019
  */
 
-/* eslint-disable */
-
 'use strict';
 
 const configNormalizers = require('./configNormalizers');
@@ -182,8 +180,8 @@ module.exports.normalize = (userConfig, defaultsOverride = {}) => {
  * @param {InstanaConfig} config
  */
 function normalizeServiceName(config) {
-  if (config.serviceName == null && process.env['INSTANA_SERVICE_NAME']) {
-    config.serviceName = process.env['INSTANA_SERVICE_NAME'];
+  if (config.serviceName == null && process.env.INSTANA_SERVICE_NAME) {
+    config.serviceName = process.env.INSTANA_SERVICE_NAME;
   }
   if (config.serviceName != null && typeof config.serviceName !== 'string') {
     logger.warn(
@@ -197,14 +195,14 @@ function normalizeServiceName(config) {
  * @param {InstanaConfig} config
  */
 function normalizePackageJsonPath(config) {
-  if (config.packageJsonPath == null && process.env['INSTANA_PACKAGE_JSON_PATH']) {
-    config.packageJsonPath = process.env['INSTANA_PACKAGE_JSON_PATH'];
+  if (config.packageJsonPath == null && process.env.INSTANA_PACKAGE_JSON_PATH) {
+    config.packageJsonPath = process.env.INSTANA_PACKAGE_JSON_PATH;
   }
   if (config.packageJsonPath != null && typeof config.packageJsonPath !== 'string') {
     logger.warn(
+      // eslint-disable-next-line max-len
       `Invalid configuration: config.packageJsonPath is not a string, the value will be ignored: ${config.packageJsonPath}`
     );
-
     config.packageJsonPath = null;
   }
 }
@@ -270,7 +268,6 @@ function normalizeTracingEnabled(config) {
  *
  * @param {InstanaConfig} config
  */
-
 function normalizeAllowRootExitSpan(config) {
   config.tracing.allowRootExitSpan = util.resolveBooleanConfig({
     envVar: 'INSTANA_ALLOW_ROOT_EXIT_SPAN',
@@ -375,6 +372,7 @@ function normalizeTracingHttp(config) {
   }
   if (!Array.isArray(config.tracing.http.extraHttpHeadersToCapture)) {
     logger.warn(
+      // eslint-disable-next-line max-len
       `Invalid configuration: config.tracing.http.extraHttpHeadersToCapture is not an array, the value will be ignored: ${JSON.stringify(
         config.tracing.http.extraHttpHeadersToCapture
       )}`
@@ -408,8 +406,8 @@ function parseHeadersEnvVar(envVarValue) {
 function normalizeTracingStackTrace(config) {
   const tracing = config.tracing;
 
-  const envStackTrace = process.env['INSTANA_STACK_TRACE'];
-  const envStackTraceLength = process.env['INSTANA_STACK_TRACE_LENGTH'];
+  const envStackTrace = process.env.INSTANA_STACK_TRACE;
+  const envStackTraceLength = process.env.INSTANA_STACK_TRACE_LENGTH;
 
   if (envStackTrace !== undefined) {
     const result = validateStackTraceMode(envStackTrace);
@@ -463,6 +461,7 @@ function normalizeTracingStackTrace(config) {
   } else if (stackTraceConfigValue !== undefined) {
     if (isLegacyLengthDefined) {
       logger.warn(
+        // eslint-disable-next-line max-len
         '[Deprecation Warning] The configuration option config.tracing.stackTraceLength is deprecated and will be removed in a future release. ' +
           'Please use config.tracing.global.stackTraceLength instead.'
       );
@@ -563,16 +562,19 @@ function normalizeSecrets(config) {
 
   if (typeof config.secrets.matcherMode !== 'string') {
     logger.warn(
+      // eslint-disable-next-line max-len
       `The value of config.secrets.matcherMode ("${config.secrets.matcherMode}") is not a string. Assuming the default value ${defaults.secrets.matcherMode}.`
     );
     config.secrets.matcherMode = defaults.secrets.matcherMode;
   } else if (validSecretsMatcherModes.indexOf(config.secrets.matcherMode) < 0) {
     logger.warn(
+      // eslint-disable-next-line max-len
       `The value of config.secrets.matcherMode (or the matcher mode parsed from INSTANA_SECRETS) (${config.secrets.matcherMode}) is not a supported matcher mode. Assuming the default value ${defaults.secrets.matcherMode}.`
     );
     config.secrets.matcherMode = defaults.secrets.matcherMode;
   } else if (!Array.isArray(config.secrets.keywords)) {
     logger.warn(
+      // eslint-disable-next-line max-len
       `The value of config.secrets.keywords (${config.secrets.keywords}) is not an array. Assuming the default value ${defaults.secrets.keywords}.`
     );
     config.secrets.keywords = defaults.secrets.keywords;
@@ -602,7 +604,7 @@ function parseMatcherMode(matcherMode) {
  * @returns {InstanaSecretsOption}
  */
 function parseSecretsEnvVar(envVarValue) {
-  let [matcherMode, keywords] = envVarValue.split(':', 2);
+  const [matcherMode, keywords] = envVarValue.split(':', 2);
 
   const parsedMatcherMode = parseMatcherMode(matcherMode);
 
@@ -616,6 +618,7 @@ function parseSecretsEnvVar(envVarValue) {
   if (!keywords) {
     // a list of keywords (with at least one element) is mandatory for all matcher modes except "none"
     logger.warn(
+      // eslint-disable-next-line max-len
       `The value of INSTANA_SECRETS (${envVarValue}) cannot be parsed. Please use the following format: INSTANA_SECRETS=<matcher>:<secret>[,<secret>]. This setting will be ignored.`
     );
     return {};
@@ -672,7 +675,6 @@ function normalizeIgnoreEndpoints(config) {
   if (process.env.INSTANA_IGNORE_ENDPOINTS) {
     config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.fromEnv(process.env.INSTANA_IGNORE_ENDPOINTS);
     logger.debug(`Ignore endpoints have been configured: ${JSON.stringify(config.tracing.ignoreEndpoints)}`);
-    return;
   }
 }
 
