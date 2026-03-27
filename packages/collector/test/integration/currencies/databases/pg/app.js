@@ -49,6 +49,22 @@ pool.query(createTableQuery, err => {
   }
 });
 
+// Create a stored procedure for testing
+const createProcedureQuery = `
+  CREATE OR REPLACE FUNCTION get_user_by_name(user_name VARCHAR)
+  RETURNS TABLE(id INT, name VARCHAR, email VARCHAR) AS $$
+  BEGIN
+    RETURN QUERY SELECT users.id, users.name, users.email FROM users WHERE users.name = user_name;
+  END;
+  $$ LANGUAGE plpgsql;
+`;
+
+pool.query(createProcedureQuery, err => {
+  if (err) {
+    log('Failed to create stored procedure', err);
+  }
+});
+
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
 }
@@ -103,6 +119,93 @@ app.get('/select-now-no-pool-promise', (req, res) => {
 app.get('/parameterized-query', async (req, res) => {
   await client.query('SELECT * FROM users WHERE name = $1', ['parapeter']);
   res.json({});
+});
+
+app.get('/bind-variables-test', async (req, res) => {
+  // Test with string query and array parameters
+  await client.query('SELECT * FROM users WHERE name = testuser AND email = test@example.com');
+
+  // Test with config object containing values
+  await pool.query({
+    text: 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *',
+    values: ['bindtest', 'bindtest@example.com']
+  });
+
+  res.json({ success: true });
+});
+
+app.get('/stored-procedure-test', async (req, res) => {
+  // First insert a test user
+  await client.query('INSERT INTO users(name, email) VALUES($1, $2) ON CONFLICT DO NOTHING', [
+    'proceduretest',
+    'procedure@example.com'
+  ]);
+
+  // Call stored procedure with bind variable
+  const result = await client.query('SELECT * FROM get_user_by_name($1)', ['proceduretest']);
+
+  res.json({ success: true, rows: result.rows });
+});
+
+app.get('/all-data-types-test', async (req, res) => {
+  // Test with various data types to demonstrate masking
+
+  // 1. String values
+  await client.query('SELECT $1::text as string_value', ['sensitive_password_123']);
+
+  // 2. Number values (integer and float)
+  await client.query('SELECT $1::integer as int_value, $2::numeric as float_value', [42, 3.14159]);
+
+  // 3. Boolean value
+  await client.query('SELECT $1::boolean as bool_value', [true]);
+
+  // 4. null and undefined (null in SQL)
+  await client.query('SELECT $1 as null_value', [null]);
+
+  // 5. Date object
+  await client.query('SELECT $1::timestamp as date_value', [new Date('2024-01-15T10:30:00Z')]);
+
+  // 6. JSON object
+  await client.query('SELECT $1::jsonb as json_value', [
+    JSON.stringify({ user: 'john', email: 'john@example.com', preferences: { theme: 'dark', notifications: true } })
+  ]);
+
+  // 7. Array (as JSON string for PostgreSQL)
+  await client.query('SELECT $1::jsonb as array_value', [JSON.stringify([1, 2, 3, 4, 5])]);
+
+  // 8. Nested JSON with arrays
+  await client.query('SELECT $1::jsonb as nested_value', [
+    JSON.stringify({
+      users: [
+        { id: 1, name: 'Alice', email: 'alice@example.com' },
+        { id: 2, name: 'Bob', email: 'bob@example.com' }
+      ],
+      metadata: { created: '2024-01-01', version: 1 }
+    })
+  ]);
+
+  // 9. Buffer/Binary data (bytea in PostgreSQL)
+  const imageBuffer = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46]); // JPEG header
+  await client.query('SELECT $1::bytea as binary_value', [imageBuffer]);
+
+  // 10. Large buffer (simulating file upload)
+  const largeBuffer = Buffer.alloc(1024); // 1KB buffer
+  await client.query('SELECT $1::bytea as large_binary', [largeBuffer]);
+
+  // 11. Mixed types in single query
+  await client.query('SELECT $1::text, $2::integer, $3::boolean, $4::jsonb, $5::bytea', [
+    'user@example.com',
+    12345,
+    false,
+    JSON.stringify({ key: 'value' }),
+    Buffer.from('secret')
+  ]);
+
+  res.json({
+    success: true,
+    message: 'All data types tested',
+    note: 'Check spans to see masked bind variables'
+  });
 });
 
 app.get('/pool-string-insert', (req, res) => {
