@@ -331,9 +331,19 @@ function createTgzSymlinks(targetDir) {
   });
 }
 
-function mergeTemplate(target, templatePath) {
+function mergeTemplate(target, templatePath, currencyVersion) {
   if (!templatePath || !fs.existsSync(templatePath)) return;
-  const template = JSON.parse(fs.readFileSync(templatePath, 'utf8'));
+
+  let templateContent = fs.readFileSync(templatePath, 'utf8');
+
+  // Replace {{CURRENCY_VERSION}} placeholder with actual version
+  // This allows template files to use {{CURRENCY_VERSION}} as a placeholder
+  // that gets replaced with the specific version being tested
+  if (currencyVersion) {
+    templateContent = templateContent.replace(/\{\{CURRENCY_VERSION\}\}/g, currencyVersion);
+  }
+
+  const template = JSON.parse(templateContent);
   Object.entries(template).forEach(([key, value]) => {
     if (typeof value === 'object' && !Array.isArray(value) && typeof target[key] === 'object') {
       Object.assign(target[key], value);
@@ -350,7 +360,14 @@ function generatePackageJson(opts) {
   let versionPackageJson = { name: pkgName };
 
   if (fs.existsSync(packageJsonTemplatePath)) {
-    const templatePackageJson = JSON.parse(fs.readFileSync(packageJsonTemplatePath, 'utf8'));
+    let templateContent = fs.readFileSync(packageJsonTemplatePath, 'utf8');
+
+    // Replace {{CURRENCY_VERSION}} placeholder with actual version in package.json template
+    if (currencyVersion) {
+      templateContent = templateContent.replace(/\{\{CURRENCY_VERSION\}\}/g, currencyVersion);
+    }
+
+    const templatePackageJson = JSON.parse(templateContent);
     versionPackageJson = Object.assign(versionPackageJson, templatePackageJson);
   } else if (fs.existsSync(packageJsonPath)) {
     const templatePackageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
@@ -358,10 +375,10 @@ function generatePackageJson(opts) {
   }
 
   if (majorVersion != null) {
-    mergeTemplate(versionPackageJson, path.join(testDir, `package.json.template.v${majorVersion}`));
+    mergeTemplate(versionPackageJson, path.join(testDir, `package.json.template.v${majorVersion}`), currencyVersion);
   }
   if (currencyVersion) {
-    mergeTemplate(versionPackageJson, path.join(testDir, `package.json.template.v${currencyVersion}`));
+    mergeTemplate(versionPackageJson, path.join(testDir, `package.json.template.v${currencyVersion}`), currencyVersion);
   }
 
   if (!versionPackageJson.dependencies) {
