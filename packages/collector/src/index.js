@@ -179,7 +179,12 @@ function init(userConfig = {}) {
 
   if (isMainThread) {
     uncaught.init(config, agentConnection, pidStore);
-    metrics.init(config, pidStore);
+
+    if (process.env.INSTANA_DISABLE_METRICS !== 'true') {
+      metrics.init(config, pidStore);
+    } else {
+      logger.info('Metrics collection is disabled via INSTANA_DISABLE_METRICS.');
+    }
   }
 
   logger.info(`@instana/collector module version: ${require(path.join(__dirname, '..', 'package.json')).version}`);
