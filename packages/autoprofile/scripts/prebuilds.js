@@ -23,26 +23,11 @@ if (!argv.node) {
 
 const targets = argv.node.split(',').join(' -t ');
 
-// darwin
-if (!argv.os || (argv.os && argv.os === 'darwin')) {
-  let archs = ['arm64', 'x64'];
-
-  if (argv.arch) {
-    archs = argv.arch.split(',');
-  }
-
-  console.log(`\n### Building darwin prebuilds for ${targets} ${archs}...\n`);
-
-  archs.forEach(arch => {
-    childProcess.execSync(`npx prebuildify -t ${targets} --strip --arch ${arch}`, { stdio: 'inherit' });
-  });
-}
-
 // linux
 // alpine = x64 musl
 // centos7-devtoolset7 = x64 glibc
 if (!argv.os || (argv.os && argv.os === 'linux')) {
-  let archs = ['alpine', 'linux-arm64', 'centos7-devtoolset7', 'linux-armv6', 'linux-armv7', 'linux-s390x'];
+  let archs = ['linux-s390x'];
   if (argv.arch) {
     archs = argv.arch.split(',');
   }
