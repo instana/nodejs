@@ -364,6 +364,10 @@ function normalizeTracingTransmission(config) {
 }
 
 /**
+ * NOTE: This normalization logic is not handled in the resolver.
+ * because it involves complex multi-step processing:
+ * Future improvement: Consider refactoring to use a more generic resolver pattern.
+ *
  * @param {InstanaConfig} config
  */
 function normalizeTracingHttp(config) {
@@ -411,6 +415,11 @@ function parseHeadersEnvVar(envVarValue) {
 
 /**
  * Handles both stackTrace and stackTraceLength configuration
+ *
+ * NOTE: This normalization logic is not handled in the resolver.
+ * because it involves complex multi-step processing:
+ * Future improvement: Consider refactoring to use a more generic resolver pattern.
+ *
  * @param {InstanaConfig} config
  */
 function normalizeTracingStackTrace(config) {
@@ -496,6 +505,10 @@ function normalizeTracingStackTrace(config) {
 }
 
 /**
+ * NOTE: This normalization logic is not handled in the resolver.
+ * because it involves complex multi-step processing:
+ * Future improvement: Consider refactoring to use a more generic resolver pattern.
+ *
  * @param {InstanaConfig} config
  */
 function normalizeDisableTracing(config) {
@@ -554,6 +567,10 @@ function normalizeTracingKafka(config) {
 }
 
 /**
+ * NOTE: This normalization logic is not handled in the resolver.
+ * because it involves complex multi-step processing:
+ * Future improvement: Consider refactoring to use a more generic resolver pattern.
+ *
  * @param {InstanaConfig} config
  */
 function normalizeSecrets(config) {
@@ -642,6 +659,10 @@ function parseSecretsEnvVar(envVarValue) {
 }
 
 /**
+ * NOTE: This normalization logic is not handled in the resolver.
+ * because it involves complex multi-step processing:
+ * Future improvement: Consider refactoring to use a more generic resolver pattern.
+ *
  * @param {InstanaConfig} config
  */
 function normalizeIgnoreEndpoints(config) {
