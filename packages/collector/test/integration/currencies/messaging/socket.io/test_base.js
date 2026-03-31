@@ -128,6 +128,33 @@ module.exports = function (name, version, isLatest) {
                       checkTelemetryResourceAttrs(span);
                     }
                   });
+
+                  // TODO: Verify client receives the message with proper trace continuity
+                  // Ideally, this should be part of a single trace. Currently, it won’t work since the client is not instrumented.
+
+                  // After adding client instrumentation, total spans should increase to 5
+                  // This will be the 5th span: socket.on('test_reply')
+
+                  // Expected additional spans after full client instrumentation:
+                  // - Span 4: Client ENTRY span for socket.on('test') - should be child of server EXIT
+                  // - Span 5: Client EXIT span for socket.emit('test_reply') - should be child of client ENTRY
+
+                  // verifyEntrySpan({
+                  //   spanName: 'otel',
+                  //   spans,
+                  //   withError: false,
+                  //   pid: String(clientControls.getPid()),
+                  //   dataProperty: 'tags',
+                  //   extraTests: span => {
+                  //     expect(span.p).to.equal(serverSocketExit.s);
+                  //     expect(span.data.tags.name).to.contain('receive');
+                  //     expect(span.data.tags['messaging.system']).to.eql('socket.io');
+                  //     expect(span.data.tags['messaging.destination']).to.eql('ON test');
+                  //     expect(span.data.tags['messaging.operation']).to.eql('receive');
+                  //     expect(span.data.tags['messaging.socket.io.event_name']).to.eql('test');
+                  //     checkTelemetryResourceAttrs(span);
+                  //   }
+                  // });
                 })
               )
             ));
