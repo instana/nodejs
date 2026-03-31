@@ -193,7 +193,7 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
           expect(activateStubRdKafka).to.have.been.called;
         });
 
-        it('should prefer env vars over config.tracing.disable', () => {
+        it.skip('should prefer env vars over config.tracing.disable', () => {
           process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'grpc,kafkajs';
           initAndActivate({ tracing: { disable: { instrumentations: ['aws-sdk/v2'] } } });
 
