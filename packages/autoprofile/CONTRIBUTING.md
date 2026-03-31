@@ -69,7 +69,7 @@ scripts/custom-dockerfiles/Dockerfile.s390x
 
 ### Troubleshooting
 
-If you encounter an error like the following:
+1. If you encounter an error like the following:
 
 ```
 Error: Could not detect abi for version 23.0.0 and runtime node.
@@ -77,3 +77,7 @@ Error: Could not detect abi for version 23.0.0 and runtime node.
 Solution:
 
 Update [`node-abi`](https://www.npmjs.com/package/node-abi), a sub-dependency of `prebuildify`, to the latest version for Node.js compatibility.
+
+2. **s390x prebuild generation:**
+
+s390x prebuild generation works with Rancher version 1.20.1 and Docker 28.3.3. There seems to be a Segmentation fault issue with the latest Docker version.
