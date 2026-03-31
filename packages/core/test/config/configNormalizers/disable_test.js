@@ -288,6 +288,34 @@ describe('util.configNormalizers.disable', () => {
       expect(result).to.deep.equal({});
     });
 
+    it.skip('should give precedence to INSTANA_TRACING_DISABLE=false over config.tracing.disable=true', () => {
+      process.env.INSTANA_TRACING_DISABLE = 'false';
+
+      const config = {
+        tracing: {
+          disable: true
+        }
+      };
+      const result = normalize(config);
+
+      expect(result).to.deep.equal({});
+    });
+
+    it.skip('should give precedence to INSTANA_TRACING_DISABLE=false over config with instrumentations', () => {
+      process.env.INSTANA_TRACING_DISABLE = 'false';
+
+      const config = {
+        tracing: {
+          disable: {
+            instrumentations: ['aws-sdk', 'mongodb']
+          }
+        }
+      };
+      const result = normalize(config);
+
+      expect(result).to.deep.equal({});
+    });
+
     it('should give precedence to INSTANA_TRACING_DISABLE=true over other env vars', () => {
       process.env.INSTANA_TRACING_DISABLE = 'true';
       process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'aws-sdk,mongodb';
