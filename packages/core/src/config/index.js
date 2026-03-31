@@ -638,8 +638,6 @@ function normalizeSecrets(userConfig, config) {
   config.secrets.matcherMode = config.secrets.matcherMode || fromEnvVar.matcherMode || defaults.secrets.matcherMode;
   config.secrets.keywords = config.secrets.keywords || fromEnvVar.keywords || defaults.secrets.keywords;
 
-  const matcherMode = userSecrets?.matcherMode || fromEnvVar.matcherMode || defaults.secrets.matcherMode;
-
   const keywords = userSecrets?.keywords || fromEnvVar.keywords || defaults.secrets.keywords;
 
   if (typeof matcherMode !== 'string') {
@@ -742,8 +740,8 @@ function normalizeIgnoreEndpoints(userTracingConfig, config) {
   }
 
   // Case 1: Use in-code configuration if available
-  if (Object.keys(userIgnoreEndpoints).length) {
-    config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(userIgnoreEndpoints);
+  if (Object.keys(ignoreEndpointsConfig).length) {
+    config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
     logger.debug('[config] incode:config.tracing.ignoreEndpoints');
     return;
   }
@@ -766,7 +764,6 @@ function normalizeIgnoreEndpoints(userTracingConfig, config) {
   if (process.env.INSTANA_IGNORE_ENDPOINTS) {
     config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.fromEnv(process.env.INSTANA_IGNORE_ENDPOINTS);
     logger.debug('[config] env:INSTANA_IGNORE_ENDPOINTS');
-    return;
   }
 
   config.tracing.ignoreEndpoints = {};
