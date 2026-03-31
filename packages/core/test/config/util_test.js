@@ -479,6 +479,17 @@ describe('config.util', () => {
 
       expect(result).to.equal(false);
     });
+
+    it('should return default when configValue and env var are not boolean', () => {
+      const result = util.resolveBooleanConfigWithInvertedEnv({
+        envVar: 'TEST_INVERTED_VAR',
+        configValue: 'not-a-boolean',
+        defaultValue: true,
+        configPath: 'config.test.inverted'
+      });
+
+      expect(result).to.equal(true);
+    });
   });
 
   describe('resolveBooleanConfigWithTruthyEnv', () => {

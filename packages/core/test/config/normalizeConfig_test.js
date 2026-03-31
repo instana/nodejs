@@ -73,6 +73,11 @@ describe('config.normalizeConfig', () => {
       expect(config.serviceName).to.not.exist;
     });
 
+    it.skip('should use config when env not set', () => {
+      const config = coreConfig.normalize({ serviceName: 'config-service-name' });
+      expect(config.serviceName).to.equal('config-service-name');
+    });
+
     it.skip('should give precedence to INSTANA_SERVICE_NAME env var over config', () => {
       process.env.INSTANA_SERVICE_NAME = 'env-service';
       const config = coreConfig.normalize({ serviceName: 'config-service' });
@@ -607,6 +612,52 @@ describe('config.normalizeConfig', () => {
         expect(config.tracing.stackTraceLength).to.equal(10);
       });
 
+      it('should use default when INSTANA_STACK_TRACE passes validation but normalizer returns null', () => {
+        const stackTraceNormalizers = require('../../src/config/configNormalizers/stackTrace');
+        const original = stackTraceNormalizers.normalizeStackTraceModeFromEnv;
+        stackTraceNormalizers.normalizeStackTraceModeFromEnv = () => null;
+
+        process.env.INSTANA_STACK_TRACE = 'all';
+        const config = coreConfig.normalize();
+        expect(config.tracing.stackTrace).to.equal('all');
+
+        stackTraceNormalizers.normalizeStackTraceModeFromEnv = original;
+      });
+
+      it('should use default when config stackTrace passes validation but normalizer returns null', () => {
+        const stackTraceNormalizers = require('../../src/config/configNormalizers/stackTrace');
+        const original = stackTraceNormalizers.normalizeStackTraceMode;
+        stackTraceNormalizers.normalizeStackTraceMode = () => null;
+
+        const config = coreConfig.normalize({ tracing: { global: { stackTrace: 'all' } } });
+        expect(config.tracing.stackTrace).to.equal('all');
+
+        stackTraceNormalizers.normalizeStackTraceMode = original;
+      });
+
+      it('should use default when INSTANA_STACK_TRACE_LENGTH passes validation but normalizer returns null', () => {
+        const stackTraceNormalizers = require('../../src/config/configNormalizers/stackTrace');
+        const original = stackTraceNormalizers.normalizeStackTraceLengthFromEnv;
+        stackTraceNormalizers.normalizeStackTraceLengthFromEnv = () => null;
+
+        process.env.INSTANA_STACK_TRACE_LENGTH = '10';
+        const config = coreConfig.normalize();
+        expect(config.tracing.stackTraceLength).to.equal(10);
+
+        stackTraceNormalizers.normalizeStackTraceLengthFromEnv = original;
+      });
+
+      it('should use default when config stackTraceLength passes validation but normalizer returns null', () => {
+        const stackTraceNormalizers = require('../../src/config/configNormalizers/stackTrace');
+        const original = stackTraceNormalizers.normalizeStackTraceLength;
+        stackTraceNormalizers.normalizeStackTraceLength = () => null;
+
+        const config = coreConfig.normalize({ tracing: { global: { stackTraceLength: 20 } } });
+        expect(config.tracing.stackTraceLength).to.equal(10);
+
+        stackTraceNormalizers.normalizeStackTraceLength = original;
+      });
+
       it('should reject INSTANA_STACK_TRACE_LENGTH with only whitespace', () => {
         process.env.INSTANA_STACK_TRACE_LENGTH = '   ';
         const config = coreConfig.normalize();
@@ -617,6 +668,17 @@ describe('config.normalizeConfig', () => {
         process.env.INSTANA_STACK_TRACE_LENGTH = '15abc';
         const config = coreConfig.normalize();
         expect(config.tracing.stackTraceLength).to.equal(15);
+      });
+
+      it('should return null from normalizeStackTraceLength when value is valid but normalized is null', () => {
+        const config = coreConfig.normalize({
+          tracing: {
+            global: {
+              stackTraceLength: Infinity
+            }
+          }
+        });
+        expect(config.tracing.stackTraceLength).to.equal(10);
       });
 
       it('should handle both INSTANA_STACK_TRACE and INSTANA_STACK_TRACE_LENGTH together', () => {
@@ -1204,6 +1266,25 @@ describe('config.normalizeConfig', () => {
         });
         expect(config.tracing.ignoreEndpoints).to.deep.equal({});
       });
+
+      it('should handle ignoreEndpoints when config is an array instead of object', () => {
+        const config = coreConfig.normalize({
+          tracing: {
+            ignoreEndpoints: ['redis', 'kafka']
+          }
+        });
+        expect(config.tracing.ignoreEndpoints).to.deep.equal({});
+      });
+
+      it('should handle ignoreEndpoints when config is a non-object type', () => {
+        const config = coreConfig.normalize({
+          tracing: {
+            ignoreEndpoints: 'invalid-string'
+          }
+        });
+        expect(config.tracing.ignoreEndpoints).to.deep.equal({});
+      });
+
       it('should return false when INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION is not set', () => {
         const config = coreConfig.normalize();
         expect(config.tracing.ignoreEndpointsDisableSuppression).to.equal(false);
