@@ -92,25 +92,7 @@ module.exports = function (name, version, isLatest) {
                     pid: String(serverControls.getPid())
                   });
 
-                  verifyEntrySpan({
-                    spanName: 'otel',
-                    spans,
-                    withError: false,
-                    pid: String(serverControls.getPid()),
-                    dataProperty: 'tags',
-                    extraTests: span => {
-                      expect(span.data.operation).to.equal('socket.io');
-                      expect(span.data.tags.name).to.contain('receive');
-                      expect(span.data.tags['messaging.system']).to.eql('socket.io');
-                      expect(span.data.tags['messaging.destination']).to.eql('ON test_reply');
-                      expect(span.data.tags['messaging.operation']).to.eql('receive');
-                      expect(span.data.tags['messaging.socket.io.event_name']).to.eql('test_reply');
-
-                      checkTelemetryResourceAttrs(span);
-                    }
-                  });
-
-                  verifyExitSpan({
+                  const serverSocketExit = verifyExitSpan({
                     spanName: 'otel',
                     spans,
                     parent: httpEntry,
@@ -118,6 +100,8 @@ module.exports = function (name, version, isLatest) {
                     pid: String(serverControls.getPid()),
                     dataProperty: 'tags',
                     extraTests: span => {
+                      expect(span.t).to.equal(httpEntry.t);
+                      expect(span.p).to.equal(httpEntry.s);
                       expect(span.data.tags.name).to.contain('send');
                       expect(span.data.tags['messaging.system']).to.eql('socket.io');
                       expect(span.data.tags['messaging.destination_kind']).to.eql('topic');
@@ -129,19 +113,28 @@ module.exports = function (name, version, isLatest) {
                     }
                   });
 
-                  // TODO: Verify client receives the message with proper trace continuity in https://jsw.ibm.com/browse/INSTA-83330
-                  // Ideally, this should be part of a single trace. Currently, it won't work since the client is not instrumented.
+                  verifyEntrySpan({
+                    spanName: 'otel',
+                    spans,
+                    parent: serverSocketExit,
+                    withError: false,
+                    pid: String(serverControls.getPid()),
+                    dataProperty: 'tags',
+                    extraTests: span => {
+                      // TODO: Uncomment these assertions once ctx propagation is complete
+                      // (https://jsw.ibm.com/browse/INSTA-83330)
+                      // expect(span.t).to.equal(httpEntry.t);
+                      // expect(span.p).to.equal(serverSocketExit.s);
+                      expect(span.data.operation).to.equal('socket.io');
+                      expect(span.data.tags.name).to.contain('receive');
+                      expect(span.data.tags['messaging.system']).to.eql('socket.io');
+                      expect(span.data.tags['messaging.destination']).to.eql('ON test_reply');
+                      expect(span.data.tags['messaging.operation']).to.eql('receive');
+                      expect(span.data.tags['messaging.socket.io.event_name']).to.eql('test_reply');
 
-                  // After adding client instrumentation, total spans should increase to 5
-
-                  // Expected assertions for client ENTRY span:
-                  //   expect(span.p).to.equal(serverSocketExit.s);
-                  //   expect(span.data.tags.name).to.contain('receive');
-                  //   expect(span.data.tags['messaging.system']).to.eql('socket.io');
-                  //   expect(span.data.tags['messaging.destination']).to.eql('ON test');
-                  //   expect(span.data.tags['messaging.operation']).to.eql('receive');
-                  //   expect(span.data.tags['messaging.socket.io.event_name']).to.eql('test');
-                  //   checkTelemetryResourceAttrs(span);
+                      checkTelemetryResourceAttrs(span);
+                    }
+                  });
                 })
               )
             ));
