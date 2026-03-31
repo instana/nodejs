@@ -376,6 +376,28 @@ describe('config.configNormalizers.stackTrace', () => {
 
       expect(result).to.equal(20);
     });
+
+    it('should return null when tracing.stackTraceLength is a non-numeric string', () => {
+      const config = {
+        tracing: {
+          stackTraceLength: 'not-a-number'
+        }
+      };
+      const result = stackTraceNormalizer.normalizeStackTraceLength(config);
+
+      expect(result).to.be.null;
+    });
+
+    it('should return null when tracing.stackTraceLength results in NaN after parsing', () => {
+      const config = {
+        tracing: {
+          stackTraceLength: 'abc123'
+        }
+      };
+      const result = stackTraceNormalizer.normalizeStackTraceLength(config);
+
+      expect(result).to.be.null;
+    });
   });
 
   describe('normalizeStackTraceModeFromAgent()', () => {
