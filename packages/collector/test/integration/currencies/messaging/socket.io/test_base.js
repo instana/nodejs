@@ -129,7 +129,7 @@ module.exports = function (name, version, isLatest) {
                     }
                   });
 
-                  // TODO: Verify client receives the message with proper trace continuity
+                  // TODO: Verify client receives the message with proper trace continuity in https://jsw.ibm.com/browse/INSTA-83330
                   // Ideally, this should be part of a single trace. Currently, it won't work since the client is not instrumented.
 
                   // After adding client instrumentation, total spans should increase to 5
