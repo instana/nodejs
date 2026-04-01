@@ -144,24 +144,32 @@ module.exports.init = _logger => {
 
 /**
  * Merges the config that was passed to the init function with environment variables and default values.
- */
-
-/**
- * @param {InstanaConfig} [userConfig]
- * @param {InstanaConfig} [defaultsOverride]
+ * @param {Object} [options]
+ * @param {InstanaConfig} [options.userConfig]
+ * @param {Object} [options.extraFinalConfig]
+ * @param {InstanaConfig} [options.defaultsOverride]
  * @returns {InstanaConfig}
  */
-module.exports.normalize = (userConfig, defaultsOverride = {}) => {
-  if (defaultsOverride && typeof defaultsOverride === 'object') {
+module.exports.normalize = ({ userConfig = {}, extraFinalConfig = {}, defaultsOverride = {} } = {}) => {
+  if (defaultsOverride && typeof defaultsOverride === 'object' && Object.keys(defaultsOverride).length > 0) {
     defaults = deepMerge(defaults, defaultsOverride);
   }
 
   let normalizedUserConfig;
-  if (userConfig !== null) {
+  if (userConfig !== null && userConfig !== undefined) {
     normalizedUserConfig = Object.assign({}, userConfig);
+  } else {
+    normalizedUserConfig = {};
   }
+
+  // Preserve extraFinalConfig in the finalConfig to allow additional config values
+  // that are not part of the core config schema. Eg: collector config needs to be preserved.
   /** @type InstanaConfig */
+<<<<<<< HEAD
   const config = {};
+=======
+  const finalConfig = extraFinalConfig ? Object.assign({}, extraFinalConfig) : {};
+>>>>>>> 71a1f1038 (chore: refactor)
 
   // TODO: remove this and forward the logger via init fn.
   config.logger = logger;
@@ -366,6 +374,8 @@ function normalizeActivateImmediately(userTracingConfig, config) {
  */
 function normalizeTracingTransmission(userTracingConfig, config) {
   config.tracing.maxBufferedSpans = userTracingConfig?.maxBufferedSpans || defaults.tracing.maxBufferedSpans;
+function normalizeTracingTransmission(userConfig, defaultConfig, finalConfig) {
+  finalConfig.tracing.maxBufferedSpans = userConfig.tracing.maxBufferedSpans || defaultConfig.tracing.maxBufferedSpans;
 
   config.tracing.transmissionDelay = util.resolveNumericConfig({
     envVar: 'INSTANA_TRACING_TRANSMISSION_DELAY',
