@@ -22,11 +22,14 @@ const defaults = {
 module.exports = function normalizeConfig(userConfig = {}) {
   const finalConfig = {};
 
+  // NOTE: This function only normalizes collector-specific configuration fields.
+  // Other userConfig fields (like serviceName, tracing, etc.) are passed through as-is
+  // and will be normalized later by core/config when this collector config is passed
+  // as extraFinalConfig to core's normalize function.
   finalConfig.agentHost = normalizeAgentHost(userConfig, defaults);
   finalConfig.agentPort = normalizeAgentPort(userConfig, defaults);
   finalConfig.agentRequestTimeout = normalizeAgentRequestTimeout(userConfig, defaults);
   finalConfig.autoProfile = normalizeAutoProfile(userConfig, defaults);
-  finalConfig.tracing = normalizeTracing(userConfig);
   finalConfig.reportUnhandledPromiseRejections = normalizeUnhandledRejections(userConfig);
 
   return finalConfig;
@@ -70,14 +73,6 @@ function normalizeAgentRequestTimeout(userConfig, defaultConfig) {
  */
 function normalizeAutoProfile(userConfig, defaultConfig) {
   return resolveConfig(process.env.INSTANA_AUTO_PROFILE, userConfig.autoProfile, defaultConfig.autoProfile);
-}
-
-/**
- * @param {import('../types/collector').CollectorConfig} userConfig
- * @returns {object}
- */
-function normalizeTracing(userConfig) {
-  return userConfig.tracing ?? {};
 }
 
 /**
