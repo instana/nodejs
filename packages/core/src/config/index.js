@@ -156,6 +156,10 @@ module.exports.normalize = (userConfig, defaultsOverride = {}) => {
     defaults = deepMerge(defaults, defaultsOverride);
   }
 
+  let normalizedUserConfig;
+  if (userConfig !== null) {
+    normalizedUserConfig = Object.assign({}, userConfig);
+  }
   /** @type InstanaConfig */
   const config = {};
 
