@@ -80,4 +80,9 @@ Update [`node-abi`](https://www.npmjs.com/package/node-abi), a sub-dependency of
 
 2. **s390x prebuild generation:**
 
-s390x prebuild generation works with Rancher version 1.20.1 and Docker 28.3.3. There seems to be a Segmentation fault issue with the latest Docker version.
+Prebuild generation for the s390x architecture has been verified to work with:
+
+- Rancher Desktop v1.20.1
+- Docker v28.3.3
+
+Newer Docker versions may trigger segmentation faults, which can cause the build process to fail. If you encounter this issue, it is recommended to use the versions listed above.
