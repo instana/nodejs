@@ -44,7 +44,7 @@ exports.resolveNumericConfig = function resolveNumericConfig({ envVar, configVal
   if (configValue != null) {
     const configParsed = toValidNumber(configValue);
     if (configParsed !== undefined) {
-      logger.debug(`[config] config:${configPath} = ${configValue}`);
+      logger.debug(`[config] incode:${configPath} = ${configValue}`);
       return configParsed;
     }
 
@@ -86,7 +86,7 @@ function parseBooleanFromEnv(envValue) {
  */
 exports.resolveBooleanConfig = function resolveBooleanConfig({ envVar, configValue, defaultValue, configPath }) {
   if (typeof configValue === 'boolean') {
-    logger.debug(`[config] config:${configPath} = ${configValue}`);
+    logger.debug(`[config] incode:${configPath} = ${configValue}`);
     return configValue;
   }
 
@@ -131,7 +131,7 @@ exports.resolveBooleanConfigWithInvertedEnv = function resolveBooleanConfigWithI
   configPath
 }) {
   if (typeof configValue === 'boolean') {
-    logger.debug(`[config] config:${configPath} = ${configValue}`);
+    logger.debug(`[config] incode:${configPath} = ${configValue}`);
 
     return configValue;
   }
@@ -171,7 +171,7 @@ exports.resolveBooleanConfigWithTruthyEnv = function resolveBooleanConfigWithTru
   configPath
 }) {
   if (typeof configValue === 'boolean') {
-    logger.debug(`[config] config:${configPath} = ${configValue}`);
+    logger.debug(`[config] incode:${configPath} = ${configValue}`);
     return configValue;
   }
 

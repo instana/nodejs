@@ -29,14 +29,14 @@ exports.normalize = function normalize(config) {
   try {
     // Disable all tracing if explicitly set  'disable' to true
     if (config.tracing.disable === true) {
-      logger?.debug('[config] config:tracing.disable = true');
+      logger?.debug('[config] incode:tracing.disable = true');
 
       return true;
     }
     const hasDisableConfig = isDisableConfigNonEmpty(config);
 
     if (hasDisableConfig) {
-      logger?.debug(`[config] config:tracing.disable = ${JSON.stringify(config.tracing.disable)}`);
+      logger?.debug(`[config] incode:tracing.disable = ${JSON.stringify(config.tracing.disable)}`);
     }
 
     // Fallback to environment variables if `disable` is not explicitly configured

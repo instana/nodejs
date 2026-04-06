@@ -184,7 +184,7 @@ function normalizeServiceName(config) {
     config.serviceName = process.env.INSTANA_SERVICE_NAME;
     logger.debug(`[config] env:INSTANA_SERVICE_NAME = ${process.env.INSTANA_SERVICE_NAME}`);
   } else if (config.serviceName != null && typeof config.serviceName === 'string') {
-    logger.debug(`[config] config:config.serviceName = ${config.serviceName}`);
+    logger.debug(`[config] incode:config.serviceName = ${config.serviceName}`);
   }
   if (config.serviceName != null && typeof config.serviceName !== 'string') {
     logger.warn(
@@ -202,7 +202,7 @@ function normalizePackageJsonPath(config) {
     config.packageJsonPath = process.env.INSTANA_PACKAGE_JSON_PATH;
     logger.debug(`[config] env:INSTANA_PACKAGE_JSON_PATH = ${process.env.INSTANA_PACKAGE_JSON_PATH}`);
   } else if (config.packageJsonPath != null && typeof config.packageJsonPath === 'string') {
-    logger.debug(`[config] config:config.packageJsonPath = ${config.packageJsonPath}`);
+    logger.debug(`[config] incode:config.packageJsonPath = ${config.packageJsonPath}`);
   }
   if (config.packageJsonPath != null && typeof config.packageJsonPath !== 'string') {
     logger.warn(
@@ -381,7 +381,7 @@ function normalizeTracingHttp(config) {
     config.tracing.http.extraHttpHeadersToCapture = fromEnvVar;
     logger.debug(`[config] env:INSTANA_EXTRA_HTTP_HEADERS = ${process.env.INSTANA_EXTRA_HTTP_HEADERS}`);
   } else if (config.tracing.http.extraHttpHeadersToCapture) {
-    logger.debug('[config] config:config.tracing.http.extraHttpHeadersToCapture');
+    logger.debug('[config] incode:config.tracing.http.extraHttpHeadersToCapture');
   }
   if (!Array.isArray(config.tracing.http.extraHttpHeadersToCapture)) {
     logger.warn(
@@ -585,13 +585,13 @@ function normalizeSecrets(config) {
   }
 
   if (config.secrets.matcherMode) {
-    logger.debug(`[config] config:config.secrets.matcherMode = ${config.secrets.matcherMode}`);
+    logger.debug(`[config] incode:config.secrets.matcherMode = ${config.secrets.matcherMode}`);
   } else if (fromEnvVar.matcherMode) {
     logger.debug(`[config] env:INSTANA_SECRETS (matcherMode) = ${fromEnvVar.matcherMode}`);
   }
 
   if (config.secrets.keywords) {
-    logger.debug('[config] config:config.secrets.keywords');
+    logger.debug('[config] incode:config.secrets.keywords');
   } else if (fromEnvVar.keywords) {
     logger.debug('[config] env:INSTANA_SECRETS (keywords)');
   }
@@ -696,7 +696,7 @@ function normalizeIgnoreEndpoints(config) {
   // Case 1: Use in-code configuration if available
   if (Object.keys(ignoreEndpointsConfig).length) {
     config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
-    logger.debug('[config] config:config.tracing.ignoreEndpoints');
+    logger.debug('[config] incode:config.tracing.ignoreEndpoints');
     return;
   }
 
