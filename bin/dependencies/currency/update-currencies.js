@@ -84,6 +84,7 @@ currencies.forEach(currency => {
 
     // 1. Reset currencies.json to discard changes from previous iterations of the loop.
     if (!DRY_RUN) {
+      execSync('git checkout main', { cwd });
       execSync('git checkout -- currencies.json', { cwd });
     }
 
