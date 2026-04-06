@@ -33,21 +33,20 @@ console.log('==============\n');
 
 if (!MAJOR_UPDATES_MODE) {
   console.log('[INIT] Preparing batch (patch/minor) updates...');
-  utils.prepareGitEnvironment(BRANCH, cwd, BRANCH === 'main', DRY_RUN);
+  utils.prepareGitEnvironment(BRANCH, cwd, BRANCH === 'chore-currency-update-bug', DRY_RUN);
 }
 
 currencies.forEach(originalCurrency => {
   let currency = originalCurrency;
 
   if (MAJOR_UPDATES_MODE) {
-    utils.prepareGitEnvironment('main', cwd, true, DRY_RUN);
+    utils.prepareGitEnvironment('chore-currency-update-bug', cwd, true, DRY_RUN);
 
     currencies = loadCurrencies();
     currency = currencies.find(c => c.name === originalCurrency.name);
   }
 
-  const versions = (currency.versions || []).map(v => (typeof v === 'string' ? v : v.v));
-  console.log(`[CHECK] ${currency.name} | versions: ${versions.join(', ')}`);
+  console.log(`-----------${currency.name}-----------`);
 
   if (currency.ignoreUpdates) {
     console.log(`[SKIP] ${currency.name}. ignoreUpdates is set.`);
@@ -57,7 +56,7 @@ currencies.forEach(originalCurrency => {
   const { version: installedVersion, versionObj: installedVersionObj } = utils.getLatestInstalledVersion(currency);
 
   if (!installedVersion) {
-    console.log(`[SKIP] ${currency.name} (no installed version)`);
+    console.log(`[SKIP] ${currency.name}. No installed version(core dependency).`);
     return;
   }
 
@@ -68,7 +67,7 @@ currencies.forEach(originalCurrency => {
   });
 
   if (latestVersion === installedVersion) {
-    console.log(`[IGNORE] ${currency.name} already up-to-date (${installedVersion})`);
+    console.log(`[UP-TO-DATE] ${currency.name} already up-to-date (${installedVersion})`);
     return;
   }
 
@@ -82,7 +81,7 @@ currencies.forEach(originalCurrency => {
   }
 
   if (!MAJOR_UPDATES_MODE && isMajorUpdate) {
-    console.log('[SKIP] . No major update available');
+    console.log(`[SKIP] ${currency.name}. Major updates not allowed.`);
     return;
   }
 
@@ -102,9 +101,10 @@ currencies.forEach(originalCurrency => {
       return;
     }
 
-    console.log(`[GIT] Creating branch: ${branchName}`);
-    utils.prepareGitEnvironment(branchName, cwd, BRANCH === 'main', DRY_RUN);
+    utils.prepareGitEnvironment(branchName, cwd, BRANCH === 'chore-currency-update-bug', DRY_RUN);
   }
+
+  // 1. update currencies.json versions array
   const installedIndex = currency.versions.findIndex(vObj => {
     const v = typeof vObj === 'string' ? vObj : vObj.v;
     return v === installedVersion;
@@ -156,12 +156,8 @@ if (!MAJOR_UPDATES_MODE) {
     if (!SKIP_PUSH) {
       try {
         execSync(`git push origin ${BRANCH} --no-verify`, { cwd });
-
-        execSync(
-          // eslint-disable-next-line max-len
-          `gh pr create --base main --head ${BRANCH} --title "[Currency Bot] Bumped patch/minor dependencies" --body "Tada!"`,
-          { cwd }
-        );
+        const prTitle = '[Currency Bot] Bumped patch/minor dependencies';
+        execSync(`gh pr create --base main --head ${BRANCH} --title "${prTitle}" --body "Tada!"`, { cwd });
 
         console.log('[DONE] Currency PR created');
       } catch (error) {
