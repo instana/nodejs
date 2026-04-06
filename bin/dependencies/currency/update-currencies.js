@@ -60,9 +60,9 @@ currencies.forEach(currency => {
   console.log(`Latest version: ${latestVersion}`);
   console.log(`Installed version: ${installedVersion}`);
 
-  const isMajorUpdate = semver.major(latestVersion) === semver.major(installedVersion);
+  const isMinorOrPatchUpdate = semver.major(latestVersion) === semver.major(installedVersion);
 
-  if (!MAJOR_UPDATES_MODE && !isMajorUpdate) {
+  if (!MAJOR_UPDATES_MODE && !isMinorOrPatchUpdate) {
     console.log(`Skipping ${currency.name}. Major updates not allowed.`);
     return;
   }
@@ -90,7 +90,7 @@ currencies.forEach(currency => {
     return v === installedVersion;
   });
 
-  if (MAJOR_UPDATES_MODE && isMajorUpdate) {
+  if (MAJOR_UPDATES_MODE && !isMinorOrPatchUpdate) {
     const newVersionObj =
       typeof installedVersionObj === 'string' ? latestVersion : { ...installedVersionObj, v: latestVersion };
     currency.versions.unshift(newVersionObj);
