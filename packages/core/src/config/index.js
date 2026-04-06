@@ -184,6 +184,9 @@ module.exports.normalize = (userConfig, defaultsOverride = {}) => {
 function normalizeServiceName(config) {
   if (config.serviceName == null && process.env.INSTANA_SERVICE_NAME) {
     config.serviceName = process.env.INSTANA_SERVICE_NAME;
+    logger.debug(`[config] env:INSTANA_SERVICE_NAME = ${process.env.INSTANA_SERVICE_NAME}`);
+  } else if (config.serviceName != null && typeof config.serviceName === 'string') {
+    logger.debug(`[config] incode:config.serviceName = ${config.serviceName}`);
   }
   if (config.serviceName != null && typeof config.serviceName !== 'string') {
     logger.warn(
@@ -199,6 +202,9 @@ function normalizeServiceName(config) {
 function normalizePackageJsonPath(config) {
   if (config.packageJsonPath == null && process.env.INSTANA_PACKAGE_JSON_PATH) {
     config.packageJsonPath = process.env.INSTANA_PACKAGE_JSON_PATH;
+    logger.debug(`[config] env:INSTANA_PACKAGE_JSON_PATH = ${process.env.INSTANA_PACKAGE_JSON_PATH}`);
+  } else if (config.packageJsonPath != null && typeof config.packageJsonPath === 'string') {
+    logger.debug(`[config] incode:config.packageJsonPath = ${config.packageJsonPath}`);
   }
   if (config.packageJsonPath != null && typeof config.packageJsonPath !== 'string') {
     logger.warn(
@@ -305,7 +311,7 @@ function normalizeUseOpentelemetry(config) {
  */
 function normalizeAutomaticTracingEnabled(config) {
   if (!config.tracing.enabled) {
-    logger.info('Not enabling automatic tracing as tracing in general is explicitly disabled via config.');
+    logger.debug('Not enabling automatic tracing as tracing in general is explicitly disabled via config.');
     config.tracing.automaticTracingEnabled = false;
     return;
   }
@@ -383,6 +389,9 @@ function normalizeTracingHttp(config) {
     return;
   } else if (!config.tracing.http.extraHttpHeadersToCapture && fromEnvVar) {
     config.tracing.http.extraHttpHeadersToCapture = fromEnvVar;
+    logger.debug(`[config] env:INSTANA_EXTRA_HTTP_HEADERS = ${process.env.INSTANA_EXTRA_HTTP_HEADERS}`);
+  } else if (config.tracing.http.extraHttpHeadersToCapture) {
+    logger.debug('[config] incode:config.tracing.http.extraHttpHeadersToCapture');
   }
   if (!Array.isArray(config.tracing.http.extraHttpHeadersToCapture)) {
     logger.warn(
@@ -548,7 +557,8 @@ function normalizeDisableW3cTraceCorrelation(config) {
   config.tracing.disableW3cTraceCorrelation = util.resolveBooleanConfigWithTruthyEnv({
     envVar: 'INSTANA_DISABLE_W3C_TRACE_CORRELATION',
     configValue: config.tracing.disableW3cTraceCorrelation,
-    defaultValue: defaults.tracing.disableW3cTraceCorrelation
+    defaultValue: defaults.tracing.disableW3cTraceCorrelation,
+    configPath: 'config.tracing.disableW3cTraceCorrelation'
   });
 }
 
@@ -582,6 +592,18 @@ function normalizeSecrets(config) {
   let fromEnvVar = {};
   if (process.env.INSTANA_SECRETS) {
     fromEnvVar = parseSecretsEnvVar(process.env.INSTANA_SECRETS);
+  }
+
+  if (config.secrets.matcherMode) {
+    logger.debug(`[config] incode:config.secrets.matcherMode = ${config.secrets.matcherMode}`);
+  } else if (fromEnvVar.matcherMode) {
+    logger.debug(`[config] env:INSTANA_SECRETS (matcherMode) = ${fromEnvVar.matcherMode}`);
+  }
+
+  if (config.secrets.keywords) {
+    logger.debug('[config] incode:config.secrets.keywords');
+  } else if (fromEnvVar.keywords) {
+    logger.debug('[config] env:INSTANA_SECRETS (keywords)');
   }
 
   config.secrets.matcherMode = config.secrets.matcherMode || fromEnvVar.matcherMode || defaults.secrets.matcherMode;
@@ -684,7 +706,7 @@ function normalizeIgnoreEndpoints(config) {
   // Case 1: Use in-code configuration if available
   if (Object.keys(ignoreEndpointsConfig).length) {
     config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
-    logger.debug(`Ignore endpoints have been configured: ${JSON.stringify(config.tracing.ignoreEndpoints)}`);
+    logger.debug('[config] incode:config.tracing.ignoreEndpoints');
     return;
   }
 
@@ -696,7 +718,7 @@ function normalizeIgnoreEndpoints(config) {
       process.env.INSTANA_IGNORE_ENDPOINTS_PATH
     );
 
-    logger.debug(`Ignore endpoints have been configured: ${JSON.stringify(config.tracing.ignoreEndpoints)}`);
+    logger.debug('[config] env:INSTANA_IGNORE_ENDPOINTS_PATH');
     return;
   }
 
@@ -705,7 +727,7 @@ function normalizeIgnoreEndpoints(config) {
   // Provides a simple way to configure ignored operations via environment variables.
   if (process.env.INSTANA_IGNORE_ENDPOINTS) {
     config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.fromEnv(process.env.INSTANA_IGNORE_ENDPOINTS);
-    logger.debug(`Ignore endpoints have been configured: ${JSON.stringify(config.tracing.ignoreEndpoints)}`);
+    logger.debug('[config] env:INSTANA_IGNORE_ENDPOINTS');
   }
 }
 
