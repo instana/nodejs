@@ -113,15 +113,15 @@ currencies.forEach(originalCurrency => {
   const newVersionObj =
     typeof installedVersionObj === 'string' ? latestVersion : { ...installedVersionObj, v: latestVersion };
 
-  if (isMajorUpdate) {
-    currency.versions.unshift(newVersionObj);
-  } else {
-    currency.versions = currency.versions.filter(vObj => {
-      const v = typeof vObj === 'string' ? vObj : vObj.v;
-      return v !== installedVersion;
-    });
-    currency.versions.splice(installedIndex, 0, newVersionObj);
-  }
+  // if (isMajorUpdate) {
+  //   currency.versions.unshift(newVersionObj);
+  // } else {
+  currency.versions = currency.versions.filter(vObj => {
+    const v = typeof vObj === 'string' ? vObj : vObj.v;
+    return v !== installedVersion;
+  });
+  currency.versions.splice(installedIndex, 0, newVersionObj);
+  // }
 
   if (!DRY_RUN) {
     fs.writeFileSync(currenciesPath, JSON.stringify(currencies, null, 2));
