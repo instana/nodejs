@@ -9,7 +9,8 @@ const path = require('path');
 const semver = require('semver');
 const { execSync } = require('child_process');
 const fs = require('fs');
-const currencies = require(path.join(__dirname, '..', '..', '..', 'currencies.json'));
+const currenciesPath = path.join(__dirname, '..', '..', '..', 'currencies.json');
+const currencies = require(currenciesPath);
 const utils = require('../utils');
 const MAJOR_UPDATES_MODE = process.env.MAJOR_UPDATES_MODE ? process.env.MAJOR_UPDATES_MODE === 'true' : false;
 const BRANCH = process.env.BRANCH;
@@ -57,19 +58,19 @@ currencies.forEach(currency => {
     return;
   }
 
-  console.log(`Latest version: ${latestVersion}`);
-  console.log(`Installed version: ${installedVersion}`);
+  const isMinorOrPatchUpdate = semver.major(latestVersion) === semver.major(installedVersion);
 
-  const isMajorUpdate = semver.major(latestVersion) > semver.major(installedVersion);
-
-  // If not in major updates mode and the update is major, skip it.
-  if (!MAJOR_UPDATES_MODE && isMajorUpdate) {
+  if (!MAJOR_UPDATES_MODE && !isMinorOrPatchUpdate) {
     console.log(`Skipping ${currency.name}. Major updates not allowed.`);
     return;
   }
 
+  // --- START OF FIX ---
+  let targetCurrencies = currencies;
+  let targetCurrency = currency;
+
   if (MAJOR_UPDATES_MODE) {
-    if (!isMajorUpdate) {
+    if (isMinorOrPatchUpdate) {
       console.log(`Skipping ${currency.name}. No major update available.`);
       return;
     }
@@ -82,38 +83,42 @@ currencies.forEach(currency => {
       return;
     }
 
-    // 1. Reset currencies.json to discard changes from previous iterations of the loop.
     if (!DRY_RUN) {
-      execSync('git checkout main', { cwd });
+      // 1. Reset the environment to the clean base branch for every major update
+      execSync(`git checkout ${BRANCH}`, { cwd });
       execSync('git checkout -- currencies.json', { cwd });
+
+      // 2. Re-read the file so we don't have previous iterations' changes in memory
+      const freshData = fs.readFileSync(currenciesPath, 'utf8');
+      targetCurrencies = JSON.parse(freshData);
+      targetCurrency = targetCurrencies.find(c => c.name === currency.name);
     }
 
-    // 2. Create the new clean branch from the base BRANCH
     utils.prepareGitEnvironment(branchName, cwd, BRANCH === 'main');
   }
+  // --- END OF FIX ---
 
-  // 1. update currencies.json versions array
-  const installedVersionIndex = currency.versions.findIndex(vObj => {
+  // Update versions array
+  const installedVersionIndex = targetCurrency.versions.findIndex(vObj => {
     const v = typeof vObj === 'string' ? vObj : vObj.v;
     return v === installedVersion;
   });
 
-  if (MAJOR_UPDATES_MODE && isMajorUpdate) {
-    const newVersionObj =
-      typeof installedVersionObj === 'string' ? latestVersion : { ...installedVersionObj, v: latestVersion };
-    currency.versions.unshift(newVersionObj);
+  const newVersionObj =
+    typeof installedVersionObj === 'string' ? latestVersion : { ...installedVersionObj, v: latestVersion };
+
+  if (MAJOR_UPDATES_MODE && !isMinorOrPatchUpdate) {
+    targetCurrency.versions.unshift(newVersionObj);
   } else {
-    currency.versions = currency.versions.filter(vObj => {
+    targetCurrency.versions = targetCurrency.versions.filter(vObj => {
       const v = typeof vObj === 'string' ? vObj : vObj.v;
       return v !== installedVersion;
     });
-    const newVersionObj =
-      typeof installedVersionObj === 'string' ? latestVersion : { ...installedVersionObj, v: latestVersion };
-    currency.versions.splice(installedVersionIndex, 0, newVersionObj);
+    targetCurrency.versions.splice(installedVersionIndex, 0, newVersionObj);
   }
 
   if (!DRY_RUN) {
-    fs.writeFileSync(path.join(__dirname, '..', '..', '..', 'currencies.json'), JSON.stringify(currencies, null, 2));
+    fs.writeFileSync(currenciesPath, JSON.stringify(targetCurrencies, null, 2));
   } else {
     console.log(`[DRY RUN] Updated currencies.json with ${currency.name} version ${latestVersion}`);
   }
@@ -129,6 +134,11 @@ currencies.forEach(currency => {
       skipPush: SKIP_PUSH,
       prTitle: `[Currency Bot] Bumped ${currency.name} from ${installedVersion} to ${latestVersion}`
     });
+
+    // Return to main branch after creating PR to avoid staying on a "dirty" branch
+    if (!DRY_RUN) {
+      execSync(`git checkout ${BRANCH}`, { cwd });
+    }
   } else if (!DRY_RUN) {
     try {
       execSync("git add 'currencies.json'", { cwd });
@@ -137,7 +147,6 @@ currencies.forEach(currency => {
       console.error(`Failed to commit changes: ${error.message}`);
     }
   } else {
-    // eslint-disable-next-line max-len
     console.log(
       `[DRY RUN] git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`
     );
@@ -150,7 +159,6 @@ if (!MAJOR_UPDATES_MODE) {
     if (!SKIP_PUSH) {
       try {
         execSync(`git push origin ${branchName} --no-verify`, { cwd });
-        // eslint-disable-next-line max-len
         const prTitle = '[Currency Bot] Bumped patch/minor dependencies';
         execSync(`gh pr create --base main --head ${branchName} --title "${prTitle}" --body "Tada!"`, { cwd });
       } catch (error) {
