@@ -270,8 +270,13 @@ function normalizeMetricsConfig(userConfig, config) {
  * @param {InstanaConfig|null} userConfig
  * @param {InstanaConfig} config
  */
+<<<<<<< HEAD
 function normalizeTracingConfig(userConfig, config) {
   const userTracingConfig = userConfig?.tracing;
+=======
+function normalizeTracingConfig(userConfig, defaultConfig, finalConfig) {
+  finalConfig.tracing = finalConfig.tracing || {};
+>>>>>>> 44bad8024 (test: fixed)
 
   config.tracing = {};
 
