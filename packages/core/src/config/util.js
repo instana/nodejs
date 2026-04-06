@@ -34,6 +34,7 @@ exports.resolveNumericConfig = function resolveNumericConfig({ envVar, configVal
   if (envRaw != null) {
     const envParsed = toValidNumber(envRaw);
     if (envParsed !== undefined) {
+      logger.debug(`[config] env:${envVar} = ${envParsed}`);
       return envParsed;
     }
 
@@ -43,6 +44,7 @@ exports.resolveNumericConfig = function resolveNumericConfig({ envVar, configVal
   if (configValue != null) {
     const configParsed = toValidNumber(configValue);
     if (configParsed !== undefined) {
+      logger.debug(`[config] incode:${configPath} = ${configValue}`);
       return configParsed;
     }
 
@@ -84,6 +86,7 @@ function parseBooleanFromEnv(envValue) {
  */
 exports.resolveBooleanConfig = function resolveBooleanConfig({ envVar, configValue, defaultValue, configPath }) {
   if (typeof configValue === 'boolean') {
+    logger.debug(`[config] incode:${configPath} = ${configValue}`);
     return configValue;
   }
 
@@ -99,6 +102,7 @@ exports.resolveBooleanConfig = function resolveBooleanConfig({ envVar, configVal
   const envParsed = parseBooleanFromEnv(envValue);
 
   if (envParsed !== undefined) {
+    logger.debug(`[config] env:${envVar} = ${envParsed}`);
     return envParsed;
   }
 
@@ -127,11 +131,14 @@ exports.resolveBooleanConfigWithInvertedEnv = function resolveBooleanConfigWithI
   configPath
 }) {
   if (typeof configValue === 'boolean') {
+    logger.debug(`[config] incode:${configPath} = ${configValue}`);
+
     return configValue;
   }
 
   const envValue = process.env[envVar];
   if (envValue === 'true') {
+    logger.debug(`[config] env:${envVar} = true (inverted to false)`);
     return false;
   }
 
@@ -154,19 +161,23 @@ exports.resolveBooleanConfigWithInvertedEnv = function resolveBooleanConfigWithI
  * @param {string} params.envVar - Environment variable name
  * @param {boolean|undefined|null} params.configValue - Config value
  * @param {boolean} params.defaultValue - Default value
+ * @param {string} [params.configPath]
  * @returns {boolean}
  */
 exports.resolveBooleanConfigWithTruthyEnv = function resolveBooleanConfigWithTruthyEnv({
   envVar,
   configValue,
-  defaultValue
+  defaultValue,
+  configPath
 }) {
   if (typeof configValue === 'boolean') {
+    logger.debug(`[config] incode:${configPath} = ${configValue}`);
     return configValue;
   }
 
   const envValue = process.env[envVar];
   if (envValue) {
+    logger.debug(`[config] env:${envVar} = ${envValue}`);
     return true;
   }
 
