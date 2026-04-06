@@ -543,6 +543,10 @@
     "core": false,
     "versions": [
       {
+        "v": "15.0.0",
+        "esmOnly": true
+      },
+      {
         "v": "14.6.6",
         "esmOnly": true
       },
