@@ -10,7 +10,6 @@ const semver = require('semver');
 const { execSync } = require('child_process');
 const fs = require('fs');
 const currenciesPath = path.join(__dirname, '..', '..', '..', 'currencies.json');
-const currencies = require(currenciesPath);
 const utils = require('../utils');
 const MAJOR_UPDATES_MODE = process.env.MAJOR_UPDATES_MODE ? process.env.MAJOR_UPDATES_MODE === 'true' : false;
 const BRANCH = process.env.BRANCH;
@@ -19,87 +18,94 @@ const cwd = path.join(__dirname, '..', '..', '..');
 const DRY_RUN = process.env.DRY_RUN === 'true';
 
 if (!BRANCH) throw new Error('Please set env variable "BRANCH".');
-let branchName = BRANCH;
+
+const loadCurrencies = () => {
+  delete require.cache[require.resolve(currenciesPath)];
+  return require(currenciesPath);
+};
+
+let currencies = loadCurrencies();
 
 console.log(`MAJOR_UPDATES_MODE: ${MAJOR_UPDATES_MODE}`);
 console.log(`BRANCH: ${BRANCH}`);
 console.log(`SKIP_PUSH: ${SKIP_PUSH}`);
+console.log('==============\n');
 
 if (!MAJOR_UPDATES_MODE) {
-  console.log('Preparing patch/minor updates...');
-  utils.prepareGitEnvironment(branchName, cwd, BRANCH === 'main', DRY_RUN);
+  console.log('[INIT] Preparing batch (patch/minor) updates...');
+  utils.prepareGitEnvironment(BRANCH, cwd, BRANCH === 'main', DRY_RUN);
 }
 
-currencies.forEach(currency => {
-  console.log(`Checking currency update for ${currency.name}`);
+currencies.forEach(originalCurrency => {
+  let currency = originalCurrency;
+
+  if (MAJOR_UPDATES_MODE) {
+    utils.prepareGitEnvironment('main', cwd, true, DRY_RUN);
+
+    currencies = loadCurrencies();
+    currency = currencies.find(c => c.name === originalCurrency.name);
+  }
+
+  const versions = (currency.versions || []).map(v => (typeof v === 'string' ? v : v.v));
+  console.log(`[CHECK] ${currency.name} | versions: ${versions.join(', ')}`);
 
   if (currency.ignoreUpdates) {
-    console.log(`Skipping ${currency.name}. ignoreUpdates is set.`);
+    console.log(`[SKIP] ${currency.name}. ignoreUpdates is set.`);
     return;
   }
 
   const { version: installedVersion, versionObj: installedVersionObj } = utils.getLatestInstalledVersion(currency);
 
   if (!installedVersion) {
-    console.log(`Skipping ${currency.name}. Seems to be a core dependency.`);
+    console.log(`[SKIP] ${currency.name} (no installed version)`);
     return;
   }
 
   const latestVersion = utils.getLatestVersion({
     pkgName: currency.name,
-    installedVersion: installedVersion,
+    installedVersion,
     isBeta: currency.isBeta
   });
 
   if (latestVersion === installedVersion) {
-    console.log(
-      `Skipping ${currency.name}. Installed version is ${installedVersion}. Latest version is ${latestVersion}`
-    );
+    console.log(`[IGNORE] ${currency.name} already up-to-date (${installedVersion})`);
     return;
   }
 
-  const isMinorOrPatchUpdate = semver.major(latestVersion) === semver.major(installedVersion);
+  const isMajorUpdate = semver.major(latestVersion) !== semver.major(installedVersion);
 
-  if (!MAJOR_UPDATES_MODE && !isMinorOrPatchUpdate) {
-    console.log(`Skipping ${currency.name}. Major updates not allowed.`);
+  console.log(`[UPDATE] ${currency.name}: ${installedVersion} → ${latestVersion}`);
+
+  if (MAJOR_UPDATES_MODE && !isMajorUpdate) {
+    console.log('[SKIP] Not a major update');
     return;
   }
 
-  // --- START OF FIX ---
-  let targetCurrencies = currencies;
-  let targetCurrency = currency;
+  if (!MAJOR_UPDATES_MODE && isMajorUpdate) {
+    console.log('[SKIP] . No major update available');
+    return;
+  }
+
+  let branchName = BRANCH;
 
   if (MAJOR_UPDATES_MODE) {
-    if (isMinorOrPatchUpdate) {
-      console.log(`Skipping ${currency.name}. No major update available.`);
+    if (!isMajorUpdate) {
+      console.log(`[SKIP] ${currency.name}. No major update available.`);
       return;
     }
 
-    console.log(`Major update available for ${currency.name}.`);
+    console.log(`[UPDATE] Major update available for ${currency.name}.`);
     branchName = utils.createBranchName(BRANCH, currency.name, latestVersion);
 
     if (utils.branchExists(branchName, cwd)) {
-      console.log(`Skipping ${currency.name}. Branch exists.`);
+      console.log(`[SKIP] Branch exists: ${branchName}`);
       return;
     }
 
-    if (!DRY_RUN) {
-      // 1. Reset the environment to the clean base branch for every major update
-      execSync(`git checkout ${BRANCH}`, { cwd });
-      execSync('git checkout -- currencies.json', { cwd });
-
-      // 2. Re-read the file so we don't have previous iterations' changes in memory
-      const freshData = fs.readFileSync(currenciesPath, 'utf8');
-      targetCurrencies = JSON.parse(freshData);
-      targetCurrency = targetCurrencies.find(c => c.name === currency.name);
-    }
-
-    utils.prepareGitEnvironment(branchName, cwd, BRANCH === 'main');
+    console.log(`[GIT] Creating branch: ${branchName}`);
+    utils.prepareGitEnvironment(branchName, cwd, BRANCH === 'main', DRY_RUN);
   }
-  // --- END OF FIX ---
-
-  // Update versions array
-  const installedVersionIndex = targetCurrency.versions.findIndex(vObj => {
+  const installedIndex = currency.versions.findIndex(vObj => {
     const v = typeof vObj === 'string' ? vObj : vObj.v;
     return v === installedVersion;
   });
@@ -107,18 +113,18 @@ currencies.forEach(currency => {
   const newVersionObj =
     typeof installedVersionObj === 'string' ? latestVersion : { ...installedVersionObj, v: latestVersion };
 
-  if (MAJOR_UPDATES_MODE && !isMinorOrPatchUpdate) {
-    targetCurrency.versions.unshift(newVersionObj);
+  if (isMajorUpdate) {
+    currency.versions.unshift(newVersionObj);
   } else {
-    targetCurrency.versions = targetCurrency.versions.filter(vObj => {
+    currency.versions = currency.versions.filter(vObj => {
       const v = typeof vObj === 'string' ? vObj : vObj.v;
       return v !== installedVersion;
     });
-    targetCurrency.versions.splice(installedVersionIndex, 0, newVersionObj);
+    currency.versions.splice(installedIndex, 0, newVersionObj);
   }
 
   if (!DRY_RUN) {
-    fs.writeFileSync(currenciesPath, JSON.stringify(targetCurrencies, null, 2));
+    fs.writeFileSync(currenciesPath, JSON.stringify(currencies, null, 2));
   } else {
     console.log(`[DRY RUN] Updated currencies.json with ${currency.name} version ${latestVersion}`);
   }
@@ -134,38 +140,35 @@ currencies.forEach(currency => {
       skipPush: SKIP_PUSH,
       prTitle: `[Currency Bot] Bumped ${currency.name} from ${installedVersion} to ${latestVersion}`
     });
-
-    // Return to main branch after creating PR to avoid staying on a "dirty" branch
-    if (!DRY_RUN) {
-      execSync(`git checkout ${BRANCH}`, { cwd });
-    }
   } else if (!DRY_RUN) {
     try {
       execSync("git add 'currencies.json'", { cwd });
       execSync(`git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`, { cwd });
-    } catch (error) {
-      console.error(`Failed to commit changes: ${error.message}`);
+    } catch (err) {
+      console.error(`[ERROR] Commit failed: ${err.message}`);
     }
-  } else {
-    console.log(
-      `[DRY RUN] git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`
-    );
   }
 });
 
 // For non-major updates, push all changes at once
 if (!MAJOR_UPDATES_MODE) {
-  if (utils.hasCommits(branchName, cwd)) {
+  if (utils.hasCommits(BRANCH, cwd)) {
     if (!SKIP_PUSH) {
       try {
-        execSync(`git push origin ${branchName} --no-verify`, { cwd });
-        const prTitle = '[Currency Bot] Bumped patch/minor dependencies';
-        execSync(`gh pr create --base main --head ${branchName} --title "${prTitle}" --body "Tada!"`, { cwd });
+        execSync(`git push origin ${BRANCH} --no-verify`, { cwd });
+
+        execSync(
+          // eslint-disable-next-line max-len
+          `gh pr create --base main --head ${BRANCH} --title "[Currency Bot] Bumped patch/minor dependencies" --body "Tada!"`,
+          { cwd }
+        );
+
+        console.log('[DONE] Currency PR created');
       } catch (error) {
-        console.error(`Failed to push changes: ${error.message}`);
+        console.error(`[ERROR] Failed to push changes:: ${error.message}`);
       }
     }
   } else {
-    console.log(`Branch ${branchName} has no commits.`);
+    console.log(`Branch ${BRANCH} has no commits.`);
   }
 }
