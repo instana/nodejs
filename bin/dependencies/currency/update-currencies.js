@@ -33,14 +33,14 @@ console.log('==============\n');
 
 if (!MAJOR_UPDATES_MODE) {
   console.log('[INIT] Preparing batch (patch/minor) updates...');
-  utils.prepareGitEnvironment(BRANCH, cwd, BRANCH === 'chore-currency-update-bug', DRY_RUN);
+  utils.prepareGitEnvironment(BRANCH, cwd, BRANCH === 'main', DRY_RUN);
 }
 
 currencies.forEach(originalCurrency => {
   let currency = originalCurrency;
 
   if (MAJOR_UPDATES_MODE) {
-    utils.prepareGitEnvironment('chore-currency-update-bug', cwd, true, DRY_RUN);
+    utils.prepareGitEnvironment('main', cwd, true, DRY_RUN);
 
     currencies = loadCurrencies();
     currency = currencies.find(c => c.name === originalCurrency.name);
@@ -101,7 +101,7 @@ currencies.forEach(originalCurrency => {
       return;
     }
 
-    utils.prepareGitEnvironment(branchName, cwd, BRANCH === 'chore-currency-update-bug', DRY_RUN);
+    utils.prepareGitEnvironment(branchName, cwd, BRANCH === 'main', DRY_RUN);
   }
 
   // 1. update currencies.json versions array
