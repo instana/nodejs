@@ -81,6 +81,12 @@ currencies.forEach(currency => {
       return;
     }
 
+    // 1. Reset currencies.json to discard changes from previous iterations of the loop.
+    if (!DRY_RUN) {
+      execSync('git checkout -- currencies.json', { cwd });
+    }
+
+    // 2. Create the new clean branch from the base BRANCH
     utils.prepareGitEnvironment(branchName, cwd, BRANCH === 'main');
   }
 
