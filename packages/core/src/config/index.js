@@ -461,7 +461,7 @@ function parseHeadersEnvVar(envVarValue) {
  */
 function normalizeTracingStackTrace(userConfig, defaultConfig, finalConfig) {
   const userTracingConfig = userConfig.tracing;
-  const userGlobal = userTracingConfig?.global;
+  const userGlobal = userTracingConfig.global;
 
   const envStackTrace = process.env.INSTANA_STACK_TRACE;
   const envStackTraceLength = process.env.INSTANA_STACK_TRACE_LENGTH;
@@ -552,11 +552,7 @@ function normalizeTracingStackTrace(userConfig, defaultConfig, finalConfig) {
  * @param {InstanaConfig} finalConfig
  */
 function normalizeDisableTracing(userConfig, defaultConfig, finalConfig) {
-  const tempConfig = {
-    tracing: userConfig.tracing ? { ...userConfig.tracing } : {}
-  };
-
-  const disableConfig = configNormalizers.disable.normalize(tempConfig);
+  const disableConfig = configNormalizers.disable.normalize(userConfig);
 
   // If tracing is globally disabled (via `disable: true` or INSTANA_TRACING_DISABLE=true ),
   // mark `tracing.enabled` as false and clear any specific disable rules.
