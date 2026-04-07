@@ -544,6 +544,11 @@
     "versions": [
       {
         "v": "15.0.0",
+        "esmOnly": true,
+        "node": ">=22"
+      },
+      {
+        "v": "14.6.6",
         "esmOnly": true
       },
       {
