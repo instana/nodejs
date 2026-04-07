@@ -8,7 +8,8 @@
 const { expect } = require('chai');
 const { fail } = expect;
 
-const tracingHeaders = require('../../src/tracing/tracingHeaders');
+const tracingHeaders = require('@_local/core/src/tracing/tracingHeaders');
+const { createFakeLogger } = require('@_local/core/test/test_util');
 
 // X-INSTANA- values
 const instana16CharTraceId = '0123456789abcdef';
@@ -33,6 +34,10 @@ const traceStateWithInstanaNarrow = `rojo=00f067aa0ba902b7,congo=t61rcWkgMzE,${i
 const traceStateWithInstanaLeftMostNarrow = `${instanaNarrowTraceStateValue},rojo=00f067aa0ba902b7,congo=t61rcWkgMzE`;
 
 describe('tracing/headers', () => {
+  before(() => {
+    tracingHeaders.init({ logger: createFakeLogger(), tracing: { disableW3cTraceCorrelation: false } });
+  });
+
   it('should read X-INSTANA- headers', () => {
     const context = tracingHeaders.fromHttpRequest({
       headers: {
