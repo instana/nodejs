@@ -156,7 +156,7 @@ module.exports.normalize = ({ userConfig = {}, finalConfigBase = {}, defaultsOve
   }
 
   let normalizedUserConfig;
-  
+
   // NOTE: Do not modify the original user input object
   if (userConfig !== null && userConfig !== undefined) {
     normalizedUserConfig = Object.assign({}, userConfig);
