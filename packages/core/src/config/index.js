@@ -146,11 +146,11 @@ module.exports.init = _logger => {
  * Merges the config that was passed to the init function with environment variables and default values.
  * @param {Object} [options]
  * @param {InstanaConfig} [options.userConfig]
- * @param {Object} [options.extraFinalConfig]
+ * @param {Object} [options.finalConfigBase]
  * @param {InstanaConfig} [options.defaultsOverride]
  * @returns {InstanaConfig}
  */
-module.exports.normalize = ({ userConfig = {}, extraFinalConfig = {}, defaultsOverride = {} } = {}) => {
+module.exports.normalize = ({ userConfig = {}, finalConfigBase = {}, defaultsOverride = {} } = {}) => {
   if (defaultsOverride && typeof defaultsOverride === 'object' && Object.keys(defaultsOverride).length > 0) {
     defaults = deepMerge(defaults, defaultsOverride);
   }
@@ -164,10 +164,10 @@ module.exports.normalize = ({ userConfig = {}, extraFinalConfig = {}, defaultsOv
     normalizedUserConfig = {};
   }
 
-  // Preserve extraFinalConfig in the finalConfig to allow additional config values
+  // Preserve finalConfigBase in the finalConfig to allow additional config values
   // that are not part of the core config schema. Eg: collector config needs to be preserved.
   /** @type InstanaConfig */
-  const finalConfig = extraFinalConfig ? Object.assign({}, extraFinalConfig) : {};
+  const finalConfig = finalConfigBase ? Object.assign({}, finalConfigBase) : {};
 
   // TODO: remove this and forward the logger via init fn.
   finalConfig.logger = logger;
@@ -188,7 +188,7 @@ module.exports.normalize = ({ userConfig = {}, extraFinalConfig = {}, defaultsOv
  * @param {InstanaConfig} finalConfig
  */
 function normalizeServiceName(userConfig, defaultConfig, finalConfig) {
-  const userValue = userConfig?.serviceName;
+  const userValue = userConfig.serviceName;
 
   if (userValue != null) {
     if (typeof userValue === 'string') {
@@ -212,7 +212,7 @@ function normalizeServiceName(userConfig, defaultConfig, finalConfig) {
  * @param {InstanaConfig} finalConfig
  */
 function normalizePackageJsonPath(userConfig, defaultConfig, finalConfig) {
-  const userValue = userConfig?.packageJsonPath;
+  const userValue = userConfig.packageJsonPath;
 
   if (userValue != null) {
     if (typeof userValue === 'string') {
@@ -238,7 +238,7 @@ function normalizePackageJsonPath(userConfig, defaultConfig, finalConfig) {
  * @param {InstanaConfig} finalConfig
  */
 function normalizeMetricsConfig(userConfig, defaultConfig, finalConfig) {
-  const userMetrics = userConfig?.metrics;
+  const userMetrics = userConfig.metrics;
 
   finalConfig.metrics = {};
 
@@ -261,7 +261,7 @@ function normalizeMetricsConfig(userConfig, defaultConfig, finalConfig) {
 function normalizeTracingConfig(userConfig, defaultConfig, finalConfig) {
   finalConfig.tracing = finalConfig.tracing || {};
 
-  userConfig.tracing = userConfig?.tracing || {};
+  userConfig.tracing = userConfig.tracing || {};
 
   normalizeTracingEnabled(userConfig, defaultConfig, finalConfig);
   normalizeUseOpentelemetry(userConfig, defaultConfig, finalConfig);
@@ -460,7 +460,7 @@ function parseHeadersEnvVar(envVarValue) {
  * @param {InstanaConfig} finalConfig
  */
 function normalizeTracingStackTrace(userConfig, defaultConfig, finalConfig) {
-  const userTracingConfig = userConfig?.tracing;
+  const userTracingConfig = userConfig.tracing;
   const userGlobal = userTracingConfig?.global;
 
   const envStackTrace = process.env.INSTANA_STACK_TRACE;
@@ -553,7 +553,7 @@ function normalizeTracingStackTrace(userConfig, defaultConfig, finalConfig) {
  */
 function normalizeDisableTracing(userConfig, defaultConfig, finalConfig) {
   const tempConfig = {
-    tracing: userConfig?.tracing ? { ...userConfig.tracing } : {}
+    tracing: userConfig.tracing ? { ...userConfig.tracing } : {}
   };
 
   const disableConfig = configNormalizers.disable.normalize(tempConfig);
@@ -628,7 +628,7 @@ function normalizeTracingKafka(userConfig, defaultConfig, finalConfig) {
  * @param {InstanaConfig} finalConfig
  */
 function normalizeSecrets(userConfig, defaultConfig, finalConfig) {
-  const userSecrets = userConfig?.secrets;
+  const userSecrets = userConfig.secrets;
   finalConfig.secrets = {};
 
   /** @type {InstanaSecretsOption} */
@@ -818,7 +818,7 @@ function normalizeDisableEOLEvents(userConfig, defaultConfig, finalConfig) {
  * @param {InstanaConfig} finalConfig
  */
 function normalizePreloadOpentelemetry(userConfig, defaultConfig, finalConfig) {
-  if (userConfig?.preloadOpentelemetry === true) {
+  if (userConfig.preloadOpentelemetry === true) {
     finalConfig.preloadOpentelemetry = true;
   } else {
     finalConfig.preloadOpentelemetry = defaultConfig.preloadOpentelemetry;

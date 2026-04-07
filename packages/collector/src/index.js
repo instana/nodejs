@@ -161,7 +161,7 @@ function init(userConfig = {}) {
   const collectorConfig = normalizeCollectorConfig(userConfig);
   config = instanaNodeJsCore.coreConfig.normalize({
     userConfig,
-    extraFinalConfig: collectorConfig
+    finalConfigBase: collectorConfig
   });
 
   agentConnection = require('./agentConnection');

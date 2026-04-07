@@ -1476,21 +1476,21 @@ describe('config.normalizeConfig', () => {
     });
   });
 
-  describe('extraFinalConfig parameter', () => {
-    it('should always preserve extraFinalConfig', () => {
-      const extraFinalConfig = {
+  describe('finalConfigBase parameter', () => {
+    it('should always preserve finalConfigBase', () => {
+      const finalConfigBase = {
         agentHost: '192.168.1.100',
         agentPort: 3000,
         agentRequestTimeout: 10000
       };
-      const config = coreConfig.normalize({ extraFinalConfig });
+      const config = coreConfig.normalize({ finalConfigBase });
       expect(config.agentHost).to.equal('192.168.1.100');
       expect(config.agentPort).to.equal(3000);
       expect(config.agentRequestTimeout).to.equal(10000);
     });
 
-    it('should merge extraFinalConfig with userConfig', () => {
-      const extraFinalConfig = {
+    it('should merge finalConfigBase with userConfig', () => {
+      const finalConfigBase = {
         agentHost: '192.168.1.100',
         agentPort: 3000,
         agentRequestTimeout: 5000
@@ -1501,7 +1501,7 @@ describe('config.normalizeConfig', () => {
           enabled: true
         }
       };
-      const config = coreConfig.normalize({ userConfig, extraFinalConfig });
+      const config = coreConfig.normalize({ userConfig, finalConfigBase });
       expect(config.agentHost).to.equal('192.168.1.100');
       expect(config.agentPort).to.equal(3000);
       expect(config.agentRequestTimeout).to.equal(5000);
@@ -1509,13 +1509,13 @@ describe('config.normalizeConfig', () => {
       expect(config.tracing.enabled).to.be.true;
     });
 
-    it('should work with empty extraFinalConfig', () => {
-      const config = coreConfig.normalize({ extraFinalConfig: {} });
+    it('should work with empty finalConfigBase', () => {
+      const config = coreConfig.normalize({ finalConfigBase: {} });
       expect(config.serviceName).to.be.null;
       expect(config.tracing.enabled).to.be.true;
     });
 
-    it('should work without extraFinalConfig parameter', () => {
+    it('should work without finalConfigBase parameter', () => {
       const config = coreConfig.normalize({ userConfig: { serviceName: 'test' } });
       expect(config.serviceName).to.equal('test');
     });
