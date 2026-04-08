@@ -390,36 +390,34 @@ function normalizeTracingHttp({ userConfig = {}, defaultConfig = {}, finalConfig
   const userHttp = userConfig.tracing.http;
   finalConfig.tracing.http = {};
 
-  let fromEnvVar;
-  if (process.env.INSTANA_EXTRA_HTTP_HEADERS) {
-    fromEnvVar = parseHeadersEnvVar(process.env.INSTANA_EXTRA_HTTP_HEADERS);
-  }
-
   const userHeaders = userHttp?.extraHttpHeadersToCapture;
 
-  if (!userHeaders && !fromEnvVar) {
-    finalConfig.tracing.http.extraHttpHeadersToCapture = defaultConfig.tracing.http.extraHttpHeadersToCapture;
-    return;
-  } else if (!userHeaders && fromEnvVar) {
+  // 1. Check in-code configuration first
+  if (userHeaders !== undefined) {
+    if (!Array.isArray(userHeaders)) {
+      logger.warn(
+        // eslint-disable-next-line max-len
+        `Invalid configuration: config.tracing.http.extraHttpHeadersToCapture is not an array, the value will be ignored: ${JSON.stringify(
+          userHeaders
+        )}`
+      );
+    } else {
+      finalConfig.tracing.http.extraHttpHeadersToCapture = userHeaders.map(s => s.toLowerCase());
+      logger.debug('[config] incode:config.tracing.http.extraHttpHeadersToCapture');
+      return;
+    }
+  }
+
+  // 2. Check environment variable
+  if (process.env.INSTANA_EXTRA_HTTP_HEADERS) {
+    const fromEnvVar = parseHeadersEnvVar(process.env.INSTANA_EXTRA_HTTP_HEADERS);
     finalConfig.tracing.http.extraHttpHeadersToCapture = fromEnvVar;
     logger.debug(`[config] env:INSTANA_EXTRA_HTTP_HEADERS = ${process.env.INSTANA_EXTRA_HTTP_HEADERS}`);
     return;
-  } else if (finalConfig.tracing.http.extraHttpHeadersToCapture) {
-    logger.debug('[config] incode:config.tracing.http.extraHttpHeadersToCapture');
   }
 
-  if (!Array.isArray(userHeaders)) {
-    logger.warn(
-      // eslint-disable-next-line max-len
-      `Invalid configuration: config.tracing.http.extraHttpHeadersToCapture is not an array, the value will be ignored: ${JSON.stringify(
-        userHeaders
-      )}`
-    );
-    finalConfig.tracing.http.extraHttpHeadersToCapture = defaultConfig.tracing.http.extraHttpHeadersToCapture;
-    return;
-  }
-
-  finalConfig.tracing.http.extraHttpHeadersToCapture = userHeaders.map(s => s.toLowerCase());
+  // 3. Use default configuration
+  finalConfig.tracing.http.extraHttpHeadersToCapture = defaultConfig.tracing.http.extraHttpHeadersToCapture;
 }
 
 /**
