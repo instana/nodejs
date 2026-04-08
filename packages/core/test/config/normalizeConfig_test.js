@@ -50,15 +50,15 @@ describe('config.normalizeConfig', () => {
   describe('default configuration', () => {
     it('should apply all defaults', () => {
       checkDefaults(coreConfig.normalize());
-      checkDefaults(coreConfig.normalize({}));
-      checkDefaults(coreConfig.normalize({ tracing: {}, metrics: {} }));
-      checkDefaults(coreConfig.normalize({ unknowConfigOption: 13 }));
+      checkDefaults(coreConfig.normalize({ userConfig: { userConfig: {} } }));
+      checkDefaults(coreConfig.normalize({ userConfig: { userConfig: { tracing: {}, metrics: {} } } }));
+      checkDefaults(coreConfig.normalize({ userConfig: { userConfig: { unknowConfigOption: 13 } } }));
     });
   });
 
   describe('service name configuration', () => {
     it('should accept service name', () => {
-      const config = coreConfig.normalize({ serviceName: 'custom-service-name' });
+      const config = coreConfig.normalize({ userConfig: { serviceName: 'custom-service-name' } });
       expect(config.serviceName).to.equal('custom-service-name');
     });
 
@@ -69,18 +69,18 @@ describe('config.normalizeConfig', () => {
     });
 
     it('should not accept non-string service name', () => {
-      const config = coreConfig.normalize({ serviceName: 42 });
+      const config = coreConfig.normalize({ userConfig: { serviceName: 42 } });
       expect(config.serviceName).to.not.exist;
     });
 
     it.skip('should use config when env not set', () => {
-      const config = coreConfig.normalize({ serviceName: 'config-service-name' });
+      const config = coreConfig.normalize({ userConfig: { serviceName: 'config-service-name' } });
       expect(config.serviceName).to.equal('config-service-name');
     });
 
     it.skip('should give precedence to INSTANA_SERVICE_NAME env var over config', () => {
       process.env.INSTANA_SERVICE_NAME = 'env-service';
-      const config = coreConfig.normalize({ serviceName: 'config-service' });
+      const config = coreConfig.normalize({ userConfig: { serviceName: 'config-service' } });
       expect(config.serviceName).to.equal('env-service');
     });
   });
@@ -88,8 +88,10 @@ describe('config.normalizeConfig', () => {
   describe('metrics configuration', () => {
     it('should use custom metrics transmission settings from config', () => {
       const config = coreConfig.normalize({
-        metrics: {
-          transmissionDelay: 9753
+        userConfig: {
+          metrics: {
+            transmissionDelay: 9753
+          }
         }
       });
       expect(config.metrics.transmissionDelay).to.equal(9753);
@@ -114,26 +116,28 @@ describe('config.normalizeConfig', () => {
 
     it.skip('should give precedence to INSTANA_METRICS_TRANSMISSION_DELAY env var over config', () => {
       process.env.INSTANA_METRICS_TRANSMISSION_DELAY = '3000';
-      const config = coreConfig.normalize({ metrics: { transmissionDelay: 5000 } });
+      const config = coreConfig.normalize({ userConfig: { metrics: { transmissionDelay: 5000 } } });
       expect(config.metrics.transmissionDelay).to.equal(3000);
     });
 
     it('should fall back to config when env var is invalid', () => {
       process.env.INSTANA_METRICS_TRANSMISSION_DELAY = 'invalid';
-      const config = coreConfig.normalize({ metrics: { transmissionDelay: 5000 } });
+      const config = coreConfig.normalize({ userConfig: { metrics: { transmissionDelay: 5000 } } });
       expect(config.metrics.transmissionDelay).to.equal(5000);
     });
 
     it('should fall back to default when both env and config are invalid', () => {
       process.env.INSTANA_METRICS_TRANSMISSION_DELAY = 'invalid';
-      const config = coreConfig.normalize({ metrics: { transmissionDelay: 'also-invalid' } });
+      const config = coreConfig.normalize({ userConfig: { metrics: { transmissionDelay: 'also-invalid' } } });
       expect(config.metrics.transmissionDelay).to.equal(1000);
     });
 
     it('should use custom config.metrics.timeBetweenHealthcheckCalls', () => {
       const config = coreConfig.normalize({
-        metrics: {
-          timeBetweenHealthcheckCalls: 9876
+        userConfig: {
+          metrics: {
+            timeBetweenHealthcheckCalls: 9876
+          }
         }
       });
       expect(config.metrics.timeBetweenHealthcheckCalls).to.equal(9876);
@@ -143,19 +147,19 @@ describe('config.normalizeConfig', () => {
   describe('tracing configuration', () => {
     describe('enabling and disabling tracing', () => {
       it('should disable tracing with enabled: false', () => {
-        const config = coreConfig.normalize({ tracing: { enabled: false } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { enabled: false } } });
         expect(config.tracing.enabled).to.be.false;
         expect(config.tracing.automaticTracingEnabled).to.be.false;
       });
 
       it('should disable tracing with disable: true', () => {
-        const config = coreConfig.normalize({ tracing: { enabled: false } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { enabled: false } } });
         expect(config.tracing.enabled).to.be.false;
         expect(config.tracing.automaticTracingEnabled).to.be.false;
       });
 
       it('should disable automatic tracing', () => {
-        const config = coreConfig.normalize({ tracing: { automaticTracingEnabled: false } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { automaticTracingEnabled: false } } });
         expect(config.tracing.enabled).to.be.true;
         expect(config.tracing.automaticTracingEnabled).to.be.false;
       });
@@ -168,9 +172,11 @@ describe('config.normalizeConfig', () => {
       });
       it('should not enable automatic tracing when tracing is disabled in general', () => {
         const config = coreConfig.normalize({
-          tracing: {
-            enabled: false,
-            automaticTracingEnabled: true
+          userConfig: {
+            tracing: {
+              enabled: false,
+              automaticTracingEnabled: true
+            }
           }
         });
         expect(config.tracing.enabled).to.be.false;
@@ -184,13 +190,13 @@ describe('config.normalizeConfig', () => {
 
       it.skip('should give precedence to INSTANA_TRACING_DISABLE env var set to true over config set to true', () => {
         process.env.INSTANA_TRACING_DISABLE = 'true';
-        const config = coreConfig.normalize({ tracing: { enabled: true } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { enabled: true } } });
         expect(config.tracing.enabled).to.be.false;
       });
 
       it.skip('should give precedence to INSTANA_TRACING_DISABLE env var set to false over config set to false', () => {
         process.env.INSTANA_TRACING_DISABLE = 'false';
-        const config = coreConfig.normalize({ tracing: { enabled: false } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { enabled: false } } });
         expect(config.tracing.enabled).to.be.true;
       });
 
@@ -207,13 +213,13 @@ describe('config.normalizeConfig', () => {
 
       it.skip('should give precedence to INSTANA_DISABLE_AUTO_INSTR env var set to true over config set to true', () => {
         process.env.INSTANA_DISABLE_AUTO_INSTR = 'true';
-        const config = coreConfig.normalize({ tracing: { automaticTracingEnabled: true } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { automaticTracingEnabled: true } } });
         expect(config.tracing.automaticTracingEnabled).to.be.false;
       });
 
       it.skip('should give precedence to INSTANA_DISABLE_AUTO_INSTR env var set to false over config set to false', () => {
         process.env.INSTANA_DISABLE_AUTO_INSTR = 'false';
-        const config = coreConfig.normalize({ tracing: { automaticTracingEnabled: false } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { automaticTracingEnabled: false } } });
         expect(config.tracing.automaticTracingEnabled).to.be.true;
       });
 
@@ -226,7 +232,7 @@ describe('config.normalizeConfig', () => {
 
     describe('immediate activation', () => {
       it('should enable immediate tracing activation', () => {
-        const config = coreConfig.normalize({ tracing: { activateImmediately: true } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { activateImmediately: true } } });
         expect(config.tracing.activateImmediately).to.be.true;
       });
 
@@ -238,9 +244,11 @@ describe('config.normalizeConfig', () => {
 
       it('should not enable immediate tracing activation when tracing is disabled in general', () => {
         const config = coreConfig.normalize({
-          tracing: {
-            enabled: false,
-            activateImmediately: true
+          userConfig: {
+            tracing: {
+              enabled: false,
+              activateImmediately: true
+            }
           }
         });
         expect(config.tracing.enabled).to.be.false;
@@ -254,13 +262,13 @@ describe('config.normalizeConfig', () => {
 
       it.skip('should give precedence to INSTANA_TRACE_IMMEDIATELY env var set to true over config set to false', () => {
         process.env.INSTANA_TRACE_IMMEDIATELY = 'true';
-        const config = coreConfig.normalize({ tracing: { activateImmediately: false } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { activateImmediately: false } } });
         expect(config.tracing.activateImmediately).to.be.true;
       });
 
       it.skip('should give precedence to INSTANA_TRACE_IMMEDIATELY env var set to false over config set to true', () => {
         process.env.INSTANA_TRACE_IMMEDIATELY = 'false';
-        const config = coreConfig.normalize({ tracing: { activateImmediately: true } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { activateImmediately: true } } });
         expect(config.tracing.activateImmediately).to.be.false;
       });
     });
@@ -268,10 +276,12 @@ describe('config.normalizeConfig', () => {
     describe('transmission settings', () => {
       it('should use custom tracing transmission settings from config', () => {
         const config = coreConfig.normalize({
-          tracing: {
-            maxBufferedSpans: 13,
-            forceTransmissionStartingAt: 2,
-            transmissionDelay: 9753
+          userConfig: {
+            tracing: {
+              maxBufferedSpans: 13,
+              forceTransmissionStartingAt: 2,
+              transmissionDelay: 9753
+            }
           }
         });
         expect(config.tracing.maxBufferedSpans).to.equal(13);
@@ -297,25 +307,25 @@ describe('config.normalizeConfig', () => {
 
       it.skip('should give precedence to INSTANA_TRACING_TRANSMISSION_DELAY env var over config', () => {
         process.env.INSTANA_TRACING_TRANSMISSION_DELAY = '4000';
-        const config = coreConfig.normalize({ tracing: { transmissionDelay: 2000 } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { transmissionDelay: 2000 } } });
         expect(config.tracing.transmissionDelay).to.equal(4000);
       });
 
       it.skip('should give precedence to INSTANA_FORCE_TRANSMISSION_STARTING_AT env var over config', () => {
         process.env.INSTANA_FORCE_TRANSMISSION_STARTING_AT = '700';
-        const config = coreConfig.normalize({ tracing: { forceTransmissionStartingAt: 300 } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { forceTransmissionStartingAt: 300 } } });
         expect(config.tracing.forceTransmissionStartingAt).to.equal(700);
       });
 
       it('should fall back to config when env var is invalid for transmissionDelay', () => {
         process.env.INSTANA_TRACING_TRANSMISSION_DELAY = 'invalid';
-        const config = coreConfig.normalize({ tracing: { transmissionDelay: 5000 } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { transmissionDelay: 5000 } } });
         expect(config.tracing.transmissionDelay).to.equal(5000);
       });
 
       it('should fall back to default when both env and config are invalid for transmissionDelay', () => {
         process.env.INSTANA_TRACING_TRANSMISSION_DELAY = 'invalid';
-        const config = coreConfig.normalize({ tracing: { transmissionDelay: 'also-invalid' } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { transmissionDelay: 'also-invalid' } } });
         expect(config.tracing.transmissionDelay).to.equal(1000);
       });
     });
@@ -323,9 +333,11 @@ describe('config.normalizeConfig', () => {
     describe('HTTP headers configuration', () => {
       it('should use extra http headers (and normalize to lower case)', () => {
         const config = coreConfig.normalize({
-          tracing: {
-            http: {
-              extraHttpHeadersToCapture: ['yo', 'LO']
+          userConfig: {
+            tracing: {
+              http: {
+                extraHttpHeadersToCapture: ['yo', 'LO']
+              }
             }
           }
         });
@@ -334,9 +346,11 @@ describe('config.normalizeConfig', () => {
 
       it('should reject non-array extra http headers configuration value', () => {
         const config = coreConfig.normalize({
-          tracing: {
-            http: {
-              extraHttpHeadersToCapture: 'yolo'
+          userConfig: {
+            tracing: {
+              http: {
+                extraHttpHeadersToCapture: 'yolo'
+              }
             }
           }
         });
@@ -359,36 +373,36 @@ describe('config.normalizeConfig', () => {
 
     describe('stack trace configuration', () => {
       it('should accept numerical custom stack trace length', () => {
-        const config = coreConfig.normalize({ tracing: { stackTraceLength: 666 } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { stackTraceLength: 666 } } });
         expect(config.tracing.stackTraceLength).to.equal(500);
       });
       it('should normalize numbers for custom stack trace length', () => {
-        const config = coreConfig.normalize({ tracing: { stackTraceLength: -28.08 } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { stackTraceLength: -28.08 } } });
 
         expect(config.tracing.stackTraceLength).to.be.a('number');
         expect(config.tracing.stackTraceLength).to.equal(28);
       });
 
       it('should accept number-like strings for custom stack trace length', () => {
-        const config = coreConfig.normalize({ tracing: { stackTraceLength: '1302' } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { stackTraceLength: '1302' } } });
         expect(config.tracing.stackTraceLength).to.be.a('number');
         expect(config.tracing.stackTraceLength).to.equal(500);
       });
 
       it('should normalize number-like strings for custom stack trace length', () => {
-        const config = coreConfig.normalize({ tracing: { stackTraceLength: '-16.04' } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { stackTraceLength: '-16.04' } } });
         expect(config.tracing.stackTraceLength).to.be.a('number');
         expect(config.tracing.stackTraceLength).to.equal(16);
       });
 
       it('should reject non-numerical strings for custom stack trace length', () => {
-        const config = coreConfig.normalize({ tracing: { stackTraceLength: 'three' } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { stackTraceLength: 'three' } } });
         expect(config.tracing.stackTraceLength).to.be.a('number');
         expect(config.tracing.stackTraceLength).to.equal(10);
       });
 
       it('should reject custom stack trace length which is neither a number nor a string', () => {
-        const config = coreConfig.normalize({ tracing: { stackTraceLength: false } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { stackTraceLength: false } } });
         expect(config.tracing.stackTraceLength).to.be.a('number');
         expect(config.tracing.stackTraceLength).to.equal(10);
       });
@@ -401,7 +415,7 @@ describe('config.normalizeConfig', () => {
 
       it.skip('should give precedence to INSTANA_STACK_TRACE_LENGTH over config', () => {
         process.env.INSTANA_STACK_TRACE_LENGTH = '5';
-        const normalizedConfig = coreConfig.normalize({ tracing: { stackTraceLength: 20 } });
+        const normalizedConfig = coreConfig.normalize({ userConfig: { tracing: { stackTraceLength: 20 } } });
         expect(normalizedConfig.tracing.stackTraceLength).to.equal(5);
         delete process.env.INSTANA_STACK_TRACE_LENGTH;
       });
@@ -412,17 +426,17 @@ describe('config.normalizeConfig', () => {
       });
 
       it('should accept valid stack trace mode from config', () => {
-        const config = coreConfig.normalize({ tracing: { global: { stackTrace: 'error' } } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { global: { stackTrace: 'error' } } } });
         expect(config.tracing.stackTrace).to.equal('error');
       });
 
       it('should accept "none" stack trace mode from config', () => {
-        const config = coreConfig.normalize({ tracing: { global: { stackTrace: 'none' } } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { global: { stackTrace: 'none' } } } });
         expect(config.tracing.stackTrace).to.equal('none');
       });
 
       it('should normalize stack trace mode to lowercase from config', () => {
-        const config = coreConfig.normalize({ tracing: { global: { stackTrace: 'ERROR' } } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { global: { stackTrace: 'ERROR' } } } });
         expect(config.tracing.stackTrace).to.equal('error');
       });
 
@@ -440,12 +454,12 @@ describe('config.normalizeConfig', () => {
 
       it.skip('should give precedence to env INSTANA_STACK_TRACE over config', () => {
         process.env.INSTANA_STACK_TRACE = 'none';
-        const config = coreConfig.normalize({ tracing: { global: { stackTrace: 'all' } } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { global: { stackTrace: 'all' } } } });
         expect(config.tracing.stackTrace).to.equal('none');
       });
 
       it('should reject invalid stack trace mode from config and fallback to default', () => {
-        const config = coreConfig.normalize({ tracing: { global: { stackTrace: 'invalid' } } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { global: { stackTrace: 'invalid' } } } });
         expect(config.tracing.stackTrace).to.equal('all');
       });
 
@@ -456,102 +470,102 @@ describe('config.normalizeConfig', () => {
       });
 
       it('should reject non-string stack trace mode from config', () => {
-        const config = coreConfig.normalize({ tracing: { global: { stackTrace: 123 } } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { global: { stackTrace: 123 } } } });
         expect(config.tracing.stackTrace).to.equal('all');
       });
 
       it('should handle null stack trace mode from config', () => {
-        const config = coreConfig.normalize({ tracing: { global: { stackTrace: null } } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { global: { stackTrace: null } } } });
         expect(config.tracing.stackTrace).to.equal('all');
       });
 
       it('should handle undefined stack trace mode from config', () => {
-        const config = coreConfig.normalize({ tracing: { global: { stackTrace: undefined } } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { global: { stackTrace: undefined } } } });
         expect(config.tracing.stackTrace).to.equal('all');
       });
 
       it('should handle empty string stack trace mode from config', () => {
-        const config = coreConfig.normalize({ tracing: { global: { stackTrace: '' } } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { global: { stackTrace: '' } } } });
         expect(config.tracing.stackTrace).to.equal('all');
       });
 
       it('should handle boolean stack trace mode from config', () => {
-        const config = coreConfig.normalize({ tracing: { global: { stackTrace: true } } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { global: { stackTrace: true } } } });
         expect(config.tracing.stackTrace).to.equal('all');
       });
 
       it('should handle object stack trace mode from config', () => {
-        const config = coreConfig.normalize({ tracing: { global: { stackTrace: {} } } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { global: { stackTrace: {} } } } });
         expect(config.tracing.stackTrace).to.equal('all');
       });
 
       it('should handle array stack trace mode from config', () => {
-        const config = coreConfig.normalize({ tracing: { global: { stackTrace: ['error'] } } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { global: { stackTrace: ['error'] } } } });
         expect(config.tracing.stackTrace).to.equal('all');
       });
 
       it('should accept zero as valid stack trace length', () => {
-        const config = coreConfig.normalize({ tracing: { stackTraceLength: 0 } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { stackTraceLength: 0 } } });
         expect(config.tracing.stackTraceLength).to.equal(0);
       });
 
       it('should handle negative stack trace length', () => {
-        const config = coreConfig.normalize({ tracing: { stackTraceLength: -10 } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { stackTraceLength: -10 } } });
         expect(config.tracing.stackTraceLength).to.equal(10);
       });
 
       it('should handle very large negative stack trace length', () => {
-        const config = coreConfig.normalize({ tracing: { stackTraceLength: -100 } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { stackTraceLength: -100 } } });
         expect(config.tracing.stackTraceLength).to.equal(100);
       });
 
       it('should handle stack trace length as positive float', () => {
-        const config = coreConfig.normalize({ tracing: { stackTraceLength: 15.9 } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { stackTraceLength: 15.9 } } });
         expect(config.tracing.stackTraceLength).to.equal(16);
       });
 
       it('should handle stack trace length as negative float', () => {
-        const config = coreConfig.normalize({ tracing: { stackTraceLength: -15.9 } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { stackTraceLength: -15.9 } } });
         expect(config.tracing.stackTraceLength).to.equal(16);
       });
 
       it('should handle stack trace length as string with leading zeros', () => {
-        const config = coreConfig.normalize({ tracing: { stackTraceLength: '007' } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { stackTraceLength: '007' } } });
         expect(config.tracing.stackTraceLength).to.equal(7);
       });
 
       it('should handle stack trace length as string with whitespace', () => {
-        const config = coreConfig.normalize({ tracing: { stackTraceLength: '  25  ' } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { stackTraceLength: '  25  ' } } });
         expect(config.tracing.stackTraceLength).to.equal(25);
       });
 
       it('should handle stack trace length as string with plus sign', () => {
-        const config = coreConfig.normalize({ tracing: { stackTraceLength: '+30' } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { stackTraceLength: '+30' } } });
         expect(config.tracing.stackTraceLength).to.equal(30);
       });
 
       it('should reject stack trace length as null', () => {
-        const config = coreConfig.normalize({ tracing: { stackTraceLength: null } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { stackTraceLength: null } } });
         expect(config.tracing.stackTraceLength).to.equal(10);
       });
 
       it('should reject stack trace length as undefined', () => {
-        const config = coreConfig.normalize({ tracing: { stackTraceLength: undefined } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { stackTraceLength: undefined } } });
         expect(config.tracing.stackTraceLength).to.equal(10);
       });
 
       it('should reject stack trace length as empty string', () => {
-        const config = coreConfig.normalize({ tracing: { stackTraceLength: '' } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { stackTraceLength: '' } } });
         expect(config.tracing.stackTraceLength).to.equal(10);
       });
 
       it('should reject stack trace length as object', () => {
-        const config = coreConfig.normalize({ tracing: { stackTraceLength: {} } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { stackTraceLength: {} } } });
         expect(config.tracing.stackTraceLength).to.equal(10);
       });
 
       it('should reject stack trace length as array', () => {
-        const config = coreConfig.normalize({ tracing: { stackTraceLength: [10] } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { stackTraceLength: [10] } } });
         expect(config.tracing.stackTraceLength).to.equal(10);
       });
 
@@ -608,7 +622,7 @@ describe('config.normalizeConfig', () => {
         const original = stackTraceNormalizers.normalizeStackTraceMode;
         stackTraceNormalizers.normalizeStackTraceMode = () => null;
 
-        const config = coreConfig.normalize({ tracing: { global: { stackTrace: 'all' } } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { global: { stackTrace: 'all' } } } });
         expect(config.tracing.stackTrace).to.equal('all');
 
         stackTraceNormalizers.normalizeStackTraceMode = original;
@@ -631,7 +645,7 @@ describe('config.normalizeConfig', () => {
         const original = stackTraceNormalizers.normalizeStackTraceLength;
         stackTraceNormalizers.normalizeStackTraceLength = () => null;
 
-        const config = coreConfig.normalize({ tracing: { global: { stackTraceLength: 20 } } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { global: { stackTraceLength: 20 } } } });
         expect(config.tracing.stackTraceLength).to.equal(10);
 
         stackTraceNormalizers.normalizeStackTraceLength = original;
@@ -651,9 +665,11 @@ describe('config.normalizeConfig', () => {
 
       it('should return null from normalizeStackTraceLength when value is valid but normalized is null', () => {
         const config = coreConfig.normalize({
-          tracing: {
-            global: {
-              stackTraceLength: Infinity
+          userConfig: {
+            tracing: {
+              global: {
+                stackTraceLength: Infinity
+              }
             }
           }
         });
@@ -670,10 +686,12 @@ describe('config.normalizeConfig', () => {
 
       it('should handle config with both stackTrace and stackTraceLength', () => {
         const config = coreConfig.normalize({
-          tracing: {
-            global: {
-              stackTrace: 'none',
-              stackTraceLength: 30
+          userConfig: {
+            tracing: {
+              global: {
+                stackTrace: 'none',
+                stackTraceLength: 30
+              }
             }
           }
         });
@@ -685,10 +703,12 @@ describe('config.normalizeConfig', () => {
         process.env.INSTANA_STACK_TRACE = 'error';
         process.env.INSTANA_STACK_TRACE_LENGTH = '15';
         const config = coreConfig.normalize({
-          tracing: {
-            global: {
-              stackTrace: 'all',
-              stackTraceLength: 40
+          userConfig: {
+            tracing: {
+              global: {
+                stackTrace: 'all',
+                stackTraceLength: 40
+              }
             }
           }
         });
@@ -711,8 +731,10 @@ describe('config.normalizeConfig', () => {
       });
       it('should disable individual instrumentations via disable config', () => {
         const config = coreConfig.normalize({
-          tracing: {
-            disable: ['graphQL', 'GRPC']
+          userConfig: {
+            tracing: {
+              disable: ['graphQL', 'GRPC']
+            }
           }
         });
         expect(config.tracing.disable.instrumentations).to.deep.equal(['graphql', 'grpc']);
@@ -720,8 +742,10 @@ describe('config.normalizeConfig', () => {
 
       it('should disable individual instrumentations via disable.instrumentations config', () => {
         const config = coreConfig.normalize({
-          tracing: {
-            disable: { instrumentations: ['graphQL', 'GRPC'] }
+          userConfig: {
+            tracing: {
+              disable: { instrumentations: ['graphQL', 'GRPC'] }
+            }
           }
         });
         expect(config.tracing.disable.instrumentations).to.deep.equal(['graphql', 'grpc']);
@@ -730,8 +754,10 @@ describe('config.normalizeConfig', () => {
       it('config should take precedence over INSTANA_TRACING_DISABLE_INSTRUMENTATIONS  for config', () => {
         process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'foo, bar';
         const config = coreConfig.normalize({
-          tracing: {
-            disable: { instrumentations: ['baz', 'fizz'] }
+          userConfig: {
+            tracing: {
+              disable: { instrumentations: ['baz', 'fizz'] }
+            }
           }
         });
         expect(config.tracing.disable.instrumentations).to.deep.equal(['baz', 'fizz']);
@@ -757,8 +783,10 @@ describe('config.normalizeConfig', () => {
 
       it('should disable individual groups via disable config', () => {
         const config = coreConfig.normalize({
-          tracing: {
-            disable: { groups: ['logging'] }
+          userConfig: {
+            tracing: {
+              disable: { groups: ['logging'] }
+            }
           }
         });
         expect(config.tracing.disable.groups).to.deep.equal(['logging']);
@@ -773,8 +801,10 @@ describe('config.normalizeConfig', () => {
       it('config should take precedence over INSTANA_TRACING_DISABLE_GROUPS when disabling groups', () => {
         process.env.INSTANA_TRACING_DISABLE_GROUPS = 'frameworks, databases';
         const config = coreConfig.normalize({
-          tracing: {
-            disable: { groups: ['LOGGING'] }
+          userConfig: {
+            tracing: {
+              disable: { groups: ['LOGGING'] }
+            }
           }
         });
         expect(config.tracing.disable.groups).to.deep.equal(['logging']);
@@ -782,8 +812,10 @@ describe('config.normalizeConfig', () => {
 
       it('should disable instrumentations and groups when both configured', () => {
         const config = coreConfig.normalize({
-          tracing: {
-            disable: { groups: ['LOGGING'], instrumentations: ['redis', 'kafka'] }
+          userConfig: {
+            tracing: {
+              disable: { groups: ['LOGGING'], instrumentations: ['redis', 'kafka'] }
+            }
           }
         });
         expect(config.tracing.disable.groups).to.deep.equal(['logging']);
@@ -808,8 +840,10 @@ describe('config.normalizeConfig', () => {
 
       it('should disable all tracing via config tracing.disable', () => {
         const config = coreConfig.normalize({
-          tracing: {
-            disable: true
+          userConfig: {
+            tracing: {
+              disable: true
+            }
           }
         });
         expect(config.tracing.enabled).to.be.false;
@@ -821,7 +855,7 @@ describe('config.normalizeConfig', () => {
     describe('span batching', () => {
       // delete this test when we switch to opt-out
       it('should enable span batching via config in transition phase', () => {
-        const config = coreConfig.normalize({ tracing: { spanBatchingEnabled: true } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { spanBatchingEnabled: true } } });
         expect(config.tracing.spanBatchingEnabled).to.be.true;
       });
 
@@ -833,14 +867,14 @@ describe('config.normalizeConfig', () => {
       });
 
       it('should ignore non-boolean span batching config value', () => {
-        const config = coreConfig.normalize({ tracing: { spanBatchingEnabled: 73 } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { spanBatchingEnabled: 73 } } });
         // test needs to be updated once we switch to opt-out
         expect(config.tracing.spanBatchingEnabled).to.be.false;
       });
 
       it('should disable span batching', () => {
         // test only becomes relevant once we switch to opt-out
-        const config = coreConfig.normalize({ tracing: { spanBatchingEnabled: false } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { spanBatchingEnabled: false } } });
         expect(config.tracing.spanBatchingEnabled).to.be.false;
       });
 
@@ -858,20 +892,20 @@ describe('config.normalizeConfig', () => {
 
       it.skip('should give precedence to INSTANA_SPANBATCHING_ENABLED env var set to true over config set to false', () => {
         process.env.INSTANA_SPANBATCHING_ENABLED = 'true';
-        const config = coreConfig.normalize({ tracing: { spanBatchingEnabled: false } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { spanBatchingEnabled: false } } });
         expect(config.tracing.spanBatchingEnabled).to.be.true;
       });
 
       it.skip('should give precedence to INSTANA_SPANBATCHING_ENABLED env var set to false over config set to true', () => {
         process.env.INSTANA_SPANBATCHING_ENABLED = 'false';
-        const config = coreConfig.normalize({ tracing: { spanBatchingEnabled: true } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { spanBatchingEnabled: true } } });
         expect(config.tracing.spanBatchingEnabled).to.be.false;
       });
     });
 
     describe('W3C trace correlation', () => {
       it('should disable W3C trace correlation', () => {
-        const config = coreConfig.normalize({ tracing: { disableW3cTraceCorrelation: true } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { disableW3cTraceCorrelation: true } } });
         expect(config.tracing.disableW3cTraceCorrelation).to.be.true;
       });
 
@@ -888,14 +922,14 @@ describe('config.normalizeConfig', () => {
 
       it.skip('should give precedence to INSTANA_DISABLE_W3C_TRACE_CORRELATION env var over config (truthy env)', () => {
         process.env.INSTANA_DISABLE_W3C_TRACE_CORRELATION = 'any-value';
-        const config = coreConfig.normalize({ tracing: { disableW3cTraceCorrelation: false } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { disableW3cTraceCorrelation: false } } });
         expect(config.tracing.disableW3cTraceCorrelation).to.be.true;
       });
     });
 
     describe('Kafka trace correlation', () => {
       it('should disable Kafka trace correlation', () => {
-        const config = coreConfig.normalize({ tracing: { kafka: { traceCorrelation: false } } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { kafka: { traceCorrelation: false } } } });
         expect(config.tracing.kafka.traceCorrelation).to.be.false;
       });
 
@@ -912,13 +946,13 @@ describe('config.normalizeConfig', () => {
 
       it.skip('should give precedence to INSTANA_KAFKA_TRACE_CORRELATION env var set to false over config set to true', () => {
         process.env.INSTANA_KAFKA_TRACE_CORRELATION = 'false';
-        const config = coreConfig.normalize({ tracing: { kafka: { traceCorrelation: true } } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { kafka: { traceCorrelation: true } } } });
         expect(config.tracing.kafka.traceCorrelation).to.be.false;
       });
 
       it.skip('should give precedence to INSTANA_KAFKA_TRACE_CORRELATION env var set to true over config set to false', () => {
         process.env.INSTANA_KAFKA_TRACE_CORRELATION = 'true';
-        const config = coreConfig.normalize({ tracing: { kafka: { traceCorrelation: false } } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { kafka: { traceCorrelation: false } } } });
         expect(config.tracing.kafka.traceCorrelation).to.be.true;
       });
     });
@@ -926,14 +960,18 @@ describe('config.normalizeConfig', () => {
     describe('OpenTelemetry configuration', () => {
       it('should disable opentelemetry if config is set', () => {
         const config = coreConfig.normalize({
-          tracing: { useOpentelemetry: false }
+          userConfig: {
+            tracing: { useOpentelemetry: false }
+          }
         });
         expect(config.tracing.useOpentelemetry).to.equal(false);
       });
 
       it('should enable opentelemetry if config is set', () => {
         const config = coreConfig.normalize({
-          tracing: { useOpentelemetry: true }
+          userConfig: {
+            tracing: { useOpentelemetry: true }
+          }
         });
         expect(config.tracing.useOpentelemetry).to.equal(true);
       });
@@ -957,13 +995,13 @@ describe('config.normalizeConfig', () => {
 
       it.skip('should give precedence to INSTANA_DISABLE_USE_OPENTELEMETRY env var set to true over config set to true', () => {
         process.env.INSTANA_DISABLE_USE_OPENTELEMETRY = 'true';
-        const config = coreConfig.normalize({ tracing: { useOpentelemetry: true } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { useOpentelemetry: true } } });
         expect(config.tracing.useOpentelemetry).to.be.false;
       });
 
       it.skip('should give precedence to INSTANA_DISABLE_USE_OPENTELEMETRY env var set to false over config set to false', () => {
         process.env.INSTANA_DISABLE_USE_OPENTELEMETRY = 'false';
-        const config = coreConfig.normalize({ tracing: { useOpentelemetry: false } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { useOpentelemetry: false } } });
         expect(config.tracing.useOpentelemetry).to.be.true;
       });
     });
@@ -971,9 +1009,11 @@ describe('config.normalizeConfig', () => {
     describe('secrets configuration', () => {
       it('should accept custom secrets config', () => {
         const config = coreConfig.normalize({
-          secrets: {
-            matcherMode: 'equals',
-            keywords: ['custom-secret', 'sheesh']
+          userConfig: {
+            secrets: {
+              matcherMode: 'equals',
+              keywords: ['custom-secret', 'sheesh']
+            }
           }
         });
         expect(config.secrets.matcherMode).to.equal('equals');
@@ -982,8 +1022,10 @@ describe('config.normalizeConfig', () => {
 
       it("should set keywords to empty array for matcher mode 'none'", () => {
         const config = coreConfig.normalize({
-          secrets: {
-            matcherMode: 'none'
+          userConfig: {
+            secrets: {
+              matcherMode: 'none'
+            }
           }
         });
         expect(config.secrets.matcherMode).to.equal('none');
@@ -991,19 +1033,19 @@ describe('config.normalizeConfig', () => {
       });
 
       it('should reject non-string matcher mode', () => {
-        const config = coreConfig.normalize({ secrets: { matcherMode: 43 } });
+        const config = coreConfig.normalize({ userConfig: { secrets: { matcherMode: 43 } } });
         expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
         expect(config.secrets.keywords).to.deep.equal(['key', 'pass', 'secret']);
       });
 
       it('should reject unknown matcher mode from config', () => {
-        const config = coreConfig.normalize({ secrets: { matcherMode: 'whatever' } });
+        const config = coreConfig.normalize({ userConfig: { secrets: { matcherMode: 'whatever' } } });
         expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
         expect(config.secrets.keywords).to.deep.equal(['key', 'pass', 'secret']);
       });
 
       it('should reject non-array keywords', () => {
-        const config = coreConfig.normalize({ secrets: { keywords: 'yes' } });
+        const config = coreConfig.normalize({ userConfig: { secrets: { keywords: 'yes' } } });
         expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
         expect(config.secrets.keywords).to.deep.equal(['key', 'pass', 'secret']);
       });
@@ -1039,12 +1081,12 @@ describe('config.normalizeConfig', () => {
 
     describe('package.json path configuration', () => {
       it('should accept packageJsonPath', () => {
-        const config = coreConfig.normalize({ packageJsonPath: './something' });
+        const config = coreConfig.normalize({ userConfig: { packageJsonPath: './something' } });
         expect(config.packageJsonPath).to.equal('./something');
       });
 
       it('should not accept packageJsonPath', () => {
-        const config = coreConfig.normalize({ packageJsonPath: 1234 });
+        const config = coreConfig.normalize({ userConfig: { packageJsonPath: 1234 } });
         expect(config.packageJsonPath).to.not.exist;
       });
 
@@ -1061,7 +1103,7 @@ describe('config.normalizeConfig', () => {
 
       it.skip('should give precedence to INSTANA_PACKAGE_JSON_PATH env var over config', () => {
         process.env.INSTANA_PACKAGE_JSON_PATH = '/env/path/package.json';
-        const config = coreConfig.normalize({ packageJsonPath: '/config/path/package.json' });
+        const config = coreConfig.normalize({ userConfig: { packageJsonPath: '/config/path/package.json' } });
         expect(config.packageJsonPath).to.equal('/env/path/package.json');
       });
     });
@@ -1069,14 +1111,18 @@ describe('config.normalizeConfig', () => {
     describe('allow root exit span', () => {
       it('should disable allow root exit span if config is set to false', () => {
         const config = coreConfig.normalize({
-          tracing: { allowRootExitSpan: false }
+          userConfig: {
+            tracing: { allowRootExitSpan: false }
+          }
         });
         expect(config.tracing.allowRootExitSpan).to.equal(false);
       });
 
       it('should enable allow root exit span if config is set to true', () => {
         const config = coreConfig.normalize({
-          tracing: { allowRootExitSpan: true }
+          userConfig: {
+            tracing: { allowRootExitSpan: true }
+          }
         });
         expect(config.tracing.allowRootExitSpan).to.equal(true);
       });
@@ -1099,13 +1145,13 @@ describe('config.normalizeConfig', () => {
 
       it.skip('should give precedence to INSTANA_ALLOW_ROOT_EXIT_SPAN env var set to true over config set to false', () => {
         process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN = 'true';
-        const config = coreConfig.normalize({ tracing: { allowRootExitSpan: false } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { allowRootExitSpan: false } } });
         expect(config.tracing.allowRootExitSpan).to.be.true;
       });
 
       it.skip('should give precedence to INSTANA_ALLOW_ROOT_EXIT_SPAN env var set to false over config set to true', () => {
         process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN = 'false';
-        const config = coreConfig.normalize({ tracing: { allowRootExitSpan: true } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { allowRootExitSpan: true } } });
         expect(config.tracing.allowRootExitSpan).to.be.false;
       });
     });
@@ -1140,24 +1186,30 @@ describe('config.normalizeConfig', () => {
 
       it('should apply ignore endpoints via config', () => {
         const config = coreConfig.normalize({
-          tracing: {
-            ignoreEndpoints: { redis: ['get'] }
+          userConfig: {
+            tracing: {
+              ignoreEndpoints: { redis: ['get'] }
+            }
           }
         });
         expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: [{ methods: ['get'] }] });
       });
       it('should apply multiple ignore endpoints via config', () => {
         const config = coreConfig.normalize({
-          tracing: {
-            ignoreEndpoints: { redis: ['GET', 'TYPE'] }
+          userConfig: {
+            tracing: {
+              ignoreEndpoints: { redis: ['GET', 'TYPE'] }
+            }
           }
         });
         expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: [{ methods: ['get', 'type'] }] });
       });
       it('should apply ignore endpoints via config for multiple packages', () => {
         const config = coreConfig.normalize({
-          tracing: {
-            ignoreEndpoints: { redis: ['get'], dynamodb: ['querey'] }
+          userConfig: {
+            tracing: {
+              ignoreEndpoints: { redis: ['get'], dynamodb: ['querey'] }
+            }
           }
         });
         expect(config.tracing.ignoreEndpoints).to.deep.equal({
@@ -1168,10 +1220,12 @@ describe('config.normalizeConfig', () => {
 
       it('should normalize case and trim spaces in method names and endpoint paths', () => {
         const config = coreConfig.normalize({
-          tracing: {
-            ignoreEndpoints: {
-              redis: ['  GET ', 'TyPe'],
-              kafka: [{ methods: ['  PUBLISH  '], endpoints: [' Topic1 ', 'TOPIC2 '] }]
+          userConfig: {
+            tracing: {
+              ignoreEndpoints: {
+                redis: ['  GET ', 'TyPe'],
+                kafka: [{ methods: ['  PUBLISH  '], endpoints: [' Topic1 ', 'TOPIC2 '] }]
+              }
             }
           }
         });
@@ -1183,8 +1237,10 @@ describe('config.normalizeConfig', () => {
 
       it('should return an empty list if all configurations are invalid', () => {
         const config = coreConfig.normalize({
-          tracing: {
-            ignoreEndpoints: { redis: {}, kafka: true, mysql: null }
+          userConfig: {
+            tracing: {
+              ignoreEndpoints: { redis: {}, kafka: true, mysql: null }
+            }
           }
         });
         expect(config.tracing.ignoreEndpoints).to.deep.equal({
@@ -1196,10 +1252,12 @@ describe('config.normalizeConfig', () => {
 
       it('should normalize objects when unsupported additional fields applied', () => {
         const config = coreConfig.normalize({
-          tracing: {
-            ignoreEndpoints: {
-              redis: [{ extra: 'data' }],
-              kafka: [{ methods: ['publish'], extra: 'info' }]
+          userConfig: {
+            tracing: {
+              ignoreEndpoints: {
+                redis: [{ extra: 'data' }],
+                kafka: [{ methods: ['publish'], extra: 'info' }]
+              }
             }
           }
         });
@@ -1211,9 +1269,11 @@ describe('config.normalizeConfig', () => {
 
       it('should normalize objects with only methods and no endpoints', () => {
         const config = coreConfig.normalize({
-          tracing: {
-            ignoreEndpoints: {
-              kafka: [{ methods: ['PUBLISH'] }]
+          userConfig: {
+            tracing: {
+              ignoreEndpoints: {
+                kafka: [{ methods: ['PUBLISH'] }]
+              }
             }
           }
         });
@@ -1224,9 +1284,11 @@ describe('config.normalizeConfig', () => {
 
       it('should normalize objects with only endpoints and no methods', () => {
         const config = coreConfig.normalize({
-          tracing: {
-            ignoreEndpoints: {
-              kafka: [{ endpoints: ['Topic1'] }]
+          userConfig: {
+            tracing: {
+              ignoreEndpoints: {
+                kafka: [{ endpoints: ['Topic1'] }]
+              }
             }
           }
         });
@@ -1237,9 +1299,11 @@ describe('config.normalizeConfig', () => {
 
       it('should normalize objects where methods or endpoints are invalid types', () => {
         const config = coreConfig.normalize({
-          tracing: {
-            ignoreEndpoints: {
-              kafka: [{ methods: 123, endpoints: 'invalid' }]
+          userConfig: {
+            tracing: {
+              ignoreEndpoints: {
+                kafka: [{ methods: 123, endpoints: 'invalid' }]
+              }
             }
           }
         });
@@ -1248,8 +1312,10 @@ describe('config.normalizeConfig', () => {
 
       it('should handle ignoreEndpoints when config is an array instead of object', () => {
         const config = coreConfig.normalize({
-          tracing: {
-            ignoreEndpoints: ['redis', 'kafka']
+          userConfig: {
+            tracing: {
+              ignoreEndpoints: ['redis', 'kafka']
+            }
           }
         });
         expect(config.tracing.ignoreEndpoints).to.deep.equal({});
@@ -1257,8 +1323,10 @@ describe('config.normalizeConfig', () => {
 
       it('should handle ignoreEndpoints when config is a non-object type', () => {
         const config = coreConfig.normalize({
-          tracing: {
-            ignoreEndpoints: 'invalid-string'
+          userConfig: {
+            tracing: {
+              ignoreEndpoints: 'invalid-string'
+            }
           }
         });
         expect(config.tracing.ignoreEndpoints).to.deep.equal({});
@@ -1282,13 +1350,13 @@ describe('config.normalizeConfig', () => {
 
       it.skip('should give precedence to INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION env var set to true over config set to false', () => {
         process.env.INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION = 'true';
-        const config = coreConfig.normalize({ tracing: { ignoreEndpointsDisableSuppression: false } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { ignoreEndpointsDisableSuppression: false } } });
         expect(config.tracing.ignoreEndpointsDisableSuppression).to.be.true;
       });
 
       it.skip('should give precedence to INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION env var set to false over config set to true', () => {
         process.env.INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION = 'false';
-        const config = coreConfig.normalize({ tracing: { ignoreEndpointsDisableSuppression: true } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { ignoreEndpointsDisableSuppression: true } } });
         expect(config.tracing.ignoreEndpointsDisableSuppression).to.be.false;
       });
 
@@ -1341,7 +1409,9 @@ describe('config.normalizeConfig', () => {
 
       it('preloadOpentelemetry should accept true value', () => {
         const config = coreConfig.normalize({
-          preloadOpentelemetry: true
+          userConfig: {
+            preloadOpentelemetry: true
+          }
         });
         expect(config.preloadOpentelemetry).to.be.true;
       });
@@ -1353,7 +1423,7 @@ describe('config.normalizeConfig', () => {
             forceTransmissionStartingAt: 25
           }
         };
-        const config = coreConfig.normalize({}, customDefaults);
+        const config = coreConfig.normalize({ defaultsOverride: customDefaults });
         expect(config.preloadOpentelemetry).to.be.true;
         expect(config.tracing.forceTransmissionStartingAt).to.equal(25);
       });
@@ -1388,21 +1458,66 @@ describe('config.normalizeConfig', () => {
       });
 
       it('should use config value when env is not set', () => {
-        const config = coreConfig.normalize({ tracing: { disableEOLEvents: true } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { disableEOLEvents: true } } });
         expect(config.tracing.disableEOLEvents).to.be.true;
       });
 
       it.skip('should give precedence to INSTANA_TRACING_DISABLE_EOL_EVENTS env var set to true over config set to false', () => {
         process.env.INSTANA_TRACING_DISABLE_EOL_EVENTS = 'true';
-        const config = coreConfig.normalize({ tracing: { disableEOLEvents: false } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { disableEOLEvents: false } } });
         expect(config.tracing.disableEOLEvents).to.be.true;
       });
 
       it.skip('should give precedence to INSTANA_TRACING_DISABLE_EOL_EVENTS env var set to false over config set to true', () => {
         process.env.INSTANA_TRACING_DISABLE_EOL_EVENTS = 'false';
-        const config = coreConfig.normalize({ tracing: { disableEOLEvents: true } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { disableEOLEvents: true } } });
         expect(config.tracing.disableEOLEvents).to.be.false;
       });
+    });
+  });
+
+  describe('finalConfigBase parameter', () => {
+    it('should always preserve finalConfigBase', () => {
+      const finalConfigBase = {
+        agentHost: '192.168.1.100',
+        agentPort: 3000,
+        agentRequestTimeout: 10000
+      };
+      const config = coreConfig.normalize({ finalConfigBase });
+      expect(config.agentHost).to.equal('192.168.1.100');
+      expect(config.agentPort).to.equal(3000);
+      expect(config.agentRequestTimeout).to.equal(10000);
+    });
+
+    it('should merge finalConfigBase with userConfig', () => {
+      const finalConfigBase = {
+        agentHost: '192.168.1.100',
+        agentPort: 3000,
+        agentRequestTimeout: 5000
+      };
+      const userConfig = {
+        serviceName: 'my-app',
+        tracing: {
+          enabled: true
+        }
+      };
+      const config = coreConfig.normalize({ userConfig, finalConfigBase });
+      expect(config.agentHost).to.equal('192.168.1.100');
+      expect(config.agentPort).to.equal(3000);
+      expect(config.agentRequestTimeout).to.equal(5000);
+      expect(config.serviceName).to.equal('my-app');
+      expect(config.tracing.enabled).to.be.true;
+    });
+
+    it('should work with empty finalConfigBase', () => {
+      const config = coreConfig.normalize({ finalConfigBase: {} });
+      expect(config.serviceName).to.be.null;
+      expect(config.tracing.enabled).to.be.true;
+    });
+
+    it('should work without finalConfigBase parameter', () => {
+      const config = coreConfig.normalize({ userConfig: { serviceName: 'test' } });
+      expect(config.serviceName).to.equal('test');
     });
   });
 
