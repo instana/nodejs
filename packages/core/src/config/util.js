@@ -183,3 +183,25 @@ exports.resolveBooleanConfigWithTruthyEnv = function resolveBooleanConfigWithTru
 
   return defaultValue;
 };
+
+/**
+ * @param {Object} params
+ * @param {any} params.envVar
+ * @param {any} params.configValue
+ * @param {any} params.defaultValue
+ * @param {string} [params.configPath]
+ */
+exports.resolveConfig = function resolveConfig({ envVar, configValue, defaultValue, configPath }) {
+  if (configValue != null) {
+    logger.debug(`[config] incode:${configPath} = ${configValue}`);
+    return configValue;
+  }
+
+  const envValue = process.env[envVar];
+  if (envValue != null) {
+    logger.debug(`[config] env:${envVar} = ${envValue}`);
+    return envValue;
+  }
+
+  return defaultValue;
+};
