@@ -685,14 +685,7 @@ function normalizeIgnoreEndpoints({ userConfig = {}, defaultConfig = {}, finalCo
     return;
   }
 
-  // Case 1: Use in-code configuration if available
-  if (userIgnoreEndpoints && Object.keys(userIgnoreEndpoints).length) {
-    finalConfig.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(userIgnoreEndpoints);
-    logger.debug('[config] incode:config.tracing.ignoreEndpoints');
-    return;
-  }
-
-  // Case 2: Load from a YAML file if `INSTANA_IGNORE_ENDPOINTS_PATH` is set
+  // Priority 1: Load from a YAML file if `INSTANA_IGNORE_ENDPOINTS_PATH` is set
   // Introduced in Phase 2 for advanced filtering based on both methods and endpoints.
   // Also supports basic filtering for endpoints.
   if (process.env.INSTANA_IGNORE_ENDPOINTS_PATH) {
@@ -703,7 +696,7 @@ function normalizeIgnoreEndpoints({ userConfig = {}, defaultConfig = {}, finalCo
     return;
   }
 
-  // Case 3: Load from the `INSTANA_IGNORE_ENDPOINTS` environment variable
+  // Priority 2: Load from the `INSTANA_IGNORE_ENDPOINTS` environment variable
   // Introduced in Phase 1 for basic filtering based only on operations (e.g., `redis.get`, `kafka.consume`).
   // Provides a simple way to configure ignored operations via environment variables.
   if (process.env.INSTANA_IGNORE_ENDPOINTS) {
@@ -711,6 +704,13 @@ function normalizeIgnoreEndpoints({ userConfig = {}, defaultConfig = {}, finalCo
       process.env.INSTANA_IGNORE_ENDPOINTS
     );
     logger.debug('[config] env:INSTANA_IGNORE_ENDPOINTS');
+    return;
+  }
+
+  // Priority 3: Use in-code configuration if available
+  if (userIgnoreEndpoints && Object.keys(userIgnoreEndpoints).length) {
+    finalConfig.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(userIgnoreEndpoints);
+    logger.debug('[config] incode:config.tracing.ignoreEndpoints');
     return;
   }
 
