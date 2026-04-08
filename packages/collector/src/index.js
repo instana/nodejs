@@ -103,7 +103,7 @@ const instanaSharedMetrics = require('@instana/shared-metrics');
 require('./tracing'); // load additional instrumentations
 
 const log = require('./logger');
-const collectorConfig = require('./util/normalizeConfig');
+const normalizeConfig = require('./util/normalizeConfig');
 const experimental = require('./experimental');
 
 // NOTE: Default collector logger && config for cases like `preinit`.
@@ -158,7 +158,7 @@ function init(userConfig = {}) {
     log.init(userConfig);
   }
 
-  const finalCollectorConfig = collectorConfig.normalizeConfig(userConfig);
+  const finalCollectorConfig = normalizeConfig(userConfig);
   config = instanaNodeJsCore.coreConfig.normalize({
     userConfig,
     finalConfigBase: finalCollectorConfig

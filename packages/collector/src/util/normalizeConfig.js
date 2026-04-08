@@ -19,7 +19,7 @@ const defaults = {
  * @param {import('../types/collector').CollectorConfig} userConfig
  * @returns {import('../types/collector').CollectorConfig}
  */
-function normalizeConfig(userConfig = {}) {
+module.exports = function normalizeConfig(userConfig = {}) {
   const finalConfig = {};
 
   // NOTE: This function only normalizes collector-specific configuration fields.
@@ -34,13 +34,7 @@ function normalizeConfig(userConfig = {}) {
   finalConfig.tracing = userConfig.tracing || {};
 
   return finalConfig;
-}
-
-// Export both init and normalizeConfig
-// For backward compatibility, also make normalizeConfig the default export
-module.exports = normalizeConfig;
-module.exports.init = exports.init;
-module.exports.normalizeConfig = normalizeConfig;
+};
 
 /**
  * @param {import('../types/collector').CollectorConfig} userConfig
