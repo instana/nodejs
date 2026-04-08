@@ -273,7 +273,7 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
     function initAndActivate(initConfig, extraConfigForActivate) {
       const logger = testUtils.createFakeLogger();
       coreConfig.init(logger);
-      const config = coreConfig.normalize(initConfig);
+      const config = coreConfig.normalize({ userConfig: initConfig });
       util.init(config);
       tracing.init(config);
       tracing.activate(extraConfigForActivate);
