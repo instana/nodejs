@@ -95,7 +95,7 @@ exports.resolveBooleanConfig = function resolveBooleanConfig({ envVar, configVal
   }
 
   if (envValue != null) {
-    logger.warn(`Invalid boolean value for ${envVar}: "${envValue}". Checking in-code config.`);
+    logger.warn(`Invalid boolean value for ${envValue}: "${envValue}".`);
   }
 
   // Priority 2: In-code configuration
