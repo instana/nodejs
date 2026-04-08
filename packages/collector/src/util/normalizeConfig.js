@@ -3,9 +3,20 @@
  * (c) Copyright Instana Inc. and contributors 2019
  */
 
-/* eslint-disable dot-notation */
-
 'use strict';
+
+const util = require('@instana/core/src/config/util');
+
+/** @type {import('@instana/core/src/core').GenericLogger} */
+let logger;
+
+/**
+ * @param {import('@instana/core/src/config').InstanaConfig} config
+ */
+exports.init = function init(config) {
+  logger = config.logger;
+  util.init(logger);
+};
 
 const defaults = {
   agentHost: '127.0.0.1',
@@ -19,7 +30,7 @@ const defaults = {
  * @param {import('../types/collector').CollectorConfig} userConfig
  * @returns {import('../types/collector').CollectorConfig}
  */
-module.exports = function normalizeConfig(userConfig = {}) {
+function normalizeConfig(userConfig = {}) {
   const finalConfig = {};
 
   // NOTE: This function only normalizes collector-specific configuration fields.
@@ -34,7 +45,13 @@ module.exports = function normalizeConfig(userConfig = {}) {
   finalConfig.tracing = userConfig.tracing || {};
 
   return finalConfig;
-};
+}
+
+// Export both init and normalizeConfig
+// For backward compatibility, also make normalizeConfig the default export
+module.exports = normalizeConfig;
+module.exports.init = exports.init;
+module.exports.normalizeConfig = normalizeConfig;
 
 /**
  * @param {import('../types/collector').CollectorConfig} userConfig
@@ -51,7 +68,12 @@ function normalizeAgentHost(userConfig, defaultConfig) {
  * @returns {number}
  */
 function normalizeAgentPort(userConfig, defaultConfig) {
-  return resolveNumericConfig(process.env.INSTANA_AGENT_PORT, userConfig.agentPort, defaultConfig.agentPort);
+  return util.resolveNumericConfig({
+    envVar: 'INSTANA_AGENT_PORT',
+    configValue: userConfig.agentPort,
+    defaultValue: defaultConfig.agentPort,
+    configPath: 'config.agentPort'
+  });
 }
 
 /**
@@ -60,11 +82,12 @@ function normalizeAgentPort(userConfig, defaultConfig) {
  * @returns {number}
  */
 function normalizeAgentRequestTimeout(userConfig, defaultConfig) {
-  return resolveNumericConfig(
-    process.env.INSTANA_AGENT_REQUEST_TIMEOUT,
-    userConfig.agentRequestTimeout,
-    defaultConfig.agentRequestTimeout
-  );
+  return util.resolveNumericConfig({
+    envVar: 'INSTANA_AGENT_REQUEST_TIMEOUT',
+    configValue: userConfig.agentRequestTimeout,
+    defaultValue: defaultConfig.agentRequestTimeout,
+    configPath: 'config.agentRequestTimeout'
+  });
 }
 
 /**
@@ -101,40 +124,4 @@ function resolveConfig(envValue, configValue, defaultValue) {
   }
 
   return defaultValue;
-}
-
-/**
- * @param {string | undefined} envValue
- * @param {number | undefined} configValue
- * @param {number} defaultValue
- * @returns {number}
- */
-function resolveNumericConfig(envValue, configValue, defaultValue) {
-  if (configValue != null) {
-    return configValue;
-  }
-
-  const parsedEnv = parseToPositiveInteger(envValue);
-  if (parsedEnv != null) {
-    return parsedEnv;
-  }
-  return defaultValue;
-}
-
-/**
- * @param {string | number | undefined} value
- * @returns {number | null}
- */
-function parseToPositiveInteger(value) {
-  if (typeof value !== 'string') {
-    return null;
-  }
-
-  const parsed = Number.parseInt(value, 10);
-
-  if (!isNaN(parsed)) {
-    return Math.abs(Math.round(parsed));
-  }
-
-  return null;
 }
