@@ -146,10 +146,7 @@ module.exports.init = _logger => {
 
 /**
  * Merges the config that was passed to the init function with environment variables and default values.
- * @param {Object} [options]
- * @param {InstanaConfig} [options.userConfig]
- * @param {Object} [options.finalConfigBase]
- * @param {InstanaConfig} [options.defaultsOverride]
+ * @param {{ userConfig?: InstanaConfig, finalConfigBase?: Object, defaultsOverride?: InstanaConfig }} [options]
  * @returns {InstanaConfig}
  */
 module.exports.normalize = ({ userConfig = {}, finalConfigBase = {}, defaultsOverride = {} } = {}) => {
@@ -174,22 +171,20 @@ module.exports.normalize = ({ userConfig = {}, finalConfigBase = {}, defaultsOve
   // TODO: remove this and forward the logger via init fn.
   finalConfig.logger = logger;
 
-  normalizeServiceName(normalizedUserConfig, defaults, finalConfig);
-  normalizePackageJsonPath(normalizedUserConfig, defaults, finalConfig);
-  normalizeMetricsConfig(normalizedUserConfig, defaults, finalConfig);
-  normalizeTracingConfig(normalizedUserConfig, defaults, finalConfig);
-  normalizeSecrets(normalizedUserConfig, defaults, finalConfig);
-  normalizePreloadOpentelemetry(normalizedUserConfig, defaults, finalConfig);
+  normalizeServiceName({ userConfig: normalizedUserConfig, defaultConfig: defaults, finalConfig });
+  normalizePackageJsonPath({ userConfig: normalizedUserConfig, defaultConfig: defaults, finalConfig });
+  normalizeMetricsConfig({ userConfig: normalizedUserConfig, defaultConfig: defaults, finalConfig });
+  normalizeTracingConfig({ userConfig: normalizedUserConfig, defaultConfig: defaults, finalConfig });
+  normalizeSecrets({ userConfig: normalizedUserConfig, defaultConfig: defaults, finalConfig });
+  normalizePreloadOpentelemetry({ userConfig: normalizedUserConfig, defaultConfig: defaults, finalConfig });
 
   return finalConfig;
 };
 
 /**
- * @param {InstanaConfig|null} userConfig
- * @param {InstanaConfig} defaultConfig
- * @param {InstanaConfig} finalConfig
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
-function normalizeServiceName(userConfig, defaultConfig, finalConfig) {
+function normalizeServiceName({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
   const userValue = userConfig.serviceName;
 
   if (userValue != null) {
@@ -209,11 +204,9 @@ function normalizeServiceName(userConfig, defaultConfig, finalConfig) {
 }
 
 /**
- * @param {InstanaConfig|null} userConfig
- * @param {InstanaConfig} defaultConfig
- * @param {InstanaConfig} finalConfig
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
-function normalizePackageJsonPath(userConfig, defaultConfig, finalConfig) {
+function normalizePackageJsonPath({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
   const userValue = userConfig.packageJsonPath;
 
   if (userValue != null) {
@@ -235,11 +228,9 @@ function normalizePackageJsonPath(userConfig, defaultConfig, finalConfig) {
 }
 
 /**
- * @param {InstanaConfig|null} userConfig
- * @param {InstanaConfig} defaultConfig
- * @param {InstanaConfig} finalConfig
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
-function normalizeMetricsConfig(userConfig, defaultConfig, finalConfig) {
+function normalizeMetricsConfig({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
   const userMetrics = userConfig.metrics;
 
   finalConfig.metrics = {};
@@ -265,38 +256,34 @@ function normalizeMetricsConfig(userConfig, defaultConfig, finalConfig) {
 }
 
 /**
- * @param {InstanaConfig|null} userConfig
- * @param {InstanaConfig} defaultConfig
- * @param {InstanaConfig} finalConfig
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
-function normalizeTracingConfig(userConfig, defaultConfig, finalConfig) {
+function normalizeTracingConfig({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
   finalConfig.tracing = finalConfig.tracing || {};
 
   userConfig.tracing = userConfig.tracing || {};
 
-  normalizeTracingEnabled(userConfig, defaultConfig, finalConfig);
-  normalizeUseOpentelemetry(userConfig, defaultConfig, finalConfig);
-  normalizeDisableTracing(userConfig, defaultConfig, finalConfig);
-  normalizeAutomaticTracingEnabled(userConfig, defaultConfig, finalConfig);
-  normalizeActivateImmediately(userConfig, defaultConfig, finalConfig);
-  normalizeTracingTransmission(userConfig, defaultConfig, finalConfig);
-  normalizeTracingHttp(userConfig, defaultConfig, finalConfig);
-  normalizeTracingStackTrace(userConfig, defaultConfig, finalConfig);
-  normalizeSpanBatchingEnabled(userConfig, defaultConfig, finalConfig);
-  normalizeDisableW3cTraceCorrelation(userConfig, defaultConfig, finalConfig);
-  normalizeTracingKafka(userConfig, defaultConfig, finalConfig);
-  normalizeAllowRootExitSpan(userConfig, defaultConfig, finalConfig);
-  normalizeIgnoreEndpoints(userConfig, defaultConfig, finalConfig);
-  normalizeIgnoreEndpointsDisableSuppression(userConfig, defaultConfig, finalConfig);
-  normalizeDisableEOLEvents(userConfig, defaultConfig, finalConfig);
+  normalizeTracingEnabled({ userConfig, defaultConfig, finalConfig });
+  normalizeUseOpentelemetry({ userConfig, defaultConfig, finalConfig });
+  normalizeDisableTracing({ userConfig, defaultConfig, finalConfig });
+  normalizeAutomaticTracingEnabled({ userConfig, defaultConfig, finalConfig });
+  normalizeActivateImmediately({ userConfig, defaultConfig, finalConfig });
+  normalizeTracingTransmission({ userConfig, defaultConfig, finalConfig });
+  normalizeTracingHttp({ userConfig, defaultConfig, finalConfig });
+  normalizeTracingStackTrace({ userConfig, defaultConfig, finalConfig });
+  normalizeSpanBatchingEnabled({ userConfig, defaultConfig, finalConfig });
+  normalizeDisableW3cTraceCorrelation({ userConfig, defaultConfig, finalConfig });
+  normalizeTracingKafka({ userConfig, defaultConfig, finalConfig });
+  normalizeAllowRootExitSpan({ userConfig, defaultConfig, finalConfig });
+  normalizeIgnoreEndpoints({ userConfig, defaultConfig, finalConfig });
+  normalizeIgnoreEndpointsDisableSuppression({ userConfig, defaultConfig, finalConfig });
+  normalizeDisableEOLEvents({ userConfig, defaultConfig, finalConfig });
 }
 
 /**
- * @param {InstanaConfig|null} userConfig
- * @param {InstanaConfig} defaultConfig
- * @param {InstanaConfig} finalConfig
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
-function normalizeTracingEnabled(userConfig, defaultConfig, finalConfig) {
+function normalizeTracingEnabled({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
   finalConfig.tracing.enabled = util.resolveBooleanConfigWithInvertedEnv({
     envVar: 'INSTANA_TRACING_DISABLE',
     configValue: userConfig.tracing.enabled,
@@ -306,11 +293,9 @@ function normalizeTracingEnabled(userConfig, defaultConfig, finalConfig) {
 }
 
 /**
- * @param {InstanaConfig|null} userConfig
- * @param {InstanaConfig} defaultConfig
- * @param {InstanaConfig} finalConfig
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
-function normalizeAllowRootExitSpan(userConfig, defaultConfig, finalConfig) {
+function normalizeAllowRootExitSpan({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
   finalConfig.tracing.allowRootExitSpan = util.resolveBooleanConfig({
     envVar: 'INSTANA_ALLOW_ROOT_EXIT_SPAN',
     configValue: userConfig.tracing.allowRootExitSpan,
@@ -320,11 +305,9 @@ function normalizeAllowRootExitSpan(userConfig, defaultConfig, finalConfig) {
 }
 
 /**
- * @param {InstanaConfig|null} userConfig
- * @param {InstanaConfig} defaultConfig
- * @param {InstanaConfig} finalConfig
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
-function normalizeUseOpentelemetry(userConfig, defaultConfig, finalConfig) {
+function normalizeUseOpentelemetry({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
   finalConfig.tracing.useOpentelemetry = util.resolveBooleanConfigWithInvertedEnv({
     envVar: 'INSTANA_DISABLE_USE_OPENTELEMETRY',
     configValue: userConfig.tracing.useOpentelemetry,
@@ -334,11 +317,9 @@ function normalizeUseOpentelemetry(userConfig, defaultConfig, finalConfig) {
 }
 
 /**
- * @param {InstanaConfig|null} userConfig
- * @param {InstanaConfig} defaultConfig
- * @param {InstanaConfig} finalConfig
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
-function normalizeAutomaticTracingEnabled(userConfig, defaultConfig, finalConfig) {
+function normalizeAutomaticTracingEnabled({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
   if (!finalConfig.tracing.enabled) {
     logger.info('Not enabling automatic tracing as tracing in general is explicitly disabled via finalConfig.');
     finalConfig.tracing.automaticTracingEnabled = false;
@@ -354,11 +335,9 @@ function normalizeAutomaticTracingEnabled(userConfig, defaultConfig, finalConfig
 }
 
 /**
- * @param {InstanaConfig|null} userConfig
- * @param {InstanaConfig} defaultConfig
- * @param {InstanaConfig} finalConfig
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
-function normalizeActivateImmediately(userConfig, defaultConfig, finalConfig) {
+function normalizeActivateImmediately({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
   if (!finalConfig.tracing.enabled) {
     finalConfig.tracing.activateImmediately = false;
     return;
@@ -373,11 +352,9 @@ function normalizeActivateImmediately(userConfig, defaultConfig, finalConfig) {
 }
 
 /**
- * @param {InstanaConfig|null} userConfig
- * @param {InstanaConfig} defaultConfig
- * @param {InstanaConfig} finalConfig
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
-function normalizeTracingTransmission(userConfig, defaultConfig, finalConfig) {
+function normalizeTracingTransmission({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
   finalConfig.tracing.maxBufferedSpans = userConfig.tracing.maxBufferedSpans || defaultConfig.tracing.maxBufferedSpans;
 
   finalConfig.tracing.transmissionDelay = util.resolveNumericConfig({
@@ -407,11 +384,9 @@ function normalizeTracingTransmission(userConfig, defaultConfig, finalConfig) {
  * because it involves complex multi-step processing:
  * Future improvement: Consider refactoring to use a more generic resolver pattern.
  *
- * @param {InstanaConfig|null} userConfig
- * @param {InstanaConfig} defaultConfig
- * @param {InstanaConfig} finalConfig
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
-function normalizeTracingHttp(userConfig, defaultConfig, finalConfig) {
+function normalizeTracingHttp({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
   const userHttp = userConfig.tracing.http;
   finalConfig.tracing.http = {};
 
@@ -466,11 +441,9 @@ function parseHeadersEnvVar(envVarValue) {
  * Future improvement: Consider refactoring to use a more generic resolver pattern.
  *
  *
- * @param {InstanaConfig|null} userConfig
- * @param {InstanaConfig} defaultConfig
- * @param {InstanaConfig} finalConfig
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
-function normalizeTracingStackTrace(userConfig, defaultConfig, finalConfig) {
+function normalizeTracingStackTrace({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
   const userTracingConfig = userConfig.tracing;
   const userGlobal = userTracingConfig.global;
 
@@ -558,11 +531,9 @@ function normalizeTracingStackTrace(userConfig, defaultConfig, finalConfig) {
  * because it involves complex multi-step processing:
  * Future improvement: Consider refactoring to use a more generic resolver pattern.
  *
- * @param {InstanaConfig|null} userConfig
- * @param {InstanaConfig} defaultConfig
- * @param {InstanaConfig} finalConfig
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
-function normalizeDisableTracing(userConfig, defaultConfig, finalConfig) {
+function normalizeDisableTracing({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
   const disableConfig = configNormalizers.disable.normalize(userConfig);
 
   // If tracing is globally disabled (via `disable: true` or INSTANA_TRACING_DISABLE=true ),
@@ -581,11 +552,9 @@ function normalizeDisableTracing(userConfig, defaultConfig, finalConfig) {
 }
 
 /**
- * @param {InstanaConfig|null} userConfig
- * @param {InstanaConfig} defaultConfig
- * @param {InstanaConfig} finalConfig
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
-function normalizeSpanBatchingEnabled(userConfig, defaultConfig, finalConfig) {
+function normalizeSpanBatchingEnabled({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
   finalConfig.tracing.spanBatchingEnabled = util.resolveBooleanConfig({
     envVar: 'INSTANA_SPANBATCHING_ENABLED',
     configValue: userConfig.tracing.spanBatchingEnabled,
@@ -595,11 +564,9 @@ function normalizeSpanBatchingEnabled(userConfig, defaultConfig, finalConfig) {
 }
 
 /**
- * @param {InstanaConfig|null} userConfig
- * @param {InstanaConfig} defaultConfig
- * @param {InstanaConfig} finalConfig
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
-function normalizeDisableW3cTraceCorrelation(userConfig, defaultConfig, finalConfig) {
+function normalizeDisableW3cTraceCorrelation({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
   finalConfig.tracing.disableW3cTraceCorrelation = util.resolveBooleanConfigWithTruthyEnv({
     envVar: 'INSTANA_DISABLE_W3C_TRACE_CORRELATION',
     configValue: userConfig.tracing.disableW3cTraceCorrelation,
@@ -609,11 +576,9 @@ function normalizeDisableW3cTraceCorrelation(userConfig, defaultConfig, finalCon
 }
 
 /**
- * @param {InstanaConfig|null} userConfig
- * @param {InstanaConfig} defaultConfig
- * @param {InstanaConfig} finalConfig
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
-function normalizeTracingKafka(userConfig, defaultConfig, finalConfig) {
+function normalizeTracingKafka({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
   const userKafka = userConfig.tracing.kafka;
   finalConfig.tracing.kafka = {};
 
@@ -630,11 +595,9 @@ function normalizeTracingKafka(userConfig, defaultConfig, finalConfig) {
  * because it involves complex multi-step processing:
  * Future improvement: Consider refactoring to use a more generic resolver pattern.
  *
- * @param {InstanaConfig|null} userConfig
- * @param {InstanaConfig} defaultConfig
- * @param {InstanaConfig} finalConfig
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
-function normalizeSecrets(userConfig, defaultConfig, finalConfig) {
+function normalizeSecrets({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
   const userSecrets = userConfig.secrets;
   finalConfig.secrets = {};
 
@@ -742,11 +705,9 @@ function parseSecretsEnvVar(envVarValue) {
  * because it involves complex multi-step processing:
  * Future improvement: Consider refactoring to use a more generic resolver pattern.
  *
- * @param {InstanaConfig|null} userConfig
- * @param {InstanaConfig} defaultConfig
- * @param {InstanaConfig} finalConfig
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
-function normalizeIgnoreEndpoints(userConfig, defaultConfig, finalConfig) {
+function normalizeIgnoreEndpoints({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
   const userIgnoreEndpoints = userConfig.tracing.ignoreEndpoints;
 
   if (userIgnoreEndpoints && (typeof userIgnoreEndpoints !== 'object' || Array.isArray(userIgnoreEndpoints))) {
@@ -792,11 +753,9 @@ function normalizeIgnoreEndpoints(userConfig, defaultConfig, finalConfig) {
 }
 
 /**
- * @param {InstanaConfig|null} userConfig
- * @param {InstanaConfig} defaultConfig
- * @param {InstanaConfig} finalConfig
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
-function normalizeIgnoreEndpointsDisableSuppression(userConfig, defaultConfig, finalConfig) {
+function normalizeIgnoreEndpointsDisableSuppression({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
   finalConfig.tracing.ignoreEndpointsDisableSuppression = util.resolveBooleanConfig({
     envVar: 'INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION',
     configValue: userConfig.tracing.ignoreEndpointsDisableSuppression,
@@ -806,11 +765,9 @@ function normalizeIgnoreEndpointsDisableSuppression(userConfig, defaultConfig, f
 }
 
 /**
- * @param {InstanaConfig|null} userConfig
- * @param {InstanaConfig} defaultConfig
- * @param {InstanaConfig} finalConfig
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
-function normalizeDisableEOLEvents(userConfig, defaultConfig, finalConfig) {
+function normalizeDisableEOLEvents({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
   finalConfig.tracing.disableEOLEvents = util.resolveBooleanConfig({
     envVar: 'INSTANA_TRACING_DISABLE_EOL_EVENTS',
     configValue: userConfig.tracing.disableEOLEvents,
@@ -820,11 +777,9 @@ function normalizeDisableEOLEvents(userConfig, defaultConfig, finalConfig) {
 }
 
 /**
- * @param {InstanaConfig|null} userConfig
- * @param {InstanaConfig} defaultConfig
- * @param {InstanaConfig} finalConfig
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
-function normalizePreloadOpentelemetry(userConfig, defaultConfig, finalConfig) {
+function normalizePreloadOpentelemetry({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
   if (userConfig.preloadOpentelemetry === true) {
     finalConfig.preloadOpentelemetry = true;
   } else {
