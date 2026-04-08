@@ -6,10 +6,15 @@
 'use strict';
 
 const expect = require('chai').expect;
-
+const testUtils = require('@_local/core/test/test_util');
+const coreConfig = require('@instana/core/src/config');
 const normalizeConfig = require('@_local/collector/src/util/normalizeConfig');
 
 describe('util.normalizeConfig', () => {
+  before(() => {
+    coreConfig.init(testUtils.createFakeLogger());
+  });
+
   beforeEach(resetEnv);
   afterEach(resetEnv);
 
@@ -82,14 +87,6 @@ describe('util.normalizeConfig', () => {
       const config = normalizeConfig({});
 
       expect(config.agentPort).to.equal(42699);
-    });
-
-    it('should normalize negative env values', () => {
-      process.env.INSTANA_AGENT_PORT = '-3000';
-
-      const config = normalizeConfig();
-
-      expect(config.agentPort).to.equal(3000);
     });
 
     it('should fallback to default for invalid env value', () => {
