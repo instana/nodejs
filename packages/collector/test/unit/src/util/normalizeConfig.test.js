@@ -7,17 +7,13 @@
 
 const expect = require('chai').expect;
 
+const testUtils = require('@_local/core/test/test_util');
 const normalizeConfig = require('@_local/collector/src/util/normalizeConfig');
 
 describe('util.normalizeConfig', () => {
   before(() => {
     normalizeConfig.init({
-      logger: {
-        debug: () => {},
-        info: () => {},
-        warn: () => {},
-        error: () => {}
-      }
+      logger: testUtils.createFakeLogger()
     });
   });
 
