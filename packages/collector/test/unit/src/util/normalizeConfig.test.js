@@ -39,7 +39,7 @@ describe('util.normalizeConfig', () => {
   });
 
   describe('agentHost', () => {
-    it.skip('should use env over config over default', () => {
+    it('should use env over config over default', () => {
       process.env.INSTANA_AGENT_HOST = 'env-host';
 
       const config = normalizeConfig({
@@ -65,7 +65,7 @@ describe('util.normalizeConfig', () => {
   });
 
   describe('agentPort', () => {
-    it.skip('should use env over config over default', () => {
+    it('should use env over config over default', () => {
       process.env.INSTANA_AGENT_PORT = '9999';
 
       const config = normalizeConfig({
@@ -99,7 +99,7 @@ describe('util.normalizeConfig', () => {
   });
 
   describe('agentRequestTimeout', () => {
-    it.skip('should use env over config over default', () => {
+    it('should use env over config over default', () => {
       process.env.INSTANA_AGENT_REQUEST_TIMEOUT = '8000';
 
       const config = normalizeConfig({
@@ -133,7 +133,7 @@ describe('util.normalizeConfig', () => {
   });
 
   describe('autoProfile', () => {
-    it.skip('should use env over config over default', () => {
+    it('should use env over config over default', () => {
       process.env.INSTANA_AUTO_PROFILE = 'true';
 
       const config = normalizeConfig({
