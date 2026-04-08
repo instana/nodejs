@@ -1,0 +1,59 @@
+name: Bob PR review
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  run-bob:
+    if: |-
+      (
+        github.event_name == 'issue_comment' &&
+        github.event.issue.pull_request &&
+        github.event.sender.type == 'User' &&
+        startsWith(github.event.comment.body, '/') &&
+        contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
+      )
+    runs-on: ibm-x86-64-small
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Login to private registry
+        run: |
+          echo "${{ secrets.REGISTRY_KEY }}" | docker login icr.io/bob-workflows -u iamapikey --password-stdin
+
+      - name: Pull Docker image from private registry
+        run: |
+          docker pull icr.io/bob-workflows/bob-workflow:latest
+
+      - name: Run bob workflow container
+        env:
+          API_KEY: ${{ secrets.BOB_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_API_URL: ${{ github.api_url }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+          COMMENT: ${{ github.event.comment.body }}
+          BUDGET: 3
+        run: |
+          docker run \
+            -e API_KEY="${API_KEY}" \
+            -e GITHUB_TOKEN="${GITHUB_TOKEN}" \
+            -e GITHUB_API_URL="${GITHUB_API_URL}" \
+            -e GITHUB_SERVER_URL="${GITHUB_SERVER_URL}" \
+            -e GITHUB_RUN_ID="${GITHUB_RUN_ID}" \
+            -e GITHUB_ACTOR="${GITHUB_ACTOR}" \
+            -e OWNER="${OWNER}" \
+            -e REPO="${REPO}" \
+            -e PR_NUMBER="${PR_NUMBER}" \
+            -e COMMENT="${COMMENT}" \
+            -e BUDGET="${BUDGET}" \
+            icr.io/bob-workflows/bob-workflow:latest
