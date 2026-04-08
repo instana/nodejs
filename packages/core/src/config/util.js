@@ -85,6 +85,20 @@ function parseBooleanFromEnv(envValue) {
  * @returns {boolean}
  */
 exports.resolveBooleanConfig = function resolveBooleanConfig({ envVar, configValue, defaultValue, configPath }) {
+  // Priority 1: Environment variable
+  const envValue = process.env[envVar];
+  const envParsed = parseBooleanFromEnv(envValue);
+
+  if (envParsed !== undefined) {
+    logger.debug(`[config] env:${envVar} = ${envParsed}`);
+    return envParsed;
+  }
+
+  if (envValue != null) {
+    logger.warn(`Invalid boolean value for ${envVar}: "${envValue}". Checking in-code config.`);
+  }
+
+  // Priority 2: In-code configuration
   if (typeof configValue === 'boolean') {
     logger.debug(`[config] incode:${configPath} = ${configValue}`);
     return configValue;
@@ -98,18 +112,7 @@ exports.resolveBooleanConfig = function resolveBooleanConfig({ envVar, configVal
     );
   }
 
-  const envValue = process.env[envVar];
-  const envParsed = parseBooleanFromEnv(envValue);
-
-  if (envParsed !== undefined) {
-    logger.debug(`[config] env:${envVar} = ${envParsed}`);
-    return envParsed;
-  }
-
-  if (envValue != null) {
-    logger.warn(`Invalid boolean value for ${envValue}: "${envValue}".`);
-  }
-
+  // Priority 3: Default value
   return defaultValue;
 };
 
@@ -130,16 +133,24 @@ exports.resolveBooleanConfigWithInvertedEnv = function resolveBooleanConfigWithI
   defaultValue,
   configPath
 }) {
-  if (typeof configValue === 'boolean') {
-    logger.debug(`[config] incode:${configPath} = ${configValue}`);
+  // Priority 1: Environment variable
+  const envValue = process.env[envVar];
+  const envParsed = parseBooleanFromEnv(envValue);
 
-    return configValue;
+  if (envParsed !== undefined) {
+    const invertedValue = !envParsed;
+    logger.debug(`[config] env:${envVar} = ${envParsed} (inverted to ${invertedValue})`);
+    return invertedValue;
   }
 
-  const envValue = process.env[envVar];
-  if (envValue === 'true') {
-    logger.debug(`[config] env:${envVar} = true (inverted to false)`);
-    return false;
+  if (envValue != null) {
+    logger.warn(`Invalid boolean value for ${envVar}: "${envValue}". Checking in-code config.`);
+  }
+
+  // Priority 2: In-code configuration
+  if (typeof configValue === 'boolean') {
+    logger.debug(`[config] incode:${configPath} = ${configValue}`);
+    return configValue;
   }
 
   if (configValue != null && configPath) {
@@ -150,6 +161,7 @@ exports.resolveBooleanConfigWithInvertedEnv = function resolveBooleanConfigWithI
     );
   }
 
+  // Priority 3: Default value
   return defaultValue;
 };
 
@@ -170,16 +182,19 @@ exports.resolveBooleanConfigWithTruthyEnv = function resolveBooleanConfigWithTru
   defaultValue,
   configPath
 }) {
-  if (typeof configValue === 'boolean') {
-    logger.debug(`[config] incode:${configPath} = ${configValue}`);
-    return configValue;
-  }
-
+  // Priority 1: Environment variable (truthy check)
   const envValue = process.env[envVar];
   if (envValue) {
     logger.debug(`[config] env:${envVar} = ${envValue}`);
     return true;
   }
 
+  // Priority 2: In-code configuration
+  if (typeof configValue === 'boolean') {
+    logger.debug(`[config] incode:${configPath} = ${configValue}`);
+    return configValue;
+  }
+
+  // Priority 3: Default value
   return defaultValue;
 };

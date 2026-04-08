@@ -190,6 +190,12 @@ module.exports.normalize = ({ userConfig = {}, finalConfigBase = {}, defaultsOve
 function normalizeServiceName(userConfig, defaultConfig, finalConfig) {
   const userValue = userConfig.serviceName;
 
+  if (process.env.INSTANA_SERVICE_NAME) {
+    finalConfig.serviceName = process.env.INSTANA_SERVICE_NAME;
+    logger.debug(`[config] env:INSTANA_SERVICE_NAME = ${process.env.INSTANA_SERVICE_NAME}`);
+    return;
+  }
+
   if (userValue != null) {
     if (typeof userValue === 'string') {
       finalConfig.serviceName = userValue;
@@ -198,12 +204,10 @@ function normalizeServiceName(userConfig, defaultConfig, finalConfig) {
       logger.warn(`Invalid configuration: config.serviceName is not a string, the value will be ignored: ${userValue}`);
       finalConfig.serviceName = defaultConfig.serviceName;
     }
-  } else if (process.env.INSTANA_SERVICE_NAME) {
-    finalConfig.serviceName = process.env.INSTANA_SERVICE_NAME;
-    logger.debug(`[config] env:INSTANA_SERVICE_NAME = ${process.env.INSTANA_SERVICE_NAME}`);
-  } else {
-    finalConfig.serviceName = defaultConfig.serviceName;
+    return;
   }
+
+  finalConfig.serviceName = defaultConfig.serviceName;
 }
 
 /**
@@ -214,6 +218,14 @@ function normalizeServiceName(userConfig, defaultConfig, finalConfig) {
 function normalizePackageJsonPath(userConfig, defaultConfig, finalConfig) {
   const userValue = userConfig.packageJsonPath;
 
+  // Priority 1: Environment variable
+  if (process.env.INSTANA_PACKAGE_JSON_PATH) {
+    finalConfig.packageJsonPath = process.env.INSTANA_PACKAGE_JSON_PATH;
+    logger.debug(`[config] env:INSTANA_PACKAGE_JSON_PATH = ${process.env.INSTANA_PACKAGE_JSON_PATH}`);
+    return;
+  }
+
+  // Priority 2: In-code configuration
   if (userValue != null) {
     if (typeof userValue === 'string') {
       finalConfig.packageJsonPath = userValue;
@@ -224,12 +236,11 @@ function normalizePackageJsonPath(userConfig, defaultConfig, finalConfig) {
       );
       finalConfig.packageJsonPath = defaultConfig.packageJsonPath;
     }
-  } else if (process.env.INSTANA_PACKAGE_JSON_PATH) {
-    finalConfig.packageJsonPath = process.env.INSTANA_PACKAGE_JSON_PATH;
-    logger.debug(`[config] env:INSTANA_PACKAGE_JSON_PATH = ${process.env.INSTANA_PACKAGE_JSON_PATH}`);
-  } else {
-    finalConfig.packageJsonPath = defaultConfig.packageJsonPath;
+    return;
   }
+
+  // Priority 3: Default value
+  finalConfig.packageJsonPath = defaultConfig.packageJsonPath;
 }
 
 /**
@@ -404,36 +415,31 @@ function normalizeTracingHttp(userConfig, defaultConfig, finalConfig) {
   const userHttp = userConfig.tracing.http;
   finalConfig.tracing.http = {};
 
-  let fromEnvVar;
   if (process.env.INSTANA_EXTRA_HTTP_HEADERS) {
-    fromEnvVar = parseHeadersEnvVar(process.env.INSTANA_EXTRA_HTTP_HEADERS);
-  }
-
-  const userHeaders = userHttp?.extraHttpHeadersToCapture;
-
-  if (!userHeaders && !fromEnvVar) {
-    finalConfig.tracing.http.extraHttpHeadersToCapture = defaultConfig.tracing.http.extraHttpHeadersToCapture;
-    return;
-  } else if (!userHeaders && fromEnvVar) {
+    const fromEnvVar = parseHeadersEnvVar(process.env.INSTANA_EXTRA_HTTP_HEADERS);
     finalConfig.tracing.http.extraHttpHeadersToCapture = fromEnvVar;
     logger.debug(`[config] env:INSTANA_EXTRA_HTTP_HEADERS = ${process.env.INSTANA_EXTRA_HTTP_HEADERS}`);
     return;
-  } else if (finalConfig.tracing.http.extraHttpHeadersToCapture) {
-    logger.debug('[config] incode:config.tracing.http.extraHttpHeadersToCapture');
   }
 
-  if (!Array.isArray(userHeaders)) {
-    logger.warn(
-      // eslint-disable-next-line max-len
-      `Invalid configuration: config.tracing.http.extraHttpHeadersToCapture is not an array, the value will be ignored: ${JSON.stringify(
-        userHeaders
-      )}`
-    );
-    finalConfig.tracing.http.extraHttpHeadersToCapture = defaultConfig.tracing.http.extraHttpHeadersToCapture;
+  const userHeaders = userHttp?.extraHttpHeadersToCapture;
+  if (userHeaders != null) {
+    if (!Array.isArray(userHeaders)) {
+      logger.warn(
+        // eslint-disable-next-line max-len
+        `Invalid configuration: config.tracing.http.extraHttpHeadersToCapture is not an array, the value will be ignored: ${JSON.stringify(
+          userHeaders
+        )}`
+      );
+      finalConfig.tracing.http.extraHttpHeadersToCapture = defaultConfig.tracing.http.extraHttpHeadersToCapture;
+      return;
+    }
+    finalConfig.tracing.http.extraHttpHeadersToCapture = userHeaders.map(s => s.toLowerCase());
+    logger.debug('[config] incode:config.tracing.http.extraHttpHeadersToCapture');
     return;
   }
 
-  finalConfig.tracing.http.extraHttpHeadersToCapture = userHeaders.map(s => s.toLowerCase());
+  finalConfig.tracing.http.extraHttpHeadersToCapture = defaultConfig.tracing.http.extraHttpHeadersToCapture;
 }
 
 /**
@@ -748,14 +754,7 @@ function normalizeIgnoreEndpoints(userConfig, defaultConfig, finalConfig) {
     return;
   }
 
-  // Case 1: Use in-code configuration if available
-  if (userIgnoreEndpoints && Object.keys(userIgnoreEndpoints).length) {
-    finalConfig.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(userIgnoreEndpoints);
-    logger.debug('[config] incode:config.tracing.ignoreEndpoints');
-    return;
-  }
-
-  // Case 2: Load from a YAML file if `INSTANA_IGNORE_ENDPOINTS_PATH` is set
+  // Priority 1: Load from a YAML file if `INSTANA_IGNORE_ENDPOINTS_PATH` is set
   // Introduced in Phase 2 for advanced filtering based on both methods and endpoints.
   // Also supports basic filtering for endpoints.
   if (process.env.INSTANA_IGNORE_ENDPOINTS_PATH) {
@@ -766,7 +765,7 @@ function normalizeIgnoreEndpoints(userConfig, defaultConfig, finalConfig) {
     return;
   }
 
-  // Case 3: Load from the `INSTANA_IGNORE_ENDPOINTS` environment variable
+  // Priority 2: Load from the `INSTANA_IGNORE_ENDPOINTS` environment variable
   // Introduced in Phase 1 for basic filtering based only on operations (e.g., `redis.get`, `kafka.consume`).
   // Provides a simple way to configure ignored operations via environment variables.
   if (process.env.INSTANA_IGNORE_ENDPOINTS) {
@@ -774,6 +773,13 @@ function normalizeIgnoreEndpoints(userConfig, defaultConfig, finalConfig) {
       process.env.INSTANA_IGNORE_ENDPOINTS
     );
     logger.debug('[config] env:INSTANA_IGNORE_ENDPOINTS');
+    return;
+  }
+
+  // Priority 3: Use in-code configuration if available
+  if (userIgnoreEndpoints && Object.keys(userIgnoreEndpoints).length) {
+    finalConfig.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(userIgnoreEndpoints);
+    logger.debug('[config] incode:config.tracing.ignoreEndpoints');
     return;
   }
 
