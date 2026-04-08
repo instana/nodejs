@@ -6,15 +6,13 @@
 'use strict';
 
 const expect = require('chai').expect;
-
 const testUtils = require('@_local/core/test/test_util');
+const coreConfig = require('@instana/core/src/config');
 const normalizeConfig = require('@_local/collector/src/util/normalizeConfig');
 
 describe('util.normalizeConfig', () => {
   before(() => {
-    normalizeConfig.init({
-      logger: testUtils.createFakeLogger()
-    });
+    coreConfig.init(testUtils.createFakeLogger());
   });
 
   beforeEach(resetEnv);

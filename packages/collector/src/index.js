@@ -158,8 +158,6 @@ function init(userConfig = {}) {
     log.init(userConfig);
   }
 
-  collectorConfig.init(config);
-
   const finalCollectorConfig = collectorConfig.normalizeConfig(userConfig);
   config = instanaNodeJsCore.coreConfig.normalize({
     userConfig,

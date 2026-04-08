@@ -7,13 +7,6 @@
 
 const util = require('@instana/core/src/config/util');
 
-/**
- * @param {import('@instana/core/src/config').InstanaConfig} config
- */
-exports.init = function init(config) {
-  util.init(config.logger);
-};
-
 const defaults = {
   agentHost: '127.0.0.1',
   agentPort: 42699,
