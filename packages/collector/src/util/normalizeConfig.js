@@ -7,15 +7,11 @@
 
 const util = require('@instana/core/src/config/util');
 
-/** @type {import('@instana/core/src/core').GenericLogger} */
-let logger;
-
 /**
  * @param {import('@instana/core/src/config').InstanaConfig} config
  */
 exports.init = function init(config) {
-  logger = config.logger;
-  util.init(logger);
+  util.init(config.logger);
 };
 
 const defaults = {
