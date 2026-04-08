@@ -31,6 +31,7 @@ module.exports = function normalizeConfig(userConfig = {}) {
   finalConfig.agentRequestTimeout = normalizeAgentRequestTimeout(userConfig, defaults);
   finalConfig.autoProfile = normalizeAutoProfile(userConfig, defaults);
   finalConfig.reportUnhandledPromiseRejections = normalizeUnhandledRejections(userConfig);
+  finalConfig.tracing = userConfig.tracing || {};
 
   return finalConfig;
 };
