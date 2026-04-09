@@ -4,46 +4,61 @@
 
 'use strict';
 
+// Gespeicherte Resource-Informationen für Metrics (wenn kein "from" Feld vorhanden)
+let cachedHostId = null;
+let cachedPid = null;
+
+/**
+ * Setzt die Host-ID für Resource Attributes
+ * @param {string} hostId - Host ID
+ */
+function setHostId(hostId) {
+  cachedHostId = hostId;
+}
+
+/**
+ * Setzt die PID für Resource Attributes
+ * @param {string|number} pid - Process ID
+ */
+function setPid(pid) {
+  cachedPid = String(pid);
+}
+
 /**
  * Transformiert Instana Traces Format zu OpenTelemetry Format
  *
  * OTEL Format Beispiel:
  * {
- *   "resourceSpans": [
- *     {
- *       "resource": {
- *         "attributes": [
- *           { "key": "service.name", "value": { "stringValue": "checkout-service" } },
- *           { "key": "service.version", "value": { "stringValue": "1.2.3" } },
- *           { "key": "host.name", "value": { "stringValue": "node-1" } }
- *         ]
- *       },
- *       "scopeSpans": [
- *         {
- *           "scope": {
- *             "name": "io.opentelemetry.http",
- *             "version": "1.0.1"
- *           },
- *           "spans": [
- *             {
- *               "traceId": "5b8e1005739815c1054b4f575459392c",
- *               "spanId": "eed258b6641e17d9",
- *               "parentSpanId": "6513c7a9c141094d",
- *               "name": "/calculate-tax",
- *               "kind": 2,
- *               "startTimeUnixNano": "1678901234000000000",
- *               "endTimeUnixNano": "1678901234500000000",
- *               "attributes": [
- *                 { "key": "http.method", "value": { "stringValue": "POST" } },
- *                 { "key": "http.status_code", "value": { "intValue": 200 } }
- *               ],
- *               "status": { "code": 1 }
- *             }
- *           ]
- *         }
+ *   "resourceSpans": [{
+ *     "resource": {
+ *       "attributes": [
+ *         {"key": "service.name", "value": {"stringValue": "demoService"}},
+ *         {"key": "process.pid", "value": {"intValue": 12345}},
+ *         {"key": "host.name", "value": {"stringValue": "My Fancy Host"}}
  *       ]
- *     }
- *   ]
+ *     },
+ *     "scopeSpans": [{
+ *       "scope": {
+ *         "name": "@instana/collector",
+ *         "version": "1.0.0"
+ *       },
+ *       "spans": [{
+ *         "traceId": "0a0b0c0d010203040506070809008081",
+ *         "spanId": "010203040a0b0c0d",
+ *         "parentSpanId": "0d0c0b0a04030201",
+ *         "name": "some span",
+ *         "kind": 3,
+ *         "startTimeUnixNano": "1775732779960000000",
+ *         "endTimeUnixNano": "1775732779969000000",
+ *         "attributes": [
+ *           {"key": "http.method", "value": {"stringValue": "GET"}},
+ *           {"key": "http.status_code", "value": {"intValue": 200}},
+ *           {"key": "http.url", "value": {"stringValue": "/"}}
+ *         ],
+ *         "status": {"code": 1}
+ *       }]
+ *     }]
+ *   }]
  * }
  *
  * INSTANA Format Beispiel:
@@ -71,6 +86,35 @@
  *     }
  *   }
  * }]
+ */
+
+/**
+ * OTEL Metrics Format Beispiel:
+ * {
+ *   "resourceMetrics": [{
+ *     "resource": {
+ *       "attributes": [
+ *         {"key": "service.name", "value": {"stringValue": "metricsService"}},
+ *         {"key": "process.pid", "value": {"intValue": 4711}},
+ *         {"key": "host.name", "value": {"stringValue": "My Lame Host"}}
+ *       ]
+ *     },
+ *     "scopeMetrics": [{
+ *       "scope": {
+ *         "name": "instrumentationScope",
+ *         "version": "13.2"
+ *       },
+ *       "metrics": [{
+ *         "name": "sumMetricName",
+ *         "sum": {
+ *           "dataPoints": [{
+ *             "asDouble": 42.42
+ *           }]
+ *         }
+ *       }]
+ *     }]
+ *   }]
+ * }
  */
 
 /**
@@ -174,34 +218,29 @@ function createResourceAttributes(from) {
   });
 
   // Service Name - verwende process.title oder einen Default
-  const serviceName = 'dummy';
+  const serviceName = process.env.SERVICE_NAME;
   attributes.push({
     key: 'service.name',
     value: { stringValue: serviceName }
   });
 
-  if (!from) {
-    return attributes;
-  }
+  // Verwende "from" Feld wenn vorhanden, sonst cached Werte
+  const pid = from && from.e ? from.e : cachedPid;
+  const hostId = from && from.h ? from.h : cachedHostId;
 
-  // Service Instance ID und Process PID aus Instana "from.e" (entity ID / PID)
-  if (from.e) {
-    attributes.push({
-      key: 'service.instance.id',
-      value: { stringValue: from.e }
-    });
-
+  // Process PID
+  if (pid) {
     attributes.push({
       key: 'process.pid',
-      value: { intValue: parseInt(from.e, 10) }
+      value: { intValue: parseInt(pid, 10) }
     });
   }
 
-  // Host ID aus Instana "from.h"
-  if (from.h) {
+  // Host Name
+  if (hostId) {
     attributes.push({
-      key: 'host.id',
-      value: { stringValue: from.h }
+      key: 'host.name',
+      value: { stringValue: hostId }
     });
   }
 
@@ -262,6 +301,16 @@ function transform(instanaTraces) {
   const spansByResource = new Map();
 
   instanaTraces.forEach(function (instanaSpan) {
+    // Cache PID und Host-ID aus dem ersten Span für Metrics
+    if (instanaSpan.f) {
+      if (instanaSpan.f.e && !cachedPid) {
+        setPid(instanaSpan.f.e);
+      }
+      if (instanaSpan.f.h && !cachedHostId) {
+        setHostId(instanaSpan.f.h);
+      }
+    }
+
     const resourceKey = JSON.stringify(instanaSpan.f || {});
 
     if (!spansByResource.has(resourceKey)) {
@@ -299,6 +348,185 @@ function transform(instanaTraces) {
   };
 }
 
+/**
+ * Flacht verschachtelte Objekte zu einem flachen Objekt mit Punkt-Notation
+ * @param {Object} obj - Verschachteltes Objekt
+ * @param {string} prefix - Prefix für die Keys
+ * @returns {Object} Flaches Objekt
+ */
+function flattenObject(obj, prefix) {
+  prefix = prefix || '';
+  const flattened = {};
+
+  for (const key in obj) {
+    if (!obj.hasOwnProperty(key)) {
+      continue;
+    }
+
+    const value = obj[key];
+    const newKey = prefix ? `${prefix}.${key}` : key;
+
+    if (value === null || value === undefined) {
+      continue;
+    }
+
+    if (typeof value === 'object' && !Array.isArray(value)) {
+      // Rekursiv verschachtelte Objekte flach machen
+      const nested = flattenObject(value, newKey);
+      for (const nestedKey in nested) {
+        if (nested.hasOwnProperty(nestedKey)) {
+          flattened[nestedKey] = nested[nestedKey];
+        }
+      }
+    } else if (typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean') {
+      // Nur primitive Werte übernehmen
+      flattened[newKey] = value;
+    }
+  }
+
+  return flattened;
+}
+
+/**
+ * Transformiert Instana Metrics zu OTEL Format
+ * @param {Array} instanaMetrics - Array von Instana metrics
+ * @returns {Object} OTEL metrics object
+ */
+function transformMetrics(instanaMetrics) {
+  // Wenn es ein Objekt ist, konvertiere die Werte zu einem Array
+  let metricsArray = instanaMetrics;
+
+  if (!Array.isArray(instanaMetrics)) {
+    if (!instanaMetrics || typeof instanaMetrics !== 'object') {
+      return {
+        resourceMetrics: []
+      };
+    }
+
+    // Flache das verschachtelte Objekt
+    const flattenedMetrics = flattenObject(instanaMetrics);
+
+    // Konvertiere flaches Objekt zu Array von Metrics
+    metricsArray = Object.keys(flattenedMetrics).map(function (key) {
+      const value = flattenedMetrics[key];
+      return {
+        name: key,
+        value: value,
+        timestamp: Date.now(),
+        unit: '',
+        from: instanaMetrics.from
+      };
+    });
+  }
+
+  if (metricsArray.length === 0) {
+    return {
+      resourceMetrics: []
+    };
+  }
+
+  // Gruppiere Metrics nach Resource
+  const metricsByResource = new Map();
+
+  metricsArray.forEach(function (instanaMetric) {
+    const resourceKey = JSON.stringify(instanaMetric.from || {});
+
+    if (!metricsByResource.has(resourceKey)) {
+      metricsByResource.set(resourceKey, {
+        resource: instanaMetric.from,
+        metrics: []
+      });
+    }
+
+    metricsByResource.get(resourceKey).metrics.push(instanaMetric);
+  });
+
+  // Erstelle OTEL ResourceMetrics
+  const resourceMetrics = Array.from(metricsByResource.values()).map(function (group) {
+    const otelMetrics = group.metrics.map(function (metric) {
+      // Bestimme den Metrik-Typ basierend auf dem Wert
+      let metricData;
+      if (typeof metric.value === 'number') {
+        metricData = {
+          sum: {
+            dataPoints: [
+              {
+                asDouble: metric.value
+              }
+            ]
+          }
+        };
+      } else if (typeof metric.value === 'string') {
+        // Strings als Gauge mit String-Wert (nicht standard OTLP, aber für Debugging)
+        metricData = {
+          gauge: {
+            dataPoints: [
+              {
+                asDouble: 0,
+                attributes: [
+                  {
+                    key: 'value',
+                    value: { stringValue: metric.value }
+                  }
+                ]
+              }
+            ]
+          }
+        };
+      } else if (typeof metric.value === 'boolean') {
+        metricData = {
+          gauge: {
+            dataPoints: [
+              {
+                asDouble: metric.value ? 1 : 0
+              }
+            ]
+          }
+        };
+      } else {
+        // Fallback für unbekannte Typen
+        metricData = {
+          sum: {
+            dataPoints: [
+              {
+                asDouble: 0
+              }
+            ]
+          }
+        };
+      }
+
+      return {
+        name: metric.name || 'unknown.metric',
+        ...metricData
+      };
+    });
+
+    return {
+      resource: {
+        attributes: createResourceAttributes(group.resource)
+      },
+      scopeMetrics: [
+        {
+          scope: {
+            name: 'instrumentationScope',
+            version: '13.2'
+          },
+          metrics: otelMetrics
+        }
+      ]
+    };
+  });
+
+  return {
+    resourceMetrics: resourceMetrics
+  };
+}
+
 module.exports = transform;
+module.exports.transformTraces = transform;
+module.exports.transformMetrics = transformMetrics;
+module.exports.setHostId = setHostId;
+module.exports.setPid = setPid;
 
 // Made with Bob
