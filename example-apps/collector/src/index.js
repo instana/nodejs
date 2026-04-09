@@ -19,6 +19,8 @@ if (config.mode === 'npm') {
   packageToRequire = '@instana/collector';
 }
 
+process.env.INSTANA_OTLP_FORMAT = 'true';
+
 if (config.collectorEnabled) {
   console.log(`enabling @instana/collector (requiring ${packageToRequire})`);
   require(packageToRequire)({

@@ -10,7 +10,7 @@ const pathUtil = require('path');
 const circularReferenceRemover = require('./util/removeCircular');
 const agentOpts = require('./agent/opts');
 const cmdline = require('./cmdline');
-
+const otlpTransformer = require('./otlpTransformer');
 /** @typedef {import('@instana/core/src/core').InstanaBaseSpan} InstanaBaseSpan */
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
@@ -307,6 +307,9 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
 exports.sendMetrics = function sendMetrics(data, cb) {
   cb = util.atMostOnce('callback for sendMetrics', cb);
 
+  cb();
+
+  /*
   sendData(`/com.instana.plugin.nodejs.${pidStore.pid}`, data, (err, body) => {
     if (err) {
       cb(err, null);
@@ -323,6 +326,7 @@ exports.sendMetrics = function sendMetrics(data, cb) {
       cb(null, body);
     }
   });
+  */
 };
 
 /**
@@ -425,7 +429,8 @@ exports.sendTracingMetricsToAgent = function sendTracingMetricsToAgent(tracingMe
     cb(err);
   });
 
-  sendData('/tracermetrics', tracingMetrics, callback);
+  // sendData('/tracermetrics', tracingMetrics, callback);
+  cb();
 };
 
 /**
@@ -438,7 +443,15 @@ exports.sendTracingMetricsToAgent = function sendTracingMetricsToAgent(tracingMe
 function sendData(path, data, cb, ignore404 = false) {
   cb = util.atMostOnce(`callback for sendData: ${path}`, cb);
 
-  const payloadAsString = JSON.stringify(data, circularReferenceRemover());
+  path = '/v1/traces';
+
+  console.log(JSON.stringify(data));
+  // Transform Instana format to OTLP format
+  const otlpFormat = otlpTransformer(data);
+
+  console.log(JSON.stringify(otlpFormat));
+
+  const payloadAsString = JSON.stringify(otlpFormat, circularReferenceRemover());
   if (typeof logger.trace === 'function') {
     logger.trace(`Sending data to ${path}.`);
   } else {
@@ -455,7 +468,7 @@ function sendData(path, data, cb, ignore404 = false) {
   const req = http.request(
     {
       host: agentOpts.host,
-      port: agentOpts.port,
+      port: 4318,
       path,
       method: 'POST',
       agent: http.agent,
@@ -465,24 +478,26 @@ function sendData(path, data, cb, ignore404 = false) {
       }
     },
     res => {
-      if (res.statusCode < 200 || res.statusCode >= 300) {
-        if (res.statusCode !== 404 || !ignore404) {
-          const statusCodeError = new Error(
-            `Failed to send data to agent via POST ${path}. Got status code ${res.statusCode}.`
-          );
-          // @ts-ignore
-          statusCodeError.statusCode = res.statusCode;
-          cb(statusCodeError);
-          return;
-        }
-      }
-
       res.setEncoding('utf8');
       let responseBody = '';
       res.on('data', chunk => {
         responseBody += chunk;
       });
       res.on('end', () => {
+        console.log(responseBody);
+
+        if (res.statusCode < 200 || res.statusCode >= 300) {
+          if (res.statusCode !== 404 || !ignore404) {
+            const statusCodeError = new Error(
+              `Failed to send data to agent via POST ${path}. Got status code ${res.statusCode}.`
+            );
+            // @ts-ignore
+            statusCodeError.statusCode = res.statusCode;
+            cb(statusCodeError);
+            return;
+          }
+        }
+
         cb(null, responseBody);
       });
     }
