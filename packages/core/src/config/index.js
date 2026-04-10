@@ -370,7 +370,15 @@ function normalizeTracingHttp({ userConfig = {}, defaultConfig = {}, finalConfig
 
   const userHeaders = userHttp?.extraHttpHeadersToCapture;
 
-  // 1. Check in-code configuration first
+  // 1. Check environment variable
+  if (process.env.INSTANA_EXTRA_HTTP_HEADERS) {
+    const fromEnvVar = parseHeadersEnvVar(process.env.INSTANA_EXTRA_HTTP_HEADERS);
+    finalConfig.tracing.http.extraHttpHeadersToCapture = fromEnvVar;
+    logger.debug(`[config] env:INSTANA_EXTRA_HTTP_HEADERS = ${process.env.INSTANA_EXTRA_HTTP_HEADERS}`);
+    return;
+  }
+
+  // 2. Check in-code configuration
   if (userHeaders !== undefined) {
     if (!Array.isArray(userHeaders)) {
       logger.warn(
@@ -384,14 +392,6 @@ function normalizeTracingHttp({ userConfig = {}, defaultConfig = {}, finalConfig
       logger.debug('[config] incode:config.tracing.http.extraHttpHeadersToCapture');
       return;
     }
-  }
-
-  // 2. Check environment variable
-  if (process.env.INSTANA_EXTRA_HTTP_HEADERS) {
-    const fromEnvVar = parseHeadersEnvVar(process.env.INSTANA_EXTRA_HTTP_HEADERS);
-    finalConfig.tracing.http.extraHttpHeadersToCapture = fromEnvVar;
-    logger.debug(`[config] env:INSTANA_EXTRA_HTTP_HEADERS = ${process.env.INSTANA_EXTRA_HTTP_HEADERS}`);
-    return;
   }
 
   // 3. Use default configuration
@@ -426,6 +426,7 @@ function normalizeTracingStackTrace({ userConfig = {}, defaultConfig = {}, final
   const envStackTrace = process.env.INSTANA_STACK_TRACE;
   const envStackTraceLength = process.env.INSTANA_STACK_TRACE_LENGTH;
 
+  // Priority 1: Environment variable
   if (envStackTrace !== undefined) {
     const result = validateStackTraceMode(envStackTrace);
 
@@ -441,6 +442,7 @@ function normalizeTracingStackTrace({ userConfig = {}, defaultConfig = {}, final
       finalConfig.tracing.stackTrace = defaultConfig.tracing.stackTrace;
     }
   } else if (userGlobal?.stackTrace !== undefined) {
+    // Priority 2: In-code configuration
     const result = validateStackTraceMode(userGlobal.stackTrace);
 
     if (result.isValid) {
@@ -461,6 +463,7 @@ function normalizeTracingStackTrace({ userConfig = {}, defaultConfig = {}, final
   const isLegacyLengthDefined = userTracingConfig?.stackTraceLength !== undefined;
   const stackTraceConfigValue = userGlobal?.stackTraceLength || userTracingConfig?.stackTraceLength;
 
+  // Priority 1: Environment variable
   if (envStackTraceLength !== undefined) {
     const result = validateStackTraceLength(envStackTraceLength);
 
@@ -476,6 +479,7 @@ function normalizeTracingStackTrace({ userConfig = {}, defaultConfig = {}, final
       finalConfig.tracing.stackTraceLength = defaultConfig.tracing.stackTraceLength;
     }
   } else if (stackTraceConfigValue !== undefined) {
+    // Priority 2: In-code configuration
     if (isLegacyLengthDefined) {
       logger.warn(
         // eslint-disable-next-line max-len
@@ -696,14 +700,7 @@ function normalizeIgnoreEndpoints({ userConfig = {}, defaultConfig = {}, finalCo
     return;
   }
 
-  // Case 1: Use in-code configuration if available
-  if (userIgnoreEndpoints && Object.keys(userIgnoreEndpoints).length) {
-    finalConfig.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(userIgnoreEndpoints);
-    logger.debug('[config] incode:config.tracing.ignoreEndpoints');
-    return;
-  }
-
-  // Case 2: Load from a YAML file if `INSTANA_IGNORE_ENDPOINTS_PATH` is set
+  // Priority 1: Load from a YAML file if `INSTANA_IGNORE_ENDPOINTS_PATH` is set
   // Introduced in Phase 2 for advanced filtering based on both methods and endpoints.
   // Also supports basic filtering for endpoints.
   if (process.env.INSTANA_IGNORE_ENDPOINTS_PATH) {
@@ -714,7 +711,7 @@ function normalizeIgnoreEndpoints({ userConfig = {}, defaultConfig = {}, finalCo
     return;
   }
 
-  // Case 3: Load from the `INSTANA_IGNORE_ENDPOINTS` environment variable
+  // Priority 2: Load from the `INSTANA_IGNORE_ENDPOINTS` environment variable
   // Introduced in Phase 1 for basic filtering based only on operations (e.g., `redis.get`, `kafka.consume`).
   // Provides a simple way to configure ignored operations via environment variables.
   if (process.env.INSTANA_IGNORE_ENDPOINTS) {
@@ -722,6 +719,13 @@ function normalizeIgnoreEndpoints({ userConfig = {}, defaultConfig = {}, finalCo
       process.env.INSTANA_IGNORE_ENDPOINTS
     );
     logger.debug('[config] env:INSTANA_IGNORE_ENDPOINTS');
+    return;
+  }
+
+  // Priority 3: Use in-code configuration if available
+  if (userIgnoreEndpoints && Object.keys(userIgnoreEndpoints).length) {
+    finalConfig.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(userIgnoreEndpoints);
+    logger.debug('[config] incode:config.tracing.ignoreEndpoints');
     return;
   }
 
