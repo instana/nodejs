@@ -679,7 +679,7 @@ describe('config.util', () => {
     it('should handle multiline string values', () => {
       const multilineValue = 'line1\nline2\nline3';
       const result = util.resolveStringConfig({
-        envVar: 'TEST_STRING_VAR',
+        envVar: undefined,
         configValue: multilineValue,
         defaultValue: 'default-value',
         configPath: 'config.test.string'
