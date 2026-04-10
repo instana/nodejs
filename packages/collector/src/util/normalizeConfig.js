@@ -80,11 +80,11 @@ function normalizeAgentRequestTimeout(userConfig, defaultConfig) {
 
 /**
  * @param {import('../types/collector').CollectorConfig} userConfig
- * @param {{ autoProfile: string | boolean }} defaultConfig
- * @returns {string | boolean}
+ * @param {{ autoProfile: boolean }} defaultConfig
+ * @returns {boolean}
  */
 function normalizeAutoProfile(userConfig, defaultConfig) {
-  return util.resolveStringConfig({
+  return util.resolveBooleanConfig({
     envVar: 'INSTANA_AUTO_PROFILE',
     configValue: userConfig.autoProfile,
     defaultValue: defaultConfig.autoProfile,

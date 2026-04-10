@@ -193,6 +193,14 @@ exports.resolveBooleanConfigWithTruthyEnv = function resolveBooleanConfigWithTru
  */
 exports.resolveStringConfig = function resolveStringConfig({ envVar, configValue, defaultValue, configPath }) {
   if (configValue != null) {
+    if (typeof configValue !== 'string') {
+      logger.warn(
+        `Invalid configuration: ${configPath} is not a string value, will be ignored: ${JSON.stringify(
+          configValue
+        )}. Falling back to default: ${defaultValue}.`
+      );
+      return defaultValue;
+    }
     logger.debug(`[config] incode:${configPath} = ${configValue}`);
     return configValue;
   }
