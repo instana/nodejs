@@ -183,46 +183,24 @@ module.exports.normalize = ({ userConfig = {}, finalConfigBase = {}, defaultsOve
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
 function normalizeServiceName({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
-  const userValue = userConfig.serviceName;
-
-  if (userValue != null) {
-    if (typeof userValue === 'string') {
-      finalConfig.serviceName = userValue;
-      logger.debug(`[config] incode:config.serviceName = ${finalConfig.serviceName}`);
-    } else {
-      logger.warn(`Invalid configuration: config.serviceName is not a string, the value will be ignored: ${userValue}`);
-      finalConfig.serviceName = defaultConfig.serviceName;
-    }
-  } else if (process.env.INSTANA_SERVICE_NAME) {
-    finalConfig.serviceName = process.env.INSTANA_SERVICE_NAME;
-    logger.debug(`[config] env:INSTANA_SERVICE_NAME = ${process.env.INSTANA_SERVICE_NAME}`);
-  } else {
-    finalConfig.serviceName = defaultConfig.serviceName;
-  }
+  finalConfig.serviceName = util.resolveStringConfig({
+    envVar: 'INSTANA_SERVICE_NAME',
+    configValue: userConfig.serviceName,
+    defaultValue: defaultConfig.serviceName,
+    configPath: 'config.serviceName'
+  });
 }
 
 /**
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
 function normalizePackageJsonPath({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
-  const userValue = userConfig.packageJsonPath;
-
-  if (userValue != null) {
-    if (typeof userValue === 'string') {
-      finalConfig.packageJsonPath = userValue;
-      logger.debug(`[config] incode:config.packageJsonPath = ${finalConfig.packageJsonPath}`);
-    } else {
-      logger.warn(
-        `Invalid configuration: config.packageJsonPath is not a string, the value will be ignored: ${userValue}`
-      );
-      finalConfig.packageJsonPath = defaultConfig.packageJsonPath;
-    }
-  } else if (process.env.INSTANA_PACKAGE_JSON_PATH) {
-    finalConfig.packageJsonPath = process.env.INSTANA_PACKAGE_JSON_PATH;
-    logger.debug(`[config] env:INSTANA_PACKAGE_JSON_PATH = ${process.env.INSTANA_PACKAGE_JSON_PATH}`);
-  } else {
-    finalConfig.packageJsonPath = defaultConfig.packageJsonPath;
-  }
+  finalConfig.packageJsonPath = util.resolveStringConfig({
+    envVar: 'INSTANA_PACKAGE_JSON_PATH',
+    configValue: userConfig.packageJsonPath,
+    defaultValue: defaultConfig.packageJsonPath,
+    configPath: 'config.packageJsonPath'
+  });
 }
 
 /**
