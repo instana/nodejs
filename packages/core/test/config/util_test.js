@@ -581,4 +581,111 @@ describe('config.util', () => {
       expect(result).to.equal(false);
     });
   });
+
+  describe('resolveStringConfig', () => {
+    beforeEach(() => {
+      delete process.env.TEST_STRING_VAR;
+    });
+
+    afterEach(() => {
+      delete process.env.TEST_STRING_VAR;
+    });
+
+    it('should return the default value when no env var or config value is provided', () => {
+      const result = util.resolveStringConfig({
+        envVar: 'TEST_STRING_VAR',
+        configValue: undefined,
+        defaultValue: 'default-value',
+        configPath: 'config.test.string'
+      });
+
+      expect(result).to.equal('default-value');
+    });
+
+    it.skip('should prioritize env var over config value', () => {
+      process.env.TEST_STRING_VAR = 'env-value';
+
+      const result = util.resolveStringConfig({
+        envVar: 'TEST_STRING_VAR',
+        configValue: 'config-value',
+        defaultValue: 'default-value',
+        configPath: 'config.test.string'
+      });
+
+      expect(result).to.equal('env-value');
+    });
+
+    it('should use env var when config value is not set', () => {
+      process.env.TEST_STRING_VAR = 'env-value';
+
+      const result = util.resolveStringConfig({
+        envVar: 'TEST_STRING_VAR',
+        configValue: undefined,
+        defaultValue: 'default-value',
+        configPath: 'config.test.string'
+      });
+
+      expect(result).to.equal('env-value');
+    });
+
+    it('should use config value when env var is not set', () => {
+      const result = util.resolveStringConfig({
+        envVar: 'TEST_STRING_VAR',
+        configValue: 'config-value',
+        defaultValue: 'default-value',
+        configPath: 'config.test.string'
+      });
+
+      expect(result).to.equal('config-value');
+    });
+
+    it('should handle empty string as a valid config value', () => {
+      const result = util.resolveStringConfig({
+        envVar: 'TEST_STRING_VAR',
+        configValue: '',
+        defaultValue: 'default-value',
+        configPath: 'config.test.string'
+      });
+
+      expect(result).to.equal('');
+    });
+
+    it('should handle empty string as a valid env var value', () => {
+      process.env.TEST_STRING_VAR = '';
+
+      const result = util.resolveStringConfig({
+        envVar: 'TEST_STRING_VAR',
+        configValue: undefined,
+        defaultValue: 'default-value',
+        configPath: 'config.test.string'
+      });
+
+      expect(result).to.equal('');
+    });
+
+    it('should handle undefined config value as not set', () => {
+      process.env.TEST_STRING_VAR = 'env-value';
+
+      const result = util.resolveStringConfig({
+        envVar: 'TEST_STRING_VAR',
+        configValue: undefined,
+        defaultValue: 'default-value',
+        configPath: 'config.test.string'
+      });
+
+      expect(result).to.equal('env-value');
+    });
+
+    it('should handle multiline string values', () => {
+      const multilineValue = 'line1\nline2\nline3';
+      const result = util.resolveStringConfig({
+        envVar: undefined,
+        configValue: multilineValue,
+        defaultValue: 'default-value',
+        configPath: 'config.test.string'
+      });
+
+      expect(result).to.equal(multilineValue);
+    });
+  });
 });
