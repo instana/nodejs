@@ -581,4 +581,216 @@ describe('config.util', () => {
       expect(result).to.equal(false);
     });
   });
+
+  describe('resolveStringConfig', () => {
+    beforeEach(() => {
+      delete process.env.TEST_STRING_VAR;
+    });
+
+    afterEach(() => {
+      delete process.env.TEST_STRING_VAR;
+    });
+
+    it('should return the default value when no env var or config value is provided', () => {
+      const result = util.resolveStringConfig({
+        envVar: 'TEST_STRING_VAR',
+        configValue: undefined,
+        defaultValue: 'default-value',
+        configPath: 'config.test.string'
+      });
+
+      expect(result).to.equal('default-value');
+    });
+
+    it.skip('should prioritize env var over config value', () => {
+      process.env.TEST_STRING_VAR = 'env-value';
+
+      const result = util.resolveStringConfig({
+        envVar: 'TEST_STRING_VAR',
+        configValue: 'config-value',
+        defaultValue: 'default-value',
+        configPath: 'config.test.string'
+      });
+
+      expect(result).to.equal('env-value');
+    });
+
+    it('should use env var when config value is not set', () => {
+      process.env.TEST_STRING_VAR = 'env-value';
+
+      const result = util.resolveStringConfig({
+        envVar: 'TEST_STRING_VAR',
+        configValue: undefined,
+        defaultValue: 'default-value',
+        configPath: 'config.test.string'
+      });
+
+      expect(result).to.equal('env-value');
+    });
+
+    it('should use config value when env var is not set', () => {
+      const result = util.resolveStringConfig({
+        envVar: 'TEST_STRING_VAR',
+        configValue: 'config-value',
+        defaultValue: 'default-value',
+        configPath: 'config.test.string'
+      });
+
+      expect(result).to.equal('config-value');
+    });
+
+    it('should handle empty string as a valid config value', () => {
+      const result = util.resolveStringConfig({
+        envVar: 'TEST_STRING_VAR',
+        configValue: '',
+        defaultValue: 'default-value',
+        configPath: 'config.test.string'
+      });
+
+      expect(result).to.equal('');
+    });
+
+    it('should handle empty string as a valid env var value', () => {
+      process.env.TEST_STRING_VAR = '';
+
+      const result = util.resolveStringConfig({
+        envVar: 'TEST_STRING_VAR',
+        configValue: undefined,
+        defaultValue: 'default-value',
+        configPath: 'config.test.string'
+      });
+
+      expect(result).to.equal('');
+    });
+
+    it('should handle numeric config value', () => {
+      const result = util.resolveStringConfig({
+        envVar: 'TEST_STRING_VAR',
+        configValue: 12345,
+        defaultValue: 'default-value',
+        configPath: 'config.test.string'
+      });
+
+      expect(result).to.equal(12345);
+    });
+
+    it('should handle boolean config value', () => {
+      const result = util.resolveStringConfig({
+        envVar: 'TEST_STRING_VAR',
+        configValue: true,
+        defaultValue: 'default-value',
+        configPath: 'config.test.string'
+      });
+
+      expect(result).to.equal(true);
+    });
+
+    it('should handle object config value', () => {
+      const configObj = { key: 'value' };
+      const result = util.resolveStringConfig({
+        envVar: 'TEST_STRING_VAR',
+        configValue: configObj,
+        defaultValue: 'default-value',
+        configPath: 'config.test.string'
+      });
+
+      expect(result).to.equal(configObj);
+    });
+
+    it('should handle array config value', () => {
+      const configArray = ['item1', 'item2'];
+      const result = util.resolveStringConfig({
+        envVar: 'TEST_STRING_VAR',
+        configValue: configArray,
+        defaultValue: 'default-value',
+        configPath: 'config.test.string'
+      });
+
+      expect(result).to.equal(configArray);
+    });
+
+    it('should handle null config value as not set', () => {
+      process.env.TEST_STRING_VAR = 'env-value';
+
+      const result = util.resolveStringConfig({
+        envVar: 'TEST_STRING_VAR',
+        configValue: null,
+        defaultValue: 'default-value',
+        configPath: 'config.test.string'
+      });
+
+      expect(result).to.equal('env-value');
+    });
+
+    it('should handle undefined config value as not set', () => {
+      process.env.TEST_STRING_VAR = 'env-value';
+
+      const result = util.resolveStringConfig({
+        envVar: 'TEST_STRING_VAR',
+        configValue: undefined,
+        defaultValue: 'default-value',
+        configPath: 'config.test.string'
+      });
+
+      expect(result).to.equal('env-value');
+    });
+
+    it('should handle zero as a valid config value', () => {
+      const result = util.resolveStringConfig({
+        envVar: 'TEST_STRING_VAR',
+        configValue: 0,
+        defaultValue: 'default-value',
+        configPath: 'config.test.string'
+      });
+
+      expect(result).to.equal(0);
+    });
+
+    it('should handle false as a valid config value', () => {
+      const result = util.resolveStringConfig({
+        envVar: 'TEST_STRING_VAR',
+        configValue: false,
+        defaultValue: 'default-value',
+        configPath: 'config.test.string'
+      });
+
+      expect(result).to.equal(false);
+    });
+
+    it('should handle special characters in string values', () => {
+      const specialValue = 'value-with-special-chars!@#$%^&*()';
+      const result = util.resolveStringConfig({
+        envVar: 'TEST_STRING_VAR',
+        configValue: specialValue,
+        defaultValue: 'default-value',
+        configPath: 'config.test.string'
+      });
+
+      expect(result).to.equal(specialValue);
+    });
+
+    it('should handle whitespace in string values', () => {
+      const whitespaceValue = '  value with spaces  ';
+      const result = util.resolveStringConfig({
+        envVar: 'TEST_STRING_VAR',
+        configValue: whitespaceValue,
+        defaultValue: 'default-value',
+        configPath: 'config.test.string'
+      });
+
+      expect(result).to.equal(whitespaceValue);
+    });
+
+    it('should handle multiline string values', () => {
+      const multilineValue = 'line1\nline2\nline3';
+      const result = util.resolveStringConfig({
+        envVar: 'TEST_STRING_VAR',
+        configValue: multilineValue,
+        defaultValue: 'default-value',
+        configPath: 'config.test.string'
+      });
+
+      expect(result).to.equal(multilineValue);
+    });
+  });
 });

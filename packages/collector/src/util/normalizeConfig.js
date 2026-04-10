@@ -42,7 +42,7 @@ module.exports = function normalizeConfig(userConfig = {}) {
  * @returns {string}
  */
 function normalizeAgentHost(userConfig, defaultConfig) {
-  return util.resolveConfig({
+  return util.resolveStringConfig({
     envVar: 'INSTANA_AGENT_HOST',
     configValue: userConfig.agentHost,
     defaultValue: defaultConfig.agentHost,
@@ -84,7 +84,7 @@ function normalizeAgentRequestTimeout(userConfig, defaultConfig) {
  * @returns {string | boolean}
  */
 function normalizeAutoProfile(userConfig, defaultConfig) {
-  return util.resolveConfig({
+  return util.resolveStringConfig({
     envVar: 'INSTANA_AUTO_PROFILE',
     configValue: userConfig.autoProfile,
     defaultValue: defaultConfig.autoProfile,

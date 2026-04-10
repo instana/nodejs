@@ -191,7 +191,7 @@ exports.resolveBooleanConfigWithTruthyEnv = function resolveBooleanConfigWithTru
  * @param {any} params.defaultValue
  * @param {string} [params.configPath]
  */
-exports.resolveConfig = function resolveConfig({ envVar, configValue, defaultValue, configPath }) {
+exports.resolveStringConfig = function resolveStringConfig({ envVar, configValue, defaultValue, configPath }) {
   if (configValue != null) {
     logger.debug(`[config] incode:${configPath} = ${configValue}`);
     return configValue;
