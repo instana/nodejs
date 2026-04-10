@@ -29,7 +29,7 @@ export interface CollectorConfig {
     stackTraceLength?: number;
     [key: string]: any;
   };
-  autoProfile?: boolean | string;
+  autoProfile?: boolean;
   reportUnhandledPromiseRejections?: boolean;
   logger?: GenericLogger;
   level?: string | number;
