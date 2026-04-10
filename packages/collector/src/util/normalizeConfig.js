@@ -48,7 +48,12 @@ module.exports = function normalizeConfig(userConfig = {}) {
  * @returns {string}
  */
 function normalizeAgentHost(userConfig, defaultConfig) {
-  return resolveConfig(process.env.INSTANA_AGENT_HOST, userConfig.agentHost, defaultConfig.agentHost);
+  return util.resolveStringConfig({
+    envVar: 'INSTANA_AGENT_HOST',
+    configValue: userConfig.agentHost,
+    defaultValue: defaultConfig.agentHost,
+    configPath: 'config.agentHost'
+  });
 }
 
 /**
@@ -81,11 +86,16 @@ function normalizeAgentRequestTimeout(userConfig, defaultConfig) {
 
 /**
  * @param {import('../types/collector').CollectorConfig} userConfig
- * @param {{ autoProfile: string | boolean }} defaultConfig
- * @returns {string | boolean}
+ * @param {{ autoProfile: boolean }} defaultConfig
+ * @returns {boolean}
  */
 function normalizeAutoProfile(userConfig, defaultConfig) {
-  return resolveConfig(process.env.INSTANA_AUTO_PROFILE, userConfig.autoProfile, defaultConfig.autoProfile);
+  return util.resolveBooleanConfig({
+    envVar: 'INSTANA_AUTO_PROFILE',
+    configValue: userConfig.autoProfile,
+    defaultValue: defaultConfig.autoProfile,
+    configPath: 'config.autoProfile'
+  });
 }
 
 /**
@@ -94,23 +104,4 @@ function normalizeAutoProfile(userConfig, defaultConfig) {
  */
 function normalizeUnhandledRejections(userConfig) {
   return userConfig.reportUnhandledPromiseRejections ?? false;
-}
-
-/**
- * @template T
- * @param {T | undefined} envValue
- * @param {T | undefined} configValue
- * @param {T} defaultValue
- * @returns {T}
- */
-function resolveConfig(envValue, configValue, defaultValue) {
-  if (configValue != null) {
-    return configValue;
-  }
-
-  if (envValue != null) {
-    return envValue;
-  }
-
-  return defaultValue;
 }

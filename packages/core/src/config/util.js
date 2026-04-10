@@ -183,3 +183,33 @@ exports.resolveBooleanConfigWithTruthyEnv = function resolveBooleanConfigWithTru
 
   return defaultValue;
 };
+
+/**
+ * @param {Object} params
+ * @param {any} params.envVar
+ * @param {any} params.configValue
+ * @param {any} params.defaultValue
+ * @param {string} [params.configPath]
+ */
+exports.resolveStringConfig = function resolveStringConfig({ envVar, configValue, defaultValue, configPath }) {
+  if (configValue != null) {
+    if (typeof configValue !== 'string') {
+      logger.warn(
+        `Invalid configuration: ${configPath} is not a string value, will be ignored: ${JSON.stringify(
+          configValue
+        )}. Falling back to default: ${defaultValue}.`
+      );
+      return defaultValue;
+    }
+    logger.debug(`[config] incode:${configPath} = ${configValue}`);
+    return configValue;
+  }
+
+  const envValue = process.env[envVar];
+  if (envValue != null) {
+    logger.debug(`[config] env:${envVar} = ${envValue}`);
+    return envValue;
+  }
+
+  return defaultValue;
+};
