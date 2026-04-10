@@ -35,7 +35,7 @@ describe('config.util', () => {
       expect(result).to.equal(1000);
     });
 
-    it.skip('should prioritize env var over config value', () => {
+    it('should prioritize env var over config value', () => {
       process.env.TEST_ENV_VAR = '2000';
 
       const result = util.resolveNumericConfig({
@@ -259,7 +259,7 @@ describe('config.util', () => {
       expect(result).to.equal(false);
     });
 
-    it.skip('should prioritize env var over config value', () => {
+    it('should prioritize env var over config value', () => {
       process.env.TEST_BOOL_VAR = 'true';
 
       const result = util.resolveBooleanConfig({
@@ -361,7 +361,7 @@ describe('config.util', () => {
       expect(result).to.equal(false);
     });
 
-    it.skip('should fall back to config value when env var is invalid', () => {
+    it('should fall back to config value when env var is invalid', () => {
       process.env.TEST_BOOL_VAR = 'invalid';
 
       const result = util.resolveBooleanConfig({
@@ -432,7 +432,7 @@ describe('config.util', () => {
       expect(result).to.equal(false);
     });
 
-    it.skip('should prioritize env var over config value', () => {
+    it('should prioritize env var over config value', () => {
       process.env.TEST_DISABLE_VAR = 'true';
 
       const result = util.resolveBooleanConfigWithInvertedEnv({
@@ -537,7 +537,7 @@ describe('config.util', () => {
       expect(result).to.equal(true);
     });
 
-    it.skip('should prioritize env var over config value', () => {
+    it('should prioritize env var over config value', () => {
       process.env.TEST_TRUTHY_VAR = 'yes';
 
       const result = util.resolveBooleanConfigWithTruthyEnv({
@@ -602,7 +602,7 @@ describe('config.util', () => {
       expect(result).to.equal('default-value');
     });
 
-    it.skip('should prioritize env var over config value', () => {
+    it('should prioritize env var over config value', () => {
       process.env.TEST_STRING_VAR = 'env-value';
 
       const result = util.resolveStringConfig({
