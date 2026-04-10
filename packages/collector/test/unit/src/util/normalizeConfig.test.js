@@ -140,7 +140,7 @@ describe('util.normalizeConfig', () => {
         autoProfile: false
       });
 
-      expect(config.autoProfile).to.equal('true');
+      expect(config.autoProfile).to.equal(true);
     });
 
     it('should use config when env is not set', () => {
