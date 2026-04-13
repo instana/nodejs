@@ -275,6 +275,15 @@ function isEqual(value1, value2) {
 }
 
 /**
+ * Resolves an external config value with respect to current and default values.
+ *
+ * Rules:
+ * - Use external value if current value is not set.
+ * - Use external value if current value is equal to default value.
+ * - Otherwise keep the current value.
+ *
+ * This allows external config (agent) to override only default or unset values,
+ * while existing custom values(environment variables or in-code config) are preserved.
  * @param {Object} params
  * @param {any} params.currentValue
  * @param {any} params.externalValue
@@ -285,7 +294,6 @@ exports.resolveExternalConfig = function resolveExternalConfig({ currentValue, e
     return currentValue;
   }
 
-  // Handle nested objects
   if (isObject(externalValue)) {
     const result = isObject(currentValue) ? { ...currentValue } : {};
 
@@ -300,16 +308,13 @@ exports.resolveExternalConfig = function resolveExternalConfig({ currentValue, e
     return result;
   }
 
-  // 3. If current not set → take external
   if (currentValue === undefined) {
     return externalValue;
   }
 
-  // 4. If current equals default → override (FIXED)
   if (isEqual(currentValue, defaultValue)) {
     return externalValue;
   }
 
-  // 5. Otherwise keep current
   return currentValue;
 };

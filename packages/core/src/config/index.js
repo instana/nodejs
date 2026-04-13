@@ -150,11 +150,13 @@ module.exports.init = _logger => {
 
  */
 module.exports.activate = externalConfig => {
-  applyExternalConfig({
-    finalConfig: currentConfig,
-    externalConfig: externalConfig || {},
-    defaultConfig: defaults
-  });
+  if (externalConfig && typeof externalConfig === 'object' && Object.keys(externalConfig).length > 0) {
+    applyExternalConfig({
+      finalConfig: currentConfig,
+      externalConfig: externalConfig,
+      defaultConfig: defaults
+    });
+  }
 };
 
 /**
