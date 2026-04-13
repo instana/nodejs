@@ -147,7 +147,6 @@ module.exports.init = _logger => {
 
 /**
  * @param {InstanaConfig} externalConfig
-
  */
 module.exports.activate = externalConfig => {
   if (externalConfig && typeof externalConfig === 'object' && Object.keys(externalConfig).length > 0) {
@@ -793,21 +792,6 @@ function normalizeExternalConfig({ finalConfig, externalConfig = {}, defaultConf
     const externalValue = externalConfig[key];
     const currentValue = finalConfig[key];
     const defaultValue = defaultConfig[key];
-
-    if (externalValue && typeof externalValue === 'object' && !Array.isArray(externalValue)) {
-      if (!currentValue || typeof currentValue !== 'object') {
-        finalConfig[key] = {};
-      }
-
-      normalizeExternalConfig({
-        finalConfig: finalConfig[key],
-        externalConfig: externalValue,
-        defaultConfig:
-          defaultValue && typeof defaultValue === 'object' && !Array.isArray(defaultValue) ? defaultValue : {}
-      });
-
-      return;
-    }
 
     finalConfig[key] = util.resolveExternalConfig({
       currentValue: currentValue,

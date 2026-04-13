@@ -1522,12 +1522,8 @@ describe('config.normalizeConfig', () => {
   });
 
   describe('resolve external config', () => {
-    beforeEach(() => {
-      delete process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN;
-    });
-
-    it('should apply external config when not set already', () => {
-      const config = coreConfig.normalize({});
+    it('should apply external config when config not set already', () => {
+      const config = coreConfig.normalize({ userConfig: { tracing: { enabled: true } } });
 
       coreConfig.activate({
         serviceName: 'external-service'
@@ -1536,7 +1532,7 @@ describe('config.normalizeConfig', () => {
       expect(config.serviceName).to.equal('external-service');
     });
 
-    it('should override when current config equals default', () => {
+    it('should override with external config when current config equals default', () => {
       const config = coreConfig.normalize({});
 
       coreConfig.activate({
@@ -1546,7 +1542,7 @@ describe('config.normalizeConfig', () => {
       expect(config.tracing.allowRootExitSpan).to.equal(true);
     });
 
-    it('should not override user-defined config', () => {
+    it('should not override in-code config', () => {
       const config = coreConfig.normalize({
         userConfig: {
           tracing: { allowRootExitSpan: true }
@@ -1560,7 +1556,7 @@ describe('config.normalizeConfig', () => {
       expect(config.tracing.allowRootExitSpan).to.equal(true);
     });
 
-    it('should not override env-based config', () => {
+    it('should not override env config', () => {
       process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN = 'true';
 
       const config = coreConfig.normalize({});
@@ -1573,18 +1569,16 @@ describe('config.normalizeConfig', () => {
     });
 
     it('should ignore empty external values', () => {
-      const config = coreConfig.normalize({
-        userConfig: { serviceName: 'my-service' }
-      });
+      const config = coreConfig.normalize({});
 
       coreConfig.activate({
         serviceName: ''
       });
 
-      expect(config.serviceName).to.equal('my-service');
+      expect(config.serviceName).to.equal(null);
     });
 
-    it('should replace array when current equals default', () => {
+    it('should handle external array config when current config equals default', () => {
       const config = coreConfig.normalize({});
 
       coreConfig.activate({
@@ -1594,7 +1588,7 @@ describe('config.normalizeConfig', () => {
       expect(config.secrets.keywords).to.deep.equal(['a']);
     });
 
-    it('should not replace array when already customized', () => {
+    it('should not replace external array config when already set via in-code config', () => {
       const config = coreConfig.normalize({
         userConfig: {
           secrets: { keywords: ['custom'] }
@@ -1608,7 +1602,7 @@ describe('config.normalizeConfig', () => {
       expect(config.secrets.keywords).to.deep.equal(['custom']);
     });
 
-    it('should merge nested objects when current is default', () => {
+    it('should handle nested objects external config when current config equals default', () => {
       const config = coreConfig.normalize({});
 
       coreConfig.activate({
@@ -1618,7 +1612,7 @@ describe('config.normalizeConfig', () => {
       expect(config.secrets.matcherMode).to.equal('equals');
     });
 
-    it('should not override nested values when already set', () => {
+    it('should not override nested values when already set via in-code config', () => {
       const config = coreConfig.normalize({
         userConfig: {
           secrets: { matcherMode: 'equals' }
@@ -1632,7 +1626,7 @@ describe('config.normalizeConfig', () => {
       expect(config.secrets.matcherMode).to.equal('equals');
     });
 
-    it('should apply ignoreEndpoints as-is (already normalized)', () => {
+    it('should apply ignoreEndpoints', () => {
       const config = coreConfig.normalize({});
 
       const external = {
@@ -1650,7 +1644,7 @@ describe('config.normalizeConfig', () => {
       });
     });
 
-    it('should apply multiple ignoreEndpoints entries as-is', () => {
+    it('should apply multiple ignoreEndpoints entries', () => {
       const config = coreConfig.normalize({});
 
       const external = {
@@ -1670,7 +1664,36 @@ describe('config.normalizeConfig', () => {
       });
     });
 
-    it('should apply disable config as-is (already normalized)', () => {
+    it('should ignore ignoreEndpoints entries when in-code is set', () => {
+      const config = coreConfig.normalize({
+        userConfig: {
+          tracing: {
+            ignoreEndpoints: {
+              redis: [{ methods: ['get'] }],
+              dynamodb: [{ methods: ['query'] }]
+            }
+          }
+        }
+      });
+
+      const external = {
+        tracing: {
+          ignoreEndpoints: {
+            redis: [{ methods: ['post'] }],
+            dynamodb: [{ methods: ['select'] }]
+          }
+        }
+      };
+
+      coreConfig.activate(external);
+
+      expect(config.tracing.ignoreEndpoints).to.deep.equal({
+        redis: [{ methods: ['get'] }],
+        dynamodb: [{ methods: ['query'] }]
+      });
+    });
+
+    it('should apply disable config', () => {
       const config = coreConfig.normalize({});
 
       const external = {
@@ -1684,7 +1707,7 @@ describe('config.normalizeConfig', () => {
       expect(config.tracing.disable).to.deep.equal(['logging', '!console']);
     });
 
-    it('should apply disable config with mixed flags as-is', () => {
+    it('should apply disable config with mixed flags', () => {
       const config = coreConfig.normalize({});
 
       const external = {

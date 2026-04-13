@@ -232,6 +232,7 @@ exports.resolveStringConfig = function resolveStringConfig({ envVar, configValue
 
 /**
  * @param {any} value
+ * @return {boolean}
  */
 function isEmpty(value) {
   if (value === undefined || value === null) return true;
@@ -247,6 +248,7 @@ function isEmpty(value) {
 
 /**
  * @param {any} value
+ * @return {boolean}
  */
 function isObject(value) {
   return value && typeof value === 'object' && !Array.isArray(value);
@@ -294,18 +296,28 @@ exports.resolveExternalConfig = function resolveExternalConfig({ currentValue, e
     return currentValue;
   }
 
-  if (isObject(externalValue)) {
-    const result = isObject(currentValue) ? { ...currentValue } : {};
+  if (isObject(externalValue) && isObject(currentValue)) {
+    const result = { ...currentValue };
 
     Object.keys(externalValue).forEach(key => {
       result[key] = resolveExternalConfig({
-        currentValue: currentValue ? currentValue[key] : undefined,
+        currentValue: currentValue[key],
         externalValue: externalValue[key],
         defaultValue: defaultValue ? defaultValue[key] : undefined
       });
     });
 
     return result;
+  }
+
+  if (isObject(externalValue)) {
+    if (currentValue === undefined) {
+      return externalValue;
+    }
+    if (isEqual(currentValue, defaultValue)) {
+      return externalValue;
+    }
+    return currentValue;
   }
 
   if (currentValue === undefined) {
