@@ -27,7 +27,7 @@ describe('config.util', () => {
     it('should return the default value when no env var or config value is provided', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: 1000,
         configPath: 'config.test.value'
       });
@@ -40,7 +40,7 @@ describe('config.util', () => {
 
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
-        configValue: 3000,
+        inCodeValue: 3000,
         defaultValue: 1000,
         configPath: 'config.test.value'
       });
@@ -51,7 +51,7 @@ describe('config.util', () => {
     it('should use config value when env var is not set', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
-        configValue: 3000,
+        inCodeValue: 3000,
         defaultValue: 1000,
         configPath: 'config.test.value'
       });
@@ -62,7 +62,7 @@ describe('config.util', () => {
     it('should handle numeric config value', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
-        configValue: 5000,
+        inCodeValue: 5000,
         defaultValue: 1000,
         configPath: 'config.test.value'
       });
@@ -73,7 +73,7 @@ describe('config.util', () => {
     it('should handle string config value that can be parsed as number', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
-        configValue: '5000',
+        inCodeValue: '5000',
         defaultValue: 1000,
         configPath: 'config.test.value'
       });
@@ -86,7 +86,7 @@ describe('config.util', () => {
 
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: 1000,
         configPath: 'config.test.value'
       });
@@ -99,7 +99,7 @@ describe('config.util', () => {
 
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: 1000,
         configPath: 'config.test.value'
       });
@@ -110,7 +110,7 @@ describe('config.util', () => {
     it('should fall back to default when config value is invalid', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
-        configValue: 'invalid',
+        inCodeValue: 'invalid',
         defaultValue: 1000,
         configPath: 'config.test.value'
       });
@@ -123,7 +123,7 @@ describe('config.util', () => {
 
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
-        configValue: 3000,
+        inCodeValue: 3000,
         defaultValue: 1000,
         configPath: 'config.test.value'
       });
@@ -136,7 +136,7 @@ describe('config.util', () => {
 
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: 1000,
         configPath: 'config.test.value'
       });
@@ -147,7 +147,7 @@ describe('config.util', () => {
     it('should handle zero as a valid value from config', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
-        configValue: 0,
+        inCodeValue: 0,
         defaultValue: 1000,
         configPath: 'config.test.value'
       });
@@ -160,7 +160,7 @@ describe('config.util', () => {
 
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: 1000,
         configPath: 'config.test.value'
       });
@@ -171,7 +171,7 @@ describe('config.util', () => {
     it('should handle negative numbers from config', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
-        configValue: -500,
+        inCodeValue: -500,
         defaultValue: 1000,
         configPath: 'config.test.value'
       });
@@ -184,7 +184,7 @@ describe('config.util', () => {
 
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: 1000,
         configPath: 'config.test.value'
       });
@@ -195,7 +195,7 @@ describe('config.util', () => {
     it('should handle floating point numbers from config', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
-        configValue: 123.45,
+        inCodeValue: 123.45,
         defaultValue: 1000,
         configPath: 'config.test.value'
       });
@@ -206,7 +206,7 @@ describe('config.util', () => {
     it('should handle null config value', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
-        configValue: null,
+        inCodeValue: null,
         defaultValue: 1000,
         configPath: 'config.test.value'
       });
@@ -219,7 +219,7 @@ describe('config.util', () => {
 
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: 1000,
         configPath: 'config.test.value'
       });
@@ -230,7 +230,7 @@ describe('config.util', () => {
     it('should handle empty string config value as 0', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
-        configValue: '',
+        inCodeValue: '',
         defaultValue: 1000,
         configPath: 'config.test.value'
       });
@@ -251,7 +251,7 @@ describe('config.util', () => {
     it('should return the default value when no env var or config value is provided', () => {
       const result = util.resolveBooleanConfig({
         envVar: 'TEST_BOOL_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: false,
         configPath: 'config.test.bool'
       });
@@ -264,7 +264,7 @@ describe('config.util', () => {
 
       const result = util.resolveBooleanConfig({
         envVar: 'TEST_BOOL_VAR',
-        configValue: false,
+        inCodeValue: false,
         defaultValue: false,
         configPath: 'config.test.bool'
       });
@@ -275,7 +275,7 @@ describe('config.util', () => {
     it('should use config value when env var is not set', () => {
       const result = util.resolveBooleanConfig({
         envVar: 'TEST_BOOL_VAR',
-        configValue: true,
+        inCodeValue: true,
         defaultValue: false,
         configPath: 'config.test.bool'
       });
@@ -288,7 +288,7 @@ describe('config.util', () => {
 
       const result = util.resolveBooleanConfig({
         envVar: 'TEST_BOOL_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: false,
         configPath: 'config.test.bool'
       });
@@ -301,7 +301,7 @@ describe('config.util', () => {
 
       const result = util.resolveBooleanConfig({
         envVar: 'TEST_BOOL_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: true,
         configPath: 'config.test.bool'
       });
@@ -314,7 +314,7 @@ describe('config.util', () => {
 
       const result = util.resolveBooleanConfig({
         envVar: 'TEST_BOOL_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: false,
         configPath: 'config.test.bool'
       });
@@ -327,7 +327,7 @@ describe('config.util', () => {
 
       const result = util.resolveBooleanConfig({
         envVar: 'TEST_BOOL_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: true,
         configPath: 'config.test.bool'
       });
@@ -340,7 +340,7 @@ describe('config.util', () => {
 
       const result = util.resolveBooleanConfig({
         envVar: 'TEST_BOOL_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: false,
         configPath: 'config.test.bool'
       });
@@ -353,7 +353,7 @@ describe('config.util', () => {
 
       const result = util.resolveBooleanConfig({
         envVar: 'TEST_BOOL_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: true,
         configPath: 'config.test.bool'
       });
@@ -366,7 +366,7 @@ describe('config.util', () => {
 
       const result = util.resolveBooleanConfig({
         envVar: 'TEST_BOOL_VAR',
-        configValue: true,
+        inCodeValue: true,
         defaultValue: false,
         configPath: 'config.test.bool'
       });
@@ -379,7 +379,7 @@ describe('config.util', () => {
 
       const result = util.resolveBooleanConfig({
         envVar: 'TEST_BOOL_VAR',
-        configValue: 'not-a-boolean',
+        inCodeValue: 'not-a-boolean',
         defaultValue: true,
         configPath: 'config.test.bool'
       });
@@ -390,7 +390,7 @@ describe('config.util', () => {
     it('should handle null config value', () => {
       const result = util.resolveBooleanConfig({
         envVar: 'TEST_BOOL_VAR',
-        configValue: null,
+        inCodeValue: null,
         defaultValue: true,
         configPath: 'config.test.bool'
       });
@@ -401,7 +401,7 @@ describe('config.util', () => {
     it('should handle undefined config value', () => {
       const result = util.resolveBooleanConfig({
         envVar: 'TEST_BOOL_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: false,
         configPath: 'config.test.bool'
       });
@@ -424,7 +424,7 @@ describe('config.util', () => {
 
       const result = util.resolveBooleanConfigWithInvertedEnv({
         envVar: 'TEST_DISABLE_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: true,
         configPath: 'config.test.disable'
       });
@@ -437,7 +437,7 @@ describe('config.util', () => {
 
       const result = util.resolveBooleanConfigWithInvertedEnv({
         envVar: 'TEST_DISABLE_VAR',
-        configValue: true,
+        inCodeValue: true,
         defaultValue: true,
         configPath: 'config.test.disable'
       });
@@ -448,7 +448,7 @@ describe('config.util', () => {
     it('should use config value when env var is not set', () => {
       const result = util.resolveBooleanConfigWithInvertedEnv({
         envVar: 'TEST_DISABLE_VAR',
-        configValue: false,
+        inCodeValue: false,
         defaultValue: true,
         configPath: 'config.test.disable'
       });
@@ -461,7 +461,7 @@ describe('config.util', () => {
 
       const result = util.resolveBooleanConfigWithInvertedEnv({
         envVar: 'TEST_DISABLE_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: true,
         configPath: 'config.test.disable'
       });
@@ -472,7 +472,7 @@ describe('config.util', () => {
     it('should handle null config value', () => {
       const result = util.resolveBooleanConfigWithInvertedEnv({
         envVar: 'TEST_DISABLE_VAR',
-        configValue: null,
+        inCodeValue: null,
         defaultValue: false,
         configPath: 'config.test.disable'
       });
@@ -480,10 +480,10 @@ describe('config.util', () => {
       expect(result).to.equal(false);
     });
 
-    it('should return default when configValue and env var are not boolean', () => {
+    it('should return default when inCodeValue and env var are not boolean', () => {
       const result = util.resolveBooleanConfigWithInvertedEnv({
         envVar: 'TEST_INVERTED_VAR',
-        configValue: 'not-a-boolean',
+        inCodeValue: 'not-a-boolean',
         defaultValue: true,
         configPath: 'config.test.inverted'
       });
@@ -506,7 +506,7 @@ describe('config.util', () => {
 
       const result = util.resolveBooleanConfigWithTruthyEnv({
         envVar: 'TEST_TRUTHY_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: false
       });
 
@@ -518,7 +518,7 @@ describe('config.util', () => {
 
       const result = util.resolveBooleanConfigWithTruthyEnv({
         envVar: 'TEST_TRUTHY_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: false
       });
 
@@ -530,7 +530,7 @@ describe('config.util', () => {
 
       const result = util.resolveBooleanConfigWithTruthyEnv({
         envVar: 'TEST_TRUTHY_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: false
       });
 
@@ -542,7 +542,7 @@ describe('config.util', () => {
 
       const result = util.resolveBooleanConfigWithTruthyEnv({
         envVar: 'TEST_TRUTHY_VAR',
-        configValue: false,
+        inCodeValue: false,
         defaultValue: false
       });
 
@@ -552,7 +552,7 @@ describe('config.util', () => {
     it('should use config value when env var is not set', () => {
       const result = util.resolveBooleanConfigWithTruthyEnv({
         envVar: 'TEST_TRUTHY_VAR',
-        configValue: true,
+        inCodeValue: true,
         defaultValue: false
       });
 
@@ -562,7 +562,7 @@ describe('config.util', () => {
     it('should use default when env var is not set and config is not boolean', () => {
       const result = util.resolveBooleanConfigWithTruthyEnv({
         envVar: 'TEST_TRUTHY_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: false
       });
 
@@ -574,7 +574,7 @@ describe('config.util', () => {
 
       const result = util.resolveBooleanConfigWithTruthyEnv({
         envVar: 'TEST_TRUTHY_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: false
       });
 
@@ -594,7 +594,7 @@ describe('config.util', () => {
     it('should return the default value when no env var or config value is provided', () => {
       const result = util.resolveStringConfig({
         envVar: 'TEST_STRING_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: 'default-value',
         configPath: 'config.test.string'
       });
@@ -607,7 +607,7 @@ describe('config.util', () => {
 
       const result = util.resolveStringConfig({
         envVar: 'TEST_STRING_VAR',
-        configValue: 'config-value',
+        inCodeValue: 'config-value',
         defaultValue: 'default-value',
         configPath: 'config.test.string'
       });
@@ -620,7 +620,7 @@ describe('config.util', () => {
 
       const result = util.resolveStringConfig({
         envVar: 'TEST_STRING_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: 'default-value',
         configPath: 'config.test.string'
       });
@@ -631,7 +631,7 @@ describe('config.util', () => {
     it('should use config value when env var is not set', () => {
       const result = util.resolveStringConfig({
         envVar: 'TEST_STRING_VAR',
-        configValue: 'config-value',
+        inCodeValue: 'config-value',
         defaultValue: 'default-value',
         configPath: 'config.test.string'
       });
@@ -642,7 +642,7 @@ describe('config.util', () => {
     it('should handle empty string as a valid config value', () => {
       const result = util.resolveStringConfig({
         envVar: 'TEST_STRING_VAR',
-        configValue: '',
+        inCodeValue: '',
         defaultValue: 'default-value',
         configPath: 'config.test.string'
       });
@@ -655,7 +655,7 @@ describe('config.util', () => {
 
       const result = util.resolveStringConfig({
         envVar: 'TEST_STRING_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: 'default-value',
         configPath: 'config.test.string'
       });
@@ -668,7 +668,7 @@ describe('config.util', () => {
 
       const result = util.resolveStringConfig({
         envVar: 'TEST_STRING_VAR',
-        configValue: undefined,
+        inCodeValue: undefined,
         defaultValue: 'default-value',
         configPath: 'config.test.string'
       });
@@ -680,7 +680,7 @@ describe('config.util', () => {
       const multilineValue = 'line1\nline2\nline3';
       const result = util.resolveStringConfig({
         envVar: undefined,
-        configValue: multilineValue,
+        inCodeValue: multilineValue,
         defaultValue: 'default-value',
         configPath: 'config.test.string'
       });

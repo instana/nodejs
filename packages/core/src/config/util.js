@@ -17,12 +17,12 @@ exports.init = _logger => {
 /**
  * @param {Object} params
  * @param {string} params.envVar
- * @param {number|string|undefined|null} params.configValue
+ * @param {number|string|undefined|null} params.inCodeValue
  * @param {number} params.defaultValue
  * @param {string} params.configPath
  * @returns {number}
  */
-exports.resolveNumericConfig = function resolveNumericConfig({ envVar, configValue, defaultValue, configPath }) {
+exports.resolveNumericConfig = function resolveNumericConfig({ envVar, inCodeValue, defaultValue, configPath }) {
   const envRaw = process.env[envVar];
 
   /** @param {number|string|null|undefined} val */
@@ -41,15 +41,15 @@ exports.resolveNumericConfig = function resolveNumericConfig({ envVar, configVal
     logger.warn(`Invalid numeric value from env:${envVar}: "${envRaw}". Ignoring and checking config value.`);
   }
 
-  if (configValue != null) {
-    const configParsed = toValidNumber(configValue);
+  if (inCodeValue != null) {
+    const configParsed = toValidNumber(inCodeValue);
     if (configParsed !== undefined) {
-      logger.debug(`[config] incode:${configPath} = ${configValue}`);
+      logger.debug(`[config] incode:${configPath} = ${inCodeValue}`);
       return configParsed;
     }
 
     logger.warn(
-      `Invalid numeric value for ${configPath} from config: "${configValue}". Falling back to default: ${defaultValue}.`
+      `Invalid numeric value for ${configPath} from config: "${inCodeValue}". Falling back to default: ${defaultValue}.`
     );
   }
 
@@ -79,12 +79,12 @@ function parseBooleanFromEnv(envValue) {
 /**
  * @param {Object} params
  * @param {string} params.envVar
- * @param {boolean|undefined|null} params.configValue
+ * @param {boolean|undefined|null} params.inCodeValue
  * @param {boolean} params.defaultValue
  * @param {string} [params.configPath]
  * @returns {boolean}
  */
-exports.resolveBooleanConfig = function resolveBooleanConfig({ envVar, configValue, defaultValue, configPath }) {
+exports.resolveBooleanConfig = function resolveBooleanConfig({ envVar, inCodeValue, defaultValue, configPath }) {
   // Priority 1: Environment variable
   const envValue = process.env[envVar];
   const envParsed = parseBooleanFromEnv(envValue);
@@ -99,15 +99,15 @@ exports.resolveBooleanConfig = function resolveBooleanConfig({ envVar, configVal
   }
 
   // Priority 2: In-code configuration
-  if (typeof configValue === 'boolean') {
-    logger.debug(`[config] incode:${configPath} = ${configValue}`);
-    return configValue;
+  if (typeof inCodeValue === 'boolean') {
+    logger.debug(`[config] incode:${configPath} = ${inCodeValue}`);
+    return inCodeValue;
   }
 
-  if (configValue != null && configPath) {
+  if (inCodeValue != null && configPath) {
     logger.warn(
       `Invalid configuration: ${configPath} is not a boolean value, will be ignored: ${JSON.stringify(
-        configValue
+        inCodeValue
       )}. Falling back to default: ${defaultValue}.`
     );
   }
@@ -122,14 +122,14 @@ exports.resolveBooleanConfig = function resolveBooleanConfig({ envVar, configVal
  *
  * @param {Object} params
  * @param {string} params.envVar - Environment variable name (e.g., INSTANA_DISABLE_X)
- * @param {boolean|undefined|null} params.configValue - Config value
+ * @param {boolean|undefined|null} params.inCodeValue - Config value
  * @param {boolean} params.defaultValue - Default value
  * @param {string} [params.configPath] - Config path for logging (optional)
  * @returns {boolean}
  */
 exports.resolveBooleanConfigWithInvertedEnv = function resolveBooleanConfigWithInvertedEnv({
   envVar,
-  configValue,
+  inCodeValue,
   defaultValue,
   configPath
 }) {
@@ -148,15 +148,15 @@ exports.resolveBooleanConfigWithInvertedEnv = function resolveBooleanConfigWithI
   }
 
   // Priority 2: In-code configuration
-  if (typeof configValue === 'boolean') {
-    logger.debug(`[config] incode:${configPath} = ${configValue}`);
-    return configValue;
+  if (typeof inCodeValue === 'boolean') {
+    logger.debug(`[config] incode:${configPath} = ${inCodeValue}`);
+    return inCodeValue;
   }
 
-  if (configValue != null && configPath) {
+  if (inCodeValue != null && configPath) {
     logger.warn(
       `Invalid configuration: ${configPath} is not a boolean value, will be ignored: ${JSON.stringify(
-        configValue
+        inCodeValue
       )}. Falling back to default: ${defaultValue}.`
     );
   }
@@ -171,14 +171,14 @@ exports.resolveBooleanConfigWithInvertedEnv = function resolveBooleanConfigWithI
  *
  * @param {Object} params
  * @param {string} params.envVar - Environment variable name
- * @param {boolean|undefined|null} params.configValue - Config value
+ * @param {boolean|undefined|null} params.inCodeValue - Config value
  * @param {boolean} params.defaultValue - Default value
  * @param {string} [params.configPath]
  * @returns {boolean}
  */
 exports.resolveBooleanConfigWithTruthyEnv = function resolveBooleanConfigWithTruthyEnv({
   envVar,
-  configValue,
+  inCodeValue,
   defaultValue,
   configPath
 }) {
@@ -190,9 +190,9 @@ exports.resolveBooleanConfigWithTruthyEnv = function resolveBooleanConfigWithTru
   }
 
   // Priority 2: In-code configuration
-  if (typeof configValue === 'boolean') {
-    logger.debug(`[config] incode:${configPath} = ${configValue}`);
-    return configValue;
+  if (typeof inCodeValue === 'boolean') {
+    logger.debug(`[config] incode:${configPath} = ${inCodeValue}`);
+    return inCodeValue;
   }
 
   // Priority 3: Default value
@@ -202,11 +202,11 @@ exports.resolveBooleanConfigWithTruthyEnv = function resolveBooleanConfigWithTru
 /**
  * @param {Object} params
  * @param {any} params.envVar
- * @param {any} params.configValue
+ * @param {any} params.inCodeValue
  * @param {any} params.defaultValue
  * @param {string} [params.configPath]
  */
-exports.resolveStringConfig = function resolveStringConfig({ envVar, configValue, defaultValue, configPath }) {
+exports.resolveStringConfig = function resolveStringConfig({ envVar, inCodeValue, defaultValue, configPath }) {
   // Priority 1: Environment variable
   const envValue = process.env[envVar];
   if (envValue != null) {
@@ -215,17 +215,17 @@ exports.resolveStringConfig = function resolveStringConfig({ envVar, configValue
   }
 
   // Priority 2: In-code configuration
-  if (configValue != null) {
-    if (typeof configValue !== 'string') {
+  if (inCodeValue != null) {
+    if (typeof inCodeValue !== 'string') {
       logger.warn(
         `Invalid configuration: ${configPath} is not a string value, will be ignored: ${JSON.stringify(
-          configValue
+          inCodeValue
         )}. Falling back to default: ${defaultValue}.`
       );
       return defaultValue;
     }
-    logger.debug(`[config] incode:${configPath} = ${configValue}`);
-    return configValue;
+    logger.debug(`[config] incode:${configPath} = ${inCodeValue}`);
+    return inCodeValue;
   }
   return defaultValue;
 };
