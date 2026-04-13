@@ -331,7 +331,6 @@ exports.resolveExternalConfig = function resolveExternalConfig({ currentValue, e
     return currentValue;
   }
 
-  // Primitive values (string/number/boolean/array)
   if (shouldApplyExternalValue(currentValue, defaultValue)) {
     return externalValue;
   }
