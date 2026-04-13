@@ -229,3 +229,88 @@ exports.resolveStringConfig = function resolveStringConfig({ envVar, configValue
   }
   return defaultValue;
 };
+
+/**
+ * @param {any} value
+ */
+function isEmpty(value) {
+  if (value === undefined || value === null) return true;
+
+  if (typeof value === 'string') return value.trim() === '';
+
+  if (Array.isArray(value)) return value.length === 0;
+
+  if (typeof value === 'object') return Object.keys(value).length === 0;
+
+  return false;
+}
+
+/**
+ * @param {any} value
+ */
+function isObject(value) {
+  return value && typeof value === 'object' && !Array.isArray(value);
+}
+
+/**
+ * @param {any[]} a
+ * @param {string | any[]} b
+ * @returns {boolean}
+ */
+function isEqual(a, b) {
+  if (a === b) return true;
+
+  if (Array.isArray(a) && Array.isArray(b)) {
+    return a.length === b.length && a.every((val, i) => isEqual(val, b[i]));
+  }
+
+  if (isObject(a) && isObject(b)) {
+    const aKeys = Object.keys(a);
+    const bKeys = Object.keys(b);
+
+    return aKeys.length === bKeys.length && aKeys.every(key => isEqual(a[key], b[key]));
+  }
+
+  return false;
+}
+
+/**
+ * @param {Object} params
+ * @param {any} params.currentValue
+ * @param {any} params.externalValue
+ * @param {any} params.defaultValue
+ */
+exports.resolveExternalConfig = function resolveExternalConfig({ currentValue, externalValue, defaultValue }) {
+  // 1. Ignore empty external values
+  if (isEmpty(externalValue)) {
+    return currentValue;
+  }
+
+  // 2. Handle nested objects
+  if (isObject(externalValue)) {
+    const result = isObject(currentValue) ? { ...currentValue } : {};
+
+    Object.keys(externalValue).forEach(key => {
+      result[key] = resolveExternalConfig({
+        currentValue: currentValue ? currentValue[key] : undefined,
+        externalValue: externalValue[key],
+        defaultValue: defaultValue ? defaultValue[key] : undefined
+      });
+    });
+
+    return result;
+  }
+
+  // 3. If current not set → take external
+  if (currentValue === undefined) {
+    return externalValue;
+  }
+
+  // 4. If current equals default → override (FIXED)
+  if (isEqual(currentValue, defaultValue)) {
+    return externalValue;
+  }
+
+  // 5. Otherwise keep current
+  return currentValue;
+};

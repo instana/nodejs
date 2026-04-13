@@ -688,4 +688,178 @@ describe('config.util', () => {
       expect(result).to.equal(multilineValue);
     });
   });
+
+  describe('resolveExternalConfig', () => {
+    it('should return current value when external value is undefined', () => {
+      const result = util.resolveExternalConfig({
+        currentValue: 10,
+        externalValue: undefined,
+        defaultValue: 5
+      });
+
+      expect(result).to.equal(10);
+    });
+
+    it('should return current value when external value is null', () => {
+      const result = util.resolveExternalConfig({
+        currentValue: 10,
+        externalValue: null,
+        defaultValue: 5
+      });
+
+      expect(result).to.equal(10);
+    });
+
+    it('should return current value when external string is empty', () => {
+      const result = util.resolveExternalConfig({
+        currentValue: 'abc',
+        externalValue: '',
+        defaultValue: 'default'
+      });
+
+      expect(result).to.equal('abc');
+    });
+
+    it('should return current value when external array is empty', () => {
+      const result = util.resolveExternalConfig({
+        currentValue: [1, 2],
+        externalValue: [],
+        defaultValue: []
+      });
+
+      expect(result).to.deep.equal([1, 2]);
+    });
+
+    it('should return current value when external object is empty', () => {
+      const result = util.resolveExternalConfig({
+        currentValue: { a: 1 },
+        externalValue: {},
+        defaultValue: {}
+      });
+
+      expect(result).to.deep.equal({ a: 1 });
+    });
+
+    it('should set value when current value is undefined', () => {
+      const result = util.resolveExternalConfig({
+        currentValue: undefined,
+        externalValue: 20,
+        defaultValue: 5
+      });
+
+      expect(result).to.equal(20);
+    });
+
+    it('should override when current value equals default', () => {
+      const result = util.resolveExternalConfig({
+        currentValue: 5,
+        externalValue: 20,
+        defaultValue: 5
+      });
+
+      expect(result).to.equal(20);
+    });
+
+    it('should not override when current value differs from default', () => {
+      const result = util.resolveExternalConfig({
+        currentValue: 15,
+        externalValue: 20,
+        defaultValue: 5
+      });
+
+      expect(result).to.equal(15);
+    });
+
+    it('should handle boolean override when current equals default', () => {
+      const result = util.resolveExternalConfig({
+        currentValue: false,
+        externalValue: true,
+        defaultValue: false
+      });
+
+      expect(result).to.equal(true);
+    });
+
+    it('should not override boolean when current differs from default', () => {
+      const result = util.resolveExternalConfig({
+        currentValue: true,
+        externalValue: false,
+        defaultValue: false
+      });
+
+      expect(result).to.equal(true);
+    });
+
+    it('should replace array when current equals default', () => {
+      const result = util.resolveExternalConfig({
+        currentValue: [],
+        externalValue: ['a'],
+        defaultValue: []
+      });
+
+      expect(result).to.deep.equal(['a']);
+    });
+
+    it('should not replace array when current differs from default', () => {
+      const result = util.resolveExternalConfig({
+        currentValue: ['b'],
+        externalValue: ['a'],
+        defaultValue: []
+      });
+
+      expect(result).to.deep.equal(['b']);
+    });
+
+    it('should deeply resolve nested object values', () => {
+      const result = util.resolveExternalConfig({
+        currentValue: {
+          matcherMode: 'contains-ignore-case',
+          keywords: ['key', 'pass']
+        },
+        externalValue: {
+          matcherMode: 'equals',
+          keywords: ['secret']
+        },
+        defaultValue: {
+          matcherMode: 'contains-ignore-case',
+          keywords: ['key', 'pass', 'secret']
+        }
+      });
+
+      expect(result).to.deep.equal({
+        matcherMode: 'equals',
+        keywords: ['key', 'pass']
+      });
+    });
+
+    it('should add missing nested keys from external config', () => {
+      const result = util.resolveExternalConfig({
+        currentValue: {
+          matcherMode: 'contains-ignore-case'
+        },
+        externalValue: {
+          keywords: ['secret']
+        },
+        defaultValue: {
+          matcherMode: 'contains-ignore-case',
+          keywords: ['key']
+        }
+      });
+
+      expect(result).to.deep.equal({
+        matcherMode: 'contains-ignore-case',
+        keywords: ['secret']
+      });
+    });
+
+    it('should ignore external value when equal to default', () => {
+      const result = util.resolveExternalConfig({
+        currentValue: 'custom',
+        externalValue: 'default',
+        defaultValue: 'default'
+      });
+
+      expect(result).to.equal('custom');
+    });
+  });
 });

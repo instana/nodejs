@@ -87,6 +87,9 @@ const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'cont
 let logger;
 
 /** @type {InstanaConfig} */
+let currentConfig;
+
+/** @type {InstanaConfig} */
 let defaults = {
   serviceName: null,
   packageJsonPath: null,
@@ -143,6 +146,14 @@ module.exports.init = _logger => {
 };
 
 /**
+ * @param {InstanaConfig} externalConfig
+
+ */
+module.exports.activate = externalConfig => {
+  applyExternalConfig(currentConfig, externalConfig || {}, defaults);
+};
+
+/**
  * Merges the config that was passed to the init function with environment variables and default values.
  * @param {{ userConfig?: InstanaConfig, finalConfigBase?: Object, defaultsOverride?: InstanaConfig }} [options]
  * @returns {InstanaConfig}
@@ -176,6 +187,7 @@ module.exports.normalize = ({ userConfig = {}, finalConfigBase = {}, defaultsOve
   normalizeSecrets({ userConfig: normalizedUserConfig, defaultConfig: defaults, finalConfig });
   normalizePreloadOpentelemetry({ userConfig: normalizedUserConfig, defaultConfig: defaults, finalConfig });
 
+  currentConfig = finalConfig;
   return finalConfig;
 };
 
@@ -761,4 +773,44 @@ function normalizePreloadOpentelemetry({ userConfig = {}, defaultConfig = {}, fi
   } else {
     finalConfig.preloadOpentelemetry = defaultConfig.preloadOpentelemetry;
   }
+}
+
+/**
+ * @param {{ [x: string]: any; finalConfig?: any; externalConfig?: any; defaultConfig?: InstanaConfig; }} target
+ * @param {{ [x: string]: any; }} [source]
+ * @param {{ [x: string]: any; }} [defaultsRef]
+ */
+function applyExternalConfig(target, source, defaultsRef, path = '') {
+  Object.keys(source).forEach(key => {
+    const sourceVal = source[key];
+    const targetHasKey = Object.prototype.hasOwnProperty.call(target, key);
+    const targetVal = target[key];
+    const defaultVal = defaultsRef ? defaultsRef[key] : undefined;
+
+    const currentPath = path ? `${path}.${key}` : key;
+
+    // ---- Nested object ----
+    if (sourceVal && typeof sourceVal === 'object' && !Array.isArray(sourceVal)) {
+      if (!targetHasKey) {
+        target[key] = {};
+      }
+
+      applyExternalConfig(target[key], sourceVal, defaultVal || {}, currentPath);
+      return;
+    }
+
+    // ---- Resolve using util ----
+    const resolved = util.resolveExternalConfig({
+      currentValue: targetVal,
+      externalValue: sourceVal,
+      defaultValue: defaultVal
+    });
+
+    if (resolved !== targetVal) {
+      target[key] = resolved;
+      logger.debug(`[config] external applied: ${currentPath}`);
+    } else {
+      logger.debug(`[config] external skipped: ${currentPath}`);
+    }
+  });
 }

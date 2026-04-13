@@ -1521,6 +1521,200 @@ describe('config.normalizeConfig', () => {
     });
   });
 
+  describe('resolve external config', () => {
+    beforeEach(() => {
+      delete process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN;
+    });
+
+    it('should apply external config when not set already', () => {
+      const config = coreConfig.normalize({});
+
+      coreConfig.activate({
+        serviceName: 'external-service'
+      });
+
+      expect(config.serviceName).to.equal('external-service');
+    });
+
+    it('should override when current config equals default', () => {
+      const config = coreConfig.normalize({});
+
+      coreConfig.activate({
+        tracing: { allowRootExitSpan: true }
+      });
+
+      expect(config.tracing.allowRootExitSpan).to.equal(true);
+    });
+
+    it('should not override user-defined config', () => {
+      const config = coreConfig.normalize({
+        userConfig: {
+          tracing: { allowRootExitSpan: true }
+        }
+      });
+
+      coreConfig.activate({
+        tracing: { allowRootExitSpan: false }
+      });
+
+      expect(config.tracing.allowRootExitSpan).to.equal(true);
+    });
+
+    it('should not override env-based config', () => {
+      process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN = 'true';
+
+      const config = coreConfig.normalize({});
+
+      coreConfig.activate({
+        tracing: { allowRootExitSpan: false }
+      });
+
+      expect(config.tracing.allowRootExitSpan).to.equal(true);
+    });
+
+    it('should ignore empty external values', () => {
+      const config = coreConfig.normalize({
+        userConfig: { serviceName: 'my-service' }
+      });
+
+      coreConfig.activate({
+        serviceName: ''
+      });
+
+      expect(config.serviceName).to.equal('my-service');
+    });
+
+    it('should replace array when current equals default', () => {
+      const config = coreConfig.normalize({});
+
+      coreConfig.activate({
+        secrets: { keywords: ['a'] }
+      });
+
+      expect(config.secrets.keywords).to.deep.equal(['a']);
+    });
+
+    it('should not replace array when already customized', () => {
+      const config = coreConfig.normalize({
+        userConfig: {
+          secrets: { keywords: ['custom'] }
+        }
+      });
+
+      coreConfig.activate({
+        secrets: { keywords: ['external'] }
+      });
+
+      expect(config.secrets.keywords).to.deep.equal(['custom']);
+    });
+
+    it('should merge nested objects when current is default', () => {
+      const config = coreConfig.normalize({});
+
+      coreConfig.activate({
+        secrets: { matcherMode: 'equals' }
+      });
+
+      expect(config.secrets.matcherMode).to.equal('equals');
+    });
+
+    it('should not override nested values when already set', () => {
+      const config = coreConfig.normalize({
+        userConfig: {
+          secrets: { matcherMode: 'equals' }
+        }
+      });
+
+      coreConfig.activate({
+        secrets: { matcherMode: 'contains' }
+      });
+
+      expect(config.secrets.matcherMode).to.equal('equals');
+    });
+
+    it('should apply ignoreEndpoints as-is (already normalized)', () => {
+      const config = coreConfig.normalize({});
+
+      const external = {
+        tracing: {
+          ignoreEndpoints: {
+            redis: [{ methods: ['get', 'set'] }]
+          }
+        }
+      };
+
+      coreConfig.activate(external);
+
+      expect(config.tracing.ignoreEndpoints).to.deep.equal({
+        redis: [{ methods: ['get', 'set'] }]
+      });
+    });
+
+    it('should apply multiple ignoreEndpoints entries as-is', () => {
+      const config = coreConfig.normalize({});
+
+      const external = {
+        tracing: {
+          ignoreEndpoints: {
+            redis: [{ methods: ['get'] }],
+            dynamodb: [{ methods: ['query'] }]
+          }
+        }
+      };
+
+      coreConfig.activate(external);
+
+      expect(config.tracing.ignoreEndpoints).to.deep.equal({
+        redis: [{ methods: ['get'] }],
+        dynamodb: [{ methods: ['query'] }]
+      });
+    });
+
+    it('should apply disable config as-is (already normalized)', () => {
+      const config = coreConfig.normalize({});
+
+      const external = {
+        tracing: {
+          disable: ['logging', '!console']
+        }
+      };
+
+      coreConfig.activate(external);
+
+      expect(config.tracing.disable).to.deep.equal(['logging', '!console']);
+    });
+
+    it('should apply disable config with mixed flags as-is', () => {
+      const config = coreConfig.normalize({});
+
+      const external = {
+        tracing: {
+          disable: { instrumentations: ['redis', 'mongodb'] }
+        }
+      };
+
+      coreConfig.activate(external);
+
+      expect(config.tracing.disable).to.deep.equal({ instrumentations: ['redis', 'mongodb'] });
+    });
+
+    it('should  override disable when not set', () => {
+      const config = coreConfig.normalize({
+        userConfig: {
+          tracing: { disable: {} }
+        }
+      });
+
+      coreConfig.activate({
+        tracing: {
+          disable: { instrumentations: ['external'] }
+        }
+      });
+
+      expect(config.tracing.disable).to.deep.equal({ instrumentations: ['external'] });
+    });
+  });
+
   function checkDefaults(config) {
     expect(config).to.be.an('object');
 
