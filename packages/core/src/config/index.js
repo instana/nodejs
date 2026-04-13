@@ -150,7 +150,11 @@ module.exports.init = _logger => {
 
  */
 module.exports.activate = externalConfig => {
-  applyExternalConfig(currentConfig, externalConfig || {}, defaults);
+  applyExternalConfig({
+    finalConfig: currentConfig,
+    externalConfig: externalConfig || {},
+    defaultConfig: defaults
+  });
 };
 
 /**
@@ -776,41 +780,37 @@ function normalizePreloadOpentelemetry({ userConfig = {}, defaultConfig = {}, fi
 }
 
 /**
- * @param {{ [x: string]: any; finalConfig?: any; externalConfig?: any; defaultConfig?: InstanaConfig; }} target
- * @param {{ [x: string]: any; }} [source]
- * @param {{ [x: string]: any; }} [defaultsRef]
+ * @param {{
+ *   finalConfig: { [key: string]: any };
+ *   externalConfig?: { [x: string]: any };
+ *   defaultConfig?: { [x: string]: any };
+ * }} params
  */
-function applyExternalConfig(target, source, defaultsRef, path = '') {
-  Object.keys(source).forEach(key => {
-    const sourceVal = source[key];
-    const targetHasKey = Object.prototype.hasOwnProperty.call(target, key);
-    const targetVal = target[key];
-    const defaultVal = defaultsRef ? defaultsRef[key] : undefined;
+function applyExternalConfig({ finalConfig, externalConfig = {}, defaultConfig = {} }) {
+  Object.keys(externalConfig).forEach(key => {
+    const externalValue = externalConfig[key];
+    const currentValue = finalConfig[key];
+    const defaultValue = defaultConfig[key];
 
-    const currentPath = path ? `${path}.${key}` : key;
-
-    // ---- Nested object ----
-    if (sourceVal && typeof sourceVal === 'object' && !Array.isArray(sourceVal)) {
-      if (!targetHasKey) {
-        target[key] = {};
+    if (externalValue && typeof externalValue === 'object' && !Array.isArray(externalValue)) {
+      if (!currentValue || typeof currentValue !== 'object') {
+        finalConfig[key] = {};
       }
 
-      applyExternalConfig(target[key], sourceVal, defaultVal || {}, currentPath);
+      applyExternalConfig({
+        finalConfig: finalConfig[key],
+        externalConfig: externalValue,
+        defaultConfig:
+          defaultValue && typeof defaultValue === 'object' && !Array.isArray(defaultValue) ? defaultValue : {}
+      });
+
       return;
     }
 
-    // ---- Resolve using util ----
-    const resolved = util.resolveExternalConfig({
-      currentValue: targetVal,
-      externalValue: sourceVal,
-      defaultValue: defaultVal
+    finalConfig[key] = util.resolveExternalConfig({
+      currentValue: currentValue,
+      externalValue: externalValue,
+      defaultValue: defaultValue
     });
-
-    if (resolved !== targetVal) {
-      target[key] = resolved;
-      logger.debug(`[config] external applied: ${currentPath}`);
-    } else {
-      logger.debug(`[config] external skipped: ${currentPath}`);
-    }
   });
 }

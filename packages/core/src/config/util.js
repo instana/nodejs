@@ -253,22 +253,22 @@ function isObject(value) {
 }
 
 /**
- * @param {any[]} a
- * @param {string | any[]} b
+ * @param {any} value1
+ * @param {any} value2
  * @returns {boolean}
  */
-function isEqual(a, b) {
-  if (a === b) return true;
+function isEqual(value1, value2) {
+  if (value1 === value2) return true;
 
-  if (Array.isArray(a) && Array.isArray(b)) {
-    return a.length === b.length && a.every((val, i) => isEqual(val, b[i]));
+  if (Array.isArray(value1) && Array.isArray(value2)) {
+    return value1.length === value2.length && value1.every((val, i) => isEqual(val, value2[i]));
   }
 
-  if (isObject(a) && isObject(b)) {
-    const aKeys = Object.keys(a);
-    const bKeys = Object.keys(b);
+  if (isObject(value1) && isObject(value2)) {
+    const aKeys = Object.keys(value1);
+    const bKeys = Object.keys(value2);
 
-    return aKeys.length === bKeys.length && aKeys.every(key => isEqual(a[key], b[key]));
+    return aKeys.length === bKeys.length && aKeys.every(key => isEqual(value1[key], value2[key]));
   }
 
   return false;
@@ -281,12 +281,11 @@ function isEqual(a, b) {
  * @param {any} params.defaultValue
  */
 exports.resolveExternalConfig = function resolveExternalConfig({ currentValue, externalValue, defaultValue }) {
-  // 1. Ignore empty external values
   if (isEmpty(externalValue)) {
     return currentValue;
   }
 
-  // 2. Handle nested objects
+  // Handle nested objects
   if (isObject(externalValue)) {
     const result = isObject(currentValue) ? { ...currentValue } : {};
 
