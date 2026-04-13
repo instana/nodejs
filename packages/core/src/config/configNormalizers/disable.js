@@ -31,12 +31,10 @@ exports.normalize = function normalize(config) {
 
     if (envDisableConfig !== null) {
       if (envDisableConfig === true) {
-        logger?.debug('[config] env:INSTANA_TRACING_DISABLE = true');
         return true;
       }
 
       if (envDisableConfig === false) {
-        logger?.debug('[config] env:INSTANA_TRACING_DISABLE = false (overrides in-code config)');
         return {};
       }
 
