@@ -149,13 +149,11 @@ module.exports.init = _logger => {
  * @param {import('@instana/collector/src/types/collector').AgentConfig} externalConfig
  */
 module.exports.activate = externalConfig => {
-  if (externalConfig && typeof externalConfig === 'object' && Object.keys(externalConfig).length > 0) {
-    normalizeExternalConfig({
-      finalConfig: currentConfig,
-      externalConfig: externalConfig,
-      defaultConfig: defaults
-    });
-  }
+  normalizeExternalConfig({
+    finalConfig: currentConfig,
+    externalConfig: externalConfig,
+    defaultConfig: defaults
+  });
 };
 
 /**
@@ -788,15 +786,13 @@ function normalizePreloadOpentelemetry({ userConfig = {}, defaultConfig = {}, fi
  * }} params
  */
 function normalizeExternalConfig({ finalConfig, externalConfig = {}, defaultConfig = {} }) {
-  Object.keys(externalConfig).forEach(key => {
-    const externalValue = externalConfig[key];
-    const currentValue = finalConfig[key];
-    const defaultValue = defaultConfig[key];
-
-    finalConfig[key] = util.resolveExternalConfig({
-      currentValue: currentValue,
-      externalValue: externalValue,
-      defaultValue: defaultValue
+  if (externalConfig && typeof externalConfig === 'object' && Object.keys(externalConfig).length > 0) {
+    Object.keys(externalConfig).forEach(key => {
+      finalConfig[key] = util.resolveExternalConfig({
+        currentValue: finalConfig[key],
+        externalValue: externalConfig[key],
+        defaultValue: defaultConfig[key]
+      });
     });
-  });
+  }
 }
