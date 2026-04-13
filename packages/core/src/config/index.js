@@ -262,8 +262,15 @@ function normalizeTracingConfig({ userConfig = {}, defaultConfig = {}, finalConf
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
 function normalizeTracingEnabled({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
+  // INSTANA_TRACING_DISABLE can be either:
+  // 1. A boolean ('true'/'false') to enable/disable all tracing
+  // 2. A list of instrumentations/groups to selectively disable
+  // We only use it for tracing.enabled if it's a boolean value
+  const envValue = process.env.INSTANA_TRACING_DISABLE;
+  const isBooleanValue = envValue === 'true' || envValue === 'false';
+
   finalConfig.tracing.enabled = util.resolveBooleanConfigWithInvertedEnv({
-    envVar: 'INSTANA_TRACING_DISABLE',
+    envVar: isBooleanValue ? 'INSTANA_TRACING_DISABLE' : undefined,
     configValue: userConfig.tracing.enabled,
     defaultValue: defaultConfig.tracing.enabled,
     configPath: 'config.tracing.enabled'
