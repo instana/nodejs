@@ -151,7 +151,7 @@ module.exports.init = _logger => {
  */
 module.exports.activate = externalConfig => {
   if (externalConfig && typeof externalConfig === 'object' && Object.keys(externalConfig).length > 0) {
-    applyExternalConfig({
+    normalizeExternalConfig({
       finalConfig: currentConfig,
       externalConfig: externalConfig,
       defaultConfig: defaults
@@ -788,7 +788,7 @@ function normalizePreloadOpentelemetry({ userConfig = {}, defaultConfig = {}, fi
  *   defaultConfig?: { [x: string]: any };
  * }} params
  */
-function applyExternalConfig({ finalConfig, externalConfig = {}, defaultConfig = {} }) {
+function normalizeExternalConfig({ finalConfig, externalConfig = {}, defaultConfig = {} }) {
   Object.keys(externalConfig).forEach(key => {
     const externalValue = externalConfig[key];
     const currentValue = finalConfig[key];
@@ -799,7 +799,7 @@ function applyExternalConfig({ finalConfig, externalConfig = {}, defaultConfig =
         finalConfig[key] = {};
       }
 
-      applyExternalConfig({
+      normalizeExternalConfig({
         finalConfig: finalConfig[key],
         externalConfig: externalValue,
         defaultConfig:
