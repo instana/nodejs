@@ -146,7 +146,7 @@ module.exports.init = _logger => {
 };
 
 /**
- * @param {InstanaConfig} externalConfig
+ * @param {import('@instana/collector/src/types/collector').AgentConfig} externalConfig
  */
 module.exports.activate = externalConfig => {
   if (externalConfig && typeof externalConfig === 'object' && Object.keys(externalConfig).length > 0) {

@@ -6,6 +6,7 @@
 'use strict';
 
 const sdk = require('./sdk');
+const coreConfig = require('../config');
 const constants = require('./constants');
 const tracingMetrics = require('./metrics');
 const opentracing = require('./opentracing');
@@ -263,6 +264,8 @@ function initInstanaInstrumentations(_config) {
 exports.activate = function activate(extraConfig = {}) {
   if (tracingEnabled && !tracingActivated) {
     tracingActivated = true;
+    coreConfig.activate(extraConfig);
+    // Todo refactor the other activate functions to use config directly
     coreUtil.activate(extraConfig);
     tracingUtil.activate(extraConfig);
     spanBuffer.activate(extraConfig);
