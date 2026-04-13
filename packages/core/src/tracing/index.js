@@ -266,7 +266,7 @@ exports.activate = function activate(extraConfig = {}) {
     tracingActivated = true;
     coreConfig.activate(extraConfig);
     // Todo refactor the other activate functions to use config directly
-    coreUtil.activate(extraConfig);
+    coreUtil.activate(config);
     tracingUtil.activate(extraConfig);
     spanBuffer.activate(extraConfig);
     opentracing.activate();
