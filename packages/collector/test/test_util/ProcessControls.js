@@ -151,7 +151,6 @@ class ProcessControls {
         APP_CWD: this.cwd,
         INSTANA_AGENT_PORT: agentPort,
         INSTANA_LOG_LEVEL: 'warn',
-        INSTANA_TRACING_DISABLE: !this.tracingEnabled,
         INSTANA_FORCE_TRANSMISSION_STARTING_AT: '1',
         INSTANA_FULL_METRICS_INTERNAL_IN_S: 1,
         INSTANA_FIRE_MONITORING_EVENT_DURATION_IN_MS: 500,
@@ -166,6 +165,13 @@ class ProcessControls {
 
     if (!this.env.INSTANA_DISABLE_COLLECTOR_INIT_EVENT) {
       this.env.INSTANA_DISABLE_COLLECTOR_INIT_EVENT = 'false';
+    }
+
+    // Only set INSTANA_TRACING_DISABLE when tracing is actually disabled to avoid
+    // overriding other disable environment variables (INSTANA_TRACING_DISABLE_INSTRUMENTATIONS, etc.)
+    // See packages/core/src/config/configNormalizers/disable.js for precedence rules
+    if (!this.tracingEnabled) {
+      this.env.INSTANA_TRACING_DISABLE = 'true';
     }
 
     if (this.usePreInit) {
