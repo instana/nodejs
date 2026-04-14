@@ -176,6 +176,8 @@ module.exports.normalize = ({ userConfig = {}, finalConfigBase = {}, defaultsOve
   } else {
     normalizedUserConfig = {};
   }
+  // Clear previous sources if any
+  Object.keys(configSources).forEach(key => delete configSources[key]);
 
   // Preserve finalConfigBase in the finalConfig to allow additional config values
   // that are not part of the core config schema. Eg: collector config needs to be preserved.
