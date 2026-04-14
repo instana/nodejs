@@ -269,7 +269,7 @@ const SOURCE_PRIORITY = {
 /** @type {Object.<string, TypeSchema>} */
 const TypeSchemas = {
   STR: {
-    coerce: v => (v != null ? String(v).trim() : null),
+    coerce: v => (typeof v === 'string' ? v : null),
     validate: v => typeof v === 'string' && v.length > 0 && v !== 'null' && v !== 'undefined'
   },
   NUM: {
@@ -355,24 +355,22 @@ exports.get = function get({ key, envKey, inCodeValue, defaultValue, type = 'STR
  * Respects the precedence hierarchy
  *
  * @param {Object} params
- * @param {string} params.key - Configuration key name
- * @param {any} params.newValue - New value to set
- * @param {string} params.sourceName - Source name (must be a valid SOURCE key)
- * @param {'STR'|'NUM'|'BOOL'} [params.type='STR'] - Value type
- * @returns {any} The current configuration value (may be unchanged if update was rejected)
+ * @param {string} params.key
+ * @param {any} params.newValue
+ * @param {string} params.sourceName
+ * @returns {any}
  */
-exports.update = function update({ key, newValue, sourceName, type = 'STR' }) {
-  const schema = TypeSchemas[type];
-  if (!schema) {
-    logger.warn(`Unknown type "${type}" for config key "${key}". Update rejected.`);
-    return configStore[key]?.value || null;
+exports.update = function update({ key, newValue, sourceName }) {
+  if (newValue === null || newValue === undefined || newValue === '') {
+    const current = configStore[key];
+    return current ? current.value : null;
   }
 
   const current = configStore[key];
   const incomingPriority = SOURCE_PRIORITY[sourceName];
 
   if (incomingPriority === undefined) {
-    logger.warn(`Invalid source name "${sourceName}" for config key "${key}". Update rejected.`);
+    logger.warn(`[config] Invalid source name "${sourceName}" for key "${key}". Update rejected.`);
     return current?.value || null;
   }
 
@@ -381,31 +379,19 @@ exports.update = function update({ key, newValue, sourceName, type = 'STR' }) {
     if (incomingPriority <= currentPriority) {
       logger.info(
         `[config] Rejected "${key}" update from ${sourceName} (priority: ${incomingPriority}): ` +
-          `${current.source} (priority: ${currentPriority}) has higher or equal precedence. ` +
-          `Current value: ${JSON.stringify(current.value)}`
+          `${current.source} (priority: ${currentPriority}) has higher or equal precedence`
       );
       return current.value;
     }
   }
 
-  const coerced = schema.coerce(newValue);
-  if (!schema.validate(coerced)) {
-    logger.warn(
-      `[config] Rejected "${key}" update from ${sourceName}: Invalid ${type} value: ${JSON.stringify(newValue)}`
-    );
-    return current?.value || null;
-  }
-
   configStore[key] = {
-    value: coerced,
+    value: newValue,
     source: sourceName
   };
 
-  logger.info(
-    `[config] Updated "${key}" from ${sourceName}: ${JSON.stringify(coerced)} (priority: ${incomingPriority})`
-  );
-
-  return coerced;
+  logger.info(`[config] Updated "${key}" from ${sourceName}: ${JSON.stringify(newValue)}`);
+  return newValue;
 };
 
 /**

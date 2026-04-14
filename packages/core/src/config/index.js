@@ -161,6 +161,7 @@ module.exports.normalize = ({ userConfig = {}, finalConfigBase = {}, defaultsOve
     normalizedUserConfig = {};
   }
 
+  util.clearConfigStore();
   // Preserve finalConfigBase in the finalConfig to allow additional config values
   // that are not part of the core config schema. Eg: collector config needs to be preserved.
   /** @type InstanaConfig */
@@ -764,16 +765,27 @@ function normalizePreloadOpentelemetry({ userConfig = {}, defaultConfig = {}, fi
   }
 }
 
-exports.update = function update({ userConfig = {}, sourceName }) {
-  const updatedServiceName = util.update({
-    key: 'serviceName',
-    newValue: userConfig.serviceName,
-    sourceName: sourceName,
-    type: 'STR'
-  });
+/**
+ * Updates configuration values dynamically from external sources (e.g., agent)
+ * Iterates through all keys in externalConfig and updates them with precedence checking
+ *
+ * @param {Object} params
+ * @param {InstanaConfig} params.finalConfig
+ * @param {Object} [params.externalConfig]
+ * @param {string} params.sourceName
+ */
+exports.update = function update({ finalConfig, externalConfig = {}, sourceName }) {
+  if (!finalConfig) {
+    throw new Error('finalConfig is required for config.update()');
+  }
 
-  // Return a config object with the updated serviceName
-  return {
-    serviceName: updatedServiceName
-  };
+  if (externalConfig && typeof externalConfig === 'object' && Object.keys(externalConfig).length > 0) {
+    Object.keys(externalConfig).forEach(key => {
+      finalConfig[key] = util.update({
+        key: key,
+        newValue: externalConfig[key],
+        sourceName: sourceName
+      });
+    });
+  }
 };
