@@ -65,7 +65,6 @@ describe('config.normalizeConfig', () => {
     it('should accept agent service name', () => {
       const config = coreConfig.normalize({});
       coreConfig.update({
-        finalConfig: config,
         externalConfig: {
           serviceName: 'agent-service-name',
           transmissionDelay: 5000
