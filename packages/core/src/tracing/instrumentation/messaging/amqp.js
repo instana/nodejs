@@ -182,8 +182,6 @@ function instrumentedDispatchMessage(ctx, originalDispatchMessage, originalArgs)
       ? originalArgs[1].properties.headers
       : {};
 
-  removeInstanaHeadersFromMessage(originalArgs[1]);
-
   return cls.ns.runAndReturn(() => {
     if (tracingUtil.readAttribCaseInsensitive(headers, constants.traceLevelHeaderName) === '0') {
       cls.setTracingLevel('0');
@@ -214,6 +212,8 @@ ctx.connection.stream.remoteAddress}:${ctx.connection.stream.remotePort}`;
     if (fields.routingKey) {
       span.data.rabbitmq.key = fields.routingKey;
     }
+
+    removeInstanaHeadersFromMessage(originalArgs[1]);
 
     try {
       return originalDispatchMessage.apply(ctx, originalArgs);
