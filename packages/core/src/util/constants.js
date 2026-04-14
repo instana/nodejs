@@ -17,3 +17,10 @@ exports.STACK_TRACE_MODES = {
   ALL: 'all',
   NONE: 'none'
 };
+
+exports.CONFIG_SOURCES = {
+  ENV: 1,
+  IN_CODE: 2,
+  AGENT: 3,
+  DEFAULT: 4
+};
