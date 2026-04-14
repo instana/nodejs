@@ -18,6 +18,8 @@ exports.STACK_TRACE_MODES = {
   NONE: 'none'
 };
 
+// Defines configuration source precedence (lower value = higher priority):
+// ENV > IN_CODE > AGENT > DEFAULT
 exports.CONFIG_SOURCES = {
   ENV: 1,
   IN_CODE: 2,
