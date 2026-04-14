@@ -4,6 +4,8 @@
 
 'use strict';
 
+const { CONFIG_SOURCES } = require('./constants');
+
 /** @type {import('../core').GenericLogger} */
 let logger;
 
@@ -15,12 +17,24 @@ exports.init = _logger => {
 };
 
 /**
+ * Internal config source wrapper
+ * @param {any} value
+ * @param {number} source
+ */
+function wrap(value, source) {
+  return {
+    value,
+    source
+  };
+}
+
+/**
  * @param {Object} params
  * @param {string} params.envVar
  * @param {number|string|undefined|null} params.configValue
  * @param {number} params.defaultValue
  * @param {string} params.configPath
- * @returns {number}
+ * @returns {{value:number,source:number}}
  */
 exports.resolveNumericConfig = function resolveNumericConfig({ envVar, configValue, defaultValue, configPath }) {
   const envRaw = process.env[envVar];
@@ -35,7 +49,7 @@ exports.resolveNumericConfig = function resolveNumericConfig({ envVar, configVal
     const envParsed = toValidNumber(envRaw);
     if (envParsed !== undefined) {
       logger.debug(`[config] env:${envVar} = ${envParsed}`);
-      return envParsed;
+      return wrap(envParsed, CONFIG_SOURCES.ENV);
     }
 
     logger.warn(`Invalid numeric value from env:${envVar}: "${envRaw}". Ignoring and checking config value.`);
@@ -45,7 +59,7 @@ exports.resolveNumericConfig = function resolveNumericConfig({ envVar, configVal
     const configParsed = toValidNumber(configValue);
     if (configParsed !== undefined) {
       logger.debug(`[config] incode:${configPath} = ${configValue}`);
-      return configParsed;
+      return wrap(configParsed, CONFIG_SOURCES.IN_CODE);
     }
 
     logger.warn(
@@ -53,7 +67,7 @@ exports.resolveNumericConfig = function resolveNumericConfig({ envVar, configVal
     );
   }
 
-  return defaultValue;
+  return wrap(defaultValue, CONFIG_SOURCES.DEFAULT);
 };
 
 /**
@@ -82,26 +96,24 @@ function parseBooleanFromEnv(envValue) {
  * @param {boolean|undefined|null} params.configValue
  * @param {boolean} params.defaultValue
  * @param {string} [params.configPath]
- * @returns {boolean}
+ * @returns {{value:boolean,source:number}}
  */
 exports.resolveBooleanConfig = function resolveBooleanConfig({ envVar, configValue, defaultValue, configPath }) {
-  // Priority 1: Environment variable
   const envValue = process.env[envVar];
   const envParsed = parseBooleanFromEnv(envValue);
 
   if (envParsed !== undefined) {
     logger.debug(`[config] env:${envVar} = ${envParsed}`);
-    return envParsed;
+    return wrap(envParsed, CONFIG_SOURCES.ENV);
   }
 
   if (envValue != null) {
     logger.warn(`Invalid boolean value for ${envValue}: "${envValue}".`);
   }
 
-  // Priority 2: In-code configuration
   if (typeof configValue === 'boolean') {
     logger.debug(`[config] incode:${configPath} = ${configValue}`);
-    return configValue;
+    return wrap(configValue, CONFIG_SOURCES.IN_CODE);
   }
 
   if (configValue != null && configPath) {
@@ -112,8 +124,7 @@ exports.resolveBooleanConfig = function resolveBooleanConfig({ envVar, configVal
     );
   }
 
-  // Priority 3: Default value
-  return defaultValue;
+  return wrap(defaultValue, CONFIG_SOURCES.DEFAULT);
 };
 
 /**
@@ -125,7 +136,7 @@ exports.resolveBooleanConfig = function resolveBooleanConfig({ envVar, configVal
  * @param {boolean|undefined|null} params.configValue - Config value
  * @param {boolean} params.defaultValue - Default value
  * @param {string} [params.configPath] - Config path for logging (optional)
- * @returns {boolean}
+ * @returns {{value:boolean,source:number}}
  */
 exports.resolveBooleanConfigWithInvertedEnv = function resolveBooleanConfigWithInvertedEnv({
   envVar,
@@ -133,24 +144,22 @@ exports.resolveBooleanConfigWithInvertedEnv = function resolveBooleanConfigWithI
   defaultValue,
   configPath
 }) {
-  // Priority 1: Environment variable
   const envValue = process.env[envVar];
   const envParsed = parseBooleanFromEnv(envValue);
 
   if (envParsed !== undefined) {
     const invertedValue = !envParsed;
     logger.debug(`[config] env:${envVar} = ${envParsed} (inverted to ${invertedValue})`);
-    return invertedValue;
+    return wrap(invertedValue, CONFIG_SOURCES.ENV);
   }
 
   if (envValue != null) {
     logger.warn(`Invalid boolean value for ${envVar}: "${envValue}". Checking in-code config.`);
   }
 
-  // Priority 2: In-code configuration
   if (typeof configValue === 'boolean') {
     logger.debug(`[config] incode:${configPath} = ${configValue}`);
-    return configValue;
+    return wrap(configValue, CONFIG_SOURCES.IN_CODE);
   }
 
   if (configValue != null && configPath) {
@@ -161,8 +170,7 @@ exports.resolveBooleanConfigWithInvertedEnv = function resolveBooleanConfigWithI
     );
   }
 
-  // Priority 3: Default value
-  return defaultValue;
+  return wrap(defaultValue, CONFIG_SOURCES.DEFAULT);
 };
 
 /**
@@ -174,7 +182,7 @@ exports.resolveBooleanConfigWithInvertedEnv = function resolveBooleanConfigWithI
  * @param {boolean|undefined|null} params.configValue - Config value
  * @param {boolean} params.defaultValue - Default value
  * @param {string} [params.configPath]
- * @returns {boolean}
+ * @returns {{value:boolean,source:number}}
  */
 exports.resolveBooleanConfigWithTruthyEnv = function resolveBooleanConfigWithTruthyEnv({
   envVar,
@@ -186,17 +194,16 @@ exports.resolveBooleanConfigWithTruthyEnv = function resolveBooleanConfigWithTru
   const envValue = process.env[envVar];
   if (envValue) {
     logger.debug(`[config] env:${envVar} = ${envValue}`);
-    return true;
+    return wrap(true, CONFIG_SOURCES.ENV);
   }
 
   // Priority 2: In-code configuration
   if (typeof configValue === 'boolean') {
     logger.debug(`[config] incode:${configPath} = ${configValue}`);
-    return configValue;
+    return wrap(configValue, CONFIG_SOURCES.IN_CODE);
   }
-
   // Priority 3: Default value
-  return defaultValue;
+  return wrap(defaultValue, CONFIG_SOURCES.DEFAULT);
 };
 
 /**
@@ -205,13 +212,14 @@ exports.resolveBooleanConfigWithTruthyEnv = function resolveBooleanConfigWithTru
  * @param {any} params.configValue
  * @param {any} params.defaultValue
  * @param {string} [params.configPath]
+ * @returns {{value:any,source:number}}
  */
 exports.resolveStringConfig = function resolveStringConfig({ envVar, configValue, defaultValue, configPath }) {
   // Priority 1: Environment variable
   const envValue = process.env[envVar];
   if (envValue != null) {
     logger.debug(`[config] env:${envVar} = ${envValue}`);
-    return envValue;
+    return wrap(envValue, CONFIG_SOURCES.ENV);
   }
 
   // Priority 2: In-code configuration
@@ -222,10 +230,12 @@ exports.resolveStringConfig = function resolveStringConfig({ envVar, configValue
           configValue
         )}. Falling back to default: ${defaultValue}.`
       );
-      return defaultValue;
+      return wrap(defaultValue, CONFIG_SOURCES.DEFAULT);
     }
+
     logger.debug(`[config] incode:${configPath} = ${configValue}`);
-    return configValue;
+    return wrap(configValue, CONFIG_SOURCES.IN_CODE);
   }
-  return defaultValue;
+
+  return wrap(defaultValue, CONFIG_SOURCES.DEFAULT);
 };

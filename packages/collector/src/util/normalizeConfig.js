@@ -42,12 +42,13 @@ module.exports = function normalizeConfig(userConfig = {}) {
  * @returns {string}
  */
 function normalizeAgentHost(userConfig, defaultConfig) {
-  return util.resolveStringConfig({
+  const res = util.resolveStringConfig({
     envVar: 'INSTANA_AGENT_HOST',
     configValue: userConfig.agentHost,
     defaultValue: defaultConfig.agentHost,
     configPath: 'config.agentHost'
   });
+  return res.value;
 }
 
 /**
@@ -56,12 +57,13 @@ function normalizeAgentHost(userConfig, defaultConfig) {
  * @returns {number}
  */
 function normalizeAgentPort(userConfig, defaultConfig) {
-  return util.resolveNumericConfig({
+  const res = util.resolveNumericConfig({
     envVar: 'INSTANA_AGENT_PORT',
     configValue: userConfig.agentPort,
     defaultValue: defaultConfig.agentPort,
     configPath: 'config.agentPort'
   });
+  return res.value;
 }
 
 /**
@@ -70,12 +72,13 @@ function normalizeAgentPort(userConfig, defaultConfig) {
  * @returns {number}
  */
 function normalizeAgentRequestTimeout(userConfig, defaultConfig) {
-  return util.resolveNumericConfig({
+  const res = util.resolveNumericConfig({
     envVar: 'INSTANA_AGENT_REQUEST_TIMEOUT',
     configValue: userConfig.agentRequestTimeout,
     defaultValue: defaultConfig.agentRequestTimeout,
     configPath: 'config.agentRequestTimeout'
   });
+  return res.value;
 }
 
 /**
@@ -84,12 +87,13 @@ function normalizeAgentRequestTimeout(userConfig, defaultConfig) {
  * @returns {boolean}
  */
 function normalizeAutoProfile(userConfig, defaultConfig) {
-  return util.resolveBooleanConfig({
+  const res = util.resolveBooleanConfig({
     envVar: 'INSTANA_AUTO_PROFILE',
     configValue: userConfig.autoProfile,
     defaultValue: defaultConfig.autoProfile,
     configPath: 'config.autoProfile'
   });
+  return res.value;
 }
 
 /**
