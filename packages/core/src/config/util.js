@@ -20,11 +20,13 @@ exports.init = _logger => {
  * Internal config source wrapper
  * @param {any} value
  * @param {number} source
+ * @param {string} configPath
  */
-function wrap(value, source) {
+function wrap(value, source, configPath) {
   return {
     value,
-    source
+    source,
+    configPath
   };
 }
 
@@ -49,7 +51,7 @@ exports.resolveNumericConfig = function resolveNumericConfig({ envVar, configVal
     const envParsed = toValidNumber(envRaw);
     if (envParsed !== undefined) {
       logger.debug(`[config] env:${envVar} = ${envParsed}`);
-      return wrap(envParsed, CONFIG_SOURCES.ENV);
+      return wrap(envParsed, CONFIG_SOURCES.ENV, configPath);
     }
 
     logger.warn(`Invalid numeric value from env:${envVar}: "${envRaw}". Ignoring and checking config value.`);
@@ -59,7 +61,7 @@ exports.resolveNumericConfig = function resolveNumericConfig({ envVar, configVal
     const configParsed = toValidNumber(configValue);
     if (configParsed !== undefined) {
       logger.debug(`[config] incode:${configPath} = ${configValue}`);
-      return wrap(configParsed, CONFIG_SOURCES.IN_CODE);
+      return wrap(configParsed, CONFIG_SOURCES.IN_CODE, configPath);
     }
 
     logger.warn(
@@ -67,7 +69,7 @@ exports.resolveNumericConfig = function resolveNumericConfig({ envVar, configVal
     );
   }
 
-  return wrap(defaultValue, CONFIG_SOURCES.DEFAULT);
+  return wrap(defaultValue, CONFIG_SOURCES.DEFAULT, configPath);
 };
 
 /**
@@ -104,7 +106,7 @@ exports.resolveBooleanConfig = function resolveBooleanConfig({ envVar, configVal
 
   if (envParsed !== undefined) {
     logger.debug(`[config] env:${envVar} = ${envParsed}`);
-    return wrap(envParsed, CONFIG_SOURCES.ENV);
+    return wrap(envParsed, CONFIG_SOURCES.ENV, configPath);
   }
 
   if (envValue != null) {
@@ -113,7 +115,7 @@ exports.resolveBooleanConfig = function resolveBooleanConfig({ envVar, configVal
 
   if (typeof configValue === 'boolean') {
     logger.debug(`[config] incode:${configPath} = ${configValue}`);
-    return wrap(configValue, CONFIG_SOURCES.IN_CODE);
+    return wrap(configValue, CONFIG_SOURCES.IN_CODE, configPath);
   }
 
   if (configValue != null && configPath) {
@@ -124,7 +126,7 @@ exports.resolveBooleanConfig = function resolveBooleanConfig({ envVar, configVal
     );
   }
 
-  return wrap(defaultValue, CONFIG_SOURCES.DEFAULT);
+  return wrap(defaultValue, CONFIG_SOURCES.DEFAULT, configPath);
 };
 
 /**
@@ -150,7 +152,7 @@ exports.resolveBooleanConfigWithInvertedEnv = function resolveBooleanConfigWithI
   if (envParsed !== undefined) {
     const invertedValue = !envParsed;
     logger.debug(`[config] env:${envVar} = ${envParsed} (inverted to ${invertedValue})`);
-    return wrap(invertedValue, CONFIG_SOURCES.ENV);
+    return wrap(invertedValue, CONFIG_SOURCES.ENV, configPath);
   }
 
   if (envValue != null) {
@@ -159,7 +161,7 @@ exports.resolveBooleanConfigWithInvertedEnv = function resolveBooleanConfigWithI
 
   if (typeof configValue === 'boolean') {
     logger.debug(`[config] incode:${configPath} = ${configValue}`);
-    return wrap(configValue, CONFIG_SOURCES.IN_CODE);
+    return wrap(configValue, CONFIG_SOURCES.IN_CODE, configPath);
   }
 
   if (configValue != null && configPath) {
@@ -170,7 +172,7 @@ exports.resolveBooleanConfigWithInvertedEnv = function resolveBooleanConfigWithI
     );
   }
 
-  return wrap(defaultValue, CONFIG_SOURCES.DEFAULT);
+  return wrap(defaultValue, CONFIG_SOURCES.DEFAULT, configPath);
 };
 
 /**
@@ -194,16 +196,16 @@ exports.resolveBooleanConfigWithTruthyEnv = function resolveBooleanConfigWithTru
   const envValue = process.env[envVar];
   if (envValue) {
     logger.debug(`[config] env:${envVar} = ${envValue}`);
-    return wrap(true, CONFIG_SOURCES.ENV);
+    return wrap(true, CONFIG_SOURCES.ENV, configPath);
   }
 
   // Priority 2: In-code configuration
   if (typeof configValue === 'boolean') {
     logger.debug(`[config] incode:${configPath} = ${configValue}`);
-    return wrap(configValue, CONFIG_SOURCES.IN_CODE);
+    return wrap(configValue, CONFIG_SOURCES.IN_CODE, configPath);
   }
   // Priority 3: Default value
-  return wrap(defaultValue, CONFIG_SOURCES.DEFAULT);
+  return wrap(defaultValue, CONFIG_SOURCES.DEFAULT, configPath);
 };
 
 /**
@@ -219,7 +221,7 @@ exports.resolveStringConfig = function resolveStringConfig({ envVar, configValue
   const envValue = process.env[envVar];
   if (envValue != null) {
     logger.debug(`[config] env:${envVar} = ${envValue}`);
-    return wrap(envValue, CONFIG_SOURCES.ENV);
+    return wrap(envValue, CONFIG_SOURCES.ENV, configPath);
   }
 
   // Priority 2: In-code configuration
@@ -230,12 +232,12 @@ exports.resolveStringConfig = function resolveStringConfig({ envVar, configValue
           configValue
         )}. Falling back to default: ${defaultValue}.`
       );
-      return wrap(defaultValue, CONFIG_SOURCES.DEFAULT);
+      return wrap(defaultValue, CONFIG_SOURCES.DEFAULT, configPath);
     }
 
     logger.debug(`[config] incode:${configPath} = ${configValue}`);
-    return wrap(configValue, CONFIG_SOURCES.IN_CODE);
+    return wrap(configValue, CONFIG_SOURCES.IN_CODE, configPath);
   }
 
-  return wrap(defaultValue, CONFIG_SOURCES.DEFAULT);
+  return wrap(defaultValue, CONFIG_SOURCES.DEFAULT, configPath);
 };

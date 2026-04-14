@@ -29,12 +29,14 @@ describe('config.util', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
         configValue: undefined,
-        defaultValue: 1000
+        defaultValue: 1000,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: 1000,
-        source: CONFIG_SOURCES.DEFAULT
+        source: CONFIG_SOURCES.DEFAULT,
+        configPath: 'config.test.value'
       });
     });
 
@@ -44,12 +46,14 @@ describe('config.util', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
         configValue: 3000,
-        defaultValue: 1000
+        defaultValue: 1000,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: 2000,
-        source: CONFIG_SOURCES.ENV
+        source: CONFIG_SOURCES.ENV,
+        configPath: 'config.test.value'
       });
     });
 
@@ -57,12 +61,14 @@ describe('config.util', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
         configValue: 3000,
-        defaultValue: 1000
+        defaultValue: 1000,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: 3000,
-        source: CONFIG_SOURCES.IN_CODE
+        source: CONFIG_SOURCES.IN_CODE,
+        configPath: 'config.test.value'
       });
     });
 
@@ -70,12 +76,14 @@ describe('config.util', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
         configValue: 5000,
-        defaultValue: 1000
+        defaultValue: 1000,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: 5000,
-        source: CONFIG_SOURCES.IN_CODE
+        source: CONFIG_SOURCES.IN_CODE,
+        configPath: 'config.test.value'
       });
     });
 
@@ -83,12 +91,14 @@ describe('config.util', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
         configValue: '5000',
-        defaultValue: 1000
+        defaultValue: 1000,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: 5000,
-        source: CONFIG_SOURCES.IN_CODE
+        source: CONFIG_SOURCES.IN_CODE,
+        configPath: 'config.test.value'
       });
     });
 
@@ -98,12 +108,14 @@ describe('config.util', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
         configValue: undefined,
-        defaultValue: 1000
+        defaultValue: 1000,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: 7500,
-        source: CONFIG_SOURCES.ENV
+        source: CONFIG_SOURCES.ENV,
+        configPath: 'config.test.value'
       });
     });
 
@@ -113,12 +125,14 @@ describe('config.util', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
         configValue: undefined,
-        defaultValue: 1000
+        defaultValue: 1000,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: 1000,
-        source: CONFIG_SOURCES.DEFAULT
+        source: CONFIG_SOURCES.DEFAULT,
+        configPath: 'config.test.value'
       });
     });
 
@@ -126,12 +140,14 @@ describe('config.util', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
         configValue: 'invalid',
-        defaultValue: 1000
+        defaultValue: 1000,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: 1000,
-        source: CONFIG_SOURCES.DEFAULT
+        source: CONFIG_SOURCES.DEFAULT,
+        configPath: 'config.test.value'
       });
     });
 
@@ -141,12 +157,14 @@ describe('config.util', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
         configValue: 3000,
-        defaultValue: 1000
+        defaultValue: 1000,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: 3000,
-        source: CONFIG_SOURCES.IN_CODE
+        source: CONFIG_SOURCES.IN_CODE,
+        configPath: 'config.test.value'
       });
     });
 
@@ -156,12 +174,14 @@ describe('config.util', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
         configValue: undefined,
-        defaultValue: 1000
+        defaultValue: 1000,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: 0,
-        source: CONFIG_SOURCES.ENV
+        source: CONFIG_SOURCES.ENV,
+        configPath: 'config.test.value'
       });
     });
 
@@ -169,12 +189,14 @@ describe('config.util', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
         configValue: 0,
-        defaultValue: 1000
+        defaultValue: 1000,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: 0,
-        source: CONFIG_SOURCES.IN_CODE
+        source: CONFIG_SOURCES.IN_CODE,
+        configPath: 'config.test.value'
       });
     });
 
@@ -184,12 +206,14 @@ describe('config.util', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
         configValue: undefined,
-        defaultValue: 1000
+        defaultValue: 1000,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: -500,
-        source: CONFIG_SOURCES.ENV
+        source: CONFIG_SOURCES.ENV,
+        configPath: 'config.test.value'
       });
     });
 
@@ -197,12 +221,14 @@ describe('config.util', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
         configValue: -500,
-        defaultValue: 1000
+        defaultValue: 1000,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: -500,
-        source: CONFIG_SOURCES.IN_CODE
+        source: CONFIG_SOURCES.IN_CODE,
+        configPath: 'config.test.value'
       });
     });
 
@@ -212,12 +238,14 @@ describe('config.util', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
         configValue: undefined,
-        defaultValue: 1000
+        defaultValue: 1000,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: 123.45,
-        source: CONFIG_SOURCES.ENV
+        source: CONFIG_SOURCES.ENV,
+        configPath: 'config.test.value'
       });
     });
 
@@ -225,12 +253,14 @@ describe('config.util', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
         configValue: 123.45,
-        defaultValue: 1000
+        defaultValue: 1000,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: 123.45,
-        source: CONFIG_SOURCES.IN_CODE
+        source: CONFIG_SOURCES.IN_CODE,
+        configPath: 'config.test.value'
       });
     });
 
@@ -238,12 +268,14 @@ describe('config.util', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
         configValue: null,
-        defaultValue: 1000
+        defaultValue: 1000,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: 1000,
-        source: CONFIG_SOURCES.DEFAULT
+        source: CONFIG_SOURCES.DEFAULT,
+        configPath: 'config.test.value'
       });
     });
 
@@ -253,12 +285,14 @@ describe('config.util', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
         configValue: undefined,
-        defaultValue: 1000
+        defaultValue: 1000,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: 0,
-        source: CONFIG_SOURCES.ENV
+        source: CONFIG_SOURCES.ENV,
+        configPath: 'config.test.value'
       });
     });
 
@@ -266,12 +300,14 @@ describe('config.util', () => {
       const result = util.resolveNumericConfig({
         envVar: 'TEST_ENV_VAR',
         configValue: '',
-        defaultValue: 1000
+        defaultValue: 1000,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: 0,
-        source: CONFIG_SOURCES.IN_CODE
+        source: CONFIG_SOURCES.IN_CODE,
+        configPath: 'config.test.value'
       });
     });
   });
@@ -289,12 +325,14 @@ describe('config.util', () => {
       const result = util.resolveBooleanConfig({
         envVar: 'TEST_BOOL_VAR',
         configValue: undefined,
-        defaultValue: false
+        defaultValue: false,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: false,
-        source: CONFIG_SOURCES.DEFAULT
+        source: CONFIG_SOURCES.DEFAULT,
+        configPath: 'config.test.value'
       });
     });
 
@@ -304,12 +342,14 @@ describe('config.util', () => {
       const result = util.resolveBooleanConfig({
         envVar: 'TEST_BOOL_VAR',
         configValue: false,
-        defaultValue: false
+        defaultValue: false,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.ENV
+        source: CONFIG_SOURCES.ENV,
+        configPath: 'config.test.value'
       });
     });
 
@@ -317,12 +357,14 @@ describe('config.util', () => {
       const result = util.resolveBooleanConfig({
         envVar: 'TEST_BOOL_VAR',
         configValue: true,
-        defaultValue: false
+        defaultValue: false,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.IN_CODE
+        source: CONFIG_SOURCES.IN_CODE,
+        configPath: 'config.test.value'
       });
     });
 
@@ -332,12 +374,14 @@ describe('config.util', () => {
       const result = util.resolveBooleanConfig({
         envVar: 'TEST_BOOL_VAR',
         configValue: undefined,
-        defaultValue: false
+        defaultValue: false,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.ENV
+        source: CONFIG_SOURCES.ENV,
+        configPath: 'config.test.value'
       });
     });
 
@@ -347,12 +391,14 @@ describe('config.util', () => {
       const result = util.resolveBooleanConfig({
         envVar: 'TEST_BOOL_VAR',
         configValue: undefined,
-        defaultValue: true
+        defaultValue: true,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: false,
-        source: CONFIG_SOURCES.ENV
+        source: CONFIG_SOURCES.ENV,
+        configPath: 'config.test.value'
       });
     });
 
@@ -367,7 +413,8 @@ describe('config.util', () => {
 
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.ENV
+        source: CONFIG_SOURCES.ENV,
+        configPath: undefined
       });
     });
 
@@ -377,12 +424,13 @@ describe('config.util', () => {
       const result = util.resolveBooleanConfig({
         envVar: 'TEST_BOOL_VAR',
         configValue: undefined,
-        defaultValue: true
+        defaultValue: true,
+        configPath: 'config.test.value'
       });
-
       expect(result).to.deep.equal({
         value: false,
-        source: CONFIG_SOURCES.ENV
+        source: CONFIG_SOURCES.ENV,
+        configPath: 'config.test.value'
       });
     });
 
@@ -392,12 +440,14 @@ describe('config.util', () => {
       const result = util.resolveBooleanConfig({
         envVar: 'TEST_BOOL_VAR',
         configValue: undefined,
-        defaultValue: false
+        defaultValue: false,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.ENV
+        source: CONFIG_SOURCES.ENV,
+        configPath: 'config.test.value'
       });
     });
 
@@ -407,12 +457,14 @@ describe('config.util', () => {
       const result = util.resolveBooleanConfig({
         envVar: 'TEST_BOOL_VAR',
         configValue: undefined,
-        defaultValue: true
+        defaultValue: true,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: false,
-        source: CONFIG_SOURCES.ENV
+        source: CONFIG_SOURCES.ENV,
+        configPath: 'config.test.value'
       });
     });
 
@@ -422,12 +474,14 @@ describe('config.util', () => {
       const result = util.resolveBooleanConfig({
         envVar: 'TEST_BOOL_VAR',
         configValue: true,
-        defaultValue: false
+        defaultValue: false,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.IN_CODE
+        source: CONFIG_SOURCES.IN_CODE,
+        configPath: 'config.test.value'
       });
     });
 
@@ -437,12 +491,14 @@ describe('config.util', () => {
       const result = util.resolveBooleanConfig({
         envVar: 'TEST_BOOL_VAR',
         configValue: 'not-a-boolean',
-        defaultValue: true
+        defaultValue: true,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.DEFAULT
+        source: CONFIG_SOURCES.DEFAULT,
+        configPath: 'config.test.value'
       });
     });
 
@@ -450,12 +506,14 @@ describe('config.util', () => {
       const result = util.resolveBooleanConfig({
         envVar: 'TEST_BOOL_VAR',
         configValue: null,
-        defaultValue: true
+        defaultValue: true,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.DEFAULT
+        source: CONFIG_SOURCES.DEFAULT,
+        configPath: 'config.test.value'
       });
     });
 
@@ -463,12 +521,14 @@ describe('config.util', () => {
       const result = util.resolveBooleanConfig({
         envVar: 'TEST_BOOL_VAR',
         configValue: undefined,
-        defaultValue: false
+        defaultValue: false,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: false,
-        source: CONFIG_SOURCES.DEFAULT
+        source: CONFIG_SOURCES.DEFAULT,
+        configPath: 'config.test.value'
       });
     });
   });
@@ -488,12 +548,14 @@ describe('config.util', () => {
       const result = util.resolveBooleanConfigWithInvertedEnv({
         envVar: 'TEST_DISABLE_VAR',
         configValue: undefined,
-        defaultValue: true
+        defaultValue: true,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: false,
-        source: CONFIG_SOURCES.ENV
+        source: CONFIG_SOURCES.ENV,
+        configPath: 'config.test.value'
       });
     });
 
@@ -503,12 +565,14 @@ describe('config.util', () => {
       const result = util.resolveBooleanConfigWithInvertedEnv({
         envVar: 'TEST_DISABLE_VAR',
         configValue: true,
-        defaultValue: true
+        defaultValue: true,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: false,
-        source: CONFIG_SOURCES.ENV
+        source: CONFIG_SOURCES.ENV,
+        configPath: 'config.test.value'
       });
     });
 
@@ -516,12 +580,14 @@ describe('config.util', () => {
       const result = util.resolveBooleanConfigWithInvertedEnv({
         envVar: 'TEST_DISABLE_VAR',
         configValue: false,
-        defaultValue: true
+        defaultValue: true,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: false,
-        source: CONFIG_SOURCES.IN_CODE
+        source: CONFIG_SOURCES.IN_CODE,
+        configPath: 'config.test.value'
       });
     });
 
@@ -531,12 +597,14 @@ describe('config.util', () => {
       const result = util.resolveBooleanConfigWithInvertedEnv({
         envVar: 'TEST_DISABLE_VAR',
         configValue: undefined,
-        defaultValue: true
+        defaultValue: true,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.ENV
+        source: CONFIG_SOURCES.ENV,
+        configPath: 'config.test.value'
       });
     });
 
@@ -544,12 +612,14 @@ describe('config.util', () => {
       const result = util.resolveBooleanConfigWithInvertedEnv({
         envVar: 'TEST_DISABLE_VAR',
         configValue: null,
-        defaultValue: false
+        defaultValue: false,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: false,
-        source: CONFIG_SOURCES.DEFAULT
+        source: CONFIG_SOURCES.DEFAULT,
+        configPath: 'config.test.value'
       });
     });
 
@@ -557,12 +627,14 @@ describe('config.util', () => {
       const result = util.resolveBooleanConfigWithInvertedEnv({
         envVar: 'TEST_INVERTED_VAR',
         configValue: 'not-a-boolean',
-        defaultValue: true
+        defaultValue: true,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.DEFAULT
+        source: CONFIG_SOURCES.DEFAULT,
+        configPath: 'config.test.value'
       });
     });
   });
@@ -582,12 +654,14 @@ describe('config.util', () => {
       const result = util.resolveBooleanConfigWithTruthyEnv({
         envVar: 'TEST_TRUTHY_VAR',
         configValue: undefined,
-        defaultValue: false
+        defaultValue: false,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.ENV
+        source: CONFIG_SOURCES.ENV,
+        configPath: 'config.test.value'
       });
     });
 
@@ -597,12 +671,14 @@ describe('config.util', () => {
       const result = util.resolveBooleanConfigWithTruthyEnv({
         envVar: 'TEST_TRUTHY_VAR',
         configValue: undefined,
-        defaultValue: false
+        defaultValue: false,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.ENV
+        source: CONFIG_SOURCES.ENV,
+        configPath: 'config.test.value'
       });
     });
 
@@ -612,12 +688,14 @@ describe('config.util', () => {
       const result = util.resolveBooleanConfigWithTruthyEnv({
         envVar: 'TEST_TRUTHY_VAR',
         configValue: undefined,
-        defaultValue: false
+        defaultValue: false,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.ENV
+        source: CONFIG_SOURCES.ENV,
+        configPath: 'config.test.value'
       });
     });
 
@@ -627,12 +705,14 @@ describe('config.util', () => {
       const result = util.resolveBooleanConfigWithTruthyEnv({
         envVar: 'TEST_TRUTHY_VAR',
         configValue: false,
-        defaultValue: false
+        defaultValue: false,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.ENV
+        source: CONFIG_SOURCES.ENV,
+        configPath: 'config.test.value'
       });
     });
 
@@ -640,12 +720,14 @@ describe('config.util', () => {
       const result = util.resolveBooleanConfigWithTruthyEnv({
         envVar: 'TEST_TRUTHY_VAR',
         configValue: true,
-        defaultValue: false
+        defaultValue: false,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.IN_CODE
+        source: CONFIG_SOURCES.IN_CODE,
+        configPath: 'config.test.value'
       });
     });
 
@@ -653,12 +735,14 @@ describe('config.util', () => {
       const result = util.resolveBooleanConfigWithTruthyEnv({
         envVar: 'TEST_TRUTHY_VAR',
         configValue: undefined,
-        defaultValue: false
+        defaultValue: false,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: false,
-        source: CONFIG_SOURCES.DEFAULT
+        source: CONFIG_SOURCES.DEFAULT,
+        configPath: 'config.test.value'
       });
     });
 
@@ -668,12 +752,14 @@ describe('config.util', () => {
       const result = util.resolveBooleanConfigWithTruthyEnv({
         envVar: 'TEST_TRUTHY_VAR',
         configValue: undefined,
-        defaultValue: false
+        defaultValue: false,
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: false,
-        source: CONFIG_SOURCES.DEFAULT
+        source: CONFIG_SOURCES.DEFAULT,
+        configPath: 'config.test.value'
       });
     });
   });
@@ -691,12 +777,14 @@ describe('config.util', () => {
       const result = util.resolveStringConfig({
         envVar: 'TEST_STRING_VAR',
         configValue: undefined,
-        defaultValue: 'default-value'
+        defaultValue: 'default-value',
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: 'default-value',
-        source: CONFIG_SOURCES.DEFAULT
+        source: CONFIG_SOURCES.DEFAULT,
+        configPath: 'config.test.value'
       });
     });
 
@@ -706,12 +794,14 @@ describe('config.util', () => {
       const result = util.resolveStringConfig({
         envVar: 'TEST_STRING_VAR',
         configValue: 'config-value',
-        defaultValue: 'default-value'
+        defaultValue: 'default-value',
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: 'env-value',
-        source: CONFIG_SOURCES.ENV
+        source: CONFIG_SOURCES.ENV,
+        configPath: 'config.test.value'
       });
     });
 
@@ -721,12 +811,14 @@ describe('config.util', () => {
       const result = util.resolveStringConfig({
         envVar: 'TEST_STRING_VAR',
         configValue: undefined,
-        defaultValue: 'default-value'
+        defaultValue: 'default-value',
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: 'env-value',
-        source: CONFIG_SOURCES.ENV
+        source: CONFIG_SOURCES.ENV,
+        configPath: 'config.test.value'
       });
     });
 
@@ -734,12 +826,14 @@ describe('config.util', () => {
       const result = util.resolveStringConfig({
         envVar: 'TEST_STRING_VAR',
         configValue: 'config-value',
-        defaultValue: 'default-value'
+        defaultValue: 'default-value',
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: 'config-value',
-        source: CONFIG_SOURCES.IN_CODE
+        source: CONFIG_SOURCES.IN_CODE,
+        configPath: 'config.test.value'
       });
     });
 
@@ -747,12 +841,14 @@ describe('config.util', () => {
       const result = util.resolveStringConfig({
         envVar: 'TEST_STRING_VAR',
         configValue: '',
-        defaultValue: 'default-value'
+        defaultValue: 'default-value',
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: '',
-        source: CONFIG_SOURCES.IN_CODE
+        source: CONFIG_SOURCES.IN_CODE,
+        configPath: 'config.test.value'
       });
     });
 
@@ -762,12 +858,14 @@ describe('config.util', () => {
       const result = util.resolveStringConfig({
         envVar: 'TEST_STRING_VAR',
         configValue: undefined,
-        defaultValue: 'default-value'
+        defaultValue: 'default-value',
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: '',
-        source: CONFIG_SOURCES.ENV
+        source: CONFIG_SOURCES.ENV,
+        configPath: 'config.test.value'
       });
     });
 
@@ -777,12 +875,14 @@ describe('config.util', () => {
       const result = util.resolveStringConfig({
         envVar: 'TEST_STRING_VAR',
         configValue: undefined,
-        defaultValue: 'default-value'
+        defaultValue: 'default-value',
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: 'env-value',
-        source: CONFIG_SOURCES.ENV
+        source: CONFIG_SOURCES.ENV,
+        configPath: 'config.test.value'
       });
     });
 
@@ -791,12 +891,14 @@ describe('config.util', () => {
       const result = util.resolveStringConfig({
         envVar: undefined,
         configValue: multilineValue,
-        defaultValue: 'default-value'
+        defaultValue: 'default-value',
+        configPath: 'config.test.value'
       });
 
       expect(result).to.deep.equal({
         value: multilineValue,
-        source: CONFIG_SOURCES.IN_CODE
+        source: CONFIG_SOURCES.IN_CODE,
+        configPath: 'config.test.value'
       });
     });
   });
