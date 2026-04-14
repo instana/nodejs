@@ -481,12 +481,7 @@ function instrumentedCallbackModelPublish(ctx, originalFunction, originalArgs) {
   });
 }
 function removeInstanaHeadersFromMessage(originalArgs) {
-  if (
-    originalArgs &&
-    originalArgs.properties &&
-    originalArgs.properties.headers &&
-    typeof originalArgs.properties.headers === 'object'
-  ) {
+  if (originalArgs?.properties?.headers && typeof originalArgs.properties.headers === 'object') {
     delete originalArgs.properties.headers[constants.traceIdHeaderName];
     delete originalArgs.properties.headers[constants.spanIdHeaderName];
     delete originalArgs.properties.headers[constants.traceLevelHeaderName];
