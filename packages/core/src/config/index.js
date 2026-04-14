@@ -28,9 +28,9 @@ function recordMeta({ configPath, source }) {
 
 /**
  * Applies a resolved configuration value to the target object and records its metadata.
- * @param {Object} target - The target object to apply the value to
+ * @param {any} target - The target object to apply the value to
  * @param {string} key - The key to set on the target object
- * @param {{ value: any, source: number, configPath: string }} resolved - The resolved config value with metadata
+ * @param {{ value: any, source: number, configPath?: string }} resolved - The resolved config value with metadata
  */
 function applyResolved(target, key, resolved) {
   target[key] = resolved.value;
