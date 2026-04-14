@@ -7,6 +7,8 @@
 
 'use strict';
 
+const expect = require('chai').expect;
+
 const agentPort = process.env.AGENT_PORT;
 const instana = require('@instana/collector')({
   agentPort,
@@ -50,6 +52,8 @@ amqp
   })
   .then(() =>
     channel.consume(queueForExchangeName, msg => {
+      expect(msg.properties.headers).to.not.exist;
+
       if (msg !== null) {
         log(msg.content.toString());
         const span = instana.currentSpan();

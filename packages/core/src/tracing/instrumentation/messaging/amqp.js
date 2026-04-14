@@ -182,6 +182,8 @@ function instrumentedDispatchMessage(ctx, originalDispatchMessage, originalArgs)
       ? originalArgs[1].properties.headers
       : {};
 
+  removeInstanaHeadersFromMessage(originalArgs[1]);
+
   return cls.ns.runAndReturn(() => {
     if (tracingUtil.readAttribCaseInsensitive(headers, constants.traceLevelHeaderName) === '0') {
       cls.setTracingLevel('0');
@@ -477,6 +479,23 @@ function instrumentedCallbackModelPublish(ctx, originalFunction, originalArgs) {
 
     return originalFunction.apply(ctx, originalArgs);
   });
+}
+function removeInstanaHeadersFromMessage(originalArgs) {
+  if (
+    originalArgs &&
+    originalArgs.properties &&
+    originalArgs.properties.headers &&
+    typeof originalArgs.properties.headers === 'object'
+  ) {
+    delete originalArgs.properties.headers[constants.traceIdHeaderName];
+    delete originalArgs.properties.headers[constants.spanIdHeaderName];
+    delete originalArgs.properties.headers[constants.traceLevelHeaderName];
+
+    // CASE: only our headers were in the message. Remove the headers object.
+    if (Object.keys(originalArgs.properties.headers).length === 0) {
+      delete originalArgs.properties.headers;
+    }
+  }
 }
 
 exports.activate = function activate() {
