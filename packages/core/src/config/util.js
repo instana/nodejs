@@ -229,3 +229,195 @@ exports.resolveStringConfig = function resolveStringConfig({ envVar, configValue
   }
   return defaultValue;
 };
+
+// ============================================================================
+// Dynamic Config Resolution
+// ============================================================================
+
+/**
+ * @enum {string}
+ */
+const SOURCE = {
+  ENV: 'ENV',
+  IN_CODE: 'IN_CODE',
+  AGENT: 'AGENT',
+  DEFAULT: 'DEFAULT'
+};
+
+/**
+ * Configuration source priority levels
+ * Higher number = higher priority in precedence resolution
+ *
+ * To change precedence, simply modify the numbers here.
+ * For example, to make AGENT higher priority than IN_CODE:
+ *   AGENT: 3, IN_CODE: 2
+ *
+ * @type {Record<string, number>}
+ */
+const SOURCE_PRIORITY = {
+  [SOURCE.ENV]: 4,
+  [SOURCE.IN_CODE]: 3,
+  [SOURCE.AGENT]: 2,
+  [SOURCE.DEFAULT]: 1
+};
+/**
+ * @typedef {Object} TypeSchema
+ * @property {function(any): any} coerce
+ * @property {function(any): boolean} validate
+ */
+
+/** @type {Object.<string, TypeSchema>} */
+const TypeSchemas = {
+  STR: {
+    coerce: v => (v != null ? String(v).trim() : null),
+    validate: v => typeof v === 'string' && v.length > 0 && v !== 'null' && v !== 'undefined'
+  },
+  NUM: {
+    coerce: v => (v !== '' ? Number(v) : NaN),
+    validate: v => typeof v === 'number' && !isNaN(v)
+  },
+  BOOL: {
+    coerce: v => {
+      if (typeof v === 'boolean') return v;
+      if (v === 'true' || v === '1') return true;
+      if (v === 'false' || v === '0') return false;
+      return null;
+    },
+    validate: v => typeof v === 'boolean'
+  }
+};
+
+/**
+ * @typedef {Object} ConfigEntry
+ * @property {any} value - The resolved configuration value
+ * @property {string} source - The source name (ENV, IN_CODE, AGENT, DEFAULT)
+ */
+
+/**
+ * Central configuration state store
+ * @type {Object.<string, ConfigEntry>}
+ */
+const configStore = {};
+
+/**
+ * Resolves a configuration value during initial normalization
+ * Follows the priority order: ENV > IN_CODE > DEFAULT
+ *
+ * @param {Object} params
+ * @param {string} params.key - Configuration key name
+ * @param {string} params.envKey - Environment variable name
+ * @param {any} params.inCodeValue - User-provided in-code value
+ * @param {any} params.defaultValue - Default fallback value
+ * @param {'STR'|'NUM'|'BOOL'} [params.type='STR'] - Value type
+ * @returns {any} The resolved configuration value
+ */
+exports.get = function get({ key, envKey, inCodeValue, defaultValue, type = 'STR' }) {
+  const schema = TypeSchemas[type];
+  if (!schema) {
+    logger.warn(`Unknown type "${type}" for config key "${key}". Defaulting to STR.`);
+    return defaultValue;
+  }
+
+  // Resolution order: ENV > IN_CODE > DEFAULT
+  const sources = [
+    { name: SOURCE.ENV, value: process.env[envKey] },
+    { name: SOURCE.IN_CODE, value: inCodeValue },
+    { name: SOURCE.DEFAULT, value: defaultValue }
+  ];
+
+  // eslint-disable-next-line no-restricted-syntax
+  for (const source of sources) {
+    if (source.value === undefined || source.value === null) {
+      continue;
+    }
+
+    const coerced = schema.coerce(source.value);
+    if (schema.validate(coerced)) {
+      configStore[key] = {
+        value: coerced,
+        source: source.name
+      };
+
+      logger.debug(`[config] Resolved "${key}" from ${source.name}: ${JSON.stringify(coerced)})`);
+
+      return coerced;
+    }
+
+    logger.warn(`[config] Invalid ${type} value for "${key}" from ${source.name}: ${JSON.stringify(source.value)}`);
+  }
+
+  logger.debug(`[config] No valid value found for "${key}", using default: ${JSON.stringify(defaultValue)}`);
+  return defaultValue;
+};
+
+/**
+ * Updates a configuration value dynamically (e.g., from agent)
+ * Respects the precedence hierarchy
+ *
+ * @param {Object} params
+ * @param {string} params.key - Configuration key name
+ * @param {any} params.newValue - New value to set
+ * @param {string} params.sourceName - Source name (must be a valid SOURCE key)
+ * @param {'STR'|'NUM'|'BOOL'} [params.type='STR'] - Value type
+ * @returns {any} The current configuration value (may be unchanged if update was rejected)
+ */
+exports.update = function update({ key, newValue, sourceName, type = 'STR' }) {
+  const schema = TypeSchemas[type];
+  if (!schema) {
+    logger.warn(`Unknown type "${type}" for config key "${key}". Update rejected.`);
+    return configStore[key]?.value || null;
+  }
+
+  const current = configStore[key];
+  const incomingPriority = SOURCE_PRIORITY[sourceName];
+
+  if (incomingPriority === undefined) {
+    logger.warn(`Invalid source name "${sourceName}" for config key "${key}". Update rejected.`);
+    return current?.value || null;
+  }
+
+  if (current) {
+    const currentPriority = SOURCE_PRIORITY[current.source];
+    if (incomingPriority <= currentPriority) {
+      logger.info(
+        `[config] Rejected "${key}" update from ${sourceName} (priority: ${incomingPriority}): ` +
+          `${current.source} (priority: ${currentPriority}) has higher or equal precedence. ` +
+          `Current value: ${JSON.stringify(current.value)}`
+      );
+      return current.value;
+    }
+  }
+
+  const coerced = schema.coerce(newValue);
+  if (!schema.validate(coerced)) {
+    logger.warn(
+      `[config] Rejected "${key}" update from ${sourceName}: Invalid ${type} value: ${JSON.stringify(newValue)}`
+    );
+    return current?.value || null;
+  }
+
+  configStore[key] = {
+    value: coerced,
+    source: sourceName
+  };
+
+  logger.info(
+    `[config] Updated "${key}" from ${sourceName}: ${JSON.stringify(coerced)} (priority: ${incomingPriority})`
+  );
+
+  return coerced;
+};
+
+/**
+ * @param {string} key
+ * @returns {ConfigEntry|null}
+ */
+exports.getConfigEntry = function getConfigEntry(key) {
+  return configStore[key] || null;
+};
+
+exports.clearConfigStore = function clearConfigStore() {
+  Object.keys(configStore).forEach(key => {
+    delete configStore[key];
+  });
+};

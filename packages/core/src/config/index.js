@@ -183,11 +183,12 @@ module.exports.normalize = ({ userConfig = {}, finalConfigBase = {}, defaultsOve
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
 function normalizeServiceName({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
-  finalConfig.serviceName = util.resolveStringConfig({
-    envVar: 'INSTANA_SERVICE_NAME',
-    configValue: userConfig.serviceName,
+  finalConfig.serviceName = util.get({
+    key: 'serviceName',
+    envKey: 'INSTANA_SERVICE_NAME',
+    inCodeValue: userConfig.serviceName,
     defaultValue: defaultConfig.serviceName,
-    configPath: 'config.serviceName'
+    type: 'STR'
   });
 }
 
@@ -762,3 +763,17 @@ function normalizePreloadOpentelemetry({ userConfig = {}, defaultConfig = {}, fi
     finalConfig.preloadOpentelemetry = defaultConfig.preloadOpentelemetry;
   }
 }
+
+exports.update = function update({ userConfig = {}, sourceName }) {
+  const updatedServiceName = util.update({
+    key: 'serviceName',
+    newValue: userConfig.serviceName,
+    sourceName: sourceName,
+    type: 'STR'
+  });
+
+  // Return a config object with the updated serviceName
+  return {
+    serviceName: updatedServiceName
+  };
+};
