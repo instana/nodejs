@@ -87,9 +87,6 @@ const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'cont
 let logger;
 
 /** @type {InstanaConfig} */
-let currentConfig;
-
-/** @type {InstanaConfig} */
 let defaults = {
   serviceName: null,
   packageJsonPath: null,
@@ -135,6 +132,9 @@ const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-igno
 
 module.exports.configNormalizers = configNormalizers;
 module.exports.configValidators = configValidators;
+
+/** @type {InstanaConfig} */
+let currentConfig;
 
 /**
  * @param {import('../core').GenericLogger} [_logger]
@@ -774,7 +774,7 @@ function normalizePreloadOpentelemetry({ userConfig = {}, defaultConfig = {}, fi
  * Iterates through all keys in externalConfig and updates them with precedence checking
  *
  * @param {Object} params
- * @param {Record<string, any>} [params.externalConfig]
+ * @param {Object.<string, any>} [params.externalConfig]
  * @param {string} params.sourceName
  */
 exports.update = function update({ externalConfig = {}, sourceName }) {
@@ -787,6 +787,7 @@ exports.update = function update({ externalConfig = {}, sourceName }) {
       });
 
       if (updatedValue !== undefined) {
+        // @ts-ignore
         currentConfig[key] = updatedValue;
       }
     });

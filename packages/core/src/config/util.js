@@ -230,9 +230,7 @@ exports.resolveStringConfig = function resolveStringConfig({ envVar, configValue
   return defaultValue;
 };
 
-// ============================================================================
-// Dynamic Config Resolution
-// ============================================================================
+// ignore above util functions for now, we will  refactor them later
 
 /**
  * @enum {string}
