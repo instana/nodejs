@@ -87,6 +87,9 @@ const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'cont
 let logger;
 
 /** @type {InstanaConfig} */
+let currentConfig;
+
+/** @type {InstanaConfig} */
 let defaults = {
   serviceName: null,
   packageJsonPath: null,
@@ -177,6 +180,7 @@ module.exports.normalize = ({ userConfig = {}, finalConfigBase = {}, defaultsOve
   normalizeSecrets({ userConfig: normalizedUserConfig, defaultConfig: defaults, finalConfig });
   normalizePreloadOpentelemetry({ userConfig: normalizedUserConfig, defaultConfig: defaults, finalConfig });
 
+  currentConfig = finalConfig;
   return finalConfig;
 };
 
@@ -770,22 +774,21 @@ function normalizePreloadOpentelemetry({ userConfig = {}, defaultConfig = {}, fi
  * Iterates through all keys in externalConfig and updates them with precedence checking
  *
  * @param {Object} params
- * @param {InstanaConfig} params.finalConfig
- * @param {Object} [params.externalConfig]
+ * @param {Record<string, any>} [params.externalConfig]
  * @param {string} params.sourceName
  */
-exports.update = function update({ finalConfig, externalConfig = {}, sourceName }) {
-  if (!finalConfig) {
-    throw new Error('finalConfig is required for config.update()');
-  }
-
+exports.update = function update({ externalConfig = {}, sourceName }) {
   if (externalConfig && typeof externalConfig === 'object' && Object.keys(externalConfig).length > 0) {
     Object.keys(externalConfig).forEach(key => {
-      finalConfig[key] = util.update({
+      const updatedValue = util.update({
         key: key,
         newValue: externalConfig[key],
         sourceName: sourceName
       });
+
+      if (updatedValue !== undefined) {
+        currentConfig[key] = updatedValue;
+      }
     });
   }
 };

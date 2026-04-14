@@ -289,7 +289,6 @@ const TypeSchemas = {
 
 /**
  * @typedef {Object} ConfigEntry
- * @property {any} value - The resolved configuration value
  * @property {string} source - The source name (ENV, IN_CODE, AGENT, DEFAULT)
  */
 
@@ -334,7 +333,6 @@ exports.get = function get({ key, envKey, inCodeValue, defaultValue, type = 'STR
     const coerced = schema.coerce(source.value);
     if (schema.validate(coerced)) {
       configStore[key] = {
-        value: coerced,
         source: source.name
       };
 
@@ -353,7 +351,6 @@ exports.get = function get({ key, envKey, inCodeValue, defaultValue, type = 'STR
   logger.warn(`[config] No valid value found for "${key}", using default: ${JSON.stringify(defaultValue)}`);
 
   configStore[key] = {
-    value: defaultValue,
     source: SOURCE.DEFAULT
   };
 
@@ -372,8 +369,7 @@ exports.get = function get({ key, envKey, inCodeValue, defaultValue, type = 'STR
  */
 exports.update = function update({ key, newValue, sourceName }) {
   if (newValue === null || newValue === undefined || newValue === '') {
-    const current = configStore[key];
-    return current ? current.value : null;
+    return undefined;
   }
 
   const current = configStore[key];
@@ -381,9 +377,10 @@ exports.update = function update({ key, newValue, sourceName }) {
 
   if (incomingPriority === undefined) {
     logger.warn(`[config] Invalid source name "${sourceName}" for key "${key}". Update rejected.`);
-    return current?.value || null;
+    return undefined;
   }
 
+  // Precedence check
   if (current) {
     const currentPriority = SOURCE_PRIORITY[current.source];
     if (incomingPriority <= currentPriority) {
@@ -391,12 +388,11 @@ exports.update = function update({ key, newValue, sourceName }) {
         `[config] Rejected "${key}" update from ${sourceName} (priority: ${incomingPriority}): ` +
           `${current.source} (priority: ${currentPriority}) has higher or equal precedence`
       );
-      return current.value;
+      return undefined;
     }
   }
 
   configStore[key] = {
-    value: newValue,
     source: sourceName
   };
 
