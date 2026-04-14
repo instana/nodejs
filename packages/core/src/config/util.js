@@ -338,7 +338,11 @@ exports.get = function get({ key, envKey, inCodeValue, defaultValue, type = 'STR
         source: source.name
       };
 
-      logger.debug(`[config] Resolved "${key}" from ${source.name}: ${JSON.stringify(coerced)})`);
+      logger.debug(
+        `[config] Resolved "${key}" from ${source.name}: ${JSON.stringify(coerced)} (priority: ${
+          SOURCE_PRIORITY[source.name]
+        })`
+      );
 
       return coerced;
     }
@@ -346,7 +350,13 @@ exports.get = function get({ key, envKey, inCodeValue, defaultValue, type = 'STR
     logger.warn(`[config] Invalid ${type} value for "${key}" from ${source.name}: ${JSON.stringify(source.value)}`);
   }
 
-  logger.debug(`[config] No valid value found for "${key}", using default: ${JSON.stringify(defaultValue)}`);
+  logger.warn(`[config] No valid value found for "${key}", using default: ${JSON.stringify(defaultValue)}`);
+
+  configStore[key] = {
+    value: defaultValue,
+    source: SOURCE.DEFAULT
+  };
+
   return defaultValue;
 };
 
