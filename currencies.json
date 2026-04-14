@@ -543,7 +543,7 @@
     "core": false,
     "versions": [
       {
-        "v": "15.0.1",
+        "v": "15.0.2",
         "esmOnly": true,
         "node": ">=22"
       },
