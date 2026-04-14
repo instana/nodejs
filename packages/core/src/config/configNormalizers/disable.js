@@ -5,7 +5,7 @@
 'use strict';
 
 const { DISABLABLE_INSTRUMENTATION_GROUPS } = require('../../tracing/constants');
-const { CONFIG_SOURCES } = require('../constants');
+const { CONFIG_SOURCES } = require('../../util/constants');
 /** @type {import('../../core').GenericLogger} */
 let logger;
 

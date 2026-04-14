@@ -8,10 +8,9 @@
 const configNormalizers = require('./configNormalizers');
 const configValidators = require('./configValidators');
 const deepMerge = require('../util/deepMerge');
-const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE } = require('../util/constants');
+const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE, CONFIG_SOURCES } = require('../util/constants');
 const { validateStackTraceMode, validateStackTraceLength } = require('./configValidators/stackTraceValidation');
 const util = require('./util');
-const { CONFIG_SOURCES } = require('./constants');
 
 // @typedef {{ [x: string]: any }} configSources
 /** @type {configSources} */

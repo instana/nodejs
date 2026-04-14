@@ -7,7 +7,7 @@
 const expect = require('chai').expect;
 const { createFakeLogger } = require('../test_util');
 const util = require('../../src/config/util');
-const { CONFIG_SOURCES } = require('../../src/config/constants');
+const { CONFIG_SOURCES } = require('../../src/util/constants');
 
 describe('config.util', () => {
   let logger;

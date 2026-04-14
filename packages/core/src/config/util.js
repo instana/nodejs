@@ -4,7 +4,7 @@
 
 'use strict';
 
-const { CONFIG_SOURCES } = require('./constants');
+const { CONFIG_SOURCES } = require('../util/constants');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
