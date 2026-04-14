@@ -11,6 +11,7 @@ const deepMerge = require('../util/deepMerge');
 const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE } = require('../util/constants');
 const { validateStackTraceMode, validateStackTraceLength } = require('./configValidators/stackTraceValidation');
 const util = require('./util');
+const resolver = require('./resolver');
 
 /**
  * @typedef {Object} InstanaTracingOption
@@ -143,6 +144,7 @@ module.exports.init = _logger => {
   logger = _logger;
   configNormalizers.init({ logger });
   util.init(logger);
+  resolver.init(logger);
 };
 
 /**
@@ -164,7 +166,7 @@ module.exports.normalize = ({ userConfig = {}, finalConfigBase = {}, defaultsOve
     normalizedUserConfig = {};
   }
 
-  util.clearConfigStore();
+  resolver.clearConfigStore();
   // Preserve finalConfigBase in the finalConfig to allow additional config values
   // that are not part of the core config schema. Eg: collector config needs to be preserved.
   /** @type InstanaConfig */
@@ -188,7 +190,7 @@ module.exports.normalize = ({ userConfig = {}, finalConfigBase = {}, defaultsOve
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
 function normalizeServiceName({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
-  finalConfig.serviceName = util.get({
+  finalConfig.serviceName = resolver.get({
     key: 'serviceName',
     envKey: 'INSTANA_SERVICE_NAME',
     inCodeValue: userConfig.serviceName,
@@ -780,7 +782,7 @@ function normalizePreloadOpentelemetry({ userConfig = {}, defaultConfig = {}, fi
 exports.update = function update({ externalConfig = {}, sourceName }) {
   if (externalConfig && typeof externalConfig === 'object' && Object.keys(externalConfig).length > 0) {
     Object.keys(externalConfig).forEach(key => {
-      const updatedValue = util.update({
+      const updatedValue = resolver.update({
         key: key,
         newValue: externalConfig[key],
         sourceName: sourceName
