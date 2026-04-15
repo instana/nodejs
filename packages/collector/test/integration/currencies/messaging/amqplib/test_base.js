@@ -22,7 +22,7 @@ const agentControls = globalAgent.instance;
 let publisherControls;
 let consumerControls;
 
-module.exports = function (name, version, isLatest) {
+module.exports = function (name, version, isLatest, mode) {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
@@ -36,51 +36,9 @@ module.exports = function (name, version, isLatest) {
   publisherControls = require('./publisherControls');
   consumerControls = require('./consumerControls');
 
-  ['Promises', 'Callbacks'].forEach(apiType => {
-    describe(apiType, function () {
-      registerTests.call(this, apiType);
-    });
-  });
-
-  if (isLatest) {
-    describe('allowRootExitSpan', function () {
-      let controls;
-
-      before(async () => {
-        controls = new ProcessControls({
-          dirname: __dirname,
-          appName: 'allowRootExitSpanApp',
-          useGlobalAgent: true,
-          env: {
-            ...commonEnv,
-            INSTANA_ALLOW_ROOT_EXIT_SPAN: 1
-          }
-        });
-
-        await controls.start(null, null, true);
-      });
-
-      beforeEach(async () => {
-        await agentControls.clearReceivedTraceData();
-      });
-
-      it('must trace', async function () {
-        await retry(async () => {
-          const spans = await agentControls.getSpans();
-          expect(spans.length).to.be.eql(1);
-
-          expectExactlyOneMatching(spans, [
-            span => expect(span.n).to.equal('rabbitmq'),
-            span => expect(span.k).to.equal(2)
-          ]);
-        });
-      });
-    });
-  }
-
-  function registerTests(apiType) {
-    publisherControls.registerTestHooks({ apiType });
-    consumerControls.registerTestHooks({ apiType });
+  describe(mode, function () {
+    publisherControls.registerTestHooks({ apiType: mode });
+    consumerControls.registerTestHooks({ apiType: mode });
 
     beforeEach(async () => {
       await agentControls.clearReceivedTraceData();
@@ -216,59 +174,124 @@ module.exports = function (name, version, isLatest) {
           .then(() => agentControls.getSpans())
           .then(spans => expect(spans).to.be.empty));
     });
+  });
 
-    function verifyHttpEntry(spans) {
-      return expectExactlyOneMatching(spans, [
-        span => expect(span.n).to.equal('node.http.server'),
-        span => expect(span.f.e).to.equal(String(publisherControls.getPid())),
-        span => expect(span.f.h).to.equal('agent-stub-uuid'),
-        span => expect(span.async).to.not.exist,
-        span => expect(span.error).to.not.exist,
-        span => expect(span.ec).to.equal(0)
-      ]);
-    }
+  describe('tracing disabled', () => {
+    publisherControls.registerTestHooks({ apiType: 'Promises', enableTracing: false });
+    consumerControls.registerTestHooks({ apiType: 'Promises', enableTracing: false });
 
-    function verifyRabbitMqExit(spans, parentSpan) {
-      return expectExactlyOneMatching(spans, [
-        span => expect(span.t).to.equal(parentSpan.t),
-        span => expect(span.p).to.equal(parentSpan.s),
-        span => expect(span.k).to.equal(constants.EXIT),
-        span => expect(span.n).to.equal('rabbitmq'),
-        span => expect(span.f.e).to.equal(String(publisherControls.getPid())),
-        span => expect(span.f.h).to.equal('agent-stub-uuid'),
-        span => expect(span.async).to.not.exist,
-        span => expect(span.error).to.not.exist,
-        span => expect(span.ec).to.equal(0),
-        span => expect(span.data.rabbitmq.sort).to.equal('publish'),
-        span => expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672')
-      ]);
-    }
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
 
-    function verifyRabbitMqEntry(spans, parentSpan) {
-      return expectExactlyOneMatching(spans, [
-        span => expect(span.t).to.equal(parentSpan.t),
-        span => expect(span.p).to.equal(parentSpan.s),
-        span => expect(span.n).to.equal('rabbitmq'),
-        span => expect(span.k).to.equal(constants.ENTRY),
-        span => expect(span.d).to.be.greaterThan(99),
-        span => expect(span.f.e).to.equal(String(consumerControls.getPid())),
-        span => expect(span.f.h).to.equal('agent-stub-uuid'),
-        span => expect(span.async).to.not.exist,
-        span => expect(span.error).to.not.exist,
-        span => expect(span.ec).to.equal(0),
-        span => expect(span.data.rabbitmq.sort).to.equal('consume'),
-        span => expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672')
-      ]);
-    }
+    beforeEach(() =>
+      Promise.all([
+        agentControls.waitUntilAppIsCompletelyInitialized(consumerControls.getPid()),
+        agentControls.waitUntilAppIsCompletelyInitialized(publisherControls.getPid())
+      ])
+    );
 
-    function verifyHttpExit(spans, parentSpan) {
-      return expectExactlyOneMatching(spans, [
-        span => expect(span.n).to.equal('node.http.client'),
-        span => expect(span.t).to.equal(parentSpan.t),
-        span => expect(span.p).to.equal(parentSpan.s),
-        span => expect(span.k).to.equal(constants.EXIT),
-        span => expect(span.data.http.url).to.equal(`http://127.0.0.1:${agentControls.agentPort}/ping`)
-      ]);
-    }
+    it('must not trace when tracing is disabled', () =>
+      publisherControls
+        .sendToQueue('Ohai!')
+        .then(() => delay(1000))
+        .then(() => agentControls.getSpans())
+        .then(spans => {
+          spans.forEach(s => {
+            console.log(s);
+          });
+
+          expect(spans).to.be.empty;
+        }));
+  });
+
+  if (isLatest) {
+    describe('allowRootExitSpan', function () {
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'allowRootExitSpanApp',
+          useGlobalAgent: true,
+          env: {
+            ...commonEnv,
+            INSTANA_ALLOW_ROOT_EXIT_SPAN: 1
+          }
+        });
+
+        await controls.start(null, null, true);
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      it('must trace', async function () {
+        await retry(async () => {
+          const spans = await agentControls.getSpans();
+          expect(spans.length).to.be.eql(1);
+
+          expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('rabbitmq'),
+            span => expect(span.k).to.equal(2)
+          ]);
+        });
+      });
+    });
   }
 };
+
+function verifyHttpEntry(spans) {
+  return expectExactlyOneMatching(spans, [
+    span => expect(span.n).to.equal('node.http.server'),
+    span => expect(span.f.e).to.equal(String(publisherControls.getPid())),
+    span => expect(span.f.h).to.equal('agent-stub-uuid'),
+    span => expect(span.async).to.not.exist,
+    span => expect(span.error).to.not.exist,
+    span => expect(span.ec).to.equal(0)
+  ]);
+}
+
+function verifyRabbitMqExit(spans, parentSpan) {
+  return expectExactlyOneMatching(spans, [
+    span => expect(span.t).to.equal(parentSpan.t),
+    span => expect(span.p).to.equal(parentSpan.s),
+    span => expect(span.k).to.equal(constants.EXIT),
+    span => expect(span.n).to.equal('rabbitmq'),
+    span => expect(span.f.e).to.equal(String(publisherControls.getPid())),
+    span => expect(span.f.h).to.equal('agent-stub-uuid'),
+    span => expect(span.async).to.not.exist,
+    span => expect(span.error).to.not.exist,
+    span => expect(span.ec).to.equal(0),
+    span => expect(span.data.rabbitmq.sort).to.equal('publish'),
+    span => expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672')
+  ]);
+}
+
+function verifyRabbitMqEntry(spans, parentSpan) {
+  return expectExactlyOneMatching(spans, [
+    span => expect(span.t).to.equal(parentSpan.t),
+    span => expect(span.p).to.equal(parentSpan.s),
+    span => expect(span.n).to.equal('rabbitmq'),
+    span => expect(span.k).to.equal(constants.ENTRY),
+    span => expect(span.d).to.be.greaterThan(99),
+    span => expect(span.f.e).to.equal(String(consumerControls.getPid())),
+    span => expect(span.f.h).to.equal('agent-stub-uuid'),
+    span => expect(span.async).to.not.exist,
+    span => expect(span.error).to.not.exist,
+    span => expect(span.ec).to.equal(0),
+    span => expect(span.data.rabbitmq.sort).to.equal('consume'),
+    span => expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672')
+  ]);
+}
+
+function verifyHttpExit(spans, parentSpan) {
+  return expectExactlyOneMatching(spans, [
+    span => expect(span.n).to.equal('node.http.client'),
+    span => expect(span.t).to.equal(parentSpan.t),
+    span => expect(span.p).to.equal(parentSpan.s),
+    span => expect(span.k).to.equal(constants.EXIT),
+    span => expect(span.data.http.url).to.equal(`http://127.0.0.1:${agentControls.agentPort}/ping`)
+  ]);
+}
