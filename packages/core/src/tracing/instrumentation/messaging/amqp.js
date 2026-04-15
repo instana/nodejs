@@ -185,6 +185,7 @@ function instrumentedDispatchMessage(ctx, originalDispatchMessage, originalArgs)
   return cls.ns.runAndReturn(() => {
     if (tracingUtil.readAttribCaseInsensitive(headers, constants.traceLevelHeaderName) === '0') {
       cls.setTracingLevel('0');
+      removeInstanaHeadersFromMessage(originalArgs[1]);
       return originalDispatchMessage.apply(ctx, originalArgs);
     }
 
@@ -262,6 +263,7 @@ function instrumentedChannelModelGet(ctx, originalGet, originalArgs) {
 
       if (tracingUtil.readAttribCaseInsensitive(headers, constants.traceLevelHeaderName) === '0') {
         cls.setTracingLevel('0');
+        removeInstanaHeadersFromMessage(result);
         span.cancel();
         return result;
       }
@@ -349,6 +351,7 @@ function instrumentedCallbackModelGet(ctx, originalGet, originalArgs) {
 
       if (tracingUtil.readAttribCaseInsensitive(headers, constants.traceLevelHeaderName) === '0') {
         cls.setTracingLevel('0');
+        removeInstanaHeadersFromMessage(result);
         if (originalCallback) {
           return originalCallback(err, result);
         }

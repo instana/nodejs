@@ -205,14 +205,14 @@ module.exports = function (name, version, isLatest) {
       it('must propagate suppression downstream for sendToQueue', () =>
         publisherControls
           .sendToQueue('Ohai', { 'X-INSTANA-L': 0 })
-          .then(() => delay(500))
+          .then(() => delay(1000))
           .then(() => agentControls.getSpans())
           .then(spans => expect(spans).to.be.empty));
 
       it('must propagate suppression downstream for publish', () =>
         publisherControls
           .publish('Ohai!', { 'X-INSTANA-L': 0 })
-          .then(() => delay(500))
+          .then(() => delay(1000))
           .then(() => agentControls.getSpans())
           .then(spans => expect(spans).to.be.empty));
     });
@@ -266,7 +266,8 @@ module.exports = function (name, version, isLatest) {
         span => expect(span.n).to.equal('node.http.client'),
         span => expect(span.t).to.equal(parentSpan.t),
         span => expect(span.p).to.equal(parentSpan.s),
-        span => expect(span.k).to.equal(constants.EXIT)
+        span => expect(span.k).to.equal(constants.EXIT),
+        span => expect(span.data.http.url).to.equal(`http://127.0.0.1:${agentControls.agentPort}/ping`)
       ]);
     }
   }
