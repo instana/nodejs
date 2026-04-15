@@ -488,11 +488,6 @@ function removeInstanaHeadersFromMessage(originalArgs) {
     delete originalArgs.properties.headers[constants.traceIdHeaderName];
     delete originalArgs.properties.headers[constants.spanIdHeaderName];
     delete originalArgs.properties.headers[constants.traceLevelHeaderName];
-
-    // CASE: only our headers were in the message. Remove the headers object.
-    if (Object.keys(originalArgs.properties.headers).length === 0) {
-      delete originalArgs.properties.headers;
-    }
   }
 }
 
