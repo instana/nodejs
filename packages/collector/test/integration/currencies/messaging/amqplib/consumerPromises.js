@@ -85,6 +85,7 @@ amqp
   )
   .then(() =>
     channel.consume(queueName, msg => {
+      console.log(msg);
       expect(msg.properties.headers['X-INSTANA-L']).to.not.exist;
       expect(msg.properties.headers['X-INSTANA-S']).to.not.exist;
       expect(msg.properties.headers['X-INSTANA-T']).to.not.exist;
