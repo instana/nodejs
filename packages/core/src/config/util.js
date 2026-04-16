@@ -23,257 +23,69 @@ const CONFIG_PRIORITY = Object.entries(CONFIG_SOURCES)
   });
 
 /**
- * Internal config source wrapper
- * @param {any} resolvedConfigValue
- * @param {number} source
- * @param {string} configPath
+ * Generic resolve function that resolves configuration values based on priority
+ * and validates/transforms them using provided validators.
+ *
+ * UTILITY DOES NOT KNOW CONFIG STORE!
+ *
+ * @param {Object} params
+ * @param {string} [params.envVar]
+ * @param {any} [params.configValue]
+ * @param {any} [params.agentValue]
+ * @param {any} params.defaultValue
+ * @param {string} [params.configPath]
+ * @param {Function|Function[]} validators - validator(s) returning value | undefined
+ * @returns {{ resolvedConfigValue: any, source: number, configPath?: string }}
  */
-function wrap(resolvedConfigValue, source, configPath) {
-  return {
-    resolvedConfigValue,
-    source,
-    configPath
-  };
-}
-
-/**
- * Generic resolver with priority-based sources.
- * @param {Record<string, () => any>} sources
- */
-function resolveWithPriority(sources) {
+exports.resolve = function resolve({ envVar, configValue, agentValue, defaultValue, configPath }, validators) {
   let resolved;
 
-  CONFIG_PRIORITY.find(key => {
-    const resolver = sources[key];
+  const validatorList = Array.isArray(validators) ? validators : [validators];
 
-    if (typeof resolver !== 'function') {
-      return false;
-    }
-    const value = resolver();
-
-    if (value !== undefined) {
-      resolved = value;
-      return true;
-    }
-    return false;
-  });
-
-  return resolved;
-}
-
-/**
- * @param {Object} params
- * @param {string} params.envVar
- * @param {number|string|undefined|null} params.configValue
- * @param {number} params.defaultValue
- * @param {string} params.configPath
- * @returns {{ resolvedConfigValue: number, source: number, configPath: string }}
- */
-exports.resolveNumericConfig = function resolveNumericConfig({ envVar, configValue, defaultValue, configPath }) {
-  /** @param {number|string|null|undefined} val */
-  const toValidNumber = val => {
-    const num = typeof val === 'number' ? val : Number(val);
-    return Number.isNaN(num) ? undefined : num;
+  const inputs = {
+    env: envVar ? process.env[envVar] : undefined,
+    in_code: configValue,
+    agent: agentValue,
+    default: defaultValue
   };
 
-  return resolveWithPriority({
-    env: () => {
-      const envRaw = process.env[envVar];
-      if (envRaw != null) {
-        const parsed = toValidNumber(envRaw);
-        if (parsed !== undefined) {
-          logger.debug(`[config] env:${envVar} = ${parsed}`);
-          return wrap(parsed, CONFIG_SOURCES.ENV, configPath);
-        }
-        logger.warn(`Invalid numeric value from env:${envVar}: "${envRaw}".`);
-      }
-    },
+  CONFIG_PRIORITY.find(sourceKey => {
+    const rawValue = inputs[sourceKey];
 
-    in_code: () => {
-      if (configValue != null) {
-        const parsed = toValidNumber(configValue);
-        if (parsed !== undefined) {
-          logger.debug(`[config] incode:${configPath} = ${parsed}`);
-          return wrap(parsed, CONFIG_SOURCES.IN_CODE, configPath);
-        }
-        logger.warn(
-          `Invalid numeric value for ${configPath}: "${configValue}". Falling back to default: ${defaultValue}.`
-        );
-      }
-    },
+    // Skip undefined except default
+    if (rawValue === undefined && sourceKey !== 'default') {
+      return false;
+    }
 
-    default: () => wrap(defaultValue, CONFIG_SOURCES.DEFAULT, configPath)
-  });
-};
+    // Apply validators as transformation pipeline
+    const parsedValue = validatorList.reduce((val, fn) => {
+      if (val === undefined) return undefined;
+      return fn(val);
+    }, rawValue);
 
-/**
- * @param {string|undefined} envValue
- * @returns {boolean|undefined}
- */
-function parseBooleanFromEnv(envValue) {
-  if (envValue == null) {
-    return undefined;
-  }
+    if (parsedValue !== undefined) {
+      resolved = {
+        resolvedConfigValue: parsedValue,
+        source: CONFIG_SOURCES[sourceKey.toUpperCase()],
+        configPath
+      };
 
-  const normalized = envValue.toLowerCase();
-  if (normalized === 'true' || normalized === '1') {
-    return true;
-  }
-  if (normalized === 'false' || normalized === '0') {
+      logger?.debug(`[config] Resolved from ${sourceKey}: ${JSON.stringify(parsedValue)}`);
+      return true;
+    }
+
+    if (rawValue !== undefined) {
+      logger?.warn(`[config] Validation failed for ${sourceKey}: ${JSON.stringify(rawValue)}`);
+    }
+
     return false;
-  }
-
-  return undefined;
-}
-
-/**
- * @param {Object} params
- * @param {string} params.envVar
- * @param {boolean|undefined|null} params.configValue
- * @param {boolean} params.defaultValue
- * @param {string} [params.configPath]
- * @returns {{ resolvedConfigValue: boolean, source: number, configPath: string }}
- */
-exports.resolveBooleanConfig = function resolveBooleanConfig({ envVar, configValue, defaultValue, configPath }) {
-  return resolveWithPriority({
-    env: () => {
-      const raw = process.env[envVar];
-      const parsed = parseBooleanFromEnv(raw);
-
-      if (parsed !== undefined) {
-        logger.debug(`[config] env:${envVar} = ${parsed}`);
-        return wrap(parsed, CONFIG_SOURCES.ENV, configPath);
-      }
-
-      if (raw != null) {
-        logger.warn(`Invalid boolean value for ${envVar}: "${raw}".`);
-      }
-    },
-
-    in_code: () => {
-      if (typeof configValue === 'boolean') {
-        logger.debug(`[config] incode:${configPath} = ${configValue}`);
-        return wrap(configValue, CONFIG_SOURCES.IN_CODE, configPath);
-      }
-
-      if (configValue != null) {
-        logger.warn(
-          `Invalid configuration: ${configPath} is not boolean: ${JSON.stringify(
-            configValue
-          )}. Falling back to default: ${defaultValue}.`
-        );
-      }
-    },
-
-    default: () => wrap(defaultValue, CONFIG_SOURCES.DEFAULT, configPath)
   });
-};
 
-/**
- * special cases:
- * eg: "INSTANA_DISABLE_USE_OPENTELEMETRY" where env var presence means false in the config "useOpentelemetry".
- *
- * @param {Object} params
- * @param {string} params.envVar
- * @param {boolean|undefined|null} params.configValue
- * @param {boolean} params.defaultValue
- * @param {string} params.configPath
- * @returns {{ resolvedConfigValue: boolean, source: number, configPath: string }}
- */
-exports.resolveBooleanConfigWithInvertedEnv = function ({ envVar, configValue, defaultValue, configPath }) {
-  return resolveWithPriority({
-    env: () => {
-      const raw = process.env[envVar];
-      const parsed = parseBooleanFromEnv(raw);
-
-      if (parsed !== undefined) {
-        const inverted = !parsed;
-        logger.debug(`[config] env:${envVar} = ${parsed} (inverted to ${inverted})`);
-        return wrap(inverted, CONFIG_SOURCES.ENV, configPath);
-      }
-
-      if (raw != null) {
-        logger.warn(`Invalid boolean value for ${envVar}: "${raw}".`);
-      }
-    },
-
-    in_code: () => {
-      if (typeof configValue === 'boolean') {
-        logger.debug(`[config] incode:${configPath} = ${configValue}`);
-        return wrap(configValue, CONFIG_SOURCES.IN_CODE, configPath);
-      }
-    },
-
-    default: () => wrap(defaultValue, CONFIG_SOURCES.DEFAULT, configPath)
-  });
-};
-
-/**
- * Returns true if env var exists and is truthy, otherwise uses config or default.
- * eg: "INSTANA_DISABLE_W3C_TRACE_CORRELATION" where env var presence means true in the config .
- *
- * @param {Object} params
- * @param {string} params.envVar
- * @param {boolean|undefined|null} params.configValue
- * @param {boolean} params.defaultValue
- * @param {string} params.configPath
- * @returns {{ resolvedConfigValue: boolean, source: number, configPath: string }}
- */
-exports.resolveBooleanConfigWithTruthyEnv = function ({ envVar, configValue, defaultValue, configPath }) {
-  return resolveWithPriority({
-    env: () => {
-      const raw = process.env[envVar];
-      if (raw) {
-        logger.debug(`[config] env:${envVar} = ${raw}`);
-        return wrap(true, CONFIG_SOURCES.ENV, configPath);
-      }
-    },
-
-    in_code: () => {
-      if (typeof configValue === 'boolean') {
-        logger.debug(`[config] incode:${configPath} = ${configValue}`);
-        return wrap(configValue, CONFIG_SOURCES.IN_CODE, configPath);
-      }
-    },
-
-    default: () => wrap(defaultValue, CONFIG_SOURCES.DEFAULT, configPath)
-  });
-};
-
-/**
- * @param {Object} params
- * @param {string} params.envVar
- * @param {string|undefined|null} params.configValue
- * @param {string} params.defaultValue
- * @param {string} params.configPath
- * @returns {{ resolvedConfigValue: string, source: number, configPath: string }}
- */
-exports.resolveStringConfig = function resolveStringConfig({ envVar, configValue, defaultValue, configPath }) {
-  return resolveWithPriority({
-    env: () => {
-      const val = process.env[envVar];
-      if (val != null) {
-        logger.debug(`[config] env:${envVar} = ${val}`);
-        return wrap(val, CONFIG_SOURCES.ENV, configPath);
-      }
-    },
-
-    in_code: () => {
-      if (configValue != null) {
-        if (typeof configValue !== 'string') {
-          logger.warn(
-            `Invalid configuration: ${configPath} is not a string: ${JSON.stringify(
-              configValue
-            )}. Falling back to default: ${defaultValue}.`
-          );
-          return;
-        }
-
-        logger.debug(`[config] incode:${configPath} = ${configValue}`);
-        return wrap(configValue, CONFIG_SOURCES.IN_CODE, configPath);
-      }
-    },
-
-    default: () => wrap(defaultValue, CONFIG_SOURCES.DEFAULT, configPath)
-  });
+  return (
+    resolved || {
+      resolvedConfigValue: defaultValue,
+      source: CONFIG_SOURCES.DEFAULT,
+      configPath
+    }
+  );
 };

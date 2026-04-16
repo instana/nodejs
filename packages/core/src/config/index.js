@@ -11,6 +11,7 @@ const deepMerge = require('../util/deepMerge');
 const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE, CONFIG_SOURCES } = require('../util/constants');
 const { validateStackTraceMode, validateStackTraceLength } = require('./configValidators/stackTraceValidation');
 const util = require('./util');
+const validate = require('./validator');
 
 // @typedef {{ [x: string]: any }} configMeta
 /** @type {configMeta} */
@@ -27,7 +28,7 @@ const configStore = {
 
   /**
    * @param {string} configPath - The config path
-   * @returns {{ source: number } | undefined}
+   * @returns {{ value: any, source: number } | undefined}
    */
   get(configPath) {
     return configMeta[configPath];
@@ -47,22 +48,6 @@ function recordMeta({ configPath, source }) {
 
 /** @type {InstanaConfig} */
 let currentConfig;
-
-/**
- * @param {any} target
- * @param {string} key
- * @param {{ resolvedConfigValue: any, source: number, configPath?: string }} resolved
- */
-function applyResolved(target, key, resolved) {
-  target[key] = resolved.resolvedConfigValue;
-
-  if (resolved.configPath) {
-    recordMeta({
-      configPath: resolved.configPath,
-      source: resolved.source
-    });
-  }
-}
 
 /**
  * @typedef {Object} InstanaTracingOption
@@ -237,32 +222,37 @@ module.exports.normalize = ({ userConfig = {}, finalConfigBase = {}, defaultsOve
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
 function normalizeServiceName({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
-  applyResolved(
-    finalConfig,
-    'serviceName',
-    util.resolveStringConfig({
+  const { resolvedConfigValue, source } = util.resolve(
+    {
       envVar: 'INSTANA_SERVICE_NAME',
       configValue: userConfig.serviceName,
       defaultValue: defaultConfig.serviceName,
       configPath: 'config.serviceName'
-    })
+    },
+    [validate.normalizeString]
   );
+
+  configStore.set('config.serviceName', source);
+
+  finalConfig.serviceName = resolvedConfigValue;
 }
 
 /**
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
 function normalizePackageJsonPath({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
-  applyResolved(
-    finalConfig,
-    'packageJsonPath',
-    util.resolveStringConfig({
+  const { resolvedConfigValue, source } = util.resolve(
+    {
       envVar: 'INSTANA_PACKAGE_JSON_PATH',
       configValue: userConfig.packageJsonPath,
       defaultValue: defaultConfig.packageJsonPath,
       configPath: 'config.packageJsonPath'
-    })
+    },
+    [validate.normalizeString]
   );
+
+  configStore.set('config.packageJsonPath', source);
+  finalConfig.packageJsonPath = resolvedConfigValue;
 }
 
 /**
@@ -273,16 +263,18 @@ function normalizeMetricsConfig({ userConfig = {}, defaultConfig = {}, finalConf
 
   finalConfig.metrics = {};
 
-  applyResolved(
-    finalConfig.metrics,
-    'transmissionDelay',
-    util.resolveNumericConfig({
+  const { resolvedConfigValue: transmissionDelay, source: transmissionDelaySource } = util.resolve(
+    {
       envVar: 'INSTANA_METRICS_TRANSMISSION_DELAY',
       configValue: userMetrics?.transmissionDelay,
       defaultValue: defaultConfig.metrics.transmissionDelay,
       configPath: 'config.metrics.transmissionDelay'
-    })
+    },
+    [validate.normalizeNumber]
   );
+
+  configStore.set('config.metrics.transmissionDelay', transmissionDelaySource);
+  finalConfig.metrics.transmissionDelay = transmissionDelay;
 
   const health = userMetrics?.timeBetweenHealthcheckCalls ?? defaultConfig.metrics.timeBetweenHealthcheckCalls;
 
@@ -329,48 +321,60 @@ function normalizeTracingEnabled({ userConfig = {}, defaultConfig = {}, finalCon
   const envValue = process.env.INSTANA_TRACING_DISABLE;
   const isBooleanValue = envValue === 'true' || envValue === 'false';
 
-  applyResolved(
-    finalConfig.tracing,
-    'enabled',
-    util.resolveBooleanConfigWithInvertedEnv({
+  const { resolvedConfigValue, source } = util.resolve(
+    {
       envVar: isBooleanValue ? 'INSTANA_TRACING_DISABLE' : undefined,
       configValue: userConfig.tracing.enabled,
       defaultValue: defaultConfig.tracing.enabled,
       configPath: 'config.tracing.enabled'
-    })
+    },
+    [validate.normalizeBoolean]
   );
+
+  // The env var is TRACING_DISABLE, so we need to invert it when it comes from env
+  const finalValue = source === CONFIG_SOURCES.ENV ? !resolvedConfigValue : resolvedConfigValue;
+
+  configStore.set('config.tracing.enabled', source);
+  finalConfig.tracing.enabled = finalValue;
 }
 
 /**
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
 function normalizeAllowRootExitSpan({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
-  applyResolved(
-    finalConfig.tracing,
-    'allowRootExitSpan',
-    util.resolveBooleanConfig({
+  const { resolvedConfigValue, source } = util.resolve(
+    {
       envVar: 'INSTANA_ALLOW_ROOT_EXIT_SPAN',
       configValue: userConfig.tracing.allowRootExitSpan,
       defaultValue: defaultConfig.tracing.allowRootExitSpan,
       configPath: 'config.tracing.allowRootExitSpan'
-    })
+    },
+    [validate.normalizeBoolean]
   );
+
+  configStore.set('config.tracing.allowRootExitSpan', source);
+  finalConfig.tracing.allowRootExitSpan = resolvedConfigValue;
 }
 
 /**
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
 function normalizeUseOpentelemetry({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
-  applyResolved(
-    finalConfig.tracing,
-    'useOpentelemetry',
-    util.resolveBooleanConfigWithInvertedEnv({
+  const { resolvedConfigValue, source } = util.resolve(
+    {
       envVar: 'INSTANA_DISABLE_USE_OPENTELEMETRY',
       configValue: userConfig.tracing.useOpentelemetry,
       defaultValue: defaultConfig.tracing.useOpentelemetry,
       configPath: 'config.tracing.useOpentelemetry'
-    })
+    },
+    [validate.normalizeBoolean]
   );
+
+  // The env var is DISABLE_USE_OPENTELEMETRY, so we need to invert it when it comes from env
+  const finalValue = source === CONFIG_SOURCES.ENV ? !resolvedConfigValue : resolvedConfigValue;
+
+  configStore.set('config.tracing.useOpentelemetry', source);
+  finalConfig.tracing.useOpentelemetry = finalValue;
 }
 
 /**
@@ -382,16 +386,21 @@ function normalizeAutomaticTracingEnabled({ userConfig = {}, defaultConfig = {},
     return;
   }
 
-  applyResolved(
-    finalConfig.tracing,
-    'automaticTracingEnabled',
-    util.resolveBooleanConfigWithInvertedEnv({
+  const { resolvedConfigValue, source } = util.resolve(
+    {
       envVar: 'INSTANA_DISABLE_AUTO_INSTR',
       configValue: userConfig.tracing.automaticTracingEnabled,
       defaultValue: defaultConfig.tracing.automaticTracingEnabled,
       configPath: 'config.tracing.automaticTracingEnabled'
-    })
+    },
+    [validate.normalizeBoolean]
   );
+
+  // The env var is DISABLE_AUTO_INSTR, so we need to invert it when it comes from env
+  const finalValue = source === CONFIG_SOURCES.ENV ? !resolvedConfigValue : resolvedConfigValue;
+
+  configStore.set('config.tracing.automaticTracingEnabled', source);
+  finalConfig.tracing.automaticTracingEnabled = finalValue;
 }
 
 /**
@@ -403,16 +412,18 @@ function normalizeActivateImmediately({ userConfig = {}, defaultConfig = {}, fin
     return;
   }
 
-  applyResolved(
-    finalConfig.tracing,
-    'activateImmediately',
-    util.resolveBooleanConfig({
+  const { resolvedConfigValue, source } = util.resolve(
+    {
       envVar: 'INSTANA_TRACE_IMMEDIATELY',
       configValue: userConfig.tracing.activateImmediately,
       defaultValue: defaultConfig.tracing.activateImmediately,
       configPath: 'config.tracing.activateImmediately'
-    })
+    },
+    [validate.normalizeBoolean]
   );
+
+  configStore.set('config.tracing.activateImmediately', source);
+  finalConfig.tracing.activateImmediately = resolvedConfigValue;
 }
 
 /**
@@ -426,38 +437,44 @@ function normalizeTracingTransmission({ userConfig = {}, defaultConfig = {}, fin
     source: userConfig.tracing.maxBufferedSpans !== undefined ? CONFIG_SOURCES.IN_CODE : CONFIG_SOURCES.DEFAULT
   });
 
-  applyResolved(
-    finalConfig.tracing,
-    'transmissionDelay',
-    util.resolveNumericConfig({
+  const { resolvedConfigValue: tracingTransmissionDelay, source: tracingTransmissionDelaySource } = util.resolve(
+    {
       envVar: 'INSTANA_TRACING_TRANSMISSION_DELAY',
       configValue: userConfig.tracing.transmissionDelay,
       defaultValue: defaultConfig.tracing.transmissionDelay,
       configPath: 'config.tracing.transmissionDelay'
-    })
+    },
+    [validate.normalizeNumber]
   );
 
-  applyResolved(
-    finalConfig.tracing,
-    'forceTransmissionStartingAt',
-    util.resolveNumericConfig({
+  configStore.set('config.tracing.transmissionDelay', tracingTransmissionDelaySource);
+  finalConfig.tracing.transmissionDelay = tracingTransmissionDelay;
+
+  const { resolvedConfigValue: forceTransmissionStartingAt, source: forceTransmissionStartingAtSource } = util.resolve(
+    {
       envVar: 'INSTANA_FORCE_TRANSMISSION_STARTING_AT',
       configValue: userConfig.tracing.forceTransmissionStartingAt,
       defaultValue: defaultConfig.tracing.forceTransmissionStartingAt,
       configPath: 'config.tracing.forceTransmissionStartingAt'
-    })
+    },
+    [validate.normalizeNumber]
   );
 
-  applyResolved(
-    finalConfig.tracing,
-    'initialTransmissionDelay',
-    util.resolveNumericConfig({
+  configStore.set('config.tracing.forceTransmissionStartingAt', forceTransmissionStartingAtSource);
+  finalConfig.tracing.forceTransmissionStartingAt = forceTransmissionStartingAt;
+
+  const { resolvedConfigValue: initialTransmissionDelay, source: initialTransmissionDelaySource } = util.resolve(
+    {
       envVar: 'INSTANA_TRACING_INITIAL_TRANSMISSION_DELAY',
       configValue: userConfig.tracing.initialTransmissionDelay,
       defaultValue: defaultConfig.tracing.initialTransmissionDelay,
       configPath: 'config.tracing.initialTransmissionDelay'
-    })
+    },
+    [validate.normalizeNumber]
   );
+
+  configStore.set('config.tracing.initialTransmissionDelay', initialTransmissionDelaySource);
+  finalConfig.tracing.initialTransmissionDelay = initialTransmissionDelay;
 }
 
 /**
@@ -718,32 +735,36 @@ function normalizeDisableTracing({ userConfig = {}, defaultConfig = {}, finalCon
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
 function normalizeSpanBatchingEnabled({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
-  applyResolved(
-    finalConfig.tracing,
-    'spanBatchingEnabled',
-    util.resolveBooleanConfig({
+  const { resolvedConfigValue, source } = util.resolve(
+    {
       envVar: 'INSTANA_SPANBATCHING_ENABLED',
       configValue: userConfig.tracing.spanBatchingEnabled,
       defaultValue: defaultConfig.tracing.spanBatchingEnabled,
       configPath: 'config.tracing.spanBatchingEnabled'
-    })
+    },
+    [validate.normalizeBoolean]
   );
+
+  configStore.set('config.tracing.spanBatchingEnabled', source);
+  finalConfig.tracing.spanBatchingEnabled = resolvedConfigValue;
 }
 
 /**
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
 function normalizeDisableW3cTraceCorrelation({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
-  applyResolved(
-    finalConfig.tracing,
-    'disableW3cTraceCorrelation',
-    util.resolveBooleanConfigWithTruthyEnv({
+  const { resolvedConfigValue, source } = util.resolve(
+    {
       envVar: 'INSTANA_DISABLE_W3C_TRACE_CORRELATION',
       configValue: userConfig.tracing.disableW3cTraceCorrelation,
       defaultValue: defaultConfig.tracing.disableW3cTraceCorrelation,
       configPath: 'config.tracing.disableW3cTraceCorrelation'
-    })
+    },
+    [validate.normalizeTruthyBoolean]
   );
+
+  configStore.set('config.tracing.disableW3cTraceCorrelation', source);
+  finalConfig.tracing.disableW3cTraceCorrelation = resolvedConfigValue;
 }
 
 /**
@@ -754,16 +775,18 @@ function normalizeTracingKafka({ userConfig = {}, defaultConfig = {}, finalConfi
 
   finalConfig.tracing.kafka = finalConfig.tracing.kafka || {};
 
-  applyResolved(
-    finalConfig.tracing.kafka,
-    'traceCorrelation',
-    util.resolveBooleanConfig({
+  const { resolvedConfigValue, source } = util.resolve(
+    {
       envVar: 'INSTANA_KAFKA_TRACE_CORRELATION',
       configValue: userKafka.traceCorrelation,
       defaultValue: defaultConfig.tracing.kafka.traceCorrelation,
       configPath: 'config.tracing.kafka.traceCorrelation'
-    })
+    },
+    [validate.normalizeBoolean]
   );
+
+  configStore.set('config.tracing.kafka.traceCorrelation', source);
+  finalConfig.tracing.kafka.traceCorrelation = resolvedConfigValue;
 }
 
 /**
@@ -991,32 +1014,36 @@ function normalizeIgnoreEndpoints({ userConfig = {}, defaultConfig = {}, finalCo
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
 function normalizeIgnoreEndpointsDisableSuppression({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
-  applyResolved(
-    finalConfig.tracing,
-    'ignoreEndpointsDisableSuppression',
-    util.resolveBooleanConfig({
+  const { resolvedConfigValue, source } = util.resolve(
+    {
       envVar: 'INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION',
       configValue: userConfig.tracing.ignoreEndpointsDisableSuppression,
       defaultValue: defaultConfig.tracing.ignoreEndpointsDisableSuppression,
       configPath: 'config.tracing.ignoreEndpointsDisableSuppression'
-    })
+    },
+    [validate.normalizeBoolean]
   );
+
+  configStore.set('config.tracing.ignoreEndpointsDisableSuppression', source);
+  finalConfig.tracing.ignoreEndpointsDisableSuppression = resolvedConfigValue;
 }
 
 /**
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
 function normalizeDisableEOLEvents({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
-  applyResolved(
-    finalConfig.tracing,
-    'disableEOLEvents',
-    util.resolveBooleanConfig({
+  const { resolvedConfigValue, source } = util.resolve(
+    {
       envVar: 'INSTANA_TRACING_DISABLE_EOL_EVENTS',
       configValue: userConfig.tracing.disableEOLEvents,
       defaultValue: defaultConfig.tracing.disableEOLEvents,
       configPath: 'config.tracing.disableEOLEvents'
-    })
+    },
+    [validate.normalizeBoolean]
   );
+
+  configStore.set('config.tracing.disableEOLEvents', source);
+  finalConfig.tracing.disableEOLEvents = resolvedConfigValue;
 }
 
 /**
