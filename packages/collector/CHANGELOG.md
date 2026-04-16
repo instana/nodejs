@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [5.4.2](https://github.com/instana/nodejs/compare/v5.4.1...v5.4.2) (2026-04-16)
+
+
+### Bug Fixes
+
+* **amqp:** cleaned up headers ([#2494](https://github.com/instana/nodejs/issues/2494)) ([88181a0](https://github.com/instana/nodejs/commit/88181a0399fb5e25a2c0db399db535b3a52ebe04))
+
+
+
+
+
 ## [5.4.1](https://github.com/instana/nodejs/compare/v5.4.0...v5.4.1) (2026-03-25)
 
 **Note:** Version bump only for package @instana/collector

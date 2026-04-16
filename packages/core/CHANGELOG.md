@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [5.4.2](https://github.com/instana/nodejs/compare/v5.4.1...v5.4.2) (2026-04-16)
+
+
+### Bug Fixes
+
+* **amqp:** cleaned up headers ([#2494](https://github.com/instana/nodejs/issues/2494)) ([88181a0](https://github.com/instana/nodejs/commit/88181a0399fb5e25a2c0db399db535b3a52ebe04))
+* bumped @opentelemetry/core from 2.6.0 to 2.6.1 ([#2443](https://github.com/instana/nodejs/issues/2443)) ([462ac5e](https://github.com/instana/nodejs/commit/462ac5e88a8645892775dbd08eb80260be86c72b))
+* bumped @opentelemetry/instrumentation-fs from 0.32.0 to 0.33.0 ([#2462](https://github.com/instana/nodejs/issues/2462)) ([f3bedf5](https://github.com/instana/nodejs/commit/f3bedf517ce418fbef442bf0ef88de7b820e4097))
+* bumped @opentelemetry/instrumentation-oracledb from 0.38.0 to 0.39.0 ([#2463](https://github.com/instana/nodejs/issues/2463)) ([76ad468](https://github.com/instana/nodejs/commit/76ad4688364c682f576807178d70ef01d9e37890))
+* bumped @opentelemetry/instrumentation-socket.io from 0.59.0 to 0.60.0 ([#2418](https://github.com/instana/nodejs/issues/2418)) ([300e710](https://github.com/instana/nodejs/commit/300e71054f870445d76e0c8a139161d367e5b422))
+
+
+
+
+
 ## [5.4.1](https://github.com/instana/nodejs/compare/v5.4.0...v5.4.1) (2026-03-25)
 
 **Note:** Version bump only for package @instana/core
