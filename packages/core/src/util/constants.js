@@ -24,8 +24,3 @@ exports.CONFIG_SOURCES = {
   AGENT: 3,
   DEFAULT: 4
 };
-
-/**
- * @type {string[]}
- */
-exports.CONFIG_PRIORITY = ['env', 'inCode', 'default'];
