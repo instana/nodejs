@@ -34,7 +34,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: 1000,
+        value: 1000,
         source: CONFIG_SOURCES.DEFAULT,
         configPath: 'config.test.value'
       });
@@ -51,7 +51,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: 2000,
+        value: 2000,
         source: CONFIG_SOURCES.ENV,
         configPath: 'config.test.value'
       });
@@ -66,7 +66,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: 3000,
+        value: 3000,
         source: CONFIG_SOURCES.IN_CODE,
         configPath: 'config.test.value'
       });
@@ -81,7 +81,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: 5000,
+        value: 5000,
         source: CONFIG_SOURCES.IN_CODE,
         configPath: 'config.test.value'
       });
@@ -96,7 +96,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: 5000,
+        value: 5000,
         source: CONFIG_SOURCES.IN_CODE,
         configPath: 'config.test.value'
       });
@@ -113,7 +113,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: 7500,
+        value: 7500,
         source: CONFIG_SOURCES.ENV,
         configPath: 'config.test.value'
       });
@@ -130,7 +130,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: 1000,
+        value: 1000,
         source: CONFIG_SOURCES.DEFAULT,
         configPath: 'config.test.value'
       });
@@ -145,7 +145,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: 1000,
+        value: 1000,
         source: CONFIG_SOURCES.DEFAULT,
         configPath: 'config.test.value'
       });
@@ -162,7 +162,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: 3000,
+        value: 3000,
         source: CONFIG_SOURCES.IN_CODE,
         configPath: 'config.test.value'
       });
@@ -179,7 +179,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: 0,
+        value: 0,
         source: CONFIG_SOURCES.ENV,
         configPath: 'config.test.value'
       });
@@ -194,7 +194,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: 0,
+        value: 0,
         source: CONFIG_SOURCES.IN_CODE,
         configPath: 'config.test.value'
       });
@@ -211,7 +211,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: -500,
+        value: -500,
         source: CONFIG_SOURCES.ENV,
         configPath: 'config.test.value'
       });
@@ -226,7 +226,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: -500,
+        value: -500,
         source: CONFIG_SOURCES.IN_CODE,
         configPath: 'config.test.value'
       });
@@ -243,7 +243,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: 123.45,
+        value: 123.45,
         source: CONFIG_SOURCES.ENV,
         configPath: 'config.test.value'
       });
@@ -258,7 +258,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: 123.45,
+        value: 123.45,
         source: CONFIG_SOURCES.IN_CODE,
         configPath: 'config.test.value'
       });
@@ -273,7 +273,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: 1000,
+        value: 1000,
         source: CONFIG_SOURCES.DEFAULT,
         configPath: 'config.test.value'
       });
@@ -290,7 +290,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: 0,
+        value: 0,
         source: CONFIG_SOURCES.ENV,
         configPath: 'config.test.value'
       });
@@ -305,7 +305,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: 0,
+        value: 0,
         source: CONFIG_SOURCES.IN_CODE,
         configPath: 'config.test.value'
       });
@@ -330,7 +330,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: false,
+        value: false,
         source: CONFIG_SOURCES.DEFAULT,
         configPath: 'config.test.value'
       });
@@ -347,7 +347,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: true,
+        value: true,
         source: CONFIG_SOURCES.ENV,
         configPath: 'config.test.value'
       });
@@ -362,7 +362,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: true,
+        value: true,
         source: CONFIG_SOURCES.IN_CODE,
         configPath: 'config.test.value'
       });
@@ -379,7 +379,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: true,
+        value: true,
         source: CONFIG_SOURCES.ENV,
         configPath: 'config.test.value'
       });
@@ -396,7 +396,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: false,
+        value: false,
         source: CONFIG_SOURCES.ENV,
         configPath: 'config.test.value'
       });
@@ -412,7 +412,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: true,
+        value: true,
         source: CONFIG_SOURCES.ENV,
         configPath: undefined
       });
@@ -428,7 +428,7 @@ describe.skip('config.util', () => {
         configPath: 'config.test.value'
       });
       expect(result).to.deep.equal({
-        resolvedConfigValue: false,
+        value: false,
         source: CONFIG_SOURCES.ENV,
         configPath: 'config.test.value'
       });
@@ -445,7 +445,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: true,
+        value: true,
         source: CONFIG_SOURCES.ENV,
         configPath: 'config.test.value'
       });
@@ -462,7 +462,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: false,
+        value: false,
         source: CONFIG_SOURCES.ENV,
         configPath: 'config.test.value'
       });
@@ -479,7 +479,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: true,
+        value: true,
         source: CONFIG_SOURCES.IN_CODE,
         configPath: 'config.test.value'
       });
@@ -496,7 +496,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: true,
+        value: true,
         source: CONFIG_SOURCES.DEFAULT,
         configPath: 'config.test.value'
       });
@@ -511,7 +511,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: true,
+        value: true,
         source: CONFIG_SOURCES.DEFAULT,
         configPath: 'config.test.value'
       });
@@ -526,7 +526,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: false,
+        value: false,
         source: CONFIG_SOURCES.DEFAULT,
         configPath: 'config.test.value'
       });
@@ -553,7 +553,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: false,
+        value: false,
         source: CONFIG_SOURCES.ENV,
         configPath: 'config.test.value'
       });
@@ -570,7 +570,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: false,
+        value: false,
         source: CONFIG_SOURCES.ENV,
         configPath: 'config.test.value'
       });
@@ -585,7 +585,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: false,
+        value: false,
         source: CONFIG_SOURCES.IN_CODE,
         configPath: 'config.test.value'
       });
@@ -602,7 +602,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: true,
+        value: true,
         source: CONFIG_SOURCES.ENV,
         configPath: 'config.test.value'
       });
@@ -617,7 +617,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: false,
+        value: false,
         source: CONFIG_SOURCES.DEFAULT,
         configPath: 'config.test.value'
       });
@@ -632,7 +632,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: true,
+        value: true,
         source: CONFIG_SOURCES.DEFAULT,
         configPath: 'config.test.value'
       });
@@ -659,7 +659,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: true,
+        value: true,
         source: CONFIG_SOURCES.ENV,
         configPath: 'config.test.value'
       });
@@ -676,7 +676,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: true,
+        value: true,
         source: CONFIG_SOURCES.ENV,
         configPath: 'config.test.value'
       });
@@ -693,7 +693,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: true,
+        value: true,
         source: CONFIG_SOURCES.ENV,
         configPath: 'config.test.value'
       });
@@ -710,7 +710,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: true,
+        value: true,
         source: CONFIG_SOURCES.ENV,
         configPath: 'config.test.value'
       });
@@ -725,7 +725,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: true,
+        value: true,
         source: CONFIG_SOURCES.IN_CODE,
         configPath: 'config.test.value'
       });
@@ -740,7 +740,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: false,
+        value: false,
         source: CONFIG_SOURCES.DEFAULT,
         configPath: 'config.test.value'
       });
@@ -757,7 +757,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: false,
+        value: false,
         source: CONFIG_SOURCES.DEFAULT,
         configPath: 'config.test.value'
       });
@@ -782,7 +782,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: 'default-value',
+        value: 'default-value',
         source: CONFIG_SOURCES.DEFAULT,
         configPath: 'config.test.value'
       });
@@ -799,7 +799,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: 'env-value',
+        value: 'env-value',
         source: CONFIG_SOURCES.ENV,
         configPath: 'config.test.value'
       });
@@ -816,7 +816,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: 'env-value',
+        value: 'env-value',
         source: CONFIG_SOURCES.ENV,
         configPath: 'config.test.value'
       });
@@ -831,7 +831,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: 'config-value',
+        value: 'config-value',
         source: CONFIG_SOURCES.IN_CODE,
         configPath: 'config.test.value'
       });
@@ -846,7 +846,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: '',
+        value: '',
         source: CONFIG_SOURCES.IN_CODE,
         configPath: 'config.test.value'
       });
@@ -863,7 +863,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: '',
+        value: '',
         source: CONFIG_SOURCES.ENV,
         configPath: 'config.test.value'
       });
@@ -880,7 +880,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: 'env-value',
+        value: 'env-value',
         source: CONFIG_SOURCES.ENV,
         configPath: 'config.test.value'
       });
@@ -896,7 +896,7 @@ describe.skip('config.util', () => {
       });
 
       expect(result).to.deep.equal({
-        resolvedConfigValue: multilineValue,
+        value: multilineValue,
         source: CONFIG_SOURCES.IN_CODE,
         configPath: 'config.test.value'
       });

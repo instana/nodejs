@@ -23,10 +23,6 @@ const CONFIG_PRIORITY = Object.entries(CONFIG_SOURCES)
   });
 
 /**
- * Generic resolve function that resolves configuration values based on priority
- * and validates/transforms them using provided validators.
- *
- * UTILITY DOES NOT KNOW CONFIG STORE!
  *
  * @param {Object} params
  * @param {string} [params.envVar]
@@ -35,7 +31,7 @@ const CONFIG_PRIORITY = Object.entries(CONFIG_SOURCES)
  * @param {any} params.defaultValue
  * @param {string} [params.configPath]
  * @param {Function|Function[]} validators - validator(s) returning value | undefined
- * @returns {{ resolvedConfigValue: any, source: number, configPath?: string }}
+ * @returns {{ value: any, source: number, configPath?: string }}
  */
 exports.resolve = function resolve({ envVar, configValue, agentValue, defaultValue, configPath }, validators) {
   let resolved;
@@ -52,12 +48,10 @@ exports.resolve = function resolve({ envVar, configValue, agentValue, defaultVal
   CONFIG_PRIORITY.find(sourceKey => {
     const rawValue = inputs[sourceKey];
 
-    // Skip undefined except default
     if (rawValue === undefined && sourceKey !== 'default') {
       return false;
     }
 
-    // Apply validators as transformation pipeline
     const parsedValue = validatorList.reduce((val, fn) => {
       if (val === undefined) return undefined;
       return fn(val);
@@ -65,7 +59,7 @@ exports.resolve = function resolve({ envVar, configValue, agentValue, defaultVal
 
     if (parsedValue !== undefined) {
       resolved = {
-        resolvedConfigValue: parsedValue,
+        value: parsedValue,
         source: CONFIG_SOURCES[sourceKey.toUpperCase()],
         configPath
       };
@@ -83,7 +77,7 @@ exports.resolve = function resolve({ envVar, configValue, agentValue, defaultVal
 
   return (
     resolved || {
-      resolvedConfigValue: defaultValue,
+      value: defaultValue,
       source: CONFIG_SOURCES.DEFAULT,
       configPath
     }

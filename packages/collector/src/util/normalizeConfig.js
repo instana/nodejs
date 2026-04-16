@@ -48,7 +48,7 @@ function normalizeAgentHost(userConfig, defaultConfig) {
     defaultValue: defaultConfig.agentHost,
     configPath: 'config.agentHost'
   });
-  return result.resolvedConfigValue;
+  return result.value;
 }
 
 /**
@@ -63,7 +63,7 @@ function normalizeAgentPort(userConfig, defaultConfig) {
     defaultValue: defaultConfig.agentPort,
     configPath: 'config.agentPort'
   });
-  return result.resolvedConfigValue;
+  return result.value;
 }
 
 /**
@@ -78,7 +78,7 @@ function normalizeAgentRequestTimeout(userConfig, defaultConfig) {
     defaultValue: defaultConfig.agentRequestTimeout,
     configPath: 'config.agentRequestTimeout'
   });
-  return result.resolvedConfigValue;
+  return result.value;
 }
 
 /**
@@ -93,7 +93,7 @@ function normalizeAutoProfile(userConfig, defaultConfig) {
     defaultValue: defaultConfig.autoProfile,
     configPath: 'config.autoProfile'
   });
-  return result.resolvedConfigValue;
+  return result.value;
 }
 
 /**
