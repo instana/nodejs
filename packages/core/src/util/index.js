@@ -44,11 +44,11 @@ exports.init = function init(config) {
 };
 
 /**
- * @param {import('@instana/collector/src/types/collector').AgentConfig} extraConfig
+ * @param {import('@instana/core/src/config').InstanaConfig} config
  */
-exports.activate = function activate(extraConfig) {
-  disableInstrumentation.activate(extraConfig);
-  spanFilter.activate(extraConfig);
+exports.activate = function activate(config) {
+  disableInstrumentation.activate(config);
+  spanFilter.activate(config);
 };
 
 exports.applicationUnderMonitoring = applicationUnderMonitoring;

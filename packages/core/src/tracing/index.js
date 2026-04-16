@@ -260,10 +260,12 @@ function initInstanaInstrumentations(_config) {
   }
 }
 
+/// the extraconfig won't reach here
 exports.activate = function activate(extraConfig = {}) {
   if (tracingEnabled && !tracingActivated) {
     tracingActivated = true;
-    coreUtil.activate(extraConfig);
+    coreUtil.activate(config);
+    // not handled
     tracingUtil.activate(extraConfig);
     spanBuffer.activate(extraConfig);
     opentracing.activate();

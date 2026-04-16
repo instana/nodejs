@@ -28,12 +28,8 @@ exports.updateConfig = function updateConfig(config) {
   traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
 };
 
-exports.activate = function activate(extraConfig) {
-  if (extraConfig && extraConfig.tracing && extraConfig.tracing.kafka) {
-    if (extraConfig.tracing.kafka.traceCorrelation != null) {
-      traceCorrelationEnabled = extraConfig.tracing.kafka.traceCorrelation;
-    }
-  }
+exports.activate = function activate(_config) {
+  traceCorrelationEnabled = _config.tracing.kafka.traceCorrelation;
   isActive = true;
 };
 
