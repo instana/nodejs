@@ -4,7 +4,7 @@
 
 'use strict';
 
-const { CONFIG_SOURCES } = require('../util/constants');
+const { CONFIG_SOURCES, CONFIG_PRIORITY } = require('../util/constants');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -15,11 +15,6 @@ let logger;
 exports.init = _logger => {
   logger = _logger;
 };
-
-/** @typedef {'env' | 'config' | 'default'} ConfigSourceKey */
-
-/** @type {ConfigSourceKey[]} */
-const CONFIG_PRIORITY = ['env', 'config', 'default'];
 
 /**
  * Internal config source wrapper
@@ -37,7 +32,7 @@ function wrap(resolvedConfigValue, source, configPath) {
 
 /**
  * Generic resolver (core logic)
- * @param {Record<ConfigSourceKey, () => any>} sources
+ * @param {Record<string, () => any>} sources
  */
 function resolveWithPriority(sources) {
   let resolved;
@@ -82,7 +77,7 @@ exports.resolveNumericConfig = function resolveNumericConfig({ envVar, configVal
       }
     },
 
-    config: () => {
+    inCode: () => {
       if (configValue != null) {
         const parsed = toValidNumber(configValue);
         if (parsed !== undefined) {
@@ -143,7 +138,7 @@ exports.resolveBooleanConfig = function resolveBooleanConfig({ envVar, configVal
       }
     },
 
-    config: () => {
+    inCode: () => {
       if (typeof configValue === 'boolean') {
         logger.debug(`[config] incode:${configPath} = ${configValue}`);
         return wrap(configValue, CONFIG_SOURCES.IN_CODE, configPath);
@@ -190,7 +185,7 @@ exports.resolveBooleanConfigWithInvertedEnv = function ({ envVar, configValue, d
       }
     },
 
-    config: () => {
+    inCode: () => {
       if (typeof configValue === 'boolean') {
         logger.debug(`[config] incode:${configPath} = ${configValue}`);
         return wrap(configValue, CONFIG_SOURCES.IN_CODE, configPath);
@@ -222,7 +217,7 @@ exports.resolveBooleanConfigWithTruthyEnv = function ({ envVar, configValue, def
       }
     },
 
-    config: () => {
+    inCode: () => {
       if (typeof configValue === 'boolean') {
         logger.debug(`[config] incode:${configPath} = ${configValue}`);
         return wrap(configValue, CONFIG_SOURCES.IN_CODE, configPath);
@@ -251,7 +246,7 @@ exports.resolveStringConfig = function resolveStringConfig({ envVar, configValue
       }
     },
 
-    config: () => {
+    inCode: () => {
       if (configValue != null) {
         if (typeof configValue !== 'string') {
           logger.warn(
