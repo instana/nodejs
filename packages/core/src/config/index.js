@@ -49,6 +49,9 @@ function recordMeta({ configPath, source }) {
   configStore.set(configPath, source);
 }
 
+/** @type {InstanaConfig} */
+let currentConfig;
+
 /**
  * @param {any} target
  * @param {string} key
@@ -134,7 +137,6 @@ const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'cont
  * @property {InstanaSecretsOption} [secrets]
  * @property {number} [timeBetweenHealthcheckCalls]
  * @property {boolean} [preloadOpentelemetry]
- * @property {Object} [_meta]
  */
 
 /** @type {import('../core').GenericLogger} */
@@ -231,8 +233,7 @@ module.exports.normalize = ({ userConfig = {}, finalConfigBase = {}, defaultsOve
   normalizeTracingConfig({ userConfig: normalizedUserConfig, defaultConfig: defaults, finalConfig });
   normalizeSecrets({ userConfig: normalizedUserConfig, defaultConfig: defaults, finalConfig });
   normalizePreloadOpentelemetry({ userConfig: normalizedUserConfig, defaultConfig: defaults, finalConfig });
-
-  finalConfig._meta = configMeta;
+  currentConfig = finalConfig;
   return finalConfig;
 };
 
@@ -1038,3 +1039,29 @@ function normalizeDisableEOLEvents({ userConfig = {}, defaultConfig = {}, finalC
     source: source
   });
 }
+
+/**
+ * Updates configuration values dynamically from external sources (e.g., agent)
+ *
+ * @param {Object.<string, any>} externalConfig
+ * @param {number} source
+ */
+exports.update = function update(externalConfig, source) {
+  if (!externalConfig || typeof externalConfig !== 'object' || Object.keys(externalConfig).length === 0) {
+    return;
+  }
+
+  Object.keys(externalConfig).forEach(key => {
+    const configPath = `config.${key}`;
+    const currentMeta = configStore.get(configPath);
+
+    if (currentMeta && currentMeta.source < source) {
+      logger.debug(`[config] Skipping ${key}: current source ${currentMeta.source} > incoming ${source}`);
+      return;
+    }
+
+    /** @type {any} */ (currentConfig)[key] = externalConfig[key];
+    configStore.set(configPath, source);
+    logger.debug(`[config] Updated ${key} from source ${source}: ${JSON.stringify(externalConfig[key])}`);
+  });
+};
