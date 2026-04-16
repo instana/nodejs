@@ -25,7 +25,7 @@ exports.registerTestHooks = opts => {
     env.AGENT_PORT = agentControls.getPort();
     env.APP_PORT = portfinder();
     appPort = env.APP_PORT;
-    env.TRACING_ENABLED = opts.enableTracing !== false;
+    env.TRACING_ENABLED = 'enableTracing' in opts ? opts.enableTracing : true;
     env.INSTANA_RETRY_AGENT_CONNECTION_IN_MS = 100;
 
     app = spawn('node', [path.join(__dirname, `publisher${opts.apiType}.js`)], {

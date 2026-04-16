@@ -7,6 +7,8 @@
 
 'use strict';
 
+const expect = require('chai').expect;
+
 const agentPort = process.env.AGENT_PORT;
 const instana = require('@instana/collector')({
   agentPort,
@@ -50,6 +52,15 @@ amqp
   })
   .then(() =>
     channel.consume(queueForExchangeName, msg => {
+      if (msg.properties.headers) {
+        expect(msg.properties.headers['X-INSTANA-L']).to.not.exist;
+        expect(msg.properties.headers['X-INSTANA-S']).to.not.exist;
+        expect(msg.properties.headers['X-INSTANA-T']).to.not.exist;
+        expect(msg.properties.headers['x-instana-l']).to.not.exist;
+        expect(msg.properties.headers['x-instana-s']).to.not.exist;
+        expect(msg.properties.headers['x-instana-t']).to.not.exist;
+      }
+
       if (msg !== null) {
         log(msg.content.toString());
         const span = instana.currentSpan();
@@ -76,6 +87,15 @@ amqp
   )
   .then(() =>
     channel.consume(queueName, msg => {
+      if (msg.properties.headers) {
+        expect(msg.properties.headers['X-INSTANA-L']).to.not.exist;
+        expect(msg.properties.headers['X-INSTANA-S']).to.not.exist;
+        expect(msg.properties.headers['X-INSTANA-T']).to.not.exist;
+        expect(msg.properties.headers['x-instana-l']).to.not.exist;
+        expect(msg.properties.headers['x-instana-s']).to.not.exist;
+        expect(msg.properties.headers['x-instana-t']).to.not.exist;
+      }
+
       if (msg !== null) {
         log(msg.content.toString());
         const span = instana.currentSpan();

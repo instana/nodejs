@@ -185,6 +185,7 @@ function instrumentedDispatchMessage(ctx, originalDispatchMessage, originalArgs)
   return cls.ns.runAndReturn(() => {
     if (tracingUtil.readAttribCaseInsensitive(headers, constants.traceLevelHeaderName) === '0') {
       cls.setTracingLevel('0');
+      removeInstanaHeadersFromMessage(originalArgs[1]);
       return originalDispatchMessage.apply(ctx, originalArgs);
     }
 
@@ -212,6 +213,8 @@ ctx.connection.stream.remoteAddress}:${ctx.connection.stream.remotePort}`;
     if (fields.routingKey) {
       span.data.rabbitmq.key = fields.routingKey;
     }
+
+    removeInstanaHeadersFromMessage(originalArgs[1]);
 
     try {
       return originalDispatchMessage.apply(ctx, originalArgs);
@@ -260,6 +263,7 @@ function instrumentedChannelModelGet(ctx, originalGet, originalArgs) {
 
       if (tracingUtil.readAttribCaseInsensitive(headers, constants.traceLevelHeaderName) === '0') {
         cls.setTracingLevel('0');
+        removeInstanaHeadersFromMessage(result);
         span.cancel();
         return result;
       }
@@ -347,6 +351,7 @@ function instrumentedCallbackModelGet(ctx, originalGet, originalArgs) {
 
       if (tracingUtil.readAttribCaseInsensitive(headers, constants.traceLevelHeaderName) === '0') {
         cls.setTracingLevel('0');
+        removeInstanaHeadersFromMessage(result);
         if (originalCallback) {
           return originalCallback(err, result);
         }
@@ -477,6 +482,13 @@ function instrumentedCallbackModelPublish(ctx, originalFunction, originalArgs) {
 
     return originalFunction.apply(ctx, originalArgs);
   });
+}
+function removeInstanaHeadersFromMessage(originalArgs) {
+  if (originalArgs?.properties?.headers && typeof originalArgs.properties.headers === 'object') {
+    delete originalArgs.properties.headers[constants.traceIdHeaderName];
+    delete originalArgs.properties.headers[constants.spanIdHeaderName];
+    delete originalArgs.properties.headers[constants.traceLevelHeaderName];
+  }
 }
 
 exports.activate = function activate() {

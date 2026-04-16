@@ -163,7 +163,7 @@ services:
       MSSQL_SA_PASSWORD: stanCanHazMsSQL1
 
   rabbitmq:
-    image: public.ecr.aws/docker/library/rabbitmq:3.13.7-alpine
+    image: public.ecr.aws/docker/library/rabbitmq:3.13.0
     pull_policy: if_not_present
     ports:
       - 5671:5671

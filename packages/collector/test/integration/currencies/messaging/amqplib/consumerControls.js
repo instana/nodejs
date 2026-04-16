@@ -19,7 +19,7 @@ exports.registerTestHooks = opts => {
 
     const env = Object.create(process.env);
     env.AGENT_PORT = agentPort;
-    env.TRACING_ENABLED = opts.enableTracing !== false;
+    env.TRACING_ENABLED = 'enableTracing' in opts ? opts.enableTracing : true;
     env.INSTANA_RETRY_AGENT_CONNECTION_IN_MS = 100;
 
     app = spawn('node', [path.join(__dirname, `consumer${opts.apiType}.js`)], {
