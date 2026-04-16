@@ -8,17 +8,17 @@
  * @param {any} value
  * @returns {number|undefined}
  */
-function numberValidator(value) {
+exports.numberValidator = function numberValidator(value) {
   if (value == null) return undefined;
   const num = typeof value === 'number' ? value : Number(value);
   return Number.isNaN(num) ? undefined : num;
-}
+};
 
 /**
  * @param {any} value
  * @returns {boolean|undefined}
  */
-function booleanValidator(value) {
+exports.booleanValidator = function booleanValidator(value) {
   if (value == null) return undefined;
 
   if (typeof value === 'boolean') return value;
@@ -30,29 +30,22 @@ function booleanValidator(value) {
   }
 
   return undefined;
-}
+};
 
 /**
  * @param {any} value
  * @returns {string|undefined}
  */
-function stringValidator(value) {
+exports.stringValidator = function stringValidator(value) {
   if (value == null) return undefined;
   return typeof value === 'string' ? value : undefined;
-}
+};
 
 /**
  * @param {any} value
  * @returns {boolean|undefined}
  */
-function validateTruthyBoolean(value) {
+exports.validateTruthyBoolean = function validateTruthyBoolean(value) {
   // Return true if value is truthy, undefined otherwise
   return value ? true : undefined;
-}
-
-module.exports = {
-  numberValidator,
-  booleanValidator,
-  stringValidator,
-  validateTruthyBoolean
 };
