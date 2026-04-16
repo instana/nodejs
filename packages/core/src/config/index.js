@@ -16,22 +16,46 @@ const util = require('./util');
 /** @type {configMeta} */
 const configMeta = {};
 
+const configStore = {
+  /**
+   * @param {string} configPath
+   * @param {number} source
+   */
+  set(configPath, source) {
+    configMeta[configPath] = { source };
+  },
+
+  /**
+   * @param {string} configPath - The config path
+   * @returns {{ source: number } | undefined}
+   */
+  get(configPath) {
+    return configMeta[configPath];
+  },
+
+  getAll() {
+    return { ...configMeta };
+  },
+
+  clear() {
+    Object.keys(configMeta).forEach(key => delete configMeta[key]);
+  }
+};
+
 /**
  * @param {{ configPath: string,  source: number }} options
  */
 function recordMeta({ configPath, source }) {
-  configMeta[configPath] = {
-    source
-  };
+  configStore.set(configPath, source);
 }
 
 /**
  * @param {any} target
  * @param {string} key
- * @param {{ value: any, source: number, configPath?: string }} resolved
+ * @param {{ resolvedConfigValue: any, source: number, configPath?: string }} resolved
  */
 function applyResolved(target, key, resolved) {
-  target[key] = resolved.value;
+  target[key] = resolved.resolvedConfigValue;
 
   if (resolved.configPath) {
     recordMeta({
@@ -191,7 +215,7 @@ module.exports.normalize = ({ userConfig = {}, finalConfigBase = {}, defaultsOve
     normalizedUserConfig = {};
   }
   // Clear previous sources if any
-  Object.keys(configMeta).forEach(key => delete configMeta[key]);
+  configStore.clear();
 
   // Preserve finalConfigBase in the finalConfig to allow additional config values
   // that are not part of the core config schema. Eg: collector config needs to be preserved.
