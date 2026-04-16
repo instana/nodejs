@@ -46,7 +46,7 @@ exports.resolve = function resolve({ envVar, configValue, agentValue, defaultVal
   };
 
   CONFIG_PRIORITY.find(sourceKey => {
-    const rawValue = inputs[sourceKey];
+    const rawValue = inputs[/** @type {keyof typeof inputs} */ (sourceKey)];
 
     if (rawValue === undefined && sourceKey !== 'default') {
       return false;
@@ -60,7 +60,7 @@ exports.resolve = function resolve({ envVar, configValue, agentValue, defaultVal
     if (parsedValue !== undefined) {
       resolved = {
         value: parsedValue,
-        source: CONFIG_SOURCES[sourceKey.toUpperCase()],
+        source: CONFIG_SOURCES[/** @type {keyof typeof CONFIG_SOURCES} */ (sourceKey.toUpperCase())],
         configPath
       };
 

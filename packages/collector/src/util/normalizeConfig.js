@@ -6,6 +6,7 @@
 'use strict';
 
 const util = require('@instana/core/src/config/util');
+const validate = require('@instana/core/src/config/validator');
 
 const defaults = {
   agentHost: '127.0.0.1',
@@ -42,13 +43,16 @@ module.exports = function normalizeConfig(userConfig = {}) {
  * @returns {string}
  */
 function normalizeAgentHost(userConfig, defaultConfig) {
-  const result = util.resolveStringConfig({
-    envVar: 'INSTANA_AGENT_HOST',
-    configValue: userConfig.agentHost,
-    defaultValue: defaultConfig.agentHost,
-    configPath: 'config.agentHost'
-  });
-  return result.value;
+  const { value } = util.resolve(
+    {
+      envVar: 'INSTANA_AGENT_HOST',
+      configValue: userConfig.agentHost,
+      defaultValue: defaultConfig.agentHost,
+      configPath: 'config.agentHost'
+    },
+    [validate.stringValidator]
+  );
+  return value;
 }
 
 /**
@@ -57,13 +61,16 @@ function normalizeAgentHost(userConfig, defaultConfig) {
  * @returns {number}
  */
 function normalizeAgentPort(userConfig, defaultConfig) {
-  const result = util.resolveNumericConfig({
-    envVar: 'INSTANA_AGENT_PORT',
-    configValue: userConfig.agentPort,
-    defaultValue: defaultConfig.agentPort,
-    configPath: 'config.agentPort'
-  });
-  return result.value;
+  const { value } = util.resolve(
+    {
+      envVar: 'INSTANA_AGENT_PORT',
+      configValue: userConfig.agentPort,
+      defaultValue: defaultConfig.agentPort,
+      configPath: 'config.agentPort'
+    },
+    [validate.numberValidator]
+  );
+  return value;
 }
 
 /**
@@ -72,13 +79,16 @@ function normalizeAgentPort(userConfig, defaultConfig) {
  * @returns {number}
  */
 function normalizeAgentRequestTimeout(userConfig, defaultConfig) {
-  const result = util.resolveNumericConfig({
-    envVar: 'INSTANA_AGENT_REQUEST_TIMEOUT',
-    configValue: userConfig.agentRequestTimeout,
-    defaultValue: defaultConfig.agentRequestTimeout,
-    configPath: 'config.agentRequestTimeout'
-  });
-  return result.value;
+  const { value } = util.resolve(
+    {
+      envVar: 'INSTANA_AGENT_REQUEST_TIMEOUT',
+      configValue: userConfig.agentRequestTimeout,
+      defaultValue: defaultConfig.agentRequestTimeout,
+      configPath: 'config.agentRequestTimeout'
+    },
+    [validate.numberValidator]
+  );
+  return value;
 }
 
 /**
@@ -87,13 +97,16 @@ function normalizeAgentRequestTimeout(userConfig, defaultConfig) {
  * @returns {boolean}
  */
 function normalizeAutoProfile(userConfig, defaultConfig) {
-  const result = util.resolveBooleanConfig({
-    envVar: 'INSTANA_AUTO_PROFILE',
-    configValue: userConfig.autoProfile,
-    defaultValue: defaultConfig.autoProfile,
-    configPath: 'config.autoProfile'
-  });
-  return result.value;
+  const { value } = util.resolve(
+    {
+      envVar: 'INSTANA_AUTO_PROFILE',
+      configValue: userConfig.autoProfile,
+      defaultValue: defaultConfig.autoProfile,
+      configPath: 'config.autoProfile'
+    },
+    [validate.booleanValidator]
+  );
+  return value;
 }
 
 /**
