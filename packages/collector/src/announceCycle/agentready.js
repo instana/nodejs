@@ -12,7 +12,7 @@ try {
   // Worker threads are not available, so we know that this is the main thread.
 }
 
-const { tracing } = require('@instana/core');
+const { tracing, coreConfig, util } = require('@instana/core');
 const agentConnection = require('../agentConnection');
 const agentOpts = require('../agent/opts');
 const initializedTooLate = require('../util/initializedTooLate');
@@ -130,6 +130,8 @@ function enter(_ctx) {
     }
   }
 
+  // here we update the config with the values from the agent
+  coreConfig.update(coreConfig, util.constants.CONFIG_SOURCES.AGENT);
   tracing.activate(agentOpts.config);
 
   if (agentOpts.autoProfile && autoprofile) {
