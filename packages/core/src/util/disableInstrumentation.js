@@ -9,9 +9,6 @@ const { DISABLABLE_INSTRUMENTATION_GROUPS } = require('../tracing/constants');
 /** @type {import('../config').InstanaConfig} */
 let config;
 
-/** @type {import('@instana/collector/src/types/collector').AgentConfig} */
-let agentConfig;
-
 /**
  * @param {import('../config').InstanaConfig} _config
  */
