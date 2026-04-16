@@ -31,7 +31,7 @@ function wrap(resolvedConfigValue, source, configPath) {
 }
 
 /**
- * Generic resolver (core logic)
+ * Generic resolver with priority-based sources.
  * @param {Record<string, () => any>} sources
  */
 function resolveWithPriority(sources) {
