@@ -62,6 +62,17 @@ describe('config.normalizeConfig', () => {
       expect(config.serviceName).to.equal('custom-service-name');
     });
 
+    it('should accept agent service name', () => {
+      const config = coreConfig.normalize({});
+      coreConfig.update({
+        externalConfig: {
+          serviceName: 'agent-service-name',
+          transmissionDelay: 5000
+        },
+        sourceName: 'AGENT'
+      });
+      expect(config.serviceName).to.equal('agent-service-name');
+    });
     it('should accept service name from env var', () => {
       process.env.INSTANA_SERVICE_NAME = 'very-custom-service-name';
       const config = coreConfig.normalize();

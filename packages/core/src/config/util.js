@@ -4,6 +4,8 @@
 
 'use strict';
 
+// this file needs remove later, we will use resolver.js, but we want to keep this around for a while to migrate
+
 /** @type {import('../core').GenericLogger} */
 let logger;
 

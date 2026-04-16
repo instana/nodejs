@@ -11,6 +11,7 @@ const deepMerge = require('../util/deepMerge');
 const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE } = require('../util/constants');
 const { validateStackTraceMode, validateStackTraceLength } = require('./configValidators/stackTraceValidation');
 const util = require('./util');
+const resolver = require('./resolver');
 
 /**
  * @typedef {Object} InstanaTracingOption
@@ -133,6 +134,9 @@ const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-igno
 module.exports.configNormalizers = configNormalizers;
 module.exports.configValidators = configValidators;
 
+/** @type {InstanaConfig} */
+let currentConfig;
+
 /**
  * @param {import('../core').GenericLogger} [_logger]
  */
@@ -140,6 +144,7 @@ module.exports.init = _logger => {
   logger = _logger;
   configNormalizers.init({ logger });
   util.init(logger);
+  resolver.init(logger);
 };
 
 /**
@@ -161,6 +166,7 @@ module.exports.normalize = ({ userConfig = {}, finalConfigBase = {}, defaultsOve
     normalizedUserConfig = {};
   }
 
+  resolver.clearConfigStore();
   // Preserve finalConfigBase in the finalConfig to allow additional config values
   // that are not part of the core config schema. Eg: collector config needs to be preserved.
   /** @type InstanaConfig */
@@ -176,6 +182,7 @@ module.exports.normalize = ({ userConfig = {}, finalConfigBase = {}, defaultsOve
   normalizeSecrets({ userConfig: normalizedUserConfig, defaultConfig: defaults, finalConfig });
   normalizePreloadOpentelemetry({ userConfig: normalizedUserConfig, defaultConfig: defaults, finalConfig });
 
+  currentConfig = finalConfig;
   return finalConfig;
 };
 
@@ -183,11 +190,12 @@ module.exports.normalize = ({ userConfig = {}, finalConfigBase = {}, defaultsOve
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
 function normalizeServiceName({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
-  finalConfig.serviceName = util.resolveStringConfig({
-    envVar: 'INSTANA_SERVICE_NAME',
-    configValue: userConfig.serviceName,
+  finalConfig.serviceName = resolver.get({
+    key: 'serviceName',
+    envKey: 'INSTANA_SERVICE_NAME',
+    inCodeValue: userConfig.serviceName,
     defaultValue: defaultConfig.serviceName,
-    configPath: 'config.serviceName'
+    type: 'STR'
   });
 }
 
@@ -762,3 +770,28 @@ function normalizePreloadOpentelemetry({ userConfig = {}, defaultConfig = {}, fi
     finalConfig.preloadOpentelemetry = defaultConfig.preloadOpentelemetry;
   }
 }
+
+/**
+ * Updates configuration values dynamically from external sources (e.g., agent)
+ * Iterates through all keys in externalConfig and updates them with precedence checking
+ *
+ * @param {Object} params
+ * @param {Object.<string, any>} [params.externalConfig]
+ * @param {string} params.sourceName
+ */
+exports.update = function update({ externalConfig = {}, sourceName }) {
+  if (externalConfig && typeof externalConfig === 'object' && Object.keys(externalConfig).length > 0) {
+    Object.keys(externalConfig).forEach(key => {
+      const updatedValue = resolver.update({
+        key: key,
+        newValue: externalConfig[key],
+        sourceName: sourceName
+      });
+
+      if (updatedValue !== undefined) {
+        // @ts-ignore
+        currentConfig[key] = updatedValue;
+      }
+    });
+  }
+};
