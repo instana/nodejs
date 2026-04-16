@@ -33,10 +33,6 @@ const configStore = {
     return configMeta[configPath];
   },
 
-  getAll() {
-    return { ...configMeta };
-  },
-
   clear() {
     Object.keys(configMeta).forEach(key => delete configMeta[key]);
   }
