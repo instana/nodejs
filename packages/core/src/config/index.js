@@ -974,7 +974,7 @@ function normalizeDisableEOLEvents({ userConfig = {}, defaultConfig = {}, finalC
  */
 exports.update = function update(externalConfig, source) {
   if (!externalConfig || typeof externalConfig !== 'object' || Object.keys(externalConfig).length === 0) {
-    return;
+    return currentConfig;
   }
 
   Object.keys(externalConfig).forEach(key => {
@@ -983,7 +983,7 @@ exports.update = function update(externalConfig, source) {
 
     if (currentMeta && currentMeta.source < source) {
       logger.debug(`[config] Skipping ${key}: current source ${currentMeta.source} > incoming ${source}`);
-      return;
+      return currentConfig;
     }
 
     /** @type {any} */ (currentConfig)[key] = externalConfig[key];
