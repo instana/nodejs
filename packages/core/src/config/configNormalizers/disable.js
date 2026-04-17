@@ -19,33 +19,53 @@ exports.init = function init(_config) {
  * Handles environment variables, and array inputs.
  *
  * Precedence order (highest to lowest):
- * 1. `tracing.disable`
- * 2. Environment variables (`INSTANA_TRACING_DISABLE*`)
+ * 1. Environment variables (`INSTANA_TRACING_DISABLE*`)
+ * 2. In-code tracing.disable
  *
  * @param {import('../../config').InstanaConfig} config
  */
 exports.normalize = function normalize(config) {
   if (!config?.tracing) config.tracing = {};
   try {
-    // Disable all tracing if explicitly set  'disable' to true
+    const envDisableConfig = getDisableFromEnv();
+
+    if (envDisableConfig !== null) {
+      if (envDisableConfig === true) {
+        return true;
+      }
+
+      if (envDisableConfig === false) {
+        return {};
+      }
+
+      if (envDisableConfig.instrumentations?.length || envDisableConfig.groups?.length) {
+        logger?.debug(`[config] env:INSTANA_TRACING_DISABLE* = ${JSON.stringify(envDisableConfig)}`);
+
+        if (envDisableConfig.instrumentations) {
+          envDisableConfig.instrumentations = normalizeArray(envDisableConfig.instrumentations);
+        }
+        if (envDisableConfig.groups) {
+          envDisableConfig.groups = normalizeArray(envDisableConfig.groups);
+        }
+
+        return envDisableConfig;
+      }
+    }
+
     if (config.tracing.disable === true) {
-      logger?.info('Tracing has been disabled via "tracing.disable: true" configuration.');
+      logger?.debug('[config] incode:tracing.disable = true');
       return true;
     }
+
     const hasDisableConfig = isDisableConfigNonEmpty(config);
 
     if (hasDisableConfig) {
-      logger?.info(
-        `Tracing selectively disabled as per "tracing.disable" configuration: ${JSON.stringify(config.tracing.disable)}`
-      );
+      logger?.debug(`[config] incode:tracing.disable = ${JSON.stringify(config.tracing.disable)}`);
     }
 
-    // Fallback to environment variables if `disable` is not explicitly configured
-    const disableConfig = isDisableConfigNonEmpty(config) ? config.tracing.disable : getDisableFromEnv();
+    const disableConfig = isDisableConfigNonEmpty(config) ? config.tracing.disable : null;
 
     if (!disableConfig) return {};
-
-    if (disableConfig === true) return true;
 
     // Normalize instrumentations and groups
     if (disableConfig?.instrumentations) {
@@ -91,7 +111,7 @@ exports.normalizeExternalConfig = function normalizeExternalConfig(config) {
  * 2. INSTANA_TRACING_DISABLE_INSTRUMENTATIONS / INSTANA_TRACING_DISABLE_GROUPS
  * 3. INSTANA_TRACING_DISABLE=list
  *
- * @returns {import('../../config/types').Disable}
+ * @returns {import('../../config/types').Disable | boolean | null}
  */
 function getDisableFromEnv() {
   const disable = {};
@@ -101,11 +121,16 @@ function getDisableFromEnv() {
     const envVarValue = process.env.INSTANA_TRACING_DISABLE;
 
     if (envVarValue === 'true') {
-      logger?.info('Tracing has been disabled via environment variable "INSTANA_TRACING_DISABLE=true".');
+      logger?.debug('[config] env:INSTANA_TRACING_DISABLE = true');
       return true;
     }
 
-    if (envVarValue !== 'false' && envVarValue !== '') {
+    if (envVarValue === 'false') {
+      logger?.debug('[config] env:INSTANA_TRACING_DISABLE = false');
+      return false;
+    }
+
+    if (envVarValue !== '') {
       const categorized = categorizeDisableEntries(parseEnvVar(envVarValue));
       if (categorized?.instrumentations?.length) {
         disable.instrumentations = categorized.instrumentations;
@@ -114,24 +139,20 @@ function getDisableFromEnv() {
         disable.groups = categorized.groups;
       }
 
-      logger?.info(`Tracing has been disabled via "INSTANA_TRACING_DISABLE=${envVarValue}"`);
+      logger?.debug(`[config] env:INSTANA_TRACING_DISABLE = ${envVarValue}`);
     }
   }
 
   if (process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS) {
     disable.instrumentations = parseEnvVar(process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS);
-    logger?.info(
-      `Tracing instrumentations disabled via "INSTANA_TRACING_DISABLE_INSTRUMENTATIONS": ${JSON.stringify(
-        disable.instrumentations
-      )}`
+    logger?.debug(
+      `[config] env:INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = ${process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS}`
     );
   }
 
   if (process.env.INSTANA_TRACING_DISABLE_GROUPS) {
     disable.groups = parseEnvVar(process.env.INSTANA_TRACING_DISABLE_GROUPS);
-    logger?.info(
-      `Tracing instrumentation groups disabled via "INSTANA_TRACING_DISABLE_GROUPS": ${JSON.stringify(disable.groups)}`
-    );
+    logger?.debug(`[config] env:INSTANA_TRACING_DISABLE_GROUPS = ${process.env.INSTANA_TRACING_DISABLE_GROUPS}`);
   }
 
   return Object.keys(disable).length > 0 ? disable : null;

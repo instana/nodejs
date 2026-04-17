@@ -36,7 +36,7 @@ const latestRuntime = semver.gte(process.version, '24.0.0');
 
 const logger = serverlessLogger.init();
 coreConfig.init(logger);
-let config = coreConfig.normalize({}, lambdaConfigDefaults);
+let config = coreConfig.normalize({ defaultsOverride: lambdaConfigDefaults });
 let coldStart = true;
 
 // Initialize instrumentations early to allow for require statements after our
@@ -286,7 +286,7 @@ function init(event, arnInfo, _config) {
   //         - late env variables (less likely)
   //         - custom logger
   //         - we always renormalize unconditionally to ensure safety.
-  config = coreConfig.normalize(userConfig, lambdaConfigDefaults);
+  config = coreConfig.normalize({ userConfig, defaultsOverride: lambdaConfigDefaults });
 
   if (!config.tracing.enabled) {
     return false;
