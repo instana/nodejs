@@ -25,20 +25,20 @@ const CONFIG_PRIORITY = Object.entries(CONFIG_SOURCES)
 /**
  *
  * @param {Object} params
- * @param {string} [params.envVar]
+ * @param {string} [params.envValue]
  * @param {any} [params.inCodeValue]
  * @param {any} [params.agentValue]
  * @param {any} params.defaultValue
  * @param {Function|Function[]} validators - validator(s) returning value | undefined
  * @returns {{ value: any, source: number }}
  */
-exports.resolve = function resolve({ envVar, inCodeValue, agentValue, defaultValue }, validators) {
+exports.resolve = function resolve({ envValue, inCodeValue, agentValue, defaultValue }, validators) {
   let resolved;
 
   const validatorList = Array.isArray(validators) ? validators : [validators];
 
   const inputs = {
-    env: envVar ? process.env[envVar] : undefined,
+    env: envValue ? process.env[envValue] : undefined,
     in_code: inCodeValue,
     agent: agentValue,
     default: defaultValue
