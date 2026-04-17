@@ -20,10 +20,10 @@ const configMeta = {};
 const configStore = {
   /**
    * @param {string} configPath
-   * @param {number} source
+   * @param {{ val?: any, source: number }} obj
    */
-  set(configPath, source) {
-    configMeta[configPath] = { source };
+  set(configPath, obj) {
+    configMeta[configPath] = obj;
   },
 
   /**
@@ -40,10 +40,10 @@ const configStore = {
 };
 
 /**
- * @param {{ configPath: string,  source: number }} options
+ * @param {{ configPath: string, val?: any, source: number }} options
  */
-function recordMeta({ configPath, source }) {
-  configStore.set(configPath, source);
+function recordMeta({ configPath, val, source }) {
+  configStore.set(configPath, { val, source });
 }
 
 /** @type {InstanaConfig} */
@@ -231,7 +231,7 @@ function normalizeServiceName({ userConfig = {}, defaultConfig = {}, finalConfig
     [validate.stringValidator]
   );
 
-  configStore.set('config.serviceName', source);
+  configStore.set('config.serviceName', { source });
   finalConfig.serviceName = value;
 }
 
@@ -248,7 +248,7 @@ function normalizePackageJsonPath({ userConfig = {}, defaultConfig = {}, finalCo
     [validate.stringValidator]
   );
 
-  configStore.set('config.packageJsonPath', source);
+  configStore.set('config.packageJsonPath', { source });
   finalConfig.packageJsonPath = value;
 }
 
@@ -269,16 +269,15 @@ function normalizeMetricsConfig({ userConfig = {}, defaultConfig = {}, finalConf
     [validate.numberValidator]
   );
 
-  configStore.set('config.metrics.transmissionDelay', transmissionDelaySource);
+  configStore.set('config.metrics.transmissionDelay', { source: transmissionDelaySource });
   finalConfig.metrics.transmissionDelay = transmissionDelay;
 
   const health = userMetrics?.timeBetweenHealthcheckCalls ?? defaultConfig.metrics.timeBetweenHealthcheckCalls;
 
   finalConfig.metrics.timeBetweenHealthcheckCalls = health;
-  configStore.set(
-    'config.metrics.timeBetweenHealthcheckCalls',
-    userMetrics?.timeBetweenHealthcheckCalls !== undefined ? CONFIG_SOURCES.IN_CODE : CONFIG_SOURCES.DEFAULT
-  );
+  configStore.set('config.metrics.timeBetweenHealthcheckCalls', {
+    source: userMetrics?.timeBetweenHealthcheckCalls !== undefined ? CONFIG_SOURCES.IN_CODE : CONFIG_SOURCES.DEFAULT
+  });
 }
 
 /**
@@ -329,7 +328,7 @@ function normalizeTracingEnabled({ userConfig = {}, defaultConfig = {}, finalCon
   // The env var is TRACING_DISABLE, so we need to invert it when it comes from env
   const finalValue = source === CONFIG_SOURCES.ENV ? !value : value;
 
-  configStore.set('config.tracing.enabled', source);
+  configStore.set('config.tracing.enabled', { source });
   finalConfig.tracing.enabled = finalValue;
 }
 
@@ -346,7 +345,7 @@ function normalizeAllowRootExitSpan({ userConfig = {}, defaultConfig = {}, final
     [validate.booleanValidator]
   );
 
-  configStore.set('config.tracing.allowRootExitSpan', source);
+  configStore.set('config.tracing.allowRootExitSpan', { source });
   finalConfig.tracing.allowRootExitSpan = value;
 }
 
@@ -366,7 +365,7 @@ function normalizeUseOpentelemetry({ userConfig = {}, defaultConfig = {}, finalC
   // The env var is DISABLE_USE_OPENTELEMETRY, so we need to invert it when it comes from env
   const finalValue = source === CONFIG_SOURCES.ENV ? !value : value;
 
-  configStore.set('config.tracing.useOpentelemetry', source);
+  configStore.set('config.tracing.useOpentelemetry', { source });
   finalConfig.tracing.useOpentelemetry = finalValue;
 }
 
@@ -391,7 +390,7 @@ function normalizeAutomaticTracingEnabled({ userConfig = {}, defaultConfig = {},
   // The env var is DISABLE_AUTO_INSTR, so we need to invert it when it comes from env
   const finalValue = source === CONFIG_SOURCES.ENV ? !value : value;
 
-  configStore.set('config.tracing.automaticTracingEnabled', source);
+  configStore.set('config.tracing.automaticTracingEnabled', { source });
   finalConfig.tracing.automaticTracingEnabled = finalValue;
 }
 
@@ -413,7 +412,7 @@ function normalizeActivateImmediately({ userConfig = {}, defaultConfig = {}, fin
     [validate.booleanValidator]
   );
 
-  configStore.set('config.tracing.activateImmediately', source);
+  configStore.set('config.tracing.activateImmediately', { source });
   finalConfig.tracing.activateImmediately = value;
 }
 
@@ -437,7 +436,7 @@ function normalizeTracingTransmission({ userConfig = {}, defaultConfig = {}, fin
     [validate.numberValidator]
   );
 
-  configStore.set('config.tracing.transmissionDelay', tracingTransmissionDelaySource);
+  configStore.set('config.tracing.transmissionDelay', { source: tracingTransmissionDelaySource });
   finalConfig.tracing.transmissionDelay = tracingTransmissionDelay;
 
   const { value: forceTransmissionStartingAt, source: forceTransmissionStartingAtSource } = util.resolve(
@@ -449,7 +448,7 @@ function normalizeTracingTransmission({ userConfig = {}, defaultConfig = {}, fin
     [validate.numberValidator]
   );
 
-  configStore.set('config.tracing.forceTransmissionStartingAt', forceTransmissionStartingAtSource);
+  configStore.set('config.tracing.forceTransmissionStartingAt', { source: forceTransmissionStartingAtSource });
   finalConfig.tracing.forceTransmissionStartingAt = forceTransmissionStartingAt;
 
   const { value: initialTransmissionDelay, source: initialTransmissionDelaySource } = util.resolve(
@@ -461,7 +460,7 @@ function normalizeTracingTransmission({ userConfig = {}, defaultConfig = {}, fin
     [validate.numberValidator]
   );
 
-  configStore.set('config.tracing.initialTransmissionDelay', initialTransmissionDelaySource);
+  configStore.set('config.tracing.initialTransmissionDelay', { source: initialTransmissionDelaySource });
   finalConfig.tracing.initialTransmissionDelay = initialTransmissionDelay;
 }
 
@@ -483,7 +482,7 @@ function normalizeTracingHttp({ userConfig = {}, defaultConfig = {}, finalConfig
     const fromEnvVar = parseHeadersEnvVar(process.env.INSTANA_EXTRA_HTTP_HEADERS);
     finalConfig.tracing.http.extraHttpHeadersToCapture = fromEnvVar;
 
-    configStore.set('config.tracing.http.extraHttpHeadersToCapture', CONFIG_SOURCES.ENV);
+    configStore.set('config.tracing.http.extraHttpHeadersToCapture', { source: CONFIG_SOURCES.ENV });
     return;
   }
 
@@ -498,7 +497,7 @@ function normalizeTracingHttp({ userConfig = {}, defaultConfig = {}, finalConfig
       );
     } else {
       finalConfig.tracing.http.extraHttpHeadersToCapture = userHeaders.map(s => s.toLowerCase());
-      configStore.set('config.tracing.http.extraHttpHeadersToCapture', CONFIG_SOURCES.IN_CODE);
+      configStore.set('config.tracing.http.extraHttpHeadersToCapture', { source: CONFIG_SOURCES.IN_CODE });
       logger.debug('[config] incode:config.tracing.http.extraHttpHeadersToCapture');
       return;
     }
@@ -506,7 +505,7 @@ function normalizeTracingHttp({ userConfig = {}, defaultConfig = {}, finalConfig
 
   // 3. Use default configuration
   finalConfig.tracing.http.extraHttpHeadersToCapture = defaultConfig.tracing.http.extraHttpHeadersToCapture;
-  configStore.set('config.tracing.http.extraHttpHeadersToCapture', CONFIG_SOURCES.DEFAULT);
+  configStore.set('config.tracing.http.extraHttpHeadersToCapture', { source: CONFIG_SOURCES.DEFAULT });
 }
 /**
  * @param {string} envVarValue
@@ -544,15 +543,15 @@ function normalizeTracingStackTrace({ userConfig = {}, defaultConfig = {}, final
       const normalized = configNormalizers.stackTrace.normalizeStackTraceModeFromEnv(envStackTrace);
       if (normalized !== null) {
         finalConfig.tracing.stackTrace = normalized;
-        configStore.set('config.tracing.stackTrace', CONFIG_SOURCES.ENV);
+        configStore.set('config.tracing.stackTrace', { source: CONFIG_SOURCES.ENV });
       } else {
         finalConfig.tracing.stackTrace = defaultConfig.tracing.stackTrace;
-        configStore.set('config.tracing.stackTrace', CONFIG_SOURCES.DEFAULT);
+        configStore.set('config.tracing.stackTrace', { source: CONFIG_SOURCES.DEFAULT });
       }
     } else {
       logger.warn(`Invalid env INSTANA_STACK_TRACE: ${result.error}`);
       finalConfig.tracing.stackTrace = defaultConfig.tracing.stackTrace;
-      configStore.set('config.tracing.stackTrace', CONFIG_SOURCES.DEFAULT);
+      configStore.set('config.tracing.stackTrace', { source: CONFIG_SOURCES.DEFAULT });
     }
   } else if (userGlobal?.stackTrace !== undefined) {
     // Priority 2: In-code configuration
@@ -562,19 +561,19 @@ function normalizeTracingStackTrace({ userConfig = {}, defaultConfig = {}, final
       const normalized = configNormalizers.stackTrace.normalizeStackTraceMode(userConfig);
       if (normalized !== null) {
         finalConfig.tracing.stackTrace = normalized;
-        configStore.set('config.tracing.stackTrace', CONFIG_SOURCES.IN_CODE);
+        configStore.set('config.tracing.stackTrace', { source: CONFIG_SOURCES.IN_CODE });
       } else {
         finalConfig.tracing.stackTrace = defaultConfig.tracing.stackTrace;
-        configStore.set('config.tracing.stackTrace', CONFIG_SOURCES.DEFAULT);
+        configStore.set('config.tracing.stackTrace', { source: CONFIG_SOURCES.DEFAULT });
       }
     } else {
       logger.warn(`Invalid config.tracing.global.stackTrace: ${result.error}`);
       finalConfig.tracing.stackTrace = defaultConfig.tracing.stackTrace;
-      configStore.set('config.tracing.stackTrace', CONFIG_SOURCES.DEFAULT);
+      configStore.set('config.tracing.stackTrace', { source: CONFIG_SOURCES.DEFAULT });
     }
   } else {
     finalConfig.tracing.stackTrace = defaultConfig.tracing.stackTrace;
-    configStore.set('config.tracing.stackTrace', CONFIG_SOURCES.DEFAULT);
+    configStore.set('config.tracing.stackTrace', { source: CONFIG_SOURCES.DEFAULT });
   }
 
   const isLegacyLengthDefined = userTracingConfig?.stackTraceLength !== undefined;
@@ -588,15 +587,15 @@ function normalizeTracingStackTrace({ userConfig = {}, defaultConfig = {}, final
       const normalized = configNormalizers.stackTrace.normalizeStackTraceLengthFromEnv(envStackTraceLength);
       if (normalized !== null) {
         finalConfig.tracing.stackTraceLength = normalized;
-        configStore.set('config.tracing.stackTraceLength', CONFIG_SOURCES.ENV);
+        configStore.set('config.tracing.stackTraceLength', { source: CONFIG_SOURCES.ENV });
       } else {
         finalConfig.tracing.stackTraceLength = defaultConfig.tracing.stackTraceLength;
-        configStore.set('config.tracing.stackTraceLength', CONFIG_SOURCES.DEFAULT);
+        configStore.set('config.tracing.stackTraceLength', { source: CONFIG_SOURCES.DEFAULT });
       }
     } else {
       logger.warn(`Invalid env INSTANA_STACK_TRACE_LENGTH: ${result.error}`);
       finalConfig.tracing.stackTraceLength = defaultConfig.tracing.stackTraceLength;
-      configStore.set('config.tracing.stackTraceLength', CONFIG_SOURCES.DEFAULT);
+      configStore.set('config.tracing.stackTraceLength', { source: CONFIG_SOURCES.DEFAULT });
     }
   } else if (stackTraceConfigValue !== undefined) {
     // Priority 2: In-code configuration
@@ -614,19 +613,19 @@ function normalizeTracingStackTrace({ userConfig = {}, defaultConfig = {}, final
       const normalized = configNormalizers.stackTrace.normalizeStackTraceLength(userConfig);
       if (normalized !== null) {
         finalConfig.tracing.stackTraceLength = normalized;
-        configStore.set('config.tracing.stackTraceLength', CONFIG_SOURCES.IN_CODE);
+        configStore.set('config.tracing.stackTraceLength', { source: CONFIG_SOURCES.IN_CODE });
       } else {
         finalConfig.tracing.stackTraceLength = defaultConfig.tracing.stackTraceLength;
-        configStore.set('config.tracing.stackTraceLength', CONFIG_SOURCES.DEFAULT);
+        configStore.set('config.tracing.stackTraceLength', { source: CONFIG_SOURCES.DEFAULT });
       }
     } else {
       logger.warn(`Invalid stackTraceLength value: ${result.error}`);
       finalConfig.tracing.stackTraceLength = defaultConfig.tracing.stackTraceLength;
-      configStore.set('config.tracing.stackTraceLength', CONFIG_SOURCES.DEFAULT);
+      configStore.set('config.tracing.stackTraceLength', { source: CONFIG_SOURCES.DEFAULT });
     }
   } else {
     finalConfig.tracing.stackTraceLength = defaultConfig.tracing.stackTraceLength;
-    configStore.set('config.tracing.stackTraceLength', CONFIG_SOURCES.DEFAULT);
+    configStore.set('config.tracing.stackTraceLength', { source: CONFIG_SOURCES.DEFAULT });
   }
 }
 
@@ -662,7 +661,7 @@ function normalizeDisableTracing({ userConfig = {}, defaultConfig = {}, finalCon
     return;
   }
   finalConfig.tracing.disable = defaultConfig.tracing.disable;
-  configStore.set('config.tracing.disable', CONFIG_SOURCES.DEFAULT);
+  configStore.set('config.tracing.disable', { source: CONFIG_SOURCES.DEFAULT });
 }
 
 /**
@@ -678,7 +677,7 @@ function normalizeSpanBatchingEnabled({ userConfig = {}, defaultConfig = {}, fin
     [validate.booleanValidator]
   );
 
-  configStore.set('config.tracing.spanBatchingEnabled', source);
+  configStore.set('config.tracing.spanBatchingEnabled', { source });
   finalConfig.tracing.spanBatchingEnabled = value;
 }
 
@@ -695,7 +694,7 @@ function normalizeDisableW3cTraceCorrelation({ userConfig = {}, defaultConfig = 
     [validate.validateTruthyBoolean]
   );
 
-  configStore.set('config.tracing.disableW3cTraceCorrelation', source);
+  configStore.set('config.tracing.disableW3cTraceCorrelation', { source });
   finalConfig.tracing.disableW3cTraceCorrelation = value;
 }
 
@@ -716,7 +715,7 @@ function normalizeTracingKafka({ userConfig = {}, defaultConfig = {}, finalConfi
     [validate.booleanValidator]
   );
 
-  configStore.set('config.tracing.kafka.traceCorrelation', source);
+  configStore.set('config.tracing.kafka.traceCorrelation', { source });
   finalConfig.tracing.kafka.traceCorrelation = value;
 }
 
@@ -739,18 +738,18 @@ function normalizeSecrets({ userConfig = {}, defaultConfig = {}, finalConfig = {
 
   if (finalConfig.secrets.matcherMode) {
     logger.debug(`[config] incode:config.secrets.matcherMode = ${finalConfig.secrets.matcherMode}`);
-    configStore.set('config.secrets.matcherMode', CONFIG_SOURCES.IN_CODE);
+    configStore.set('config.secrets.matcherMode', { source: CONFIG_SOURCES.IN_CODE });
   } else if (fromEnvVar.matcherMode) {
     logger.debug(`[config] env:INSTANA_SECRETS (matcherMode) = ${fromEnvVar.matcherMode}`);
-    configStore.set('config.secrets.matcherMode', CONFIG_SOURCES.ENV);
+    configStore.set('config.secrets.matcherMode', { source: CONFIG_SOURCES.ENV });
   }
 
   if (finalConfig.secrets.keywords) {
     logger.debug('[config] incode:config.secrets.keywords');
-    configStore.set('config.secrets.keywords', CONFIG_SOURCES.IN_CODE);
+    configStore.set('config.secrets.keywords', { source: CONFIG_SOURCES.IN_CODE });
   } else if (fromEnvVar.keywords) {
     logger.debug('[config] env:INSTANA_SECRETS (keywords)');
-    configStore.set('config.secrets.keywords', CONFIG_SOURCES.ENV);
+    configStore.set('config.secrets.keywords', { source: CONFIG_SOURCES.ENV });
   }
   const matcherMode = userSecrets?.matcherMode || fromEnvVar.matcherMode || defaultConfig.secrets.matcherMode;
 
@@ -762,7 +761,7 @@ function normalizeSecrets({ userConfig = {}, defaultConfig = {}, finalConfig = {
       `The value of config.secrets.matcherMode ("${matcherMode}") is not a string. Assuming the default value ${defaults.secrets.matcherMode}.`
     );
     finalConfig.secrets.matcherMode = defaultConfig.secrets.matcherMode;
-    configStore.set('config.secrets.matcherMode', CONFIG_SOURCES.IN_CODE);
+    configStore.set('config.secrets.matcherMode', { source: CONFIG_SOURCES.IN_CODE });
   } else if (validSecretsMatcherModes.indexOf(matcherMode) < 0) {
     logger.warn(
       // eslint-disable-next-line max-len
@@ -775,7 +774,7 @@ function normalizeSecrets({ userConfig = {}, defaultConfig = {}, finalConfig = {
     });
   } else {
     finalConfig.secrets.matcherMode = matcherMode;
-    configStore.set('config.secrets.matcherMode', CONFIG_SOURCES.IN_CODE);
+    configStore.set('config.secrets.matcherMode', { source: CONFIG_SOURCES.IN_CODE });
   }
 
   if (!Array.isArray(keywords)) {
@@ -784,15 +783,15 @@ function normalizeSecrets({ userConfig = {}, defaultConfig = {}, finalConfig = {
       `The value of config.secrets.keywords (${keywords}) is not an array. Assuming the default value ${defaults.secrets.keywords}.`
     );
     finalConfig.secrets.keywords = defaultConfig.secrets.keywords;
-    configStore.set('config.secrets.keywords', CONFIG_SOURCES.IN_CODE);
+    configStore.set('config.secrets.keywords', { source: CONFIG_SOURCES.IN_CODE });
   } else {
     finalConfig.secrets.keywords = keywords;
-    configStore.set('config.secrets.keywords', CONFIG_SOURCES.IN_CODE);
+    configStore.set('config.secrets.keywords', { source: CONFIG_SOURCES.IN_CODE });
   }
 
   if (finalConfig.secrets.matcherMode === 'none') {
     finalConfig.secrets.keywords = [];
-    configStore.set('config.secrets.keywords', CONFIG_SOURCES.IN_CODE);
+    configStore.set('config.secrets.keywords', { source: CONFIG_SOURCES.IN_CODE });
   }
 }
 
@@ -860,7 +859,7 @@ function normalizeIgnoreEndpoints({ userConfig = {}, defaultConfig = {}, finalCo
       process.env.INSTANA_IGNORE_ENDPOINTS_PATH
     );
     logger.debug('[config] env:INSTANA_IGNORE_ENDPOINTS_PATH');
-    configStore.set('config.tracing.ignoreEndpoints', CONFIG_SOURCES.ENV);
+    configStore.set('config.tracing.ignoreEndpoints', { source: CONFIG_SOURCES.ENV });
     return;
   }
 
@@ -872,7 +871,7 @@ function normalizeIgnoreEndpoints({ userConfig = {}, defaultConfig = {}, finalCo
       process.env.INSTANA_IGNORE_ENDPOINTS
     );
     logger.debug('[config] env:INSTANA_IGNORE_ENDPOINTS');
-    configStore.set('config.tracing.ignoreEndpoints', CONFIG_SOURCES.ENV);
+    configStore.set('config.tracing.ignoreEndpoints', { source: CONFIG_SOURCES.ENV });
     return;
   }
 
@@ -885,18 +884,18 @@ function normalizeIgnoreEndpoints({ userConfig = {}, defaultConfig = {}, finalCo
       )}`
     );
     finalConfig.tracing.ignoreEndpoints = defaultConfig.tracing.ignoreEndpoints;
-    configStore.set('config.tracing.ignoreEndpoints', CONFIG_SOURCES.DEFAULT);
+    configStore.set('config.tracing.ignoreEndpoints', { source: CONFIG_SOURCES.DEFAULT });
     return;
   }
   if (userIgnoreEndpoints && Object.keys(userIgnoreEndpoints).length) {
     finalConfig.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(userIgnoreEndpoints);
     logger.debug('[config] incode:config.tracing.ignoreEndpoints');
-    configStore.set('config.tracing.ignoreEndpoints', CONFIG_SOURCES.IN_CODE);
+    configStore.set('config.tracing.ignoreEndpoints', { source: CONFIG_SOURCES.IN_CODE });
     return;
   }
 
   finalConfig.tracing.ignoreEndpoints = defaultConfig.tracing.ignoreEndpoints;
-  configStore.set('config.tracing.ignoreEndpoints', CONFIG_SOURCES.DEFAULT);
+  configStore.set('config.tracing.ignoreEndpoints', { source: CONFIG_SOURCES.DEFAULT });
 }
 
 /**
@@ -912,7 +911,7 @@ function normalizeIgnoreEndpointsDisableSuppression({ userConfig = {}, defaultCo
     [validate.booleanValidator]
   );
 
-  configStore.set('config.tracing.ignoreEndpointsDisableSuppression', source);
+  configStore.set('config.tracing.ignoreEndpointsDisableSuppression', { source });
   finalConfig.tracing.ignoreEndpointsDisableSuppression = value;
 }
 
@@ -929,7 +928,7 @@ function normalizeDisableEOLEvents({ userConfig = {}, defaultConfig = {}, finalC
     [validate.booleanValidator]
   );
 
-  configStore.set('config.tracing.disableEOLEvents', source);
+  configStore.set('config.tracing.disableEOLEvents', { source });
   finalConfig.tracing.disableEOLEvents = value;
 }
 
@@ -971,7 +970,7 @@ exports.update = function update(externalConfig, source) {
     }
 
     /** @type {any} */ (currentConfig)[key] = externalConfig[key];
-    configStore.set(configPath, source);
+    configStore.set(configPath, { source });
     logger.debug(`[config] Updated ${key} from source ${source}: ${JSON.stringify(externalConfig[key])}`);
   });
   return currentConfig;

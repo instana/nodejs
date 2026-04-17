@@ -5,7 +5,6 @@
 'use strict';
 
 const { DISABLABLE_INSTRUMENTATION_GROUPS } = require('../../tracing/constants');
-const { CONFIG_SOURCES } = require('../../util/constants');
 /** @type {import('../../core').GenericLogger} */
 let logger;
 
@@ -32,11 +31,11 @@ exports.normalize = function normalize(config) {
 
     if (envDisableConfig !== null) {
       if (envDisableConfig === true) {
-        return wrap(true, CONFIG_SOURCES.ENV, 'config.tracing.disable');
+        return true;
       }
 
       if (envDisableConfig === false) {
-        return wrap({}, CONFIG_SOURCES.ENV, 'config.tracing.disable');
+        return {};
       }
 
       if (envDisableConfig.instrumentations?.length || envDisableConfig.groups?.length) {
@@ -49,13 +48,13 @@ exports.normalize = function normalize(config) {
           envDisableConfig.groups = normalizeArray(envDisableConfig.groups);
         }
 
-        return wrap(envDisableConfig, CONFIG_SOURCES.ENV, 'config.tracing.disable');
+        return envDisableConfig;
       }
     }
 
     if (config.tracing.disable === true) {
       logger?.debug('[config] incode:tracing.disable = true');
-      return wrap(true, CONFIG_SOURCES.IN_CODE, 'config.tracing.disable');
+      return true;
     }
 
     const hasDisableConfig = isDisableConfigNonEmpty(config);
@@ -66,7 +65,7 @@ exports.normalize = function normalize(config) {
 
     const disableConfig = isDisableConfigNonEmpty(config) ? config.tracing.disable : null;
 
-    if (!disableConfig) return wrap({}, CONFIG_SOURCES.DEFAULT, 'config.tracing.disable');
+    if (!disableConfig) return {};
 
     // Normalize instrumentations and groups
     if (disableConfig?.instrumentations) {
@@ -78,29 +77,16 @@ exports.normalize = function normalize(config) {
 
     // Handle if tracing.disable is an array
     if (Array.isArray(disableConfig)) {
-      return wrap(categorizeDisableEntries(disableConfig), CONFIG_SOURCES.IN_CODE, 'config.tracing.disable');
+      return categorizeDisableEntries(disableConfig);
     }
 
-    return wrap(disableConfig || {}, CONFIG_SOURCES.IN_CODE, 'config.tracing.disable');
+    return disableConfig || {};
   } catch (error) {
     // Fallback to an empty disable config on error
     logger?.debug(`Error while normalizing tracing.disable config: ${error?.message} ${error?.stack}`);
-    return wrap({}, CONFIG_SOURCES.DEFAULT, 'config.tracing.disable');
+    return {};
   }
 };
-
-/**
- * @param {any} value
- * @param {number} source
- * @param {string} configPath
- */
-function wrap(value, source, configPath) {
-  return {
-    value,
-    source,
-    configPath
-  };
-}
 
 /**
  * Handles config from agent.
