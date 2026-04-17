@@ -20,7 +20,7 @@ const configMeta = {};
 const configStore = {
   /**
    * @param {string} configPath
-   * @param {{ val?: any, source: number }} obj
+   * @param {{ source: number }} obj
    */
   set(configPath, obj) {
     configMeta[configPath] = obj;
@@ -28,7 +28,7 @@ const configStore = {
 
   /**
    * @param {string} configPath - The config path
-   * @returns {{ value: any, source: number } | undefined}
+   * @returns {{ source: number } | undefined}
    */
   get(configPath) {
     return configMeta[configPath];
@@ -40,10 +40,10 @@ const configStore = {
 };
 
 /**
- * @param {{ configPath: string, val?: any, source: number }} options
+ * @param {{ configPath: string, source: number }} options
  */
-function recordMeta({ configPath, val, source }) {
-  configStore.set(configPath, { val, source });
+function recordMeta({ configPath, source }) {
+  configStore.set(configPath, { source });
 }
 
 /** @type {InstanaConfig} */
