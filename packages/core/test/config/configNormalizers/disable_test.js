@@ -49,7 +49,7 @@ describe.skip('util.configNormalizers.disable', () => {
 
       const result = normalize(config);
       expect(result.value.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
-      expect(result.source).to.equal(CONFIG_SOURCES.IN_CODE);
+      expect(result.source).to.equal(CONFIG_SOURCES.INCODE);
       expect(result.configPath).to.equal('config.tracing.disable');
     });
 
@@ -64,7 +64,7 @@ describe.skip('util.configNormalizers.disable', () => {
 
       const result = normalize(config);
       expect(result.value.instrumentations).to.deep.equal([]);
-      expect(result.source).to.equal(CONFIG_SOURCES.IN_CODE);
+      expect(result.source).to.equal(CONFIG_SOURCES.INCODE);
       expect(result.configPath).to.equal('config.tracing.disable');
     });
 
@@ -77,7 +77,7 @@ describe.skip('util.configNormalizers.disable', () => {
 
       const result = normalize(config);
       expect(result.value.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
-      expect(result.source).to.equal(CONFIG_SOURCES.IN_CODE);
+      expect(result.source).to.equal(CONFIG_SOURCES.INCODE);
       expect(result.configPath).to.equal('config.tracing.disable');
     });
 
@@ -92,7 +92,7 @@ describe.skip('util.configNormalizers.disable', () => {
 
       const result = normalize(config);
       expect(result.value.groups).to.deep.equal(['logging', 'databases']);
-      expect(result.source).to.equal(CONFIG_SOURCES.IN_CODE);
+      expect(result.source).to.equal(CONFIG_SOURCES.INCODE);
       expect(result.configPath).to.equal('config.tracing.disable');
     });
 
@@ -107,7 +107,7 @@ describe.skip('util.configNormalizers.disable', () => {
 
       const result = normalize(config);
       expect(result.value.groups).to.deep.equal(['logging', 'databases', 'messaging']);
-      expect(result.source).to.equal(CONFIG_SOURCES.IN_CODE);
+      expect(result.source).to.equal(CONFIG_SOURCES.INCODE);
       expect(result.configPath).to.equal('config.tracing.disable');
     });
 
@@ -122,7 +122,7 @@ describe.skip('util.configNormalizers.disable', () => {
 
       const result = normalize(config);
       expect(result.value.groups).to.deep.equal([]);
-      expect(result.source).to.equal(CONFIG_SOURCES.IN_CODE);
+      expect(result.source).to.equal(CONFIG_SOURCES.INCODE);
       expect(result.configPath).to.equal('config.tracing.disable');
     });
 
@@ -139,7 +139,7 @@ describe.skip('util.configNormalizers.disable', () => {
           instrumentations: ['aws-sdk', 'mongodb'],
           groups: ['logging', 'databases']
         },
-        source: CONFIG_SOURCES.IN_CODE,
+        source: CONFIG_SOURCES.INCODE,
         configPath: 'config.tracing.disable'
       });
     });
@@ -184,7 +184,7 @@ describe.skip('util.configNormalizers.disable', () => {
 
       const result = normalize(config);
       expect(result.value.instrumentations).to.deep.equal(['aws-sdk', 'mongodb']);
-      expect(result.source).to.equal(CONFIG_SOURCES.IN_CODE);
+      expect(result.source).to.equal(CONFIG_SOURCES.INCODE);
       expect(result.configPath).to.equal('config.tracing.disable');
     });
 
@@ -197,7 +197,7 @@ describe.skip('util.configNormalizers.disable', () => {
 
       const result = normalize(config);
       expect(result.value.instrumentations).to.deep.equal(['aws-sdk', 'mongodb']);
-      expect(result.source).to.equal(CONFIG_SOURCES.IN_CODE);
+      expect(result.source).to.equal(CONFIG_SOURCES.INCODE);
       expect(result.configPath).to.equal('config.tracing.disable');
     });
 
@@ -211,7 +211,7 @@ describe.skip('util.configNormalizers.disable', () => {
       const result = normalize(config);
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.IN_CODE,
+        source: CONFIG_SOURCES.INCODE,
         configPath: 'config.tracing.disable'
       });
     });

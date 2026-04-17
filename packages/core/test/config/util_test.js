@@ -67,7 +67,7 @@ describe.skip('config.util', () => {
 
       expect(result).to.deep.equal({
         value: 3000,
-        source: CONFIG_SOURCES.IN_CODE,
+        source: CONFIG_SOURCES.INCODE,
         configPath: 'config.test.value'
       });
     });
@@ -82,7 +82,7 @@ describe.skip('config.util', () => {
 
       expect(result).to.deep.equal({
         value: 5000,
-        source: CONFIG_SOURCES.IN_CODE,
+        source: CONFIG_SOURCES.INCODE,
         configPath: 'config.test.value'
       });
     });
@@ -97,7 +97,7 @@ describe.skip('config.util', () => {
 
       expect(result).to.deep.equal({
         value: 5000,
-        source: CONFIG_SOURCES.IN_CODE,
+        source: CONFIG_SOURCES.INCODE,
         configPath: 'config.test.value'
       });
     });
@@ -163,7 +163,7 @@ describe.skip('config.util', () => {
 
       expect(result).to.deep.equal({
         value: 3000,
-        source: CONFIG_SOURCES.IN_CODE,
+        source: CONFIG_SOURCES.INCODE,
         configPath: 'config.test.value'
       });
     });
@@ -195,7 +195,7 @@ describe.skip('config.util', () => {
 
       expect(result).to.deep.equal({
         value: 0,
-        source: CONFIG_SOURCES.IN_CODE,
+        source: CONFIG_SOURCES.INCODE,
         configPath: 'config.test.value'
       });
     });
@@ -227,7 +227,7 @@ describe.skip('config.util', () => {
 
       expect(result).to.deep.equal({
         value: -500,
-        source: CONFIG_SOURCES.IN_CODE,
+        source: CONFIG_SOURCES.INCODE,
         configPath: 'config.test.value'
       });
     });
@@ -259,7 +259,7 @@ describe.skip('config.util', () => {
 
       expect(result).to.deep.equal({
         value: 123.45,
-        source: CONFIG_SOURCES.IN_CODE,
+        source: CONFIG_SOURCES.INCODE,
         configPath: 'config.test.value'
       });
     });
@@ -306,7 +306,7 @@ describe.skip('config.util', () => {
 
       expect(result).to.deep.equal({
         value: 0,
-        source: CONFIG_SOURCES.IN_CODE,
+        source: CONFIG_SOURCES.INCODE,
         configPath: 'config.test.value'
       });
     });
@@ -363,7 +363,7 @@ describe.skip('config.util', () => {
 
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.IN_CODE,
+        source: CONFIG_SOURCES.INCODE,
         configPath: 'config.test.value'
       });
     });
@@ -480,7 +480,7 @@ describe.skip('config.util', () => {
 
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.IN_CODE,
+        source: CONFIG_SOURCES.INCODE,
         configPath: 'config.test.value'
       });
     });
@@ -586,7 +586,7 @@ describe.skip('config.util', () => {
 
       expect(result).to.deep.equal({
         value: false,
-        source: CONFIG_SOURCES.IN_CODE,
+        source: CONFIG_SOURCES.INCODE,
         configPath: 'config.test.value'
       });
     });
@@ -726,7 +726,7 @@ describe.skip('config.util', () => {
 
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.IN_CODE,
+        source: CONFIG_SOURCES.INCODE,
         configPath: 'config.test.value'
       });
     });
@@ -832,7 +832,7 @@ describe.skip('config.util', () => {
 
       expect(result).to.deep.equal({
         value: 'config-value',
-        source: CONFIG_SOURCES.IN_CODE,
+        source: CONFIG_SOURCES.INCODE,
         configPath: 'config.test.value'
       });
     });
@@ -847,7 +847,7 @@ describe.skip('config.util', () => {
 
       expect(result).to.deep.equal({
         value: '',
-        source: CONFIG_SOURCES.IN_CODE,
+        source: CONFIG_SOURCES.INCODE,
         configPath: 'config.test.value'
       });
     });
@@ -897,7 +897,7 @@ describe.skip('config.util', () => {
 
       expect(result).to.deep.equal({
         value: multilineValue,
-        source: CONFIG_SOURCES.IN_CODE,
+        source: CONFIG_SOURCES.INCODE,
         configPath: 'config.test.value'
       });
     });
