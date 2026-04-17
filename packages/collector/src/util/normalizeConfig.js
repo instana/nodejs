@@ -45,8 +45,8 @@ module.exports = function normalizeConfig(userConfig = {}) {
 function normalizeAgentHost(userConfig, defaultConfig) {
   const { value } = util.resolve(
     {
-      envVar: 'INSTANA_AGENT_HOST',
-      configValue: userConfig.agentHost,
+      envValue: 'INSTANA_AGENT_HOST',
+      inCodeValue: userConfig.agentHost,
       defaultValue: defaultConfig.agentHost,
       configPath: 'config.agentHost'
     },
@@ -63,8 +63,8 @@ function normalizeAgentHost(userConfig, defaultConfig) {
 function normalizeAgentPort(userConfig, defaultConfig) {
   const { value } = util.resolve(
     {
-      envVar: 'INSTANA_AGENT_PORT',
-      configValue: userConfig.agentPort,
+      envValue: 'INSTANA_AGENT_PORT',
+      inCodeValue: userConfig.agentPort,
       defaultValue: defaultConfig.agentPort,
       configPath: 'config.agentPort'
     },
@@ -81,8 +81,8 @@ function normalizeAgentPort(userConfig, defaultConfig) {
 function normalizeAgentRequestTimeout(userConfig, defaultConfig) {
   const { value } = util.resolve(
     {
-      envVar: 'INSTANA_AGENT_REQUEST_TIMEOUT',
-      configValue: userConfig.agentRequestTimeout,
+      envValue: 'INSTANA_AGENT_REQUEST_TIMEOUT',
+      inCodeValue: userConfig.agentRequestTimeout,
       defaultValue: defaultConfig.agentRequestTimeout,
       configPath: 'config.agentRequestTimeout'
     },
@@ -99,8 +99,8 @@ function normalizeAgentRequestTimeout(userConfig, defaultConfig) {
 function normalizeAutoProfile(userConfig, defaultConfig) {
   const { value } = util.resolve(
     {
-      envVar: 'INSTANA_AUTO_PROFILE',
-      configValue: userConfig.autoProfile,
+      envValue: 'INSTANA_AUTO_PROFILE',
+      inCodeValue: userConfig.autoProfile,
       defaultValue: defaultConfig.autoProfile,
       configPath: 'config.autoProfile'
     },

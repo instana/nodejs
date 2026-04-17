@@ -26,21 +26,20 @@ const CONFIG_PRIORITY = Object.entries(CONFIG_SOURCES)
  *
  * @param {Object} params
  * @param {string} [params.envVar]
- * @param {any} [params.configValue]
+ * @param {any} [params.inCodeValue]
  * @param {any} [params.agentValue]
  * @param {any} params.defaultValue
- * @param {string} [params.configPath]
  * @param {Function|Function[]} validators - validator(s) returning value | undefined
- * @returns {{ value: any, source: number, configPath?: string }}
+ * @returns {{ value: any, source: number }}
  */
-exports.resolve = function resolve({ envVar, configValue, agentValue, defaultValue, configPath }, validators) {
+exports.resolve = function resolve({ envVar, inCodeValue, agentValue, defaultValue }, validators) {
   let resolved;
 
   const validatorList = Array.isArray(validators) ? validators : [validators];
 
   const inputs = {
     env: envVar ? process.env[envVar] : undefined,
-    in_code: configValue,
+    in_code: inCodeValue,
     agent: agentValue,
     default: defaultValue
   };
@@ -60,8 +59,7 @@ exports.resolve = function resolve({ envVar, configValue, agentValue, defaultVal
     if (parsedValue !== undefined) {
       resolved = {
         value: parsedValue,
-        source: CONFIG_SOURCES[/** @type {keyof typeof CONFIG_SOURCES} */ (sourceKey.toUpperCase())],
-        configPath
+        source: CONFIG_SOURCES[/** @type {keyof typeof CONFIG_SOURCES} */ (sourceKey.toUpperCase())]
       };
 
       logger?.debug(`[config] Resolved from ${sourceKey}: ${JSON.stringify(parsedValue)}`);
@@ -78,8 +76,7 @@ exports.resolve = function resolve({ envVar, configValue, agentValue, defaultVal
   return (
     resolved || {
       value: defaultValue,
-      source: CONFIG_SOURCES.DEFAULT,
-      configPath
+      source: CONFIG_SOURCES.DEFAULT
     }
   );
 };
