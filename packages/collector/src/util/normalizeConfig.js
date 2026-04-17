@@ -47,8 +47,7 @@ function normalizeAgentHost(userConfig, defaultConfig) {
     {
       envValue: 'INSTANA_AGENT_HOST',
       inCodeValue: userConfig.agentHost,
-      defaultValue: defaultConfig.agentHost,
-      configPath: 'config.agentHost'
+      defaultValue: defaultConfig.agentHost
     },
     [validate.stringValidator]
   );
@@ -65,8 +64,7 @@ function normalizeAgentPort(userConfig, defaultConfig) {
     {
       envValue: 'INSTANA_AGENT_PORT',
       inCodeValue: userConfig.agentPort,
-      defaultValue: defaultConfig.agentPort,
-      configPath: 'config.agentPort'
+      defaultValue: defaultConfig.agentPort
     },
     [validate.numberValidator]
   );
@@ -83,8 +81,7 @@ function normalizeAgentRequestTimeout(userConfig, defaultConfig) {
     {
       envValue: 'INSTANA_AGENT_REQUEST_TIMEOUT',
       inCodeValue: userConfig.agentRequestTimeout,
-      defaultValue: defaultConfig.agentRequestTimeout,
-      configPath: 'config.agentRequestTimeout'
+      defaultValue: defaultConfig.agentRequestTimeout
     },
     [validate.numberValidator]
   );
@@ -101,8 +98,7 @@ function normalizeAutoProfile(userConfig, defaultConfig) {
     {
       envValue: 'INSTANA_AUTO_PROFILE',
       inCodeValue: userConfig.autoProfile,
-      defaultValue: defaultConfig.autoProfile,
-      configPath: 'config.autoProfile'
+      defaultValue: defaultConfig.autoProfile
     },
     [validate.booleanValidator]
   );
