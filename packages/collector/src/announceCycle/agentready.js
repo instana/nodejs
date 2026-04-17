@@ -130,7 +130,6 @@ function enter(_ctx) {
     }
   }
 
-  // here we update the config with the values from the agent
   const updatedConfig = coreConfig.update(agentOpts.config, util.constants.CONFIG_SOURCES.AGENT);
   tracing.activate(updatedConfig);
 
