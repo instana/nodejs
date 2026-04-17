@@ -20,7 +20,7 @@ exports.STACK_TRACE_MODES = {
 
 exports.CONFIG_SOURCES = {
   ENV: 1,
-  IN_CODE: 2,
+  INCODE: 2,
   AGENT: 3,
   DEFAULT: 4
 };

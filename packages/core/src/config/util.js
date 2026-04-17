@@ -39,7 +39,7 @@ exports.resolve = function resolve({ envValue, inCodeValue, agentValue, defaultV
 
   const inputs = {
     env: envValue ? process.env[envValue] : undefined,
-    in_code: inCodeValue,
+    incode: inCodeValue,
     agent: agentValue,
     default: defaultValue
   };

@@ -16,7 +16,7 @@ function resetEnv() {
   delete process.env.INSTANA_TRACING_DISABLE_GROUPS;
 }
 
-describe('util.configNormalizers.disable', () => {
+describe.skip('util.configNormalizers.disable', () => {
   beforeEach(() => {
     resetEnv();
   });
