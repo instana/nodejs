@@ -39,13 +39,6 @@ const configStore = {
   }
 };
 
-/**
- * @param {{ configPath: string, source: number }} options
- */
-function recordMeta({ configPath, source }) {
-  configStore.set(configPath, { source });
-}
-
 /** @type {InstanaConfig} */
 let currentConfig;
 
@@ -422,8 +415,7 @@ function normalizeActivateImmediately({ userConfig = {}, defaultConfig = {}, fin
 function normalizeTracingTransmission({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
   finalConfig.tracing.maxBufferedSpans = userConfig.tracing.maxBufferedSpans ?? defaultConfig.tracing.maxBufferedSpans;
 
-  recordMeta({
-    configPath: 'config.tracing.maxBufferedSpans',
+  configStore.set('config.tracing.maxBufferedSpans', {
     source: userConfig.tracing.maxBufferedSpans !== undefined ? CONFIG_SOURCES.IN_CODE : CONFIG_SOURCES.DEFAULT
   });
 
@@ -645,8 +637,7 @@ function normalizeDisableTracing({ userConfig = {}, defaultConfig = {}, finalCon
   if (disableConfig === true) {
     finalConfig.tracing.enabled = false;
     finalConfig.tracing.disable = {};
-    recordMeta({
-      configPath: 'config.tracing.disable',
+    configStore.set('config.tracing.disable', {
       source: CONFIG_SOURCES.DEFAULT
     });
     return;
@@ -654,8 +645,7 @@ function normalizeDisableTracing({ userConfig = {}, defaultConfig = {}, finalCon
 
   if (typeof disableConfig === 'object' && (disableConfig.instrumentations?.length || disableConfig.groups?.length)) {
     finalConfig.tracing.disable = disableConfig;
-    recordMeta({
-      configPath: 'config.tracing.disable',
+    configStore.set('config.tracing.disable', {
       source: disableRes.source
     });
     return;
@@ -768,8 +758,7 @@ function normalizeSecrets({ userConfig = {}, defaultConfig = {}, finalConfig = {
       `The value of config.secrets.matcherMode (or the matcher mode parsed from INSTANA_SECRETS) (${matcherMode}) is not a supported matcher mode. Assuming the default value ${defaults.secrets.matcherMode}.`
     );
     finalConfig.secrets.matcherMode = defaultConfig.secrets.matcherMode;
-    recordMeta({
-      configPath: 'config.secrets.matcherMode',
+    configStore.set('config.secrets.matcherMode', {
       source: CONFIG_SOURCES.IN_CODE
     });
   } else {
@@ -943,8 +932,7 @@ function normalizeDisableEOLEvents({ userConfig = {}, defaultConfig = {}, finalC
   const source = userConfig.preloadOpentelemetry !== undefined ? CONFIG_SOURCES.IN_CODE : CONFIG_SOURCES.DEFAULT;
 
   finalConfig.preloadOpentelemetry = value;
-  recordMeta({
-    configPath: 'config.preloadOpentelemetry',
+  configStore.set('config.preloadOpentelemetry', {
     source: source
   });
 }
