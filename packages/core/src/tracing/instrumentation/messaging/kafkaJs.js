@@ -28,6 +28,7 @@ exports.updateConfig = function updateConfig(config) {
   traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
 };
 
+// TODO: We will remove _config as soon as the config object is a config instance (`config.get`)
 exports.activate = function activate(_config) {
   traceCorrelationEnabled = _config.tracing?.kafka?.traceCorrelation;
   isActive = true;
