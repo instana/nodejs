@@ -10,7 +10,7 @@ const opentelemetry = require('@opentelemetry/sdk-node');
 const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
 const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-grpc');
 const { OTLPMetricExporter } = require('@opentelemetry/exporter-metrics-otlp-grpc');
-const { PeriodicExportingMetricReader, ConsoleMetricExporter } = require('@opentelemetry/sdk-metrics');
+const { PeriodicExportingMetricReader } = require('@opentelemetry/sdk-metrics');
 const { KafkaJsInstrumentation } = require('@opentelemetry/instrumentation-kafkajs');
 const { HostMetrics } = require('@opentelemetry/host-metrics');
 
@@ -31,8 +31,6 @@ const sdk = new opentelemetry.NodeSDK({
     url: otlpEndpoint,
     metadata
   }),
-  // Das SDK akzeptiert hier einen Reader.
-  // Um beide zu nutzen, ohne komplexe Provider-Logik:
   metricReader: instanaReader,
   instrumentations: [
     getNodeAutoInstrumentations({
