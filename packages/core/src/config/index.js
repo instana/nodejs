@@ -199,7 +199,7 @@ module.exports.normalize = ({ userConfig = {}, finalConfigBase = {}, defaultsOve
   } else {
     normalizedUserConfig = {};
   }
-  // Clear previous sources if any
+  // TODO: This call needs to be reconsidered when we add the full config instance (`config.get(...)`).
   configStore.clear();
 
   // Preserve finalConfigBase in the finalConfig to allow additional config values
