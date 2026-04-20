@@ -305,7 +305,7 @@ function applyDisableConfiguration(agentResponse) {
   ensureNestedObjectExists(agentOpts.config, ['tracing', 'disable']);
   agentOpts.config.tracing.disable = configNormalizers.disable.normalizeExternalConfig({
     tracing: { disable: disablingConfig }
-  });
+  }).value;
 }
 module.exports = {
   init,
