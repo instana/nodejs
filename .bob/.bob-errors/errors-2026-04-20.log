@@ -1,0 +1,22 @@
+
+================================================================================
+ERROR LOGGED: 2026-04-20T12:02:20.128Z
+User ID: Abhilash.Sivan@ibm.com
+================================================================================
+Error Name: GatewayError
+Error Message: Request failed after 6 attempts: This operation was aborted
+
+Stack Trace:
+GatewayError: Request failed after 6 attempts: This operation was aborted
+    at t.fetch (file:///Users/abhi/.nvm/versions/node/v24.14.1/lib/node_modules/bobshell/bundle/bob.js:775:3824)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async t.createChatCompletion (file:///Users/abhi/.nvm/versions/node/v24.14.1/lib/node_modules/bobshell/bundle/bob.js:775:7600)
+    at async unt.createChatCompletionWithTokenRenewal (file:///Users/abhi/.nvm/versions/node/v24.14.1/lib/node_modules/bobshell/bundle/bob.js:2171:235)
+    at async unt.generateContent (file:///Users/abhi/.nvm/versions/node/v24.14.1/lib/node_modules/bobshell/bundle/bob.js:2170:1114)
+    at async file:///Users/abhi/.nvm/versions/node/v24.14.1/lib/node_modules/bobshell/bundle/bob.js:798:30351
+    at async nR (file:///Users/abhi/.nvm/versions/node/v24.14.1/lib/node_modules/bobshell/bundle/bob.js:798:17190)
+    at async hz (file:///Users/abhi/.nvm/versions/node/v24.14.1/lib/node_modules/bobshell/bundle/bob.js:1634:1437)
+    at async cwe.generateContent (file:///Users/abhi/.nvm/versions/node/v24.14.1/lib/node_modules/bobshell/bundle/bob.js:2818:1879)
+    at async vor.executeFallback (file:///Users/abhi/.nvm/versions/node/v24.14.1/lib/node_modules/bobshell/bundle/bob.js:2423:5)
+================================================================================
+
