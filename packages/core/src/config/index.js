@@ -372,7 +372,7 @@ function normalizeUseOpentelemetry({ userConfig = {}, defaultConfig = {}, finalC
   );
 
   // The env var is DISABLE_USE_OPENTELEMETRY, so we need to invert it when it comes from env
-  // TODO: Consider adding this normalization support to util.resolver
+  // TODO: add normalization helpers to util.resolve(...)
   const finalValue = source === CONFIG_SOURCES.ENV ? !value : value;
 
   configStore.set('config.tracing.useOpentelemetry', { source });
