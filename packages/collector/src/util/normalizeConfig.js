@@ -110,5 +110,12 @@ function normalizeAutoProfile(userConfig, defaultConfig) {
  * @returns {boolean}
  */
 function normalizeUnhandledRejections(userConfig) {
-  return userConfig.reportUnhandledPromiseRejections ?? false;
+  const { value } = util.resolve(
+    {
+      inCodeValue: userConfig.reportUnhandledPromiseRejections,
+      defaultValue: false
+    },
+    [validate.booleanValidator]
+  );
+  return value;
 }

@@ -39,7 +39,16 @@ const configStore = {
   }
 };
 
-/** @type {InstanaConfig} */
+/**
+ * @type {InstanaConfig}
+ *
+ * NOTE: currentConfig is a reference to the config object returned by normalize().
+ * This variable exists to allow dynamic config updates via the update() function without
+ * requiring the config object to be passed as a parameter.
+ *
+ * TODO: This can be removed in the future when we implement config.get()/config.set()
+ * methods that will provide a cleaner API for accessing and modifying configuration values.
+ */
 let currentConfig;
 
 /**
@@ -262,14 +271,20 @@ function normalizeMetricsConfig({ userConfig = {}, defaultConfig = {}, finalConf
     [validate.numberValidator]
   );
 
-  configStore.set('config.metrics.transmissionDelay', { source: transmissionDelaySource });
   finalConfig.metrics.transmissionDelay = transmissionDelay;
+  configStore.set('config.metrics.transmissionDelay', { source: transmissionDelaySource });
 
-  const health = userMetrics?.timeBetweenHealthcheckCalls ?? defaultConfig.metrics.timeBetweenHealthcheckCalls;
+  const { value: healthcheckInterval, source: healthcheckSource } = util.resolve(
+    {
+      inCodeValue: userMetrics?.timeBetweenHealthcheckCalls,
+      defaultValue: defaultConfig.metrics.timeBetweenHealthcheckCalls
+    },
+    [validate.numberValidator]
+  );
 
-  finalConfig.metrics.timeBetweenHealthcheckCalls = health;
+  finalConfig.metrics.timeBetweenHealthcheckCalls = healthcheckInterval;
   configStore.set('config.metrics.timeBetweenHealthcheckCalls', {
-    source: userMetrics?.timeBetweenHealthcheckCalls !== undefined ? CONFIG_SOURCES.INCODE : CONFIG_SOURCES.DEFAULT
+    source: healthcheckSource
   });
 }
 
@@ -925,18 +940,18 @@ function normalizeDisableEOLEvents({ userConfig = {}, defaultConfig = {}, finalC
 
 /**
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
- */ function normalizePreloadOpentelemetry({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
-  const value =
-    userConfig.preloadOpentelemetry !== undefined
-      ? userConfig.preloadOpentelemetry
-      : defaultConfig.preloadOpentelemetry;
-
-  const source = userConfig.preloadOpentelemetry !== undefined ? CONFIG_SOURCES.INCODE : CONFIG_SOURCES.DEFAULT;
+ */
+function normalizePreloadOpentelemetry({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
+  const { value, source } = util.resolve(
+    {
+      inCodeValue: userConfig.preloadOpentelemetry,
+      defaultValue: defaultConfig.preloadOpentelemetry
+    },
+    [validate.booleanValidator]
+  );
 
   finalConfig.preloadOpentelemetry = value;
-  configStore.set('config.preloadOpentelemetry', {
-    source: source
-  });
+  configStore.set('config.preloadOpentelemetry', { source });
 }
 
 /**
