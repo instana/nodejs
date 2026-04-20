@@ -9,9 +9,6 @@ const { DISABLABLE_INSTRUMENTATION_GROUPS } = require('../tracing/constants');
 /** @type {import('../config').InstanaConfig} */
 let config;
 
-/** @type {import('@instana/collector/src/types/collector').AgentConfig} */
-let agentConfig;
-
 /**
  * @param {import('../config').InstanaConfig} _config
  */
@@ -20,10 +17,10 @@ function init(_config) {
 }
 
 /**
- * @param {import('@instana/collector/src/types/collector').AgentConfig} _agentConfig
+ * @param {import('../config').InstanaConfig} _config
  */
-function activate(_agentConfig) {
-  agentConfig = _agentConfig;
+function activate(_config) {
+  config = _config;
 }
 
 /**
@@ -110,14 +107,7 @@ function isInstrumentationDisabled({ instrumentationModules = {}, instrumentatio
 
   const context = { moduleName, instrumentationName, group };
 
-  // Give priority to service-level config
   if (config && shouldDisable(config, context)) {
-    return true;
-  }
-
-  // Fallback to agent-level config if not disabled above
-  // NOTE: We currently have no single config object.
-  if (agentConfig && shouldDisable(agentConfig, context)) {
     return true;
   }
 
