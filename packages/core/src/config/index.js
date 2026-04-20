@@ -319,6 +319,7 @@ function normalizeTracingEnabled({ userConfig = {}, defaultConfig = {}, finalCon
   );
 
   // The env var is TRACING_DISABLE, so we need to invert it when it comes from env
+  // TODO: Consider adding this normalization support to util.resolver
   const finalValue = source === CONFIG_SOURCES.ENV ? !value : value;
 
   configStore.set('config.tracing.enabled', { source });
@@ -356,6 +357,7 @@ function normalizeUseOpentelemetry({ userConfig = {}, defaultConfig = {}, finalC
   );
 
   // The env var is DISABLE_USE_OPENTELEMETRY, so we need to invert it when it comes from env
+  // TODO: Consider adding this normalization support to util.resolver
   const finalValue = source === CONFIG_SOURCES.ENV ? !value : value;
 
   configStore.set('config.tracing.useOpentelemetry', { source });
@@ -381,6 +383,7 @@ function normalizeAutomaticTracingEnabled({ userConfig = {}, defaultConfig = {},
   );
 
   // The env var is DISABLE_AUTO_INSTR, so we need to invert it when it comes from env
+  // TODO: Consider adding this normalization support to util.resolver
   const finalValue = source === CONFIG_SOURCES.ENV ? !value : value;
 
   configStore.set('config.tracing.automaticTracingEnabled', { source });
@@ -865,7 +868,6 @@ function normalizeIgnoreEndpoints({ userConfig = {}, defaultConfig = {}, finalCo
   }
 
   // Priority 3: Use in-code configuration if available
-
   if (userIgnoreEndpoints && (typeof userIgnoreEndpoints !== 'object' || Array.isArray(userIgnoreEndpoints))) {
     logger.warn(
       `Invalid tracing.ignoreEndpoints configuration. Expected an object, but received: ${JSON.stringify(
