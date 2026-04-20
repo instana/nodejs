@@ -5,6 +5,7 @@
 'use strict';
 
 const { DISABLABLE_INSTRUMENTATION_GROUPS } = require('../../tracing/constants');
+const { CONFIG_SOURCES } = require('../../util/constants');
 /** @type {import('../../core').GenericLogger} */
 let logger;
 
@@ -31,11 +32,11 @@ exports.normalize = function normalize(config) {
 
     if (envDisableConfig !== null) {
       if (envDisableConfig === true) {
-        return true;
+        return { value: true, source: CONFIG_SOURCES.ENV };
       }
 
       if (envDisableConfig === false) {
-        return {};
+        return { value: {}, source: CONFIG_SOURCES.ENV };
       }
 
       if (envDisableConfig.instrumentations?.length || envDisableConfig.groups?.length) {
@@ -48,13 +49,13 @@ exports.normalize = function normalize(config) {
           envDisableConfig.groups = normalizeArray(envDisableConfig.groups);
         }
 
-        return envDisableConfig;
+        return { value: envDisableConfig, source: CONFIG_SOURCES.ENV };
       }
     }
 
     if (config.tracing.disable === true) {
       logger?.debug('[config] incode:tracing.disable = true');
-      return true;
+      return { value: true, source: CONFIG_SOURCES.INCODE };
     }
 
     const hasDisableConfig = isDisableConfigNonEmpty(config);
@@ -65,7 +66,7 @@ exports.normalize = function normalize(config) {
 
     const disableConfig = isDisableConfigNonEmpty(config) ? config.tracing.disable : null;
 
-    if (!disableConfig) return {};
+    if (!disableConfig) return { value: {}, source: CONFIG_SOURCES.DEFAULT };
 
     // Normalize instrumentations and groups
     if (disableConfig?.instrumentations) {
@@ -77,14 +78,14 @@ exports.normalize = function normalize(config) {
 
     // Handle if tracing.disable is an array
     if (Array.isArray(disableConfig)) {
-      return categorizeDisableEntries(disableConfig);
+      return { value: categorizeDisableEntries(disableConfig), source: CONFIG_SOURCES.INCODE };
     }
 
-    return disableConfig || {};
+    return { value: disableConfig || {}, source: CONFIG_SOURCES.INCODE };
   } catch (error) {
     // Fallback to an empty disable config on error
     logger?.debug(`Error while normalizing tracing.disable config: ${error?.message} ${error?.stack}`);
-    return {};
+    return { value: {}, source: CONFIG_SOURCES.DEFAULT };
   }
 };
 
@@ -96,13 +97,13 @@ exports.normalizeExternalConfig = function normalizeExternalConfig(config) {
   try {
     if (isNonEmptyObject(config.tracing.disable)) {
       const flattenedEntries = flattenDisableConfigs(config.tracing.disable);
-      return categorizeDisableEntries(flattenedEntries);
+      return { value: categorizeDisableEntries(flattenedEntries), source: CONFIG_SOURCES.AGENT };
     }
   } catch (error) {
     logger?.debug(`Error while normalizing external tracing.disable config: ${error?.message} ${error?.stack}`);
   }
 
-  return {};
+  return { value: {}, source: CONFIG_SOURCES.DEFAULT };
 };
 
 /**
