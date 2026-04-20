@@ -7,9 +7,10 @@
 const expect = require('chai').expect;
 const { createFakeLogger } = require('../test_util');
 const util = require('../../src/config/util');
+const validate = require('../../src/config/validator');
 const { CONFIG_SOURCES } = require('../../src/util/constants');
 
-describe.skip('config.util', () => {
+describe('config.util', () => {
   let logger;
 
   before(() => {
@@ -22,883 +23,594 @@ describe.skip('config.util', () => {
 
   function resetEnv() {
     delete process.env.TEST_ENV_VAR;
+    delete process.env.TEST_BOOL_VAR;
+    delete process.env.TEST_STRING_VAR;
+    delete process.env.TEST_TRUTHY_VAR;
   }
 
-  describe('resolveNumericConfig', () => {
-    it('should return the default value when no env var or config value is provided', () => {
-      const result = util.resolveNumericConfig({
-        envVar: 'TEST_ENV_VAR',
-        configValue: undefined,
-        defaultValue: 1000,
-        configPath: 'config.test.value'
-      });
+  describe('resolve - priority order (env > inCode > agent > default)', () => {
+    it('should prioritize env over inCode, agent, and default', () => {
+      process.env.TEST_ENV_VAR = '100';
+
+      const result = util.resolve(
+        {
+          envValue: 'TEST_ENV_VAR',
+          inCodeValue: 200,
+          agentValue: 300,
+          defaultValue: 400
+        },
+        validate.numberValidator
+      );
 
       expect(result).to.deep.equal({
-        value: 1000,
-        source: CONFIG_SOURCES.DEFAULT,
-        configPath: 'config.test.value'
+        value: 100,
+        source: CONFIG_SOURCES.ENV
       });
     });
 
-    it('should prioritize env var over config value', () => {
-      process.env.TEST_ENV_VAR = '2000';
-
-      const result = util.resolveNumericConfig({
-        envVar: 'TEST_ENV_VAR',
-        configValue: 3000,
-        defaultValue: 1000,
-        configPath: 'config.test.value'
-      });
+    it('should prioritize inCode over agent and default when env is not set', () => {
+      const result = util.resolve(
+        {
+          inCodeValue: 200,
+          agentValue: 300,
+          defaultValue: 400
+        },
+        validate.numberValidator
+      );
 
       expect(result).to.deep.equal({
-        value: 2000,
-        source: CONFIG_SOURCES.ENV,
-        configPath: 'config.test.value'
+        value: 200,
+        source: CONFIG_SOURCES.INCODE
       });
     });
 
-    it('should use config value when env var is not set', () => {
-      const result = util.resolveNumericConfig({
-        envVar: 'TEST_ENV_VAR',
-        configValue: 3000,
-        defaultValue: 1000,
-        configPath: 'config.test.value'
-      });
+    it('should prioritize agent over default when env and inCode are not set', () => {
+      const result = util.resolve(
+        {
+          agentValue: 300,
+          defaultValue: 400
+        },
+        validate.numberValidator
+      );
 
       expect(result).to.deep.equal({
-        value: 3000,
-        source: CONFIG_SOURCES.INCODE,
-        configPath: 'config.test.value'
+        value: 300,
+        source: CONFIG_SOURCES.AGENT
       });
     });
 
-    it('should handle numeric config value', () => {
-      const result = util.resolveNumericConfig({
-        envVar: 'TEST_ENV_VAR',
-        configValue: 5000,
-        defaultValue: 1000,
-        configPath: 'config.test.value'
-      });
+    it('should use default when env, inCode, and agent are not set', () => {
+      const result = util.resolve(
+        {
+          defaultValue: 400
+        },
+        validate.numberValidator
+      );
 
       expect(result).to.deep.equal({
-        value: 5000,
-        source: CONFIG_SOURCES.INCODE,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should handle string config value that can be parsed as number', () => {
-      const result = util.resolveNumericConfig({
-        envVar: 'TEST_ENV_VAR',
-        configValue: '5000',
-        defaultValue: 1000,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: 5000,
-        source: CONFIG_SOURCES.INCODE,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should handle string env var that can be parsed as number', () => {
-      process.env.TEST_ENV_VAR = '7500';
-
-      const result = util.resolveNumericConfig({
-        envVar: 'TEST_ENV_VAR',
-        configValue: undefined,
-        defaultValue: 1000,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: 7500,
-        source: CONFIG_SOURCES.ENV,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should fall back to default when env var is invalid', () => {
-      process.env.TEST_ENV_VAR = 'not-a-number';
-
-      const result = util.resolveNumericConfig({
-        envVar: 'TEST_ENV_VAR',
-        configValue: undefined,
-        defaultValue: 1000,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: 1000,
-        source: CONFIG_SOURCES.DEFAULT,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should fall back to default when config value is invalid', () => {
-      const result = util.resolveNumericConfig({
-        envVar: 'TEST_ENV_VAR',
-        configValue: 'invalid',
-        defaultValue: 1000,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: 1000,
-        source: CONFIG_SOURCES.DEFAULT,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should use config value when env var is invalid', () => {
-      process.env.TEST_ENV_VAR = 'not-a-number';
-
-      const result = util.resolveNumericConfig({
-        envVar: 'TEST_ENV_VAR',
-        configValue: 3000,
-        defaultValue: 1000,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: 3000,
-        source: CONFIG_SOURCES.INCODE,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should handle zero as a valid value from env var', () => {
-      process.env.TEST_ENV_VAR = '0';
-
-      const result = util.resolveNumericConfig({
-        envVar: 'TEST_ENV_VAR',
-        configValue: undefined,
-        defaultValue: 1000,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: 0,
-        source: CONFIG_SOURCES.ENV,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should handle zero as a valid value from config', () => {
-      const result = util.resolveNumericConfig({
-        envVar: 'TEST_ENV_VAR',
-        configValue: 0,
-        defaultValue: 1000,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: 0,
-        source: CONFIG_SOURCES.INCODE,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should handle negative numbers from env var', () => {
-      process.env.TEST_ENV_VAR = '-500';
-
-      const result = util.resolveNumericConfig({
-        envVar: 'TEST_ENV_VAR',
-        configValue: undefined,
-        defaultValue: 1000,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: -500,
-        source: CONFIG_SOURCES.ENV,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should handle negative numbers from config', () => {
-      const result = util.resolveNumericConfig({
-        envVar: 'TEST_ENV_VAR',
-        configValue: -500,
-        defaultValue: 1000,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: -500,
-        source: CONFIG_SOURCES.INCODE,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should handle floating point numbers from env var', () => {
-      process.env.TEST_ENV_VAR = '123.45';
-
-      const result = util.resolveNumericConfig({
-        envVar: 'TEST_ENV_VAR',
-        configValue: undefined,
-        defaultValue: 1000,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: 123.45,
-        source: CONFIG_SOURCES.ENV,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should handle floating point numbers from config', () => {
-      const result = util.resolveNumericConfig({
-        envVar: 'TEST_ENV_VAR',
-        configValue: 123.45,
-        defaultValue: 1000,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: 123.45,
-        source: CONFIG_SOURCES.INCODE,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should handle null config value', () => {
-      const result = util.resolveNumericConfig({
-        envVar: 'TEST_ENV_VAR',
-        configValue: null,
-        defaultValue: 1000,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: 1000,
-        source: CONFIG_SOURCES.DEFAULT,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should handle empty string env var as 0', () => {
-      process.env.TEST_ENV_VAR = '';
-
-      const result = util.resolveNumericConfig({
-        envVar: 'TEST_ENV_VAR',
-        configValue: undefined,
-        defaultValue: 1000,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: 0,
-        source: CONFIG_SOURCES.ENV,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should handle empty string config value as 0', () => {
-      const result = util.resolveNumericConfig({
-        envVar: 'TEST_ENV_VAR',
-        configValue: '',
-        defaultValue: 1000,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: 0,
-        source: CONFIG_SOURCES.INCODE,
-        configPath: 'config.test.value'
+        value: 400,
+        source: CONFIG_SOURCES.DEFAULT
       });
     });
   });
 
-  describe('resolveBooleanConfig', () => {
-    beforeEach(() => {
-      delete process.env.TEST_BOOL_VAR;
-    });
+  describe('resolve with numberValidator', () => {
+    it('should parse numeric string from env var', () => {
+      process.env.TEST_ENV_VAR = '7500';
 
-    afterEach(() => {
-      delete process.env.TEST_BOOL_VAR;
-    });
-
-    it('should return the default value when no env var or config value is provided', () => {
-      const result = util.resolveBooleanConfig({
-        envVar: 'TEST_BOOL_VAR',
-        configValue: undefined,
-        defaultValue: false,
-        configPath: 'config.test.value'
-      });
+      const result = util.resolve(
+        {
+          envValue: 'TEST_ENV_VAR',
+          inCodeValue: undefined,
+          defaultValue: 1000
+        },
+        validate.numberValidator
+      );
 
       expect(result).to.deep.equal({
-        value: false,
-        source: CONFIG_SOURCES.DEFAULT,
-        configPath: 'config.test.value'
+        value: 7500,
+        source: CONFIG_SOURCES.ENV
       });
     });
 
-    it('should prioritize env var over config value', () => {
-      process.env.TEST_BOOL_VAR = 'true';
-
-      const result = util.resolveBooleanConfig({
-        envVar: 'TEST_BOOL_VAR',
-        configValue: false,
-        defaultValue: false,
-        configPath: 'config.test.value'
-      });
+    it('should parse numeric string from inCode value', () => {
+      const result = util.resolve(
+        {
+          envValue: 'TEST_ENV_VAR',
+          inCodeValue: '5000',
+          defaultValue: 1000
+        },
+        validate.numberValidator
+      );
 
       expect(result).to.deep.equal({
-        value: true,
-        source: CONFIG_SOURCES.ENV,
-        configPath: 'config.test.value'
+        value: 5000,
+        source: CONFIG_SOURCES.INCODE
       });
     });
 
-    it('should use config value when env var is not set', () => {
-      const result = util.resolveBooleanConfig({
-        envVar: 'TEST_BOOL_VAR',
-        configValue: true,
-        defaultValue: false,
-        configPath: 'config.test.value'
-      });
+    it('should handle zero as valid value', () => {
+      const result = util.resolve(
+        {
+          envValue: 'TEST_ENV_VAR',
+          inCodeValue: 0,
+          defaultValue: 1000
+        },
+        validate.numberValidator
+      );
 
       expect(result).to.deep.equal({
-        value: true,
-        source: CONFIG_SOURCES.INCODE,
-        configPath: 'config.test.value'
+        value: 0,
+        source: CONFIG_SOURCES.INCODE
       });
     });
 
+    it('should handle negative numbers', () => {
+      process.env.TEST_ENV_VAR = '-500';
+
+      const result = util.resolve(
+        {
+          envValue: 'TEST_ENV_VAR',
+          inCodeValue: undefined,
+          defaultValue: 1000
+        },
+        validate.numberValidator
+      );
+
+      expect(result).to.deep.equal({
+        value: -500,
+        source: CONFIG_SOURCES.ENV
+      });
+    });
+
+    it('should handle floating point numbers', () => {
+      const result = util.resolve(
+        {
+          envValue: 'TEST_ENV_VAR',
+          inCodeValue: 123.45,
+          defaultValue: 1000
+        },
+        validate.numberValidator
+      );
+
+      expect(result).to.deep.equal({
+        value: 123.45,
+        source: CONFIG_SOURCES.INCODE
+      });
+    });
+
+    it('should handle empty string as 0', () => {
+      process.env.TEST_ENV_VAR = '';
+
+      const result = util.resolve(
+        {
+          envValue: 'TEST_ENV_VAR',
+          inCodeValue: undefined,
+          defaultValue: 1000
+        },
+        validate.numberValidator
+      );
+
+      expect(result).to.deep.equal({
+        value: 0,
+        source: CONFIG_SOURCES.ENV
+      });
+    });
+
+    it('should fall back to next priority when env var is invalid', () => {
+      process.env.TEST_ENV_VAR = 'not-a-number';
+
+      const result = util.resolve(
+        {
+          envValue: 'TEST_ENV_VAR',
+          inCodeValue: 3000,
+          defaultValue: 1000
+        },
+        validate.numberValidator
+      );
+
+      expect(result).to.deep.equal({
+        value: 3000,
+        source: CONFIG_SOURCES.INCODE
+      });
+    });
+
+    it('should fall back to default when all values are invalid', () => {
+      process.env.TEST_ENV_VAR = 'not-a-number';
+
+      const result = util.resolve(
+        {
+          envValue: 'TEST_ENV_VAR',
+          inCodeValue: 'invalid',
+          defaultValue: 1000
+        },
+        validate.numberValidator
+      );
+
+      expect(result).to.deep.equal({
+        value: 1000,
+        source: CONFIG_SOURCES.DEFAULT
+      });
+    });
+
+    it('should treat null as undefined', () => {
+      const result = util.resolve(
+        {
+          envValue: 'TEST_ENV_VAR',
+          inCodeValue: null,
+          defaultValue: 1000
+        },
+        validate.numberValidator
+      );
+
+      expect(result).to.deep.equal({
+        value: 1000,
+        source: CONFIG_SOURCES.DEFAULT
+      });
+    });
+  });
+
+  describe('resolve with booleanValidator', () => {
     it('should parse "true" from env var', () => {
       process.env.TEST_BOOL_VAR = 'true';
 
-      const result = util.resolveBooleanConfig({
-        envVar: 'TEST_BOOL_VAR',
-        configValue: undefined,
-        defaultValue: false,
-        configPath: 'config.test.value'
-      });
+      const result = util.resolve(
+        {
+          envValue: 'TEST_BOOL_VAR',
+          inCodeValue: undefined,
+          defaultValue: false
+        },
+        validate.booleanValidator
+      );
 
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.ENV,
-        configPath: 'config.test.value'
+        source: CONFIG_SOURCES.ENV
       });
     });
 
     it('should parse "false" from env var', () => {
       process.env.TEST_BOOL_VAR = 'false';
 
-      const result = util.resolveBooleanConfig({
-        envVar: 'TEST_BOOL_VAR',
-        configValue: undefined,
-        defaultValue: true,
-        configPath: 'config.test.value'
-      });
+      const result = util.resolve(
+        {
+          envValue: 'TEST_BOOL_VAR',
+          inCodeValue: undefined,
+          defaultValue: true
+        },
+        validate.booleanValidator
+      );
 
       expect(result).to.deep.equal({
         value: false,
-        source: CONFIG_SOURCES.ENV,
-        configPath: 'config.test.value'
+        source: CONFIG_SOURCES.ENV
       });
     });
 
-    it('should parse "1" from env var as true', () => {
+    it('should parse "1" as true', () => {
       process.env.TEST_BOOL_VAR = '1';
 
-      const result = util.resolveBooleanConfig({
-        envVar: 'TEST_BOOL_VAR',
-        configValue: undefined,
-        defaultValue: false
-      });
+      const result = util.resolve(
+        {
+          envValue: 'TEST_BOOL_VAR',
+          inCodeValue: undefined,
+          defaultValue: false
+        },
+        validate.booleanValidator
+      );
 
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.ENV,
-        configPath: undefined
+        source: CONFIG_SOURCES.ENV
       });
     });
 
-    it('should parse "0" from env var as false', () => {
+    it('should parse "0" as false', () => {
       process.env.TEST_BOOL_VAR = '0';
 
-      const result = util.resolveBooleanConfig({
-        envVar: 'TEST_BOOL_VAR',
-        configValue: undefined,
-        defaultValue: true,
-        configPath: 'config.test.value'
-      });
+      const result = util.resolve(
+        {
+          envValue: 'TEST_BOOL_VAR',
+          inCodeValue: undefined,
+          defaultValue: true
+        },
+        validate.booleanValidator
+      );
+
       expect(result).to.deep.equal({
         value: false,
-        source: CONFIG_SOURCES.ENV,
-        configPath: 'config.test.value'
+        source: CONFIG_SOURCES.ENV
       });
     });
 
-    it('should handle case-insensitive "TRUE" from env var', () => {
+    it('should handle case-insensitive values', () => {
       process.env.TEST_BOOL_VAR = 'TRUE';
 
-      const result = util.resolveBooleanConfig({
-        envVar: 'TEST_BOOL_VAR',
-        configValue: undefined,
-        defaultValue: false,
-        configPath: 'config.test.value'
-      });
+      const result = util.resolve(
+        {
+          envValue: 'TEST_BOOL_VAR',
+          inCodeValue: undefined,
+          defaultValue: false
+        },
+        validate.booleanValidator
+      );
 
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.ENV,
-        configPath: 'config.test.value'
+        source: CONFIG_SOURCES.ENV
       });
     });
 
-    it('should handle case-insensitive "FALSE" from env var', () => {
-      process.env.TEST_BOOL_VAR = 'FALSE';
-
-      const result = util.resolveBooleanConfig({
-        envVar: 'TEST_BOOL_VAR',
-        configValue: undefined,
-        defaultValue: true,
-        configPath: 'config.test.value'
-      });
+    it('should handle boolean inCode values', () => {
+      const result = util.resolve(
+        {
+          envValue: 'TEST_BOOL_VAR',
+          inCodeValue: true,
+          defaultValue: false
+        },
+        validate.booleanValidator
+      );
 
       expect(result).to.deep.equal({
-        value: false,
-        source: CONFIG_SOURCES.ENV,
-        configPath: 'config.test.value'
+        value: true,
+        source: CONFIG_SOURCES.INCODE
       });
     });
 
-    it('should fall back to config value when env var is invalid', () => {
+    it('should fall back to next priority when env var is invalid', () => {
       process.env.TEST_BOOL_VAR = 'invalid';
 
-      const result = util.resolveBooleanConfig({
-        envVar: 'TEST_BOOL_VAR',
-        configValue: true,
-        defaultValue: false,
-        configPath: 'config.test.value'
-      });
+      const result = util.resolve(
+        {
+          envValue: 'TEST_BOOL_VAR',
+          inCodeValue: true,
+          defaultValue: false
+        },
+        validate.booleanValidator
+      );
 
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.INCODE,
-        configPath: 'config.test.value'
+        source: CONFIG_SOURCES.INCODE
       });
     });
 
-    it('should fall back to default when both env var and config value are invalid', () => {
+    it('should fall back to default when all values are invalid', () => {
       process.env.TEST_BOOL_VAR = 'invalid';
 
-      const result = util.resolveBooleanConfig({
-        envVar: 'TEST_BOOL_VAR',
-        configValue: 'not-a-boolean',
-        defaultValue: true,
-        configPath: 'config.test.value'
-      });
+      const result = util.resolve(
+        {
+          envValue: 'TEST_BOOL_VAR',
+          inCodeValue: 'not-a-boolean',
+          defaultValue: true
+        },
+        validate.booleanValidator
+      );
 
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.DEFAULT,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should handle null config value', () => {
-      const result = util.resolveBooleanConfig({
-        envVar: 'TEST_BOOL_VAR',
-        configValue: null,
-        defaultValue: true,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: true,
-        source: CONFIG_SOURCES.DEFAULT,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should handle undefined config value', () => {
-      const result = util.resolveBooleanConfig({
-        envVar: 'TEST_BOOL_VAR',
-        configValue: undefined,
-        defaultValue: false,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: false,
-        source: CONFIG_SOURCES.DEFAULT,
-        configPath: 'config.test.value'
+        source: CONFIG_SOURCES.DEFAULT
       });
     });
   });
 
-  describe('resolveBooleanConfigWithInvertedEnv', () => {
-    beforeEach(() => {
-      delete process.env.TEST_DISABLE_VAR;
-    });
-
-    afterEach(() => {
-      delete process.env.TEST_DISABLE_VAR;
-    });
-
-    it('should return false when env var is "true" (inverted logic)', () => {
-      process.env.TEST_DISABLE_VAR = 'true';
-
-      const result = util.resolveBooleanConfigWithInvertedEnv({
-        envVar: 'TEST_DISABLE_VAR',
-        configValue: undefined,
-        defaultValue: true,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: false,
-        source: CONFIG_SOURCES.ENV,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should prioritize env var over config value', () => {
-      process.env.TEST_DISABLE_VAR = 'true';
-
-      const result = util.resolveBooleanConfigWithInvertedEnv({
-        envVar: 'TEST_DISABLE_VAR',
-        configValue: true,
-        defaultValue: true,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: false,
-        source: CONFIG_SOURCES.ENV,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should use config value when env var is not set', () => {
-      const result = util.resolveBooleanConfigWithInvertedEnv({
-        envVar: 'TEST_DISABLE_VAR',
-        configValue: false,
-        defaultValue: true,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: false,
-        source: CONFIG_SOURCES.INCODE,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should use default when env var is not "true" and config is not set', () => {
-      process.env.TEST_DISABLE_VAR = 'false';
-
-      const result = util.resolveBooleanConfigWithInvertedEnv({
-        envVar: 'TEST_DISABLE_VAR',
-        configValue: undefined,
-        defaultValue: true,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: true,
-        source: CONFIG_SOURCES.ENV,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should handle null config value', () => {
-      const result = util.resolveBooleanConfigWithInvertedEnv({
-        envVar: 'TEST_DISABLE_VAR',
-        configValue: null,
-        defaultValue: false,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: false,
-        source: CONFIG_SOURCES.DEFAULT,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should return default when configValue and env var are not boolean', () => {
-      const result = util.resolveBooleanConfigWithInvertedEnv({
-        envVar: 'TEST_INVERTED_VAR',
-        configValue: 'not-a-boolean',
-        defaultValue: true,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: true,
-        source: CONFIG_SOURCES.DEFAULT,
-        configPath: 'config.test.value'
-      });
-    });
-  });
-
-  describe('resolveBooleanConfigWithTruthyEnv', () => {
-    beforeEach(() => {
-      delete process.env.TEST_TRUTHY_VAR;
-    });
-
-    afterEach(() => {
-      delete process.env.TEST_TRUTHY_VAR;
-    });
-
-    it('should return true when env var exists and is truthy', () => {
+  describe('resolve with validateTruthyBoolean', () => {
+    it('should return true for any truthy env var value', () => {
       process.env.TEST_TRUTHY_VAR = 'any-value';
 
-      const result = util.resolveBooleanConfigWithTruthyEnv({
-        envVar: 'TEST_TRUTHY_VAR',
-        configValue: undefined,
-        defaultValue: false,
-        configPath: 'config.test.value'
-      });
+      const result = util.resolve(
+        {
+          envValue: 'TEST_TRUTHY_VAR',
+          inCodeValue: undefined,
+          defaultValue: false
+        },
+        validate.validateTruthyBoolean
+      );
 
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.ENV,
-        configPath: 'config.test.value'
+        source: CONFIG_SOURCES.ENV
       });
     });
 
-    it('should return true when env var is "true"', () => {
-      process.env.TEST_TRUTHY_VAR = 'true';
-
-      const result = util.resolveBooleanConfigWithTruthyEnv({
-        envVar: 'TEST_TRUTHY_VAR',
-        configValue: undefined,
-        defaultValue: false,
-        configPath: 'config.test.value'
-      });
+    it('should return true for truthy inCode value', () => {
+      const result = util.resolve(
+        {
+          envValue: 'TEST_TRUTHY_VAR',
+          inCodeValue: true,
+          defaultValue: false
+        },
+        validate.validateTruthyBoolean
+      );
 
       expect(result).to.deep.equal({
         value: true,
-        source: CONFIG_SOURCES.ENV,
-        configPath: 'config.test.value'
+        source: CONFIG_SOURCES.INCODE
       });
     });
 
-    it('should return true when env var is "1"', () => {
-      process.env.TEST_TRUTHY_VAR = '1';
-
-      const result = util.resolveBooleanConfigWithTruthyEnv({
-        envVar: 'TEST_TRUTHY_VAR',
-        configValue: undefined,
-        defaultValue: false,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: true,
-        source: CONFIG_SOURCES.ENV,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should prioritize env var over config value', () => {
-      process.env.TEST_TRUTHY_VAR = 'yes';
-
-      const result = util.resolveBooleanConfigWithTruthyEnv({
-        envVar: 'TEST_TRUTHY_VAR',
-        configValue: false,
-        defaultValue: false,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: true,
-        source: CONFIG_SOURCES.ENV,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should use config value when env var is not set', () => {
-      const result = util.resolveBooleanConfigWithTruthyEnv({
-        envVar: 'TEST_TRUTHY_VAR',
-        configValue: true,
-        defaultValue: false,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: true,
-        source: CONFIG_SOURCES.INCODE,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should use default when env var is not set and config is not boolean', () => {
-      const result = util.resolveBooleanConfigWithTruthyEnv({
-        envVar: 'TEST_TRUTHY_VAR',
-        configValue: undefined,
-        defaultValue: false,
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: false,
-        source: CONFIG_SOURCES.DEFAULT,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should handle empty string env var as falsy', () => {
+    it('should fall back to default for empty string env var', () => {
       process.env.TEST_TRUTHY_VAR = '';
 
-      const result = util.resolveBooleanConfigWithTruthyEnv({
-        envVar: 'TEST_TRUTHY_VAR',
-        configValue: undefined,
-        defaultValue: false,
-        configPath: 'config.test.value'
-      });
+      const result = util.resolve(
+        {
+          envValue: 'TEST_TRUTHY_VAR',
+          inCodeValue: undefined,
+          defaultValue: false
+        },
+        validate.validateTruthyBoolean
+      );
 
       expect(result).to.deep.equal({
         value: false,
-        source: CONFIG_SOURCES.DEFAULT,
-        configPath: 'config.test.value'
+        source: CONFIG_SOURCES.DEFAULT
+      });
+    });
+
+    it('should fall back to default for falsy inCode value', () => {
+      const result = util.resolve(
+        {
+          envValue: 'TEST_TRUTHY_VAR',
+          inCodeValue: false,
+          defaultValue: true
+        },
+        validate.validateTruthyBoolean
+      );
+
+      expect(result).to.deep.equal({
+        value: true,
+        source: CONFIG_SOURCES.DEFAULT
       });
     });
   });
 
-  describe('resolveStringConfig', () => {
-    beforeEach(() => {
-      delete process.env.TEST_STRING_VAR;
-    });
-
-    afterEach(() => {
-      delete process.env.TEST_STRING_VAR;
-    });
-
-    it('should return the default value when no env var or config value is provided', () => {
-      const result = util.resolveStringConfig({
-        envVar: 'TEST_STRING_VAR',
-        configValue: undefined,
-        defaultValue: 'default-value',
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: 'default-value',
-        source: CONFIG_SOURCES.DEFAULT,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should prioritize env var over config value', () => {
+  describe('resolve with stringValidator', () => {
+    it('should use string from env var', () => {
       process.env.TEST_STRING_VAR = 'env-value';
 
-      const result = util.resolveStringConfig({
-        envVar: 'TEST_STRING_VAR',
-        configValue: 'config-value',
-        defaultValue: 'default-value',
-        configPath: 'config.test.value'
-      });
+      const result = util.resolve(
+        {
+          envValue: 'TEST_STRING_VAR',
+          inCodeValue: undefined,
+          defaultValue: 'default-value'
+        },
+        validate.stringValidator
+      );
 
       expect(result).to.deep.equal({
         value: 'env-value',
-        source: CONFIG_SOURCES.ENV,
-        configPath: 'config.test.value'
+        source: CONFIG_SOURCES.ENV
       });
     });
 
-    it('should use env var when config value is not set', () => {
-      process.env.TEST_STRING_VAR = 'env-value';
-
-      const result = util.resolveStringConfig({
-        envVar: 'TEST_STRING_VAR',
-        configValue: undefined,
-        defaultValue: 'default-value',
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: 'env-value',
-        source: CONFIG_SOURCES.ENV,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should use config value when env var is not set', () => {
-      const result = util.resolveStringConfig({
-        envVar: 'TEST_STRING_VAR',
-        configValue: 'config-value',
-        defaultValue: 'default-value',
-        configPath: 'config.test.value'
-      });
+    it('should use string from inCode value', () => {
+      const result = util.resolve(
+        {
+          envValue: 'TEST_STRING_VAR',
+          inCodeValue: 'config-value',
+          defaultValue: 'default-value'
+        },
+        validate.stringValidator
+      );
 
       expect(result).to.deep.equal({
         value: 'config-value',
-        source: CONFIG_SOURCES.INCODE,
-        configPath: 'config.test.value'
+        source: CONFIG_SOURCES.INCODE
       });
     });
 
-    it('should handle empty string as a valid config value', () => {
-      const result = util.resolveStringConfig({
-        envVar: 'TEST_STRING_VAR',
-        configValue: '',
-        defaultValue: 'default-value',
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: '',
-        source: CONFIG_SOURCES.INCODE,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should handle empty string as a valid env var value', () => {
+    it('should handle empty string as valid value', () => {
       process.env.TEST_STRING_VAR = '';
 
-      const result = util.resolveStringConfig({
-        envVar: 'TEST_STRING_VAR',
-        configValue: undefined,
-        defaultValue: 'default-value',
-        configPath: 'config.test.value'
-      });
+      const result = util.resolve(
+        {
+          envValue: 'TEST_STRING_VAR',
+          inCodeValue: undefined,
+          defaultValue: 'default-value'
+        },
+        validate.stringValidator
+      );
 
       expect(result).to.deep.equal({
         value: '',
-        source: CONFIG_SOURCES.ENV,
-        configPath: 'config.test.value'
+        source: CONFIG_SOURCES.ENV
       });
     });
 
-    it('should handle undefined config value as not set', () => {
-      process.env.TEST_STRING_VAR = 'env-value';
-
-      const result = util.resolveStringConfig({
-        envVar: 'TEST_STRING_VAR',
-        configValue: undefined,
-        defaultValue: 'default-value',
-        configPath: 'config.test.value'
-      });
-
-      expect(result).to.deep.equal({
-        value: 'env-value',
-        source: CONFIG_SOURCES.ENV,
-        configPath: 'config.test.value'
-      });
-    });
-
-    it('should handle multiline string values', () => {
+    it('should handle multiline strings', () => {
       const multilineValue = 'line1\nline2\nline3';
-      const result = util.resolveStringConfig({
-        envVar: undefined,
-        configValue: multilineValue,
-        defaultValue: 'default-value',
-        configPath: 'config.test.value'
-      });
+      const result = util.resolve(
+        {
+          envValue: 'TEST_STRING_VAR',
+          inCodeValue: multilineValue,
+          defaultValue: 'default-value'
+        },
+        validate.stringValidator
+      );
 
       expect(result).to.deep.equal({
         value: multilineValue,
-        source: CONFIG_SOURCES.INCODE,
-        configPath: 'config.test.value'
+        source: CONFIG_SOURCES.INCODE
+      });
+    });
+
+    it('should reject non-string values and fall back', () => {
+      const result = util.resolve(
+        {
+          envValue: 'TEST_STRING_VAR',
+          inCodeValue: 123,
+          defaultValue: 'default-value'
+        },
+        validate.stringValidator
+      );
+
+      expect(result).to.deep.equal({
+        value: 'default-value',
+        source: CONFIG_SOURCES.DEFAULT
+      });
+    });
+
+    it('should treat null as undefined', () => {
+      const result = util.resolve(
+        {
+          envValue: 'TEST_STRING_VAR',
+          inCodeValue: null,
+          defaultValue: 'default-value'
+        },
+        validate.stringValidator
+      );
+
+      expect(result).to.deep.equal({
+        value: 'default-value',
+        source: CONFIG_SOURCES.DEFAULT
+      });
+    });
+  });
+
+  describe('resolve with multiple validators', () => {
+    it('should apply validators in sequence', () => {
+      const customValidator = value => {
+        if (typeof value === 'number' && value > 100) {
+          return value;
+        }
+        return undefined;
+      };
+
+      const result = util.resolve(
+        {
+          envValue: 'TEST_ENV_VAR',
+          inCodeValue: 150,
+          defaultValue: 50
+        },
+        [validate.numberValidator, customValidator]
+      );
+
+      expect(result).to.deep.equal({
+        value: 150,
+        source: CONFIG_SOURCES.INCODE
+      });
+    });
+
+    it('should fall back when any validator in chain fails', () => {
+      const customValidator = value => {
+        if (typeof value === 'number' && value > 100) {
+          return value;
+        }
+        return undefined;
+      };
+
+      const result = util.resolve(
+        {
+          envValue: 'TEST_ENV_VAR',
+          inCodeValue: 50,
+          defaultValue: 200
+        },
+        [validate.numberValidator, customValidator]
+      );
+
+      expect(result).to.deep.equal({
+        value: 200,
+        source: CONFIG_SOURCES.DEFAULT
       });
     });
   });
