@@ -661,7 +661,7 @@ function normalizeDisableTracing({ userConfig = {}, defaultConfig = {}, finalCon
     return;
   }
 
-  if (typeof disableConfig === 'object' && (disableConfig.instrumentations?.length || disableConfig.groups?.length)) {
+  if (typeof disableConfig === 'object' && disableRes.source !== CONFIG_SOURCES.DEFAULT) {
     finalConfig.tracing.disable = disableConfig;
     configStore.set('config.tracing.disable', {
       source: disableRes.source
