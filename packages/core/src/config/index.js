@@ -47,7 +47,7 @@ const configStore = {
  * requiring the config object to be passed as a parameter.
  *
  * TODO: This can be removed in the future when we implement config.get()/config.set()
- * methods that will provide a cleaner API for accessing and modifying configuration values.
+ * methods. The values will be kept in the configStore instance.
  */
 let currentConfig;
 
