@@ -260,12 +260,12 @@ function initInstanaInstrumentations(_config) {
   }
 }
 
-exports.activate = function activate(extraConfig = {}) {
+exports.activate = function activate(_config = config) {
   if (tracingEnabled && !tracingActivated) {
     tracingActivated = true;
-    coreUtil.activate(extraConfig);
-    tracingUtil.activate(extraConfig);
-    spanBuffer.activate(extraConfig);
+    coreUtil.activate(_config);
+    tracingUtil.activate(_config);
+    spanBuffer.activate(_config);
     opentracing.activate();
     sdk.activate();
 
@@ -285,7 +285,7 @@ exports.activate = function activate(extraConfig = {}) {
             instrumentationKey
           })
         ) {
-          instrumentationModules[instrumentationKey].activate(extraConfig);
+          instrumentationModules[instrumentationKey].activate(_config);
         }
       });
     }

@@ -1540,6 +1540,132 @@ describe('config.normalizeConfig', () => {
       const config = coreConfig.normalize({ userConfig: { serviceName: 'test' } });
       expect(config.serviceName).to.equal('test');
     });
+
+    describe('config.update', () => {
+      const { CONFIG_SOURCES } = require('../../src/util/constants');
+
+      it('should update config from agent when not previously set', () => {
+        const config = coreConfig.normalize({});
+
+        coreConfig.update(
+          {
+            serviceName: 'agent-service'
+          },
+          CONFIG_SOURCES.AGENT
+        );
+
+        expect(config.serviceName).to.equal('agent-service');
+      });
+
+      it('should not update config from agent when ENV var is set', () => {
+        process.env.INSTANA_SERVICE_NAME = 'env-service';
+        const config = coreConfig.normalize({});
+        expect(config.serviceName).to.equal('env-service');
+
+        coreConfig.update(
+          {
+            serviceName: 'agent-service'
+          },
+          CONFIG_SOURCES.AGENT
+        );
+
+        expect(config.serviceName).to.equal('env-service');
+      });
+
+      it('should not update config from agent when in-code config is set', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            serviceName: 'code-service'
+          }
+        });
+        expect(config.serviceName).to.equal('code-service');
+
+        coreConfig.update(
+          {
+            serviceName: 'agent-service'
+          },
+          CONFIG_SOURCES.AGENT
+        );
+
+        expect(config.serviceName).to.equal('code-service');
+      });
+
+      it('should update multiple config values from agent', () => {
+        const config = coreConfig.normalize();
+
+        coreConfig.update(
+          {
+            serviceName: 'agent-service',
+            'metrics.transmissionDelay': 2000
+          },
+          CONFIG_SOURCES.AGENT
+        );
+
+        expect(config.serviceName).to.equal('agent-service');
+        expect(config['metrics.transmissionDelay']).to.equal(2000);
+      });
+
+      it('should handle empty agent config', () => {
+        const config = coreConfig.normalize();
+        const originalServiceName = config.serviceName;
+
+        coreConfig.update({}, CONFIG_SOURCES.AGENT);
+
+        expect(config.serviceName).to.equal(originalServiceName);
+      });
+
+      it('should handle null agent config', () => {
+        const config = coreConfig.normalize();
+        const originalServiceName = config.serviceName;
+
+        coreConfig.update(null, CONFIG_SOURCES.AGENT);
+
+        expect(config.serviceName).to.equal(originalServiceName);
+      });
+
+      it('should update agent config over default values', () => {
+        const config = coreConfig.normalize();
+
+        expect(config.serviceName).to.be.null;
+
+        coreConfig.update(
+          {
+            serviceName: 'agent-service'
+          },
+          CONFIG_SOURCES.AGENT
+        );
+
+        expect(config.serviceName).to.equal('agent-service');
+      });
+
+      it('should respect precedence: ENV > IN_CODE > AGENT > DEFAULT', () => {
+        process.env.INSTANA_SERVICE_NAME = 'env-service';
+
+        const config = coreConfig.normalize({
+          userConfig: {
+            packageJsonPath: '/custom/path'
+          }
+        });
+
+        expect(config.serviceName).to.equal('env-service');
+        expect(config.packageJsonPath).to.equal('/custom/path');
+
+        coreConfig.update(
+          {
+            serviceName: 'agent-service',
+            packageJsonPath: '/agent/path',
+            preloadOpentelemetry: true
+          },
+          CONFIG_SOURCES.AGENT
+        );
+
+        expect(config.serviceName).to.equal('env-service');
+
+        expect(config.packageJsonPath).to.equal('/custom/path');
+
+        expect(config.preloadOpentelemetry).to.be.true;
+      });
+    });
   });
 
   function checkDefaults(config) {

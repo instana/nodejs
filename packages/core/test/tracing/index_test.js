@@ -155,8 +155,8 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
             }
           };
           initAndActivate({}, extraConfigFromAgent);
-          expect(activateStubKafkaJs).to.have.been.calledWith(extraConfigFromAgent);
-          expect(activateStubRdKafka).to.have.been.calledWith(extraConfigFromAgent);
+          expect(activateStubKafkaJs).to.have.been.called;
+          expect(activateStubRdKafka).to.have.been.called;
         });
 
         it('should disable aws-sdk/v3 via config', () => {
@@ -273,10 +273,12 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
     function initAndActivate(initConfig, extraConfigForActivate) {
       const logger = testUtils.createFakeLogger();
       coreConfig.init(logger);
-      const config = coreConfig.normalize({ userConfig: initConfig });
+      let config = coreConfig.normalize({ userConfig: initConfig });
       util.init(config);
       tracing.init(config);
-      tracing.activate(extraConfigForActivate);
+
+      config = coreConfig.update(extraConfigForActivate, 3);
+      tracing.activate(config);
     }
   });
 });

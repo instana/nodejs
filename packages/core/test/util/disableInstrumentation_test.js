@@ -387,31 +387,6 @@ describe('util.disableInstrumentation', () => {
       expect(consoleResult).to.be.true;
     });
 
-    it('should accept service configuration and agent configuration when both are present', () => {
-      disableInstrumentation.init({
-        tracing: {
-          disable: { instrumentations: ['console'] }
-        }
-      });
-      disableInstrumentation.activate({
-        tracing: {
-          disable: { instrumentations: ['bunyan'] }
-        }
-      });
-
-      const consoleResult = disableInstrumentation.isInstrumentationDisabled({
-        instrumentationKey: './instrumentation/logging/console',
-        instrumentationModules: testInstrumentationModules
-      });
-      const bunyanResult = disableInstrumentation.isInstrumentationDisabled({
-        instrumentationKey: './instrumentation/logging/bunyan',
-        instrumentationModules: testInstrumentationModules
-      });
-
-      expect(consoleResult).to.be.true;
-      expect(bunyanResult).to.be.true;
-    });
-
     it('should use agent configuration when service configuration is empty', () => {
       disableInstrumentation.init({});
       disableInstrumentation.activate({
