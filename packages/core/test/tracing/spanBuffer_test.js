@@ -46,7 +46,13 @@ describe('tracing/spanBuffer', () => {
     });
 
     beforeEach(() => {
-      spanBuffer.activate();
+      downstreamConnectionStub.sendSpans.resetHistory();
+      spanBuffer.setTransmitImmediate(false);
+      spanBuffer.activate({
+        tracing: {
+          spanBatchingEnabled: false
+        }
+      });
       expect(global.setTimeout.called).to.be.false;
 
       global.setTimeout.resetHistory();
@@ -124,7 +130,13 @@ describe('tracing/spanBuffer', () => {
     });
 
     beforeEach(() => {
-      spanBuffer.activate();
+      downstreamConnectionStub.sendSpans.resetHistory();
+      spanBuffer.setTransmitImmediate(false);
+      spanBuffer.activate({
+        tracing: {
+          spanBatchingEnabled: false
+        }
+      });
       expect(global.setTimeout.called).to.be.true;
       global.setTimeout.resetHistory();
     });
@@ -217,7 +229,14 @@ describe('tracing/spanBuffer', () => {
         spanBuffer.addBatchableSpanName('batchable');
       });
 
-      beforeEach(() => spanBuffer.activate());
+      beforeEach(() => {
+        spanBuffer.setTransmitImmediate(false);
+        spanBuffer.activate({
+          tracing: {
+            spanBatchingEnabled: true
+          }
+        });
+      });
 
       afterEach(() => spanBuffer.deactivate());
 
@@ -563,7 +582,14 @@ describe('tracing/spanBuffer', () => {
         spanBuffer.addBatchableSpanName('batchable');
       });
 
-      beforeEach(() => spanBuffer.activate());
+      beforeEach(() => {
+        spanBuffer.setTransmitImmediate(false);
+        spanBuffer.activate({
+          tracing: {
+            spanBatchingEnabled: false
+          }
+        });
+      });
 
       afterEach(() => spanBuffer.deactivate());
 
@@ -574,7 +600,14 @@ describe('tracing/spanBuffer', () => {
     });
 
     describe('when applying span transformations', () => {
-      beforeEach(() => spanBuffer.activate());
+      beforeEach(() => {
+        spanBuffer.setTransmitImmediate(false);
+        spanBuffer.activate({
+          tracing: {
+            spanBatchingEnabled: false
+          }
+        });
+      });
 
       afterEach(() => spanBuffer.deactivate());
       const span = {
