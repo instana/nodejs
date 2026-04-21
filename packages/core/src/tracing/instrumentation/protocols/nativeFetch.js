@@ -53,20 +53,14 @@ exports.updateConfig = function updateConfig(config) {
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
 };
 
-exports.activate = function activate(extraConfig) {
+exports.activate = function activate(_config) {
   if (originalFetch == null) {
     // Do nothing in Node.js versions that do not support native fetch.
     return;
   }
 
-  if (
-    extraConfig &&
-    extraConfig.tracing &&
-    extraConfig.tracing.http &&
-    Array.isArray(extraConfig.tracing.http.extraHttpHeadersToCapture)
-  ) {
-    extraHttpHeadersToCapture = extraConfig.tracing.http.extraHttpHeadersToCapture;
-  }
+  extraHttpHeadersToCapture = _config.tracing.http.extraHttpHeadersToCapture;
+
   isActive = true;
 };
 
