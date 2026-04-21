@@ -46,7 +46,9 @@ describe('tracing/spanBuffer', () => {
     });
 
     beforeEach(() => {
-      spanBuffer.activate();
+      spanBuffer.activate({
+        tracing: {}
+      });
       expect(global.setTimeout.called).to.be.false;
 
       global.setTimeout.resetHistory();
@@ -124,7 +126,9 @@ describe('tracing/spanBuffer', () => {
     });
 
     beforeEach(() => {
-      spanBuffer.activate();
+      spanBuffer.activate({
+        tracing: {}
+      });
       expect(global.setTimeout.called).to.be.true;
       global.setTimeout.resetHistory();
     });
@@ -217,7 +221,11 @@ describe('tracing/spanBuffer', () => {
         spanBuffer.addBatchableSpanName('batchable');
       });
 
-      beforeEach(() => spanBuffer.activate());
+      beforeEach(() =>
+        spanBuffer.activate({
+          tracing: {}
+        })
+      );
 
       afterEach(() => spanBuffer.deactivate());
 
@@ -563,7 +571,11 @@ describe('tracing/spanBuffer', () => {
         spanBuffer.addBatchableSpanName('batchable');
       });
 
-      beforeEach(() => spanBuffer.activate());
+      beforeEach(() =>
+        spanBuffer.activate({
+          tracing: {}
+        })
+      );
 
       afterEach(() => spanBuffer.deactivate());
 
@@ -574,7 +586,11 @@ describe('tracing/spanBuffer', () => {
     });
 
     describe('when applying span transformations', () => {
-      beforeEach(() => spanBuffer.activate());
+      beforeEach(() =>
+        spanBuffer.activate({
+          tracing: {}
+        })
+      );
 
       afterEach(() => spanBuffer.deactivate());
       const span = {

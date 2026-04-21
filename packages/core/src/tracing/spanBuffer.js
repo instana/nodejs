@@ -119,7 +119,7 @@ exports.activate = function activate(_config) {
     return;
   }
 
-  if (_config?.tracing.spanBatchingEnabled) {
+  if (_config.tracing.spanBatchingEnabled) {
     batchingEnabled = true;
   }
 
