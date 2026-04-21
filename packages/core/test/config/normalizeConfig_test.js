@@ -1665,6 +1665,32 @@ describe('config.normalizeConfig', () => {
 
         expect(config.preloadOpentelemetry).to.be.true;
       });
+
+      it('should preserve existing tracing config when agent updates tracing partially', () => {
+        const config = coreConfig.normalize();
+
+        expect(config.tracing.kafka.traceCorrelation).to.be.true;
+        expect(config.tracing.http.extraHttpHeadersToCapture).to.deep.equal([]);
+
+        coreConfig.update(
+          {
+            tracing: {
+              http: {
+                extraHttpHeadersToCapture: ['x-instana-test']
+              }
+            }
+          },
+          CONFIG_SOURCES.AGENT
+        );
+
+        expect(config.tracing.http.extraHttpHeadersToCapture).to.deep.equal(['x-instana-test']);
+        expect(config.tracing.kafka).to.deep.equal({
+          traceCorrelation: true
+        });
+        expect(config.tracing.kafka.traceCorrelation).to.be.true;
+        expect(config.tracing.enabled).to.be.true;
+        expect(config.tracing.spanBatchingEnabled).to.be.false;
+      });
     });
   });
 

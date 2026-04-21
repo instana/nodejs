@@ -44,7 +44,7 @@ exports.resolve = function resolve({ envValue, inCodeValue, agentValue, defaultV
     default: defaultValue
   };
 
-  CONFIG_PRIORITY.find(sourceKey => {
+  CONFIG_PRIORITY.some(sourceKey => {
     const rawValue = inputs[/** @type {keyof typeof inputs} */ (sourceKey)];
 
     if (rawValue === undefined && sourceKey !== 'default') {
