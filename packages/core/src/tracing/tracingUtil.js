@@ -37,8 +37,8 @@ exports.init = function (config) {
  * @param {import('../config').InstanaConfig} _config
  */
 exports.activate = function activate(_config) {
-  stackTraceLength = _config.tracing?.stackTraceLength;
-  stackTraceMode = _config.tracing?.stackTrace;
+  stackTraceLength = _config.tracing.stackTraceLength;
+  stackTraceMode = _config.tracing.stackTrace;
 };
 
 /**
