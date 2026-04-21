@@ -1670,6 +1670,274 @@ describe('config.normalizeConfig', () => {
         expect(config.tracing.enabled).to.be.true;
         expect(config.tracing.spanBatchingEnabled).to.be.false;
       });
+
+      it('should handle agent updating tracing.disable configuration', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              disable: {
+                'http-client': true
+              }
+            }
+          }
+        });
+
+        expect(config.tracing.disable).to.deep.equal({
+          'http-client': true
+        });
+
+        coreConfig.update(
+          {
+            tracing: {
+              disable: {
+                'http-server': true,
+                mongodb: true
+              }
+            }
+          },
+          CONFIG_SOURCES.AGENT
+        );
+
+        expect(config.tracing.disable).to.deep.equal({
+          'http-client': true
+        });
+      });
+
+      it('should handle agent updating tracing.http.extraHttpHeadersToCapture', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              http: {
+                extraHttpHeadersToCapture: ['x-custom-header']
+              }
+            }
+          }
+        });
+
+        expect(config.tracing.http.extraHttpHeadersToCapture).to.deep.equal(['x-custom-header']);
+
+        coreConfig.update(
+          {
+            tracing: {
+              http: {
+                extraHttpHeadersToCapture: ['x-agent-header', 'x-trace-id']
+              }
+            }
+          },
+          CONFIG_SOURCES.AGENT
+        );
+
+        expect(config.tracing.http.extraHttpHeadersToCapture).to.deep.equal(['x-custom-header']);
+      });
+
+      it('should handle agent updating secrets configuration', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            secrets: {
+              matcherMode: 'contains-ignore-case',
+              keywords: ['password', 'secret']
+            }
+          }
+        });
+
+        expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
+        expect(config.secrets.keywords).to.deep.equal(['password', 'secret']);
+
+        coreConfig.update(
+          {
+            secrets: {
+              keywords: ['token', 'apikey', 'auth']
+            }
+          },
+          CONFIG_SOURCES.AGENT
+        );
+
+        expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
+        expect(config.secrets.keywords).to.deep.equal(['password', 'secret']);
+      });
+
+      it('should handle agent updating tracing.ignoreEndpoints configuration', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              ignoreEndpoints: {
+                redis: ['get', 'set']
+              }
+            }
+          }
+        });
+
+        expect(config.tracing.ignoreEndpoints).to.deep.equal({
+          redis: [{ methods: ['get', 'set'] }]
+        });
+
+        coreConfig.update(
+          {
+            tracing: {
+              ignoreEndpoints: {
+                dynamodb: [{ methods: ['query'] }],
+                mongodb: [{ methods: ['find'] }]
+              }
+            }
+          },
+          CONFIG_SOURCES.AGENT
+        );
+
+        expect(config.tracing.ignoreEndpoints).to.deep.equal({
+          redis: [{ methods: ['get', 'set'] }]
+        });
+      });
+
+      it('should handle agent updating stackTrace configuration when not set in-code', () => {
+        const config = coreConfig.normalize();
+
+        expect(config.tracing.stackTrace).to.equal('all');
+        expect(config.tracing.stackTraceLength).to.equal(10);
+
+        coreConfig.update(
+          {
+            tracing: {
+              stackTrace: 'on-error',
+              stackTraceLength: 15
+            }
+          },
+          CONFIG_SOURCES.AGENT
+        );
+
+        expect(config.tracing.stackTrace).to.equal('on-error');
+        expect(config.tracing.stackTraceLength).to.equal(15);
+      });
+
+      it('should not override in-code config with agent config when in-code has higher priority', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              enabled: false,
+              stackTrace: 'never'
+            }
+          }
+        });
+
+        expect(config.tracing.enabled).to.be.false;
+        expect(config.tracing.stackTrace).to.equal('all');
+
+        coreConfig.update(
+          {
+            tracing: {
+              enabled: true,
+              stackTrace: 'all'
+            }
+          },
+          CONFIG_SOURCES.AGENT
+        );
+
+        expect(config.tracing.enabled).to.be.false;
+        expect(config.tracing.stackTrace).to.equal('all');
+      });
+
+      it('should handle complex nested config updates from agent', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              http: {
+                extraHttpHeadersToCapture: ['x-custom']
+              },
+              kafka: {
+                traceCorrelation: false
+              }
+            }
+          }
+        });
+
+        expect(config.tracing.http.extraHttpHeadersToCapture).to.deep.equal(['x-custom']);
+        expect(config.tracing.kafka.traceCorrelation).to.be.false;
+
+        coreConfig.update(
+          {
+            tracing: {
+              http: {
+                extraHttpHeadersToCapture: ['x-agent-header']
+              },
+              stackTrace: 'on-error',
+              stackTraceLength: 25,
+              disable: {
+                redis: true
+              }
+            }
+          },
+          CONFIG_SOURCES.AGENT
+        );
+
+        expect(config.tracing.http.extraHttpHeadersToCapture).to.deep.equal(['x-custom']);
+        expect(config.tracing.stackTrace).to.equal('on-error');
+        expect(config.tracing.stackTraceLength).to.equal(25);
+        expect(config.tracing.disable.redis).to.be.true;
+
+        expect(config.tracing.kafka.traceCorrelation).to.be.false;
+      });
+
+      it('should handle agent disabling tracing when not set in-code', () => {
+        const config = coreConfig.normalize();
+
+        expect(config.tracing.enabled).to.be.true;
+
+        coreConfig.update(
+          {
+            tracing: {
+              enabled: false
+            }
+          },
+          CONFIG_SOURCES.AGENT
+        );
+
+        expect(config.tracing.enabled).to.be.false;
+      });
+
+      it('should handle agent updating tracing.ignoreEndpointsDisableSuppression', () => {
+        const config = coreConfig.normalize();
+
+        expect(config.tracing.ignoreEndpointsDisableSuppression).to.be.false;
+
+        coreConfig.update(
+          {
+            tracing: {
+              ignoreEndpointsDisableSuppression: true
+            }
+          },
+          CONFIG_SOURCES.AGENT
+        );
+
+        expect(config.tracing.ignoreEndpointsDisableSuppression).to.be.true;
+      });
+
+      it('should preserve existing tracing.ignoreEndpoints when agent updates disableSuppression', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              ignoreEndpoints: {
+                redis: ['get'],
+                mongodb: ['find']
+              }
+            }
+          }
+        });
+
+        expect(config.tracing.ignoreEndpoints.redis).to.deep.equal([{ methods: ['get'] }]);
+        expect(config.tracing.ignoreEndpoints.mongodb).to.deep.equal([{ methods: ['find'] }]);
+
+        coreConfig.update(
+          {
+            tracing: {
+              ignoreEndpointsDisableSuppression: true
+            }
+          },
+          CONFIG_SOURCES.AGENT
+        );
+
+        expect(config.tracing.ignoreEndpoints.redis).to.deep.equal([{ methods: ['get'] }]);
+        expect(config.tracing.ignoreEndpoints.mongodb).to.deep.equal([{ methods: ['find'] }]);
+        expect(config.tracing.ignoreEndpointsDisableSuppression).to.be.true;
+      });
     });
   });
 

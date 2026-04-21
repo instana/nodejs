@@ -965,20 +965,46 @@ exports.update = function update(externalConfig, source) {
     return currentConfig;
   }
 
-  Object.keys(externalConfig).forEach(key => {
-    const configPath = `config.${key}`;
-    const currentMeta = configStore.get(configPath);
+  applyUpdateRecursive({ target: currentConfig, incoming: externalConfig, basePath: 'config', source });
 
-    if (currentMeta && currentMeta.source < source) {
-      logger.debug(`[config] Skipping ${key}: current source ${currentMeta.source} > incoming ${source}`);
-      return currentConfig;
-    }
-
-    /** @type {Record<string, any>} */
-    const configAsRecord = currentConfig;
-    configAsRecord[key] = deepMerge(configAsRecord[key], externalConfig[key]);
-
-    configStore.set(configPath, { source });
-  });
   return currentConfig;
 };
+
+/**
+ * @param {{
+ *   target?: Object.<string, any>,
+ *   incoming?: Object.<string, any>,
+ *   basePath?: string,
+ *   source?: number
+ * }} [options]
+ */
+function applyUpdateRecursive({
+  target = {},
+  incoming = {},
+  basePath = 'config',
+  source = CONFIG_SOURCES.DEFAULT
+} = {}) {
+  Object.keys(incoming).forEach(key => {
+    const path = `${basePath}.${key}`;
+    const currentMeta = configStore.get(path);
+
+    if (currentMeta && currentMeta.source < source) {
+      logger.debug(`[config] Skipping ${path}: current source ${currentMeta.source} > incoming ${source}`);
+      return;
+    }
+
+    const incomingValue = incoming[key];
+
+    if (incomingValue && typeof incomingValue === 'object' && !Array.isArray(incomingValue)) {
+      if (!target[key] || typeof target[key] !== 'object') {
+        target[key] = {};
+      }
+
+      applyUpdateRecursive({ target: target[key], incoming: incomingValue, basePath: path, source });
+    } else {
+      target[key] = incomingValue;
+
+      configStore.set(path, { source });
+    }
+  });
+}
