@@ -65,6 +65,217 @@ module.exports = function (name, version, isLatest) {
         )
       ));
 
+  it('must collect bind variables from parameterized queries', () =>
+    controls
+      .sendRequest({
+        method: 'GET',
+        path: '/bind-variables-test'
+      })
+      .then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables-test');
+
+            // Verify first query with string and array parameters
+            let selectQuery = getSpansByName(spans, 'postgres');
+
+            console.log('SPAN SELECT QUERY: ', selectQuery[0].data);
+
+            selectQuery = selectQuery.find(
+              span => span.data.pg.stmt === 'SELECT * FROM users WHERE name = $1 AND email = $2'
+            );
+            expect(selectQuery).to.exist;
+            expect(selectQuery.data.pg.params).to.exist;
+            expect(selectQuery.data.pg.params).to.be.an('array');
+            expect(selectQuery.data.pg.params).to.have.lengthOf(2);
+            // Verify values are masked (first 2 and last 2 chars visible, exact length preserved)
+            // 'testuser' (8 chars) -> 'te****er'
+            expect(selectQuery.data.pg.params[0]).to.equal('te****er');
+            expect(selectQuery.data.pg.params[0]).to.have.lengthOf(8);
+            // 'test@example.com' (16 chars) -> 'te************om'
+            expect(selectQuery.data.pg.params[1]).to.equal('te************om');
+            expect(selectQuery.data.pg.params[1]).to.have.lengthOf(16);
+
+            // Verify second query with config object containing values
+            const insertQuery = getSpansByName(spans, 'postgres').find(
+              span => span.data.pg.stmt === 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *'
+            );
+            expect(insertQuery).to.exist;
+            expect(insertQuery.data.pg.params).to.exist;
+            expect(insertQuery.data.pg.params).to.be.an('array');
+            expect(insertQuery.data.pg.params).to.have.lengthOf(2);
+            // Verify values are masked with exact length preserved
+            // 'bindtest' (8 chars) -> 'bi****st'
+            expect(insertQuery.data.pg.params[0]).to.equal('bi****st');
+            expect(insertQuery.data.pg.params[0]).to.have.lengthOf(8);
+            // 'bindtest@example.com' (20 chars) -> 'bi****************om'
+            expect(insertQuery.data.pg.params[1]).to.equal('bi****************om');
+            expect(insertQuery.data.pg.params[1]).to.have.lengthOf(20);
+          })
+        )
+      ));
+
+  it('must collect bind variables when calling stored procedures', () =>
+    controls
+      .sendRequest({
+        method: 'GET',
+        path: '/stored-procedure-test'
+      })
+      .then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/stored-procedure-test');
+
+            // Verify INSERT query with bind variables
+            const insertQuery = getSpansByName(spans, 'postgres').find(
+              span => span.data.pg.stmt && span.data.pg.stmt.includes('INSERT INTO users(name, email) VALUES($1, $2)')
+            );
+            expect(insertQuery).to.exist;
+            expect(insertQuery.data.pg.params).to.exist;
+            expect(insertQuery.data.pg.params).to.be.an('array');
+            expect(insertQuery.data.pg.params).to.have.lengthOf(2);
+            // Verify values are masked with exact length preserved
+            // 'proceduretest' (13 chars) -> 'pr*********st'
+            expect(insertQuery.data.pg.params[0]).to.equal('pr*********st');
+            expect(insertQuery.data.pg.params[0]).to.have.lengthOf(13);
+            // 'procedure@example.com' (21 chars) -> 'pr*****************om'
+            expect(insertQuery.data.pg.params[1]).to.equal('pr*****************om');
+            expect(insertQuery.data.pg.params[1]).to.have.lengthOf(21);
+
+            // Verify stored procedure call with bind variable
+            const procedureCall = getSpansByName(spans, 'postgres').find(
+              span => span.data.pg.stmt === 'SELECT * FROM get_user_by_name($1)'
+            );
+            expect(procedureCall).to.exist;
+            expect(procedureCall.data.pg.params).to.exist;
+            expect(procedureCall.data.pg.params).to.be.an('array');
+            expect(procedureCall.data.pg.params).to.have.lengthOf(1);
+            // Verify value is masked with exact length preserved
+            // 'proceduretest' (13 chars) -> 'pr*********st'
+            expect(procedureCall.data.pg.params[0]).to.equal('pr*********st');
+            expect(procedureCall.data.pg.params[0]).to.have.lengthOf(13);
+          })
+        )
+      ));
+
+  it('must collect and mask all data types correctly', () =>
+    controls
+      .sendRequest({
+        method: 'GET',
+        path: '/all-data-types-test'
+      })
+      .then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/all-data-types-test');
+            const pgSpans = getSpansByName(spans, 'postgres');
+
+            // 1. String value test
+            const stringQuery = pgSpans.find(span => span.data.pg.stmt.includes('string_value'));
+            expect(stringQuery).to.exist;
+            expect(stringQuery.data.pg.params).to.exist;
+            // 'sensitive_password_123' (23 chars) -> 'se*******************23'
+            expect(stringQuery.data.pg.params[0]).to.equal('se******************23');
+            expect(stringQuery.data.pg.params[0]).to.have.lengthOf(22);
+
+            // 2. Number values test
+            const numberQuery = pgSpans.find(span => span.data.pg.stmt.includes('int_value'));
+            expect(numberQuery).to.exist;
+            expect(numberQuery.data.pg.params).to.have.lengthOf(2);
+            // 42 -> '**'
+            expect(numberQuery.data.pg.params[0]).to.equal('**');
+            // 3.14159 -> '3.***59'
+            expect(numberQuery.data.pg.params[1]).to.equal('3.***59');
+
+            // 3. Boolean value test
+            const boolQuery = pgSpans.find(span => span.data.pg.stmt.includes('bool_value'));
+            expect(boolQuery).to.exist;
+            // true -> 't**e'
+            expect(boolQuery.data.pg.params[0]).to.equal('t**e');
+
+            // 4. Null value test
+            const nullQuery = pgSpans.find(span => span.data.pg.stmt.includes('null_value'));
+            expect(nullQuery).to.exist;
+            expect(nullQuery.data.pg.params[0]).to.equal('<null>');
+
+            // 5. Date value test
+            const dateQuery = pgSpans.find(span => span.data.pg.stmt.includes('date_value'));
+            expect(dateQuery).to.exist;
+            // Date ISO string is masked
+            expect(dateQuery.data.pg.params[0]).to.match(/^20\*+0Z$/);
+            expect(dateQuery.data.pg.params[0]).to.have.lengthOf(24);
+
+            // 6. JSON object test
+            const jsonQuery = pgSpans.find(span => span.data.pg.stmt.includes('json_value'));
+            expect(jsonQuery).to.exist;
+            // JSON is now masked with structure preserved
+            const parsedJson = JSON.parse(jsonQuery.data.pg.params[0]);
+            expect(parsedJson).to.have.property('u**r', 'j**n');
+            expect(parsedJson).to.have.property('em**l', 'jo**************om');
+            expect(parsedJson).to.have.property('pr********s');
+            expect(parsedJson['pr********s']).to.have.property('th**e', 'd**k');
+            expect(parsedJson['pr********s']).to.have.property('no*********ns', 't**e');
+
+            // 7. Array test
+            const arrayQuery = pgSpans.find(span => span.data.pg.stmt.includes('array_value'));
+            expect(arrayQuery).to.exist;
+            // Array is now masked with structure preserved
+            const parsedArray = JSON.parse(arrayQuery.data.pg.params[0]);
+            expect(parsedArray).to.be.an('array');
+            expect(parsedArray).to.have.lengthOf(5);
+            expect(parsedArray[0]).to.equal('1');
+            expect(parsedArray[1]).to.equal('2');
+            expect(parsedArray[2]).to.equal('3');
+            expect(parsedArray[3]).to.equal('4');
+            expect(parsedArray[4]).to.equal('5');
+
+            // 8. Nested JSON test
+            const nestedQuery = pgSpans.find(span => span.data.pg.stmt.includes('nested_value'));
+            expect(nestedQuery).to.exist;
+            // Complex nested JSON is now masked with structure preserved
+            const parsedNested = JSON.parse(nestedQuery.data.pg.params[0]);
+            expect(parsedNested).to.have.property('us**s');
+            expect(parsedNested['us**s']).to.be.an('array');
+            expect(parsedNested['us**s']).to.have.lengthOf(2);
+            expect(parsedNested['us**s'][0]).to.have.property('*d', '1');
+            expect(parsedNested['us**s'][0]).to.have.property('n**e', 'Al**e');
+            expect(parsedNested['us**s'][0]).to.have.property('em**l', 'al**************om');
+            expect(parsedNested).to.have.property('me*****a');
+            expect(parsedNested['me*****a']).to.have.property('cr****d', '20********01');
+            expect(parsedNested['me*****a']).to.have.property('ve****n', '1');
+
+            // 9. Buffer/Binary data test
+            const binaryQuery = pgSpans.find(span => span.data.pg.stmt.includes('binary_value'));
+            expect(binaryQuery).to.exist;
+            // Buffer shown as size
+            expect(binaryQuery.data.pg.params[0]).to.equal('<Buffer 8 bytes>');
+
+            // 10. Large buffer test
+            const largeBinaryQuery = pgSpans.find(span => span.data.pg.stmt.includes('large_binary'));
+            expect(largeBinaryQuery).to.exist;
+            expect(largeBinaryQuery.data.pg.params[0]).to.equal('<Buffer 1024 bytes>');
+
+            // 11. Mixed types in single query
+            const mixedQuery = pgSpans.find(span =>
+              span.data.pg.stmt.includes('SELECT $1::text, $2::integer, $3::boolean, $4::jsonb, $5::bytea')
+            );
+            expect(mixedQuery).to.exist;
+            expect(mixedQuery.data.pg.params).to.have.lengthOf(5);
+            // String: 'user@example.com' -> 'us************om'
+            expect(mixedQuery.data.pg.params[0]).to.equal('us************om');
+            // Number: 12345 -> '1***5'
+            expect(mixedQuery.data.pg.params[1]).to.equal('1***5');
+            // Boolean: false -> 'f***e'
+            expect(mixedQuery.data.pg.params[2]).to.equal('f***e');
+            // JSON: '{"key":"value"}' is now masked with structure preserved
+            const parsedMixed = JSON.parse(mixedQuery.data.pg.params[3]);
+            expect(parsedMixed).to.have.property('k*y', 'va**e');
+            // Buffer: '<Buffer 6 bytes>'
+            expect(mixedQuery.data.pg.params[4]).to.equal('<Buffer 6 bytes>');
+          })
+        )
+      ));
+
   it('must trace pooled select now', () =>
     controls
       .sendRequest({
