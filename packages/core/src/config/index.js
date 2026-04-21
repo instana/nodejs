@@ -986,9 +986,11 @@ exports.update = function update(externalConfig, source) {
       return currentConfig;
     }
 
-    /** @type {any} */ (currentConfig)[key] = externalConfig[key];
+    /** @type {Record<string, any>} */
+    const configAsRecord = currentConfig;
+    configAsRecord[key] = deepMerge(configAsRecord[key], externalConfig[key]);
+
     configStore.set(configPath, { source });
-    logger.debug(`[config] Updated ${key} from source ${source}: ${JSON.stringify(externalConfig[key])}`);
   });
   return currentConfig;
 };
