@@ -103,9 +103,9 @@ exports.init = function init(config, _downstreamConnection) {
 };
 
 /**
- * @param {import('@instana/collector/src/types/collector').AgentConfig} extraConfig
+ * @param {import('../config').InstanaConfig} _config
  */
-exports.activate = function activate(extraConfig) {
+exports.activate = function activate(_config) {
   if (!downstreamConnection) {
     logger.error('No downstreamConnection has been set.');
     return;
@@ -119,11 +119,7 @@ exports.activate = function activate(extraConfig) {
     return;
   }
 
-  if (extraConfig?.tracing) {
-    if (extraConfig.tracing.spanBatchingEnabled) {
-      batchingEnabled = true;
-    }
-  }
+  batchingEnabled = _config.tracing.spanBatchingEnabled;
 
   isActive = true;
   if (activatedAt == null) {
