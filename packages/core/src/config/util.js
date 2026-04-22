@@ -66,10 +66,6 @@ exports.resolve = function resolve({ envValue, inCodeValue, agentValue, defaultV
       return true;
     }
 
-    if (rawValue !== undefined) {
-      logger?.warn(`[config] Validation failed for ${sourceKey}: ${JSON.stringify(rawValue)}`);
-    }
-
     return false;
   });
 

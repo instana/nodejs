@@ -130,7 +130,10 @@ function enter(_ctx) {
     }
   }
 
-  const updatedConfig = coreConfig.update(agentOpts.config, util.constants.CONFIG_SOURCES.AGENT);
+  const updatedConfig = coreConfig.update({
+    externalConfig: agentOpts.config,
+    source: util.constants.CONFIG_SOURCES.AGENT
+  });
   tracing.activate(updatedConfig);
 
   if (agentOpts.autoProfile && autoprofile) {

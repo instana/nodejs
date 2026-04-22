@@ -35,6 +35,9 @@ describe('agent ready state', () => {
   let uncaughtStub;
   let eolStub;
   beforeEach(() => {
+    const coreConfig = require('@_local/core/src/config');
+    coreConfig.normalize({ finalConfigBase: {} });
+
     agentOptsStub = {
       config: {},
       agentUuid: 'test-uuid'
@@ -90,7 +93,8 @@ describe('agent ready state', () => {
     it('should forward agent config to tracing component', () => {
       agentOptsStub.config = { foo: { bar: 'baz' } };
       agentReadyState.enter();
-      expect(tracingStub.activate).to.have.been.calledWith(agentOptsStub.config);
+      const updatedConfig = tracingStub.activate.firstCall.args[0];
+      expect(updatedConfig.foo.bar).to.equal('baz');
     });
   });
 
