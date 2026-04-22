@@ -957,28 +957,40 @@ function normalizePreloadOpentelemetry({ userConfig = {}, defaultConfig = {}, fi
 /**
  * Updates configuration values dynamically from external sources (e.g., agent)
  *
- * @param {Object.<string, any>} externalConfig
- * @param {number} source
+ * @param {Object} [params]
+ * @param {Record<string, any>} [params.externalConfig]
+ * @param {number} [params.source]
+ * @param {Record<string, any>} [params.target=currentConfig]
+ * @param {string} [params.basePath='config']
+ * @returns {Record<string, any>}
  */
-exports.update = function update(externalConfig, source) {
+exports.update = function update({ externalConfig = {}, source, target = currentConfig, basePath = 'config' } = {}) {
   if (!externalConfig || typeof externalConfig !== 'object' || Object.keys(externalConfig).length === 0) {
     return currentConfig;
   }
 
   Object.keys(externalConfig).forEach(key => {
-    const configPath = `config.${key}`;
-    const currentMeta = configStore.get(configPath);
+    const path = `${basePath}.${key}`;
+    const currentMeta = configStore.get(path);
 
     if (currentMeta && currentMeta.source < source) {
-      logger.debug(`[config] Skipping ${key}: current source ${currentMeta.source} > incoming ${source}`);
-      return currentConfig;
+      logger.debug(`[config] Skipping ${path}: current source ${currentMeta.source} > incoming ${source}`);
+      return;
     }
 
-    /** @type {Record<string, any>} */
-    const configAsRecord = currentConfig;
-    configAsRecord[key] = deepMerge(configAsRecord[key], externalConfig[key]);
+    const incomingValue = externalConfig[key];
 
-    configStore.set(configPath, { source });
+    if (incomingValue && typeof incomingValue === 'object' && !Array.isArray(incomingValue)) {
+      if (!target[key] || typeof target[key] !== 'object') {
+        target[key] = {};
+      }
+
+      update({ externalConfig: incomingValue, source, target: target[key], basePath: path });
+    } else {
+      target[key] = incomingValue;
+      configStore.set(path, { source });
+    }
   });
+
   return currentConfig;
 };
