@@ -220,7 +220,9 @@ function normalizeMetricsConfig(config) {
     config.metrics.transmissionDelay,
     defaults.metrics.transmissionDelay,
     'config.metrics.transmissionDelay',
-    'INSTANA_METRICS_TRANSMISSION_DELAY'
+    'INSTANA_METRICS_TRANSMISSION_DELAY',
+    null,
+    5000
   );
 
   config.metrics.timeBetweenHealthcheckCalls =
@@ -718,9 +720,11 @@ function parseSecretsEnvVar(envVarValue) {
  * @param {*} defaultValue
  * @param {string} configPath
  * @param {string} envVarKey
+ * @param {number} [minValue]
+ * @param {number} [maxValue]
  * @returns {*}
  */
-function normalizeSingleValue(configValue, defaultValue, configPath, envVarKey) {
+function normalizeSingleValue(configValue, defaultValue, configPath, envVarKey, minValue, maxValue) {
   const envVarVal = process.env[envVarKey];
   let originalValue = configValue;
   if (configValue == null && envVarVal == null) {
@@ -737,6 +741,21 @@ function normalizeSingleValue(configValue, defaultValue, configPath, envVarKey) 
     );
     return defaultValue;
   }
+
+  if (minValue != null && configValue < minValue) {
+    logger.warn(
+      `The value of ${configPath} (or ${envVarKey}) (${configValue}) is below the minimum allowed value of ${minValue}. Assuming the default value ${defaultValue}.`
+    );
+    return defaultValue;
+  }
+
+  if (maxValue != null && configValue > maxValue) {
+    logger.warn(
+      `The value of ${configPath} (or ${envVarKey}) (${configValue}) exceeds the maximum allowed value of ${maxValue}. Assuming the default value ${defaultValue}.`
+    );
+    return defaultValue;
+  }
+
   return configValue;
 }
 /**
