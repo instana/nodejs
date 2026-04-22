@@ -957,34 +957,19 @@ function normalizePreloadOpentelemetry({ userConfig = {}, defaultConfig = {}, fi
 /**
  * Updates configuration values dynamically from external sources (e.g., agent)
  *
- * @param {Object.<string, any>} externalConfig
- * @param {number} source
+ * @param {Object} [params]
+ * @param {Record<string, any>} [params.externalConfig]
+ * @param {number} [params.source]
+ * @param {Record<string, any>} [params.target=currentConfig]
+ * @param {string} [params.basePath='config']
+ * @returns {Record<string, any>}
  */
-exports.update = function update(externalConfig, source) {
+exports.update = function update({ externalConfig = {}, source, target = currentConfig, basePath = 'config' } = {}) {
   if (!externalConfig || typeof externalConfig !== 'object' || Object.keys(externalConfig).length === 0) {
     return currentConfig;
   }
 
-  applyUpdateRecursive({ target: currentConfig, incoming: externalConfig, basePath: 'config', source });
-
-  return currentConfig;
-};
-
-/**
- * @param {{
- *   target?: Object.<string, any>,
- *   incoming?: Object.<string, any>,
- *   basePath?: string,
- *   source?: number
- * }} [options]
- */
-function applyUpdateRecursive({
-  target = {},
-  incoming = {},
-  basePath = 'config',
-  source = CONFIG_SOURCES.DEFAULT
-} = {}) {
-  Object.keys(incoming).forEach(key => {
+  Object.keys(externalConfig).forEach(key => {
     const path = `${basePath}.${key}`;
     const currentMeta = configStore.get(path);
 
@@ -993,18 +978,19 @@ function applyUpdateRecursive({
       return;
     }
 
-    const incomingValue = incoming[key];
+    const incomingValue = externalConfig[key];
 
     if (incomingValue && typeof incomingValue === 'object' && !Array.isArray(incomingValue)) {
       if (!target[key] || typeof target[key] !== 'object') {
         target[key] = {};
       }
 
-      applyUpdateRecursive({ target: target[key], incoming: incomingValue, basePath: path, source });
+      update({ externalConfig: incomingValue, source, target: target[key], basePath: path });
     } else {
       target[key] = incomingValue;
-
       configStore.set(path, { source });
     }
   });
-}
+
+  return currentConfig;
+};

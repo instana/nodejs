@@ -1519,425 +1519,425 @@ describe('config.normalizeConfig', () => {
       const config = coreConfig.normalize({ userConfig: { serviceName: 'test' } });
       expect(config.serviceName).to.equal('test');
     });
+  });
 
-    describe('config.update', () => {
-      const { CONFIG_SOURCES } = require('../../src/util/constants');
+  describe('config.update', () => {
+    const { CONFIG_SOURCES } = require('../../src/util/constants');
 
-      it('should update config from agent when not previously set', () => {
-        const config = coreConfig.normalize({});
+    it('should update config from external source when not previously set', () => {
+      const config = coreConfig.normalize({});
 
-        coreConfig.update(
-          {
-            serviceName: 'agent-service'
-          },
-          CONFIG_SOURCES.AGENT
-        );
-
-        expect(config.serviceName).to.equal('agent-service');
+      coreConfig.update({
+        externalConfig: {
+          serviceName: 'agent-service'
+        },
+        source: CONFIG_SOURCES.AGENT
       });
 
-      it('should not update config from agent when ENV var is set', () => {
-        process.env.INSTANA_SERVICE_NAME = 'env-service';
-        const config = coreConfig.normalize({});
-        expect(config.serviceName).to.equal('env-service');
+      expect(config.serviceName).to.equal('agent-service');
+    });
 
-        coreConfig.update(
-          {
-            serviceName: 'agent-service'
-          },
-          CONFIG_SOURCES.AGENT
-        );
+    it('should not update config from external source when ENV var is set', () => {
+      process.env.INSTANA_SERVICE_NAME = 'env-service';
+      const config = coreConfig.normalize({});
+      expect(config.serviceName).to.equal('env-service');
 
-        expect(config.serviceName).to.equal('env-service');
+      coreConfig.update({
+        externalConfig: {
+          serviceName: 'agent-service'
+        },
+        source: CONFIG_SOURCES.AGENT
       });
 
-      it('should not update config from agent when in-code config is set', () => {
-        const config = coreConfig.normalize({
-          userConfig: {
-            serviceName: 'code-service'
-          }
-        });
-        expect(config.serviceName).to.equal('code-service');
+      expect(config.serviceName).to.equal('env-service');
+    });
 
-        coreConfig.update(
-          {
-            serviceName: 'agent-service'
-          },
-          CONFIG_SOURCES.AGENT
-        );
+    it('should not update config from external source when in-code config is set', () => {
+      const config = coreConfig.normalize({
+        userConfig: {
+          serviceName: 'code-service'
+        }
+      });
+      expect(config.serviceName).to.equal('code-service');
 
-        expect(config.serviceName).to.equal('code-service');
+      coreConfig.update({
+        externalConfig: {
+          serviceName: 'agent-service'
+        },
+        source: CONFIG_SOURCES.AGENT
       });
 
-      it('should update multiple config values from agent', () => {
-        const config = coreConfig.normalize();
+      expect(config.serviceName).to.equal('code-service');
+    });
 
-        coreConfig.update(
-          {
-            serviceName: 'agent-service',
-            'metrics.transmissionDelay': 2000
-          },
-          CONFIG_SOURCES.AGENT
-        );
+    it('should update multiple config values from external source', () => {
+      const config = coreConfig.normalize();
 
-        expect(config.serviceName).to.equal('agent-service');
-        expect(config['metrics.transmissionDelay']).to.equal(2000);
+      coreConfig.update({
+        externalConfig: {
+          serviceName: 'agent-service',
+          'metrics.transmissionDelay': 2000
+        },
+        source: CONFIG_SOURCES.AGENT
       });
 
-      it('should handle empty agent config', () => {
-        const config = coreConfig.normalize();
-        const originalServiceName = config.serviceName;
+      expect(config.serviceName).to.equal('agent-service');
+      expect(config['metrics.transmissionDelay']).to.equal(2000);
+    });
 
-        coreConfig.update({}, CONFIG_SOURCES.AGENT);
+    it('should handle empty external config', () => {
+      const config = coreConfig.normalize();
+      const originalServiceName = config.serviceName;
 
-        expect(config.serviceName).to.equal(originalServiceName);
+      coreConfig.update({ externalConfig: {}, source: CONFIG_SOURCES.AGENT });
+
+      expect(config.serviceName).to.equal(originalServiceName);
+    });
+
+    it('should handle null external config', () => {
+      const config = coreConfig.normalize();
+      const originalServiceName = config.serviceName;
+
+      coreConfig.update({ externalConfig: null, source: CONFIG_SOURCES.AGENT });
+
+      expect(config.serviceName).to.equal(originalServiceName);
+    });
+
+    it('should update external config over default values', () => {
+      const config = coreConfig.normalize();
+
+      expect(config.serviceName).to.be.null;
+
+      coreConfig.update({
+        externalConfig: {
+          serviceName: 'agent-service'
+        },
+        source: CONFIG_SOURCES.AGENT
       });
 
-      it('should handle null agent config', () => {
-        const config = coreConfig.normalize();
-        const originalServiceName = config.serviceName;
+      expect(config.serviceName).to.equal('agent-service');
+    });
 
-        coreConfig.update(null, CONFIG_SOURCES.AGENT);
+    it('should respect precedence: ENV > IN_CODE > AGENT > DEFAULT', () => {
+      process.env.INSTANA_SERVICE_NAME = 'env-service';
 
-        expect(config.serviceName).to.equal(originalServiceName);
+      const config = coreConfig.normalize({
+        userConfig: {
+          packageJsonPath: '/custom/path'
+        }
       });
 
-      it('should update agent config over default values', () => {
-        const config = coreConfig.normalize();
+      expect(config.serviceName).to.equal('env-service');
+      expect(config.packageJsonPath).to.equal('/custom/path');
 
-        expect(config.serviceName).to.be.null;
-
-        coreConfig.update(
-          {
-            serviceName: 'agent-service'
-          },
-          CONFIG_SOURCES.AGENT
-        );
-
-        expect(config.serviceName).to.equal('agent-service');
+      coreConfig.update({
+        externalConfig: {
+          serviceName: 'agent-service',
+          packageJsonPath: '/agent/path',
+          preloadOpentelemetry: true
+        },
+        source: CONFIG_SOURCES.AGENT
       });
 
-      it('should respect precedence: ENV > IN_CODE > AGENT > DEFAULT', () => {
-        process.env.INSTANA_SERVICE_NAME = 'env-service';
+      expect(config.serviceName).to.equal('env-service');
 
-        const config = coreConfig.normalize({
-          userConfig: {
-            packageJsonPath: '/custom/path'
-          }
-        });
+      expect(config.packageJsonPath).to.equal('/custom/path');
 
-        expect(config.serviceName).to.equal('env-service');
-        expect(config.packageJsonPath).to.equal('/custom/path');
+      expect(config.preloadOpentelemetry).to.be.true;
+    });
 
-        coreConfig.update(
-          {
-            serviceName: 'agent-service',
-            packageJsonPath: '/agent/path',
-            preloadOpentelemetry: true
-          },
-          CONFIG_SOURCES.AGENT
-        );
+    it('should preserve existing tracing config when external source updates tracing partially', () => {
+      const config = coreConfig.normalize();
 
-        expect(config.serviceName).to.equal('env-service');
+      expect(config.tracing.kafka.traceCorrelation).to.be.true;
+      expect(config.tracing.http.extraHttpHeadersToCapture).to.deep.equal([]);
 
-        expect(config.packageJsonPath).to.equal('/custom/path');
-
-        expect(config.preloadOpentelemetry).to.be.true;
-      });
-
-      it('should preserve existing tracing config when agent updates tracing partially', () => {
-        const config = coreConfig.normalize();
-
-        expect(config.tracing.kafka.traceCorrelation).to.be.true;
-        expect(config.tracing.http.extraHttpHeadersToCapture).to.deep.equal([]);
-
-        coreConfig.update(
-          {
-            tracing: {
-              http: {
-                extraHttpHeadersToCapture: ['x-instana-test']
-              }
-            }
-          },
-          CONFIG_SOURCES.AGENT
-        );
-
-        expect(config.tracing.http.extraHttpHeadersToCapture).to.deep.equal(['x-instana-test']);
-        expect(config.tracing.kafka).to.deep.equal({
-          traceCorrelation: true
-        });
-        expect(config.tracing.kafka.traceCorrelation).to.be.true;
-        expect(config.tracing.enabled).to.be.true;
-        expect(config.tracing.spanBatchingEnabled).to.be.false;
-      });
-
-      it('should handle agent updating tracing.disable configuration', () => {
-        const config = coreConfig.normalize({
-          userConfig: {
-            tracing: {
-              disable: {
-                'http-client': true
-              }
+      coreConfig.update({
+        externalConfig: {
+          tracing: {
+            http: {
+              extraHttpHeadersToCapture: ['x-instana-test']
             }
           }
-        });
-
-        expect(config.tracing.disable).to.deep.equal({
-          'http-client': true
-        });
-
-        coreConfig.update(
-          {
-            tracing: {
-              disable: {
-                'http-server': true,
-                mongodb: true
-              }
-            }
-          },
-          CONFIG_SOURCES.AGENT
-        );
-
-        expect(config.tracing.disable).to.deep.equal({
-          'http-client': true
-        });
+        },
+        source: CONFIG_SOURCES.AGENT
       });
 
-      it('should handle agent updating tracing.http.extraHttpHeadersToCapture', () => {
-        const config = coreConfig.normalize({
-          userConfig: {
-            tracing: {
-              http: {
-                extraHttpHeadersToCapture: ['x-custom-header']
-              }
+      expect(config.tracing.http.extraHttpHeadersToCapture).to.deep.equal(['x-instana-test']);
+      expect(config.tracing.kafka).to.deep.equal({
+        traceCorrelation: true
+      });
+      expect(config.tracing.kafka.traceCorrelation).to.be.true;
+      expect(config.tracing.enabled).to.be.true;
+      expect(config.tracing.spanBatchingEnabled).to.be.false;
+    });
+
+    it('should handle external source updating tracing.disable configuration', () => {
+      const config = coreConfig.normalize({
+        userConfig: {
+          tracing: {
+            disable: {
+              'http-client': true
             }
           }
-        });
-
-        expect(config.tracing.http.extraHttpHeadersToCapture).to.deep.equal(['x-custom-header']);
-
-        coreConfig.update(
-          {
-            tracing: {
-              http: {
-                extraHttpHeadersToCapture: ['x-agent-header', 'x-trace-id']
-              }
-            }
-          },
-          CONFIG_SOURCES.AGENT
-        );
-
-        expect(config.tracing.http.extraHttpHeadersToCapture).to.deep.equal(['x-custom-header']);
+        }
       });
 
-      it('should handle agent updating secrets configuration', () => {
-        const config = coreConfig.normalize({
-          userConfig: {
-            secrets: {
-              matcherMode: 'contains-ignore-case',
-              keywords: ['password', 'secret']
+      expect(config.tracing.disable).to.deep.equal({
+        'http-client': true
+      });
+
+      coreConfig.update({
+        externalConfig: {
+          tracing: {
+            disable: {
+              'http-server': true,
+              mongodb: true
             }
           }
-        });
-
-        expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
-        expect(config.secrets.keywords).to.deep.equal(['password', 'secret']);
-
-        coreConfig.update(
-          {
-            secrets: {
-              keywords: ['token', 'apikey', 'auth']
-            }
-          },
-          CONFIG_SOURCES.AGENT
-        );
-
-        expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
-        expect(config.secrets.keywords).to.deep.equal(['password', 'secret']);
+        },
+        source: CONFIG_SOURCES.AGENT
       });
 
-      it('should handle agent updating tracing.ignoreEndpoints configuration', () => {
-        const config = coreConfig.normalize({
-          userConfig: {
-            tracing: {
-              ignoreEndpoints: {
-                redis: ['get', 'set']
-              }
+      expect(config.tracing.disable).to.deep.equal({
+        'http-client': true
+      });
+    });
+
+    it('should handle external source updating tracing.http.extraHttpHeadersToCapture', () => {
+      const config = coreConfig.normalize({
+        userConfig: {
+          tracing: {
+            http: {
+              extraHttpHeadersToCapture: ['x-custom-header']
             }
           }
-        });
-
-        expect(config.tracing.ignoreEndpoints).to.deep.equal({
-          redis: [{ methods: ['get', 'set'] }]
-        });
-
-        coreConfig.update(
-          {
-            tracing: {
-              ignoreEndpoints: {
-                dynamodb: [{ methods: ['query'] }],
-                mongodb: [{ methods: ['find'] }]
-              }
-            }
-          },
-          CONFIG_SOURCES.AGENT
-        );
-
-        expect(config.tracing.ignoreEndpoints).to.deep.equal({
-          redis: [{ methods: ['get', 'set'] }]
-        });
+        }
       });
 
-      it('should handle agent updating stackTrace configuration when not set in-code', () => {
-        const config = coreConfig.normalize();
+      expect(config.tracing.http.extraHttpHeadersToCapture).to.deep.equal(['x-custom-header']);
 
-        expect(config.tracing.stackTrace).to.equal('all');
-        expect(config.tracing.stackTraceLength).to.equal(10);
-
-        coreConfig.update(
-          {
-            tracing: {
-              stackTrace: 'on-error',
-              stackTraceLength: 15
-            }
-          },
-          CONFIG_SOURCES.AGENT
-        );
-
-        expect(config.tracing.stackTrace).to.equal('on-error');
-        expect(config.tracing.stackTraceLength).to.equal(15);
-      });
-
-      it('should not override in-code config with agent config when in-code has higher priority', () => {
-        const config = coreConfig.normalize({
-          userConfig: {
-            tracing: {
-              enabled: false,
-              stackTrace: 'never'
+      coreConfig.update({
+        externalConfig: {
+          tracing: {
+            http: {
+              extraHttpHeadersToCapture: ['x-agent-header', 'x-trace-id']
             }
           }
-        });
-
-        expect(config.tracing.enabled).to.be.false;
-        expect(config.tracing.stackTrace).to.equal('all');
-
-        coreConfig.update(
-          {
-            tracing: {
-              enabled: true,
-              stackTrace: 'all'
-            }
-          },
-          CONFIG_SOURCES.AGENT
-        );
-
-        expect(config.tracing.enabled).to.be.false;
-        expect(config.tracing.stackTrace).to.equal('all');
+        },
+        source: CONFIG_SOURCES.AGENT
       });
 
-      it('should handle complex nested config updates from agent', () => {
-        const config = coreConfig.normalize({
-          userConfig: {
-            tracing: {
-              http: {
-                extraHttpHeadersToCapture: ['x-custom']
-              },
-              kafka: {
-                traceCorrelation: false
-              }
+      expect(config.tracing.http.extraHttpHeadersToCapture).to.deep.equal(['x-custom-header']);
+    });
+
+    it('should handle external source updating secrets configuration', () => {
+      const config = coreConfig.normalize({
+        userConfig: {
+          secrets: {
+            matcherMode: 'contains-ignore-case',
+            keywords: ['password', 'secret']
+          }
+        }
+      });
+
+      expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
+      expect(config.secrets.keywords).to.deep.equal(['password', 'secret']);
+
+      coreConfig.update({
+        externalConfig: {
+          secrets: {
+            keywords: ['token', 'apikey', 'auth']
+          }
+        },
+        source: CONFIG_SOURCES.AGENT
+      });
+
+      expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
+      expect(config.secrets.keywords).to.deep.equal(['password', 'secret']);
+    });
+
+    it('should handle external source updating tracing.ignoreEndpoints configuration', () => {
+      const config = coreConfig.normalize({
+        userConfig: {
+          tracing: {
+            ignoreEndpoints: {
+              redis: ['get', 'set']
             }
           }
-        });
-
-        expect(config.tracing.http.extraHttpHeadersToCapture).to.deep.equal(['x-custom']);
-        expect(config.tracing.kafka.traceCorrelation).to.be.false;
-
-        coreConfig.update(
-          {
-            tracing: {
-              http: {
-                extraHttpHeadersToCapture: ['x-agent-header']
-              },
-              stackTrace: 'on-error',
-              stackTraceLength: 25,
-              disable: {
-                redis: true
-              }
-            }
-          },
-          CONFIG_SOURCES.AGENT
-        );
-
-        expect(config.tracing.http.extraHttpHeadersToCapture).to.deep.equal(['x-custom']);
-        expect(config.tracing.stackTrace).to.equal('on-error');
-        expect(config.tracing.stackTraceLength).to.equal(25);
-        expect(config.tracing.disable.redis).to.be.true;
-
-        expect(config.tracing.kafka.traceCorrelation).to.be.false;
+        }
       });
 
-      it('should handle agent disabling tracing when not set in-code', () => {
-        const config = coreConfig.normalize();
-
-        expect(config.tracing.enabled).to.be.true;
-
-        coreConfig.update(
-          {
-            tracing: {
-              enabled: false
-            }
-          },
-          CONFIG_SOURCES.AGENT
-        );
-
-        expect(config.tracing.enabled).to.be.false;
+      expect(config.tracing.ignoreEndpoints).to.deep.equal({
+        redis: [{ methods: ['get', 'set'] }]
       });
 
-      it('should handle agent updating tracing.ignoreEndpointsDisableSuppression', () => {
-        const config = coreConfig.normalize();
-
-        expect(config.tracing.ignoreEndpointsDisableSuppression).to.be.false;
-
-        coreConfig.update(
-          {
-            tracing: {
-              ignoreEndpointsDisableSuppression: true
-            }
-          },
-          CONFIG_SOURCES.AGENT
-        );
-
-        expect(config.tracing.ignoreEndpointsDisableSuppression).to.be.true;
-      });
-
-      it('should preserve existing tracing.ignoreEndpoints when agent updates disableSuppression', () => {
-        const config = coreConfig.normalize({
-          userConfig: {
-            tracing: {
-              ignoreEndpoints: {
-                redis: ['get'],
-                mongodb: ['find']
-              }
+      coreConfig.update({
+        externalConfig: {
+          tracing: {
+            ignoreEndpoints: {
+              dynamodb: [{ methods: ['query'] }],
+              mongodb: [{ methods: ['find'] }]
             }
           }
-        });
-
-        expect(config.tracing.ignoreEndpoints.redis).to.deep.equal([{ methods: ['get'] }]);
-        expect(config.tracing.ignoreEndpoints.mongodb).to.deep.equal([{ methods: ['find'] }]);
-
-        coreConfig.update(
-          {
-            tracing: {
-              ignoreEndpointsDisableSuppression: true
-            }
-          },
-          CONFIG_SOURCES.AGENT
-        );
-
-        expect(config.tracing.ignoreEndpoints.redis).to.deep.equal([{ methods: ['get'] }]);
-        expect(config.tracing.ignoreEndpoints.mongodb).to.deep.equal([{ methods: ['find'] }]);
-        expect(config.tracing.ignoreEndpointsDisableSuppression).to.be.true;
+        },
+        source: CONFIG_SOURCES.AGENT
       });
+
+      expect(config.tracing.ignoreEndpoints).to.deep.equal({
+        redis: [{ methods: ['get', 'set'] }]
+      });
+    });
+
+    it('should handle external source updating stackTrace configuration when not set in-code', () => {
+      const config = coreConfig.normalize();
+
+      expect(config.tracing.stackTrace).to.equal('all');
+      expect(config.tracing.stackTraceLength).to.equal(10);
+
+      coreConfig.update({
+        externalConfig: {
+          tracing: {
+            stackTrace: 'on-error',
+            stackTraceLength: 15
+          }
+        },
+        source: CONFIG_SOURCES.AGENT
+      });
+
+      expect(config.tracing.stackTrace).to.equal('on-error');
+      expect(config.tracing.stackTraceLength).to.equal(15);
+    });
+
+    it('should not override in-code config with external config when in-code has higher priority', () => {
+      const config = coreConfig.normalize({
+        userConfig: {
+          tracing: {
+            enabled: false,
+            stackTrace: 'never'
+          }
+        }
+      });
+
+      expect(config.tracing.enabled).to.be.false;
+      expect(config.tracing.stackTrace).to.equal('all');
+
+      coreConfig.update({
+        externalConfig: {
+          tracing: {
+            enabled: true,
+            stackTrace: 'all'
+          }
+        },
+        source: CONFIG_SOURCES.AGENT
+      });
+
+      expect(config.tracing.enabled).to.be.false;
+      expect(config.tracing.stackTrace).to.equal('all');
+    });
+
+    it('should handle complex nested config updates from external source', () => {
+      const config = coreConfig.normalize({
+        userConfig: {
+          tracing: {
+            http: {
+              extraHttpHeadersToCapture: ['x-custom']
+            },
+            kafka: {
+              traceCorrelation: false
+            }
+          }
+        }
+      });
+
+      expect(config.tracing.http.extraHttpHeadersToCapture).to.deep.equal(['x-custom']);
+      expect(config.tracing.kafka.traceCorrelation).to.be.false;
+
+      coreConfig.update({
+        externalConfig: {
+          tracing: {
+            http: {
+              extraHttpHeadersToCapture: ['x-agent-header']
+            },
+            stackTrace: 'on-error',
+            stackTraceLength: 25,
+            disable: {
+              redis: true
+            }
+          }
+        },
+        source: CONFIG_SOURCES.AGENT
+      });
+
+      expect(config.tracing.http.extraHttpHeadersToCapture).to.deep.equal(['x-custom']);
+      expect(config.tracing.stackTrace).to.equal('on-error');
+      expect(config.tracing.stackTraceLength).to.equal(25);
+      expect(config.tracing.disable.redis).to.be.true;
+
+      expect(config.tracing.kafka.traceCorrelation).to.be.false;
+    });
+
+    it('should handle external source disabling tracing when not set in-code', () => {
+      const config = coreConfig.normalize();
+
+      expect(config.tracing.enabled).to.be.true;
+
+      coreConfig.update({
+        externalConfig: {
+          tracing: {
+            enabled: false
+          }
+        },
+        source: CONFIG_SOURCES.AGENT
+      });
+
+      expect(config.tracing.enabled).to.be.false;
+    });
+
+    it('should handle external source updating tracing.ignoreEndpointsDisableSuppression', () => {
+      const config = coreConfig.normalize();
+
+      expect(config.tracing.ignoreEndpointsDisableSuppression).to.be.false;
+
+      coreConfig.update({
+        externalConfig: {
+          tracing: {
+            ignoreEndpointsDisableSuppression: true
+          }
+        },
+        source: CONFIG_SOURCES.AGENT
+      });
+
+      expect(config.tracing.ignoreEndpointsDisableSuppression).to.be.true;
+    });
+
+    it('should preserve existing tracing.ignoreEndpoints when external source updates disableSuppression', () => {
+      const config = coreConfig.normalize({
+        userConfig: {
+          tracing: {
+            ignoreEndpoints: {
+              redis: ['get'],
+              mongodb: ['find']
+            }
+          }
+        }
+      });
+
+      expect(config.tracing.ignoreEndpoints.redis).to.deep.equal([{ methods: ['get'] }]);
+      expect(config.tracing.ignoreEndpoints.mongodb).to.deep.equal([{ methods: ['find'] }]);
+
+      coreConfig.update({
+        externalConfig: {
+          tracing: {
+            ignoreEndpointsDisableSuppression: true
+          }
+        },
+        source: CONFIG_SOURCES.AGENT
+      });
+
+      expect(config.tracing.ignoreEndpoints.redis).to.deep.equal([{ methods: ['get'] }]);
+      expect(config.tracing.ignoreEndpoints.mongodb).to.deep.equal([{ methods: ['find'] }]);
+      expect(config.tracing.ignoreEndpointsDisableSuppression).to.be.true;
     });
   });
 
