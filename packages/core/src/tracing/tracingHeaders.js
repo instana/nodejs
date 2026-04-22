@@ -171,18 +171,24 @@ exports.fromHeaders = function fromHeaders(headers) {
     // If w3cTraceContext has no instanaTraceId/instanaParentId yet, it will get one as soon as we start a span and
     // upate it. In case we received X-INSTANA-L: 0 we will not start a span, but we will make sure to toggle the
     // sampled flag in traceparent off.
+
+    // Respect W3C sampled flag: If sampled=0 and no X-INSTANA-L header is present, treat it as suppressed
+    const w3cSampledFlagSuppressed = w3cTraceContext.sampled === false && !level;
+    const effectiveLevel = w3cSampledFlagSuppressed ? '0' : level;
+    const shouldSuppress = isSuppressed(effectiveLevel);
+
     let instanaAncestor;
-    if (traceStateHasInstanaKeyValuePair(w3cTraceContext) && !isSuppressed(level)) {
+    if (traceStateHasInstanaKeyValuePair(w3cTraceContext) && !shouldSuppress) {
       instanaAncestor = {
         t: w3cTraceContext.instanaTraceId,
         p: w3cTraceContext.instanaParentId
       };
     }
     return exports.limitTraceId({
-      traceId: !isSuppressed(level) ? w3cTraceContext.traceParentTraceId : null,
-      parentId: !isSuppressed(level) ? w3cTraceContext.traceParentParentId : null,
-      usedTraceParent: !isSuppressed(level),
-      level,
+      traceId: !shouldSuppress ? w3cTraceContext.traceParentTraceId : null,
+      parentId: !shouldSuppress ? w3cTraceContext.traceParentParentId : null,
+      usedTraceParent: !shouldSuppress,
+      level: effectiveLevel,
       correlationType,
       correlationId,
       synthetic,

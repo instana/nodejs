@@ -169,54 +169,73 @@ module.exports = function () {
               })
           );
 
-          // First request to Instana already has spec headers with sampled=0, simulating a (spec) trace in progress where
-          // the most recent upstream service did not record tracing data. We still expect Instana to continue the W3C
-          // trace with the W3C trace ID from traceparent (the parent element has not been recorded, but other ancestor
-          // elements might have been recorded). We also expect the correct spec headers to be passed downstream by the
-          // Instana service. In particular, it should keep the same trace ID it received when passing down spec headers.
-          // Furthermore, the random trace ID flag should be set since it was set in the incoming header.
-          it('Instana continues a spec trace with sampled=0 (upstream sets the random trace ID flag)', () =>
+          // W3C sampled=0 (flag 02: sampled=0, random-trace-id=1), no X-INSTANA-L
+          it('Instana respects W3C sampled=0 flag (with random-trace-id flag)', () =>
             startRequest({
               app: instanaAppControls,
               depth: 1,
               withSpecHeaders: 'valid-not-sampled-with-random-trace-id'
-            }).then(response => {
-              const { traceparent, tracestate } = getSpecHeadersFromFinalHttpRequest(response);
-              return retryUntilSpansMatch(agentControls, spans => {
-                const instanaHttpEntryRoot = verifyHttpEntry({
-                  spans,
-                  instanaAppControls,
-                  parentSpan: {
-                    t: foreignTraceIdRightHalf,
-                    s: foreignParentId
-                  },
-                  url: '/start',
-                  usedTraceParent: true,
-                  longTraceId: foreignTraceId
-                });
-                const instanaHttpExit = verifyHttpExit(spans, instanaHttpEntryRoot, '/end');
+            })
+              .then(response => {
+                response = response && response.body ? JSON.parse(response.body) : response;
+                expect(response.instanaHeaders).to.be.an('object');
+                expect(response.instanaHeaders.t).to.not.exist;
+                expect(response.instanaHeaders.s).to.not.exist;
+                expect(response.instanaHeaders.l).to.equal('0');
+                const traceparent = response.w3cTraceContext.receivedHeaders.traceparent;
+                const tracestate = response.w3cTraceContext.receivedHeaders.tracestate;
+                // sampled=0 is passed down, random-trace-id flag is preserved (flag 02)
+                expect(traceparent).to.match(new RegExp(`00-${foreignTraceId}-${foreignParentId}-02`));
+                expect(tracestate).to.equal('thing=foo,bar=baz');
+              })
+              .then(() => delay(500))
+              .then(() =>
+                agentControls.getSpans().then(spans => {
+                  expect(spans).to.have.lengthOf(0);
+                })
+              ));
 
-                const instanaExitSpanId = instanaHttpExit.s;
-                expect(traceparent).to.match(new RegExp(`00-${foreignTraceId}-${instanaExitSpanId}-03`));
-                expect(tracestate).to.match(new RegExp(`in=${foreignTraceIdRightHalf};${instanaExitSpanId}`));
-              });
-            }));
-
-          // First request to Instana already has spec headers with sampled=0, simulating a (spec) trace in progress where
-          // the most recent upstream service did not record tracing data.  We still expect Instana to continue the W3C
-          // trace with the W3C trace ID from traceparent (the parent element has not been recorded, but other ancestor
-          // elements might have been recorded). We also expect the correct spec headers to be passed downstream by the
-          // Instana service. In particular, it should keep the same trace ID it received when passing down spec headers.
-          // Furthermore, the random trace ID flag should be unset since it was unset in the incoming header.
-          it('Instana continues a spec trace with sampled=0 (upstream does not set the random trace ID flag)', () =>
+          // W3C sampled=0 (flag 00: sampled=0, random-trace-id=0), no X-INSTANA-L
+          it('Instana respects W3C sampled=0 flag (without random-trace-id flag)', () =>
             startRequest({
               app: instanaAppControls,
               depth: 1,
               withSpecHeaders: 'valid-not-sampled-no-random-trace-id'
+            })
+              .then(response => {
+                response = response && response.body ? JSON.parse(response.body) : response;
+                expect(response.instanaHeaders).to.be.an('object');
+                expect(response.instanaHeaders.t).to.not.exist;
+                expect(response.instanaHeaders.s).to.not.exist;
+                // X-INSTANA-L: 0 is passed down (derived from W3C sampled=0)
+                expect(response.instanaHeaders.l).to.equal('0');
+                expect(response.w3cTraceContext).to.be.an('object');
+                expect(response.w3cTraceContext.receivedHeaders).to.be.an('object');
+                const traceparent = response.w3cTraceContext.receivedHeaders.traceparent;
+                const tracestate = response.w3cTraceContext.receivedHeaders.tracestate;
+                // sampled=0 is passed down (flag stays 00)
+                expect(traceparent).to.match(new RegExp(`00-${foreignTraceId}-${foreignParentId}-00`));
+                expect(tracestate).to.equal('thing=foo,bar=baz');
+              })
+              // give spans a chance to come in
+              .then(() => delay(500))
+              .then(() =>
+                // verify there are no spans
+                agentControls.getSpans().then(spans => {
+                  expect(spans).to.have.lengthOf(0);
+                })
+              ));
+
+          // W3C sampled=1, no X-INSTANA-L: Should trace normally
+          it('Instana respects incoming W3C sampled=1 flag and traces (no X-INSTANA-L)', () =>
+            startRequest({
+              app: instanaAppControls,
+              depth: 1,
+              withSpecHeaders: 'valid-sampled-no-random-trace-id'
             }).then(response => {
               const { traceparent, tracestate } = getSpecHeadersFromFinalHttpRequest(response);
               return retryUntilSpansMatch(agentControls, spans => {
-                const instanaHttpEntryRoot = verifyHttpEntry({
+                const instanaHttpEntry = verifyHttpEntry({
                   spans,
                   instanaAppControls,
                   parentSpan: {
@@ -227,11 +246,117 @@ module.exports = function () {
                   usedTraceParent: true,
                   longTraceId: foreignTraceId
                 });
-                const instanaHttpExit = verifyHttpExit(spans, instanaHttpEntryRoot, '/end');
+                const instanaHttpExit = verifyHttpExit(spans, instanaHttpEntry, '/end');
 
+                // W3C sampled=1 is respected: spans created, sampled=1 passed downstream
                 const instanaExitSpanId = instanaHttpExit.s;
                 expect(traceparent).to.match(new RegExp(`00-${foreignTraceId}-${instanaExitSpanId}-01`));
                 expect(tracestate).to.match(new RegExp(`in=${foreignTraceIdRightHalf};${instanaExitSpanId}`));
+              });
+            }));
+
+          // W3C sampled=0 + X-INSTANA-L: 0: Both say suppress, should suppress
+          it('W3C sampled=0 + X-INSTANA-L=0: suppresses tracing (both agree)', () =>
+            startRequest({
+              app: instanaAppControls,
+              depth: 1,
+              withSpecHeaders: 'valid-not-sampled-no-random-trace-id',
+              withInstanaHeaders: 'suppress'
+            })
+              .then(response => {
+                response = response && response.body ? JSON.parse(response.body) : response;
+                expect(response.instanaHeaders.t).to.not.exist;
+                expect(response.instanaHeaders.s).to.not.exist;
+                expect(response.instanaHeaders.l).to.equal('0');
+                const traceparent = response.w3cTraceContext.receivedHeaders.traceparent;
+                expect(traceparent).to.match(new RegExp(`00-${foreignTraceId}-${foreignParentId}-00`));
+              })
+              .then(() => delay(500))
+              .then(() =>
+                agentControls.getSpans().then(spans => {
+                  expect(spans).to.have.lengthOf(0);
+                })
+              ));
+
+          // W3C sampled=0 + X-INSTANA-L: 1: X-INSTANA-L wins, should trace
+          it('W3C sampled=0 + X-INSTANA-L=1: traces anyway (X-INSTANA-L has priority)', () =>
+            startRequest({
+              app: instanaAppControls,
+              depth: 1,
+              withSpecHeaders: 'valid-not-sampled-no-random-trace-id',
+              withInstanaHeaders: 'trace-in-progress'
+            }).then(response => {
+              const { traceparent, tracestate } = getSpecHeadersFromFinalHttpRequest(response);
+              return retryUntilSpansMatch(agentControls, spans => {
+                const instanaHttpEntry = verifyHttpEntry({
+                  instanaAppControls,
+                  spans,
+                  parentSpan: {
+                    t: upstreamInstanaTraceId,
+                    s: upstreamInstanaParentId
+                  },
+                  url: '/start'
+                });
+                const instanaHttpExit = verifyHttpExit(spans, instanaHttpEntry, '/end');
+
+                // X-INSTANA-L: 1 overrides W3C sampled=0, so sampled=1 is passed down
+                const instanaExitSpanId = instanaHttpExit.s;
+                expect(traceparent).to.match(new RegExp(`00-${foreignTraceId}-${instanaExitSpanId}-01`));
+                expect(tracestate).to.match(new RegExp(`in=${upstreamInstanaTraceId};${instanaExitSpanId}`));
+              });
+            }));
+
+          // W3C sampled=1 + X-INSTANA-L: 0: X-INSTANA-L wins, should suppress
+          it('W3C sampled=1 + X-INSTANA-L=0: suppresses tracing (X-INSTANA-L has priority)', () =>
+            startRequest({
+              app: instanaAppControls,
+              depth: 1,
+              withSpecHeaders: 'valid-sampled-no-random-trace-id',
+              withInstanaHeaders: 'suppress'
+            })
+              .then(response => {
+                response = response && response.body ? JSON.parse(response.body) : response;
+                expect(response.instanaHeaders.t).to.not.exist;
+                expect(response.instanaHeaders.s).to.not.exist;
+                expect(response.instanaHeaders.l).to.equal('0');
+                const traceparent = response.w3cTraceContext.receivedHeaders.traceparent;
+                // X-INSTANA-L: 0 overrides W3C sampled=1, so sampled=0 is passed down
+                const traceParentMatch = new RegExp(`00-${foreignTraceId}-([0-9a-f]{16})-00`).exec(traceparent);
+                expect(traceParentMatch).to.exist;
+                expect(traceParentMatch[1]).to.not.equal(foreignParentId);
+              })
+              .then(() => delay(500))
+              .then(() =>
+                agentControls.getSpans().then(spans => {
+                  expect(spans).to.have.lengthOf(0);
+                })
+              ));
+
+          // W3C sampled=1 + X-INSTANA-L: 1: Both say trace, should trace
+          it('W3C sampled=1 + X-INSTANA-L=1: traces (both agree)', () =>
+            startRequest({
+              app: instanaAppControls,
+              depth: 1,
+              withSpecHeaders: 'valid-sampled-no-random-trace-id',
+              withInstanaHeaders: 'trace-in-progress'
+            }).then(response => {
+              const { traceparent, tracestate } = getSpecHeadersFromFinalHttpRequest(response);
+              return retryUntilSpansMatch(agentControls, spans => {
+                const instanaHttpEntry = verifyHttpEntry({
+                  instanaAppControls,
+                  spans,
+                  parentSpan: {
+                    t: upstreamInstanaTraceId,
+                    s: upstreamInstanaParentId
+                  },
+                  url: '/start'
+                });
+                const instanaHttpExit = verifyHttpExit(spans, instanaHttpEntry, '/end');
+
+                // Both agree on tracing, sampled=1 is passed down
+                const instanaExitSpanId = instanaHttpExit.s;
+                expect(traceparent).to.match(new RegExp(`00-${foreignTraceId}-${instanaExitSpanId}-01`));
+                expect(tracestate).to.match(new RegExp(`in=${upstreamInstanaTraceId};${instanaExitSpanId}`));
               });
             }));
 
