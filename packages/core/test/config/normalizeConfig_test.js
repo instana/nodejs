@@ -1757,7 +1757,7 @@ describe('config.normalizeConfig', () => {
       expect(config.secrets.keywords).to.deep.equal(['password', 'secret']);
     });
 
-    it('should handle external source updating tracing.ignoreEndpoints configuration', () => {
+    it('should ignore external source updating tracing.ignoreEndpoints configuration when already set', () => {
       const config = coreConfig.normalize({
         userConfig: {
           tracing: {
@@ -1786,6 +1786,31 @@ describe('config.normalizeConfig', () => {
 
       expect(config.tracing.ignoreEndpoints).to.deep.equal({
         redis: [{ methods: ['get', 'set'] }]
+      });
+    });
+
+    it('should use external config value dor tracing.ignoreEndpoints configuration when not set', () => {
+      const config = coreConfig.normalize({
+        userConfig: {
+          tracing: {}
+        }
+      });
+
+      coreConfig.update({
+        externalConfig: {
+          tracing: {
+            ignoreEndpoints: {
+              dynamodb: [{ methods: ['query'] }],
+              mongodb: [{ methods: ['find'] }]
+            }
+          }
+        },
+        source: CONFIG_SOURCES.AGENT
+      });
+
+      expect(config.tracing.ignoreEndpoints).to.deep.equal({
+        dynamodb: [{ methods: ['query'] }],
+        mongodb: [{ methods: ['find'] }]
       });
     });
 
