@@ -155,8 +155,8 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
             }
           };
           initAndActivate({}, extraConfigFromAgent);
-          expect(activateStubKafkaJs).to.have.been.calledWith(extraConfigFromAgent);
-          expect(activateStubRdKafka).to.have.been.calledWith(extraConfigFromAgent);
+          expect(activateStubKafkaJs).to.have.been.called;
+          expect(activateStubRdKafka).to.have.been.called;
         });
 
         it('should disable aws-sdk/v3 via config', () => {
@@ -193,18 +193,18 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
           expect(activateStubRdKafka).to.have.been.called;
         });
 
-        it('should prefer config.tracing.disable over env vars', () => {
+        it('should prefer env vars over config.tracing.disable', () => {
           process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'grpc,kafkajs';
           initAndActivate({ tracing: { disable: { instrumentations: ['aws-sdk/v2'] } } });
 
-          expect(initAwsSdkv2).not.to.have.been.called;
-          expect(activateAwsSdkv2).not.to.have.been.called;
+          expect(initAwsSdkv2).to.have.been.called;
+          expect(activateAwsSdkv2).to.have.been.called;
 
           expect(initStubGrpcJs).to.have.been.called;
           expect(activateStubGrpcJs).to.have.been.called;
 
-          expect(initStubKafkaJs).to.have.been.called;
-          expect(activateStubKafkaJs).to.have.been.called;
+          expect(initStubKafkaJs).not.to.have.been.called;
+          expect(activateStubKafkaJs).not.to.have.been.called;
         });
 
         it('should disable all instrumentations in specified groups', () => {
@@ -273,10 +273,12 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
     function initAndActivate(initConfig, extraConfigForActivate) {
       const logger = testUtils.createFakeLogger();
       coreConfig.init(logger);
-      const config = coreConfig.normalize(initConfig);
+      let config = coreConfig.normalize({ userConfig: initConfig });
       util.init(config);
       tracing.init(config);
-      tracing.activate(extraConfigForActivate);
+
+      config = coreConfig.update(extraConfigForActivate, 3);
+      tracing.activate(config);
     }
   });
 });

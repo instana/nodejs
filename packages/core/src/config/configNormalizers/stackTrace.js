@@ -25,7 +25,7 @@ exports.normalizeStackTraceMode = function (config) {
 
 /**
  * Normalizes stack trace length configuration based on precedence.
- * Precedence: global config > config > env var > default
+ * Precedence: env var > global config > config > default
  * @param {import('../../config').InstanaConfig} config
  * @returns {number} - Normalized value
  */
