@@ -88,10 +88,10 @@ describe('config.normalizeConfig', () => {
     expect(config.metrics.transmissionDelay).to.equal(1000);
   });
 
-  it('should use default metrics transmission settings when value exceeds max of 5000', () => {
+  it('should use max metrics transmission settings when value exceeds max of 5000', () => {
     process.env.INSTANA_METRICS_TRANSMISSION_DELAY = '6000';
     const normalizedConfig = coreConfig.normalize();
-    expect(normalizedConfig.metrics.transmissionDelay).to.equal(1000);
+    expect(normalizedConfig.metrics.transmissionDelay).to.equal(5000);
   });
 
   it('should accept metrics transmission delay at max value of 5000', () => {
@@ -100,13 +100,13 @@ describe('config.normalizeConfig', () => {
     expect(normalizedConfig.metrics.transmissionDelay).to.equal(5000);
   });
 
-  it('should use default metrics transmission settings when value exceeds max 5000', () => {
+  it('should use max metrics transmission settings when value exceeds max 5000', () => {
     const config = coreConfig.normalize({
       metrics: {
         transmissionDelay: 9753
       }
     });
-    expect(config.metrics.transmissionDelay).to.equal(1000);
+    expect(config.metrics.transmissionDelay).to.equal(5000);
   });
 
   it('should use custom config.metrics.timeBetweenHealthcheckCalls', () => {
