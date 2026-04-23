@@ -138,7 +138,7 @@ module.exports = function () {
 
             headers = { ...headers, ...parseHeaderList(testDefinition['request headers in']) };
 
-            const suppressed = testDefinition['X-INSTANA-L in'] === '0';
+            const suppressed = testDefinition['X-INSTANA-L in'] === '0' || testDefinition['Server-Timing'] === null;
 
             const basePath = '/start';
             const query = testDefinition['query in'];
