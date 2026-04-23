@@ -220,10 +220,16 @@ function normalizeMetricsConfig(config) {
     config.metrics.transmissionDelay,
     defaults.metrics.transmissionDelay,
     'config.metrics.transmissionDelay',
-    'INSTANA_METRICS_TRANSMISSION_DELAY',
-    null,
-    5000
+    'INSTANA_METRICS_TRANSMISSION_DELAY'
   );
+
+  // Validate max value of 5000 for transmissionDelay
+  if (config.metrics.transmissionDelay > 5000) {
+    logger.warn(
+      `The value of config.metrics.transmissionDelay (or INSTANA_METRICS_TRANSMISSION_DELAY) (${config.metrics.transmissionDelay}) exceeds the maximum allowed value of 5000. Assuming the default value ${defaults.metrics.transmissionDelay}.`
+    );
+    config.metrics.transmissionDelay = defaults.metrics.transmissionDelay;
+  }
 
   config.metrics.timeBetweenHealthcheckCalls =
     config.metrics.timeBetweenHealthcheckCalls || defaults.metrics.timeBetweenHealthcheckCalls;
@@ -720,11 +726,9 @@ function parseSecretsEnvVar(envVarValue) {
  * @param {*} defaultValue
  * @param {string} configPath
  * @param {string} envVarKey
- * @param {number} [minValue]
- * @param {number} [maxValue]
  * @returns {*}
  */
-function normalizeSingleValue(configValue, defaultValue, configPath, envVarKey, minValue, maxValue) {
+function normalizeSingleValue(configValue, defaultValue, configPath, envVarKey) {
   const envVarVal = process.env[envVarKey];
   let originalValue = configValue;
   if (configValue == null && envVarVal == null) {
@@ -741,21 +745,6 @@ function normalizeSingleValue(configValue, defaultValue, configPath, envVarKey, 
     );
     return defaultValue;
   }
-
-  if (minValue != null && configValue < minValue) {
-    logger.warn(
-      `The value of ${configPath} (or ${envVarKey}) (${configValue}) is below the minimum allowed value of ${minValue}. Assuming the default value ${defaultValue}.`
-    );
-    return defaultValue;
-  }
-
-  if (maxValue != null && configValue > maxValue) {
-    logger.warn(
-      `The value of ${configPath} (or ${envVarKey}) (${configValue}) exceeds the maximum allowed value of ${maxValue}. Assuming the default value ${defaultValue}.`
-    );
-    return defaultValue;
-  }
-
   return configValue;
 }
 /**
