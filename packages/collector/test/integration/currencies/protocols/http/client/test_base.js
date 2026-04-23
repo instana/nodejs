@@ -38,6 +38,137 @@ module.exports = function (name, version, isLatest) {
   registerConnectionRefusalTest.call(this, false);
   registerConnectionRefusalTest.call(this, true);
 
+  describe('extraHttpHeadersToCapture configuration precedence', function () {
+    describe('when only agent configuration is provided', function () {
+      let serverControls;
+      let clientControls;
+      const customAgentControls = new AgentStubControls();
+
+      before(async () => {
+        await customAgentControls.startAgent({
+          extraHeaders: ['x-agent-header-1', 'x-agent-header-2']
+        });
+
+        serverControls = new ProcessControls({
+          agentControls: customAgentControls,
+          dirname: __dirname,
+          appName: 'serverApp',
+          appUsesHttps: false
+        });
+
+        clientControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'clientApp',
+          agentControls: customAgentControls,
+          appUsesHttps: false,
+          env: {
+            ...commonEnv,
+            SERVER_PORT: serverControls.getPort()
+          }
+        });
+
+        await serverControls.startAndWaitForAgentConnection();
+        await clientControls.startAndWaitForAgentConnection();
+      });
+
+      after(() => Promise.all([serverControls.stop(), clientControls.stop(), customAgentControls.stopAgent()]));
+
+      beforeEach(() => customAgentControls.clearReceivedTraceData());
+
+      afterEach(() => Promise.all([serverControls.clearIpcMessages(), clientControls.clearIpcMessages()]));
+
+      it('should capture headers configured by agent (overriding defaults)', async () => {
+        await clientControls.sendRequest({
+          method: 'GET',
+          path: '/request-options-only?withHeader=config-test'
+        });
+
+        await retry(async () => {
+          const spans = await customAgentControls.getSpans();
+          expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('node.http.client'),
+            span => expect(span.k).to.equal(constants.EXIT),
+            span => {
+              expect(span.data.http.header).to.exist;
+
+              expect(span.data.http.header['x-agent-header-1']).to.equal('agent-value-1');
+              expect(span.data.http.header['x-agent-header-2']).to.equal('agent-value-2');
+
+              expect(span.data.http.header['x-incode-header-1']).to.be.undefined;
+              expect(span.data.http.header['x-incode-header-2']).to.be.undefined;
+              expect(span.data.http.header['x-not-configured-header']).to.be.undefined;
+            }
+          ]);
+        });
+      });
+    });
+
+    describe('when both agent and environment variable configuration are provided', function () {
+      let serverControls;
+      let clientControls;
+      const customAgentControls = new AgentStubControls();
+
+      before(async () => {
+        await customAgentControls.startAgent({
+          extraHeaders: ['x-agent-header-1', 'x-agent-header-2']
+        });
+
+        serverControls = new ProcessControls({
+          agentControls: customAgentControls,
+          dirname: __dirname,
+          appName: 'serverApp',
+          appUsesHttps: false
+        });
+
+        clientControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'clientApp',
+          agentControls: customAgentControls,
+          appUsesHttps: false,
+          env: {
+            ...commonEnv,
+            SERVER_PORT: serverControls.getPort(),
+            INSTANA_EXTRA_HTTP_HEADERS: 'x-incode-header-1,x-incode-header-2'
+          }
+        });
+
+        await serverControls.startAndWaitForAgentConnection();
+        await clientControls.startAndWaitForAgentConnection();
+      });
+
+      after(() => Promise.all([serverControls.stop(), clientControls.stop(), customAgentControls.stopAgent()]));
+
+      beforeEach(() => customAgentControls.clearReceivedTraceData());
+
+      afterEach(() => Promise.all([serverControls.clearIpcMessages(), clientControls.clearIpcMessages()]));
+
+      it('should capture headers from environment variable config (taking precedence over agent config)', async () => {
+        await clientControls.sendRequest({
+          method: 'GET',
+          path: '/request-options-only?withHeader=config-test'
+        });
+
+        await retry(async () => {
+          const spans = await customAgentControls.getSpans();
+          expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('node.http.client'),
+            span => expect(span.k).to.equal(constants.EXIT),
+            span => {
+              expect(span.data.http.header).to.exist;
+
+              expect(span.data.http.header['x-incode-header-1']).to.equal('incode-value-1');
+              expect(span.data.http.header['x-incode-header-2']).to.equal('incode-value-2');
+
+              expect(span.data.http.header['x-agent-header-1']).to.be.undefined;
+              expect(span.data.http.header['x-agent-header-2']).to.be.undefined;
+              expect(span.data.http.header['x-not-configured-header']).to.be.undefined;
+            }
+          ]);
+        });
+      });
+    });
+  });
+
   describe('SDK CASE 1', function () {
     let sdkControls;
 

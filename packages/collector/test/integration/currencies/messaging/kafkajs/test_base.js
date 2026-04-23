@@ -411,6 +411,152 @@ module.exports = function (name, version, isLatest, mode) {
       );
     });
 
+    describe('traceCorrelation configuration precedence', function () {
+      describe('when agent enables traceCorrelation (overriding default)', function () {
+        const customAgentControls = new AgentStubControls();
+
+        let consumerControls;
+        let producerControls;
+
+        before(async () => {
+          await customAgentControls.startAgent({
+            kafkaConfig: { traceCorrelation: true }
+          });
+
+          consumerControls = new ProcessControls({
+            dirname: __dirname,
+            appName: 'consumer',
+            agentControls: customAgentControls,
+            env: { ...libraryEnv }
+          });
+          producerControls = new ProcessControls({
+            dirname: __dirname,
+            appName: 'producer',
+            agentControls: customAgentControls,
+            env: { ...libraryEnv }
+          });
+
+          await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+          await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+        });
+
+        beforeEach(async () => {
+          await customAgentControls.clearReceivedTraceData();
+          await resetMessages(consumerControls);
+        });
+
+        afterEach(async () => {
+          await resetMessages(consumerControls);
+        });
+
+        after(async () => {
+          await customAgentControls.stopAgent();
+          await producerControls.stop();
+          await consumerControls.stop();
+        });
+
+        it('must maintain trace continuity when agent config enables traceCorrelation', async () => {
+          await producerControls.sendRequest({
+            method: 'POST',
+            path: '/send-messages',
+            simple: true,
+            body: JSON.stringify({
+              key: 'someKey',
+              value: 'someMessage'
+            }),
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+
+          await retry(async () => {
+            const messages = await getMessages(consumerControls);
+            checkMessages(messages, {});
+            const spans = await customAgentControls.getSpans();
+            const httpEntry = verifyHttpEntry(spans);
+            verifyKafkaExits(spans, httpEntry, {});
+            verifyFollowUpHttpExit(spans, httpEntry);
+          });
+        });
+      });
+
+      describe('when both agent and environment variable configuration are provided', function () {
+        const customAgentControls = new AgentStubControls();
+
+        let consumerControls;
+        let producerControls;
+
+        before(async () => {
+          await customAgentControls.startAgent({
+            kafkaConfig: { traceCorrelation: true }
+          });
+
+          consumerControls = new ProcessControls({
+            dirname: __dirname,
+            appName: 'consumer',
+            agentControls: customAgentControls,
+            env: {
+              ...libraryEnv,
+              INSTANA_KAFKA_TRACE_CORRELATION: 'false'
+            }
+          });
+          producerControls = new ProcessControls({
+            dirname: __dirname,
+            appName: 'producer',
+            agentControls: customAgentControls,
+            env: {
+              ...libraryEnv,
+              INSTANA_KAFKA_TRACE_CORRELATION: 'false'
+            }
+          });
+
+          await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+          await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+        });
+
+        beforeEach(async () => {
+          await customAgentControls.clearReceivedTraceData();
+          await resetMessages(consumerControls);
+        });
+
+        afterEach(async () => {
+          await resetMessages(consumerControls);
+        });
+
+        after(async () => {
+          await customAgentControls.stopAgent();
+          await producerControls.stop();
+          await consumerControls.stop();
+        });
+
+        const kafkaCorrelation = 'correlation-disabled';
+
+        it('must not maintain trace continuity when env var disables traceCorrelation (taking precedence over agent config)', async () => {
+          await producerControls.sendRequest({
+            method: 'POST',
+            path: '/send-messages',
+            simple: true,
+            body: JSON.stringify({
+              key: 'someKey',
+              value: 'someMessage'
+            }),
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+
+          await retry(async () => {
+            const messages = await getMessages(consumerControls);
+            checkMessages(messages, { kafkaCorrelation });
+            const spans = await customAgentControls.getSpans();
+            const httpEntry = verifyHttpEntry(spans);
+            verifyKafkaExits(spans, httpEntry, { kafkaCorrelation });
+            verifyFollowUpHttpExit(spans, httpEntry);
+          });
+        });
+      });
+    });
+
     describe('tracing disabled', () => {
       let consumerControls;
       let producerControls;

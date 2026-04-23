@@ -89,6 +89,14 @@ app.get('/request-options-only', (req, res) => {
       ],
       'x-exit-options-not-captured-header': 'whatever'
     };
+  } else if (req.query.withHeader === 'config-test') {
+    downstreamRequest.headers = {
+      'X-Agent-Header-1': 'agent-value-1',
+      'X-Agent-Header-2': 'agent-value-2',
+      'X-Incode-Header-1': 'incode-value-1',
+      'X-Incode-Header-2': 'incode-value-2',
+      'X-Not-Configured-Header': 'should-not-be-captured'
+    };
   }
   const requestObject = httpModule.request(downstreamRequest, () => res.sendStatus(200));
   if (req.query.withHeader === 'set-on-request') {

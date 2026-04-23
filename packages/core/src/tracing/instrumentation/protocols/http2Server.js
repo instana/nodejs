@@ -38,15 +38,9 @@ exports.updateConfig = function updateConfig(config) {
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
 };
 
-exports.activate = function activate(extraConfig) {
-  if (
-    extraConfig &&
-    extraConfig.tracing &&
-    extraConfig.tracing.http &&
-    Array.isArray(extraConfig.tracing.http.extraHttpHeadersToCapture)
-  ) {
-    extraHttpHeadersToCapture = extraConfig.tracing.http.extraHttpHeadersToCapture;
-  }
+exports.activate = function activate(_config) {
+  extraHttpHeadersToCapture = _config.tracing.http.extraHttpHeadersToCapture;
+
   isActive = true;
 };
 
