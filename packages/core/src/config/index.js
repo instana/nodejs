@@ -228,7 +228,8 @@ function normalizeServiceName({ userConfig = {}, defaultConfig = {}, finalConfig
     {
       envValue: 'INSTANA_SERVICE_NAME',
       inCodeValue: userConfig.serviceName,
-      defaultValue: defaultConfig.serviceName
+      defaultValue: defaultConfig.serviceName,
+      configPath: 'config.serviceName'
     },
     [validate.stringValidator]
   );
@@ -245,7 +246,8 @@ function normalizePackageJsonPath({ userConfig = {}, defaultConfig = {}, finalCo
     {
       envValue: 'INSTANA_PACKAGE_JSON_PATH',
       inCodeValue: userConfig.packageJsonPath,
-      defaultValue: defaultConfig.packageJsonPath
+      defaultValue: defaultConfig.packageJsonPath,
+      configPath: 'config.packageJsonPath'
     },
     [validate.stringValidator]
   );
@@ -266,7 +268,8 @@ function normalizeMetricsConfig({ userConfig = {}, defaultConfig = {}, finalConf
     {
       envValue: 'INSTANA_METRICS_TRANSMISSION_DELAY',
       inCodeValue: userMetrics?.transmissionDelay,
-      defaultValue: defaultConfig.metrics.transmissionDelay
+      defaultValue: defaultConfig.metrics.transmissionDelay,
+      configPath: 'config.metrics.transmissionDelay'
     },
     [validate.numberValidator]
   );
@@ -277,7 +280,8 @@ function normalizeMetricsConfig({ userConfig = {}, defaultConfig = {}, finalConf
   const { value: healthcheckInterval, source: healthcheckSource } = util.resolve(
     {
       inCodeValue: userMetrics?.timeBetweenHealthcheckCalls,
-      defaultValue: defaultConfig.metrics.timeBetweenHealthcheckCalls
+      defaultValue: defaultConfig.metrics.timeBetweenHealthcheckCalls,
+      configPath: 'config.metrics.timeBetweenHealthcheckCalls'
     },
     [validate.numberValidator]
   );
@@ -328,7 +332,8 @@ function normalizeTracingEnabled({ userConfig = {}, defaultConfig = {}, finalCon
     {
       envValue: isBooleanValue ? 'INSTANA_TRACING_DISABLE' : undefined,
       inCodeValue: userConfig.tracing.enabled,
-      defaultValue: defaultConfig.tracing.enabled
+      defaultValue: defaultConfig.tracing.enabled,
+      configPath: 'config.tracing.enabled'
     },
     [validate.booleanValidator]
   );
@@ -349,7 +354,8 @@ function normalizeAllowRootExitSpan({ userConfig = {}, defaultConfig = {}, final
     {
       envValue: 'INSTANA_ALLOW_ROOT_EXIT_SPAN',
       inCodeValue: userConfig.tracing.allowRootExitSpan,
-      defaultValue: defaultConfig.tracing.allowRootExitSpan
+      defaultValue: defaultConfig.tracing.allowRootExitSpan,
+      configPath: 'config.tracing.allowRootExitSpan'
     },
     [validate.booleanValidator]
   );
@@ -366,7 +372,8 @@ function normalizeUseOpentelemetry({ userConfig = {}, defaultConfig = {}, finalC
     {
       envValue: 'INSTANA_DISABLE_USE_OPENTELEMETRY',
       inCodeValue: userConfig.tracing.useOpentelemetry,
-      defaultValue: defaultConfig.tracing.useOpentelemetry
+      defaultValue: defaultConfig.tracing.useOpentelemetry,
+      configPath: 'config.tracing.useOpentelemetry'
     },
     [validate.booleanValidator]
   );
@@ -392,7 +399,8 @@ function normalizeAutomaticTracingEnabled({ userConfig = {}, defaultConfig = {},
     {
       envValue: 'INSTANA_DISABLE_AUTO_INSTR',
       inCodeValue: userConfig.tracing.automaticTracingEnabled,
-      defaultValue: defaultConfig.tracing.automaticTracingEnabled
+      defaultValue: defaultConfig.tracing.automaticTracingEnabled,
+      configPath: 'config.tracing.automaticTracingEnabled'
     },
     [validate.booleanValidator]
   );
@@ -418,7 +426,8 @@ function normalizeActivateImmediately({ userConfig = {}, defaultConfig = {}, fin
     {
       envValue: 'INSTANA_TRACE_IMMEDIATELY',
       inCodeValue: userConfig.tracing.activateImmediately,
-      defaultValue: defaultConfig.tracing.activateImmediately
+      defaultValue: defaultConfig.tracing.activateImmediately,
+      configPath: 'config.tracing.activateImmediately'
     },
     [validate.booleanValidator]
   );
@@ -441,7 +450,8 @@ function normalizeTracingTransmission({ userConfig = {}, defaultConfig = {}, fin
     {
       envValue: 'INSTANA_TRACING_TRANSMISSION_DELAY',
       inCodeValue: userConfig.tracing.transmissionDelay,
-      defaultValue: defaultConfig.tracing.transmissionDelay
+      defaultValue: defaultConfig.tracing.transmissionDelay,
+      configPath: 'config.tracing.transmissionDelay'
     },
     [validate.numberValidator]
   );
@@ -453,7 +463,8 @@ function normalizeTracingTransmission({ userConfig = {}, defaultConfig = {}, fin
     {
       envValue: 'INSTANA_FORCE_TRANSMISSION_STARTING_AT',
       inCodeValue: userConfig.tracing.forceTransmissionStartingAt,
-      defaultValue: defaultConfig.tracing.forceTransmissionStartingAt
+      defaultValue: defaultConfig.tracing.forceTransmissionStartingAt,
+      configPath: 'config.tracing.forceTransmissionStartingAt'
     },
     [validate.numberValidator]
   );
@@ -465,7 +476,8 @@ function normalizeTracingTransmission({ userConfig = {}, defaultConfig = {}, fin
     {
       envValue: 'INSTANA_TRACING_INITIAL_TRANSMISSION_DELAY',
       inCodeValue: userConfig.tracing.initialTransmissionDelay,
-      defaultValue: defaultConfig.tracing.initialTransmissionDelay
+      defaultValue: defaultConfig.tracing.initialTransmissionDelay,
+      configPath: 'config.tracing.initialTransmissionDelay'
     },
     [validate.numberValidator]
   );
@@ -680,7 +692,8 @@ function normalizeSpanBatchingEnabled({ userConfig = {}, defaultConfig = {}, fin
     {
       envValue: 'INSTANA_SPANBATCHING_ENABLED',
       inCodeValue: userConfig.tracing.spanBatchingEnabled,
-      defaultValue: defaultConfig.tracing.spanBatchingEnabled
+      defaultValue: defaultConfig.tracing.spanBatchingEnabled,
+      configPath: 'config.tracing.spanBatchingEnabled'
     },
     [validate.booleanValidator]
   );
@@ -697,7 +710,8 @@ function normalizeDisableW3cTraceCorrelation({ userConfig = {}, defaultConfig = 
     {
       envValue: 'INSTANA_DISABLE_W3C_TRACE_CORRELATION',
       inCodeValue: userConfig.tracing.disableW3cTraceCorrelation,
-      defaultValue: defaultConfig.tracing.disableW3cTraceCorrelation
+      defaultValue: defaultConfig.tracing.disableW3cTraceCorrelation,
+      configPath: 'config.tracing.disableW3cTraceCorrelation'
     },
     [validate.validateTruthyBoolean]
   );
@@ -718,7 +732,8 @@ function normalizeTracingKafka({ userConfig = {}, defaultConfig = {}, finalConfi
     {
       envValue: 'INSTANA_KAFKA_TRACE_CORRELATION',
       inCodeValue: userKafka.traceCorrelation,
-      defaultValue: defaultConfig.tracing.kafka.traceCorrelation
+      defaultValue: defaultConfig.tracing.kafka.traceCorrelation,
+      configPath: 'config.tracing.kafka.traceCorrelation'
     },
     [validate.booleanValidator]
   );
@@ -895,7 +910,9 @@ function normalizeIgnoreEndpoints({ userConfig = {}, defaultConfig = {}, finalCo
   }
   if (userIgnoreEndpoints && Object.keys(userIgnoreEndpoints).length) {
     finalConfig.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(userIgnoreEndpoints);
-    logger.debug('[config] incode:config.tracing.ignoreEndpoints');
+    logger.debug(
+      `[config] incode:config.tracing.ignoreEndpoints : ${JSON.stringify(finalConfig.tracing.ignoreEndpoints)}`
+    );
     configStore.set('config.tracing.ignoreEndpoints', { source: CONFIG_SOURCES.INCODE });
     return;
   }
@@ -912,7 +929,8 @@ function normalizeIgnoreEndpointsDisableSuppression({ userConfig = {}, defaultCo
     {
       envValue: 'INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION',
       inCodeValue: userConfig.tracing.ignoreEndpointsDisableSuppression,
-      defaultValue: defaultConfig.tracing.ignoreEndpointsDisableSuppression
+      defaultValue: defaultConfig.tracing.ignoreEndpointsDisableSuppression,
+      configPath: 'config.tracing.ignoreEndpointsDisableSuppression'
     },
     [validate.booleanValidator]
   );
@@ -929,7 +947,8 @@ function normalizeDisableEOLEvents({ userConfig = {}, defaultConfig = {}, finalC
     {
       envValue: 'INSTANA_TRACING_DISABLE_EOL_EVENTS',
       inCodeValue: userConfig.tracing.disableEOLEvents,
-      defaultValue: defaultConfig.tracing.disableEOLEvents
+      defaultValue: defaultConfig.tracing.disableEOLEvents,
+      configPath: 'config.tracing.disableEOLEvents'
     },
     [validate.booleanValidator]
   );
@@ -945,7 +964,8 @@ function normalizePreloadOpentelemetry({ userConfig = {}, defaultConfig = {}, fi
   const { value, source } = util.resolve(
     {
       inCodeValue: userConfig.preloadOpentelemetry,
-      defaultValue: defaultConfig.preloadOpentelemetry
+      defaultValue: defaultConfig.preloadOpentelemetry,
+      configPath: 'config.preloadOpentelemetry'
     },
     [validate.booleanValidator]
   );
@@ -974,7 +994,6 @@ exports.update = function update({ externalConfig = {}, source, target = current
     const currentMeta = configStore.get(path);
 
     if (currentMeta && currentMeta.source < source) {
-      logger.debug(`[config] Skipping ${path}: current source ${currentMeta.source} > incoming ${source}`);
       return;
     }
 
