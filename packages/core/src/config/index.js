@@ -73,6 +73,8 @@ const { validateStackTraceMode, validateStackTraceLength } = require('./configVa
 /** @type {String[]} */
 const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'contains-ignore-case', 'regex', 'none'];
 
+const transmissionDelayMaxValue = 5000;
+
 /**
  * @typedef {Object} InstanaConfig
  * @property {string} [serviceName]
@@ -222,6 +224,14 @@ function normalizeMetricsConfig(config) {
     'config.metrics.transmissionDelay',
     'INSTANA_METRICS_TRANSMISSION_DELAY'
   );
+
+  // Validate max value for transmissionDelay
+  if (config.metrics.transmissionDelay > transmissionDelayMaxValue) {
+    logger.warn(
+      `The value of config.metrics.transmissionDelay (or INSTANA_METRICS_TRANSMISSION_DELAY) (${config.metrics.transmissionDelay}) exceeds the maximum allowed value of ${transmissionDelayMaxValue}. Assuming the max value ${transmissionDelayMaxValue}.`
+    );
+    config.metrics.transmissionDelay = transmissionDelayMaxValue;
+  }
 
   config.metrics.timeBetweenHealthcheckCalls =
     config.metrics.timeBetweenHealthcheckCalls || defaults.metrics.timeBetweenHealthcheckCalls;
