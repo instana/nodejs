@@ -29,7 +29,7 @@ const CONFIG_PRIORITY = Object.entries(CONFIG_SOURCES)
  * @param {any} [params.inCodeValue]
  * @param {any} [params.agentValue]
  * @param {any} params.defaultValue
- * @param {string} [params.configPath] - The config path (e.g., 'config.serviceName')
+ * @param {string} [params.configPath]
  * @param {Function|Function[]} validators - validator(s) returning value | undefined
  * @returns {{ value: any, source: number }}
  */
