@@ -172,8 +172,9 @@ exports.fromHeaders = function fromHeaders(headers) {
     // upate it. In case we received X-INSTANA-L: 0 we will not start a span, but we will make sure to toggle the
     // sampled flag in traceparent off.
 
-    // Respect W3C sampled flag: If sampled=0 and no X-INSTANA-L header is present, treat it as suppressed
-    const w3cSampledFlagSuppressed = w3cTraceContext.sampled === false && !level;
+    // CASE: Respect W3C sampled flag (only if X-INSTANA-L header is not present, as Instana headers have priority)
+    const hasInstanaLevelHeader = level != null;
+    const w3cSampledFlagSuppressed = w3cTraceContext.sampled === false && !hasInstanaLevelHeader;
     const effectiveLevel = w3cSampledFlagSuppressed ? '0' : level;
     const shouldSuppress = isSuppressed(effectiveLevel);
 
