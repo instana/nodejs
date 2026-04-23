@@ -47,7 +47,8 @@ function normalizeAgentHost(userConfig, defaultConfig) {
     {
       envValue: 'INSTANA_AGENT_HOST',
       inCodeValue: userConfig.agentHost,
-      defaultValue: defaultConfig.agentHost
+      defaultValue: defaultConfig.agentHost,
+      configPath: 'config.agentHost'
     },
     [validate.stringValidator]
   );
@@ -64,7 +65,8 @@ function normalizeAgentPort(userConfig, defaultConfig) {
     {
       envValue: 'INSTANA_AGENT_PORT',
       inCodeValue: userConfig.agentPort,
-      defaultValue: defaultConfig.agentPort
+      defaultValue: defaultConfig.agentPort,
+      configPath: 'config.agentPort'
     },
     [validate.numberValidator]
   );
@@ -81,7 +83,8 @@ function normalizeAgentRequestTimeout(userConfig, defaultConfig) {
     {
       envValue: 'INSTANA_AGENT_REQUEST_TIMEOUT',
       inCodeValue: userConfig.agentRequestTimeout,
-      defaultValue: defaultConfig.agentRequestTimeout
+      defaultValue: defaultConfig.agentRequestTimeout,
+      configPath: 'config.agentRequestTimeout'
     },
     [validate.numberValidator]
   );
@@ -98,7 +101,8 @@ function normalizeAutoProfile(userConfig, defaultConfig) {
     {
       envValue: 'INSTANA_AUTO_PROFILE',
       inCodeValue: userConfig.autoProfile,
-      defaultValue: defaultConfig.autoProfile
+      defaultValue: defaultConfig.autoProfile,
+      configPath: 'config.autoProfile'
     },
     [validate.booleanValidator]
   );
@@ -113,7 +117,8 @@ function normalizeUnhandledRejections(userConfig) {
   const { value } = util.resolve(
     {
       inCodeValue: userConfig.reportUnhandledPromiseRejections,
-      defaultValue: false
+      defaultValue: false,
+      configPath: 'config.reportUnhandledPromiseRejections'
     },
     [validate.booleanValidator]
   );
