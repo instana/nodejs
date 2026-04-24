@@ -18,14 +18,18 @@ module.exports = function () {
   describe('Worker Thread', function () {
     this.timeout(config.getTestTimeout());
 
-    describe('with app require (main thread only)', function () {
+    describe('with tracing enabled in main thread only', function () {
       let controls;
 
       before(async function () {
         controls = new ProcessControls({
           dirname: __dirname,
           cwd: __dirname,
-          useGlobalAgent: true
+          useGlobalAgent: true,
+          env: {
+            // Explicitly disable to test default behavior (override ProcessControls default)
+            INSTANA_DISABLE_COLLECTOR_INIT_EVENT: 'true'
+          }
         });
 
         await controls.startAndWaitForAgentConnection();
@@ -39,7 +43,7 @@ module.exports = function () {
         await controls.stop();
       });
 
-      it('should NOT send collector init message when Instana is not in worker', async () => {
+      it('should NOT send collector init message', async () => {
         await controls.sendRequest({
           method: 'GET',
           path: '/generate-pdf?filename=test1.pdf'
@@ -67,7 +71,9 @@ module.exports = function () {
           cwd: __dirname,
           useGlobalAgent: true,
           env: {
-            NODE_OPTIONS: '--require @instana/collector/src/immediate'
+            NODE_OPTIONS: '--require @instana/collector/src/immediate',
+            // Explicitly disable to test default behavior (override ProcessControls default)
+            INSTANA_DISABLE_COLLECTOR_INIT_EVENT: 'true'
           }
         });
 

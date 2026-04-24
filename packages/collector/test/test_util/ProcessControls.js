@@ -164,6 +164,10 @@ class ProcessControls {
       opts.env
     );
 
+    if (!this.env.INSTANA_DISABLE_COLLECTOR_INIT_EVENT) {
+      this.env.INSTANA_DISABLE_COLLECTOR_INIT_EVENT = 'false';
+    }
+
     if (this.usePreInit) {
       this.env.INSTANA_EARLY_INSTRUMENTATION = 'true';
     }
