@@ -1,50 +1,228 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report:
+Version: 1.0.0 (Initial Constitution)
+Modified Principles: N/A (Initial creation)
+Added Sections: All core principles and governance sections
+Removed Sections: N/A
+Templates Requiring Updates:
+  ✅ .specify/templates/plan-template.md (Constitution Check section references this file)
+  ✅ .specify/templates/spec-template.md (Requirements must align with principles)
+  ✅ .specify/templates/tasks-template.md (Task categorization reflects principles)
+Follow-up TODOs: None
+-->
+
+# Instana Node.js Tracer Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Backward Compatibility (NON-NEGOTIABLE)
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+**Zero Breaking Changes**: All changes MUST maintain backward compatibility with existing instrumentation and APIs. New features MUST be opt-in via configuration. Deprecations require a minimum of one major version notice period with clear migration paths documented.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+**Rationale**: The Instana Node.js tracer is a production APM library used across thousands of applications. Breaking changes cause immediate production incidents and erode user trust. Backward compatibility ensures seamless upgrades and maintains the reliability contract with users.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### II. Performance First
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+**Performance Budget**: New features MUST NOT introduce more than 5% performance overhead. Memory footprint increases MUST be justified and documented. All performance-critical paths MUST be benchmarked before and after changes.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+**Observability Overhead**: As an observability tool, the tracer itself MUST have minimal impact on application performance. Instrumentation overhead MUST be measured and optimized. Span processing MUST handle high-volume scenarios (10,000+ spans/second).
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+**Rationale**: Performance degradation in an APM tool is unacceptable as it directly impacts the applications being monitored. Users choose Instana for its low overhead; maintaining this is critical to product differentiation.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+### III. Test-Driven Development (NON-NEGOTIABLE)
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+**TDD Mandatory**: Tests MUST be written before implementation. The Red-Green-Refactor cycle is strictly enforced:
+1. Write failing tests that define expected behavior
+2. Implement minimal code to pass tests
+3. Refactor while keeping tests green
+
+**Test Coverage**: All new code MUST have comprehensive test coverage:
+- Unit tests for individual functions and classes
+- Integration tests for instrumentation and tracing flows
+- Contract tests for external interfaces (OpenTelemetry, backend APIs)
+- Performance tests for critical paths
+
+**Rationale**: The tracer operates in diverse runtime environments with hundreds of instrumented libraries. TDD ensures correctness, prevents regressions, and provides living documentation of expected behavior.
+
+### IV. Monorepo Architecture
+
+**Package Independence**: Each package in the monorepo MUST be independently publishable and versioned. Packages MUST declare explicit dependencies. Circular dependencies are prohibited.
+
+**Shared Infrastructure**: Common functionality MUST be extracted to shared packages (`@instana/core`, `@instana/shared-metrics`, `@instana/metrics-util`). Code duplication across packages is a code smell requiring refactoring.
+
+**Lerna Management**: Use Lerna for monorepo operations (versioning, publishing, dependency management). All packages MUST follow the same release cadence unless explicitly justified.
+
+**Rationale**: The monorepo structure enables code sharing while maintaining package boundaries. This supports multiple deployment targets (traditional servers, AWS Lambda, Fargate, Cloud Run) from a single codebase.
+
+### V. Standards Compliance
+
+**OpenTelemetry Alignment**: When implementing OpenTelemetry support, MUST comply with official semantic conventions. Version compatibility MUST be explicitly documented. Deviations from standards MUST be justified and documented.
+
+**Node.js Version Support**: MUST support all active Node.js LTS versions (currently >= 18.19.0). New Node.js versions MUST be tested in prerelease pipelines before official release.
+
+**Semantic Versioning**: MUST follow semantic versioning strictly:
+- MAJOR: Breaking changes (API removals, behavior changes)
+- MINOR: New features, new instrumentation support
+- PATCH: Bug fixes, performance improvements, documentation
+
+**Rationale**: Standards compliance ensures interoperability and reduces user friction. Semantic versioning provides clear upgrade expectations and enables automated dependency management.
+
+### VI. Instrumentation Quality
+
+**Zero-Config Instrumentation**: Instrumentation MUST work automatically without requiring code changes. Manual instrumentation APIs are supplementary, not primary.
+
+**Defensive Programming**: Instrumentation MUST NOT crash user applications. All instrumentation code MUST handle errors gracefully. Failed instrumentation MUST log warnings but allow application execution to continue.
+
+**Minimal Dependencies**: Instrumentation packages MUST minimize production dependencies. Use `^` version ranges for dependencies unless specific pinning is justified (monkey-patching, unstable APIs).
+
+**Rationale**: Automatic instrumentation is Instana's core value proposition. Defensive programming ensures the tracer never becomes the source of production issues.
+
+### VII. Documentation and Maintainability
+
+**Code Documentation**: All public APIs MUST have JSDoc comments. Complex algorithms MUST have inline comments explaining the "why" not just the "what". Configuration options MUST be documented with examples.
+
+**External Documentation**: User-facing documentation lives at https://www.ibm.com/docs/en/instana-observability/current. Internal documentation (CONTRIBUTING.md, package READMEs) MUST be kept up-to-date.
+
+**Code Style**: MUST use ESLint and Prettier with project configurations. Code MUST pass linting before commit (enforced via Husky pre-commit hooks).
+
+**Rationale**: Clear documentation reduces onboarding time and maintenance burden. Consistent code style improves readability and reduces cognitive load during code reviews.
+
+## Security and Compliance
+
+### Vulnerability Management
+
+**Dependency Auditing**: Run `npm audit` with every build. Address HIGH and CRITICAL vulnerabilities within 7 days. MODERATE vulnerabilities MUST be evaluated and addressed or documented as accepted risk.
+
+**No Sensitive Data**: Instrumentation MUST NOT capture sensitive data (passwords, tokens, PII) by default. When capturing request/response data, MUST provide filtering mechanisms.
+
+**Supply Chain Security**: All dependencies MUST be from trusted sources (npm registry). Verify package integrity. Use `package-lock.json` (lockfileVersion 3) to ensure reproducible builds.
+
+### License Compliance
+
+**MIT License**: All code MUST include the MIT license header:
+```
+/*
+ * (c) Copyright IBM Corp. 2024
+ */
+```
+
+**Dependency Licenses**: All production dependencies MUST have compatible licenses (MIT, Apache 2.0, BSD). GPL/AGPL dependencies are prohibited in production code.
+
+## Development Workflow
+
+### Branch Management
+
+**Branch Naming**: Development branches MUST use prefixes: `feat-`, `fix-`, `chore-`, `docs-`, `test-`. Branch names MUST be lowercase alphanumeric with hyphens. Branches with these prefixes are auto-deleted after 60 days of inactivity.
+
+**Main Branch Protection**: The `main` branch is protected. All changes MUST go through pull requests. Direct commits to `main` are prohibited.
+
+### Commit Standards
+
+**Conventional Commits**: MUST follow [Conventional Commits](https://www.conventionalcommits.org/) standard. Types: `feat`, `fix`, `chore`, `docs`, `test`, `refactor`, `ci`, `build`.
+
+**Customer-Facing Changes**: Use `feat` or `fix` for changes that appear in CHANGELOG. Use `chore` for internal changes. Breaking changes MUST include `BREAKING CHANGE:` footer.
+
+**Sign-Off Required**: All commits MUST include sign-off: `Signed-off-by: Name <email@example.com>`
+
+**Commit Message Length**: Subject line ≤ 72 characters. Body lines ≤ 100 characters. Reference tickets/issues in commit body.
+
+### Code Review
+
+**Required Approvals**: All PRs MUST have at least one approval from a team member. Breaking changes require two approvals.
+
+**Review Checklist**:
+- Tests pass and provide adequate coverage
+- Code follows style guidelines (ESLint/Prettier)
+- Documentation updated (if applicable)
+- No security vulnerabilities introduced
+- Performance impact assessed (if applicable)
+- Backward compatibility maintained
+
+### Release Process
+
+**Automated Releases**: Use GitHub Actions workflow for releases. Lerna determines version bump from conventional commits. CHANGELOG files are auto-generated.
+
+**Release Artifacts**: Each release publishes:
+- npm packages to registry
+- AWS Lambda layers
+- AWS Fargate Docker images
+- Google Cloud Run images
+
+**Pre-releases**: Major versions MUST have pre-releases (`--dist-tag next --preid rc`) for user testing before stable release.
+
+## Testing Standards
+
+### Test Organization
+
+**Test Structure**: Tests organized by type:
+- `test/unit/` - Unit tests for individual modules
+- `test/integration/` - Integration tests with real dependencies
+- `test/contract/` - Contract tests for external interfaces
+
+**Test Naming**: Test files MUST match source files with `.test.js` suffix. ESM variants MUST have `.test.mjs` suffix.
+
+### Test Requirements
+
+**Coverage Targets**: Aim for >80% code coverage. Critical paths (span processing, instrumentation) MUST have >90% coverage.
+
+**Test Isolation**: Tests MUST be independent and runnable in any order. Use test containers (Docker Compose) for external dependencies.
+
+**ESM Testing**: All instrumentation tests MUST have both CJS (`.js`) and ESM (`.mjs`) variants. Use `RUN_ESM=true` to run ESM tests locally.
+
+### CI/CD Testing
+
+**Multi-Version Testing**: Tests run against all supported Node.js versions (18, 20, 22, 23). Prerelease pipeline tests against Node.js RC and nightly builds.
+
+**Platform Testing**: Tests run on Linux (primary), macOS (native addons), and Windows (compatibility).
+
+**Long-Running Tests**: Separate pipeline for long-running tests (memory leaks, performance regression).
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+### Constitution Authority
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+This constitution supersedes all other development practices and guidelines. When conflicts arise between this constitution and other documentation, the constitution takes precedence.
+
+### Amendment Process
+
+**Proposal**: Amendments MUST be proposed via pull request to `.specify/memory/constitution.md`. Proposal MUST include:
+- Rationale for change
+- Impact analysis on existing principles
+- Migration plan (if applicable)
+
+**Approval**: Amendments require approval from at least two team leads. Breaking changes to principles require team consensus.
+
+**Version Bump**: Constitution follows semantic versioning:
+- MAJOR: Principle removal or redefinition
+- MINOR: New principle or section added
+- PATCH: Clarifications, wording improvements
+
+**Propagation**: After amendment, MUST update dependent templates (plan-template.md, spec-template.md, tasks-template.md) to reflect changes.
+
+### Compliance Review
+
+**PR Reviews**: All pull requests MUST verify compliance with constitution principles. Reviewers MUST explicitly check:
+- Backward compatibility maintained
+- Performance impact acceptable
+- Tests written before implementation
+- Documentation updated
+
+**Quarterly Audits**: Team conducts quarterly audits of codebase against constitution. Violations MUST be documented and remediated or explicitly accepted as technical debt.
+
+### Complexity Justification
+
+**Simplicity Principle**: Prefer simple solutions over complex ones (YAGNI). Complexity MUST be justified in terms of:
+- User value delivered
+- Technical necessity (performance, correctness)
+- Simpler alternatives considered and rejected
+
+**Complexity Tracking**: Use "Complexity Tracking" section in plan.md to document justified complexity. Unjustified complexity is a blocker for PR approval.
+
+### Runtime Guidance
+
+For day-to-day development guidance, refer to:
+- `CONTRIBUTING.md` - Development setup and workflows
+- `AGENTS.md` - Current feature context for AI agents
+- Package-specific READMEs - Package-level documentation
+
+**Version**: 1.0.0 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-04-24
