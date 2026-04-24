@@ -1,9 +1,11 @@
 <!--
 Sync Impact Report:
-Version: 1.0.0 (Initial Constitution)
-Modified Principles: N/A (Initial creation)
-Added Sections: All core principles and governance sections
-Removed Sections: N/A
+Version: 1.0.0 → 1.1.0 (Amendment: Design-Focused Phases)
+Modified Principles:
+  - Principle III: Test-Driven Development → Added exception for design-focused phases
+Added Sections:
+  - Design-Focused Phase Exception under Principle III
+Removed Sections: None
 Templates Requiring Updates:
   ✅ .specify/templates/plan-template.md (Constitution Check section references this file)
   ✅ .specify/templates/spec-template.md (Requirements must align with principles)
@@ -29,9 +31,9 @@ Follow-up TODOs: None
 
 **Rationale**: Performance degradation in an APM tool is unacceptable as it directly impacts the applications being monitored. Users choose Instana for its low overhead; maintaining this is critical to product differentiation.
 
-### III. Test-Driven Development (NON-NEGOTIABLE)
+### III. Test-Driven Development
 
-**TDD Mandatory**: Tests MUST be written before implementation. The Red-Green-Refactor cycle is strictly enforced:
+**TDD for Implementation**: Tests MUST be written before implementation code. The Red-Green-Refactor cycle is strictly enforced for all implementation phases:
 1. Write failing tests that define expected behavior
 2. Implement minimal code to pass tests
 3. Refactor while keeping tests green
@@ -42,7 +44,13 @@ Follow-up TODOs: None
 - Contract tests for external interfaces (OpenTelemetry, backend APIs)
 - Performance tests for critical paths
 
-**Rationale**: The tracer operates in diverse runtime environments with hundreds of instrumented libraries. TDD ensures correctness, prevents regressions, and provides living documentation of expected behavior.
+**Design-Focused Phase Exception**: Design and research phases (spec.md, plan.md, research.md, data-model.md, contracts/) MAY proceed without test tasks when the phase objective is architectural design, API specification, or technical research. However:
+- Design artifacts MUST include testability requirements
+- Implementation phases MUST follow strict TDD
+- Test strategy MUST be documented in the design
+- Contracts MUST define testable interfaces
+
+**Rationale**: The tracer operates in diverse runtime environments with hundreds of instrumented libraries. TDD ensures correctness, prevents regressions, and provides living documentation of expected behavior. Design-focused phases establish the foundation for testable implementation.
 
 ### IV. Monorepo Architecture
 
@@ -204,7 +212,7 @@ This constitution supersedes all other development practices and guidelines. Whe
 **PR Reviews**: All pull requests MUST verify compliance with constitution principles. Reviewers MUST explicitly check:
 - Backward compatibility maintained
 - Performance impact acceptable
-- Tests written before implementation
+- Tests written before implementation (or design-focused exception applies)
 - Documentation updated
 
 **Quarterly Audits**: Team conducts quarterly audits of codebase against constitution. Violations MUST be documented and remediated or explicitly accepted as technical debt.
@@ -225,4 +233,4 @@ For day-to-day development guidance, refer to:
 - `AGENTS.md` - Current feature context for AI agents
 - Package-specific READMEs - Package-level documentation
 
-**Version**: 1.0.0 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-04-24
+**Version**: 1.1.0 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-04-24
