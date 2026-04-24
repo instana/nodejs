@@ -11,26 +11,11 @@ const { delay, retry } = require('@_local/core/test/test_util');
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 const globalAgent = require('@_local/collector/test/globalAgent');
 
-/**
- * Integration test to verify that Instana's worker thread instrumentation
- * sends unsolicited 'instana.collector.initialized' messages through parentPort,
- * which pollutes the application's message channel and causes data corruption.
- *
- * Issue: When Instana is enabled in a worker thread, it sends an internal
- * lifecycle message ('instana.collector.initialized') through parentPort.postMessage(),
- * which interferes with application-level communication between worker and main thread.
- *
- * This test simulates a PDF generation use case where:
- * 1. Main thread spawns a worker thread
- * 2. Worker thread generates PDF and sends structured data: { fileName: string, content: Buffer }
- * 3. Instana injects its own message: 'instana.collector.initialized'
- * 4. Application receives unexpected message types, causing downstream failures
- */
 module.exports = function () {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  describe.only('Worker Thread ParentPort Pollution', function () {
+  describe('Worker Thread ParentPort Messages', function () {
     this.timeout(config.getTestTimeout());
 
     describe('with in-app require (main thread only)', function () {
@@ -54,7 +39,7 @@ module.exports = function () {
         await controls.stop();
       });
 
-      it('should NOT pollute parentPort with instana.collector.initialized when Instana is not in worker', async () => {
+      it('should NOT send lifecycle messages when Instana is not in worker', async () => {
         await controls.sendRequest({
           method: 'GET',
           path: '/generate-pdf?filename=test1.pdf'
@@ -63,10 +48,10 @@ module.exports = function () {
         await retry(async () => {
           const response = await controls.sendRequest({
             method: 'GET',
-            path: '/check-pollution'
+            path: '/check-messages'
           });
 
-          expect(response.hasPollution).to.be.false;
+          expect(response.hasUnexpectedMessages).to.be.false;
           expect(response.instanaMessageCount).to.equal(0);
           expect(response.appMessageCount).to.be.at.least(1);
         });
@@ -97,7 +82,7 @@ module.exports = function () {
         await controls.stop();
       });
 
-      it('SHOULD pollute parentPort with instana.collector.initialized)', async function () {
+      it('should NOT activate worker thread traing by default', async function () {
         this.timeout(20000);
 
         await controls.sendRequest({
@@ -117,14 +102,14 @@ module.exports = function () {
         await retry(async () => {
           const response = await controls.sendRequest({
             method: 'GET',
-            path: '/check-pollution'
+            path: '/check-messages'
           });
 
-          expect(response.hasPollution).to.be.true;
-          expect(response.instanaMessageCount).to.be.at.least(1);
+          expect(response.hasUnexpectedMessages).to.be.false;
+          expect(response.instanaMessageCount).to.equal(0);
 
           const instanaMsg = response.allMessages.find(msg => msg === 'instana.collector.initialized');
-          expect(instanaMsg).to.equal('instana.collector.initialized');
+          expect(instanaMsg).to.be.undefined;
 
           expect(response.appMessageCount).to.be.at.least(1);
         });

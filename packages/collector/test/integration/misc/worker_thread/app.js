@@ -21,12 +21,11 @@ const port = require('@_local/collector/test/test_util/app-port')();
 const { getTestAppLogger: getLogger } = require('@_local/core/test/test_util');
 
 const app = express();
-const logPrefix = `Worker Thread ParentPort Pollution App (${process.pid}):\t`;
+const logPrefix = `Worker Thread ParentPort Messages App (${process.pid}):\t`;
 const log = getLogger(logPrefix);
 
 let worker = null;
 const receivedMessages = [];
-let workerReady = false;
 
 function createWorker() {
   worker = new Worker(path.join(__dirname, 'worker.js'));
@@ -34,10 +33,6 @@ function createWorker() {
   worker.on('message', msg => {
     log(`Received message from worker: ${JSON.stringify(msg)}`);
     receivedMessages.push(msg);
-
-    if (msg && typeof msg === 'object' && msg.type === 'worker-ready') {
-      workerReady = true;
-    }
   });
 
   worker.on('error', err => {
@@ -88,7 +83,7 @@ app.get('/received-messages', (req, res) => {
   });
 });
 
-app.get('/check-pollution', (req, res) => {
+app.get('/check-messages', (req, res) => {
   const instanaMessages = receivedMessages.filter(msg => msg === 'instana.collector.initialized');
 
   const appMessages = receivedMessages.filter(
@@ -96,7 +91,7 @@ app.get('/check-pollution', (req, res) => {
   );
 
   res.json({
-    hasPollution: instanaMessages.length > 0,
+    hasUnexpectedMessages: instanaMessages.length > 0,
     instanaMessageCount: instanaMessages.length,
     appMessageCount: appMessages.length,
     allMessages: receivedMessages

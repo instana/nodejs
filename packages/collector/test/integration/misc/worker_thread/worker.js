@@ -4,11 +4,7 @@
 
 'use strict';
 
-// When NODE_OPTIONS includes --require @instana/collector/src/immediate,
-// Instana will be automatically loaded in this worker thread and will
-// send 'instana.collector.initialized' through parentPort
-
-const { parentPort } = require('worker_threads');
+const { parentPort } = require('node:worker_threads');
 
 function generatePDF(filename) {
   const pdfContent = Buffer.from(`PDF content for ${filename}`);

@@ -153,7 +153,8 @@ function enter(_ctx) {
   // eslint-disable-next-line no-unused-expressions
   process?.send?.('instana.collector.initialized');
 
-  if (!isMainThread) {
+  // Worker thread disabled by default for auto instr
+  if (!isMainThread && agentOpts.config.disableworkerThread) {
     const { parentPort } = require('worker_threads');
 
     if (parentPort) {

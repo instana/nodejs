@@ -39,6 +39,10 @@ if (!isExcludedFromInstrumentation) {
       }
     });
   } else {
-    require('./index')();
+    require('./index')({
+      // Disable worker thread by default when using auto instr
+      // to prevent pollution of application's worker thread communication channels
+      disableworkerThread: false
+    });
   }
 }
