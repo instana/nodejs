@@ -33,10 +33,5 @@ export interface CollectorConfig {
   reportUnhandledPromiseRejections?: boolean;
   logger?: GenericLogger;
   level?: string | number;
-  /**
-   * Disables sending 'instana.collector.initialized' event.
-   * This prevents interference with application-level communication channels.
-   * @default false (event is sent by default, except when using NODE_OPTIONS pre-require)
-   */
   disableCollectorInitEvent?: boolean;
 }
