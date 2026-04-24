@@ -17,6 +17,8 @@ exports.agentUuid = undefined;
 // @ts-ignore - Cannot redeclare exported variable
 exports.autoProfile = false;
 
+exports.disableCollectorInitEvent = true;
+
 /** @type {import('@instana/collector/src/types/collector').AgentConfig} config */
 exports.config = {};
 
@@ -34,4 +36,6 @@ exports.init = function init(config) {
   exports.autoProfile = config.autoProfile;
 
   exports.requestTimeout = config.agentRequestTimeout;
+
+  exports.disableCollectorInitEvent = config.disableCollectorInitEvent;
 };
