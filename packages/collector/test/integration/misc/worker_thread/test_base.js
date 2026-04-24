@@ -15,10 +15,10 @@ module.exports = function () {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  describe('Worker Thread ParentPort Messages', function () {
+  describe('Worker Thread', function () {
     this.timeout(config.getTestTimeout());
 
-    describe('with in-app require (main thread only)', function () {
+    describe('with app require (main thread only)', function () {
       let controls;
 
       before(async function () {
@@ -39,7 +39,7 @@ module.exports = function () {
         await controls.stop();
       });
 
-      it('should NOT send lifecycle messages when Instana is not in worker', async () => {
+      it('should NOT send collector init message when Instana is not in worker', async () => {
         await controls.sendRequest({
           method: 'GET',
           path: '/generate-pdf?filename=test1.pdf'
@@ -58,7 +58,7 @@ module.exports = function () {
       });
     });
 
-    describe('with NODE_OPTIONS/pre-require (affects worker threads)', function () {
+    describe('with NODE_OPTIONS/pre-require (worker threads)', function () {
       let controls;
 
       before(async function () {
@@ -82,7 +82,7 @@ module.exports = function () {
         await controls.stop();
       });
 
-      it('should NOT activate worker thread traing by default', async function () {
+      it('should NOT send collector init message by default', async function () {
         this.timeout(20000);
 
         await controls.sendRequest({

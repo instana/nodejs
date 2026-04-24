@@ -40,9 +40,9 @@ if (!isExcludedFromInstrumentation) {
     });
   } else {
     require('./index')({
-      // Disable worker thread by default when using auto instr
-      // to prevent pollution of application's worker thread communication channels
-      disableWorkerThread: false
+      // Disable 'instana.collector.initialized' event by default when using auto instrumentation (NODE_OPTIONS)
+      // to prevent interference with application's IPC and worker thread communication channels
+      disableCollectorInitEvent: true
     });
   }
 }

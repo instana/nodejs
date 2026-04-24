@@ -153,12 +153,12 @@ function enter(_ctx) {
   // eslint-disable-next-line no-unused-expressions
   process?.send?.('instana.collector.initialized');
 
-  // Worker thread disabled by default for auto instr
-  if (!isMainThread && agentOpts.config.disableWorkerThread) {
+  if (!isMainThread) {
     const { parentPort } = require('worker_threads');
-
-    if (parentPort) {
-      // CASE: This is for the worker thread if available.
+    // Send collector init message unless explicitly disabled
+    // These messages can interfere with application-level communication channels,
+    // so they are disabled by default when using NODE_OPTIONS pre-require
+    if (parentPort && !agentOpts.config.disableCollectorInitEvent) {
       parentPort.postMessage('instana.collector.initialized');
     }
   }

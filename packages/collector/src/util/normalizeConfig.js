@@ -12,7 +12,7 @@ const defaults = {
   agentPort: 42699,
   agentRequestTimeout: 5000,
   autoProfile: false,
-  disableWorkerThread: false
+  disableCollectorInitEvent: false
 };
 
 /**
@@ -34,9 +34,9 @@ module.exports = function normalizeConfig(config = {}) {
     config.reportUnhandledPromiseRejections = false;
   }
 
-  if (config.disableWorkerThread == null) {
-    const envValue = process.env.INSTANA_DISABLE_WORKER_THREADS;
-    config.disableWorkerThread = envValue === 'true' ? true : defaults.disableWorkerThread;
+  if (config.disableCollectorInitEvent == null) {
+    const envValue = process.env.INSTANA_DISABLE_COLLECTOR_INIT_EVENT;
+    config.disableCollectorInitEvent = envValue === 'true' ? true : defaults.disableCollectorInitEvent;
   }
 
   return config;
