@@ -33,4 +33,5 @@ export interface CollectorConfig {
   reportUnhandledPromiseRejections?: boolean;
   logger?: GenericLogger;
   level?: string | number;
+  disableCollectorInitEvent?: boolean;
 }

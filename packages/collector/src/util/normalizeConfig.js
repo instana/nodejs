@@ -11,7 +11,8 @@ const defaults = {
   agentHost: '127.0.0.1',
   agentPort: 42699,
   agentRequestTimeout: 5000,
-  autoProfile: false
+  autoProfile: false,
+  disableCollectorInitEvent: true
 };
 
 /**
@@ -31,6 +32,11 @@ module.exports = function normalizeConfig(config = {}) {
 
   if (config.reportUnhandledPromiseRejections == null) {
     config.reportUnhandledPromiseRejections = false;
+  }
+
+  if (config.disableCollectorInitEvent == null) {
+    const envValue = process.env.INSTANA_DISABLE_COLLECTOR_INIT_EVENT;
+    config.disableCollectorInitEvent = envValue === 'true' ? true : defaults.disableCollectorInitEvent;
   }
 
   return config;
