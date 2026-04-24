@@ -25,9 +25,9 @@ This is a library feature within the existing `@instana/core` package:
 
 **Purpose**: Establish directory structure and configuration for the new feature
 
-- [ ] T001 Create converter module directory at packages/core/src/tracing/converters/
-- [ ] T002 [P] Create configuration schema file at packages/core/src/config/spanFormatConfig.js
-- [ ] T003 [P] Create type definitions file at packages/core/src/tracing/converters/types.d.ts
+- [X] T001 Create converter module directory at packages/core/src/tracing/converters/
+- [X] T002 [P] Create configuration schema file at packages/core/src/config/spanFormatConfig.js
+- [X] T003 [P] Create type definitions file at packages/core/src/tracing/converters/types.js
 
 ---
 
@@ -37,12 +37,12 @@ This is a library feature within the existing `@instana/core` package:
 
 **⚠️ CRITICAL**: No converter work can begin until this phase is complete
 
-- [ ] T004 Implement SpanConverter interface in packages/core/src/tracing/converters/SpanConverter.js
-- [ ] T005 Implement ConversionResult and ValidationResult types in packages/core/src/tracing/converters/types.d.ts
-- [ ] T006 Implement SpanConverterRegistry in packages/core/src/tracing/converters/SpanConverterRegistry.js
-- [ ] T007 [P] Implement ConversionError class in packages/core/src/tracing/converters/ConversionError.js
-- [ ] T008 [P] Create converter statistics tracking in packages/core/src/tracing/converters/ConverterStats.js
-- [ ] T009 Update core configuration to support spanFormat option in packages/core/src/config/index.js
+- [X] T004 Implement SpanConverter interface in packages/core/src/tracing/converters/SpanConverter.js
+- [X] T005 Implement ConversionResult and ValidationResult types (already in types.js)
+- [X] T006 Implement SpanConverterRegistry in packages/core/src/tracing/converters/SpanConverterRegistry.js
+- [X] T007 [P] Implement ConversionError class in packages/core/src/tracing/converters/ConversionError.js
+- [X] T008 [P] Create converter statistics tracking in packages/core/src/tracing/converters/ConverterStats.js
+- [X] T009 Update core configuration to support spanFormat option in packages/core/src/config/index.js
 
 **Checkpoint**: Foundation ready - converter implementation can now begin
 

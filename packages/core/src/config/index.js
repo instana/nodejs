@@ -36,6 +36,7 @@ const { validateStackTraceMode, validateStackTraceLength } = require('./configVa
  * @property {boolean} [ignoreEndpointsDisableSuppression]
  * @property {boolean} [disableEOLEvents]
  * @property {globalStackTraceConfig} [global]
+ * @property {string} [spanFormat]
  */
 
 /**
@@ -121,7 +122,8 @@ let defaults = {
     },
     ignoreEndpoints: {},
     ignoreEndpointsDisableSuppression: false,
-    disableEOLEvents: false
+    disableEOLEvents: false,
+    spanFormat: 'instana'
   },
   preloadOpentelemetry: false,
   secrets: {
@@ -250,6 +252,7 @@ function normalizeTracingConfig(config) {
   normalizeIgnoreEndpoints(config);
   normalizeIgnoreEndpointsDisableSuppression(config);
   normalizeDisableEOLEvents(config);
+  normalizeSpanFormat(config);
 }
 
 /**
@@ -626,6 +629,44 @@ function normalizeTracingKafka(config) {
     config.tracing.kafka.traceCorrelation = false;
   } else {
     config.tracing.kafka.traceCorrelation = defaults.tracing.kafka.traceCorrelation;
+  }
+  /**
+   * @param {InstanaConfig} config
+   */
+  function normalizeSpanFormat(config) {
+    const { SpanFormat } = require('./spanFormatConfig');
+    const validFormats = [SpanFormat.INSTANA, SpanFormat.OPENTELEMETRY];
+
+    // Check environment variable first
+    if (process.env['INSTANA_SPAN_FORMAT']) {
+      const envFormat = process.env['INSTANA_SPAN_FORMAT'].toLowerCase();
+      if (validFormats.includes(envFormat)) {
+        config.tracing.spanFormat = envFormat;
+        return;
+      } else {
+        logger.warn(
+          `Invalid INSTANA_SPAN_FORMAT environment variable value: "${process.env['INSTANA_SPAN_FORMAT']}". ` +
+            `Valid values are: ${validFormats.join(', ')}. Using default: ${defaults.tracing.spanFormat}`
+        );
+      }
+    }
+
+    // Check config value
+    if (config.tracing.spanFormat != null) {
+      const configFormat = config.tracing.spanFormat.toLowerCase();
+      if (validFormats.includes(configFormat)) {
+        config.tracing.spanFormat = configFormat;
+        return;
+      } else {
+        logger.warn(
+          `Invalid config.tracing.spanFormat value: "${config.tracing.spanFormat}". ` +
+            `Valid values are: ${validFormats.join(', ')}. Using default: ${defaults.tracing.spanFormat}`
+        );
+      }
+    }
+
+    // Use default
+    config.tracing.spanFormat = defaults.tracing.spanFormat;
   }
 }
 

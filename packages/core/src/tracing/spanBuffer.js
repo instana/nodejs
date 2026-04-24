@@ -7,6 +7,8 @@
 
 const tracingMetrics = require('./metrics');
 const { transform } = require('./backend_mappers');
+const converterRegistry = require('./converters/SpanConverterRegistry');
+const OTelSpanConverter = require('./converters/otel/OTelSpanConverter');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -35,6 +37,8 @@ let preActivationCleanupIntervalHandle;
 let isFaaS;
 /** @type {boolean} */
 let transmitImmediate;
+/** @type {import('../config').InstanaConfig} */
+let config;
 
 /** @type {Array.<import('../core').InstanaBaseSpan>} */
 let spans = [];
@@ -81,7 +85,8 @@ const batchingBuckets = new Map();
  * @param {import('../config').InstanaConfig} config
  * @param {import('..').DownstreamConnection} _downstreamConnection
  */
-exports.init = function init(config, _downstreamConnection) {
+exports.init = function init(_config, _downstreamConnection) {
+  config = _config;
   logger = config.logger;
 
   downstreamConnection = _downstreamConnection;
@@ -92,6 +97,19 @@ exports.init = function init(config, _downstreamConnection) {
   batchingEnabled = config.tracing.spanBatchingEnabled;
   isFaaS = false;
   transmitImmediate = false;
+
+  // Initialize OTel converter if needed
+  if (config.tracing.spanFormat === 'opentelemetry') {
+    try {
+      const otelConverter = new OTelSpanConverter({
+        semconvVersion: '1.24.0'
+      });
+      converterRegistry.register('opentelemetry', otelConverter);
+      logger.info('OpenTelemetry span converter registered');
+    } catch (error) {
+      logger.error('Failed to register OTel converter:', error);
+    }
+  }
 
   if (config.tracing.activateImmediately) {
     preActivationCleanupIntervalHandle = setInterval(() => {
@@ -456,10 +474,13 @@ function transmitSpans() {
   spans = [];
   batchingBuckets.clear();
 
+  // Convert spans if OTel format is configured
+  const processedSpans = convertSpansIfNeeded(spansToSend);
+
   // We restore the content of the spans array if sending them downstream was not successful. We do not restore
   // batchingBuckets, though. This is deliberate. In the worst case, we might miss some batching opportunities, but
   // since sending spans downstream will take a few milliseconds, even that will be rare (and it is acceptable).
-  downstreamConnection.sendSpans(spansToSend, function sendSpans(/** @type {Error} */ error) {
+  downstreamConnection.sendSpans(processedSpans, function sendSpans(/** @type {Error} */ error) {
     if (error) {
       logger.warn(`Failed to transmit spans, will retry in ${transmissionDelay} ms. ${error?.message} ${error?.stack}`);
       spans = spans.concat(spansToSend);
@@ -471,6 +492,62 @@ function transmitSpans() {
       transmissionTimeoutHandle.unref();
     }
   });
+}
+
+/**
+ * Convert spans to configured format if needed
+ *
+ * @param {Array.<import('../core').InstanaBaseSpan>} spansToConvert - Spans to convert
+ * @returns {Array} Converted spans
+ */
+function convertSpansIfNeeded(spansToConvert) {
+  // Check if OTel format is configured
+  if (config && config.tracing && config.tracing.spanFormat === 'opentelemetry') {
+    const converter = converterRegistry.get('opentelemetry');
+
+    if (!converter) {
+      logger.warn('OTel format configured but converter not available, using Instana format');
+      return spansToConvert.map(span => transform(span));
+    }
+
+    logger.debug(`[spanBuffer] Converting ${spansToConvert.length} spans to OpenTelemetry format`);
+
+    const convertedSpans = [];
+    let successCount = 0;
+    let failureCount = 0;
+
+    for (const span of spansToConvert) {
+      try {
+        const result = converter.convert(span);
+
+        if (result.success) {
+          convertedSpans.push(result.span);
+          successCount++;
+        } else {
+          logger.warn(`Span conversion failed for span ${span.s}:`, result.error.message);
+          // Fallback to Instana format for failed conversions
+          convertedSpans.push(transform(span));
+          failureCount++;
+        }
+      } catch (error) {
+        logger.error(`Unexpected error converting span ${span.s}:`, error);
+        // Fallback to Instana format
+        convertedSpans.push(transform(span));
+        failureCount++;
+      }
+    }
+
+    if (failureCount > 0) {
+      logger.warn(`[spanBuffer] OTel conversion: ${successCount} succeeded, ${failureCount} failed (using fallback)`);
+    } else {
+      logger.debug(`[spanBuffer] OTel conversion: ${successCount} spans converted successfully`);
+    }
+
+    return convertedSpans;
+  }
+
+  // Default: use Instana format with backend mapper transformation
+  return spansToConvert.map(span => transform(span));
 }
 
 /**
