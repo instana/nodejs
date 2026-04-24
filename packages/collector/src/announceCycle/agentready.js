@@ -155,9 +155,9 @@ function enter(_ctx) {
 
   if (!isMainThread) {
     const { parentPort } = require('worker_threads');
-    // Send collector init message unless explicitly disabled
-    // These messages can interfere with application-level communication channels,
-    // so they are disabled by default when using NODE_OPTIONS pre-require
+
+    // This collector init message can interfere with application-level communication channels,
+    // so its disabled by default.
     if (parentPort && !agentOpts.config.disableCollectorInitEvent) {
       parentPort.postMessage('instana.collector.initialized');
     }
