@@ -161,7 +161,6 @@ function enter(_ctx) {
      * This prevents interference with application-level communication channels.
      * The event is primarily used for testing purposes now.
      */
-    if (parentPort && !agentOpts.config.disableCollectorInitEvent) {
       parentPort.postMessage('instana.collector.initialized');
     }
   }
