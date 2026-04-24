@@ -33,5 +33,5 @@ export interface CollectorConfig {
   reportUnhandledPromiseRejections?: boolean;
   logger?: GenericLogger;
   level?: string | number;
-  disableworkerThread?: boolean;
+  disableWorkerThread?: boolean;
 }

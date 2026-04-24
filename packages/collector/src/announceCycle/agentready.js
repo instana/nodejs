@@ -154,7 +154,7 @@ function enter(_ctx) {
   process?.send?.('instana.collector.initialized');
 
   // Worker thread disabled by default for auto instr
-  if (!isMainThread && agentOpts.config.disableworkerThread) {
+  if (!isMainThread && agentOpts.config.disableWorkerThread) {
     const { parentPort } = require('worker_threads');
 
     if (parentPort) {

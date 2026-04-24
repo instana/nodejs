@@ -12,7 +12,7 @@ const defaults = {
   agentPort: 42699,
   agentRequestTimeout: 5000,
   autoProfile: false,
-  disableworkerThread: false
+  disableWorkerThread: false
 };
 
 /**
@@ -34,9 +34,9 @@ module.exports = function normalizeConfig(config = {}) {
     config.reportUnhandledPromiseRejections = false;
   }
 
-  if (config.disableworkerThread == null) {
+  if (config.disableWorkerThread == null) {
     const envValue = process.env.INSTANA_DISABLE_WORKER_THREADS;
-    config.disableworkerThread = envValue === 'true' ? true : defaults.disableworkerThread;
+    config.disableWorkerThread = envValue === 'true' ? true : defaults.disableWorkerThread;
   }
 
   return config;
