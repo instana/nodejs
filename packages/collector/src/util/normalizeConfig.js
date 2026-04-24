@@ -12,7 +12,7 @@ const defaults = {
   agentPort: 42699,
   agentRequestTimeout: 5000,
   autoProfile: false,
-  disableCollectorInitEvent: false
+  disableCollectorInitEvent: true
 };
 
 /**
