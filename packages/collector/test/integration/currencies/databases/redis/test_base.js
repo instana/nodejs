@@ -21,6 +21,7 @@ const {
 } = require('@_local/core/test/test_util');
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 const globalAgent = require('@_local/collector/test/globalAgent');
+const { AgentStubControls } = require('@_local/collector/test/apps/agentStubControls');
 
 // v3 is considered the legacy version.
 // - It does not support Redis clustering.
@@ -938,9 +939,69 @@ module.exports = function (name, version, isLatest, mode) {
     }
   });
 
+  describe('Config precedence', () => {
+    describe('when both agent config and env var are set, env var takes precedence', () => {
+      const customAgentControls = new AgentStubControls();
+      let controls;
+
+      before(async () => {
+        await customAgentControls.startAgent({
+          ignoreEndpoints: { redis: ['get', 'set'] }
+        });
+
+        controls = new ProcessControls({
+          agentControls: customAgentControls,
+          dirname: __dirname,
+          appName: isLegacyVersion ? 'legacyApp' : 'app',
+          env: {
+            LIBRARY_LATEST: isLatest,
+            LIBRARY_VERSION: version,
+            LIBRARY_NAME: name,
+            REDIS_SETUP_TYPE: mode,
+            INSTANA_IGNORE_ENDPOINTS: 'redis:get;'
+          }
+        });
+        await controls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 5);
+      });
+
+      beforeEach(async () => {
+        await customAgentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await customAgentControls.stopAgent();
+        await controls.stop();
+      });
+
+      it('should use env var config and ignore only get (not set)', async () => {
+        await controls
+          .sendRequest({
+            method: 'POST',
+            path: '/values',
+            qs: {
+              key: 'discount',
+              value: 50
+            }
+          })
+          .then(async () => {
+            return retry(async () => {
+              const spans = await customAgentControls.getSpans();
+              // 1 x http entry span
+              // 1 x http client span
+              // 1 x redis set span (set is NOT ignored because env var only ignores 'get')
+              expect(spans.length).to.equal(3);
+
+              const redisSpans = spans.filter(span => span.n === 'redis');
+              expect(redisSpans.length).to.equal(1);
+              expect(redisSpans[0].data.redis.command).to.equal('set');
+            });
+          });
+      });
+    });
+  });
+
   mochaSuiteFn('ignore-endpoints:', function () {
     describe('when ignore-endpoints is enabled via agent configuration', () => {
-      const { AgentStubControls } = require('@_local/collector/test/apps/agentStubControls');
       const customAgentControls = new AgentStubControls();
       let controls;
 
@@ -1096,7 +1157,7 @@ module.exports = function (name, version, isLatest, mode) {
               expect(spans.length).to.equal(4);
               expect(spans.some(span => span.n === 'redis')).to.be.true;
             });
-          });
+        });
       });
     });
 
