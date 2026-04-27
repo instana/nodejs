@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [5.4.3](https://github.com/instana/nodejs/compare/v5.4.2...v5.4.3) (2026-04-27)
+
+
+### Bug Fixes
+
+* bumped @opentelemetry/instrumentation-fs from 0.33.0 to 0.34.0 ([#2499](https://github.com/instana/nodejs/issues/2499)) ([5ac8eef](https://github.com/instana/nodejs/commit/5ac8eef90f28cd63ec538ed30da78b2c9d30ed52))
+* bumped @opentelemetry/instrumentation-restify from 0.58.0 to 0.59.0 ([#2484](https://github.com/instana/nodejs/issues/2484)) ([3daa455](https://github.com/instana/nodejs/commit/3daa4557d403f715b18f55b7847c3a0805cdc8fa))
+* bumped @opentelemetry/instrumentation-socket.io from 0.60.0 to 0.61.0 ([#2485](https://github.com/instana/nodejs/issues/2485)) ([f90e62a](https://github.com/instana/nodejs/commit/f90e62abce54d2277ec3ded1f75244c764ecaf24))
+* enforced max limit on metrics transmission config ([#2511](https://github.com/instana/nodejs/issues/2511)) ([ebcfebd](https://github.com/instana/nodejs/commit/ebcfebd1816d0ce468a539752a1591e089bf2ad4))
+
+
+
+
+
 ## [5.4.2](https://github.com/instana/nodejs/compare/v5.4.1...v5.4.2) (2026-04-16)
 
 
