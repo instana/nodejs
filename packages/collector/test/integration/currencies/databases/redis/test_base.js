@@ -998,6 +998,67 @@ module.exports = function (name, version, isLatest, mode) {
           });
       });
     });
+
+    mochaSuiteFn('disable redis:', function () {
+      describe('when both agent config and env var are set, env var takes precedence', () => {
+        const customAgentControls = new AgentStubControls();
+        let controls;
+
+        before(async () => {
+          await customAgentControls.startAgent({
+            disable: { redis: false }
+          });
+
+          controls = new ProcessControls({
+            agentControls: customAgentControls,
+            dirname: __dirname,
+            appName: isLegacyVersion ? 'legacyApp' : 'app',
+            env: {
+              LIBRARY_LATEST: isLatest,
+              LIBRARY_VERSION: version,
+              LIBRARY_NAME: name,
+              REDIS_SETUP_TYPE: mode,
+              INSTANA_TRACING_DISABLE: 'redis'
+            }
+          });
+          await controls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 5);
+        });
+
+        beforeEach(async () => {
+          await customAgentControls.clearReceivedTraceData();
+        });
+
+        after(async () => {
+          await customAgentControls.stopAgent();
+          await controls.stop();
+        });
+
+        it('should use env var config and disable redis tracing', async () => {
+          await controls
+            .sendRequest({
+              method: 'POST',
+              path: '/values',
+              qs: {
+                key: 'discount',
+                value: 50
+              }
+            })
+            .then(async () => {
+              return retry(async () => {
+                const spans = await customAgentControls.getSpans();
+                // 1 x http entry span
+                // 1 x http client span
+                // No redis spans because redis is disabled via env var
+                expect(spans.length).to.equal(2);
+
+                spans.forEach(span => {
+                  expect(span.n).not.to.equal('redis');
+                });
+              });
+            });
+        });
+      });
+    });
   });
 
   mochaSuiteFn('ignore-endpoints:', function () {
@@ -1157,7 +1218,7 @@ module.exports = function (name, version, isLatest, mode) {
               expect(spans.length).to.equal(4);
               expect(spans.some(span => span.n === 'redis')).to.be.true;
             });
-        });
+          });
       });
     });
 
