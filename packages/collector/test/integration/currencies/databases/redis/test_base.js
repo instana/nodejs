@@ -1018,7 +1018,7 @@ module.exports = function (name, version, isLatest, mode) {
               LIBRARY_VERSION: version,
               LIBRARY_NAME: name,
               REDIS_SETUP_TYPE: mode,
-              INSTANA_TRACING_DISABLE: 'redis'
+              INSTANA_TRACING_DISABLE_INSTRUMENTATIONS: 'redis'
             }
           });
           await controls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 5);
