@@ -1012,7 +1012,7 @@ module.exports = function (name, version, isLatest, mode) {
           controls = new ProcessControls({
             agentControls: customAgentControls,
             dirname: __dirname,
-            appName: isLegacyVersion ? 'legacyApp' : 'app',
+            appName: 'app',
             env: {
               LIBRARY_LATEST: isLatest,
               LIBRARY_VERSION: version,
