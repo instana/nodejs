@@ -379,6 +379,57 @@ module.exports = function (name, version, isLatest) {
           });
         });
       });
+
+      describe('precedence: when both agent and env are configured, env takes precedence', () => {
+        let customAgentControls;
+        let precedenceControls;
+
+        before(async () => {
+          customAgentControls = new AgentStubControls();
+          await customAgentControls.startAgent({
+            disable: { console: false }
+          });
+
+          precedenceControls = new ProcessControls({
+            agentControls: customAgentControls,
+            dirname: __dirname,
+            env: {
+              INSTANA_TRACING_DISABLE_INSTRUMENTATIONS: ['console'],
+              LIBRARY_LATEST: isLatest,
+              LIBRARY_VERSION: version,
+              LIBRARY_NAME: name
+            }
+          });
+          await precedenceControls.startAndWaitForAgentConnection();
+        });
+
+        after(async () => {
+          await precedenceControls.stop();
+          await customAgentControls.stopAgent();
+        });
+
+        it('should not trace console.warn calls (env var takes precedence over agent config)', async () => {
+          await precedenceControls.sendRequest({ path: '/warn' });
+
+          await testUtils.retry(async () => {
+            const spans = await customAgentControls.getSpans();
+            const httpEntrySpan = verifyHttpRootEntry({
+              spans,
+              apiPath: '/warn',
+              pid: String(precedenceControls.getPid())
+            });
+
+            verifyHttpExit({
+              spans,
+              parent: httpEntrySpan,
+              pid: String(precedenceControls.getPid())
+            });
+
+            const consoleLogSpans = testUtils.getSpansByName(spans, 'log.console');
+            expect(consoleLogSpans).to.be.empty;
+          });
+        });
+      });
     });
   });
 
