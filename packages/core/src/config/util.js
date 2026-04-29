@@ -62,7 +62,11 @@ exports.resolve = function resolve({ envValue, inCodeValue, agentValue, defaultV
         source: CONFIG_SOURCES[/** @type {keyof typeof CONFIG_SOURCES} */ (sourceKey.toUpperCase())]
       };
 
-      logger?.debug(`[config] Resolved from ${sourceKey}: ${JSON.stringify(parsedValue)}`);
+      if (
+        CONFIG_SOURCES[/** @type {keyof typeof CONFIG_SOURCES} */ (sourceKey.toUpperCase())] !== CONFIG_SOURCES.DEFAULT
+      ) {
+        logger?.debug(`[config] Resolved from ${sourceKey}: ${JSON.stringify(parsedValue)}`);
+      }
       return true;
     }
 
