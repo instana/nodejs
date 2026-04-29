@@ -19,6 +19,7 @@ declare -A ABI_VERSIONS=(
   # ["131"]="23.0" \
   ["137"]="24.0"
   # ["141"]="25.0"  # Non-LTS (skipped intentionally)
+  ["147"]="26.0"
 )
 
 LIBC_VARIANTS=(
