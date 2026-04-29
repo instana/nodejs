@@ -191,6 +191,7 @@ describe('config.normalizeConfig', () => {
         expect(config.tracing.enabled).to.be.true;
         expect(config.tracing.automaticTracingEnabled).to.be.false;
       });
+
       it('should not enable automatic tracing when tracing is disabled in general', () => {
         const config = coreConfig.normalize({
           userConfig: {
@@ -225,6 +226,12 @@ describe('config.normalizeConfig', () => {
         process.env.INSTANA_TRACING_DISABLE = 'true';
         const config = coreConfig.normalize({});
         expect(config.tracing.enabled).to.be.false;
+      });
+
+      it('should enable tracing if env var conatin non-boolean value', () => {
+        process.env.INSTANA_TRACING_DISABLE = 'redis';
+        const config = coreConfig.normalize({});
+        expect(config.tracing.enabled).to.be.true;
       });
 
       it('should use default (true) for automaticTracingEnabled when neither env nor config is set', () => {
