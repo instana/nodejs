@@ -468,6 +468,30 @@ function transmitSpans() {
 }
 
 /**
+ * Convert spans to configured format if needed
+ *
+ * @param {Array.<import('../core').InstanaBaseSpan>} spansToConvert - Spans to convert
+ * @returns {Array.<*>} Converted spans
+ */
+function convertSpansIfNeeded(spansToConvert) {
+  // Check if OTLP format is configured
+  // set to otel for now
+  const spanFormat = 'otel' || process.env.INSTANA_OTLP_FORMAT === 'true';
+
+  if (spanFormat === 'otel' || spanFormat === 'otlp') {
+    logger.debug(`[spanBuffer] Converting ${spansToConvert.length} spans to OTLP format`);
+    // Convert to OTLP format
+    return spansToConvert.map(span => {
+      const transformedSpan = transform(span);
+      return convertToOTLP(transformedSpan);
+    });
+  }
+
+  // Default: use Instana format with backend mapper transformation
+  return spansToConvert.map(span => transform(span));
+}
+
+/**
  * Synchronously returns the spans that are scheduled for transmission and resets the internal span buffer to an empty
  * array.
  */
