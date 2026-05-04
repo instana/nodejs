@@ -314,7 +314,7 @@ exports.sendMetrics = function sendMetrics(data, cb) {
     firstTwoKeys[dataKeys[i]] = data[dataKeys[i]];
   }
 
-  logger.debug(`sendMetrics called with data (first 2 keys): ${JSON.stringify(firstTwoKeys)}`);
+  // logger.debug(`sendMetrics called with data (first 2 keys): ${JSON.stringify(firstTwoKeys)}`);
 
   // Transform Instana metrics to OTLP format
   const otlpMetrics = otlpTransformer.transformMetrics(data);
@@ -352,7 +352,7 @@ exports.sendMetrics = function sendMetrics(data, cb) {
       logger.error('Error sending metrics:', err);
       cb(err, null);
     } else {
-      logger.debug('Metrics sent successfully');
+      // logger.debug('Metrics sent successfully');
       // OTLP endpoints don't return requests like the old Instana endpoint
       // Always return empty array for compatibility
       cb(null, []);
