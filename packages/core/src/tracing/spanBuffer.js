@@ -7,7 +7,6 @@
 
 const tracingMetrics = require('./metrics');
 const { transform } = require('./backend_mappers');
-const { convertToOTLP } = require('./otelConverter');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -484,20 +483,8 @@ function transmitSpans() {
  * @returns {Array.<*>} Converted spans
  */
 function convertSpansIfNeeded(spansToConvert) {
-  // Check if OTLP format is configured
-  // set to otel for now
-  const spanFormat = 'otel' || process.env.INSTANA_OTLP_FORMAT === 'true';
-
-  if (spanFormat === 'otel' || spanFormat === 'otlp') {
-    logger.debug(`[spanBuffer] Converting ${spansToConvert.length} spans to OTLP format`);
-    // Convert to OTLP format
-    return spansToConvert.map(span => {
-      const transformedSpan = transform(span);
-      return convertToOTLP(transformedSpan);
-    });
-  }
-
-  // Default: use Instana format with backend mapper transformation
+  // Don't convert to OTLP here - agentConnection.js will handle OTLP conversion
+  // Just apply backend mapper transformation
   return spansToConvert.map(span => transform(span));
 }
 

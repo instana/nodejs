@@ -266,6 +266,21 @@ function createStatus(errorCount) {
  * @returns {Object} OTEL span object
  */
 function transformSpan(instanaSpan) {
+  // Validate required fields
+  if (typeof instanaSpan.ts !== 'number' || typeof instanaSpan.d !== 'number') {
+    // Return a minimal valid span if timestamps are missing
+    return {
+      traceId: instanaSpan.t || '0',
+      spanId: instanaSpan.s || '0',
+      name: instanaSpan.n || 'unknown',
+      kind: 0,
+      startTimeUnixNano: '0',
+      endTimeUnixNano: '0',
+      attributes: [],
+      status: { code: 1 }
+    };
+  }
+
   const otelSpan = {
     traceId: instanaSpan.t,
     spanId: instanaSpan.s,
