@@ -11,10 +11,17 @@
 
 /**
  * Convert Instana span to OTLP format
- * @param {Object} span - Instana span
+ * Note: Assumes span has already been transformed by backend_mappers
+ * @param {Object} span - Instana span (already transformed)
  * @returns {Object} OTLP span
  */
 function convertToOTLP(span) {
+  // Validate required fields - if missing, return original span
+  if (typeof span.ts !== 'number' || typeof span.d !== 'number') {
+    // Skip OTLP conversion for spans with invalid timestamps
+    return span;
+  }
+
   // Only convert HTTP spans
   if (span.n !== 'node.http.server' && span.n !== 'node.http.client') {
     return span; // Return as-is for non-HTTP spans
@@ -31,7 +38,8 @@ function convertToOTLP(span) {
     attributes: convertAttributes(span),
     status: convertStatus(span),
     events: [],
-    links: []
+    links: [],
+    parentSpanId: undefined
   };
 
   // Add parent if exists
