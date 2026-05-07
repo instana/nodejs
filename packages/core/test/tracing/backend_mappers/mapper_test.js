@@ -347,10 +347,11 @@ describe('tracing/backend_mappers', () => {
 
       const result = otlpTransform(transform(span));
 
-      expect(result.data.http['http.method']).to.equal('GET');
-      expect(result.data.http['http.target']).to.equal('/api/users');
-      expect(result.data.http['http.host']).to.equal('localhost');
-      expect(result.data.http['http.status_code']).to.equal(200);
+      // New OTel semantic conventions
+      expect(result.data.http['http.request.method']).to.equal('GET');
+      expect(result.data.http['url.full']).to.equal('/api/users');
+      expect(result.data.http['server.address']).to.equal('localhost');
+      expect(result.data.http['http.response.status_code']).to.equal(200);
 
       expect(result.data.http).to.not.have.property('operation');
       expect(result.data.http).to.not.have.property('endpoints');
@@ -376,14 +377,52 @@ describe('tracing/backend_mappers', () => {
 
       const result = otlpTransform(span);
 
-      expect(result.data.http['http.method']).to.equal('POST');
-      expect(result.data.http['http.target']).to.equal('/orders');
-      expect(result.data.http['http.host']).to.equal('service.local');
+      // New OTel semantic conventions
+      expect(result.data.http['http.request.method']).to.equal('POST');
+      expect(result.data.http['url.full']).to.equal('/orders');
+      expect(result.data.http['server.address']).to.equal('service.local');
       expect(result.data.http['http.custom_header']).to.equal('x-test');
       expect(result.data.http).to.not.have.property('method');
       expect(result.data.http).to.not.have.property('url');
       expect(result.data.http).to.not.have.property('host');
       expect(result.data.http).to.not.have.property('custom_header');
+    });
+
+    it('should map additional HTTP fields according to OTel semantic conventions', () => {
+      span = {
+        n: 'node.http.client',
+        data: {
+          http: {
+            method: 'GET',
+            url: 'https://api.example.com/users?page=1',
+            path: '/users',
+            params: 'page=1',
+            protocol: 'HTTP/1.1',
+            path_tpl: '/users',
+            error: 'timeout'
+          }
+        }
+      };
+
+      const result = otlpTransform(span);
+
+      // Verify all new mappings
+      expect(result.data.http['http.request.method']).to.equal('GET');
+      expect(result.data.http['url.full']).to.equal('https://api.example.com/users?page=1');
+      expect(result.data.http['url.path']).to.equal('/users');
+      expect(result.data.http['url.query']).to.equal('page=1');
+      expect(result.data.http['network.protocol.name']).to.equal('HTTP/1.1');
+      expect(result.data.http['url.template']).to.equal('/users');
+      expect(result.data.http['error.type']).to.equal('timeout');
+
+      // Verify old fields are removed
+      expect(result.data.http).to.not.have.property('method');
+      expect(result.data.http).to.not.have.property('url');
+      expect(result.data.http).to.not.have.property('path');
+      expect(result.data.http).to.not.have.property('params');
+      expect(result.data.http).to.not.have.property('protocol');
+      expect(result.data.http).to.not.have.property('path_tpl');
+      expect(result.data.http).to.not.have.property('error');
     });
   });
 });
