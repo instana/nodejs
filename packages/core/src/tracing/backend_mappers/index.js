@@ -5,14 +5,26 @@
 'use strict';
 
 const mapper = require('./mapper');
+const otlpMapper = require('./otlpMapper');
+
+/**
+ * @param {(span: import('../../core').InstanaBaseSpan) => import('../../core').InstanaBaseSpan} transformer
+ */
+function createSafeTransform(transformer) {
+  return (/** @type {import('../../core').InstanaBaseSpan} */ span) => {
+    try {
+      return transformer(span);
+    } catch (error) {
+      return span;
+    }
+  };
+}
+
 module.exports = {
   get transform() {
-    return (/** @type {import('../../core').InstanaBaseSpan} */ span) => {
-      try {
-        return mapper.transform(span);
-      } catch (error) {
-        return span;
-      }
-    };
+    return createSafeTransform(mapper.transform);
+  },
+  get otlpTransform() {
+    return createSafeTransform(otlpMapper.transform);
   }
 };
