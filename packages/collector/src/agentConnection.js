@@ -10,7 +10,7 @@ const pathUtil = require('path');
 const circularReferenceRemover = require('./util/removeCircular');
 const agentOpts = require('./agent/opts');
 const cmdline = require('./cmdline');
-const otlpTransformer = require('@_local/core/src/tracing/otlpTransformer');
+const otlpTransformer = require('@instana/core/src/tracing/otlpTransformer');
 /** @typedef {import('@instana/core/src/core').InstanaBaseSpan} InstanaBaseSpan */
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
@@ -344,7 +344,7 @@ exports.sendMetrics = function sendMetrics(data, cb) {
     }
   }
 
-  logger.debug(`Transformed to OTLP (first 2 metrics) ${JSON.stringify(otlpPreview)}`);
+  // logger.debug(`Transformed to OTLP (first 2 metrics) ${JSON.stringify(otlpPreview)}`);
 
   // Send directly without using sendData (which would transform again)
   sendOtlpData('/v1/metrics', otlpMetrics, err => {
