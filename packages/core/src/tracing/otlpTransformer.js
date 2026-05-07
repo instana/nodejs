@@ -4,7 +4,7 @@
 
 'use strict';
 
-const { getOtlpAttributeMappings } = require('./backend_mappers/mapper');
+const { getOtlpAttributeMappings } = require('./backend_mappers/otlpMapper');
 
 // Cached Resource information for Metrics (when no "from" field is present)
 let cachedHostId = null;
