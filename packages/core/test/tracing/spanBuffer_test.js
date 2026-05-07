@@ -605,6 +605,49 @@ describe('tracing/spanBuffer', () => {
         expect(spans).to.have.lengthOf(1);
         expect(span).to.deep.equal(span);
       });
+
+      it('should apply otlp http mapper after backend transformation when INSTANA_OTLP_FORMAT is true', () => {
+        const previousValue = process.env.INSTANA_OTLP_FORMAT;
+        process.env.INSTANA_OTLP_FORMAT = 'true';
+
+        const httpSpan = {
+          t: '1234567803',
+          s: '1234567892',
+          p: '1234567891',
+          n: 'node.http.server',
+          k: 1,
+          data: {
+            http: {
+              operation: 'GET',
+              endpoints: '/orders',
+              connection: 'localhost',
+              status: 200
+            }
+          }
+        };
+
+        spanBuffer.addSpan(httpSpan);
+        const spans = spanBuffer.getAndResetSpans();
+
+        if (previousValue === undefined) {
+          delete process.env.INSTANA_OTLP_FORMAT;
+        } else {
+          process.env.INSTANA_OTLP_FORMAT = previousValue;
+        }
+
+        expect(spans).to.have.lengthOf(1);
+        expect(spans[0].data.http['http.method']).to.equal('GET');
+        expect(spans[0].data.http['http.target']).to.equal('/orders');
+        expect(spans[0].data.http['http.host']).to.equal('localhost');
+        expect(spans[0].data.http['http.status_code']).to.equal(200);
+        expect(spans[0].data.http).to.not.have.property('operation');
+        expect(spans[0].data.http).to.not.have.property('endpoints');
+        expect(spans[0].data.http).to.not.have.property('connection');
+        expect(spans[0].data.http).to.not.have.property('method');
+        expect(spans[0].data.http).to.not.have.property('url');
+        expect(spans[0].data.http).to.not.have.property('host');
+        expect(spans[0].data.http).to.not.have.property('status');
+      });
     });
   });
 
