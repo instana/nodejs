@@ -10,7 +10,7 @@ const pathUtil = require('path');
 const circularReferenceRemover = require('./util/removeCircular');
 const agentOpts = require('./agent/opts');
 const cmdline = require('./cmdline');
-const otlpTransformer = require('@instana/core/src/tracing/otlpTransformer');
+const otlpTransformer = require('@_local/core/src/tracing/otlpTransformer');
 /** @typedef {import('@instana/core/src/core').InstanaBaseSpan} InstanaBaseSpan */
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
@@ -475,11 +475,11 @@ function sendData(path, data, cb, ignore404 = false) {
   cb = util.atMostOnce(`callback for sendData: ${path}`, cb);
   console.log(JSON.stringify(data));
   // Transform Instana format to OTLP format
-  const otlpFormat = otlpTransformer(data);
+  // const otlpFormat = otlpTransformer(data);
 
-  console.log(JSON.stringify(otlpFormat));
+  // console.log(JSON.stringify(otlpFormat));
 
-  const payloadAsString = JSON.stringify(otlpFormat, circularReferenceRemover());
+  const payloadAsString = JSON.stringify(data, circularReferenceRemover());
   if (typeof logger.trace === 'function') {
     logger.trace(`Sending data to ${path}.`);
   } else {
