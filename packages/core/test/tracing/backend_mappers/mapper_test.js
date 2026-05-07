@@ -5,7 +5,7 @@
 'use strict';
 
 const expect = require('chai').expect;
-const { transform } = require('../../../src/tracing/backend_mappers');
+const { transform, otlpTransform } = require('../../../src/tracing/backend_mappers');
 
 describe('tracing/backend_mappers', () => {
   let span;
@@ -326,6 +326,64 @@ describe('tracing/backend_mappers', () => {
 
       const result = transform(span);
       expect(result).to.deep.equal(span);
+    });
+  });
+  describe('OTLP HTTP Mapper', () => {
+    it('should transform backend-mapped http span fields to OTLP http attributes', () => {
+      span = {
+        n: 'node.http.server',
+        t: '4234567803',
+        s: '4234567892',
+        p: '4234567891',
+        data: {
+          http: {
+            operation: 'GET',
+            endpoints: '/api/users',
+            connection: 'localhost',
+            status: 200
+          }
+        }
+      };
+
+      const result = otlpTransform(transform(span));
+
+      expect(result.data.http['http.method']).to.equal('GET');
+      expect(result.data.http['http.target']).to.equal('/api/users');
+      expect(result.data.http['http.host']).to.equal('localhost');
+      expect(result.data.http['http.status_code']).to.equal(200);
+
+      expect(result.data.http).to.not.have.property('operation');
+      expect(result.data.http).to.not.have.property('endpoints');
+      expect(result.data.http).to.not.have.property('connection');
+      expect(result.data.http).to.not.have.property('method');
+      expect(result.data.http).to.not.have.property('url');
+      expect(result.data.http).to.not.have.property('host');
+      expect(result.data.http).to.not.have.property('status');
+    });
+
+    it('should keep unmapped backend http fields as section-prefixed OTLP attributes', () => {
+      span = {
+        n: 'node.http.server',
+        data: {
+          http: {
+            method: 'POST',
+            url: '/orders',
+            host: 'service.local',
+            custom_header: 'x-test'
+          }
+        }
+      };
+
+      const result = otlpTransform(span);
+
+      expect(result.data.http['http.method']).to.equal('POST');
+      expect(result.data.http['http.target']).to.equal('/orders');
+      expect(result.data.http['http.host']).to.equal('service.local');
+      expect(result.data.http['http.custom_header']).to.equal('x-test');
+      expect(result.data.http).to.not.have.property('method');
+      expect(result.data.http).to.not.have.property('url');
+      expect(result.data.http).to.not.have.property('host');
+      expect(result.data.http).to.not.have.property('custom_header');
     });
   });
 });
