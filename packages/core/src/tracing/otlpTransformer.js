@@ -182,7 +182,7 @@ function transformSpan(instanaSpan) {
   if (typeof instanaSpan.ts !== 'number' || typeof instanaSpan.d !== 'number') {
     // Return a minimal valid span if timestamps are missing
     return {
-      traceId: instanaSpan.t || '0',
+      traceId: normalizeTraceId(instanaSpan.t || '0'),
       spanId: instanaSpan.s || '0',
       name: instanaSpan.n || 'unknown',
       kind: 0,
@@ -194,7 +194,7 @@ function transformSpan(instanaSpan) {
   }
 
   const otelSpan = {
-    traceId: instanaSpan.t,
+    traceId: normalizeTraceId(instanaSpan.t),
     spanId: instanaSpan.s,
     name: instanaSpan.n || 'unknown',
     kind: convertSpanKind(instanaSpan.k),
@@ -210,6 +210,17 @@ function transformSpan(instanaSpan) {
   }
 
   return otelSpan;
+}
+
+function normalizeTraceId(traceId) {
+  const normalized = String(traceId || '0');
+  if (normalized.length === 32) {
+    return normalized;
+  }
+  if (normalized.length > 32) {
+    return normalized.slice(-32);
+  }
+  return normalized.padStart(32, '0');
 }
 
 /**

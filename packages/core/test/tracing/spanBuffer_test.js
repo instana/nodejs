@@ -129,17 +129,17 @@ describe('tracing/spanBuffer', () => {
       spanBuffer.addBatchableSpanName('batchable');
     });
 
-    beforeEach(() => {
-      downstreamConnectionStub.sendSpans.resetHistory();
-      spanBuffer.setTransmitImmediate(false);
-      spanBuffer.activate({
-        tracing: {
-          spanBatchingEnabled: false
-        }
-      });
-      expect(global.setTimeout.called).to.be.true;
-      global.setTimeout.resetHistory();
+beforeEach(() => {
+    downstreamConnectionStub.sendSpans.resetHistory();
+    spanBuffer.setTransmitImmediate(false);
+    spanBuffer.activate({
+      tracing: {
+        spanBatchingEnabled: false
+      }
     });
+    expect(global.setTimeout.called).to.be.true;
+    global.setTimeout.resetHistory();
+  });
 
     afterEach(() => {
       spanBuffer.deactivate();
@@ -609,7 +609,7 @@ describe('tracing/spanBuffer', () => {
         });
       });
 
-      afterEach(() => spanBuffer.deactivate());
+      afterEach(() => {});
       const span = {
         t: '1234567803',
         s: '1234567892',
@@ -639,9 +639,11 @@ describe('tracing/spanBuffer', () => {
         expect(span).to.deep.equal(span);
       });
 
-      it('should apply otlp http mapper after backend transformation when INSTANA_OTLP_FORMAT is true', () => {
+      it('should transform http spans before buffering and convert the transmitted batch to OTLP when INSTANA_OTLP_FORMAT is true', () => {
         const previousValue = process.env.INSTANA_OTLP_FORMAT;
         process.env.INSTANA_OTLP_FORMAT = 'true';
+        downstreamConnectionStub.sendSpans.resetHistory();
+        spanBuffer.setTransmitImmediate(true);
 
         const httpSpan = {
           t: '1234567803',
@@ -649,6 +651,13 @@ describe('tracing/spanBuffer', () => {
           p: '1234567891',
           n: 'node.http.server',
           k: 1,
+          f: {
+            e: '45543',
+            h: 'localhost'
+          },
+          ts: timestamp(Date.now()),
+          d: 25,
+          ec: 0,
           data: {
             http: {
               operation: 'GET',
@@ -660,26 +669,39 @@ describe('tracing/spanBuffer', () => {
         };
 
         spanBuffer.addSpan(httpSpan);
-        const spans = spanBuffer.getAndResetSpans();
 
+        expect(downstreamConnectionStub.sendSpans.calledOnce).to.be.true;
+        const sentPayload = downstreamConnectionStub.sendSpans.getCall(0).args[0];
+        const sentSpan = sentPayload.resourceSpans[0].scopeSpans[0].spans[0];
+
+        expect(sentSpan.traceId).to.have.lengthOf(32);
+        expect(sentSpan.name).to.equal('node.http.server');
+        expect(sentSpan.kind).to.equal(2);
+        expect(sentSpan.attributes).to.deep.include.members([
+          {
+            key: 'http.request.method',
+            value: { stringValue: 'GET' }
+          },
+          {
+            key: 'url.full',
+            value: { stringValue: '/orders' }
+          },
+          {
+            key: 'server.address',
+            value: { stringValue: 'localhost' }
+          },
+          {
+            key: 'http.response.status_code',
+            value: { intValue: 200 }
+          }
+        ]);
+
+        spanBuffer.setTransmitImmediate(false);
         if (previousValue === undefined) {
           delete process.env.INSTANA_OTLP_FORMAT;
         } else {
           process.env.INSTANA_OTLP_FORMAT = previousValue;
         }
-
-        expect(spans).to.have.lengthOf(1);
-        expect(spans[0].data.http['http.method']).to.equal('GET');
-        expect(spans[0].data.http['http.target']).to.equal('/orders');
-        expect(spans[0].data.http['http.host']).to.equal('localhost');
-        expect(spans[0].data.http['http.status_code']).to.equal(200);
-        expect(spans[0].data.http).to.not.have.property('operation');
-        expect(spans[0].data.http).to.not.have.property('endpoints');
-        expect(spans[0].data.http).to.not.have.property('connection');
-        expect(spans[0].data.http).to.not.have.property('method');
-        expect(spans[0].data.http).to.not.have.property('url');
-        expect(spans[0].data.http).to.not.have.property('host');
-        expect(spans[0].data.http).to.not.have.property('status');
       });
     });
   });
