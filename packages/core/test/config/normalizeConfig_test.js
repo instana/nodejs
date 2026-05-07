@@ -90,11 +90,11 @@ describe('config.normalizeConfig', () => {
       const config = coreConfig.normalize({
         userConfig: {
           metrics: {
-            transmissionDelay: 9753
+            transmissionDelay: 4753
           }
         }
       });
-      expect(config.metrics.transmissionDelay).to.equal(9753);
+      expect(config.metrics.transmissionDelay).to.equal(4753);
     });
 
     it('should use custom metrics transmission settings from env vars', () => {
@@ -123,8 +123,10 @@ describe('config.normalizeConfig', () => {
 
     it('should use max metrics transmission settings when value exceeds max 5000', () => {
       const config = coreConfig.normalize({
-        metrics: {
-          transmissionDelay: 9753
+        userConfig: {
+          metrics: {
+            transmissionDelay: 9753
+          }
         }
       });
       expect(config.metrics.transmissionDelay).to.equal(5000);
