@@ -4,12 +4,14 @@
 
 'use strict';
 
-// Gespeicherte Resource-Informationen für Metrics (wenn kein "from" Feld vorhanden)
+const { getOtlpAttributeMappings } = require('./backend_mappers/mapper');
+
+// Cached Resource information for Metrics (when no "from" field is present)
 let cachedHostId = null;
 let cachedPid = null;
 
 /**
- * Setzt die Host-ID für Resource Attributes
+ * Sets the Host-ID for Resource Attributes
  * @param {string} hostId - Host ID
  */
 function setHostId(hostId) {
@@ -17,7 +19,7 @@ function setHostId(hostId) {
 }
 
 /**
- * Setzt die PID für Resource Attributes
+ * Sets the PID for Resource Attributes
  * @param {string|number} pid - Process ID
  */
 function setPid(pid) {
@@ -25,100 +27,7 @@ function setPid(pid) {
 }
 
 /**
- * Transformiert Instana Traces Format zu OpenTelemetry Format
- *
- * OTEL Format Beispiel:
- * {
- *   "resourceSpans": [{
- *     "resource": {
- *       "attributes": [
- *         {"key": "service.name", "value": {"stringValue": "demoService"}},
- *         {"key": "process.pid", "value": {"intValue": 12345}},
- *         {"key": "host.name", "value": {"stringValue": "My Fancy Host"}}
- *       ]
- *     },
- *     "scopeSpans": [{
- *       "scope": {
- *         "name": "@instana/collector",
- *         "version": "1.0.0"
- *       },
- *       "spans": [{
- *         "traceId": "0a0b0c0d010203040506070809008081",
- *         "spanId": "010203040a0b0c0d",
- *         "parentSpanId": "0d0c0b0a04030201",
- *         "name": "some span",
- *         "kind": 3,
- *         "startTimeUnixNano": "1775732779960000000",
- *         "endTimeUnixNano": "1775732779969000000",
- *         "attributes": [
- *           {"key": "http.method", "value": {"stringValue": "GET"}},
- *           {"key": "http.status_code", "value": {"intValue": 200}},
- *           {"key": "http.url", "value": {"stringValue": "/"}}
- *         ],
- *         "status": {"code": 1}
- *       }]
- *     }]
- *   }]
- * }
- *
- * INSTANA Format Beispiel:
- * [{
- *   "t": "b94dae370181cbd5",           // trace ID
- *   "s": "3c84e4b658761152",           // span ID
- *   "p": "parent_span_id",             // parent span ID (optional)
- *   "n": "node.http.server",           // span name
- *   "k": 1,                            // span kind (1=SERVER, 2=CLIENT, 3=PRODUCER, 4=CONSUMER, 5=INTERNAL)
- *   "f": {                             // from (resource attributes)
- *     "e": "74662",                    // entity ID
- *     "h": "7e:0d:24:ff:fe:aa:33:af"  // host ID
- *   },
- *   "ec": 0,                           // error count
- *   "ts": 1775729099820,               // timestamp in milliseconds
- *   "d": 8,                            // duration in milliseconds
- *   "stack": [],
- *   "data": {                          // span attributes
- *     "http": {
- *       "path_tpl": "/",
- *       "status": 304,
- *       "method": "GET",
- *       "url": "/",
- *       "host": "localhost:2807"
- *     }
- *   }
- * }]
- */
-
-/**
- * OTEL Metrics Format Beispiel:
- * {
- *   "resourceMetrics": [{
- *     "resource": {
- *       "attributes": [
- *         {"key": "service.name", "value": {"stringValue": "metricsService"}},
- *         {"key": "process.pid", "value": {"intValue": 4711}},
- *         {"key": "host.name", "value": {"stringValue": "My Lame Host"}}
- *       ]
- *     },
- *     "scopeMetrics": [{
- *       "scope": {
- *         "name": "instrumentationScope",
- *         "version": "13.2"
- *       },
- *       "metrics": [{
- *         "name": "sumMetricName",
- *         "sum": {
- *           "dataPoints": [{
- *             "asDouble": 42.42
- *           }]
- *         }
- *       }]
- *     }]
- *   }]
- * }
- */
-
-/**
- * Konvertiert Instana Span Kind zu OTEL Span Kind
+ * Converts Instana Span Kind to OTEL Span Kind
  * @param {number} instanaKind - Instana span kind
  * @returns {number} OTEL span kind
  */
@@ -138,68 +47,71 @@ function convertSpanKind(instanaKind) {
 }
 
 /**
- * Konvertiert Millisekunden zu Nanosekunden (als String)
- * @param {number} ms - Millisekunden
- * @returns {string} Nanosekunden als String
+ * Converts milliseconds to nanoseconds (as String)
+ * @param {number} ms - Milliseconds
+ * @returns {string} Nanoseconds as String
  */
 function msToNano(ms) {
   return String(ms * 1000000);
 }
 
 /**
- * Erstellt OTEL Attribute aus Instana Span Data
+ * Creates OTEL Attributes from Instana Span Data using mapper schema
  * @param {Object} data - Instana span data
  * @returns {Array} OTEL attributes array
  */
 function createAttributes(data) {
   const attributes = [];
+  const mappings = getOtlpAttributeMappings();
 
   if (!data) {
     return attributes;
   }
 
-  // HTTP Attribute
-  if (data.http) {
-    if (data.http.method) {
-      attributes.push({
-        key: 'http.method',
-        value: { stringValue: data.http.method }
-      });
-    }
-    if (data.http.status) {
-      attributes.push({
-        key: 'http.status_code',
-        value: { intValue: data.http.status }
-      });
-    }
-    if (data.http.url) {
-      attributes.push({
-        key: 'http.url',
-        value: { stringValue: data.http.url }
-      });
-    }
-    if (data.http.host) {
-      attributes.push({
-        key: 'http.host',
-        value: { stringValue: data.http.host }
-      });
-    }
-    if (data.http.path_tpl) {
-      attributes.push({
-        key: 'http.target',
-        value: { stringValue: data.http.path_tpl }
-      });
-    }
-  }
+  // Process each data section (http, service, etc.)
+  Object.keys(data).forEach(dataKey => {
+    const dataSection = data[dataKey];
+    const sectionMappings = mappings[dataKey];
 
-  // Weitere Datenfelder können hier hinzugefügt werden
-  // z.B. data.db, data.service, etc.
+    if (!sectionMappings || typeof dataSection !== 'object') {
+      // If no mappings exist for this section, add as-is
+      if (dataSection !== null && dataSection !== undefined) {
+        const stringValue = typeof dataSection === 'object' ? JSON.stringify(dataSection) : String(dataSection);
+        attributes.push({ key: dataKey, value: { stringValue } });
+      }
+      return;
+    }
+
+    // Apply mappings for this section
+    Object.keys(dataSection).forEach(field => {
+      const value = dataSection[field];
+      if (value === null || value === undefined) {
+        return;
+      }
+
+      const otlpKey = sectionMappings[field] || `${dataKey}.${field}`;
+
+      // Determine value type and format
+      if (otlpKey === 'http.status_code' && typeof value === 'number') {
+        attributes.push({ key: otlpKey, value: { intValue: value } });
+      } else if (typeof value === 'string') {
+        attributes.push({ key: otlpKey, value: { stringValue: value } });
+      } else if (typeof value === 'number') {
+        attributes.push({ key: otlpKey, value: { intValue: value } });
+      } else if (typeof value === 'boolean') {
+        attributes.push({ key: otlpKey, value: { boolValue: value } });
+      } else {
+        // Convert objects to JSON strings
+        attributes.push({ key: otlpKey, value: { stringValue: JSON.stringify(value) } });
+      }
+    });
+  });
 
   return attributes;
 }
 
 /**
- * Erstellt Resource Attributes aus Instana "from" Feld
+ * Creates Resource Attributes from Instana "from" field
  * @param {Object} from - Instana from object
  * @returns {Array} OTEL resource attributes
  */
@@ -217,14 +129,14 @@ function createResourceAttributes(from) {
     value: { stringValue: '@instana/collector' }
   });
 
-  // Service Name - verwende process.title oder einen Default
+  // Service Name - use process.title or a default
   const serviceName = process.env.SERVICE_NAME;
   attributes.push({
     key: 'service.name',
     value: { stringValue: serviceName }
   });
 
-  // Verwende "from" Feld wenn vorhanden, sonst cached Werte
+  // Use "from" field if present, otherwise cached values
   const pid = from && from.e ? from.e : cachedPid;
   const hostId = from && from.h ? from.h : cachedHostId;
 
@@ -248,7 +160,7 @@ function createResourceAttributes(from) {
 }
 
 /**
- * Bestimmt den Status Code basierend auf Error Count
+ * Determines the status code based on Error Count
  * @param {number} errorCount - Instana error count
  * @returns {Object} OTEL status object
  */
@@ -261,7 +173,7 @@ function createStatus(errorCount) {
 }
 
 /**
- * Transformiert einen einzelnen Instana Span zu OTEL Span
+ * Transforms a single Instana Span to OTEL Span
  * @param {Object} instanaSpan - Instana span object
  * @returns {Object} OTEL span object
  */
@@ -292,7 +204,7 @@ function transformSpan(instanaSpan) {
     status: createStatus(instanaSpan.ec || 0)
   };
 
-  // Parent Span ID ist optional
+  // Parent Span ID is optional
   if (instanaSpan.p) {
     otelSpan.parentSpanId = instanaSpan.p;
   }
@@ -301,8 +213,11 @@ function transformSpan(instanaSpan) {
 }
 
 /**
- * Transformiert Instana Traces zu OTEL Format
- * @param {Array} instanaTraces - Array von Instana spans
+ * Transforms Instana Traces to OTEL Format
+ * Similar to the transform pattern in mapper.js, this function processes
+ * Instana spans and converts them to OpenTelemetry format.
+ *
+ * @param {Array} instanaTraces - Array of Instana spans
  * @returns {Object} OTEL traces object
  */
 function transform(instanaTraces) {
@@ -312,11 +227,11 @@ function transform(instanaTraces) {
     };
   }
 
-  // Gruppiere Spans nach Resource (from field)
+  // Group Spans by Resource (from field)
   const spansByResource = new Map();
 
   instanaTraces.forEach(function (instanaSpan) {
-    // Cache PID und Host-ID aus dem ersten Span für Metrics
+    // Cache PID and Host-ID from the first span for Metrics
     if (instanaSpan.f) {
       if (instanaSpan.f.e && !cachedPid) {
         setPid(instanaSpan.f.e);
@@ -338,7 +253,7 @@ function transform(instanaTraces) {
     spansByResource.get(resourceKey).spans.push(instanaSpan);
   });
 
-  // Erstelle OTEL ResourceSpans
+  // Create OTEL ResourceSpans
   const resourceSpans = Array.from(spansByResource.values()).map(function (group) {
     const otelSpans = group.spans.map(transformSpan);
 
@@ -364,10 +279,10 @@ function transform(instanaTraces) {
 }
 
 /**
- * Flacht verschachtelte Objekte zu einem flachen Objekt mit Punkt-Notation
- * @param {Object} obj - Verschachteltes Objekt
- * @param {string} prefix - Prefix für die Keys
- * @returns {Object} Flaches Objekt
+ * Flattens nested objects to a flat object with dot notation
+ * @param {Object} obj - Nested object
+ * @param {string} prefix - Prefix for the keys
+ * @returns {Object} Flat object
  */
 function flattenObject(obj, prefix) {
   prefix = prefix || '';
@@ -386,7 +301,7 @@ function flattenObject(obj, prefix) {
     }
 
     if (typeof value === 'object' && !Array.isArray(value)) {
-      // Rekursiv verschachtelte Objekte flach machen
+      // Recursively flatten nested objects
       const nested = flattenObject(value, newKey);
       for (const nestedKey in nested) {
         if (nested.hasOwnProperty(nestedKey)) {
@@ -394,7 +309,7 @@ function flattenObject(obj, prefix) {
         }
       }
     } else if (typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean') {
-      // Nur primitive Werte übernehmen
+      // Only take primitive values
       flattened[newKey] = value;
     }
   }
@@ -403,12 +318,12 @@ function flattenObject(obj, prefix) {
 }
 
 /**
- * Transformiert Instana Metrics zu OTEL Format
- * @param {Array} instanaMetrics - Array von Instana metrics
+ * Transforms Instana Metrics to OTEL Format
+ * @param {Array|Object} instanaMetrics - Array or object of Instana metrics
  * @returns {Object} OTEL metrics object
  */
 function transformMetrics(instanaMetrics) {
-  // Wenn es ein Objekt ist, konvertiere die Werte zu einem Array
+  // If it's an object, convert the values to an array
   let metricsArray = instanaMetrics;
 
   if (!Array.isArray(instanaMetrics)) {
@@ -418,10 +333,10 @@ function transformMetrics(instanaMetrics) {
       };
     }
 
-    // Flache das verschachtelte Objekt
+    // Flatten the nested object
     const flattenedMetrics = flattenObject(instanaMetrics);
 
-    // Konvertiere flaches Objekt zu Array von Metrics
+    // Convert flat object to array of Metrics
     metricsArray = Object.keys(flattenedMetrics).map(function (key) {
       const value = flattenedMetrics[key];
       return {
@@ -440,7 +355,7 @@ function transformMetrics(instanaMetrics) {
     };
   }
 
-  // Gruppiere Metrics nach Resource
+  // Group Metrics by Resource
   const metricsByResource = new Map();
 
   metricsArray.forEach(function (instanaMetric) {
@@ -456,10 +371,10 @@ function transformMetrics(instanaMetrics) {
     metricsByResource.get(resourceKey).metrics.push(instanaMetric);
   });
 
-  // Erstelle OTEL ResourceMetrics
+  // Create OTEL ResourceMetrics
   const resourceMetrics = Array.from(metricsByResource.values()).map(function (group) {
     const otelMetrics = group.metrics.map(function (metric) {
-      // Bestimme den Metrik-Typ basierend auf dem Wert
+      // Determine the metric type based on the value
       let metricData;
       if (typeof metric.value === 'number') {
         metricData = {
@@ -472,7 +387,7 @@ function transformMetrics(instanaMetrics) {
           }
         };
       } else if (typeof metric.value === 'string') {
-        // Strings als Gauge mit String-Wert (nicht standard OTLP, aber für Debugging)
+        // Strings as Gauge with String value (not standard OTLP, but for debugging)
         metricData = {
           gauge: {
             dataPoints: [
@@ -499,7 +414,7 @@ function transformMetrics(instanaMetrics) {
           }
         };
       } else {
-        // Fallback für unbekannte Typen
+        // Fallback for unknown types
         metricData = {
           sum: {
             dataPoints: [
@@ -539,6 +454,7 @@ function transformMetrics(instanaMetrics) {
 }
 
 module.exports = transform;
+module.exports.transform = transform;
 module.exports.transformTraces = transform;
 module.exports.transformMetrics = transformMetrics;
 module.exports.setHostId = setHostId;
