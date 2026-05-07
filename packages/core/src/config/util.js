@@ -6,6 +6,13 @@
 
 const { CONFIG_SOURCES } = require('../util/constants');
 
+const SOURCE_LABELS = {
+  [CONFIG_SOURCES.ENV]: 'env',
+  [CONFIG_SOURCES.INCODE]: 'incode',
+  [CONFIG_SOURCES.AGENT]: 'agent',
+  [CONFIG_SOURCES.DEFAULT]: 'default'
+};
+
 /** @type {import('../core').GenericLogger} */
 let logger;
 
@@ -62,11 +69,6 @@ exports.resolve = function resolve({ envValue, inCodeValue, agentValue, defaultV
         source: CONFIG_SOURCES[/** @type {keyof typeof CONFIG_SOURCES} */ (sourceKey.toUpperCase())]
       };
 
-      if (
-        CONFIG_SOURCES[/** @type {keyof typeof CONFIG_SOURCES} */ (sourceKey.toUpperCase())] !== CONFIG_SOURCES.DEFAULT
-      ) {
-        logger?.debug(`[config] Resolved from ${sourceKey}: ${JSON.stringify(parsedValue)}`);
-      }
       return true;
     }
 
@@ -79,4 +81,20 @@ exports.resolve = function resolve({ envValue, inCodeValue, agentValue, defaultV
       source: CONFIG_SOURCES.DEFAULT
     }
   );
+};
+
+/**
+ * @param {{ configPath: string, source: number, value: any, envVarName?: string }} params
+ */
+exports.log = function log({ configPath, source, value, envVarName }) {
+  if (source === CONFIG_SOURCES.DEFAULT) {
+    return;
+  }
+
+  if (source === CONFIG_SOURCES.ENV && envVarName) {
+    logger?.debug(`[config] ${configPath} <- env:${envVarName} = ${JSON.stringify(value)}`);
+    return;
+  }
+
+  logger?.debug(`[config] ${configPath} <- ${SOURCE_LABELS[source]}:${configPath} = ${JSON.stringify(value)}`);
 };
