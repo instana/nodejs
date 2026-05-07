@@ -10,7 +10,7 @@ const pathUtil = require('path');
 const circularReferenceRemover = require('./util/removeCircular');
 const agentOpts = require('./agent/opts');
 const cmdline = require('./cmdline');
-const otlpTransformer = require('./otlpTransformer');
+const otlpTransformer = require('@instana/core/src/tracing/otlpTransformer');
 /** @typedef {import('@instana/core/src/core').InstanaBaseSpan} InstanaBaseSpan */
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
