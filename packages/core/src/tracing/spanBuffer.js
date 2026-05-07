@@ -6,7 +6,7 @@
 'use strict';
 
 const tracingMetrics = require('./metrics');
-const { transform } = require('./backend_mappers');
+const { transform, otlpTransform } = require('./backend_mappers');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -457,12 +457,12 @@ function transmitSpans() {
   batchingBuckets.clear();
 
   // Convert spans if OTel format is configured
-  const processedSpans = convertSpansIfNeeded(spansToSend);
+  // const processedSpans = spansToSend;
 
   // We restore the content of the spans array if sending them downstream was not successful. We do not restore
   // batchingBuckets, though. This is deliberate. In the worst case, we might miss some batching opportunities, but
   // since sending spans downstream will take a few milliseconds, even that will be rare (and it is acceptable).
-  downstreamConnection.sendSpans(processedSpans, function sendSpans(/** @type {Error} */ error) {
+  downstreamConnection.sendSpans(spansToSend, function sendSpans(/** @type {Error} */ error) {
     if (error) {
       logger.warn(`Failed to transmit spans, will retry in ${transmissionDelay} ms. ${error?.message} ${error?.stack}`);
       spans = spans.concat(spansToSend);
@@ -474,18 +474,6 @@ function transmitSpans() {
       transmissionTimeoutHandle.unref();
     }
   });
-}
-
-/**
- * Convert spans to configured format if needed
- *
- * @param {Array.<import('../core').InstanaBaseSpan>} spansToConvert - Spans to convert
- * @returns {Array.<*>} Converted spans
- */
-function convertSpansIfNeeded(spansToConvert) {
-  // Don't convert to OTLP here - agentConnection.js will handle OTLP conversion
-  // Just apply backend mapper transformation
-  return spansToConvert.map(span => transform(span));
 }
 
 /**
@@ -525,5 +513,12 @@ function removeSpansIfNecessary() {
  * @returns {import('../core').InstanaBaseSpan} span
  */
 function applySpanTransformation(span) {
-  return transform(span);
+  // span is internal format
+  const transformedForBE = transform(span);
+  // now it is converted to BE format
+  if (process.env.INSTANA_OTLP_FORMAT === 'true') {
+    return otlpTransform(transformedForBE);
+  }
+
+  return transformedForBE;
 }

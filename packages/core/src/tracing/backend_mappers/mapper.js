@@ -41,36 +41,6 @@ const fieldMappings = {
 };
 
 /**
- * OTLP attribute mappings for different span types.
- * Maps Instana span data fields to OTLP semantic convention attributes.
- *
- * @type {Object<string, Object<string, string>>}
- */
-const otlpAttributeMappings = {
-  http: {
-    method: 'http.method',
-    url: 'http.target',
-    path_tpl: 'http.route',
-    path: 'http.route',
-    status: 'http.status_code',
-    host: 'http.host',
-    status_text: 'http.status_text',
-    error: 'http.error'
-  },
-  service: {
-    name: 'service.name'
-  }
-};
-
-/**
- * Get OTLP attribute mappings
- * @returns {Object<string, Object<string, string>>}
- */
-module.exports.getOtlpAttributeMappings = function () {
-  return otlpAttributeMappings;
-};
-
-/**
  * Transforms span data fields to match the backend format.
  *
  * @param {import('../../core').InstanaBaseSpan} span
