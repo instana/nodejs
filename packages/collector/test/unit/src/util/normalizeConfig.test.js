@@ -199,4 +199,46 @@ describe('util.normalizeConfig', () => {
       expect(config.reportUnhandledPromiseRejections).to.be.true;
     });
   });
+
+  describe('disableCollectorInitEvent', () => {
+    it('should default to true', () => {
+      const config = normalizeConfig();
+
+      expect(config.disableCollectorInitEvent).to.be.true;
+    });
+
+    it('should allow explicit false', () => {
+      const config = normalizeConfig({
+        disableCollectorInitEvent: false
+      });
+
+      expect(config.disableCollectorInitEvent).to.be.false;
+    });
+
+    it('should allow explicit true', () => {
+      const config = normalizeConfig({
+        disableCollectorInitEvent: true
+      });
+
+      expect(config.disableCollectorInitEvent).to.be.true;
+    });
+
+    it('should use env over config over in-code', () => {
+      process.env.INSTANA_DISABLE_COLLECTOR_INIT_EVENT = 'false';
+
+      const config = normalizeConfig({
+        disableCollectorInitEvent: true
+      });
+
+      expect(config.disableCollectorInitEvent).to.be.false;
+    });
+
+    it('should fallback to default for invalid env value', () => {
+      process.env.INSTANA_DISABLE_COLLECTOR_INIT_EVENT = 'invalid';
+
+      const config = normalizeConfig();
+
+      expect(config.disableCollectorInitEvent).to.be.true;
+    });
+  });
 });

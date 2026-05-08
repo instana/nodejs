@@ -33,12 +33,8 @@ module.exports = function normalizeConfig(userConfig = {}) {
   finalConfig.agentRequestTimeout = normalizeAgentRequestTimeout(userConfig, defaults);
   finalConfig.autoProfile = normalizeAutoProfile(userConfig, defaults);
   finalConfig.reportUnhandledPromiseRejections = normalizeUnhandledRejections(userConfig);
+  finalConfig.disableCollectorInitEvent = normalizeCollectorInitEvent(userConfig);
   finalConfig.tracing = userConfig.tracing || {};
-
-  if (finalConfig.disableCollectorInitEvent == null) {
-    const envValue = process.env.INSTANA_DISABLE_COLLECTOR_INIT_EVENT;
-    finalConfig.disableCollectorInitEvent = envValue === 'true' ? true : defaults.disableCollectorInitEvent;
-  }
 
   return finalConfig;
 };
@@ -120,6 +116,22 @@ function normalizeUnhandledRejections(userConfig) {
     {
       inCodeValue: userConfig.reportUnhandledPromiseRejections,
       defaultValue: false
+    },
+    [validate.booleanValidator]
+  );
+  return value;
+}
+
+/**
+ * @param {import('../types/collector').CollectorConfig} userConfig
+ * @returns {boolean}
+ */
+function normalizeCollectorInitEvent(userConfig) {
+  const { value } = util.resolve(
+    {
+      envValue: 'INSTANA_DISABLE_COLLECTOR_INIT_EVENT',
+      inCodeValue: userConfig.disableCollectorInitEvent,
+      defaultValue: defaults.disableCollectorInitEvent
     },
     [validate.booleanValidator]
   );
