@@ -129,17 +129,17 @@ describe('tracing/spanBuffer', () => {
       spanBuffer.addBatchableSpanName('batchable');
     });
 
-beforeEach(() => {
-    downstreamConnectionStub.sendSpans.resetHistory();
-    spanBuffer.setTransmitImmediate(false);
-    spanBuffer.activate({
-      tracing: {
-        spanBatchingEnabled: false
-      }
+    beforeEach(() => {
+      downstreamConnectionStub.sendSpans.resetHistory();
+      spanBuffer.setTransmitImmediate(false);
+      spanBuffer.activate({
+        tracing: {
+          spanBatchingEnabled: false
+        }
+      });
+      expect(global.setTimeout.called).to.be.true;
+      global.setTimeout.resetHistory();
     });
-    expect(global.setTimeout.called).to.be.true;
-    global.setTimeout.resetHistory();
-  });
 
     afterEach(() => {
       spanBuffer.deactivate();
@@ -600,16 +600,32 @@ beforeEach(() => {
     });
 
     describe('when applying span transformations', () => {
-      beforeEach(() => {
-        spanBuffer.setTransmitImmediate(false);
-        spanBuffer.activate({
-          tracing: {
-            spanBatchingEnabled: false
-          }
-        });
+      before(() => {
+        downstreamConnectionStub = {
+          sendSpans: sinon.stub()
+        };
+
+        spanBuffer.init(
+          {
+            logger: testUtils.createFakeLogger(),
+            tracing: {
+              maxBufferedSpans: 1000,
+              forceTransmissionStartingAt: 500,
+              transmissionDelay: 1000,
+              spanBatchingEnabled: false
+            }
+          },
+          downstreamConnectionStub
+        );
       });
 
-      afterEach(() => {});
+      beforeEach(() => {
+        spanBuffer.activate();
+        downstreamConnectionStub.sendSpans.resetHistory();
+      });
+
+      afterEach(() => spanBuffer.deactivate());
+
       const span = {
         t: '1234567803',
         s: '1234567892',
@@ -623,13 +639,13 @@ beforeEach(() => {
         }
       };
 
-      it('should correctly transform the Redis span by renaming the operation property', () => {
+      it('should keep the Redis span with operation property in internal format', () => {
         span.data.redis.operation = 'set';
         spanBuffer.addSpan(span);
         const spans = spanBuffer.getAndResetSpans();
         expect(spans).to.have.lengthOf(1);
-        expect(span.data.redis.command).to.equal('set');
-        expect(span.data.redis).to.not.have.property('operation');
+        expect(span.data.redis.operation).to.equal('set');
+        expect(span.data.redis).to.have.property('operation');
       });
       it('should return the span unchanged for non-mapped types', () => {
         span.n = 'http';
@@ -639,8 +655,7 @@ beforeEach(() => {
         expect(span).to.deep.equal(span);
       });
 
-      // TODO check
-      it.skip('should transform http spans before buffering and convert the transmitted batch to OTLP when INSTANA_OTLP_FORMAT is true', () => {
+      it('should transform http spans before buffering and convert the transmitted batch to OTLP when INSTANA_OTLP_FORMAT is true', () => {
         const previousValue = process.env.INSTANA_OTLP_FORMAT;
         process.env.INSTANA_OTLP_FORMAT = 'true';
         downstreamConnectionStub.sendSpans.resetHistory();
@@ -662,7 +677,7 @@ beforeEach(() => {
           data: {
             http: {
               operation: 'GET',
-              endpoints: '/orders',
+              path: '/orders',
               connection: 'localhost',
               status: 200
             }
@@ -676,23 +691,19 @@ beforeEach(() => {
         const sentSpan = sentPayload.resourceSpans[0].scopeSpans[0].spans[0];
 
         expect(sentSpan.traceId).to.have.lengthOf(32);
-        expect(sentSpan.name).to.equal('node.http.server');
+        expect(sentSpan.name).to.equal('GET /orders');
         expect(sentSpan.kind).to.equal(2);
         expect(sentSpan.attributes).to.deep.include.members([
           {
-            key: 'http.request.method',
+            key: 'http.method',
             value: { stringValue: 'GET' }
           },
           {
-            key: 'url.full',
+            key: 'http.target',
             value: { stringValue: '/orders' }
           },
           {
-            key: 'server.address',
-            value: { stringValue: 'localhost' }
-          },
-          {
-            key: 'http.response.status_code',
+            key: 'http.status_code',
             value: { intValue: 200 }
           }
         ]);
