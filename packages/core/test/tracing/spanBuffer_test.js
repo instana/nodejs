@@ -124,18 +124,12 @@ describe('tracing/spanBuffer', () => {
     });
 
     beforeEach(() => {
-      delete process.env.INSTANA_OTLP_FORMAT;
-      spanBuffer.setTransmitImmediate(false);
-      downstreamConnectionStub.sendSpans.resetHistory();
       spanBuffer.activate();
       expect(global.setTimeout.called).to.be.true;
       global.setTimeout.resetHistory();
     });
 
     afterEach(() => {
-      delete process.env.INSTANA_OTLP_FORMAT;
-      spanBuffer.setTransmitImmediate(false);
-      downstreamConnectionStub.sendSpans.resetHistory();
       spanBuffer.deactivate();
     });
 
@@ -580,11 +574,32 @@ describe('tracing/spanBuffer', () => {
     });
 
     describe('when applying span transformations', () => {
+      before(() => {
+        downstreamConnectionStub = {
+          sendSpans: sinon.stub()
+        };
+
+        spanBuffer.init(
+          {
+            logger: testUtils.createFakeLogger(),
+            tracing: {
+              maxBufferedSpans: 1000,
+              forceTransmissionStartingAt: 500,
+              transmissionDelay: 1000,
+              spanBatchingEnabled: false
+            }
+          },
+          downstreamConnectionStub
+        );
+      });
+
       beforeEach(() => {
+        spanBuffer.activate();
         downstreamConnectionStub.sendSpans.resetHistory();
       });
 
-      afterEach(() => {});
+      afterEach(() => spanBuffer.deactivate());
+
       const span = {
         t: '1234567803',
         s: '1234567892',
@@ -615,7 +630,7 @@ describe('tracing/spanBuffer', () => {
       });
 
       // TODO check
-      it.skip('should transform http spans before buffering and convert the transmitted batch to OTLP when INSTANA_OTLP_FORMAT is true', () => {
+      it('should transform http spans before buffering and convert the transmitted batch to OTLP when INSTANA_OTLP_FORMAT is true', () => {
         const previousValue = process.env.INSTANA_OTLP_FORMAT;
         process.env.INSTANA_OTLP_FORMAT = 'true';
         downstreamConnectionStub.sendSpans.resetHistory();
