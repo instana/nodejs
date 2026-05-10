@@ -629,7 +629,6 @@ describe('tracing/spanBuffer', () => {
         expect(span).to.deep.equal(span);
       });
 
-      // TODO check
       it('should transform http spans before buffering and convert the transmitted batch to OTLP when INSTANA_OTLP_FORMAT is true', () => {
         const previousValue = process.env.INSTANA_OTLP_FORMAT;
         process.env.INSTANA_OTLP_FORMAT = 'true';

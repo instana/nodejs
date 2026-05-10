@@ -370,10 +370,10 @@ exports.sendSpans = function sendSpans(spans, cb) {
     if (err && !maxContentErrorHasBeenLogged && err instanceof PayloadTooLargeError) {
       logLargeSpans(spans);
     } else if (err) {
-      const spanInfo = spans;
+      const spanInfo = getSpanLengthInfo(spans);
       logger.debug(`Failed to send: ${JSON.stringify(spanInfo)}`);
     } else {
-      const spanInfo = spans;
+      const spanInfo = getSpanLengthInfo(spans);
       logger.debug(`Successfully sent: ${JSON.stringify(spanInfo)}`);
     }
     cb(err);
