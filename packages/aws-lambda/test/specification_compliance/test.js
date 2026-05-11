@@ -148,7 +148,7 @@ function registerSuite(w3cTraceCorrelationDisabled) {
         const responseBody = response.body;
         verifyHttpHeadersOnDownstreamRequest(testDefinition, valuesForPlaceholders, responseBody);
 
-        const suppressed = testDefinition['X-INSTANA-L in'] === '0';
+        const suppressed = testDefinition.suppressed === true;
         if (suppressed) {
           await delay(500);
           const spans = await control.getSpans();
