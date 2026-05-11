@@ -91,6 +91,7 @@ function instrumentClientConstructor(prismaClientModule) {
               } else if (adapter?.externalPool?.options?.connectionString) {
                 dataSourceUrl = redactPassword(provider, adapter.externalPool.options.connectionString);
               }
+              // Note: MariaDB adapter doesn't expose connection details due to private fields
             } catch (err) {
               logger.debug('[Instana] Cannot extract URL from Prisma adapter config:', err);
             }
