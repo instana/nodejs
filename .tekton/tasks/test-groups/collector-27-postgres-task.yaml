@@ -27,6 +27,35 @@ spec:
           initialDelaySeconds: 3
           periodSeconds: 2
           timeoutSeconds: 10
+    - name: mysql
+      image: public.ecr.aws/docker/library/mysql:8.0.26
+      imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "1Gi"
+      args:
+          - "--default-authentication-plugin=mysql_native_password"
+      env:
+          - name: "MYSQL_ROOT_PASSWORD"
+            value: "nodepw"
+          - name: "MYSQL_DATABASE"
+            value: "nodedb"
+          - name: "MYSQL_USER"
+            value: "node"
+          - name: "MYSQL_PASSWORD"
+            value: "nodepw"
+          - name: "MYSQL_ROOT_HOST"
+            value: "0.0.0.0"
+      readinessProbe:
+          exec:
+            command:
+            - "sh"
+            - "-c"
+            - "mysql -h 0.0.0.0 -u node -p'nodepw' -e 'SELECT 1'"
+          initialDelaySeconds: 3
+          periodSeconds: 2
+          timeoutSeconds: 10
   envFrom:
     - configMapRef:
         name: environment-properties
@@ -102,8 +131,8 @@ spec:
           memory: "8Gi"
       script: |
         #!/bin/bash
-        AVAILABLE_SIDECARS="postgres"
-        SIDECAR_COUNTS="redis=20,redis-slave=20,redis-sentinel=20,zookeeper=6,kafka=6,kafka-topics=6,postgres=3,elasticsearch=2,mongodb=1,couchbase=1,rabbitmq=1,nats=1,nats-streaming=1,nats-streaming-2=1,mysql=1,localstack=1,memcached=1,oracledb=1"
+        AVAILABLE_SIDECARS="postgres,mysql"
+        SIDECAR_COUNTS="redis=20,redis-slave=20,redis-sentinel=20,zookeeper=6,kafka=6,kafka-topics=6,postgres=3,elasticsearch=2,mongodb=1,couchbase=1,rabbitmq=1,nats=1,nats-streaming=1,nats-streaming-2=1,mysql=1,localstack=1,memcached=1,oracledb=1,mariadb=1"
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         BASE_REVISION=$(git rev-parse origin/main)

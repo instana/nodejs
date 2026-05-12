@@ -22,9 +22,14 @@ const migrationsTargetDir = path.join(appDir, 'prisma', 'migrations');
 module.exports = function (name, version, isLatest, mode) {
   this.timeout(Math.max(config.getTestTimeout() * 3, 20000));
 
-  const provider = mode; // mode is either 'sqlite' or 'postgresql'
+  const provider = mode;
   const majorVersion = parseInt(version, 10);
   const isV7 = majorVersion >= 7;
+
+  if (provider === 'mysql' && !isV7) {
+    return;
+  }
+
   // Getting the URL is not possible between Prisma 4.10 and 5.1 (getConfig was removed)
   const urlUnavailable = semver.gte(version, '4.10.0') && semver.lt(version, '5.2.0');
 

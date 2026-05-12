@@ -47,6 +47,22 @@ try {
       const { PrismaPg } = await import('@prisma/adapter-pg');
       adapter = new PrismaPg({ connectionString: process.env.INSTANA_CONNECT_POSTGRES_PRISMA_URL });
       console.log(`Initialized Prisma ${version} with PostgreSQL adapter`);
+    } else if (provider === 'mysql') {
+      const { PrismaMySQL } = await import('@prisma/adapter-mysql');
+      const host = process.env.INSTANA_CONNECT_MYSQL_HOST || '127.0.0.1';
+      const port = process.env.INSTANA_CONNECT_MYSQL_PORT || '3306';
+      const user = process.env.INSTANA_CONNECT_MYSQL_USER || 'node';
+      const password = process.env.INSTANA_CONNECT_MYSQL_PW || 'nodepw';
+      const database = process.env.INSTANA_CONNECT_MYSQL_DB || 'nodedb';
+      adapter = new PrismaMySQL({
+        host,
+        port: parseInt(port, 10),
+        user,
+        password,
+        database
+      });
+      console.log(`Initialized Prisma ${version} with MySQL adapter`);
+    } 
     } else {
       const { PrismaBetterSqlite3 } = await import('@prisma/adapter-better-sqlite3');
       const __dirname = path.dirname(fileURLToPath(import.meta.url));
