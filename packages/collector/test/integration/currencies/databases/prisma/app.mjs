@@ -48,18 +48,14 @@ try {
       adapter = new PrismaPg({ connectionString: process.env.INSTANA_CONNECT_POSTGRES_PRISMA_URL });
       console.log(`Initialized Prisma ${version} with PostgreSQL adapter`);
     } else if (provider === 'mysql') {
-      const { PrismaMySQL } = await import('@prisma/adapter-mysql');
-      const host = process.env.INSTANA_CONNECT_MYSQL_HOST || '127.0.0.1';
-      const port = process.env.INSTANA_CONNECT_MYSQL_PORT || '3306';
-      const user = process.env.INSTANA_CONNECT_MYSQL_USER || 'node';
-      const password = process.env.INSTANA_CONNECT_MYSQL_PW || 'nodepw';
-      const database = process.env.INSTANA_CONNECT_MYSQL_DB || 'nodedb';
-      adapter = new PrismaMySQL({
-        host,
-        port: parseInt(port, 10),
-        user,
-        password,
-        database
+      const { PrismaMariaDb } = await impor("@prisma/adapter-mariadb") ;
+        adapter = new PrismaMariaDb({
+        host: process.env.INSTANA_CONNECT_MYSQL_HOST,
+        port: Number(process.env.INSTANA_CONNECT_MYSQL_PORT),
+        user: process.env.INSTANA_CONNECT_MYSQL_USER,
+        password: process.env.INSTANA_CONNECT_MYSQL_PW,
+        database: process.env.INSTANA_CONNECT_MYSQL_DB,
+        connectionLimit: 5
       });
       console.log(`Initialized Prisma ${version} with MySQL adapter`);
     } 
