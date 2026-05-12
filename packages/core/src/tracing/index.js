@@ -18,6 +18,7 @@ const supportedVersion = require('./supportedVersion');
 const otelInstrumentations = require('./opentelemetry-instrumentations');
 const cls = require('./cls');
 const coreUtil = require('../util');
+const secrets = require('../secrets');
 
 let tracingEnabled = false;
 let tracingActivated = false;
@@ -268,6 +269,7 @@ exports.activate = function activate(_config = config) {
     spanBuffer.activate(_config);
     opentracing.activate();
     sdk.activate();
+    secrets.activate(config);
 
     if (automaticTracingEnabled) {
       instrumentations.forEach(instrumentationKey => {
