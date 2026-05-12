@@ -171,7 +171,7 @@
   },
   "overrides": {
     "prebuildify": {
-      "node-abi": "4.8.0"
+      "node-abi": "4.31.0"
     },
     "stream-shift": "1.0.2",
     "event-loop-stats": {
