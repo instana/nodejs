@@ -1107,6 +1107,140 @@ describe('config.normalizeConfig', () => {
         expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
         expect(config.secrets.keywords).to.deep.equal(['nope', 'never']);
       });
+
+      it('should prioritize ENV over in-code for matcherMode', () => {
+        process.env.INSTANA_SECRETS = 'equals:env-secret';
+        const config = coreConfig.normalize({
+          userConfig: {
+            secrets: {
+              matcherMode: 'regex',
+              keywords: ['incode-secret']
+            }
+          }
+        });
+        expect(config.secrets.matcherMode).to.equal('equals');
+        expect(config.secrets.keywords).to.deep.equal(['env-secret']);
+
+        const matcherModeSource = coreConfig.configStore.get('config.secrets.matcherMode');
+        expect(matcherModeSource.source).to.equal(1);
+      });
+
+      it('should prioritize ENV over in-code for keywords', () => {
+        process.env.INSTANA_SECRETS = 'contains:env-keyword1,env-keyword2';
+        const config = coreConfig.normalize({
+          userConfig: {
+            secrets: {
+              matcherMode: 'equals',
+              keywords: ['incode-keyword']
+            }
+          }
+        });
+        expect(config.secrets.keywords).to.deep.equal(['env-keyword1', 'env-keyword2']);
+
+        const keywordsSource = coreConfig.configStore.get('config.secrets.keywords');
+        expect(keywordsSource.source).to.equal(1);
+      });
+
+      it('should use in-code when ENV is not set', () => {
+        delete process.env.INSTANA_SECRETS;
+        const config = coreConfig.normalize({
+          userConfig: {
+            secrets: {
+              matcherMode: 'regex',
+              keywords: ['incode-secret']
+            }
+          }
+        });
+        expect(config.secrets.matcherMode).to.equal('regex');
+        expect(config.secrets.keywords).to.deep.equal(['incode-secret']);
+
+        const matcherModeSource = coreConfig.configStore.get('config.secrets.matcherMode');
+        expect(matcherModeSource.source).to.equal(2);
+
+        const keywordsSource = coreConfig.configStore.get('config.secrets.keywords');
+        expect(keywordsSource.source).to.equal(2);
+      });
+
+      it('should use DEFAULT when neither ENV nor in-code is set', () => {
+        delete process.env.INSTANA_SECRETS;
+        const config = coreConfig.normalize({
+          userConfig: {}
+        });
+        expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
+        expect(config.secrets.keywords).to.deep.equal(['key', 'pass', 'secret']);
+
+        const matcherModeSource = coreConfig.configStore.get('config.secrets.matcherMode');
+        expect(matcherModeSource.source).to.equal(4);
+
+        const keywordsSource = coreConfig.configStore.get('config.secrets.keywords');
+        expect(keywordsSource.source).to.equal(4);
+      });
+
+      it('should track DEFAULT source when invalid matcherMode is provided', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            secrets: {
+              matcherMode: 'invalid-matcher'
+            }
+          }
+        });
+        expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
+
+        const matcherModeSource = coreConfig.configStore.get('config.secrets.matcherMode');
+        expect(matcherModeSource.source).to.equal(4);
+      });
+
+      it('should track DEFAULT source when invalid keywords are provided', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            secrets: {
+              keywords: 'not-an-array'
+            }
+          }
+        });
+        expect(config.secrets.keywords).to.deep.equal(['key', 'pass', 'secret']);
+
+        const keywordsSource = coreConfig.configStore.get('config.secrets.keywords');
+        expect(keywordsSource.source).to.equal(4);
+      });
+
+      it('should handle matcherMode=none with correct source tracking', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            secrets: {
+              matcherMode: 'none'
+            }
+          }
+        });
+        expect(config.secrets.matcherMode).to.equal('none');
+        expect(config.secrets.keywords).to.deep.equal([]);
+
+        const matcherModeSource = coreConfig.configStore.get('config.secrets.matcherMode');
+        expect(matcherModeSource.source).to.equal(2);
+
+        const keywordsSource = coreConfig.configStore.get('config.secrets.keywords');
+        expect(keywordsSource.source).to.equal(2);
+      });
+
+      it('should handle ENV matcherMode=none with correct source tracking', () => {
+        process.env.INSTANA_SECRETS = 'none';
+        const config = coreConfig.normalize({
+          userConfig: {
+            secrets: {
+              matcherMode: 'equals',
+              keywords: ['should-be-ignored']
+            }
+          }
+        });
+        expect(config.secrets.matcherMode).to.equal('none');
+        expect(config.secrets.keywords).to.deep.equal([]);
+
+        const matcherModeSource = coreConfig.configStore.get('config.secrets.matcherMode');
+        expect(matcherModeSource.source).to.equal(1);
+
+        const keywordsSource = coreConfig.configStore.get('config.secrets.keywords');
+        expect(keywordsSource.source).to.equal(1);
+      });
     });
 
     describe('package.json path configuration', () => {
