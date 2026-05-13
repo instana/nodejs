@@ -31,9 +31,9 @@ function instrumentMariaDbAdapter(mariadbAdapterModule) {
   }
 
   class InstanaPrismaMariaDb extends OriginalPrismaMariaDb {
-    constructor(config) {
-      super(config);
-
+    constructor(...args) {
+      super(...args);
+      const [config] = args;
       if (!config || typeof config !== 'object') {
         return;
       }
