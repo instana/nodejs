@@ -24,43 +24,39 @@ exports.init = function init(config) {
 };
 
 function instrumentMariaDbAdapter(mariadbAdapterModule) {
-  if (typeof mariadbAdapterModule.PrismaMariaDb === 'function') {
-    const OriginalPrismaMariaDb = mariadbAdapterModule.PrismaMariaDb;
+  const OriginalPrismaMariaDb = mariadbAdapterModule?.PrismaMariaDb;
 
-    class InstanaPrismaMariaDb extends OriginalPrismaMariaDb {
-      constructor(config) {
-        super(config);
-
-        if (config && typeof config === 'object') {
-          const host = config.host || 'localhost';
-          const port = config.port || 3306;
-          const user = config.user || '';
-          const database = config.database || '';
-
-          if (user && database) {
-            const sanitizedUrl = `mysql://${user}:_redacted_@${host}:${port}/${database}`;
-            mariadbAdapterConfigMap.set(this, {
-              provider: 'mysql',
-              url: sanitizedUrl
-            });
-          }
-        }
-      }
-    }
-
-    Object.getOwnPropertyNames(OriginalPrismaMariaDb).forEach(prop => {
-      if (prop !== 'length' && prop !== 'name' && prop !== 'prototype') {
-        try {
-          InstanaPrismaMariaDb[prop] = OriginalPrismaMariaDb[prop];
-        } catch (e) {
-          // ignore
-        }
-      }
-    });
-    return {
-      PrismaMariaDb: InstanaPrismaMariaDb
-    };
+  if (typeof OriginalPrismaMariaDb !== 'function') {
+    return mariadbAdapterModule;
   }
+
+  class InstanaPrismaMariaDb extends OriginalPrismaMariaDb {
+    constructor(config) {
+      super(config);
+
+      if (!config || typeof config !== 'object') {
+        return;
+      }
+      const { host = 'localhost', port = 3306, user = '', database = '' } = config;
+
+      if (!user || !database) {
+        return;
+      }
+
+      const sanitizedUrl = `mysql://${user}:_redacted_@${host}:${port}/${database}`;
+
+      mariadbAdapterConfigMap.set(this, {
+        // Prisma MariaDB adapter reports mysql as provider
+        provider: 'mysql',
+        url: sanitizedUrl
+      });
+    }
+  }
+
+  return {
+    ...mariadbAdapterModule,
+    PrismaMariaDb: InstanaPrismaMariaDb
+  };
 }
 
 function instrumentPrismaClient(prismaClientModule) {
