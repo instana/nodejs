@@ -4,7 +4,7 @@
 
 'use strict';
 
-const { getOtlpAttributeMappings } = require('./backend_mappers/otlpMapper');
+const { getOtlpAttributeMappings } = require('./otlp_mapper/mapper');
 
 // Cached Resource information for Metrics (when no "from" field is present)
 let cachedHostId = null;
@@ -173,6 +173,43 @@ function createStatus(errorCount) {
 }
 
 /**
+ * Generates a descriptive span name based on Instana span data
+ * @param {Object} instanaSpan - Instana span object
+ * @returns {string} Descriptive span name
+ */
+function generateSpanName(instanaSpan) {
+  const spanType = instanaSpan.n;
+  const data = instanaSpan.data || {};
+  const httpData = data.http || {};
+
+  // Debug log to trace span name generation
+  console.log('[DEBUG] generateSpanName - Input:', {
+    spanType,
+    httpMethod: httpData.method,
+    httpUrl: httpData.url,
+    httpPath: httpData.path_tpl || httpData.url,
+    fullData: JSON.stringify(data, null, 2)
+  });
+
+  // For HTTP server spans: "METHOD path"
+  if (spanType === 'node.http.server') {
+    const method = httpData.method || 'HTTP';
+    const path = httpData.path_tpl || httpData.url || '/';
+    return `${method} ${path}`;
+  }
+
+  // For HTTP client spans: "METHOD" or "METHOD url"
+  if (spanType === 'node.http.client') {
+    const method = httpData.method || 'HTTP';
+    // For client spans, just use the method (similar to OTEL "GET")
+    return method;
+  }
+
+  // For other span types, use the original name
+  return spanType || 'unknown';
+}
+
+/**
  * Transforms a single Instana Span to OTEL Span
  * @param {Object} instanaSpan - Instana span object
  * @returns {Object} OTEL span object
@@ -184,7 +221,7 @@ function transformSpan(instanaSpan) {
     return {
       traceId: normalizeTraceId(instanaSpan.t || '0'),
       spanId: instanaSpan.s || '0',
-      name: instanaSpan.n || 'unknown',
+      name: generateSpanName(instanaSpan),
       kind: 0,
       startTimeUnixNano: '0',
       endTimeUnixNano: '0',
@@ -196,7 +233,7 @@ function transformSpan(instanaSpan) {
   const otelSpan = {
     traceId: normalizeTraceId(instanaSpan.t),
     spanId: instanaSpan.s,
-    name: instanaSpan.n || 'unknown',
+    name: generateSpanName(instanaSpan),
     kind: convertSpanKind(instanaSpan.k),
     startTimeUnixNano: msToNano(instanaSpan.ts),
     endTimeUnixNano: msToNano(instanaSpan.ts + instanaSpan.d),
@@ -267,6 +304,8 @@ function transform(instanaTraces) {
   // Create OTEL ResourceSpans
   const resourceSpans = Array.from(spansByResource.values()).map(function (group) {
     const otelSpans = group.spans.map(transformSpan);
+
+    console.log('-----------------', JSON.stringify(otelSpans));
 
     return {
       resource: {
