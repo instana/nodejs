@@ -45,12 +45,14 @@ spec:
           npm install npm@$(params.npm-version) -g
         fi
 
-        # Install yargs v18 for Node 26+ to fix Mocha compatibility
+        # Override yargs to v18 for Node 26+ (v17 has ESM issues)
         NODE_MAJOR=$(node -v | cut -d'.' -f1 | sed 's/v//')
         if [ "$NODE_MAJOR" -ge 26 ]; then
-          echo "Node $NODE_MAJOR detected - forcing Mocha to use yargs@18"
-          # Install yargs v18 directly into Mocha's node_modules to override the dependency
-          npm install --prefix node_modules/mocha yargs@18.0.0 --no-save --legacy-peer-deps
+          echo "Node $NODE_MAJOR detected - overriding yargs to v18 for ESM compatibility"
+          # Force reinstall with yargs v18 override
+          npm pkg set 'overrides.mocha.yargs=18.0.0'
+          npm install --package-lock-only
+          npm install
         fi
 
         if [ "$(params.skip-cache)" == "true" ]; then
