@@ -179,6 +179,9 @@
     },
     "gcstats.js": {
       "nan": "2.27.0"
+    },
+    "mocha": {
+      "yargs": "18.0.0"
     }
   },
   "config": {
