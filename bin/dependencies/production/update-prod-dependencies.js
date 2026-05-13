@@ -55,13 +55,25 @@ Object.entries(dependencyMap).some(([dep, usageList]) => {
   }
 
   const currentVersion = utils.cleanVersionString(usageList[0].version);
-  const latestVersion = utils.getLatestVersion({
+  let latestVersion = utils.getLatestVersion({
     pkgName: dep,
     installedVersion: currentVersion,
     isBeta: false
   });
 
   if (!latestVersion || latestVersion === currentVersion) return false;
+
+  latestVersion = utils.getDelayedLatestVersion({
+    pkgName: dep,
+    installedVersion: currentVersion,
+    upperBoundVersion: latestVersion,
+    isBeta: false
+  });
+
+  if (latestVersion === currentVersion) {
+    console.log(`Skipping ${dep}. No version older than ${utils.MIN_VERSION_AGE_DAYS} days available.`);
+    return false;
+  }
 
   const branchName = utils.createBranchName(BRANCH, dep, latestVersion);
   console.log(`Preparing PR for ${dep} (${currentVersion} -> ${latestVersion})`);

@@ -13,6 +13,35 @@ const moment = require('moment');
 const { execSync } = require('child_process');
 const fs = require('fs');
 
+const MIN_VERSION_AGE_DAYS = 5;
+exports.MIN_VERSION_AGE_DAYS = MIN_VERSION_AGE_DAYS;
+
+exports.getDelayedLatestVersion = ({
+  pkgName,
+  installedVersion,
+  upperBoundVersion,
+  isBeta,
+  minAgeDays = MIN_VERSION_AGE_DAYS,
+  today = new Date(),
+  execSyncFn = execSync
+}) => {
+  const time = JSON.parse(execSyncFn(`npm view ${pkgName} time --json`).toString());
+  const cutoff = moment(today).subtract(minAgeDays, 'days');
+
+  const candidates = Object.entries(time)
+    .filter(([version, publishedAt]) => {
+      if (!semver.valid(version)) return false;
+      if (!isBeta && semver.prerelease(version)) return false;
+      if (!semver.gt(version, installedVersion)) return false;
+      if (semver.gt(version, upperBoundVersion)) return false;
+      return !moment(publishedAt).isAfter(cutoff);
+    })
+    .map(([version]) => version);
+
+  if (candidates.length === 0) return installedVersion;
+  return candidates.sort(semver.rcompare)[0];
+};
+
 exports.getRootDependencyVersion = name => {
   const pkgjson = require(path.join(__dirname, '..', '..', 'package.json'));
   return pkgjson.devDependencies[name] || pkgjson.optionalDependencies[name];

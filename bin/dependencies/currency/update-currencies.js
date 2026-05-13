@@ -60,7 +60,7 @@ currencies.forEach(originalCurrency => {
     return;
   }
 
-  const latestVersion = utils.getLatestVersion({
+  let latestVersion = utils.getLatestVersion({
     pkgName: currency.name,
     installedVersion,
     isBeta: currency.isBeta
@@ -68,6 +68,18 @@ currencies.forEach(originalCurrency => {
 
   if (latestVersion === installedVersion) {
     console.log(`[UP-TO-DATE] ${currency.name} already up-to-date (${installedVersion})`);
+    return;
+  }
+
+  latestVersion = utils.getDelayedLatestVersion({
+    pkgName: currency.name,
+    installedVersion,
+    upperBoundVersion: latestVersion,
+    isBeta: currency.isBeta
+  });
+
+  if (latestVersion === installedVersion) {
+    console.log(`[SKIP] ${currency.name}: no version older than ${utils.MIN_VERSION_AGE_DAYS} days available.`);
     return;
   }
 

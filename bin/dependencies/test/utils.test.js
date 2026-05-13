@@ -5,7 +5,7 @@
 'use strict';
 
 const path = require('path');
-const { getDaysBehind, installPackage } = require('../utils');
+const { getDaysBehind, getDelayedLatestVersion, installPackage } = require('../utils');
 const assert = require('assert');
 
 const today = '2024-07-23T00:00:00.000Z';
@@ -121,6 +121,79 @@ try {
   );
   assert.strictEqual(daysBehind6, 136);
   console.log('Test 6 passed: Integration version is 136 days behind the latest version');
+
+  const npmTimeOutput = {
+    created: '2023-01-01T00:00:00.000Z',
+    modified: '2024-07-22T00:00:00.000Z',
+    '1.0.0': '2024-01-01T00:00:00.000Z',
+    '1.1.0': '2024-05-10T00:00:00.000Z',
+    '1.2.0': '2024-07-15T00:00:00.000Z',
+    '1.2.1': '2024-07-20T00:00:00.000Z',
+    '1.2.2': '2024-07-22T00:00:00.000Z',
+    '2.0.0-beta.1': '2024-07-10T00:00:00.000Z'
+  };
+  const mockNpmView = () => Buffer.from(JSON.stringify(npmTimeOutput));
+  const delayedToday = new Date('2024-07-23T00:00:00.000Z');
+
+  const delayed1 = getDelayedLatestVersion({
+    pkgName: 'some-pkg',
+    installedVersion: '1.1.0',
+    upperBoundVersion: '1.2.2',
+    isBeta: false,
+    minAgeDays: 5,
+    today: delayedToday,
+    execSyncFn: mockNpmView
+  });
+  assert.strictEqual(delayed1, '1.2.0');
+  console.log('Test passed: Picks the highest version that is at least 5 days old.');
+
+  const delayed2 = getDelayedLatestVersion({
+    pkgName: 'some-pkg',
+    installedVersion: '1.2.0',
+    upperBoundVersion: '1.2.2',
+    isBeta: false,
+    minAgeDays: 5,
+    today: delayedToday,
+    execSyncFn: mockNpmView
+  });
+  assert.strictEqual(delayed2, '1.2.0');
+  console.log('Test passed: Returns installed version when no candidate is old enough.');
+
+  const delayed3 = getDelayedLatestVersion({
+    pkgName: 'some-pkg',
+    installedVersion: '1.1.0',
+    upperBoundVersion: '1.2.2',
+    isBeta: false,
+    minAgeDays: 5,
+    today: delayedToday,
+    execSyncFn: mockNpmView
+  });
+  assert.strictEqual(delayed3, '1.2.0');
+  console.log('Test passed: Excludes prerelease versions when isBeta is false.');
+
+  const delayed4 = getDelayedLatestVersion({
+    pkgName: 'some-pkg',
+    installedVersion: '1.1.0',
+    upperBoundVersion: '2.0.0-beta.1',
+    isBeta: true,
+    minAgeDays: 5,
+    today: delayedToday,
+    execSyncFn: mockNpmView
+  });
+  assert.strictEqual(delayed4, '2.0.0-beta.1');
+  console.log('Test passed: Includes prerelease versions when isBeta is true.');
+
+  const delayed5 = getDelayedLatestVersion({
+    pkgName: 'some-pkg',
+    installedVersion: '1.0.0',
+    upperBoundVersion: '1.2.0',
+    isBeta: false,
+    minAgeDays: 5,
+    today: delayedToday,
+    execSyncFn: mockNpmView
+  });
+  assert.strictEqual(delayed5, '1.2.0');
+  console.log('Test passed: Respects upper bound (does not jump beyond it).');
 
   let cmd;
   installPackage({
