@@ -104,6 +104,13 @@ spec:
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
         fi
+        # Install yargs v18 for Node 26+ to fix Mocha compatibility
+        NODE_MAJOR=$(node -v | cut -d'.' -f1 | sed 's/v//')
+        if [ "$NODE_MAJOR" -ge 26 ]; then
+          echo "Node $NODE_MAJOR detected - forcing Mocha to use yargs@18"
+          # Install yargs v18 directly into Mocha's node_modules to override the dependency
+          npm install --prefix node_modules/mocha yargs@18.0.0 --no-save --legacy-peer-deps
+        fi
         npm config set fetch-retries 5
         npm config set fetch-retry-mintimeout 20000
         npm config set fetch-retry-maxtimeout 120000

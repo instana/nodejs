@@ -48,8 +48,9 @@ spec:
         # Install yargs v18 for Node 26+ to fix Mocha compatibility
         NODE_MAJOR=$(node -v | cut -d'.' -f1 | sed 's/v//')
         if [ "$NODE_MAJOR" -ge 26 ]; then
-          echo "Node $NODE_MAJOR detected - installing yargs@18 for Mocha compatibility"
-          npm install --no-save yargs@18.0.0
+          echo "Node $NODE_MAJOR detected - forcing Mocha to use yargs@18"
+          # Install yargs v18 directly into Mocha's node_modules to override the dependency
+          npm install --prefix node_modules/mocha yargs@18.0.0 --no-save --legacy-peer-deps
         fi
 
         if [ "$(params.skip-cache)" == "true" ]; then
