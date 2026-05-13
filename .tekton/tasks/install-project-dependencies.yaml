@@ -43,7 +43,14 @@ spec:
 
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
-        fi     
+        fi
+
+        # Install yargs v18 for Node 26+ to fix Mocha compatibility
+        NODE_MAJOR=$(node -v | cut -d'.' -f1 | sed 's/v//')
+        if [ "$NODE_MAJOR" -ge 26 ]; then
+          echo "Node $NODE_MAJOR detected - installing yargs@18 for Mocha compatibility"
+          npm install --no-save yargs@18.0.0
+        fi
 
         if [ "$(params.skip-cache)" == "true" ]; then
           echo "Skipping npm cache..."
