@@ -142,7 +142,7 @@
     "mocha-multi-reporters": "1.5.1",
     "moment": "2.30.1",
     "morgan": "1.10.0",
-    "nan": "2.22.2",
+    "nan": "2.27.0",
     "node-gyp": "11.2.0",
     "opentracing": "0.14.7",
     "pino": "10.3.0",
@@ -171,14 +171,14 @@
   },
   "overrides": {
     "prebuildify": {
-      "node-abi": "4.8.0"
+      "node-abi": "4.31.0"
     },
     "stream-shift": "1.0.2",
     "event-loop-stats": {
-      "nan": "2.22.2"
+      "nan": "2.27.0"
     },
     "gcstats.js": {
-      "nan": "2.22.2"
+      "nan": "2.27.0"
     }
   },
   "config": {

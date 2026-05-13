@@ -383,7 +383,8 @@
     "core": false,
     "versions": [
       {
-        "v": "2.1693.0"
+        "v": "2.1693.0",
+        "node": "<26"
       }
     ]
   },
@@ -1164,19 +1165,22 @@
     "versions": [
       {
         "v": "7.8.0",
-        "node": ">=20.19.0 <23 || >=24",
+        "node": ">=20.19.0 <23 || >=24 <26",
         "skipValidation": true
       },
       {
         "v": "6.19.0",
+        "node": "<26",
         "skipValidation": true
       },
       {
         "v": "4.16.2",
+        "node": "<26",
         "skipValidation": true
       },
       {
         "v": "4.5.0",
+        "node": "<26",
         "skipValidation": true
       }
     ]

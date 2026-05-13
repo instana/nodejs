@@ -43,7 +43,17 @@ spec:
 
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
-        fi     
+        fi
+
+        # Override yargs to v18 for Node 26+ (v17 has compatibility issues)
+        NODE_MAJOR=$(node -v | cut -d'.' -f1 | sed 's/v//')
+        if [ "$NODE_MAJOR" -ge 26 ]; then
+          echo "Node $NODE_MAJOR detected - overriding yargs to v18 for compatibility"
+          # Force reinstall with yargs v18 override
+          npm pkg set 'overrides.mocha.yargs=18.0.0'
+          npm install --package-lock-only
+          npm install
+        fi
 
         if [ "$(params.skip-cache)" == "true" ]; then
           echo "Skipping npm cache..."
