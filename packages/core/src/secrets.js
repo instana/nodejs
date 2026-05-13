@@ -181,25 +181,18 @@ exports.init = function init(config) {
   isSecretInternal = matchers[config.secrets.matcherMode](config.secrets.keywords);
 };
 
+/**
+ * @param {import('./config').InstanaConfig} config
+ */
+exports.activate = function activate(config) {
+  if (config.secrets.matcherMode && config.secrets.keywords) {
+    isSecretInternal = matchers[config.secrets.matcherMode](config.secrets.keywords);
+  }
+};
+
 exports.matchers = matchers;
 
 /** @type {(key: string) => boolean} */
 exports.isSecret = function isSecret(key) {
   return isSecretInternal(key);
-};
-
-/**
- * @param {import('@instana/core/src/config').MatchingOption} matcherId
- * @param {Array.<string>} secretsList
- */
-exports.setMatcher = function setMatcher(matcherId, secretsList) {
-  if (!(typeof matcherId === 'string')) {
-    logger.warn(`Received invalid secrets configuration, attribute matcher is not a string: ${matcherId}`);
-  } else if (Object.keys(exports.matchers).indexOf(matcherId) < 0) {
-    logger.warn(`Received invalid secrets configuration, matcher is not supported: ${matcherId}`);
-  } else if (!Array.isArray(secretsList)) {
-    logger.warn(`Received invalid secrets configuration, attribute list is not an array: ${secretsList}`);
-  } else {
-    isSecretInternal = exports.matchers[matcherId](secretsList);
-  }
 };

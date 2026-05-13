@@ -49,7 +49,6 @@ describe('unannounced state', () => {
     afterEach(() => {
       agentConnectionStub.announceNodeCollector.reset();
       tracingStub.activate.reset();
-      secretsStub.setMatcher.reset();
       agentOptsStub.agentUuid = undefined;
       agentOptsStub.config = {};
     });
@@ -90,7 +89,7 @@ describe('unannounced state', () => {
       });
     });
 
-    it('should use secrets config response', done => {
+    it('should store secrets config in agentOpts.config', done => {
       prepareAnnounceResponse({
         secrets: {
           matcher: 'equals',
@@ -99,7 +98,60 @@ describe('unannounced state', () => {
       });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(secretsStub.setMatcher).to.have.been.calledWith('equals', ['hidden', 'opaque']);
+          expect(agentOptsStub.config.secrets).to.deep.equal({
+            matcherMode: 'equals',
+            keywords: ['hidden', 'opaque']
+          });
+          done();
+        }
+      });
+    });
+
+    it('should store secrets config with different matcher modes', done => {
+      prepareAnnounceResponse({
+        secrets: {
+          matcher: 'contains-ignore-case',
+          list: ['password', 'token']
+        }
+      });
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config.secrets).to.deep.equal({
+            matcherMode: 'contains-ignore-case',
+            keywords: ['password', 'token']
+          });
+          done();
+        }
+      });
+    });
+
+    it('should handle empty secrets list', done => {
+      prepareAnnounceResponse({
+        secrets: {
+          matcher: 'none',
+          list: []
+        }
+      });
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config.secrets).to.deep.equal({
+            matcherMode: 'none',
+            keywords: []
+          });
+          done();
+        }
+      });
+    });
+
+    it('should not set secrets config when not provided by agent', done => {
+      prepareAnnounceResponse({
+        tracing: {
+          enabled: true
+        }
+      });
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config.secrets).to.be.undefined;
           done();
         }
       });

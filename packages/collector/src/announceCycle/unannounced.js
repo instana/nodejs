@@ -155,7 +155,9 @@ function applySecretsConfiguration(agentResponse) {
           ${agentResponse.secrets.list}`
       );
     } else {
-      secrets.setMatcher(agentResponse.secrets.matcher, agentResponse.secrets.list);
+      ensureNestedObjectExists(agentOpts.config, ['secrets']);
+      agentOpts.config.secrets.matcherMode = agentResponse.secrets.matcher;
+      agentOpts.config.secrets.keywords = agentResponse.secrets.list;
     }
   }
 }
