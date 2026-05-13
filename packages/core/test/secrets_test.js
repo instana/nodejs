@@ -304,4 +304,74 @@ describe('secrets with matcher mode', () => {
       expect(matcher('pass')).to.be.false;
     });
   });
+
+  describe('activate', () => {
+    it('should update matcher and keywords when config changes', () => {
+      secrets.init({
+        logger: testUtil.createFakeLogger(),
+        secrets: {
+          matcherMode: 'equals',
+          keywords: ['initialSecret']
+        }
+      });
+
+      expect(secrets.isSecret('initialSecret')).to.be.true;
+      expect(secrets.isSecret('newSecret')).to.be.false;
+
+      secrets.activate({
+        secrets: {
+          matcherMode: 'equals',
+          keywords: ['newSecret', 'anotherSecret']
+        }
+      });
+
+      expect(secrets.isSecret('initialSecret')).to.be.false;
+      expect(secrets.isSecret('newSecret')).to.be.true;
+      expect(secrets.isSecret('anotherSecret')).to.be.true;
+    });
+
+    it('should update matcher mode when config changes', () => {
+      secrets.init({
+        logger: testUtil.createFakeLogger(),
+        secrets: {
+          matcherMode: 'equals',
+          keywords: ['secret']
+        }
+      });
+
+      expect(secrets.isSecret('secret')).to.be.true;
+      expect(secrets.isSecret('SECRET')).to.be.false;
+
+      secrets.activate({
+        secrets: {
+          matcherMode: 'equals-ignore-case',
+          keywords: ['secret']
+        }
+      });
+
+      expect(secrets.isSecret('secret')).to.be.true;
+      expect(secrets.isSecret('SECRET')).to.be.true;
+    });
+
+    it('should not update when only partial config provided', () => {
+      secrets.init({
+        logger: testUtil.createFakeLogger(),
+        secrets: {
+          matcherMode: 'contains-ignore-case',
+          keywords: ['password']
+        }
+      });
+
+      expect(secrets.isSecret('mypassword')).to.be.true;
+
+      secrets.activate({
+        secrets: {
+          keywords: ['token']
+        }
+      });
+
+      expect(secrets.isSecret('mypassword')).to.be.true;
+      expect(secrets.isSecret('mytoken')).to.be.false;
+    });
+  });
 });
