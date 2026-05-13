@@ -5,7 +5,7 @@
 'use strict';
 
 const mapper = require('./mapper');
-const otlpMapper = require('./otlpMapper');
+const otlpMapper = require('../otlp_mapper/mapper');
 
 /**
  * @param {(span: import('../../core').InstanaBaseSpan) => import('../../core').InstanaBaseSpan} transformer
