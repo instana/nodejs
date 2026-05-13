@@ -228,15 +228,15 @@ module.exports = function (name, version, isLatest, mode) {
         span => expect(span.data.prisma.action).to.equal(action),
         span =>
           // URL is unavailable between Prisma 4.10 and 5.1 (getConfig removed)
-          // In v7, SQLite and Mariadb adapters don't expose the URL
-          !(urlUnavailable || ((provider === 'sqlite' || provider === 'mysql') && isV7))
+          // In v7, SQLite adapter doesn't expose the URL directly
+          !(urlUnavailable || (provider === 'sqlite' && isV7))
             ? expect(span.data.prisma.url).to.equal(expectedUrl)
             : expect(span.data.prisma.url).to.equal(''),
         span => {
-          if (provider !== 'sqlite' && provider !== 'mysql' && !urlUnavailable) {
+          if (provider !== 'sqlite' && !urlUnavailable) {
             expect(span.data.prisma.url).to.contain('_redacted_');
-          } else if ((provider === 'mysql' || provider === 'sqlite') && isV7) {
-            // MySQL/Mariadb and SQLite adapters in v7 don't expose URL
+          } else if (provider === 'sqlite' && isV7) {
+            // SQLite adapter in v7 doesn't expose URL
             expect(span.data.prisma.url).to.equal('');
           }
         },

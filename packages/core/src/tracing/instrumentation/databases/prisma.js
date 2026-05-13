@@ -14,11 +14,54 @@ let logger;
 let isActive = false;
 
 const providerAndDataSourceUriMap = new WeakMap();
+const mariadbAdapterConfigMap = new WeakMap();
 
 exports.init = function init(config) {
   logger = config.logger;
+
+  hook.onModuleLoad('@prisma/adapter-mariadb', instrumentMariaDbAdapter);
   hook.onModuleLoad('@prisma/client', instrumentPrismaClient);
 };
+
+function instrumentMariaDbAdapter(mariadbAdapterModule) {
+  if (typeof mariadbAdapterModule.PrismaMariaDb === 'function') {
+    const OriginalPrismaMariaDb = mariadbAdapterModule.PrismaMariaDb;
+
+    class InstanaPrismaMariaDb extends OriginalPrismaMariaDb {
+      constructor(config) {
+        super(config);
+
+        if (config && typeof config === 'object') {
+          const host = config.host || 'localhost';
+          const port = config.port || 3306;
+          const user = config.user || '';
+          const database = config.database || '';
+
+          if (user && database) {
+            const sanitizedUrl = `mysql://${user}:_redacted_@${host}:${port}/${database}`;
+            mariadbAdapterConfigMap.set(this, {
+              provider: 'mysql',
+              url: sanitizedUrl
+            });
+          }
+        }
+      }
+    }
+
+    Object.getOwnPropertyNames(OriginalPrismaMariaDb).forEach(prop => {
+      if (prop !== 'length' && prop !== 'name' && prop !== 'prototype') {
+        try {
+          InstanaPrismaMariaDb[prop] = OriginalPrismaMariaDb[prop];
+        } catch (e) {
+          // ignore
+        }
+      }
+    });
+    return {
+      PrismaMariaDb: InstanaPrismaMariaDb
+    };
+  }
+}
 
 function instrumentPrismaClient(prismaClientModule) {
   instrumentClientConstructor(prismaClientModule);
@@ -86,12 +129,15 @@ function instrumentClientConstructor(prismaClientModule) {
           if (this._engineConfig.adapter) {
             const adapter = this._engineConfig.adapter;
             try {
-              if (adapter?.config?.connectionString) {
+              // Capture config during adapter construction  for MariaDB adapter
+              const capturedConfig = mariadbAdapterConfigMap.get(adapter);
+              if (capturedConfig) {
+                dataSourceUrl = capturedConfig.url;
+              } else if (adapter?.config?.connectionString) {
                 dataSourceUrl = redactPassword(provider, adapter.config.connectionString);
               } else if (adapter?.externalPool?.options?.connectionString) {
                 dataSourceUrl = redactPassword(provider, adapter.externalPool.options.connectionString);
               }
-              // Note: MariaDB adapter doesn't expose connection details due to private fields
             } catch (err) {
               logger.debug('[Instana] Cannot extract URL from Prisma adapter config:', err);
             }
