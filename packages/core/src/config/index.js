@@ -751,7 +751,7 @@ function normalizeDisableTracing({ userConfig = {}, defaultConfig = {}, finalCon
     finalConfig.tracing.enabled = false;
     finalConfig.tracing.disable = {};
     configStore.set('config.tracing.disable', {
-      source: CONFIG_SOURCES.DEFAULT
+      source: disableRes.source
     });
     return;
   }
@@ -857,24 +857,37 @@ function normalizeSecrets({ userConfig = {}, defaultConfig = {}, finalConfig = {
     fromEnvVar = parseSecretsEnvVar(process.env.INSTANA_SECRETS);
   }
 
-  if (finalConfig.secrets.matcherMode) {
-    logger.debug(`[config] incode:config.secrets.matcherMode = ${finalConfig.secrets.matcherMode}`);
-    configStore.set('config.secrets.matcherMode', { source: CONFIG_SOURCES.INCODE });
-  } else if (fromEnvVar.matcherMode) {
-    logger.debug(`[config] env:INSTANA_SECRETS (matcherMode) = ${fromEnvVar.matcherMode}`);
-    configStore.set('config.secrets.matcherMode', { source: CONFIG_SOURCES.ENV });
+  let matcherModeSource;
+  let matcherMode;
+
+  if (fromEnvVar.matcherMode) {
+    matcherMode = fromEnvVar.matcherMode;
+    matcherModeSource = CONFIG_SOURCES.ENV;
+    logger.debug(`[config] env:INSTANA_SECRETS (matcherMode) = ${matcherMode}`);
+  } else if (userSecrets?.matcherMode) {
+    matcherMode = userSecrets.matcherMode;
+    matcherModeSource = CONFIG_SOURCES.INCODE;
+    logger.debug(`[config] incode:config.secrets.matcherMode = ${matcherMode}`);
+  } else {
+    matcherMode = defaultConfig.secrets.matcherMode;
+    matcherModeSource = CONFIG_SOURCES.DEFAULT;
   }
 
-  if (finalConfig.secrets.keywords) {
-    logger.debug('[config] incode:config.secrets.keywords');
-    configStore.set('config.secrets.keywords', { source: CONFIG_SOURCES.INCODE });
-  } else if (fromEnvVar.keywords) {
+  let keywordsSource;
+  let keywords;
+
+  if (fromEnvVar.keywords) {
+    keywords = fromEnvVar.keywords;
+    keywordsSource = CONFIG_SOURCES.ENV;
     logger.debug('[config] env:INSTANA_SECRETS (keywords)');
-    configStore.set('config.secrets.keywords', { source: CONFIG_SOURCES.ENV });
+  } else if (userSecrets?.keywords) {
+    keywords = userSecrets.keywords;
+    keywordsSource = CONFIG_SOURCES.INCODE;
+    logger.debug('[config] incode:config.secrets.keywords');
+  } else {
+    keywords = defaultConfig.secrets.keywords;
+    keywordsSource = CONFIG_SOURCES.DEFAULT;
   }
-  const matcherMode = userSecrets?.matcherMode || fromEnvVar.matcherMode || defaultConfig.secrets.matcherMode;
-
-  const keywords = userSecrets?.keywords || fromEnvVar.keywords || defaultConfig.secrets.keywords;
 
   if (typeof matcherMode !== 'string') {
     logger.warn(
@@ -882,19 +895,17 @@ function normalizeSecrets({ userConfig = {}, defaultConfig = {}, finalConfig = {
       `The value of config.secrets.matcherMode ("${matcherMode}") is not a string. Assuming the default value ${defaults.secrets.matcherMode}.`
     );
     finalConfig.secrets.matcherMode = defaultConfig.secrets.matcherMode;
-    configStore.set('config.secrets.matcherMode', { source: CONFIG_SOURCES.INCODE });
+    configStore.set('config.secrets.matcherMode', { source: CONFIG_SOURCES.DEFAULT });
   } else if (validSecretsMatcherModes.indexOf(matcherMode) < 0) {
     logger.warn(
       // eslint-disable-next-line max-len
       `The value of config.secrets.matcherMode (or the matcher mode parsed from INSTANA_SECRETS) (${matcherMode}) is not a supported matcher mode. Assuming the default value ${defaults.secrets.matcherMode}.`
     );
     finalConfig.secrets.matcherMode = defaultConfig.secrets.matcherMode;
-    configStore.set('config.secrets.matcherMode', {
-      source: CONFIG_SOURCES.INCODE
-    });
+    configStore.set('config.secrets.matcherMode', { source: CONFIG_SOURCES.DEFAULT });
   } else {
     finalConfig.secrets.matcherMode = matcherMode;
-    configStore.set('config.secrets.matcherMode', { source: CONFIG_SOURCES.INCODE });
+    configStore.set('config.secrets.matcherMode', { source: matcherModeSource });
   }
 
   if (!Array.isArray(keywords)) {
@@ -903,15 +914,15 @@ function normalizeSecrets({ userConfig = {}, defaultConfig = {}, finalConfig = {
       `The value of config.secrets.keywords (${keywords}) is not an array. Assuming the default value ${defaults.secrets.keywords}.`
     );
     finalConfig.secrets.keywords = defaultConfig.secrets.keywords;
-    configStore.set('config.secrets.keywords', { source: CONFIG_SOURCES.INCODE });
+    configStore.set('config.secrets.keywords', { source: CONFIG_SOURCES.DEFAULT });
   } else {
     finalConfig.secrets.keywords = keywords;
-    configStore.set('config.secrets.keywords', { source: CONFIG_SOURCES.INCODE });
+    configStore.set('config.secrets.keywords', { source: keywordsSource });
   }
 
   if (finalConfig.secrets.matcherMode === 'none') {
     finalConfig.secrets.keywords = [];
-    configStore.set('config.secrets.keywords', { source: CONFIG_SOURCES.INCODE });
+    configStore.set('config.secrets.keywords', { source: matcherModeSource });
   }
 }
 
