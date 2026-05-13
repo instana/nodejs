@@ -13,7 +13,18 @@ const cls = require('../../cls');
 let logger;
 let isActive = false;
 
+// Maps database connection info to Prisma instances for span creation
+// Key: engine instance (accessible during span creation via ctx._engine)
+// Value: { provider: string, dataSourceUrl: string }
 const providerAndDataSourceUriMap = new WeakMap();
+
+// Temporary storage for MariaDB adapter connection URLs
+// Key: adapter instance
+// Value: { provider: string, dataSourceUrl: string }
+// Why two maps? Adapter config is only accessible during construction, but spans only have access to the engine.
+// Flow: 1) Adapter constructor captures URL → mariadbAdapterConfigMap
+//       2) PrismaClient constructor transfers URL → providerAndDataSourceUriMap (keyed by engine)
+//       3) Span creation retrieves URL using engine instance
 const mariadbAdapterConfigMap = new WeakMap();
 
 exports.init = function init(config) {
@@ -125,7 +136,7 @@ function instrumentClientConstructor(prismaClientModule) {
           if (this._engineConfig.adapter) {
             const adapter = this._engineConfig.adapter;
             try {
-              // Capture config during adapter construction  for MariaDB adapter
+              // Get URL captured during MariaDB adapter construction
               const capturedConfig = mariadbAdapterConfigMap.get(adapter);
               if (capturedConfig) {
                 dataSourceUrl = capturedConfig.url;
