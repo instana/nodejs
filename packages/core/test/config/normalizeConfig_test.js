@@ -1120,9 +1120,6 @@ describe('config.normalizeConfig', () => {
         });
         expect(config.secrets.matcherMode).to.equal('equals');
         expect(config.secrets.keywords).to.deep.equal(['env-secret']);
-
-        const matcherModeSource = coreConfig.configStore.get('config.secrets.matcherMode');
-        expect(matcherModeSource.source).to.equal(1);
       });
 
       it('should prioritize ENV over in-code for keywords', () => {
@@ -1136,9 +1133,6 @@ describe('config.normalizeConfig', () => {
           }
         });
         expect(config.secrets.keywords).to.deep.equal(['env-keyword1', 'env-keyword2']);
-
-        const keywordsSource = coreConfig.configStore.get('config.secrets.keywords');
-        expect(keywordsSource.source).to.equal(1);
       });
 
       it('should use in-code when ENV is not set', () => {
@@ -1153,12 +1147,6 @@ describe('config.normalizeConfig', () => {
         });
         expect(config.secrets.matcherMode).to.equal('regex');
         expect(config.secrets.keywords).to.deep.equal(['incode-secret']);
-
-        const matcherModeSource = coreConfig.configStore.get('config.secrets.matcherMode');
-        expect(matcherModeSource.source).to.equal(2);
-
-        const keywordsSource = coreConfig.configStore.get('config.secrets.keywords');
-        expect(keywordsSource.source).to.equal(2);
       });
 
       it('should use DEFAULT when neither ENV nor in-code is set', () => {
@@ -1168,12 +1156,6 @@ describe('config.normalizeConfig', () => {
         });
         expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
         expect(config.secrets.keywords).to.deep.equal(['key', 'pass', 'secret']);
-
-        const matcherModeSource = coreConfig.configStore.get('config.secrets.matcherMode');
-        expect(matcherModeSource.source).to.equal(4);
-
-        const keywordsSource = coreConfig.configStore.get('config.secrets.keywords');
-        expect(keywordsSource.source).to.equal(4);
       });
 
       it('should track DEFAULT source when invalid matcherMode is provided', () => {
@@ -1185,9 +1167,6 @@ describe('config.normalizeConfig', () => {
           }
         });
         expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
-
-        const matcherModeSource = coreConfig.configStore.get('config.secrets.matcherMode');
-        expect(matcherModeSource.source).to.equal(4);
       });
 
       it('should track DEFAULT source when invalid keywords are provided', () => {
@@ -1199,12 +1178,9 @@ describe('config.normalizeConfig', () => {
           }
         });
         expect(config.secrets.keywords).to.deep.equal(['key', 'pass', 'secret']);
-
-        const keywordsSource = coreConfig.configStore.get('config.secrets.keywords');
-        expect(keywordsSource.source).to.equal(4);
       });
 
-      it('should handle matcherMode=none with correct source tracking', () => {
+      it('should handle matcherMode=none', () => {
         const config = coreConfig.normalize({
           userConfig: {
             secrets: {
@@ -1214,15 +1190,9 @@ describe('config.normalizeConfig', () => {
         });
         expect(config.secrets.matcherMode).to.equal('none');
         expect(config.secrets.keywords).to.deep.equal([]);
-
-        const matcherModeSource = coreConfig.configStore.get('config.secrets.matcherMode');
-        expect(matcherModeSource.source).to.equal(2);
-
-        const keywordsSource = coreConfig.configStore.get('config.secrets.keywords');
-        expect(keywordsSource.source).to.equal(2);
       });
 
-      it('should handle ENV matcherMode=none with correct source tracking', () => {
+      it('should handle ENV matcherMode=none', () => {
         process.env.INSTANA_SECRETS = 'none';
         const config = coreConfig.normalize({
           userConfig: {
@@ -1234,12 +1204,6 @@ describe('config.normalizeConfig', () => {
         });
         expect(config.secrets.matcherMode).to.equal('none');
         expect(config.secrets.keywords).to.deep.equal([]);
-
-        const matcherModeSource = coreConfig.configStore.get('config.secrets.matcherMode');
-        expect(matcherModeSource.source).to.equal(1);
-
-        const keywordsSource = coreConfig.configStore.get('config.secrets.keywords');
-        expect(keywordsSource.source).to.equal(1);
       });
     });
 

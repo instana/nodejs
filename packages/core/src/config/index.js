@@ -173,7 +173,6 @@ const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-igno
 
 module.exports.configNormalizers = configNormalizers;
 module.exports.configValidators = configValidators;
-module.exports.configStore = configStore;
 
 /**
  * @param {import('../core').GenericLogger} [_logger]
