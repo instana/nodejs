@@ -44,11 +44,6 @@ const otlpAttributeMappings = {
   kafka: {
     service: 'messaging.destination.name',
     access: 'messaging.operation.type'
-  },
-
-  // Service metadata
-  service: {
-    name: 'service.name'
   }
 };
 
