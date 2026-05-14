@@ -8,62 +8,45 @@
  * OTLP attribute mappings for different span types.
  * Maps Instana span data fields to OTLP semantic convention attributes.
  *
- * Based on OpenTelemetry Semantic Conventions for HTTP:
- * - Common HTTP exit (client) span mapping
- * - Common HTTP entry (server) span mapping
+ * Based on OpenTelemetry Semantic Conventions:
+ * - HTTP: https://opentelemetry.io/docs/specs/semconv/http/
+ * - Database: https://opentelemetry.io/docs/specs/semconv/database/
+ * - Messaging: https://opentelemetry.io/docs/specs/semconv/messaging/
  *
  * @type {Object<string, Object<string, string>>}
  */
 const otlpAttributeMappings = {
+  // HTTP Semantic Conventions
   http: {
-    // HTTP method mapping (both client and server)
-    // Instana: http.method -> OTel: http.request.method
     method: 'http.request.method',
-
-    // HTTP status code mapping (both client and server)
-    // Instana: http.status -> OTel: http.response.status_code
     status: 'http.response.status_code',
-
-    // HTTP URL mapping (client spans)
-    // Instana: http.url -> OTel: url.full
     url: 'url.full',
-
-    // HTTP path mapping (server spans)
-    // Instana: http.path -> OTel: url.path
     path: 'url.path',
-
-    // HTTP host mapping (both client and server)
-    // Instana: http.host -> OTel: server.address (simplified, may need port handling)
     host: 'server.address',
-
-    // HTTP protocol mapping
-    // Instana: http.protocol -> OTel: network.protocol.name (may need version split)
     protocol: 'network.protocol.name',
-
-    // HTTP query parameters mapping (both client and server)
-    // Instana: http.params -> OTel: url.query
     params: 'url.query',
-
-    // HTTP path template mapping (both client and server)
-    // Instana: http.path_tpl -> OTel: url.template
     path_tpl: 'url.template',
-
-    // HTTP error mapping (both client and server)
-    // Instana: http.error -> OTel: error.type
     error: 'error.type',
-
-    // Note: http.context_root mapping is not included as it conflicts with http.path
-    // Both would map to url.path. Context root extraction requires special logic
-    // and should be implemented separately when needed.
-
-    // Legacy mappings for backward compatibility
     status_text: 'http.status_text',
-
-    // HTTP route mapping (alternative to path_tpl)
     route: 'http.route'
   },
 
-  // resource but added for ui view, without this .. ?
+  // PostgreSQL/Database Semantic Conventions
+  pg: {
+    stmt: 'db.statement',
+    host: 'net.peer.name',
+    port: 'net.peer.port',
+    user: 'db.user',
+    db: 'db.name'
+  },
+
+  // Kafka/Messaging Semantic Conventions
+  kafka: {
+    service: 'messaging.destination.name',
+    access: 'messaging.operation.type'
+  },
+
+  // Service metadata
   service: {
     name: 'service.name'
   }
