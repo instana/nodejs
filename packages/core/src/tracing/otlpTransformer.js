@@ -35,8 +35,9 @@ const spanKindRules = {
     dataKey: 'kafka',
     resolver: data => {
       // OTEL: 4=PRODUCER, 5=CONSUMER
-      if (data.access === 'send') return 4;
-      if (data.access === 'consume') return 5;
+      // Visible in UI after changing to 2 and 3
+      if (data.access === 'send') return 2;
+      if (data.access === 'consume') return 3;
       return null; // Fall back to default mapping
     }
   }
