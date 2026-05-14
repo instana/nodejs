@@ -27,13 +27,41 @@ function setPid(pid) {
 }
 
 /**
+ * Span kind mapping rules for special cases
+ * Maps specific span types to OTEL span kinds based on data context
+ */
+const spanKindRules = {
+  kafka: {
+    dataKey: 'kafka',
+    resolver: data => {
+      // OTEL: 4=PRODUCER, 5=CONSUMER
+      if (data.access === 'send') return 4;
+      if (data.access === 'consume') return 5;
+      return null; // Fall back to default mapping
+    }
+  }
+};
+
+/**
  * Converts Instana Span Kind to OTEL Span Kind
- * @param {number} instanaKind - Instana span kind
+ * @param {number} instanaKind - Instana span kind (1=ENTRY, 2=EXIT, 3=INTERMEDIATE)
+ * @param {string} spanType - Instana span type (e.g., 'node.http.server', 'kafka')
+ * @param {Object} data - Span data for additional context
  * @returns {number} OTEL span kind
  */
-function convertSpanKind(instanaKind) {
-  // Instana: 1=ENTRY/SERVER, 2=EXIT/CLIENT, 3=INTERMEDIATE/INTERNAL
+function convertSpanKind(instanaKind, spanType, data) {
   // OTEL: 0=UNSPECIFIED, 1=INTERNAL, 2=SERVER, 3=CLIENT, 4=PRODUCER, 5=CONSUMER
+
+  // Check for special span kind rules
+  const rule = spanKindRules[spanType];
+  if (rule && data && data[rule.dataKey]) {
+    const resolvedKind = rule.resolver(data[rule.dataKey]);
+    if (resolvedKind !== null) {
+      return resolvedKind;
+    }
+  }
+
+  // Standard Instana kind mapping
   switch (instanaKind) {
     case 1: // ENTRY -> SERVER
       return 2;
@@ -56,16 +84,40 @@ function msToNano(ms) {
 }
 
 /**
+ * System attribute rules for specific span types
+ * Automatically adds required system attributes based on span type
+ */
+const systemAttributeRules = {
+  postgres: {
+    dataKey: 'pg',
+    attributes: [{ key: 'db.system', value: 'postgresql' }]
+  },
+  kafka: {
+    dataKey: 'kafka',
+    attributes: [{ key: 'messaging.system', value: 'kafka' }]
+  }
+};
+
+/**
  * Creates OTEL Attributes from Instana Span Data using mapper schema
  * @param {Object} data - Instana span data
+ * @param {string} spanType - Instana span type for context-specific attributes
  * @returns {Array} OTEL attributes array
  */
-function createAttributes(data) {
+function createAttributes(data, spanType) {
   const attributes = [];
   const mappings = getOtlpAttributeMappings();
 
   if (!data) {
     return attributes;
+  }
+
+  // Add system-specific attributes based on span type
+  const systemRule = systemAttributeRules[spanType];
+  if (systemRule && data[systemRule.dataKey]) {
+    systemRule.attributes.forEach(attr => {
+      attributes.push({ key: attr.key, value: { stringValue: attr.value } });
+    });
   }
 
   // Process each data section (http, service, etc.)
@@ -92,7 +144,7 @@ function createAttributes(data) {
       const otlpKey = sectionMappings[field] || `${dataKey}.${field}`;
 
       // Determine value type and format
-      if (otlpKey === 'http.status_code' && typeof value === 'number') {
+      if (otlpKey === 'http.response.status_code' && typeof value === 'number') {
         attributes.push({ key: otlpKey, value: { intValue: value } });
       } else if (typeof value === 'string') {
         attributes.push({ key: otlpKey, value: { stringValue: value } });
@@ -173,6 +225,42 @@ function createStatus(errorCount) {
 }
 
 /**
+ * Span name generation rules configuration
+ * Each rule defines how to generate a span name for a specific span type
+ */
+const spanNameRules = {
+  'node.http.server': {
+    dataKey: 'http',
+    template: data => {
+      const method = data.method || 'HTTP';
+      const path = data.path_tpl || data.url || '/';
+      return `${method} ${path}`;
+    }
+  },
+  'node.http.client': {
+    dataKey: 'http',
+    template: data => data.method || 'HTTP'
+  },
+  postgres: {
+    dataKey: 'pg',
+    template: data => {
+      const stmt = data.stmt || '';
+      const operation = stmt.split(' ')[0] || 'query';
+      const db = data.db || '';
+      return `pg.query:${operation} ${db}`.trim();
+    }
+  },
+  kafka: {
+    dataKey: 'kafka',
+    template: data => {
+      const access = data.access || 'process';
+      const topic = data.service || 'unknown';
+      return `${access} ${topic}`;
+    }
+  }
+};
+
+/**
  * Generates a descriptive span name based on Instana span data
  * @param {Object} instanaSpan - Instana span object
  * @returns {string} Descriptive span name
@@ -180,32 +268,14 @@ function createStatus(errorCount) {
 function generateSpanName(instanaSpan) {
   const spanType = instanaSpan.n;
   const data = instanaSpan.data || {};
-  const httpData = data.http || {};
 
-  // Debug log to trace span name generation
-  console.log('[DEBUG] generateSpanName - Input:', {
-    spanType,
-    httpMethod: httpData.method,
-    httpUrl: httpData.url,
-    httpPath: httpData.path_tpl || httpData.url,
-    fullData: JSON.stringify(data, null, 2)
-  });
-
-  // For HTTP server spans: "METHOD path"
-  if (spanType === 'node.http.server') {
-    const method = httpData.method || 'HTTP';
-    const path = httpData.path_tpl || httpData.url || '/';
-    return `${method} ${path}`;
+  // Check if we have a rule for this span type
+  const rule = spanNameRules[spanType];
+  if (rule && data[rule.dataKey]) {
+    return rule.template(data[rule.dataKey]);
   }
 
-  // For HTTP client spans: "METHOD" or "METHOD url"
-  if (spanType === 'node.http.client') {
-    const method = httpData.method || 'HTTP';
-    // For client spans, just use the method (similar to OTEL "GET")
-    return method;
-  }
-
-  // For other span types, use the original name
+  // Default: use span type
   return spanType || 'unknown';
 }
 
@@ -234,10 +304,10 @@ function transformSpan(instanaSpan) {
     traceId: normalizeTraceId(instanaSpan.t),
     spanId: instanaSpan.s,
     name: generateSpanName(instanaSpan),
-    kind: convertSpanKind(instanaSpan.k),
+    kind: convertSpanKind(instanaSpan.k, instanaSpan.n, instanaSpan.data),
     startTimeUnixNano: msToNano(instanaSpan.ts),
     endTimeUnixNano: msToNano(instanaSpan.ts + instanaSpan.d),
-    attributes: createAttributes(instanaSpan.data),
+    attributes: createAttributes(instanaSpan.data, instanaSpan.n),
     status: createStatus(instanaSpan.ec || 0)
   };
 
