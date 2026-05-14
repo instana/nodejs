@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.5.0](https://github.com/instana/nodejs/compare/v5.4.3...v5.5.0) (2026-05-14)
+
+
+### Bug Fixes
+
+* bumped semver from 7.7.4 to 7.8.0 ([#2541](https://github.com/instana/nodejs/issues/2541)) ([d0f9d7c](https://github.com/instana/nodejs/commit/d0f9d7c6a977d050f33338afe00c3cc343f52322))
+
+
+
+
+
 ## [5.4.3](https://github.com/instana/nodejs/compare/v5.4.2...v5.4.3) (2026-04-27)
 
 **Note:** Version bump only for package @instana/aws-lambda

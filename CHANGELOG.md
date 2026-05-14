@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.5.0](https://github.com/instana/nodejs/compare/v5.4.3...v5.5.0) (2026-05-14)
+
+
+### Bug Fixes
+
+* bumped @opentelemetry/core from 2.6.1 to 2.7.1 ([#2529](https://github.com/instana/nodejs/issues/2529)) ([c3416c0](https://github.com/instana/nodejs/commit/c3416c07f3c9e9692f16ce071ad16e09b07ab9c4))
+* bumped @opentelemetry/instrumentation-fs from 0.34.0 to 0.36.0 ([#2542](https://github.com/instana/nodejs/issues/2542)) ([1edc043](https://github.com/instana/nodejs/commit/1edc0437b696e762f0b74f42700b05afcd6d6d42))
+* bumped @opentelemetry/instrumentation-oracledb from 0.39.0 to 0.40.0 ([#2520](https://github.com/instana/nodejs/issues/2520)) ([50e8d00](https://github.com/instana/nodejs/commit/50e8d008a2d0b14872eacf9a464b896fca92528d))
+* bumped @opentelemetry/instrumentation-restify from 0.59.0 to 0.60.0 ([#2521](https://github.com/instana/nodejs/issues/2521)) ([6f63dec](https://github.com/instana/nodejs/commit/6f63deca0d5bf4f040b06e342ead4af3854736d3))
+* bumped semver from 7.7.4 to 7.8.0 ([#2541](https://github.com/instana/nodejs/issues/2541)) ([d0f9d7c](https://github.com/instana/nodejs/commit/d0f9d7c6a977d050f33338afe00c3cc343f52322))
+
+
+### Features
+
+* added support for sqs-consumer v15 ([#2530](https://github.com/instana/nodejs/issues/2530)) ([4917a71](https://github.com/instana/nodejs/commit/4917a71d355c6473f636eda72e148d42f7469d2b))
+* added support for v26 ([#2524](https://github.com/instana/nodejs/issues/2524)) ([acd19f1](https://github.com/instana/nodejs/commit/acd19f1c4b88ab792105fa195036dd7901a2ee35))
+
+
+
+
+
 ## [5.4.3](https://github.com/instana/nodejs/compare/v5.4.2...v5.4.3) (2026-04-27)
 
 
