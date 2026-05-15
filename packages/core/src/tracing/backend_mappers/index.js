@@ -5,10 +5,14 @@
 'use strict';
 
 const mapper = require('./mapper');
-
-/**
- * Backend mapper transforms - converts internal span fields to backend format
- */
 module.exports = {
-  transform: mapper.transform
+  get transform() {
+    return (/** @type {import('../../core').InstanaBaseSpan} */ span) => {
+      try {
+        return mapper.transform(span);
+      } catch (error) {
+        return span;
+      }
+    };
+  }
 };
