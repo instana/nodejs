@@ -30,7 +30,7 @@ const mariadbAdapterConfigMap = new WeakMap();
 exports.init = function init(config) {
   logger = config.logger;
 
-  hook.onModuleLoad('@prisma/adapter-mariadb', instrumentMariaDbAdapter);
+  hook.onModuleLoad('@prisma/adapter-mariadb', instrumentMariaDbAdapter, { nativeEsm: true });
   hook.onModuleLoad('@prisma/client', instrumentPrismaClient);
 };
 
@@ -64,10 +64,17 @@ function instrumentMariaDbAdapter(mariadbAdapterModule) {
     }
   }
 
-  return {
-    ...mariadbAdapterModule,
-    PrismaMariaDb: InstanaPrismaMariaDb
-  };
+  const isGetterExport = !!Object.getOwnPropertyDescriptor(mariadbAdapterModule, 'PrismaMariaDb')?.get;
+  // CJS: PrismaMariaDb is a getter property
+  if (isGetterExport) {
+    return {
+      ...mariadbAdapterModule,
+      PrismaMariaDb: InstanaPrismaMariaDb
+    };
+  }
+  // ESM: PrismaMariaDb is a direct export
+  mariadbAdapterModule.PrismaMariaDb = InstanaPrismaMariaDb;
+  return mariadbAdapterModule;
 }
 
 function instrumentPrismaClient(prismaClientModule) {
