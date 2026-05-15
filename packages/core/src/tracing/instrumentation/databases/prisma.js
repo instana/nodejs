@@ -69,7 +69,9 @@ function instrumentMariaDbAdapter(mariadbAdapterModule) {
   if (isGetterExport) {
     return {
       ...mariadbAdapterModule,
-      PrismaMariaDb: InstanaPrismaMariaDb
+      get PrismaMariaDb() {
+        return InstanaPrismaMariaDb;
+      }
     };
   }
   // ESM: PrismaMariaDb is a direct export
