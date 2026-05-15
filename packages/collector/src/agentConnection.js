@@ -10,7 +10,7 @@ const pathUtil = require('path');
 const circularReferenceRemover = require('./util/removeCircular');
 const agentOpts = require('./agent/opts');
 const cmdline = require('./cmdline');
-const otlpTransformer = require('./otlpTransformer');
+const otlpTransformer = require('@instana/core/src/tracing/otlpTransformer');
 /** @typedef {import('@instana/core/src/core').InstanaBaseSpan} InstanaBaseSpan */
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
@@ -314,7 +314,7 @@ exports.sendMetrics = function sendMetrics(data, cb) {
     firstTwoKeys[dataKeys[i]] = data[dataKeys[i]];
   }
 
-  logger.debug(`sendMetrics called with data (first 2 keys): ${JSON.stringify(firstTwoKeys)}`);
+  // logger.debug(`sendMetrics called with data (first 2 keys): ${JSON.stringify(firstTwoKeys)}`);
 
   // Transform Instana metrics to OTLP format
   const otlpMetrics = otlpTransformer.transformMetrics(data);
@@ -344,7 +344,7 @@ exports.sendMetrics = function sendMetrics(data, cb) {
     }
   }
 
-  logger.debug(`Transformed to OTLP (first 2 metrics) ${JSON.stringify(otlpPreview)}`);
+  // logger.debug(`Transformed to OTLP (first 2 metrics) ${JSON.stringify(otlpPreview)}`);
 
   // Send directly without using sendData (which would transform again)
   sendOtlpData('/v1/metrics', otlpMetrics, err => {
@@ -352,7 +352,7 @@ exports.sendMetrics = function sendMetrics(data, cb) {
       logger.error('Error sending metrics:', err);
       cb(err, null);
     } else {
-      logger.debug('Metrics sent successfully');
+      // logger.debug('Metrics sent successfully');
       // OTLP endpoints don't return requests like the old Instana endpoint
       // Always return empty array for compatibility
       cb(null, []);
@@ -370,10 +370,10 @@ exports.sendSpans = function sendSpans(spans, cb) {
     if (err && !maxContentErrorHasBeenLogged && err instanceof PayloadTooLargeError) {
       logLargeSpans(spans);
     } else if (err) {
-      const spanInfo = getSpanLengthInfo(spans);
+      const spanInfo = spans;
       logger.debug(`Failed to send: ${JSON.stringify(spanInfo)}`);
     } else {
-      const spanInfo = getSpanLengthInfo(spans);
+      const spanInfo = spans;
       logger.debug(`Successfully sent: ${JSON.stringify(spanInfo)}`);
     }
     cb(err);
@@ -475,11 +475,11 @@ function sendData(path, data, cb, ignore404 = false) {
   cb = util.atMostOnce(`callback for sendData: ${path}`, cb);
   console.log(JSON.stringify(data));
   // Transform Instana format to OTLP format
-  const otlpFormat = otlpTransformer(data);
+  // const otlpFormat = otlpTransformer(data);
 
-  console.log(JSON.stringify(otlpFormat));
+  // console.log(JSON.stringify(otlpFormat));
 
-  const payloadAsString = JSON.stringify(otlpFormat, circularReferenceRemover());
+  const payloadAsString = JSON.stringify(data, circularReferenceRemover());
   if (typeof logger.trace === 'function') {
     logger.trace(`Sending data to ${path}.`);
   } else {
