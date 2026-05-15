@@ -2,7 +2,6 @@
   "dependencies": {
     "@prisma/client": "{{CURRENCY_VERSION}}",
     "@prisma/adapter-pg": "{{CURRENCY_VERSION}}",
-    "@prisma/adapter-mariadb": "{{CURRENCY_VERSION}}",
     "@prisma/adapter-better-sqlite3": "{{CURRENCY_VERSION}}"
   }
 }

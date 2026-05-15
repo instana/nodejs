@@ -22,14 +22,9 @@ const migrationsTargetDir = path.join(appDir, 'prisma', 'migrations');
 module.exports = function (name, version, isLatest, mode) {
   this.timeout(Math.max(config.getTestTimeout() * 3, 20000));
 
-  const provider = mode;
+  const provider = mode; // mode is either 'sqlite' or 'postgresql'
   const majorVersion = parseInt(version, 10);
   const isV7 = majorVersion >= 7;
-
-  if (provider === 'mysql' && !isV7) {
-    return;
-  }
-
   // Getting the URL is not possible between Prisma 4.10 and 5.1 (getConfig was removed)
   const urlUnavailable = semver.gte(version, '4.10.0') && semver.lt(version, '5.2.0');
 
@@ -203,17 +198,6 @@ module.exports = function (name, version, isLatest, mode) {
       case 'postgresql':
         expectedUrl = process.env.INSTANA_CONNECT_POSTGRES_PRISMA_URL.replace('nodepw', '_redacted_');
         break;
-      case 'mysql': {
-        const {
-          INSTANA_CONNECT_MYSQL_HOST: host,
-          INSTANA_CONNECT_MYSQL_PORT: port,
-          INSTANA_CONNECT_MYSQL_USER: user,
-          INSTANA_CONNECT_MYSQL_DB: database
-        } = process.env;
-
-        expectedUrl = `mysql://${user}:_redacted_@${host}:${port}/${database}`;
-        break;
-      }
       default:
         throw new Error(`Unknown provider: ${provider}`);
     }

@@ -47,17 +47,6 @@ try {
       const { PrismaPg } = await import('@prisma/adapter-pg');
       adapter = new PrismaPg({ connectionString: process.env.INSTANA_CONNECT_POSTGRES_PRISMA_URL });
       console.log(`Initialized Prisma ${version} with PostgreSQL adapter`);
-    } else if (provider === 'mysql') {
-      const { PrismaMariaDb } = await import('@prisma/adapter-mariadb');
-      adapter = new PrismaMariaDb({
-        host: process.env.INSTANA_CONNECT_MYSQL_HOST,
-        port: Number(process.env.INSTANA_CONNECT_MYSQL_PORT),
-        user: process.env.INSTANA_CONNECT_MYSQL_USER,
-        password: process.env.INSTANA_CONNECT_MYSQL_PW,
-        database: process.env.INSTANA_CONNECT_MYSQL_DB,
-        connectionLimit: 5
-      });
-      console.log(`Initialized Prisma ${version} with MySQL adapter`);
     } else {
       const { PrismaBetterSqlite3 } = await import('@prisma/adapter-better-sqlite3');
       const __dirname = path.dirname(fileURLToPath(import.meta.url));

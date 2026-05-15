@@ -1,5 +1,4 @@
 [
     "sqlite",
-    "mysql",
     "postgresql"
 ]
