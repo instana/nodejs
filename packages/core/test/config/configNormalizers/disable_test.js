@@ -8,6 +8,7 @@ const { describe, it, beforeEach, afterEach } = require('mocha');
 const { expect } = require('chai');
 
 const { normalize, normalizeExternalConfig } = require('../../../src/config/configNormalizers/disable');
+const { CONFIG_SOURCES } = require('../../../src/util/constants');
 
 function resetEnv() {
   delete process.env.INSTANA_TRACING_DISABLE;
@@ -29,7 +30,10 @@ describe('util.configNormalizers.disable', () => {
       const config = {};
       const result = normalize(config);
 
-      expect(result).to.deep.equal({});
+      expect(result).to.deep.equal({
+        value: {},
+        source: CONFIG_SOURCES.DEFAULT
+      });
       expect(config.tracing).to.exist;
     });
 
@@ -43,7 +47,8 @@ describe('util.configNormalizers.disable', () => {
       };
 
       const result = normalize(config);
-      expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
+      expect(result.value.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
+      expect(result.source).to.equal(CONFIG_SOURCES.INCODE);
     });
 
     it('should handle non-array "instrumentations" input gracefully', () => {
@@ -56,7 +61,8 @@ describe('util.configNormalizers.disable', () => {
       };
 
       const result = normalize(config);
-      expect(result.instrumentations).to.deep.equal([]);
+      expect(result.value.instrumentations).to.deep.equal([]);
+      expect(result.source).to.equal(CONFIG_SOURCES.INCODE);
     });
 
     it('should handle flat disable config', () => {
@@ -67,7 +73,8 @@ describe('util.configNormalizers.disable', () => {
       };
 
       const result = normalize(config);
-      expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
+      expect(result.value.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
+      expect(result.source).to.equal(CONFIG_SOURCES.INCODE);
     });
 
     it('should support disabling by group names', () => {
@@ -80,7 +87,8 @@ describe('util.configNormalizers.disable', () => {
       };
 
       const result = normalize(config);
-      expect(result.groups).to.deep.equal(['logging', 'databases']);
+      expect(result.value.groups).to.deep.equal(['logging', 'databases']);
+      expect(result.source).to.equal(CONFIG_SOURCES.INCODE);
     });
 
     it('should normalize group names: lowercase and trim whitespace', () => {
@@ -93,7 +101,8 @@ describe('util.configNormalizers.disable', () => {
       };
 
       const result = normalize(config);
-      expect(result.groups).to.deep.equal(['logging', 'databases', 'messaging']);
+      expect(result.value.groups).to.deep.equal(['logging', 'databases', 'messaging']);
+      expect(result.source).to.equal(CONFIG_SOURCES.INCODE);
     });
 
     it('should handle non-array "groups" input gracefully', () => {
@@ -106,7 +115,8 @@ describe('util.configNormalizers.disable', () => {
       };
 
       const result = normalize(config);
-      expect(result.groups).to.deep.equal([]);
+      expect(result.value.groups).to.deep.equal([]);
+      expect(result.source).to.equal(CONFIG_SOURCES.INCODE);
     });
 
     it('should handle mixed array of instrumentations and groups', () => {
@@ -118,8 +128,11 @@ describe('util.configNormalizers.disable', () => {
 
       const result = normalize(config);
       expect(result).to.deep.equal({
-        instrumentations: ['aws-sdk', 'mongodb'],
-        groups: ['logging', 'databases']
+        value: {
+          instrumentations: ['aws-sdk', 'mongodb'],
+          groups: ['logging', 'databases']
+        },
+        source: CONFIG_SOURCES.INCODE
       });
     });
 
@@ -131,15 +144,24 @@ describe('util.configNormalizers.disable', () => {
       };
 
       const result = normalize(config);
-      expect(result).to.deep.equal({});
+      expect(result).to.deep.equal({
+        value: {},
+        source: CONFIG_SOURCES.DEFAULT
+      });
     });
 
     it('should return an empty object if disable is null or undefined', () => {
       const config1 = { tracing: { disable: null } };
       const config2 = { tracing: { disable: undefined } };
 
-      expect(normalize(config1)).to.deep.equal({});
-      expect(normalize(config2)).to.deep.equal({});
+      expect(normalize(config1)).to.deep.equal({
+        value: {},
+        source: CONFIG_SOURCES.DEFAULT
+      });
+      expect(normalize(config2)).to.deep.equal({
+        value: {},
+        source: CONFIG_SOURCES.DEFAULT
+      });
     });
 
     it('should ignore non-string values in disable array', () => {
@@ -150,7 +172,8 @@ describe('util.configNormalizers.disable', () => {
       };
 
       const result = normalize(config);
-      expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb']);
+      expect(result.value.instrumentations).to.deep.equal(['aws-sdk', 'mongodb']);
+      expect(result.source).to.equal(CONFIG_SOURCES.INCODE);
     });
 
     it('should ignore non-string values inside disable.instrumentations', () => {
@@ -161,7 +184,8 @@ describe('util.configNormalizers.disable', () => {
       };
 
       const result = normalize(config);
-      expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb']);
+      expect(result.value.instrumentations).to.deep.equal(['aws-sdk', 'mongodb']);
+      expect(result.source).to.equal(CONFIG_SOURCES.INCODE);
     });
 
     it('should return true if tracing is globally disabled (disable = true)', () => {
@@ -172,7 +196,10 @@ describe('util.configNormalizers.disable', () => {
       };
 
       const result = normalize(config);
-      expect(result).to.equal(true);
+      expect(result).to.deep.equal({
+        value: true,
+        source: CONFIG_SOURCES.INCODE
+      });
     });
 
     it('should return an empty object if tracing disable is set to false', () => {
@@ -183,7 +210,10 @@ describe('util.configNormalizers.disable', () => {
       };
 
       const result = normalize(config);
-      expect(result).to.deep.equal({});
+      expect(result).to.deep.equal({
+        value: {},
+        source: CONFIG_SOURCES.DEFAULT
+      });
     });
   });
 
@@ -194,7 +224,8 @@ describe('util.configNormalizers.disable', () => {
       const config = {};
       const result = normalize(config);
 
-      expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
+      expect(result.value.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
+      expect(result.source).to.equal(CONFIG_SOURCES.ENV);
     });
 
     it('should parse "INSTANA_TRACING_DISABLE" as instrumentations', () => {
@@ -203,7 +234,8 @@ describe('util.configNormalizers.disable', () => {
       const config = {};
       const result = normalize(config);
 
-      expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
+      expect(result.value.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
+      expect(result.source).to.equal(CONFIG_SOURCES.ENV);
     });
 
     it('should parse "INSTANA_TRACING_DISABLE_GROUPS"', () => {
@@ -212,7 +244,8 @@ describe('util.configNormalizers.disable', () => {
       const config = {};
       const result = normalize(config);
 
-      expect(result.groups).to.deep.equal(['logging', 'databases']);
+      expect(result.value.groups).to.deep.equal(['logging', 'databases']);
+      expect(result.source).to.equal(CONFIG_SOURCES.ENV);
     });
 
     it('should support semicolon-separated values in environment variable', () => {
@@ -221,7 +254,8 @@ describe('util.configNormalizers.disable', () => {
       const config = {};
       const result = normalize(config);
 
-      expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
+      expect(result.value.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
+      expect(result.source).to.equal(CONFIG_SOURCES.ENV);
     });
 
     it('should ignore empty or whitespace-only entries in environment variable', () => {
@@ -231,8 +265,9 @@ describe('util.configNormalizers.disable', () => {
       const config = {};
       const result = normalize(config);
 
-      expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
-      expect(result.groups).to.deep.equal(['logging', 'databases', 'messaging']);
+      expect(result.value.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
+      expect(result.value.groups).to.deep.equal(['logging', 'databases', 'messaging']);
+      expect(result.source).to.equal(CONFIG_SOURCES.ENV);
     });
 
     it('should combine env instrumentation and group variables', () => {
@@ -243,8 +278,11 @@ describe('util.configNormalizers.disable', () => {
       const result = normalize(config);
 
       expect(result).to.deep.equal({
-        instrumentations: ['aws-sdk', 'mongodb'],
-        groups: ['logging', 'databases']
+        value: {
+          instrumentations: ['aws-sdk', 'mongodb'],
+          groups: ['logging', 'databases']
+        },
+        source: CONFIG_SOURCES.ENV
       });
     });
 
@@ -255,8 +293,11 @@ describe('util.configNormalizers.disable', () => {
       const result = normalize(config);
 
       expect(result).to.deep.equal({
-        instrumentations: ['aws-sdk', 'mongodb'],
-        groups: ['logging', 'databases']
+        value: {
+          instrumentations: ['aws-sdk', 'mongodb'],
+          groups: ['logging', 'databases']
+        },
+        source: CONFIG_SOURCES.ENV
       });
     });
 
@@ -267,7 +308,10 @@ describe('util.configNormalizers.disable', () => {
       const config = {};
       const result = normalize(config);
 
-      expect(result).to.deep.equal({});
+      expect(result).to.deep.equal({
+        value: {},
+        source: CONFIG_SOURCES.DEFAULT
+      });
     });
 
     it('should return true if INSTANA_TRACING_DISABLE is "true"', () => {
@@ -276,7 +320,10 @@ describe('util.configNormalizers.disable', () => {
       const config = {};
       const result = normalize(config);
 
-      expect(result).to.equal(true);
+      expect(result).to.deep.equal({
+        value: true,
+        source: CONFIG_SOURCES.ENV
+      });
     });
 
     it('should return empty object if INSTANA_TRACING_DISABLE is "false"', () => {
@@ -285,7 +332,44 @@ describe('util.configNormalizers.disable', () => {
       const config = {};
       const result = normalize(config);
 
-      expect(result).to.deep.equal({});
+      expect(result).to.deep.equal({
+        value: {},
+        source: CONFIG_SOURCES.ENV
+      });
+    });
+
+    it('should give precedence to INSTANA_TRACING_DISABLE=false over config.tracing.disable=true', () => {
+      process.env.INSTANA_TRACING_DISABLE = 'false';
+
+      const config = {
+        tracing: {
+          disable: true
+        }
+      };
+      const result = normalize(config);
+
+      expect(result).to.deep.equal({
+        value: {},
+        source: CONFIG_SOURCES.ENV
+      });
+    });
+
+    it('should give precedence to INSTANA_TRACING_DISABLE=false over config with instrumentations', () => {
+      process.env.INSTANA_TRACING_DISABLE = 'false';
+
+      const config = {
+        tracing: {
+          disable: {
+            instrumentations: ['aws-sdk', 'mongodb']
+          }
+        }
+      };
+      const result = normalize(config);
+
+      expect(result).to.deep.equal({
+        value: {},
+        source: CONFIG_SOURCES.ENV
+      });
     });
 
     it('should give precedence to INSTANA_TRACING_DISABLE=true over other env vars', () => {
@@ -296,7 +380,10 @@ describe('util.configNormalizers.disable', () => {
       const config = {};
       const result = normalize(config);
 
-      expect(result).to.equal(true);
+      expect(result).to.deep.equal({
+        value: true,
+        source: CONFIG_SOURCES.ENV
+      });
     });
   });
 
@@ -312,7 +399,12 @@ describe('util.configNormalizers.disable', () => {
       };
 
       const result = normalizeExternalConfig(config);
-      expect(result.instrumentations).to.deep.equal(['redis', 'console']);
+      expect(result).to.deep.equal({
+        value: {
+          instrumentations: ['redis', 'console']
+        },
+        source: CONFIG_SOURCES.AGENT
+      });
     });
 
     it('should correctly categorize known group names', () => {
@@ -326,8 +418,9 @@ describe('util.configNormalizers.disable', () => {
       };
 
       const result = normalizeExternalConfig(config);
-      expect(result.groups).to.include('messaging');
-      expect(result.instrumentations).to.include('kafka');
+      expect(result.source).to.equal(CONFIG_SOURCES.AGENT);
+      expect(result.value.groups).to.include('messaging');
+      expect(result.value.instrumentations).to.include('kafka');
     });
 
     it('should represent false values with negated names', () => {
@@ -343,8 +436,9 @@ describe('util.configNormalizers.disable', () => {
       };
 
       const result = normalizeExternalConfig(config);
-      expect(result.instrumentations).to.deep.equal(['redis', '!console']);
-      expect(result.groups).to.include('logging', '!databases');
+      expect(result.source).to.equal(CONFIG_SOURCES.AGENT);
+      expect(result.value.instrumentations).to.deep.equal(['redis', '!console']);
+      expect(result.value.groups).to.include('logging', '!databases');
     });
 
     it('should return negated names if all values are false', () => {
@@ -358,7 +452,12 @@ describe('util.configNormalizers.disable', () => {
       };
 
       const result = normalizeExternalConfig(config);
-      expect(result.instrumentations).to.deep.equal(['!redis', '!pg']);
+      expect(result).to.deep.equal({
+        value: {
+          instrumentations: ['!redis', '!pg']
+        },
+        source: CONFIG_SOURCES.AGENT
+      });
     });
 
     it('should ignore non-boolean entries in config object', () => {
@@ -373,7 +472,12 @@ describe('util.configNormalizers.disable', () => {
       };
 
       const result = normalizeExternalConfig(config);
-      expect(result.instrumentations).to.deep.equal(['redis']);
+      expect(result).to.deep.equal({
+        value: {
+          instrumentations: ['redis']
+        },
+        source: CONFIG_SOURCES.AGENT
+      });
     });
   });
 });
