@@ -40,7 +40,7 @@ describe('tracing/otlp_mapper', () => {
 
     it('should transform MySQL span using common database mappings', () => {
       span = {
-        n: 'pg',
+        n: 'mysql',
         data: {
           mysql: {
             stmt: 'INSERT INTO orders VALUES (1)',
@@ -53,8 +53,6 @@ describe('tracing/otlp_mapper', () => {
       };
 
       const result = transform(span);
-
-      console.log(result);
       // Note: MySQL uses same fields as PostgreSQL (stmt, host, port, user, db)
       expect(result.data.mysql['db.statement']).to.equal('INSERT INTO orders VALUES (1)');
       expect(result.data.mysql['net.peer.name']).to.equal('db.example.com');
@@ -63,6 +61,9 @@ describe('tracing/otlp_mapper', () => {
       expect(result.data.mysql['db.name']).to.equal('shop');
       expect(result.data.mysql).to.not.have.property('stmt');
       expect(result.data.mysql).to.not.have.property('host');
+      expect(result.data.mysql).to.not.have.property('port');
+      expect(result.data.mysql).to.not.have.property('user');
+      expect(result.data.mysql).to.not.have.property('db');
     });
 
     it('should transform MongoDB span using common database mappings', () => {
@@ -86,7 +87,10 @@ describe('tracing/otlp_mapper', () => {
       expect(result.data.mongodb['net.peer.name']).to.equal('mongo.local');
       expect(result.data.mongodb['net.peer.port']).to.equal(27017);
       expect(result.data.mongodb).to.not.have.property('command');
+      expect(result.data.mongodb).to.not.have.property('namespace');
+      expect(result.data.mongodb).to.not.have.property('collection');
       expect(result.data.mongodb).to.not.have.property('host');
+      expect(result.data.mongodb).to.not.have.property('port');
     });
 
     it('should transform Redis span using common database mappings', () => {
@@ -121,6 +125,7 @@ describe('tracing/otlp_mapper', () => {
       const result = transform(span);
       expect(result.data.pg['db.statement']).to.equal('SELECT 1');
       expect(result.data.pg['pg.custom_field']).to.equal('custom_value');
+      expect(result.data.pg).to.not.have.property('stmt');
       expect(result.data.pg).to.not.have.property('custom_field');
     });
   });
@@ -148,6 +153,12 @@ describe('tracing/otlp_mapper', () => {
       expect(result.data.http['http.response.status_code']).to.equal(200);
       expect(result.data.http['url.path']).to.equal('/api/users');
       expect(result.data.http['network.protocol.name']).to.equal('HTTP/1.1');
+      expect(result.data.http).to.not.have.property('method');
+      expect(result.data.http).to.not.have.property('url');
+      expect(result.data.http).to.not.have.property('host');
+      expect(result.data.http).to.not.have.property('status');
+      expect(result.data.http).to.not.have.property('path');
+      expect(result.data.http).to.not.have.property('protocol');
     });
   });
 
@@ -321,6 +332,7 @@ describe('tracing/otlp_mapper', () => {
 
       const result = transform(span);
       expect(result.data.pg['db.statement']).to.equal('SELECT 1');
+      expect(result.data.pg).to.not.have.property('stmt');
       expect(result.data.stringField).to.equal('value');
       expect(result.data.numberField).to.equal(123);
     });

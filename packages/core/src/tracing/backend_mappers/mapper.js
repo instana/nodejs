@@ -50,7 +50,6 @@ module.exports.transform = span => {
   if (!span || !span.data) {
     return span;
   }
-
   //  In most cases, `span.n` matches the key inside `span.data` (e.g., `span.n === 'redis'` → `span.data.redis`).
   //  However, there are exceptions where `span.n` represents a higher-level concept or protocol,
   //  while `span.data` contains one or more lower-level components.
