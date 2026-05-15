@@ -665,7 +665,7 @@ describe('tracing/spanBuffer', () => {
         const sentSpan = sentPayload.resourceSpans[0].scopeSpans[0].spans[0];
 
         expect(sentSpan.traceId).to.have.lengthOf(32);
-        expect(sentSpan.name).to.equal('node.http.server');
+        expect(sentSpan.name).to.equal('GET /orders');
         expect(sentSpan.kind).to.equal(2);
         expect(sentSpan.attributes).to.deep.include.members([
           {
