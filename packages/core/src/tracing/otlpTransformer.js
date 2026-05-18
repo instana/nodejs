@@ -182,8 +182,8 @@ function createResourceAttributes(from) {
     value: { stringValue: '@instana/collector' }
   });
 
-  // Service Name - use process.title or a default
-  const serviceName = process.env.SERVICE_NAME;
+  // Service Name - support both OTEL_SERVICE_NAME (standard) and SERVICE_NAME (legacy)
+  const serviceName = process.env.OTEL_SERVICE_NAME || process.env.SERVICE_NAME || 'unknown-service';
   attributes.push({
     key: 'service.name',
     value: { stringValue: serviceName }
