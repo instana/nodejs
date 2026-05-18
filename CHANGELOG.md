@@ -3,6 +3,41 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.0.0](https://github.com/instana/nodejs/compare/v5.5.0...v6.0.0) (2026-05-18)
+
+
+### Bug Fixes
+
+* captured database URL for Prisma MariaDB adapter ([#2543](https://github.com/instana/nodejs/issues/2543)) ([dacba21](https://github.com/instana/nodejs/commit/dacba2163b13f070865213d4a8e4146e2df143e1))
+* **core:** ensured env vars take precedence over in-code config ([#2478](https://github.com/instana/nodejs/issues/2478)) ([e02d78d](https://github.com/instana/nodejs/commit/e02d78dba0e81de7b28933d86a4f6dbc9c4ac24e))
+* corrected the config precedence for agent config ([#2492](https://github.com/instana/nodejs/issues/2492)) ([9fbd738](https://github.com/instana/nodejs/commit/9fbd738f31e93e361e6dca085a4c6235e65606d5))
+* removed deprecated INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS env variable ([#2431](https://github.com/instana/nodejs/issues/2431)) ([a964c50](https://github.com/instana/nodejs/commit/a964c504201fa95c1f3abb7e56dfbc6484b76cf6))
+
+
+### Features
+
+* added support for amqplib v2 ([#2540](https://github.com/instana/nodejs/issues/2540)) ([b73dfb6](https://github.com/instana/nodejs/commit/b73dfb607ae333bdde0131f4c9c191df8673abea))
+* added support for ibm_db v4 ([#2474](https://github.com/instana/nodejs/issues/2474)) ([0afaeb9](https://github.com/instana/nodejs/commit/0afaeb9013a2ff1de36fe4e724596e6b32814e96))
+
+
+### BREAKING CHANGES
+
+* agent config now applies based on the precedence.
+Enforces consistent precedence:
+env > in-code > agent config > default
+Previously inconsistent behavior is now fixed. This may impact setups relying on the old precedence.
+* **core:** environment config now overrides in-code configuration.
+Enforces consistent precedence:
+env > in-code
+Previously inconsistent behavior is now fixed. This may impact setups relying on the old precedence.
+ref https://jsw.ibm.com/browse/INSTA-80965
+* - The environment variable INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS has been removed.
+- Please use INSTANA_TRACING_TRANSMISSION_DELAY instead.
+
+
+
+
+
 # [5.5.0](https://github.com/instana/nodejs/compare/v5.4.3...v5.5.0) (2026-05-14)
 
 

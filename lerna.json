@@ -1,6 +1,6 @@
 {
   "packages": ["packages/*"],
-  "version": "5.5.0",
+  "version": "6.0.0",
   "command": {
     "publish": {
       "forcePublish": "*",

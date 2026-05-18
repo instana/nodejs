@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.0.0](https://github.com/instana/nodejs/compare/v5.5.0...v6.0.0) (2026-05-18)
+
+
+### Bug Fixes
+
+* captured database URL for Prisma MariaDB adapter ([#2543](https://github.com/instana/nodejs/issues/2543)) ([dacba21](https://github.com/instana/nodejs/commit/dacba2163b13f070865213d4a8e4146e2df143e1))
+* corrected the config precedence for agent config ([#2492](https://github.com/instana/nodejs/issues/2492)) ([9fbd738](https://github.com/instana/nodejs/commit/9fbd738f31e93e361e6dca085a4c6235e65606d5))
+
+
+### BREAKING CHANGES
+
+* agent config now applies based on the precedence.
+Enforces consistent precedence:
+env > in-code > agent config > default
+Previously inconsistent behavior is now fixed. This may impact setups relying on the old precedence.
+
+
+
+
+
 # [5.5.0](https://github.com/instana/nodejs/compare/v5.4.3...v5.5.0) (2026-05-14)
 
 
