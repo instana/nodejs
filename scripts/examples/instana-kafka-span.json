@@ -1,0 +1,19 @@
+{
+  "t": "xyz789abc123",
+  "s": "span002",
+  "p": "parent002",
+  "n": "kafka",
+  "ts": 1716019300000,
+  "d": 50,
+  "ec": 0,
+  "data": {
+    "kafka": {
+      "service": "order-events",
+      "access": "send",
+      "partition": 0,
+      "offset": 12345,
+      "key": "order-123"
+    },
+    "service": "order-service"
+  }
+}
