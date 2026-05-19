@@ -265,6 +265,84 @@ function applyMetadataTransformations(instanaSpan, metadataMappings) {
 }
 
 // ============================================================================
+// Span Data Conversion
+// ============================================================================
+
+/**
+ * Converts Instana span data to OTLP attributes array based on span type
+ *
+ * @param {Object} instanaSpan - The complete Instana span object
+ * @param {Object} spanAttributeMappings - Span attribute mappings configuration
+ * @returns {Array} OTLP attributes array
+ */
+function convertSpanData(instanaSpan, spanAttributeMappings) {
+  const attributes = [];
+  const data = instanaSpan.data;
+
+  // Process span data if present
+  if (data) {
+    // Dynamically process each span type using the unified configuration
+    Object.keys(data).forEach(spanType => {
+      const config = spanAttributeMappings[spanType];
+
+      if (config && typeof data[spanType] === 'object') {
+        // Add any additional attributes for this span type
+        Object.keys(config.additionalAttributes).forEach(key => {
+          const value = config.additionalAttributes[key];
+          attributes.push({ key, value: { stringValue: value } });
+        });
+
+        // Process the span type data
+        Object.keys(data[spanType]).forEach(key => {
+          const mapping = config.mappings[key];
+          const value = data[spanType][key];
+
+          if (value === null || value === undefined) {
+            return;
+          }
+
+          let otlpKey;
+          let transformedValue = value;
+
+          if (mapping) {
+            // Handle both old string format and new object format for backward compatibility
+            if (typeof mapping === 'string') {
+              // Legacy format: direct string mapping
+              otlpKey = mapping;
+            } else if (typeof mapping === 'object' && mapping.key) {
+              // New format: { key, value? }
+              otlpKey = mapping.key;
+              transformedValue = mapping.value ? mapping.value(value) : value;
+            }
+          } else {
+            // Unmapped fields get prefixed
+            otlpKey = `${config.prefix}.${key}`;
+          }
+
+          // Add attribute with proper type
+          if (typeof transformedValue === 'string') {
+            attributes.push({ key: otlpKey, value: { stringValue: transformedValue } });
+          } else if (typeof transformedValue === 'number') {
+            attributes.push({ key: otlpKey, value: { intValue: transformedValue } });
+          } else if (typeof transformedValue === 'boolean') {
+            attributes.push({ key: otlpKey, value: { boolValue: transformedValue } });
+          } else {
+            attributes.push({ key: otlpKey, value: { stringValue: JSON.stringify(transformedValue) } });
+          }
+        });
+      } else if (typeof data[spanType] !== 'object') {
+        // Handle non-object fields directly
+        const stringValue =
+          typeof data[spanType] === 'object' ? JSON.stringify(data[spanType]) : String(data[spanType]);
+        attributes.push({ key: spanType, value: { stringValue } });
+      }
+    });
+  }
+
+  return attributes;
+}
+
+// ============================================================================
 // Module Exports
 // ============================================================================
 
@@ -295,7 +373,10 @@ module.exports = {
   identity,
 
   // Metadata transformation
-  applyMetadataTransformations
+  applyMetadataTransformations,
+
+  // Span data conversion
+  convertSpanData
 };
 
 // Made with Bob
