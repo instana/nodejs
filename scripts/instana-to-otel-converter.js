@@ -21,16 +21,47 @@
  */
 
 const fs = require('fs');
+const {
+  convertTraceId,
+  convertSpanId,
+  convertStartTime,
+  convertEndTime,
+  convertSpanKind,
+  generateSpanName,
+  convertStatus,
+  toUpperCase,
+  toInteger,
+  applyMetadataTransformations
+} = require('./instana-to-otel-converter-utils');
 
 // ============================================================================
-// OTLP Attribute Mappings Configuration
+// OTLP Mappings Configuration
 // ============================================================================
+
+/**
+ * Metadata/Base field mappings for common span fields
+ * Maps Instana span fields to OTLP span fields with value transformers
+ *
+ * Pattern: instanaField: { key: 'otelField', value: transformerFunction }
+ */
+const OTEL_METADATA_MAPPINGS = {
+  t: { key: 'traceId', value: convertTraceId },
+  s: { key: 'spanId', value: convertSpanId },
+  p: { key: 'parentSpanId', value: convertSpanId },
+  n: { key: 'name', value: generateSpanName },
+  k: { key: 'kind', value: convertSpanKind },
+  ts: { key: 'startTimeUnixNano', value: convertStartTime },
+  d: { key: 'endTimeUnixNano', value: convertEndTime },
+  ec: { key: 'status', value: convertStatus }
+};
 
 /**
  * Unified span type configuration with semantic convention mappings
  *
  * Each span type includes:
- * - mappings: Field name to OTLP attribute mappings
+ * - mappings: Field name to OTLP attribute mappings with optional value transformers
+ *   - key: The OTLP attribute name
+ *   - value: Optional transformer function (value) => transformedValue
  * - prefix: Default prefix for unmapped fields
  * - additionalAttributes: Static attributes to add for this span type
  *
@@ -38,36 +69,36 @@ const fs = require('fs');
  * - HTTP: https://opentelemetry.io/docs/specs/semconv/http/
  * - Messaging: https://opentelemetry.io/docs/specs/semconv/messaging/
  */
-const OTEL_SPAN_TYPE_CONFIG = {
+const OTEL_SPAN_ATTRIBUTE_MAPPINGS = {
   http: {
     mappings: {
-      method: 'http.request.method',
-      status: 'http.response.status_code',
-      url: 'url.full',
-      path: 'url.path',
-      host: 'server.address',
-      protocol: 'network.protocol.name',
-      params: 'url.query',
-      path_tpl: 'url.template',
-      error: 'error.type',
-      status_text: 'http.status_text',
-      route: 'http.route',
-      header: 'http.request.header',
-      response_header: 'http.response.header'
+      method: { key: 'http.request.method', value: toUpperCase },
+      status: { key: 'http.response.status_code', value: toInteger },
+      url: { key: 'url.full' },
+      path: { key: 'url.path' },
+      host: { key: 'server.address' },
+      protocol: { key: 'network.protocol.name' },
+      params: { key: 'url.query' },
+      path_tpl: { key: 'url.template' },
+      error: { key: 'error.type' },
+      status_text: { key: 'http.status_text' },
+      route: { key: 'http.route' },
+      header: { key: 'http.request.header' },
+      response_header: { key: 'http.response.header' }
     },
     prefix: 'http',
     additionalAttributes: {}
   },
   kafka: {
     mappings: {
-      service: 'messaging.destination.name',
-      access: 'messaging.operation.type',
-      operation: 'messaging.operation.type',
-      topic: 'messaging.destination.name',
-      partition: 'messaging.kafka.destination.partition',
-      offset: 'messaging.kafka.message.offset',
-      key: 'messaging.kafka.message.key',
-      group: 'messaging.consumer.group.name'
+      service: { key: 'messaging.destination.name' },
+      access: { key: 'messaging.operation.type' },
+      operation: { key: 'messaging.operation.type' },
+      topic: { key: 'messaging.destination.name' },
+      partition: { key: 'messaging.kafka.destination.partition', value: toInteger },
+      offset: { key: 'messaging.kafka.message.offset', value: toInteger },
+      key: { key: 'messaging.kafka.message.key' },
+      group: { key: 'messaging.consumer.group.name' }
     },
     prefix: 'messaging.kafka',
     additionalAttributes: {
@@ -81,7 +112,7 @@ const OTEL_SPAN_TYPE_CONFIG = {
 // ============================================================================
 
 /**
- * Converts an Instana span to OpenTelemetry format
+ * Converts an Instana span to OpenTelemetry format using metadata mappings
  *
  * @param {Object} instanaSpan - The Instana span object
  * @returns {Object} OpenTelemetry formatted span
@@ -91,39 +122,18 @@ function convertInstanaToOtel(instanaSpan) {
     throw new Error('Invalid Instana span: must be an object');
   }
 
-  // Create base OTEL span structure
+  // Create base OTEL span structure using metadata mappings
   const otelSpan = {
-    traceId: convertTraceId(instanaSpan.t),
-    spanId: convertSpanId(instanaSpan.s),
-    parentSpanId: instanaSpan.p ? convertSpanId(instanaSpan.p) : undefined,
-    name: generateSpanName(instanaSpan),
-    kind: determineSpanKind(instanaSpan),
-    startTimeUnixNano: convertTimestamp(instanaSpan.ts),
-    endTimeUnixNano: convertTimestamp(instanaSpan.ts, instanaSpan.d),
     attributes: {},
-    status: determineStatus(instanaSpan),
     events: [],
     links: []
   };
 
-  // Convert span data to OTLP attributes
-  if (instanaSpan.data) {
-    otelSpan.attributes = convertSpanData(instanaSpan.data);
-  }
+  // Apply all metadata transformations in one call
+  Object.assign(otelSpan, applyMetadataTransformations(instanaSpan, OTEL_METADATA_MAPPINGS));
 
-  // Service nam eis treated as a normal span attribute rather than a resource attribute
-  // see: https://opentelemetry.io/docs/specs/semconv/registry/attributes/
-  // This is also required in all spans, so we can keep this here IMO
-  // Add service information
-  if (instanaSpan.data?.service) {
-    otelSpan.attributes['service.name'] = instanaSpan.data.service;
-  }
-
-  // Add error information if present
-  if (instanaSpan.ec && instanaSpan.ec > 0) {
-    otelSpan.attributes.error = true;
-    otelSpan.attributes['error.count'] = instanaSpan.ec;
-  }
+  // Convert span data and error information to OTLP attributes
+  otelSpan.attributes = convertSpanData(instanaSpan);
 
   // Clean up undefined values
   Object.keys(otelSpan).forEach(key => {
@@ -137,190 +147,53 @@ function convertInstanaToOtel(instanaSpan) {
 
 /**
  * Converts Instana span data to OTLP attributes based on span type
+ * Also handles error attributes and service name
  *
- * @param {Object} data - Instana span data object
+ * @param {Object} instanaSpan - The complete Instana span object
  * @returns {Object} OTLP attributes
  */
-function convertSpanData(data) {
+function convertSpanData(instanaSpan) {
   const attributes = {};
+  const data = instanaSpan.data;
 
-  // Dynamically process each span type using the unified configuration
-  Object.keys(data).forEach(spanType => {
-    const config = OTEL_SPAN_TYPE_CONFIG[spanType];
+  // Process span data if present
+  if (data) {
+    // Dynamically process each span type using the unified configuration
+    Object.keys(data).forEach(spanType => {
+      const config = OTEL_SPAN_ATTRIBUTE_MAPPINGS[spanType];
 
-    if (config && typeof data[spanType] === 'object') {
-      // Add any additional attributes for this span type
-      Object.assign(attributes, config.additionalAttributes);
+      if (config && typeof data[spanType] === 'object') {
+        // Add any additional attributes for this span type
+        Object.assign(attributes, config.additionalAttributes);
 
-      // Process the span type data
-      Object.keys(data[spanType]).forEach(key => {
-        const otelKey = config.mappings[key];
+        // Process the span type data
+        Object.keys(data[spanType]).forEach(key => {
+          const mapping = config.mappings[key];
+          const value = data[spanType][key];
 
-        if (otelKey) {
-          attributes[otelKey] = data[spanType][key];
-        } else {
-          // Unmapped fields get prefixed
-          attributes[`${config.prefix}.${key}`] = data[spanType][key];
-        }
-      });
-    } else if (typeof data[spanType] !== 'object') {
-      // Handle non-object fields directly
-      attributes[spanType] = data[spanType];
-    }
-  });
+          if (mapping) {
+            // Handle both old string format and new object format for backward compatibility
+            if (typeof mapping === 'string') {
+              // Legacy format: direct string mapping
+              attributes[mapping] = value;
+            } else if (typeof mapping === 'object' && mapping.key) {
+              // New format: { key, value? }
+              const transformedValue = mapping.value ? mapping.value(value) : value;
+              attributes[mapping.key] = transformedValue;
+            }
+          } else {
+            // Unmapped fields get prefixed
+            attributes[`${config.prefix}.${key}`] = value;
+          }
+        });
+      } else if (typeof data[spanType] !== 'object') {
+        // Handle non-object fields directly
+        attributes[spanType] = data[spanType];
+      }
+    });
+  }
 
   return attributes;
-}
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-/**
- * Converts Instana trace ID to OTLP format (32-character hex string)
- *
- * @param {string} instanaTraceId - Instana trace ID (16-character hex)
- * @returns {string} OTLP trace ID (32-character hex)
- */
-function convertTraceId(instanaTraceId) {
-  if (!instanaTraceId) return '00000000000000000000000000000000';
-
-  // Pad to 32 characters if needed
-  return instanaTraceId.padStart(32, '0');
-}
-
-/**
- * Converts Instana span ID to OTLP format (16-character hex string)
- *
- * @param {string} instanaSpanId - Instana span ID
- * @returns {string} OTLP span ID (16-character hex)
- */
-function convertSpanId(instanaSpanId) {
-  if (!instanaSpanId) return '0000000000000000';
-
-  // Pad to 16 characters if needed
-  return instanaSpanId.padStart(16, '0');
-}
-
-/**
- * Converts Instana timestamp to OTLP nanosecond format
- *
- * @param {number} timestamp - Instana timestamp in milliseconds
- * @param {number} duration - Optional duration in milliseconds
- * @returns {string} Timestamp in nanoseconds
- */
-function convertTimestamp(timestamp, duration = 0) {
-  if (!timestamp) return '0';
-
-  const totalMs = timestamp + duration;
-  return String(totalMs * 1000000); // Convert ms to ns
-}
-
-/**
- * Generates OTLP span name from Instana span
- *
- * @param {Object} instanaSpan - Instana span
- * @returns {string} OTLP span name
- */
-function generateSpanName(instanaSpan) {
-  const spanName = instanaSpan.n;
-
-  // For HTTP spans, use method + path if available
-  if (instanaSpan.data?.http) {
-    const method = instanaSpan.data.http.method || 'HTTP';
-    const httpPath = instanaSpan.data.http.path || instanaSpan.data.http.url || '/';
-    return `${method} ${httpPath}`;
-  }
-
-  // For Kafka spans, use operation + topic
-  if (instanaSpan.data?.kafka) {
-    const operation = instanaSpan.data.kafka.access || instanaSpan.data.kafka.operation || 'kafka';
-    const topic = instanaSpan.data.kafka.service || instanaSpan.data.kafka.topic || 'unknown';
-    return `${operation} ${topic}`;
-  }
-
-  return spanName || 'unknown';
-}
-
-/**
- * Determines OTLP span kind from Instana span
- *
- * @param {Object} instanaSpan - Instana span
- * @returns {number} OTLP span kind enum value
- */
-function determineSpanKind(instanaSpan) {
-  // OTLP Span Kind enum values
-  const SpanKind = {
-    UNSPECIFIED: 0,
-    INTERNAL: 1,
-    SERVER: 2,
-    CLIENT: 3,
-    PRODUCER: 4,
-    CONSUMER: 5
-  };
-
-  // Use Instana's span kind field (k) if available
-  // k=1: Entry/Server span
-  // k=2: Exit/Client span
-  // k=3: Intermediate/Internal span (or undefined)
-  if (instanaSpan.k === 1) {
-    return SpanKind.SERVER;
-  } else if (instanaSpan.k === 2) {
-    return SpanKind.CLIENT;
-  } else if (instanaSpan.k === 3) {
-    return SpanKind.INTERNAL;
-  }
-
-  // Kafka is a special case, Event if the following code is not there, it will get mapped to entry/exit by above logic
-  // Fallback to span data for more specific kinds (Producer/Consumer)
-  // Kafka Producer
-  if (instanaSpan.data?.kafka?.access === 'send' || instanaSpan.data?.kafka?.access === 'produce') {
-    return SpanKind.PRODUCER;
-  }
-
-  // Kafka Consumer
-  if (instanaSpan.data?.kafka?.access === 'consume' || instanaSpan.data?.kafka?.access === 'receive') {
-    return SpanKind.CONSUMER;
-  }
-
-  return SpanKind.EXIT;
-}
-
-/**
- * Determines OTLP status from Instana span
- *
- * @param {Object} instanaSpan - Instana span
- * @returns {Object} OTLP status object
- */
-function determineStatus(instanaSpan) {
-  // OTLP Status Code enum values
-  const StatusCode = {
-    UNSET: 0,
-    OK: 1,
-    ERROR: 2
-  };
-
-  const status = {
-    code: StatusCode.UNSET
-  };
-
-  // Check for errors
-  if (instanaSpan.ec && instanaSpan.ec > 0) {
-    status.code = StatusCode.ERROR;
-    status.message = instanaSpan.data?.http?.error || instanaSpan.data?.kafka?.error || 'Error occurred';
-  } else if (instanaSpan.data?.http?.status) {
-    const httpStatus = instanaSpan.data.http.status;
-    if (httpStatus >= 400) {
-      status.code = StatusCode.ERROR;
-      status.message = `HTTP ${httpStatus}`;
-    } else if (httpStatus >= 200 && httpStatus < 300) {
-      status.code = StatusCode.OK;
-    }
-  } else {
-    status.code = StatusCode.OK;
-  }
-
-  return status;
 }
 
 // ============================================================================
@@ -439,7 +312,8 @@ module.exports = {
   convertInstanaToOtel,
   convertBatch,
   convertSpanData,
-  OTEL_SPAN_TYPE_CONFIG
+  OTEL_METADATA_MAPPINGS,
+  OTEL_SPAN_ATTRIBUTE_MAPPINGS
 };
 
 // Run CLI if executed directly
