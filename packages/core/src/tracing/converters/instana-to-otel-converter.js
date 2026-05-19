@@ -112,26 +112,38 @@ const OTEL_SPAN_ATTRIBUTE_MAPPINGS = {
 // ============================================================================
 
 /**
- * Creates resource attributes for OTLP format
+ * Creates resource attributes for OTLP format as an array
  *
  * @param {Object} instanaSpan - The Instana span object
- * @returns {Object} Resource attributes object
+ * @returns {Array} Resource attributes array
  */
 function createResourceAttributes(instanaSpan) {
-  const attributes = {};
+  const attributes = [];
 
   // Service name from span data
-  if (instanaSpan.data?.service) {
-    attributes['service.name'] = instanaSpan.data.service;
-  } else {
-    // Fallback to environment variable or default
-    attributes['service.name'] = process.env.OTEL_SERVICE_NAME || process.env.SERVICE_NAME || 'unknown-service';
-  }
+  const serviceName =
+    instanaSpan.data?.service || process.env.OTEL_SERVICE_NAME || process.env.SERVICE_NAME || 'unknown-service';
+
+  attributes.push({
+    key: 'service.name',
+    value: { stringValue: serviceName }
+  });
 
   // SDK information
-  attributes['telemetry.sdk.language'] = 'nodejs';
-  attributes['telemetry.sdk.name'] = '@instana/collector';
-  attributes['telemetry.sdk.version'] = '3.0.0';
+  attributes.push({
+    key: 'telemetry.sdk.language',
+    value: { stringValue: 'nodejs' }
+  });
+
+  attributes.push({
+    key: 'telemetry.sdk.name',
+    value: { stringValue: '@instana/collector' }
+  });
+
+  attributes.push({
+    key: 'telemetry.sdk.version',
+    value: { stringValue: '3.0.0' }
+  });
 
   return attributes;
 }
@@ -174,13 +186,13 @@ function convertInstanaToOtel(instanaSpan) {
 }
 
 /**
- * Converts Instana span data to OTLP attributes based on span type
+ * Converts Instana span data to OTLP attributes array based on span type
  *
  * @param {Object} instanaSpan - The complete Instana span object
- * @returns {Object} OTLP attributes
+ * @returns {Array} OTLP attributes array
  */
 function convertSpanData(instanaSpan) {
-  const attributes = {};
+  const attributes = [];
   const data = instanaSpan.data;
 
   // Process span data if present
@@ -191,31 +203,54 @@ function convertSpanData(instanaSpan) {
 
       if (config && typeof data[spanType] === 'object') {
         // Add any additional attributes for this span type
-        Object.assign(attributes, config.additionalAttributes);
+        Object.keys(config.additionalAttributes).forEach(key => {
+          const value = config.additionalAttributes[key];
+          attributes.push({ key, value: { stringValue: value } });
+        });
 
         // Process the span type data
         Object.keys(data[spanType]).forEach(key => {
           const mapping = config.mappings[key];
           const value = data[spanType][key];
 
+          if (value === null || value === undefined) {
+            return;
+          }
+
+          let otlpKey;
+          let transformedValue = value;
+
           if (mapping) {
             // Handle both old string format and new object format for backward compatibility
             if (typeof mapping === 'string') {
               // Legacy format: direct string mapping
-              attributes[mapping] = value;
+              otlpKey = mapping;
             } else if (typeof mapping === 'object' && mapping.key) {
               // New format: { key, value? }
-              const transformedValue = mapping.value ? mapping.value(value) : value;
-              attributes[mapping.key] = transformedValue;
+              otlpKey = mapping.key;
+              transformedValue = mapping.value ? mapping.value(value) : value;
             }
           } else {
             // Unmapped fields get prefixed
-            attributes[`${config.prefix}.${key}`] = value;
+            otlpKey = `${config.prefix}.${key}`;
+          }
+
+          // Add attribute with proper type
+          if (typeof transformedValue === 'string') {
+            attributes.push({ key: otlpKey, value: { stringValue: transformedValue } });
+          } else if (typeof transformedValue === 'number') {
+            attributes.push({ key: otlpKey, value: { intValue: transformedValue } });
+          } else if (typeof transformedValue === 'boolean') {
+            attributes.push({ key: otlpKey, value: { boolValue: transformedValue } });
+          } else {
+            attributes.push({ key: otlpKey, value: { stringValue: JSON.stringify(transformedValue) } });
           }
         });
       } else if (typeof data[spanType] !== 'object') {
         // Handle non-object fields directly
-        attributes[spanType] = data[spanType];
+        const stringValue =
+          typeof data[spanType] === 'object' ? JSON.stringify(data[spanType]) : String(data[spanType]);
+        attributes.push({ key: spanType, value: { stringValue } });
       }
     });
 
@@ -225,8 +260,8 @@ function convertSpanData(instanaSpan) {
 
   // Add error information if present
   if (instanaSpan.ec && instanaSpan.ec > 0) {
-    attributes.error = true;
-    attributes['error.count'] = instanaSpan.ec;
+    attributes.push({ key: 'error', value: { boolValue: true } });
+    attributes.push({ key: 'error.count', value: { intValue: instanaSpan.ec } });
   }
 
   return attributes;
@@ -237,17 +272,24 @@ function convertSpanData(instanaSpan) {
 // ============================================================================
 
 /**
- * Converts multiple Instana spans to OTLP format
+ * Converts multiple Instana spans to OTLP format with resourceSpans structure
  *
  * @param {Array<Object>} instanaSpans - Array of Instana spans
- * @returns {Array<Object>} Array of OTLP spans
+ * @returns {Object} OTLP traces object with resourceSpans
  */
 function convertBatch(instanaSpans) {
   if (!Array.isArray(instanaSpans)) {
     throw new Error('Input must be an array of spans');
   }
 
-  return instanaSpans
+  if (instanaSpans.length === 0) {
+    return {
+      resourceSpans: []
+    };
+  }
+
+  // Convert all spans
+  const otelSpans = instanaSpans
     .map(span => {
       try {
         return convertInstanaToOtel(span);
@@ -257,6 +299,44 @@ function convertBatch(instanaSpans) {
       }
     })
     .filter(span => span !== null);
+
+  // Group spans by resource attributes
+  const spansByResource = new Map();
+
+  otelSpans.forEach(otelSpan => {
+    const resourceKey = JSON.stringify(otelSpan.resource.attributes);
+
+    if (!spansByResource.has(resourceKey)) {
+      spansByResource.set(resourceKey, {
+        resource: otelSpan.resource,
+        spans: []
+      });
+    }
+
+    // Remove resource from individual span (it's at resourceSpans level)
+    const { resource, ...spanWithoutResource } = otelSpan;
+    spansByResource.get(resourceKey).spans.push(spanWithoutResource);
+  });
+
+  // Create OTLP ResourceSpans structure
+  const resourceSpans = Array.from(spansByResource.values()).map(group => {
+    return {
+      resource: group.resource,
+      scopeSpans: [
+        {
+          scope: {
+            name: '@instana/collector',
+            version: '3.0.0'
+          },
+          spans: group.spans
+        }
+      ]
+    };
+  });
+
+  return {
+    resourceSpans: resourceSpans
+  };
 }
 
 // ============================================================================
