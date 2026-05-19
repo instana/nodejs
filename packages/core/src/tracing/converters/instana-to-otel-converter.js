@@ -31,7 +31,8 @@ const {
   convertStatus,
   toUpperCase,
   toInteger,
-  applyMetadataTransformations
+  applyMetadataTransformations,
+  convertSpanData
 } = require('./instana-to-otel-converter-utils');
 
 // ============================================================================
@@ -112,6 +113,43 @@ const OTEL_SPAN_ATTRIBUTE_MAPPINGS = {
 // ============================================================================
 
 /**
+ * Converts an Instana span to OpenTelemetry format using metadata mappings
+ *
+ * @param {Object} instanaSpan - The Instana span object
+ * @returns {Object} OpenTelemetry formatted span
+ */
+function convertInstanaToOtel(instanaSpan) {
+  if (!instanaSpan || typeof instanaSpan !== 'object') {
+    throw new Error('Invalid Instana span: must be an object');
+  }
+
+  // Create base OTEL span structure using metadata mappings
+  const otelSpan = {
+    attributes: {},
+    events: [],
+    links: [],
+    resource: {
+      attributes: createResourceAttributes(instanaSpan)
+    }
+  };
+
+  // Apply all metadata transformations in one call
+  Object.assign(otelSpan, applyMetadataTransformations(instanaSpan, OTEL_METADATA_MAPPINGS));
+
+  // Convert span data and error information to OTLP attributes
+  otelSpan.attributes = convertSpanData(instanaSpan, OTEL_SPAN_ATTRIBUTE_MAPPINGS);
+
+  // Clean up undefined values
+  Object.keys(otelSpan).forEach(key => {
+    if (otelSpan[key] === undefined) {
+      delete otelSpan[key];
+    }
+  });
+
+  return otelSpan;
+}
+
+/**
  * Creates resource attributes for OTLP format as an array
  *
  * @param {Object} instanaSpan - The Instana span object
@@ -144,116 +182,6 @@ function createResourceAttributes(instanaSpan) {
     key: 'telemetry.sdk.version',
     value: { stringValue: '3.0.0' }
   });
-
-  return attributes;
-}
-
-/**
- * Converts an Instana span to OpenTelemetry format using metadata mappings
- *
- * @param {Object} instanaSpan - The Instana span object
- * @returns {Object} OpenTelemetry formatted span
- */
-function convertInstanaToOtel(instanaSpan) {
-  if (!instanaSpan || typeof instanaSpan !== 'object') {
-    throw new Error('Invalid Instana span: must be an object');
-  }
-
-  // Create base OTEL span structure using metadata mappings
-  const otelSpan = {
-    attributes: {},
-    events: [],
-    links: [],
-    resource: {
-      attributes: createResourceAttributes(instanaSpan)
-    }
-  };
-
-  // Apply all metadata transformations in one call
-  Object.assign(otelSpan, applyMetadataTransformations(instanaSpan, OTEL_METADATA_MAPPINGS));
-
-  // Convert span data and error information to OTLP attributes
-  otelSpan.attributes = convertSpanData(instanaSpan);
-
-  // Clean up undefined values
-  Object.keys(otelSpan).forEach(key => {
-    if (otelSpan[key] === undefined) {
-      delete otelSpan[key];
-    }
-  });
-
-  return otelSpan;
-}
-
-/**
- * Converts Instana span data to OTLP attributes array based on span type
- *
- * @param {Object} instanaSpan - The complete Instana span object
- * @returns {Array} OTLP attributes array
- */
-function convertSpanData(instanaSpan) {
-  const attributes = [];
-  const data = instanaSpan.data;
-
-  // Process span data if present
-  if (data) {
-    // Dynamically process each span type using the unified configuration
-    Object.keys(data).forEach(spanType => {
-      const config = OTEL_SPAN_ATTRIBUTE_MAPPINGS[spanType];
-
-      if (config && typeof data[spanType] === 'object') {
-        // Add any additional attributes for this span type
-        Object.keys(config.additionalAttributes).forEach(key => {
-          const value = config.additionalAttributes[key];
-          attributes.push({ key, value: { stringValue: value } });
-        });
-
-        // Process the span type data
-        Object.keys(data[spanType]).forEach(key => {
-          const mapping = config.mappings[key];
-          const value = data[spanType][key];
-
-          if (value === null || value === undefined) {
-            return;
-          }
-
-          let otlpKey;
-          let transformedValue = value;
-
-          if (mapping) {
-            // Handle both old string format and new object format for backward compatibility
-            if (typeof mapping === 'string') {
-              // Legacy format: direct string mapping
-              otlpKey = mapping;
-            } else if (typeof mapping === 'object' && mapping.key) {
-              // New format: { key, value? }
-              otlpKey = mapping.key;
-              transformedValue = mapping.value ? mapping.value(value) : value;
-            }
-          } else {
-            // Unmapped fields get prefixed
-            otlpKey = `${config.prefix}.${key}`;
-          }
-
-          // Add attribute with proper type
-          if (typeof transformedValue === 'string') {
-            attributes.push({ key: otlpKey, value: { stringValue: transformedValue } });
-          } else if (typeof transformedValue === 'number') {
-            attributes.push({ key: otlpKey, value: { intValue: transformedValue } });
-          } else if (typeof transformedValue === 'boolean') {
-            attributes.push({ key: otlpKey, value: { boolValue: transformedValue } });
-          } else {
-            attributes.push({ key: otlpKey, value: { stringValue: JSON.stringify(transformedValue) } });
-          }
-        });
-      } else if (typeof data[spanType] !== 'object') {
-        // Handle non-object fields directly
-        const stringValue =
-          typeof data[spanType] === 'object' ? JSON.stringify(data[spanType]) : String(data[spanType]);
-        attributes.push({ key: spanType, value: { stringValue } });
-      }
-    });
-  }
 
   return attributes;
 }
@@ -418,7 +346,6 @@ Examples:
 module.exports = {
   convertInstanaToOtel,
   convertBatch,
-  convertSpanData,
   OTEL_METADATA_MAPPINGS,
   OTEL_SPAN_ATTRIBUTE_MAPPINGS
 };
