@@ -4,7 +4,7 @@
 ### Command Line Interface
 
 ```bash
-cd scripts/
+cd packages/core/src/tracing/converters
 
 # Convert a single span
 1. node instana-to-otel-converter.js examples/instana-http-span.json
