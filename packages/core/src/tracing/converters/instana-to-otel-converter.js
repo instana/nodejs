@@ -253,15 +253,6 @@ function convertSpanData(instanaSpan) {
         attributes.push({ key: spanType, value: { stringValue } });
       }
     });
-
-    // Note: service.name is now in resource attributes, not span attributes
-    // Skip adding it here to avoid duplication
-  }
-
-  // Add error information if present
-  if (instanaSpan.ec && instanaSpan.ec > 0) {
-    attributes.push({ key: 'error', value: { boolValue: true } });
-    attributes.push({ key: 'error.count', value: { intValue: instanaSpan.ec } });
   }
 
   return attributes;
