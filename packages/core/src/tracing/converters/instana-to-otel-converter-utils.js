@@ -127,20 +127,6 @@ function convertSpanKind(instanaSpanKind) {
 function generateSpanName(instanaSpan) {
   const spanName = instanaSpan.n;
 
-  // For HTTP spans, use method + path if available
-  if (instanaSpan.data?.http) {
-    const method = instanaSpan.data.http.method || 'HTTP';
-    const httpPath = instanaSpan.data.http.path || instanaSpan.data.http.url || '/';
-    return `${method} ${httpPath}`;
-  }
-
-  // For Kafka spans, use operation + topic
-  if (instanaSpan.data?.kafka) {
-    const operation = instanaSpan.data.kafka.access || instanaSpan.data.kafka.operation || 'kafka';
-    const topic = instanaSpan.data.kafka.service || instanaSpan.data.kafka.topic || 'unknown';
-    return `${operation} ${topic}`;
-  }
-
   return spanName || 'unknown';
 }
 
