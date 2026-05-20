@@ -27,13 +27,12 @@ const {
   convertStartTime,
   convertEndTime,
   convertSpanKind,
-  generateSpanName,
   convertStatus,
-  toUpperCase,
-  toInteger,
   applyMetadataTransformations,
   convertSpanData
 } = require('./instana-to-otel-converter-utils');
+
+const { getTransformer } = require('./transformers');
 
 // ============================================================================
 // OTLP Mappings Configuration
@@ -49,63 +48,10 @@ const OTEL_METADATA_MAPPINGS = {
   t: { key: 'traceId', value: convertTraceId },
   s: { key: 'spanId', value: convertSpanId },
   p: { key: 'parentSpanId', value: convertSpanId },
-  n: { key: 'name', value: generateSpanName },
   k: { key: 'kind', value: convertSpanKind },
   ts: { key: 'startTimeUnixNano', value: convertStartTime },
   d: { key: 'endTimeUnixNano', value: convertEndTime },
   ec: { key: 'status', value: convertStatus }
-};
-
-/**
- * Unified span type configuration with semantic convention mappings
- *
- * Each span type includes:
- * - mappings: Field name to OTLP attribute mappings with optional value transformers
- *   - key: The OTLP attribute name
- *   - value: Optional transformer function (value) => transformedValue
- * - prefix: Default prefix for unmapped fields
- * - additionalAttributes: Static attributes to add for this span type
- *
- * Based on OpenTelemetry Semantic Conventions:
- * - HTTP: https://opentelemetry.io/docs/specs/semconv/http/
- * - Messaging: https://opentelemetry.io/docs/specs/semconv/messaging/
- */
-const OTEL_SPAN_ATTRIBUTE_MAPPINGS = {
-  http: {
-    mappings: {
-      method: { key: 'http.request.method', value: toUpperCase },
-      status: { key: 'http.response.status_code', value: toInteger },
-      url: { key: 'url.full' },
-      path: { key: 'url.path' },
-      host: { key: 'server.address' },
-      protocol: { key: 'network.protocol.name' },
-      params: { key: 'url.query' },
-      path_tpl: { key: 'url.template' },
-      error: { key: 'error.type' },
-      status_text: { key: 'http.status_text' },
-      route: { key: 'http.route' },
-      header: { key: 'http.request.header' },
-      response_header: { key: 'http.response.header' }
-    },
-    prefix: 'http',
-    additionalAttributes: {}
-  },
-  kafka: {
-    mappings: {
-      service: { key: 'messaging.destination.name' },
-      access: { key: 'messaging.operation.type' },
-      operation: { key: 'messaging.operation.type' },
-      topic: { key: 'messaging.destination.name' },
-      partition: { key: 'messaging.kafka.destination.partition', value: toInteger },
-      offset: { key: 'messaging.kafka.message.offset', value: toInteger },
-      key: { key: 'messaging.kafka.message.key' },
-      group: { key: 'messaging.consumer.group.name' }
-    },
-    prefix: 'messaging.kafka',
-    additionalAttributes: {
-      'messaging.system': 'kafka'
-    }
-  }
 };
 
 // ============================================================================
@@ -113,7 +59,7 @@ const OTEL_SPAN_ATTRIBUTE_MAPPINGS = {
 // ============================================================================
 
 /**
- * Converts an Instana span to OpenTelemetry format using metadata mappings
+ * Converts an Instana span to OpenTelemetry format using transformer pattern
  *
  * @param {Object} instanaSpan - The Instana span object
  * @returns {Object} OpenTelemetry formatted span
@@ -122,6 +68,9 @@ function convertInstanaToOtel(instanaSpan) {
   if (!instanaSpan || typeof instanaSpan !== 'object') {
     throw new Error('Invalid Instana span: must be an object');
   }
+
+  // Get the appropriate transformer for this span
+  const transformer = getTransformer(instanaSpan);
 
   // Create base OTEL span structure using metadata mappings
   const otelSpan = {
@@ -136,8 +85,18 @@ function convertInstanaToOtel(instanaSpan) {
   // Apply all metadata transformations in one call
   Object.assign(otelSpan, applyMetadataTransformations(instanaSpan, OTEL_METADATA_MAPPINGS));
 
+  // Override span name using transformer
+  otelSpan.name = transformer.getSpanName();
+
+  // Get data mappings from transformer and convert span data
+  const dataMappings = {};
+  const spanType = getSpanType(instanaSpan);
+  if (spanType) {
+    dataMappings[spanType] = transformer.data();
+  }
+
   // Convert span data and error information to OTLP attributes
-  otelSpan.attributes = convertSpanData(instanaSpan, OTEL_SPAN_ATTRIBUTE_MAPPINGS);
+  otelSpan.attributes = convertSpanData(instanaSpan, dataMappings);
 
   // Clean up undefined values
   Object.keys(otelSpan).forEach(key => {
@@ -147,6 +106,22 @@ function convertInstanaToOtel(instanaSpan) {
   });
 
   return otelSpan;
+}
+
+/**
+ * Helper function to determine span type from Instana span
+ *
+ * @param {Object} instanaSpan - The Instana span object
+ * @returns {string|null} The span type (http, kafka, etc.) or null
+ */
+function getSpanType(instanaSpan) {
+  if (!instanaSpan.data) return null;
+
+  if (instanaSpan.data.http) return 'http';
+  if (instanaSpan.data.kafka) return 'kafka';
+  if (instanaSpan.data.rabbitmq) return 'rabbitmq';
+
+  return null;
 }
 
 /**
@@ -347,7 +322,7 @@ module.exports = {
   convertInstanaToOtel,
   convertBatch,
   OTEL_METADATA_MAPPINGS,
-  OTEL_SPAN_ATTRIBUTE_MAPPINGS
+  getSpanType
 };
 
 // Run CLI if executed directly
