@@ -36,7 +36,14 @@ const operationsInfo = {
 };
 
 const requestMethods = ['async', 'promise', 'cb', 'async-v2', 'promise-v2', 'cb-v2'];
-const availableOperations = ['createStream'];
+const availableOperations = [
+  'createStream',
+  'putRecords',
+  'putRecord',
+  'listStreams',
+  'getRecords',
+  'getShardIterator'
+];
 
 const getNextCallMethod = require('@_local/core/test/test_util/circular_list').getCircularList(requestMethods);
 
