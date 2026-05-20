@@ -27,7 +27,6 @@ const {
   convertStartTime,
   convertEndTime,
   convertSpanKind,
-  convertStatus,
   applyMetadataTransformations,
   convertSpanData
 } = require('./instana-to-otel-converter-utils');
@@ -50,8 +49,7 @@ const OTEL_METADATA_MAPPINGS = {
   p: { key: 'parentSpanId', value: convertSpanId },
   k: { key: 'kind', value: convertSpanKind },
   ts: { key: 'startTimeUnixNano', value: convertStartTime },
-  d: { key: 'endTimeUnixNano', value: convertEndTime },
-  ec: { key: 'status', value: convertStatus }
+  d: { key: 'endTimeUnixNano', value: convertEndTime }
 };
 
 // ============================================================================
@@ -85,8 +83,9 @@ function convertInstanaToOtel(instanaSpan) {
   // Apply all metadata transformations in one call
   Object.assign(otelSpan, applyMetadataTransformations(instanaSpan, OTEL_METADATA_MAPPINGS));
 
-  // Override span name using transformer
+  // Override span name and status using transformer (protocol-specific logic)
   otelSpan.name = transformer.getSpanName();
+  otelSpan.status = transformer.getStatus();
 
   // Get data mappings from transformer and convert span data
   // The transformer's spanType is used as the key for dynamic mapping

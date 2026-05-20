@@ -15,7 +15,7 @@
  * 4. If no custom mappings needed, just register the span type to use MessagingTransformer
  */
 
-const { toUpperCase, toInteger, generateSpanName } = require('./instana-to-otel-converter-utils');
+const { toUpperCase, toInteger, generateSpanName, StatusCode } = require('./instana-to-otel-converter-utils');
 
 // ============================================================================
 // Attribute Mapping Definitions
@@ -161,6 +161,26 @@ class BaseTransformer {
   }
 
   /**
+   * Get span status
+   * Can be overridden by subclasses for protocol-specific status logic
+   *
+   * @returns {Object} OTLP status object with code and optional message
+   */
+  getStatus() {
+    const status = { code: StatusCode.UNSET };
+
+    // Basic error check using error count field
+    if (this.span.ec && this.span.ec > 0) {
+      status.code = StatusCode.ERROR;
+      status.message = 'Error occurred';
+    } else {
+      status.code = StatusCode.OK;
+    }
+
+    return status;
+  }
+
+  /**
    * Transform metadata fields
    */
   meta() {
@@ -212,6 +232,34 @@ class HttpTransformer extends BaseTransformer {
     const method = data.method || 'HTTP';
     const httpPath = data.path || data.url || '/';
     return `${method} ${httpPath}`;
+  }
+
+  /**
+   * Get HTTP-specific status
+   * Checks error count and HTTP status code
+   */
+  getStatus() {
+    const status = { code: StatusCode.UNSET };
+    const data = this.getSpanData();
+
+    // Check error count first
+    if (this.span.ec && this.span.ec > 0) {
+      status.code = StatusCode.ERROR;
+      status.message = data.error || 'Error occurred';
+    } else if (data.status) {
+      // Check HTTP status code
+      const httpStatus = data.status;
+      if (httpStatus >= 400) {
+        status.code = StatusCode.ERROR;
+        status.message = `HTTP ${httpStatus}`;
+      } else if (httpStatus >= 200 && httpStatus < 300) {
+        status.code = StatusCode.OK;
+      }
+    } else {
+      status.code = StatusCode.OK;
+    }
+
+    return status;
   }
 }
 
@@ -293,6 +341,25 @@ class KafkaTransformer extends MessagingTransformer {
     const operation = data.access || data.operation || 'kafka';
     const topic = data.service || data.topic || 'unknown';
     return `${operation} ${topic}`;
+  }
+
+  /**
+   * Get Kafka-specific status
+   * Checks error count and Kafka error field
+   */
+  getStatus() {
+    const status = { code: StatusCode.UNSET };
+    const data = this.getSpanData();
+
+    // Check error count first
+    if (this.span.ec && this.span.ec > 0) {
+      status.code = StatusCode.ERROR;
+      status.message = data.error || 'Kafka error occurred';
+    } else {
+      status.code = StatusCode.OK;
+    }
+
+    return status;
   }
 }
 
