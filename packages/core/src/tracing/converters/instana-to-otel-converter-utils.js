@@ -143,36 +143,6 @@ const StatusCode = {
   ERROR: 2
 };
 
-/**
- * Determines OTLP status from Instana span
- *
- * @param {Object} instanaSpan - Instana span
- * @returns {Object} OTLP status object
- */
-function convertStatus(instanaSpan) {
-  const status = {
-    code: StatusCode.UNSET
-  };
-
-  // Check for errors
-  if (instanaSpan.ec && instanaSpan.ec > 0) {
-    status.code = StatusCode.ERROR;
-    status.message = instanaSpan.data?.http?.error || instanaSpan.data?.kafka?.error || 'Error occurred';
-  } else if (instanaSpan.data?.http?.status) {
-    const httpStatus = instanaSpan.data.http.status;
-    if (httpStatus >= 400) {
-      status.code = StatusCode.ERROR;
-      status.message = `HTTP ${httpStatus}`;
-    } else if (httpStatus >= 200 && httpStatus < 300) {
-      status.code = StatusCode.OK;
-    }
-  } else {
-    status.code = StatusCode.OK;
-  }
-
-  return status;
-}
-
 // ============================================================================
 // Value Transformers
 // ============================================================================
@@ -227,18 +197,14 @@ function applyMetadataTransformations(instanaSpan, metadataMappings) {
     }
 
     // Apply the transformation
-    // Some transformers need the whole span (like generateSpanName, convertSpanKind, convertStatus)
+    // Some transformers need the whole span (like generateSpanName, convertEndTime)
     // Others need just the value (like convertTraceId, convertSpanId)
     // Check the transformer function's expected parameters
     if (mapping.value) {
       const transformerName = mapping.value.name;
 
       // These functions need the entire span
-      if (
-        transformerName === 'generateSpanName' ||
-        transformerName === 'convertStatus' ||
-        transformerName === 'convertEndTime'
-      ) {
+      if (transformerName === 'generateSpanName' || transformerName === 'convertEndTime') {
         result[mapping.key] = mapping.value(instanaSpan);
       } else {
         // These functions need just the value
@@ -350,7 +316,6 @@ module.exports = {
   generateSpanName,
 
   // Status
-  convertStatus,
   StatusCode,
 
   // Value transformers
