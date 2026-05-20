@@ -45,9 +45,7 @@ exports.init = function init(config) {
   /**
    * https://github.com/aws/aws-sdk-js-v3/releases/tag/v3.1046.0
    */
-  // hook.onFileLoad(/@smithy\/core\/dist-cjs\/submodules\/client\/index\.js/, instrumentGlobalSmithy);
   hook.onModuleLoad('@smithy/core/client', instrumentGlobalSmithy);
-  // hook.onModuleLoad('@aws-sdk/client-kinesis', instrumentGlobalSmithy);
 
   /**
    * @aws-sdk/smithly-client >= 3.36.0 changed how the dist structure gets delivered
@@ -79,9 +77,25 @@ exports.deactivate = function deactivate() {
   isActive = false;
 };
 
-function instrumentGlobalSmithy(Smithy) {
-  console.log('hi', Smithy);
-  // shimmer.wrap(Smithy.Client.prototype, 'send', shimSmithySend);
+/**
+ * The require hook can run once while `exports` is still `{}` (cyclic CJS load); `exports` is then the same object
+ * Node fills in later. Defer wrapping until after the current synchronous load completes.
+ */
+function instrumentGlobalSmithy(exports) {
+  const tryWrap = () => {
+    if (typeof exports.Client === 'function' && exports.Client.prototype) {
+      shimmer.wrap(exports.Client.prototype, 'send', shimSmithySend);
+      return true;
+    }
+    return false;
+  };
+
+  if (!tryWrap()) {
+    setImmediate(() => {
+      tryWrap();
+    });
+  }
+  return exports;
 }
 
 function shimSmithySend(originalSend) {
