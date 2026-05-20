@@ -153,6 +153,7 @@ function patchedModuleLoad(moduleName) {
 
     for (let i = 0; i < byFileNamePatternTransformers.length; i++) {
       if (byFileNamePatternTransformers[i].pattern.test(normalizedFilename)) {
+        console.log(filename, moduleExports);
         cacheEntry.moduleExports =
           byFileNamePatternTransformers[i].fn(cacheEntry.moduleExports, filename) || cacheEntry.moduleExports;
       }

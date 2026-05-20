@@ -43,6 +43,13 @@ exports.init = function init(config) {
   sqsConsumer.init();
 
   /**
+   * https://github.com/aws/aws-sdk-js-v3/releases/tag/v3.1046.0
+   */
+  // hook.onFileLoad(/@smithy\/core\/dist-cjs\/submodules\/client\/index\.js/, instrumentGlobalSmithy);
+  hook.onModuleLoad('@smithy/core/client', instrumentGlobalSmithy);
+  // hook.onModuleLoad('@aws-sdk/client-kinesis', instrumentGlobalSmithy);
+
+  /**
    * @aws-sdk/smithly-client >= 3.36.0 changed how the dist structure gets delivered
    * https://github.com/aws/aws-sdk-js-v3/blob/main/packages/smithy-client/CHANGELOG.md#3360-2021-10-08
    * @aws-sdk/smithly-client is a subdependency of any @aws-sdk/* package
@@ -73,7 +80,8 @@ exports.deactivate = function deactivate() {
 };
 
 function instrumentGlobalSmithy(Smithy) {
-  shimmer.wrap(Smithy.Client.prototype, 'send', shimSmithySend);
+  console.log('hi', Smithy);
+  // shimmer.wrap(Smithy.Client.prototype, 'send', shimSmithySend);
 }
 
 function shimSmithySend(originalSend) {
@@ -84,6 +92,7 @@ function shimSmithySend(originalSend) {
 
     const serviceId = self.config && self.config.serviceId;
     let awsProduct = serviceId && awsProductInstances.find(aws => aws.getServiceIdName() === serviceId.toLowerCase());
+
     if (awsProduct && awsProduct.supportsOperation(command.constructor.name)) {
       return awsProduct.instrumentedSmithySend(self, isActive, originalSend, smithySendArgs);
     } else {
