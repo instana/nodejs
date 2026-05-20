@@ -43,6 +43,11 @@ exports.init = function init(config) {
   sqsConsumer.init();
 
   /**
+   * https://github.com/aws/aws-sdk-js-v3/releases/tag/v3.1046.0
+   */
+  hook.onModuleLoad('@smithy/core/client', instrumentGlobalSmithy);
+
+  /**
    * @aws-sdk/smithly-client >= 3.36.0 changed how the dist structure gets delivered
    * https://github.com/aws/aws-sdk-js-v3/blob/main/packages/smithy-client/CHANGELOG.md#3360-2021-10-08
    * @aws-sdk/smithly-client is a subdependency of any @aws-sdk/* package
@@ -72,8 +77,25 @@ exports.deactivate = function deactivate() {
   isActive = false;
 };
 
-function instrumentGlobalSmithy(Smithy) {
-  shimmer.wrap(Smithy.Client.prototype, 'send', shimSmithySend);
+/**
+ * The require hook can run once while `exports` is still `{}` (cyclic CJS load); `exports` is then the same object
+ * Node fills in later. Defer wrapping until after the current synchronous load completes.
+ */
+function instrumentGlobalSmithy(exports) {
+  const tryWrap = () => {
+    if (typeof exports.Client === 'function' && exports.Client.prototype) {
+      shimmer.wrap(exports.Client.prototype, 'send', shimSmithySend);
+      return true;
+    }
+    return false;
+  };
+
+  if (!tryWrap()) {
+    setImmediate(() => {
+      tryWrap();
+    });
+  }
+  return exports;
 }
 
 function shimSmithySend(originalSend) {
@@ -84,6 +106,7 @@ function shimSmithySend(originalSend) {
 
     const serviceId = self.config && self.config.serviceId;
     let awsProduct = serviceId && awsProductInstances.find(aws => aws.getServiceIdName() === serviceId.toLowerCase());
+
     if (awsProduct && awsProduct.supportsOperation(command.constructor.name)) {
       return awsProduct.instrumentedSmithySend(self, isActive, originalSend, smithySendArgs);
     } else {
