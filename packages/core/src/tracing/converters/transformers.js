@@ -326,7 +326,7 @@ class KafkaTransformer extends MessagingTransformer {
       mappings: SPAN_ATTRIBUTE_MAPPINGS.kafka,
       prefix: 'messaging.kafka',
       additionalAttributes: {
-        'messaging.system': 'kafka'
+        'messaging.system': this.systemName
       }
     };
   }
