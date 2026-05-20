@@ -89,10 +89,10 @@ function convertInstanaToOtel(instanaSpan) {
   otelSpan.name = transformer.getSpanName();
 
   // Get data mappings from transformer and convert span data
+  // The transformer's spanType is used as the key for dynamic mapping
   const dataMappings = {};
-  const spanType = getSpanType(instanaSpan);
-  if (spanType) {
-    dataMappings[spanType] = transformer.data();
+  if (transformer.spanType) {
+    dataMappings[transformer.spanType] = transformer.data();
   }
 
   // Convert span data and error information to OTLP attributes
@@ -108,21 +108,8 @@ function convertInstanaToOtel(instanaSpan) {
   return otelSpan;
 }
 
-/**
- * Helper function to determine span type from Instana span
- *
- * @param {Object} instanaSpan - The Instana span object
- * @returns {string|null} The span type (http, kafka, etc.) or null
- */
-function getSpanType(instanaSpan) {
-  if (!instanaSpan.data) return null;
-
-  if (instanaSpan.data.http) return 'http';
-  if (instanaSpan.data.kafka) return 'kafka';
-  if (instanaSpan.data.rabbitmq) return 'rabbitmq';
-
-  return null;
-}
+// Note: getSpanType is now imported from transformers.js
+// It dynamically detects span types based on TRANSFORMER_REGISTRY
 
 /**
  * Creates resource attributes for OTLP format as an array
@@ -321,8 +308,7 @@ Examples:
 module.exports = {
   convertInstanaToOtel,
   convertBatch,
-  OTEL_METADATA_MAPPINGS,
-  getSpanType
+  OTEL_METADATA_MAPPINGS
 };
 
 // Run CLI if executed directly

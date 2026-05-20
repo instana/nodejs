@@ -392,6 +392,20 @@ function registerTransformer(spanType, TransformerClass) {
   TRANSFORMER_REGISTRY[spanType] = TransformerClass;
 }
 
+/**
+ * Dynamically determine the span type from an Instana span
+ * Checks span.data keys against registered transformer types
+ *
+ * @param {Object} instanaSpan - The Instana span object
+ * @returns {string|null} The span type (http, kafka, etc.) or null if not found
+ */
+function getSpanType(instanaSpan) {
+  if (!instanaSpan?.data) return null;
+
+  // Find first data key that matches a registered transformer
+  return Object.keys(instanaSpan.data).find(key => key in TRANSFORMER_REGISTRY) || null;
+}
+
 // ============================================================================
 // Module Exports
 // ============================================================================
@@ -404,6 +418,7 @@ module.exports = {
   RabbitMQTransformer,
   getTransformer,
   registerTransformer,
+  getSpanType,
   TRANSFORMER_REGISTRY
 };
 
