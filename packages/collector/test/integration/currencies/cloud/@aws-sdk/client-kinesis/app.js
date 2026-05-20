@@ -12,6 +12,7 @@ process.on('SIGTERM', () => {
 
 require('@instana/collector')();
 const express = require('express');
+const { getClientConfig } = require('./util');
 
 const app = express();
 const agentPort = process.env.INSTANA_AGENT_PORT;
@@ -31,8 +32,9 @@ const {
 const logPrefix = `AWS SDK v3 Kinesis (${process.pid}):\t`;
 const log = require('@_local/core/test/test_util/log').getLogger(logPrefix);
 
-const kinesis = new KinesisClient({ region: 'us-east-2' });
-const kinesisV2 = new Kinesis({ region: 'us-east-2' });
+const clientConfig = getClientConfig();
+const kinesis = new KinesisClient(clientConfig);
+const kinesisV2 = new Kinesis(clientConfig);
 const availableOperations = {
   deleteStream: {
     StreamName: streamName
