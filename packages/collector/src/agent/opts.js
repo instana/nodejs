@@ -12,6 +12,8 @@ exports.requestTimeout = 5000;
 exports.host = '127.0.0.1';
 // @ts-ignore - Cannot redeclare exported variable
 exports.port = 42699;
+// @ts-ignore - Cannot redeclare exported variable
+exports.dataPort = 42699;
 /** @type {string} */
 exports.agentUuid = undefined;
 // @ts-ignore - Cannot redeclare exported variable
@@ -30,6 +32,8 @@ exports.init = function init(config) {
   exports.host = config.agentHost;
   // @ts-ignore - Cannot redeclare exported variable
   exports.port = config.agentPort;
+  // @ts-ignore - Cannot redeclare exported variable
+  exports.dataPort = config.agentDataPort;
 
   // TODO: Why is autoProfile part of agentOpts? O_o
   // @ts-ignore - Cannot redeclare exported variable

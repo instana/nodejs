@@ -133,6 +133,7 @@ exports.announceNodeCollector = function announceNodeCollector(callback) {
 
   logger.debug(`Announcing the Node.js collector to the Instana host agent at ${agentOpts.host}:${agentOpts.port}`);
 
+  // Agent announcement uses agentOpts.port (agent connection port)
   const req = http.request(
     {
       host: agentOpts.host,
@@ -235,6 +236,8 @@ exports.sendLogToAgent = function sendLogToAgent(logLevel, message, stackTrace) 
 
   const payload = Buffer.from(JSON.stringify(payloadObject), 'utf8');
 
+  // Log forwarding uses agentOpts.port (agent connection port) for now
+  // this can be customized if we use OTLP transformation for logs in the future
   const req = http.request(
     {
       host: agentOpts.host,
@@ -271,6 +274,7 @@ exports.sendLogToAgent = function sendLogToAgent(logLevel, message, stackTrace) 
 function checkWhetherResponseForPathIsOkay(path, cb) {
   cb = util.atMostOnce('callback for checkWhetherResponseForPathIsOkay', cb);
 
+  // Agent readiness check uses agentOpts.port (agent connection port)
   const req = http.request(
     {
       host: agentOpts.host,
@@ -452,10 +456,12 @@ function sendData(path, data, cb, ignore404 = false) {
     return setImmediate(cb.bind(null, error));
   }
 
+  // Use dataPort for sending all telemetry data (metrics, spans, profiles, events, etc.)
+  // dataPort defaults to agentPort but can be configured separately for future use cases (e.g., OTel format)
   const req = http.request(
     {
       host: agentOpts.host,
-      port: agentOpts.port,
+      port: agentOpts.dataPort,
       path,
       method: 'POST',
       agent: http.agent,

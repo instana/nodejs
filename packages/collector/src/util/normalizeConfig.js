@@ -30,6 +30,7 @@ module.exports = function normalizeConfig(userConfig = {}) {
   // as extraFinalConfig to core's normalize function.
   finalConfig.agentHost = normalizeAgentHost(userConfig, defaults);
   finalConfig.agentPort = normalizeAgentPort(userConfig, defaults);
+  finalConfig.agentDataPort = normalizeAgentDataPort(userConfig, defaults);
   finalConfig.agentRequestTimeout = normalizeAgentRequestTimeout(userConfig, defaults);
   finalConfig.autoProfile = normalizeAutoProfile(userConfig, defaults);
   finalConfig.reportUnhandledPromiseRejections = normalizeUnhandledRejections(userConfig);
@@ -62,6 +63,24 @@ function normalizeAgentHost(userConfig, defaultConfig) {
  * @returns {number}
  */
 function normalizeAgentPort(userConfig, defaultConfig) {
+  const { value } = util.resolve(
+    {
+      envValue: 'INSTANA_AGENT_PORT',
+      inCodeValue: userConfig.agentPort,
+      defaultValue: defaultConfig.agentPort
+    },
+    [validate.numberValidator]
+  );
+  return value;
+}
+
+/**
+ * @param {import('../types/collector').CollectorConfig} userConfig
+ * @param {{ agentPort: number }} defaultConfig
+ * @returns {number}
+ */
+function normalizeAgentDataPort(userConfig, defaultConfig) {
+  // Future logic for OTLP enabled check can be added here to determine which port to use
   const { value } = util.resolve(
     {
       envValue: 'INSTANA_AGENT_PORT',
