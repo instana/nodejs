@@ -31,7 +31,7 @@ const {
   convertSpanData
 } = require('./instana-to-otel-converter-utils');
 
-const { getTransformer } = require('./transformers');
+const { getTransformer, SPAN_ATTRIBUTE_MAPPINGS } = require('./transformers');
 
 // ============================================================================
 // OTLP Mappings Configuration
@@ -51,6 +51,51 @@ const OTEL_METADATA_MAPPINGS = {
   ts: { key: 'startTimeUnixNano', value: convertStartTime },
   d: { key: 'endTimeUnixNano', value: convertEndTime }
 };
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+/**
+ * Builds data mappings for all keys in span.data
+ * Handles spans with multiple data keys (e.g., mongo + peer)
+ *
+ * @param {Object} instanaSpan - The Instana span object
+ * @param {Object} transformer - The transformer instance for the primary span type
+ * @returns {Object} Data mappings for all span data keys
+ */
+function buildDataMappings(instanaSpan, transformer) {
+  const dataMappings = {};
+
+  if (!instanaSpan.data) {
+    return dataMappings;
+  }
+
+  // Add the primary transformer's mappings
+  if (transformer.spanType) {
+    dataMappings[transformer.spanType] = transformer.data();
+  }
+
+  // Add mappings for any additional data keys (like 'peer')
+  Object.keys(instanaSpan.data).forEach(dataKey => {
+    // Skip if we already have mappings for this key
+    if (dataMappings[dataKey]) {
+      return;
+    }
+
+    // Check if we have attribute mappings for this data key
+    const attributeMappings = SPAN_ATTRIBUTE_MAPPINGS[dataKey];
+    if (attributeMappings) {
+      dataMappings[dataKey] = {
+        mappings: attributeMappings,
+        prefix: dataKey,
+        additionalAttributes: {}
+      };
+    }
+  });
+
+  return dataMappings;
+}
 
 // ============================================================================
 // Core Conversion Functions
@@ -88,11 +133,8 @@ function convertInstanaToOtel(instanaSpan) {
   otelSpan.status = transformer.getStatus();
 
   // Get data mappings from transformer and convert span data
-  // The transformer's spanType is used as the key for dynamic mapping
-  const dataMappings = {};
-  if (transformer.spanType) {
-    dataMappings[transformer.spanType] = transformer.data();
-  }
+  // Build mappings for ALL data keys in the span, not just the primary one
+  const dataMappings = buildDataMappings(instanaSpan, transformer);
 
   // Convert span data and error information to OTLP attributes
   otelSpan.attributes = convertSpanData(instanaSpan, dataMappings);
