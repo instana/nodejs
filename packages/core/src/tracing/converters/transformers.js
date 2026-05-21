@@ -21,15 +21,45 @@ const { toUpperCase, toInteger, generateSpanName, StatusCode } = require('./inst
 // Attribute Mapping Definitions
 // ============================================================================
 
+// ============================================================================
+// Constants
+// ============================================================================
+
+/**
+ * Database system identifiers for OTLP semantic conventions
+ */
+const DATABASE_SYSTEMS = {
+  MONGODB: 'mongodb'
+};
+
+/**
+ * Messaging system identifiers for OTLP semantic conventions
+ */
+// const MESSAGING_SYSTEMS = {
+//   KAFKA: 'kafka',
+//   RABBITMQ: 'rabbitmq',
+//   AMQP: 'amqp',
+//   SQS: 'sqs',
+//   SNS: 'sns'
+// };
+
+// ============================================================================
+// Base Attribute Mappings by Category
+// ============================================================================
+
 /**
  * Base mappings shared across protocol categories
  * Organized by category (messaging, database, rpc, etc.)
  * These provide common fields that specific protocols can extend
+ *
+ * @type {Object.<string, Object.<string, {key: string, value?: Function}>>}
  */
 const BASE_MAPPINGS = {
   /**
    * Common messaging fields shared by all messaging protocols
    * Used by: Kafka, RabbitMQ, AMQP, SQS, etc.
+   *
+   * @see https://opentelemetry.io/docs/specs/semconv/messaging/
    */
   messaging: {
     service: { key: 'messaging.destination.name' },
@@ -41,6 +71,8 @@ const BASE_MAPPINGS = {
    * Common database fields shared by all database protocols
    * Used by: MongoDB, MySQL, PostgreSQL, Redis, etc.
    * (Placeholder for future database support)
+   *
+   * @see https://opentelemetry.io/docs/specs/semconv/database/
    */
   database: {
     // Example: host, port, name, statement, etc.
@@ -50,11 +82,17 @@ const BASE_MAPPINGS = {
    * Common RPC fields shared by all RPC protocols
    * Used by: gRPC, GraphQL, etc.
    * (Placeholder for future RPC support)
+   *
+   * @see https://opentelemetry.io/docs/specs/semconv/rpc/
    */
   rpc: {
     // Example: service, method, etc.
   }
 };
+
+// ============================================================================
+// Protocol-Specific Attribute Mappings
+// ============================================================================
 
 /**
  * Protocol-specific attribute mappings
@@ -65,10 +103,13 @@ const BASE_MAPPINGS = {
  * - Mappings use format: { key: 'otel.attribute.name', value: transformerFunction }
  * - value transformer is optional (defaults to identity function)
  * - Protocols can extend BASE_MAPPINGS for their category
+ *
+ * @type {Object.<string, Object.<string, {key: string, value?: Function}>>}
  */
 const SPAN_ATTRIBUTE_MAPPINGS = {
   /**
    * HTTP protocol mappings
+   * @see https://opentelemetry.io/docs/specs/semconv/http/
    */
   http: {
     method: { key: 'http.request.method', value: toUpperCase },
@@ -89,12 +130,14 @@ const SPAN_ATTRIBUTE_MAPPINGS = {
   /**
    * Generic messaging protocol mappings
    * Uses only the base messaging fields
+   * @see https://opentelemetry.io/docs/specs/semconv/messaging/
    */
   messaging: BASE_MAPPINGS.messaging,
 
   /**
    * Kafka-specific mappings
    * Extends base messaging with Kafka-specific fields
+   * @see https://opentelemetry.io/docs/specs/semconv/messaging/kafka/
    */
   kafka: {
     ...BASE_MAPPINGS.messaging,
@@ -108,6 +151,7 @@ const SPAN_ATTRIBUTE_MAPPINGS = {
   /**
    * RabbitMQ-specific mappings
    * Extends base messaging with RabbitMQ-specific fields
+   * @see https://opentelemetry.io/docs/specs/semconv/messaging/rabbitmq/
    */
   rabbitmq: {
     ...BASE_MAPPINGS.messaging,
@@ -120,6 +164,7 @@ const SPAN_ATTRIBUTE_MAPPINGS = {
   /**
    * MongoDB-specific mappings
    * Maps MongoDB span fields to OTLP database semantic conventions
+   * @see https://opentelemetry.io/docs/specs/semconv/database/mongodb/
    */
   mongo: {
     command: { key: 'db.operation' },
@@ -132,6 +177,11 @@ const SPAN_ATTRIBUTE_MAPPINGS = {
    * Peer/network information mappings
    * Used by database and other protocols to capture network details
    * This is auxiliary data that appears alongside primary protocol data
+   *
+   * Note: This is not a primary span type but auxiliary data that can appear
+   * with other span types (e.g., database spans often include peer information)
+   *
+   * @see https://opentelemetry.io/docs/specs/semconv/general/attributes/#server-and-client-attributes
    */
   peer: {
     hostname: { key: 'net.peer.name' },
@@ -410,50 +460,84 @@ class RabbitMQTransformer extends MessagingTransformer {
 }
 
 // ============================================================================
-// MongoDB Transformer
+// Database Transformers
 // ============================================================================
 
 /**
  * MongoDB-specific transformer
- * Handles both 'mongo' and 'peer' data sections
+ *
+ * Handles MongoDB database operations and automatically processes auxiliary
+ * data like peer information when present in the span.
+ *
+ * Key Features:
+ * - Converts MongoDB commands to OTLP database semantic conventions
+ * - Generates descriptive span names (e.g., "mongodb.find")
+ * - Adds db.system attribute automatically
+ * - Works with multi-key span data (mongo + peer)
+ *
+ * @extends BaseTransformer
+ * @see https://opentelemetry.io/docs/specs/semconv/database/mongodb/
  */
 class MongoTransformer extends BaseTransformer {
+  /**
+   * Creates a MongoDB transformer instance
+   * @param {Object} span - The Instana span object
+   */
   constructor(span) {
     super(span, 'mongo');
   }
 
+  /**
+   * Returns data mappings configuration for MongoDB spans
+   *
+   * @returns {Object} Configuration object with mappings, prefix, and additional attributes
+   * @returns {Object} return.mappings - Field mappings from Instana to OTLP
+   * @returns {string} return.prefix - Prefix for unmapped fields
+   * @returns {Object} return.additionalAttributes - Additional OTLP attributes to add
+   */
   getDataMappings() {
     return {
       mappings: SPAN_ATTRIBUTE_MAPPINGS.mongo,
       prefix: 'db.mongodb',
       additionalAttributes: {
-        'db.system': 'mongodb'
+        'db.system': DATABASE_SYSTEMS.MONGODB
       }
     };
   }
 
   /**
-   * Generate span name for MongoDB spans
-   * Format: "mongodb.operation"
-   * Example: "mongodb.find"
+   * Generates span name for MongoDB operations
+   *
+   * Format: "mongodb.{operation}"
+   *
+   * @returns {string} The generated span name
+   * @example
+   * // For a find operation
+   * getSpanName() // Returns: "mongodb.find"
+   *
+   * @example
+   * // For an insert operation
+   * getSpanName() // Returns: "mongodb.insert"
    */
   getSpanName() {
     const data = this.getSpanData();
-    const command = data.command || 'mongodb';
+    const command = data.command || 'operation';
     return `mongodb.${command}`;
   }
 
   /**
-   * Get MongoDB-specific status
-   * Checks error count
+   * Determines span status based on error count
+   *
+   * @returns {Object} OTLP status object
+   * @returns {number} return.code - Status code (OK=1, ERROR=2)
+   * @returns {string} [return.message] - Error message if status is ERROR
    */
   getStatus() {
     const status = { code: StatusCode.UNSET };
 
-    // Check error count
     if (this.span.ec && this.span.ec > 0) {
       status.code = StatusCode.ERROR;
-      status.message = 'MongoDB error occurred';
+      status.message = 'MongoDB operation failed';
     } else {
       status.code = StatusCode.OK;
     }
@@ -466,34 +550,85 @@ class MongoTransformer extends BaseTransformer {
 // Transformer Registry
 // ============================================================================
 
+// ============================================================================
+// Transformer Registry and Configuration
+// ============================================================================
+
 /**
  * Registry mapping span types to their transformer classes
  *
- * For messaging protocols with NO custom mappings, just map to MessagingTransformer
- * For messaging protocols WITH custom mappings, create a specific class (like KafkaTransformer)
+ * This registry determines which transformer class handles each span type.
+ * When a span is converted, the appropriate transformer is selected based on
+ * the span's data keys.
+ *
+ * Design Patterns:
+ * - For protocols with custom logic: Create a dedicated transformer class
+ * - For protocols using base mappings: Use factory function with MessagingTransformer
+ *
+ * @type {Object.<string, Function>}
+ *
+ * @example
+ * // Dedicated transformer for complex protocols
+ * const TRANSFORMER_REGISTRY = {
+ *   http: HttpTransformer,
+ *   kafka: KafkaTransformer
+ * };
+ *
+ * @example
+ * // Factory function for simple protocols
+ * const TRANSFORMER_REGISTRY = {
+ *   sqs: (span) => new MessagingTransformer(span, 'sqs', 'sqs')
+ * };
  */
 const TRANSFORMER_REGISTRY = {
+  // HTTP protocol
   http: HttpTransformer,
+
+  // Messaging protocols
   kafka: KafkaTransformer,
   rabbitmq: RabbitMQTransformer,
+
+  // Database protocols
   mongo: MongoTransformer
 
-  // Example: SQS has no custom mappings, just uses MessagingTransformer
-  // sqs: (span) => new MessagingTransformer(span, 'sqs', 'sqs'),
-
-  // Example: SNS has no custom mappings, just uses MessagingTransformer
-  // sns: (span) => new MessagingTransformer(span, 'sns', 'sns'),
-
-  // Example: If we add NATS with custom mappings, create NatsTransformer class
-  // nats: NatsTransformer
+  // Future additions:
+  // sqs: (span) => new MessagingTransformer(span, 'sqs', MESSAGING_SYSTEMS.SQS),
+  // sns: (span) => new MessagingTransformer(span, 'sns', MESSAGING_SYSTEMS.SNS),
+  // redis: RedisTransformer,
+  // mysql: MySQLTransformer,
+  // postgresql: PostgreSQLTransformer
 };
 
 /**
- * Priority order for span types when multiple data keys exist
- * Primary span types (like 'mongo', 'http', 'kafka') should be checked first
- * Auxiliary data types (like 'peer') should be checked last
+ * Priority order for span type selection when multiple data keys exist
+ *
+ * When a span contains multiple data keys (e.g., both 'mongo' and 'peer'),
+ * this array determines which transformer to use. Primary span types are
+ * checked first, auxiliary data types last.
+ *
+ * Priority Levels:
+ * 1. HTTP - Web/API requests
+ * 2. Messaging - Kafka, RabbitMQ, etc.
+ * 3. Databases - MongoDB, MySQL, etc.
+ * 4. Auxiliary - peer, service metadata
+ *
+ * @type {string[]}
+ * @constant
  */
-const SPAN_TYPE_PRIORITY = ['http', 'kafka', 'rabbitmq', 'mongo', 'peer'];
+const SPAN_TYPE_PRIORITY = [
+  // HTTP
+  'http',
+
+  // Messaging
+  'kafka',
+  'rabbitmq',
+
+  // Databases
+  'mongo',
+
+  // Auxiliary data (lowest priority)
+  'peer'
+];
 
 // ============================================================================
 // Transformer Factory
@@ -501,45 +636,96 @@ const SPAN_TYPE_PRIORITY = ['http', 'kafka', 'rabbitmq', 'mongo', 'peer'];
 
 /**
  * Factory function to get the appropriate transformer for a span
- * Handles spans with multiple data keys by prioritizing primary span types
+ *
+ * This function handles the complex case where spans may have multiple data keys
+ * (e.g., MongoDB spans with both 'mongo' and 'peer' data). It uses a priority-based
+ * selection to ensure the correct transformer is chosen.
+ *
+ * Selection Algorithm:
+ * 1. Check if span has data
+ * 2. Try to match using SPAN_TYPE_PRIORITY order (primary types first)
+ * 3. Fallback to checking all data keys (for types not in priority list)
+ * 4. Default to BaseTransformer if no match found
  *
  * @param {Object} span - The Instana span object
+ * @param {string} span.n - Span name
+ * @param {Object} [span.data] - Span data containing protocol-specific information
  * @returns {BaseTransformer} The appropriate transformer instance
+ *
+ * @example
+ * // MongoDB span with peer data
+ * const span = {
+ *   n: 'mongo',
+ *   data: {
+ *     mongo: { command: 'find', ... },
+ *     peer: { hostname: '127.0.0.1', port: 27017 }
+ *   }
+ * };
+ * const transformer = getTransformer(span);
+ * // Returns: MongoTransformer instance (not PeerTransformer)
+ *
+ * @example
+ * // HTTP span
+ * const span = {
+ *   n: 'node.http.server',
+ *   data: {
+ *     http: { method: 'GET', url: '/api/users' }
+ *   }
+ * };
+ * const transformer = getTransformer(span);
+ * // Returns: HttpTransformer instance
  */
 function getTransformer(span) {
+  // Validate input
   if (!span || !span.data) {
     return new BaseTransformer(span, 'unknown');
   }
 
   const dataKeys = Object.keys(span.data);
 
-  // First, try to find a transformer using priority order
-  // This ensures primary span types (mongo, http, kafka) are matched before auxiliary types (peer)
+  // Strategy 1: Priority-based selection
+  // Check span types in priority order to handle multi-key spans correctly
   const prioritizedType = SPAN_TYPE_PRIORITY.find(type => dataKeys.includes(type) && TRANSFORMER_REGISTRY[type]);
 
   if (prioritizedType) {
     const TransformerClass = TRANSFORMER_REGISTRY[prioritizedType];
-    if (typeof TransformerClass === 'function' && TransformerClass.prototype) {
-      return new TransformerClass(span);
-    }
-    if (typeof TransformerClass === 'function') {
-      return TransformerClass(span);
-    }
+    return instantiateTransformer(TransformerClass, span);
   }
 
-  // Fallback: check all data keys in order (for span types not in priority list)
+  // Strategy 2: Fallback to first matching key
+  // For span types not in the priority list
   const matchedType = dataKeys.find(key => TRANSFORMER_REGISTRY[key]);
+
   if (matchedType) {
     const TransformerClass = TRANSFORMER_REGISTRY[matchedType];
-    if (typeof TransformerClass === 'function' && TransformerClass.prototype) {
-      return new TransformerClass(span);
-    }
-    if (typeof TransformerClass === 'function') {
-      return TransformerClass(span);
-    }
+    return instantiateTransformer(TransformerClass, span);
   }
 
-  // Default to base transformer
+  // Strategy 3: Default transformer
+  return new BaseTransformer(span, 'unknown');
+}
+
+/**
+ * Helper function to instantiate a transformer
+ * Handles both class constructors and factory functions
+ *
+ * @param {Function} TransformerClass - Transformer class or factory function
+ * @param {Object} span - The Instana span object
+ * @returns {BaseTransformer} Transformer instance
+ * @private
+ */
+function instantiateTransformer(TransformerClass, span) {
+  // Check if it's a class constructor
+  if (typeof TransformerClass === 'function' && TransformerClass.prototype) {
+    return new TransformerClass(span);
+  }
+
+  // Check if it's a factory function
+  if (typeof TransformerClass === 'function') {
+    return TransformerClass(span);
+  }
+
+  // Fallback (should never reach here)
   return new BaseTransformer(span, 'unknown');
 }
 
