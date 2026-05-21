@@ -58,32 +58,75 @@ const OTEL_METADATA_MAPPINGS = {
 
 /**
  * Builds data mappings for all keys in span.data
- * Handles spans with multiple data keys (e.g., mongo + peer)
+ *
+ * This function handles the complex case where Instana spans contain multiple
+ * data keys (e.g., MongoDB spans with both 'mongo' and 'peer' data). It ensures
+ * that all data sections are properly mapped to OTLP attributes.
+ *
+ * Processing Steps:
+ * 1. Add mappings from the primary transformer (e.g., MongoTransformer for 'mongo' data)
+ * 2. Scan for additional data keys (e.g., 'peer')
+ * 3. Add mappings for auxiliary data keys if available in SPAN_ATTRIBUTE_MAPPINGS
+ * 4. Return complete mapping configuration for all data sections
  *
  * @param {Object} instanaSpan - The Instana span object
- * @param {Object} transformer - The transformer instance for the primary span type
- * @returns {Object} Data mappings for all span data keys
+ * @param {string} instanaSpan.n - Span name
+ * @param {Object} instanaSpan.data - Span data with one or more protocol-specific sections
+ * @param {BaseTransformer} transformer - The transformer instance for the primary span type
+ * @param {string} transformer.spanType - The primary span type (e.g., 'mongo', 'http')
+ * @returns {Object.<string, Object>} Data mappings configuration for all span data keys
+ *
+ * @example
+ * // MongoDB span with peer data
+ * const span = {
+ *   data: {
+ *     mongo: { command: 'find', service: '127.0.0.1:27017' },
+ *     peer: { hostname: '127.0.0.1', port: 27017 }
+ *   }
+ * };
+ * const transformer = new MongoTransformer(span);
+ * const mappings = buildDataMappings(span, transformer);
+ * // Returns:
+ * // {
+ * //   mongo: { mappings: {...}, prefix: 'db.mongodb', additionalAttributes: {...} },
+ * //   peer: { mappings: {...}, prefix: 'peer', additionalAttributes: {} }
+ * // }
+ *
+ * @example
+ * // HTTP span (single data key)
+ * const span = {
+ *   data: {
+ *     http: { method: 'GET', url: '/api/users' }
+ *   }
+ * };
+ * const transformer = new HttpTransformer(span);
+ * const mappings = buildDataMappings(span, transformer);
+ * // Returns:
+ * // {
+ * //   http: { mappings: {...}, prefix: 'http', additionalAttributes: {} }
+ * // }
  */
 function buildDataMappings(instanaSpan, transformer) {
   const dataMappings = {};
 
+  // Validate input
   if (!instanaSpan.data) {
     return dataMappings;
   }
 
-  // Add the primary transformer's mappings
+  // Step 1: Add primary transformer's mappings
   if (transformer.spanType) {
     dataMappings[transformer.spanType] = transformer.data();
   }
 
-  // Add mappings for any additional data keys (like 'peer')
+  // Step 2: Process additional data keys
   Object.keys(instanaSpan.data).forEach(dataKey => {
     // Skip if we already have mappings for this key
     if (dataMappings[dataKey]) {
       return;
     }
 
-    // Check if we have attribute mappings for this data key
+    // Step 3: Check if we have attribute mappings for this auxiliary data key
     const attributeMappings = SPAN_ATTRIBUTE_MAPPINGS[dataKey];
     if (attributeMappings) {
       dataMappings[dataKey] = {
