@@ -115,6 +115,27 @@ const SPAN_ATTRIBUTE_MAPPINGS = {
     exchange: { key: 'messaging.rabbitmq.destination.routing_key' },
     routingKey: { key: 'messaging.rabbitmq.destination.routing_key' },
     correlationId: { key: 'messaging.message.conversation_id' }
+  },
+
+  /**
+   * MongoDB-specific mappings
+   * Maps MongoDB span fields to OTLP database semantic conventions
+   */
+  mongo: {
+    command: { key: 'db.operation' },
+    service: { key: 'db.connection_string' },
+    namespace: { key: 'db.mongodb.collection' },
+    filter: { key: 'db.statement' }
+  },
+
+  /**
+   * Peer/network information mappings
+   * Used by database and other protocols to capture network details
+   * This is auxiliary data that appears alongside primary protocol data
+   */
+  peer: {
+    hostname: { key: 'net.peer.name' },
+    port: { key: 'net.peer.port', value: toInteger }
   }
 };
 
@@ -389,6 +410,59 @@ class RabbitMQTransformer extends MessagingTransformer {
 }
 
 // ============================================================================
+// MongoDB Transformer
+// ============================================================================
+
+/**
+ * MongoDB-specific transformer
+ * Handles both 'mongo' and 'peer' data sections
+ */
+class MongoTransformer extends BaseTransformer {
+  constructor(span) {
+    super(span, 'mongo');
+  }
+
+  getDataMappings() {
+    return {
+      mappings: SPAN_ATTRIBUTE_MAPPINGS.mongo,
+      prefix: 'db.mongodb',
+      additionalAttributes: {
+        'db.system': 'mongodb'
+      }
+    };
+  }
+
+  /**
+   * Generate span name for MongoDB spans
+   * Format: "mongodb.operation"
+   * Example: "mongodb.find"
+   */
+  getSpanName() {
+    const data = this.getSpanData();
+    const command = data.command || 'mongodb';
+    return `mongodb.${command}`;
+  }
+
+  /**
+   * Get MongoDB-specific status
+   * Checks error count
+   */
+  getStatus() {
+    const status = { code: StatusCode.UNSET };
+
+    // Check error count
+    if (this.span.ec && this.span.ec > 0) {
+      status.code = StatusCode.ERROR;
+      status.message = 'MongoDB error occurred';
+    } else {
+      status.code = StatusCode.OK;
+    }
+
+    return status;
+  }
+}
+
+// ============================================================================
 // Transformer Registry
 // ============================================================================
 
@@ -401,7 +475,8 @@ class RabbitMQTransformer extends MessagingTransformer {
 const TRANSFORMER_REGISTRY = {
   http: HttpTransformer,
   kafka: KafkaTransformer,
-  rabbitmq: RabbitMQTransformer
+  rabbitmq: RabbitMQTransformer,
+  mongo: MongoTransformer
 
   // Example: SQS has no custom mappings, just uses MessagingTransformer
   // sqs: (span) => new MessagingTransformer(span, 'sqs', 'sqs'),
@@ -413,12 +488,20 @@ const TRANSFORMER_REGISTRY = {
   // nats: NatsTransformer
 };
 
+/**
+ * Priority order for span types when multiple data keys exist
+ * Primary span types (like 'mongo', 'http', 'kafka') should be checked first
+ * Auxiliary data types (like 'peer') should be checked last
+ */
+const SPAN_TYPE_PRIORITY = ['http', 'kafka', 'rabbitmq', 'mongo', 'peer'];
+
 // ============================================================================
 // Transformer Factory
 // ============================================================================
 
 /**
  * Factory function to get the appropriate transformer for a span
+ * Handles spans with multiple data keys by prioritizing primary span types
  *
  * @param {Object} span - The Instana span object
  * @returns {BaseTransformer} The appropriate transformer instance
@@ -428,19 +511,31 @@ function getTransformer(span) {
     return new BaseTransformer(span, 'unknown');
   }
 
-  // Find the first matching span type in the data
-  for (const spanType of Object.keys(span.data)) {
-    const TransformerClass = TRANSFORMER_REGISTRY[spanType];
+  const dataKeys = Object.keys(span.data);
 
-    if (TransformerClass) {
-      // If it's a class, instantiate it
-      if (typeof TransformerClass === 'function' && TransformerClass.prototype) {
-        return new TransformerClass(span);
-      }
-      // If it's a factory function, call it
-      if (typeof TransformerClass === 'function') {
-        return TransformerClass(span);
-      }
+  // First, try to find a transformer using priority order
+  // This ensures primary span types (mongo, http, kafka) are matched before auxiliary types (peer)
+  const prioritizedType = SPAN_TYPE_PRIORITY.find(type => dataKeys.includes(type) && TRANSFORMER_REGISTRY[type]);
+
+  if (prioritizedType) {
+    const TransformerClass = TRANSFORMER_REGISTRY[prioritizedType];
+    if (typeof TransformerClass === 'function' && TransformerClass.prototype) {
+      return new TransformerClass(span);
+    }
+    if (typeof TransformerClass === 'function') {
+      return TransformerClass(span);
+    }
+  }
+
+  // Fallback: check all data keys in order (for span types not in priority list)
+  const matchedType = dataKeys.find(key => TRANSFORMER_REGISTRY[key]);
+  if (matchedType) {
+    const TransformerClass = TRANSFORMER_REGISTRY[matchedType];
+    if (typeof TransformerClass === 'function' && TransformerClass.prototype) {
+      return new TransformerClass(span);
+    }
+    if (typeof TransformerClass === 'function') {
+      return TransformerClass(span);
     }
   }
 
@@ -483,10 +578,12 @@ module.exports = {
   MessagingTransformer,
   KafkaTransformer,
   RabbitMQTransformer,
+  MongoTransformer,
   getTransformer,
   registerTransformer,
   getSpanType,
-  TRANSFORMER_REGISTRY
+  TRANSFORMER_REGISTRY,
+  SPAN_ATTRIBUTE_MAPPINGS
 };
 
 // Made with Bob
