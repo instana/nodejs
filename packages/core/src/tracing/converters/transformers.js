@@ -353,15 +353,17 @@ class MessagingTransformer extends BaseTransformer {
   constructor(span, spanType, systemName) {
     super(span, spanType);
     this.systemName = systemName || spanType;
+    // Compute additional attributes once in constructor
+    this.additionalAttributes = {
+      'messaging.system': this.systemName
+    };
   }
 
   getDataMappings() {
     return {
       mappings: SPAN_ATTRIBUTE_MAPPINGS.messaging,
       prefix: `messaging.${this.systemName}`,
-      additionalAttributes: {
-        'messaging.system': this.systemName
-      }
+      additionalAttributes: this.additionalAttributes
     };
   }
 
@@ -396,9 +398,7 @@ class KafkaTransformer extends MessagingTransformer {
     return {
       mappings: SPAN_ATTRIBUTE_MAPPINGS.kafka,
       prefix: 'messaging.kafka',
-      additionalAttributes: {
-        'messaging.system': this.systemName
-      }
+      additionalAttributes: this.additionalAttributes // Inherited from parent
     };
   }
 
@@ -452,9 +452,7 @@ class RabbitMQTransformer extends MessagingTransformer {
     return {
       mappings: SPAN_ATTRIBUTE_MAPPINGS.rabbitmq,
       prefix: 'messaging.rabbitmq',
-      additionalAttributes: {
-        'messaging.system': 'rabbitmq'
-      }
+      additionalAttributes: this.additionalAttributes // Inherited from parent
     };
   }
 }
@@ -485,23 +483,23 @@ class MongoTransformer extends BaseTransformer {
    */
   constructor(span) {
     super(span, 'mongo');
+    // Compute additional attributes once in constructor
+    // Note: Once the DB transformer is done, this logic can be moved to higher level
+    this.additionalAttributes = {
+      'db.system': DATABASE_SYSTEMS.MONGODB
+    };
   }
 
   /**
    * Returns data mappings configuration for MongoDB spans
    *
    * @returns {Object} Configuration object with mappings, prefix, and additional attributes
-   * @returns {Object} return.mappings - Field mappings from Instana to OTLP
-   * @returns {string} return.prefix - Prefix for unmapped fields
-   * @returns {Object} return.additionalAttributes - Additional OTLP attributes to add
    */
   getDataMappings() {
     return {
       mappings: SPAN_ATTRIBUTE_MAPPINGS.mongo,
       prefix: 'db.mongodb',
-      additionalAttributes: {
-        'db.system': DATABASE_SYSTEMS.MONGODB
-      }
+      additionalAttributes: this.additionalAttributes
     };
   }
 
