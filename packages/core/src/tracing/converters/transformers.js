@@ -62,6 +62,7 @@ const BASE_MAPPINGS = {
    * @see https://opentelemetry.io/docs/specs/semconv/messaging/
    */
   messaging: {
+    'messaging.system': { getter: 'messagingSystem' },
     service: { key: 'messaging.destination.name' },
     access: { key: 'messaging.operation.type' },
     operation: { key: 'messaging.operation.type' }
@@ -167,6 +168,7 @@ const SPAN_ATTRIBUTE_MAPPINGS = {
    * @see https://opentelemetry.io/docs/specs/semconv/database/mongodb/
    */
   mongo: {
+    'db.system': { getter: 'dbSystem' },
     command: { key: 'db.operation' },
     service: { key: 'db.connection_string' },
     namespace: { key: 'db.mongodb.collection' },
@@ -217,9 +219,7 @@ class BaseTransformer {
    */
   getDataMappings() {
     return {
-      mappings: {},
-      prefix: 'span',
-      additionalAttributes: {}
+      mappings: {}
     };
   }
 
@@ -287,9 +287,7 @@ class HttpTransformer extends BaseTransformer {
 
   getDataMappings() {
     return {
-      mappings: SPAN_ATTRIBUTE_MAPPINGS.http,
-      prefix: 'http',
-      additionalAttributes: {}
+      mappings: SPAN_ATTRIBUTE_MAPPINGS.http
     };
   }
 
@@ -346,24 +344,30 @@ class HttpTransformer extends BaseTransformer {
  * - service -> messaging.destination.name
  * - access -> messaging.operation.type
  * - operation -> messaging.operation.type
+ * - messaging.system -> computed via getter
  *
  * Children can extend/override by calling super.getDataMappings() and merging
  */
 class MessagingTransformer extends BaseTransformer {
-  constructor(span, spanType, systemName) {
-    super(span, spanType);
-    this.systemName = systemName || spanType;
-    // Compute additional attributes once in constructor
-    this.additionalAttributes = {
-      'messaging.system': this.systemName
-    };
+  constructor(span, systemName) {
+    super(span, systemName);
+    this.systemName = systemName;
+  }
+
+  /**
+   * Getter for messaging.system attribute
+   * Called dynamically by the mapping engine when processing getter-based mappings
+   */
+  get messagingSystem() {
+    return this.systemName;
   }
 
   getDataMappings() {
+    // Automatically resolve mappings based on systemName
+    const mappings = SPAN_ATTRIBUTE_MAPPINGS[this.systemName] || SPAN_ATTRIBUTE_MAPPINGS.messaging;
+
     return {
-      mappings: SPAN_ATTRIBUTE_MAPPINGS.messaging,
-      prefix: `messaging.${this.systemName}`,
-      additionalAttributes: this.additionalAttributes
+      mappings: mappings
     };
   }
 
@@ -388,18 +392,11 @@ class MessagingTransformer extends BaseTransformer {
  * Kafka-specific transformer
  * Inherits ALL messaging mappings (service, access, operation) from MessagingTransformer
  * Adds Kafka-specific fields (topic, partition, offset, key, group)
+ * Only overrides methods for custom behavior (span naming and status)
  */
 class KafkaTransformer extends MessagingTransformer {
   constructor(span) {
-    super(span, 'kafka', 'kafka');
-  }
-
-  getDataMappings() {
-    return {
-      mappings: SPAN_ATTRIBUTE_MAPPINGS.kafka,
-      prefix: 'messaging.kafka',
-      additionalAttributes: this.additionalAttributes // Inherited from parent
-    };
+    super(span, 'kafka');
   }
 
   /**
@@ -435,29 +432,6 @@ class KafkaTransformer extends MessagingTransformer {
 }
 
 // ============================================================================
-// RabbitMQ Transformer (extends Messaging with additional mappings)
-// ============================================================================
-
-/**
- * RabbitMQ-specific transformer
- * Inherits ALL messaging mappings (service, access, operation) from MessagingTransformer
- * Adds RabbitMQ-specific fields (queue, exchange, routingKey, correlationId)
- */
-class RabbitMQTransformer extends MessagingTransformer {
-  constructor(span) {
-    super(span, 'rabbitmq', 'rabbitmq');
-  }
-
-  getDataMappings() {
-    return {
-      mappings: SPAN_ATTRIBUTE_MAPPINGS.rabbitmq,
-      prefix: 'messaging.rabbitmq',
-      additionalAttributes: this.additionalAttributes // Inherited from parent
-    };
-  }
-}
-
-// ============================================================================
 // Database Transformers
 // ============================================================================
 
@@ -483,24 +457,25 @@ class MongoTransformer extends BaseTransformer {
    */
   constructor(span) {
     super(span, 'mongo');
-    // Compute additional attributes once in constructor
-    // Note: Once the DB transformer is done, this logic can be moved to higher level
-    this.additionalAttributes = {
-      'db.system': DATABASE_SYSTEMS.MONGODB
-    };
   }
 
   /**
    * Returns data mappings configuration for MongoDB spans
    *
-   * @returns {Object} Configuration object with mappings, prefix, and additional attributes
+   * @returns {Object} Configuration object with mappings
    */
   getDataMappings() {
     return {
-      mappings: SPAN_ATTRIBUTE_MAPPINGS.mongo,
-      prefix: 'db.mongodb',
-      additionalAttributes: this.additionalAttributes
+      mappings: SPAN_ATTRIBUTE_MAPPINGS.mongo
     };
+  }
+
+  /**
+   * Getter for db.system attribute
+   * Called dynamically by the mapping engine when processing getter-based mappings
+   */
+  get dbSystem() {
+    return DATABASE_SYSTEMS.MONGODB;
   }
 
   /**
@@ -584,14 +559,14 @@ const TRANSFORMER_REGISTRY = {
 
   // Messaging protocols
   kafka: KafkaTransformer,
-  rabbitmq: RabbitMQTransformer,
+  rabbitmq: span => new MessagingTransformer(span, 'rabbitmq'),
 
   // Database protocols
   mongo: MongoTransformer
 
   // Future additions:
-  // sqs: (span) => new MessagingTransformer(span, 'sqs', MESSAGING_SYSTEMS.SQS),
-  // sns: (span) => new MessagingTransformer(span, 'sns', MESSAGING_SYSTEMS.SNS),
+  // sqs: (span) => new MessagingTransformer(span, 'sqs'),
+  // sns: (span) => new MessagingTransformer(span, 'sns'),
   // redis: RedisTransformer,
   // mysql: MySQLTransformer,
   // postgresql: PostgreSQLTransformer
@@ -761,7 +736,6 @@ module.exports = {
   HttpTransformer,
   MessagingTransformer,
   KafkaTransformer,
-  RabbitMQTransformer,
   MongoTransformer,
   getTransformer,
   registerTransformer,
