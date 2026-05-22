@@ -130,9 +130,7 @@ function buildDataMappings(instanaSpan, transformer) {
     const attributeMappings = SPAN_ATTRIBUTE_MAPPINGS[dataKey];
     if (attributeMappings) {
       dataMappings[dataKey] = {
-        mappings: attributeMappings,
-        prefix: dataKey,
-        additionalAttributes: {}
+        mappings: attributeMappings
       };
     }
   });
@@ -180,7 +178,7 @@ function convertInstanaToOtel(instanaSpan) {
   const dataMappings = buildDataMappings(instanaSpan, transformer);
 
   // Convert span data and error information to OTLP attributes
-  otelSpan.attributes = convertSpanData(instanaSpan, dataMappings);
+  otelSpan.attributes = convertSpanData(instanaSpan, dataMappings, transformer);
 
   // Clean up undefined values
   Object.keys(otelSpan).forEach(key => {

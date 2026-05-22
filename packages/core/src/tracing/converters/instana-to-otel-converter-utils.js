@@ -227,7 +227,7 @@ function applyMetadataTransformations(instanaSpan, metadataMappings) {
  * @param {Object} spanAttributeMappings - Span attribute mappings configuration
  * @returns {Array} OTLP attributes array
  */
-function convertSpanData(instanaSpan, spanAttributeMappings) {
+function convertSpanData(instanaSpan, spanAttributeMappings, transformer) {
   const attributes = [];
   const data = instanaSpan.data;
 
@@ -238,10 +238,20 @@ function convertSpanData(instanaSpan, spanAttributeMappings) {
       const config = spanAttributeMappings[spanType];
 
       if (config && typeof data[spanType] === 'object') {
-        // Add any additional attributes for this span type
-        Object.keys(config.additionalAttributes).forEach(key => {
-          const value = config.additionalAttributes[key];
-          attributes.push({ key, value: { stringValue: value } });
+        // Process getter-based mappings from the mappings object
+        Object.keys(config.mappings).forEach(key => {
+          const mapping = config.mappings[key];
+
+          // Handle getter-based mappings
+          if (mapping && typeof mapping === 'object' && mapping.getter) {
+            const getterName = mapping.getter;
+            if (transformer && typeof transformer[getterName] === 'function') {
+              const value = transformer[getterName]();
+              if (value !== null && value !== undefined) {
+                attributes.push({ key, value: { stringValue: String(value) } });
+              }
+            }
+          }
         });
 
         // Process the span type data
@@ -257,7 +267,12 @@ function convertSpanData(instanaSpan, spanAttributeMappings) {
           let transformedValue = value;
 
           if (mapping) {
-            // Handle both old string format and new object format for backward compatibility
+            // Handle getter-based mappings (skip, already processed above)
+            if (typeof mapping === 'object' && mapping.getter) {
+              return;
+            }
+
+            // Handle both old string format and new object format
             if (typeof mapping === 'string') {
               // Legacy format: direct string mapping
               otlpKey = mapping;
@@ -267,8 +282,8 @@ function convertSpanData(instanaSpan, spanAttributeMappings) {
               transformedValue = mapping.value ? mapping.value(value) : value;
             }
           } else {
-            // Unmapped fields get prefixed
-            otlpKey = `${config.prefix}.${key}`;
+            // Unmapped fields - skip prefix since we're removing it
+            return;
           }
 
           // Add attribute with proper type
