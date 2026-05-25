@@ -1174,10 +1174,12 @@
       },
       {
         "v": "4.16.2",
+        "node": "<26",
         "skipValidation": true
       },
       {
         "v": "4.5.0",
+        "node": "<26",
         "skipValidation": true
       }
     ]
