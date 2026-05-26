@@ -26,22 +26,25 @@ const { toUpperCase, toInteger, generateSpanName, StatusCode } = require('./inst
 // ============================================================================
 
 /**
- * Database system identifiers for OTLP semantic conventions
+ * Protocol configuration for transformer instantiation and semantic system names
  */
-const DATABASE_SYSTEMS = {
-  MONGODB: 'mongodb'
+const PROTOCOL_CONFIG = {
+  http: {
+    spanType: 'http'
+  },
+  kafka: {
+    spanType: 'kafka',
+    systemName: 'kafka'
+  },
+  rabbitmq: {
+    spanType: 'rabbitmq',
+    systemName: 'rabbitmq'
+  },
+  mongo: {
+    spanType: 'mongo',
+    systemName: 'mongodb'
+  }
 };
-
-/**
- * Messaging system identifiers for OTLP semantic conventions
- */
-// const MESSAGING_SYSTEMS = {
-//   KAFKA: 'kafka',
-//   RABBITMQ: 'rabbitmq',
-//   AMQP: 'amqp',
-//   SQS: 'sqs',
-//   SNS: 'sns'
-// };
 
 // ============================================================================
 // Base Attribute Mappings by Category
@@ -129,13 +132,6 @@ const SPAN_ATTRIBUTE_MAPPINGS = {
   },
 
   /**
-   * Generic messaging protocol mappings
-   * Uses only the base messaging fields
-   * @see https://opentelemetry.io/docs/specs/semconv/messaging/
-   */
-  messaging: BASE_MAPPINGS.messaging,
-
-  /**
    * Kafka-specific mappings
    * Extends base messaging with Kafka-specific fields
    * @see https://opentelemetry.io/docs/specs/semconv/messaging/kafka/
@@ -206,24 +202,6 @@ class BaseTransformer {
   }
 
   /**
-   * Get metadata mappings (common fields like traceId, spanId, etc.)
-   * Override in subclasses if needed
-   */
-  getMetaMappings() {
-    return {};
-  }
-
-  /**
-   * Get data attribute mappings (protocol-specific fields)
-   * Must be implemented by subclasses
-   */
-  getDataMappings() {
-    return {
-      mappings: {}
-    };
-  }
-
-  /**
    * Get span name
    * Can be overridden by subclasses for custom naming
    */
@@ -282,7 +260,7 @@ class BaseTransformer {
  */
 class HttpTransformer extends BaseTransformer {
   constructor(span) {
-    super(span, 'http');
+    super(span, PROTOCOL_CONFIG.http.spanType);
   }
 
   getDataMappings() {
@@ -349,8 +327,8 @@ class HttpTransformer extends BaseTransformer {
  * Children can extend/override by calling super.getDataMappings() and merging
  */
 class MessagingTransformer extends BaseTransformer {
-  constructor(span, systemName) {
-    super(span, systemName);
+  constructor(span, spanType, systemName = spanType) {
+    super(span, spanType);
     this.systemName = systemName;
   }
 
@@ -364,7 +342,7 @@ class MessagingTransformer extends BaseTransformer {
 
   getDataMappings() {
     // Automatically resolve mappings based on systemName
-    const mappings = SPAN_ATTRIBUTE_MAPPINGS[this.systemName] || SPAN_ATTRIBUTE_MAPPINGS.messaging;
+    const mappings = SPAN_ATTRIBUTE_MAPPINGS[this.systemName] || BASE_MAPPINGS.messaging;
 
     return {
       mappings: mappings
@@ -396,7 +374,7 @@ class MessagingTransformer extends BaseTransformer {
  */
 class KafkaTransformer extends MessagingTransformer {
   constructor(span) {
-    super(span, 'kafka');
+    super(span, PROTOCOL_CONFIG.kafka.spanType, PROTOCOL_CONFIG.kafka.systemName);
   }
 
   /**
@@ -456,7 +434,8 @@ class MongoTransformer extends BaseTransformer {
    * @param {Object} span - The Instana span object
    */
   constructor(span) {
-    super(span, 'mongo');
+    super(span, PROTOCOL_CONFIG.mongo.spanType);
+    this.systemName = PROTOCOL_CONFIG.mongo.systemName;
   }
 
   /**
@@ -475,7 +454,7 @@ class MongoTransformer extends BaseTransformer {
    * Called dynamically by the mapping engine when processing getter-based mappings
    */
   get dbSystem() {
-    return DATABASE_SYSTEMS.MONGODB;
+    return this.systemName;
   }
 
   /**
@@ -559,7 +538,8 @@ const TRANSFORMER_REGISTRY = {
 
   // Messaging protocols
   kafka: KafkaTransformer,
-  rabbitmq: span => new MessagingTransformer(span, 'rabbitmq'),
+  rabbitmq: span =>
+    new MessagingTransformer(span, PROTOCOL_CONFIG.rabbitmq.spanType, PROTOCOL_CONFIG.rabbitmq.systemName),
 
   // Database protocols
   mongo: MongoTransformer
