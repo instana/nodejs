@@ -178,12 +178,24 @@ function identity(value) {
  *
  * @param {Object} instanaSpan - The Instana span object
  * @param {Object} metadataMappings - Metadata mappings configuration
+ * @param {Object} transformer - Optional transformer instance for getter-based mappings
  * @returns {Object} Object with transformed OTLP base fields
  */
-function applyMetadataTransformations(instanaSpan, metadataMappings) {
+function applyMetadataTransformations(instanaSpan, metadataMappings, transformer = null) {
   const result = {};
 
   Object.entries(metadataMappings).forEach(([instanaField, mapping]) => {
+    // Handle getter-based mappings (require transformer context)
+    if (mapping.getter) {
+      if (transformer && typeof transformer[mapping.getter] === 'function') {
+        const value = transformer[mapping.getter]();
+        if (value !== null && value !== undefined) {
+          result[mapping.key] = value;
+        }
+      }
+      return;
+    }
+
     const instanaValue = instanaSpan[instanaField];
 
     // Skip if the field doesn't exist in the instana span
