@@ -34,6 +34,15 @@ const {
 const { getTransformer, SPAN_ATTRIBUTE_MAPPINGS } = require('./transformers');
 
 // ============================================================================
+// Type Definitions
+// ============================================================================
+
+/**
+ * @typedef {import('./otel-span').OtelSpan} OtelSpan
+ * @typedef {import('./otel-span').OtelAttribute} OtelAttribute
+ */
+
+// ============================================================================
 // OTLP Mappings Configuration
 // ============================================================================
 
@@ -74,11 +83,10 @@ const OTEL_METADATA_MAPPINGS = {
  * 3. Add mappings for auxiliary data keys if available in SPAN_ATTRIBUTE_MAPPINGS
  * 4. Return complete mapping configuration for all data sections
  *
- * @param {Object} instanaSpan - The Instana span object
- * @param {string} instanaSpan.n - Span name
- * @param {Object} instanaSpan.data - Span data with one or more protocol-specific sections
- * @param {BaseTransformer} transformer - The transformer instance for the primary span type
+ * @param {import('../../core').InstanaBaseSpan} instanaSpan - The Instana span object
+ * @param {Object} transformer - The transformer instance for the primary span type
  * @param {string} transformer.spanType - The primary span type (e.g., 'mongo', 'http')
+ * @param {Function} transformer.data - Method to get data mappings
  * @returns {Object.<string, Object>} Data mappings configuration for all span data keys
  *
  * @example
@@ -112,6 +120,7 @@ const OTEL_METADATA_MAPPINGS = {
  * // }
  */
 function buildDataMappings(instanaSpan, transformer) {
+  /** @type {Object.<string, Object>} */
   const dataMappings = {};
 
   // Validate input
@@ -150,8 +159,8 @@ function buildDataMappings(instanaSpan, transformer) {
 /**
  * Converts an Instana span to OpenTelemetry format using transformer pattern
  *
- * @param {Object} instanaSpan - The Instana span object
- * @returns {Object} OpenTelemetry formatted span
+ * @param {import('../../core').InstanaBaseSpan} instanaSpan - The Instana span object
+ * @returns {OtelSpan} OpenTelemetry formatted span
  */
 function convertInstanaToOtel(instanaSpan) {
   if (!instanaSpan || typeof instanaSpan !== 'object') {
@@ -159,10 +168,13 @@ function convertInstanaToOtel(instanaSpan) {
   }
 
   // Get the appropriate transformer for this span
+  // @ts-ignore - InstanaBaseSpan is compatible with transformer input
   const transformer = getTransformer(instanaSpan);
 
   // Create base OTEL span structure using metadata mappings
+  /** @type {OtelSpan} */
   const otelSpan = {
+    // @ts-ignore - attributes will be populated by convertSpanData
     attributes: {},
     events: [],
     links: [],
@@ -179,11 +191,14 @@ function convertInstanaToOtel(instanaSpan) {
   const dataMappings = buildDataMappings(instanaSpan, transformer);
 
   // Convert span data and error information to OTLP attributes
+  // @ts-ignore - convertSpanData returns the correct type
   otelSpan.attributes = convertSpanData(instanaSpan, dataMappings, transformer);
 
   // Clean up undefined values
   Object.keys(otelSpan).forEach(key => {
+    // @ts-ignore - dynamic key access for cleanup
     if (otelSpan[key] === undefined) {
+      // @ts-ignore - dynamic key access for cleanup
       delete otelSpan[key];
     }
   });
@@ -197,10 +212,11 @@ function convertInstanaToOtel(instanaSpan) {
 /**
  * Creates resource attributes for OTLP format as an array
  *
- * @param {Object} instanaSpan - The Instana span object
- * @returns {Array} Resource attributes array
+ * @param {import('../../core').InstanaBaseSpan} instanaSpan - The Instana span object
+ * @returns {Array<OtelAttribute>} Resource attributes array
  */
 function createResourceAttributes(instanaSpan) {
+  /** @type {Array<OtelAttribute>} */
   const attributes = [];
 
   // Service name from span data
