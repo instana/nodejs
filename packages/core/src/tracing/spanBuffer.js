@@ -7,8 +7,6 @@
 
 const tracingMetrics = require('./metrics');
 const { transform } = require('./backend_mappers');
-// const otlpTransformer = require('./otlpTransformer');
-// Temporary: Use refactored converter for testing
 const { convertBatch } = require('./converters/instana-to-otel-converter');
 
 /** @type {import('../core').GenericLogger} */
@@ -455,7 +453,7 @@ function transmitSpans() {
   spans = [];
   batchingBuckets.clear();
 
-  // Temporary: Use refactored converter for testing
+  // Convert to OTLP format if enabled
   const processedSpans = process.env.INSTANA_OTLP_FORMAT === 'true' ? convertBatch(spansToSend) : spansToSend;
 
   // We restore the content of the spans array if sending them downstream was not successful. We do not restore
