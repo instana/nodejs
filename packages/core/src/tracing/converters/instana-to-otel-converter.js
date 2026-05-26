@@ -31,7 +31,7 @@ const {
   convertSpanData
 } = require('./instana-to-otel-converter-utils');
 
-const { getTransformer, SPAN_ATTRIBUTE_MAPPINGS } = require('./transformers');
+const { getTransformer } = require('./transformers');
 
 // ============================================================================
 // Type Definitions
@@ -133,19 +133,25 @@ function buildDataMappings(instanaSpan, transformer) {
     dataMappings[transformer.spanType] = transformer.data();
   }
 
-  // Step 2: Process additional data keys
+  // Step 2: Process additional data keys using getTransformer
   Object.keys(instanaSpan.data).forEach(dataKey => {
     // Skip if we already have mappings for this key
     if (dataMappings[dataKey]) {
       return;
     }
 
-    // Step 3: Check if we have attribute mappings for this auxiliary data key
-    const attributeMappings = SPAN_ATTRIBUTE_MAPPINGS[dataKey];
-    if (attributeMappings) {
-      dataMappings[dataKey] = {
-        mappings: attributeMappings
-      };
+    // Step 3: Create a temporary span with only this data key to get its transformer
+    const tempSpan = {
+      n: instanaSpan.n || 'unknown',
+      data: { [dataKey]: instanaSpan.data[dataKey] }
+    };
+
+    // Get transformer for this specific data key
+    const auxiliaryTransformer = getTransformer(tempSpan);
+
+    // Only add mappings if we got a transformer with a valid spanType
+    if (auxiliaryTransformer.spanType && auxiliaryTransformer.spanType !== 'unknown') {
+      dataMappings[dataKey] = auxiliaryTransformer.data();
     }
   });
 
