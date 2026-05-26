@@ -41,7 +41,9 @@ const { getTransformer, SPAN_ATTRIBUTE_MAPPINGS } = require('./transformers');
  * Metadata/Base field mappings for common span fields
  * Maps Instana span fields to OTLP span fields with value transformers
  *
- * Pattern: instanaField: { key: 'otelField', value: transformerFunction }
+ * Pattern:
+ * - instanaField: { key: 'otelField', value: transformerFunction }
+ * - For transformer methods: { key: 'otelField', getter: 'methodName' }
  */
 const OTEL_METADATA_MAPPINGS = {
   t: { key: 'traceId', value: convertTraceId },
@@ -49,7 +51,10 @@ const OTEL_METADATA_MAPPINGS = {
   p: { key: 'parentSpanId', value: convertSpanId },
   k: { key: 'kind', value: convertSpanKind },
   ts: { key: 'startTimeUnixNano', value: convertStartTime },
-  d: { key: 'endTimeUnixNano', value: convertEndTime }
+  d: { key: 'endTimeUnixNano', value: convertEndTime },
+  // Transformer-based fields (require transformer context)
+  name: { key: 'name', getter: 'getSpanName' },
+  status: { key: 'status', getter: 'getStatus' }
 };
 
 // ============================================================================
@@ -166,12 +171,8 @@ function convertInstanaToOtel(instanaSpan) {
     }
   };
 
-  // Apply all metadata transformations in one call
-  Object.assign(otelSpan, applyMetadataTransformations(instanaSpan, OTEL_METADATA_MAPPINGS));
-
-  // Override span name and status using transformer (protocol-specific logic)
-  otelSpan.name = transformer.getSpanName();
-  otelSpan.status = transformer.getStatus();
+  // Apply all metadata transformations in one call, including name and status via transformer
+  Object.assign(otelSpan, applyMetadataTransformations(instanaSpan, OTEL_METADATA_MAPPINGS, transformer));
 
   // Get data mappings from transformer and convert span data
   // Build mappings for ALL data keys in the span, not just the primary one
