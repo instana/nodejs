@@ -195,6 +195,7 @@ function filterStableReleases(releaseList) {
     'experimental',
     'integration',
     'next',
+    'nightly',
     'rc',
     'unstable'
   ];
