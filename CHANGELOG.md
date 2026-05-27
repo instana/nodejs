@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.1.0](https://github.com/instana/nodejs/compare/v6.0.0...v6.1.0) (2026-05-27)
+
+
+### Bug Fixes
+
+* bumped @opentelemetry/instrumentation-fs from 0.36.0 to 0.37.0 ([#2562](https://github.com/instana/nodejs/issues/2562)) ([1c226d3](https://github.com/instana/nodejs/commit/1c226d37654090b4abbf54dfbe99d9a6637b0602))
+* bumped @opentelemetry/instrumentation-oracledb from 0.40.0 to 0.43.0 ([#2563](https://github.com/instana/nodejs/issues/2563)) ([6d3b6b8](https://github.com/instana/nodejs/commit/6d3b6b85e07174744ad178d681b85d28a6cf6e65))
+
+
+### Features
+
+* added support for W3C sampled flag ([#2512](https://github.com/instana/nodejs/issues/2512)) ([0d03b43](https://github.com/instana/nodejs/commit/0d03b43ae70387d4faab5ca119c1bbef452e6edf))
+* **aws-sdk:** added support for 3.1046.0 ([#2556](https://github.com/instana/nodejs/issues/2556)) ([2485d58](https://github.com/instana/nodejs/commit/2485d585245dbc93c47d30b462a6ba79fad16bb3))
+
+
+
+
+
 # [6.0.0](https://github.com/instana/nodejs/compare/v5.5.0...v6.0.0) (2026-05-18)
 
 

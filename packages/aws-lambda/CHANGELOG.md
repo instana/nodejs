@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.1.0](https://github.com/instana/nodejs/compare/v6.0.0...v6.1.0) (2026-05-27)
+
+
+### Features
+
+* added support for W3C sampled flag ([#2512](https://github.com/instana/nodejs/issues/2512)) ([0d03b43](https://github.com/instana/nodejs/commit/0d03b43ae70387d4faab5ca119c1bbef452e6edf))
+
+
+
+
+
 # [6.0.0](https://github.com/instana/nodejs/compare/v5.5.0...v6.0.0) (2026-05-18)
 
 **Note:** Version bump only for package @instana/aws-lambda
