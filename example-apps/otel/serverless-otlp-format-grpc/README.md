@@ -1,4 +1,4 @@
-# Serverless OpenTelemetry OTLP traces and metrics
+# Serverless OpenTelemetry OTLP format
 
 ## Requirements
 

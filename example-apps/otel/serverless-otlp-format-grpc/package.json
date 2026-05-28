@@ -1,5 +1,5 @@
 {
-  "name": "otel",
+  "name": "otel-sdk-otlp-format",
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
