@@ -1023,7 +1023,7 @@ module.exports = function (name, version, isLatest) {
           )
         ));
 
-    it.only('must not pollute shared headers objects with Instana trace context headers', () =>
+    it('must not pollute shared headers objects with Instana trace context headers', () =>
       clientControls
         .sendRequest({
           method: 'GET',
@@ -1309,9 +1309,8 @@ module.exports = function (name, version, isLatest) {
   }
 
   function serverUrl(appUsesHttps, urlShouldContainRedactedCredentials, path_, serverControls) {
-    return `http${appUsesHttps ? 's' : ''}://${
-      urlShouldContainRedactedCredentials ? '<redacted>:<redacted>@' : ''
-    }${`localhost:${serverControls.getPort()}`}${path_}`;
+    return `http${appUsesHttps ? 's' : ''}://${urlShouldContainRedactedCredentials ? '<redacted>:<redacted>@' : ''
+      }${`localhost:${serverControls.getPort()}`}${path_}`;
   }
 
   function checkQuery(span, withQuery) {
