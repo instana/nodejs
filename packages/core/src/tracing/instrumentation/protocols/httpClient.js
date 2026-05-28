@@ -428,7 +428,6 @@ function hasHeadersOption(options) {
 
 // CASE: Prevent caching by got/cacheable-request
 function removeInstanaHeadersFromOpts(options) {
-  return;
   if (!hasHeadersOption(options)) {
     return;
   }
