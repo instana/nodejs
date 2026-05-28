@@ -51,7 +51,7 @@ app.get('/request-url-only', (req, res) => {
 
 app.get('/request-deferred', (req, res) => {
   setTimeout(() => {
-    httpModule.get(`http://127.0.0.1:${agentPort}/ping?k=2`, () => {}).end();
+    httpModule.get(`http://127.0.0.1:${agentPort}/ping?k=2`, () => { }).end();
   }, 500);
 
   httpModule.get(`http://127.0.0.1:${agentPort}/ping?k=1`, () => res.sendStatus(200)).end();
@@ -321,6 +321,32 @@ app.get('/downstream-call', (req, res) => {
   });
 
   downstreamReq.end();
+});
+
+app.get('/request-shared-headers', (req, res) => {
+  const sharedHeaders = { Accept: 'application/json' };
+
+  const makeRequest = (path_, cb) => {
+    const reqOptions = {
+      hostname: 'localhost',
+      port: process.env.SERVER_PORT,
+      method: 'GET',
+      path: path_,
+      ca: cert,
+      headers: sharedHeaders // same reference for both requests
+    };
+
+    httpModule.request(reqOptions, response => {
+      response.resume();
+      response.on('end', cb);
+    }).end();
+  };
+
+  makeRequest('/request-only-opts', () => {
+    makeRequest('/get-only-opts', () => {
+      res.status(200).json(sharedHeaders);
+    });
+  });
 });
 
 app.get('/without-port', (req, res) => {

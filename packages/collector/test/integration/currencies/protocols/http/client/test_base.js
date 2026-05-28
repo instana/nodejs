@@ -1023,6 +1023,56 @@ module.exports = function (name, version, isLatest) {
           )
         ));
 
+    it.only('must not pollute shared headers objects with Instana trace context headers', () =>
+      clientControls
+        .sendRequest({
+          method: 'GET',
+          path: '/request-shared-headers'
+        })
+        .then(responseBody => {
+          const sharedHeaders = typeof responseBody === 'string' ? JSON.parse(responseBody) : responseBody;
+
+          expect(sharedHeaders['X-INSTANA-T'], 'X-INSTANA-T should not be in shared headers').to.not.exist;
+          expect(sharedHeaders['X-INSTANA-S'], 'X-INSTANA-S should not be in shared headers').to.not.exist;
+          expect(sharedHeaders['X-INSTANA-L'], 'X-INSTANA-L should not be in shared headers').to.not.exist;
+
+          return retry(() =>
+            globalAgent.instance.getSpans().then(spans => {
+              const exitSpans = spans.filter(
+                span => span.n === 'node.http.client' && span.k === constants.EXIT
+              );
+              expect(exitSpans).to.have.lengthOf(2);
+
+              const exitToRequestOnlyOpts = exitSpans.find(s => s.data.http.url.includes('/request-only-opts'));
+              const exitToGetOnlyOpts = exitSpans.find(s => s.data.http.url.includes('/get-only-opts'));
+
+              expect(exitToRequestOnlyOpts).to.exist;
+              expect(exitToGetOnlyOpts).to.exist;
+              expect(exitToRequestOnlyOpts.s).to.not.equal(exitToGetOnlyOpts.s);
+              expect(exitToRequestOnlyOpts.t).to.equal(exitToGetOnlyOpts.t);
+
+              const serverEntryForRequestOnlyOpts = spans.find(
+                s =>
+                  s.n === 'node.http.server' &&
+                  s.k === constants.ENTRY &&
+                  s.data.http.url === '/request-only-opts' &&
+                  s.p === exitToRequestOnlyOpts.s
+              );
+              const serverEntryForGetOnlyOpts = spans.find(
+                s =>
+                  s.n === 'node.http.server' &&
+                  s.k === constants.ENTRY &&
+                  s.data.http.url === '/get-only-opts' &&
+                  s.p === exitToGetOnlyOpts.s
+              );
+
+              expect(serverEntryForRequestOnlyOpts).to.exist;
+              expect(serverEntryForGetOnlyOpts).to.exist;
+              expect(serverEntryForRequestOnlyOpts.p).to.not.equal(serverEntryForGetOnlyOpts.p);
+            })
+          );
+        }));
+
     it('must capture deferred outgoing HTTP calls that are executed after the triggering HTTP entry has finished', () =>
       clientControls.sendRequest({ path: '/deferred-http-exit' }).then(() =>
         retry(() =>
