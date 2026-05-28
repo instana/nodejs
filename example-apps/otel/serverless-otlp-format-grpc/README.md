@@ -8,23 +8,15 @@
 ## Installation
 
 ```sh
-npm install @grpc/grpc-js --save
-npm install @opentelemetry/api --save
-npm install @opentelemetry/auto-instrumentations-node --save
-npm install @opentelemetry/exporter-metrics-otlp-grpc --save
-npm install @opentelemetry/exporter-trace-otlp-grpc --save
-npm install @opentelemetry/host-metrics --save
-npm install @opentelemetry/instrumentation-kafkajs --save
-npm install @opentelemetry/sdk-metrics --save
-npm install @opentelemetry/sdk-node --save
-npm install express --save
-npm install kafkajs --save
+npm i
 ```
 
 ## Start
 
 ```sh
 INSTANA_KEY=xxx OTEL_EXPORTER_OTLP_ENDPOINT=yyy OTEL_LOG_LEVEL=debug OTEL_SERVICE_NAME=node-otlp-grpc npm start
-
 node kafka-consumer.js
+
+curl http://localhost:6215/http
+curl -X POST http://localhost:6215/kafka-msg
 ```
