@@ -14,7 +14,7 @@ npm i
 ## Start
 
 ```sh
-INSTANA_AGENT_KEY=xxx OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4318" OTEL_LOG_LEVEL=debug OTEL_SERVICE_NAME=node-agent-based-otel-sdk npm start
+INSTANA_ENDPOINT_URL="http://localhost:4318" OTEL_LOG_LEVEL=debug OTEL_SERVICE_NAME=node-agent-based-otel-sdk npm start
 node kafka-consumer.js
 
 curl http://localhost:6215/http
