@@ -101,7 +101,8 @@ fi
 # - us-gov-* (only available to U.S. government agencies; not enabled for our account)
 # - eusc-de-east-1 (AWS European Sovereign Cloud; cannot be deployed from standard accounts)
 #   Ref: INSTA-69685
-SKIPPED_REGIONS=$'us-gov-east-1\nus-gov-west-1\neusc-de-east-1'
+# - me-south-1 region is currently unavailable due to damage from the Middle East conflict, INSTA-92352
+SKIPPED_REGIONS=$'us-gov-east-1\nus-gov-west-1\neusc-de-east-1\nme-south-1'
 
 if [[ -z $REGIONS ]]; then
   printf "\nstep 1/9: Fetching AWS regions\n"
