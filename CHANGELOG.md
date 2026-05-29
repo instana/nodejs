@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [6.1.1](https://github.com/instana/nodejs/compare/v6.1.0...v6.1.1) (2026-05-29)
+
+
+### Bug Fixes
+
+* resolved got caching issue ([#2570](https://github.com/instana/nodejs/issues/2570)) ([c22e3a2](https://github.com/instana/nodejs/commit/c22e3a2980264a96f1d166f4b0ed4c2677588a76))
+
+
+
+
+
 # [6.1.0](https://github.com/instana/nodejs/compare/v6.0.0...v6.1.0) (2026-05-27)
 
 
