@@ -1,5 +1,5 @@
 {
-  "name": "otel-sdk-otlp-format",
+  "name": "otel-agent-based-http",
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
