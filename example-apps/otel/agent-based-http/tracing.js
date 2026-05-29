@@ -12,6 +12,8 @@ const { OTLPMetricExporter } = require('@opentelemetry/exporter-metrics-otlp-htt
 const { PeriodicExportingMetricReader } = require('@opentelemetry/sdk-metrics');
 const { KafkaJsInstrumentation } = require('@opentelemetry/instrumentation-kafkajs');
 const { HostMetrics } = require('@opentelemetry/host-metrics');
+const { instanaAgentDetector } = require('@opentelemetry/resource-detector-instana');
+const { processDetector, envDetector } = require('@opentelemetry/resources');
 
 const otlpEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://127.0.0.1:4318';
 const headers = {
@@ -27,6 +29,7 @@ const instanaReader = new PeriodicExportingMetricReader({
 });
 
 const sdk = new opentelemetry.NodeSDK({
+  resourceDetectors: [envDetector, processDetector, instanaAgentDetector],
   traceExporter: new OTLPTraceExporter({
     url: `${otlpEndpoint}/v1/traces`,
     headers
