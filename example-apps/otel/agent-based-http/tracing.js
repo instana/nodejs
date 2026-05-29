@@ -14,6 +14,7 @@ const { KafkaJsInstrumentation } = require('@opentelemetry/instrumentation-kafka
 const { HostMetrics } = require('@opentelemetry/host-metrics');
 const { instanaAgentDetector } = require('@opentelemetry/resource-detector-instana');
 const { processDetector, envDetector } = require('@opentelemetry/resources');
+const { InstanaPropagator } = require('@opentelemetry/propagator-instana');
 
 const otlpEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://127.0.0.1:4318';
 const headers = {
@@ -34,6 +35,7 @@ const sdk = new opentelemetry.NodeSDK({
     url: `${otlpEndpoint}/v1/traces`,
     headers
   }),
+  propagator: new InstanaPropagator(),
   metricReader: instanaReader,
   instrumentations: [
     getNodeAutoInstrumentations({

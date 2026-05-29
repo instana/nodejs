@@ -13,6 +13,7 @@ const { OTLPMetricExporter } = require('@opentelemetry/exporter-metrics-otlp-grp
 const { PeriodicExportingMetricReader } = require('@opentelemetry/sdk-metrics');
 const { KafkaJsInstrumentation } = require('@opentelemetry/instrumentation-kafkajs');
 const { HostMetrics } = require('@opentelemetry/host-metrics');
+const { InstanaPropagator } = require('@opentelemetry/propagator-instana');
 
 const otlpEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4317';
 const metadata = new grpc.Metadata();
@@ -31,6 +32,7 @@ const sdk = new opentelemetry.NodeSDK({
     url: otlpEndpoint,
     metadata
   }),
+  propagator: new InstanaPropagator(),
   metricReader: instanaReader,
   instrumentations: [
     getNodeAutoInstrumentations({
