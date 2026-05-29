@@ -183,6 +183,7 @@ function instrument(coreModule, forceHttps) {
       }
 
       clientRequest = originalRequest.apply(coreModule, arguments);
+      removeInstanaHeadersFromOpts(options);
       if (skipTracingResult.suppressed && !traceLevelHeaderHasBeenAdded) {
         clientRequest.setHeader(constants.traceLevelHeaderName, '0');
         setW3cHeadersOnRequest(clientRequest, w3cTraceContext);
@@ -254,7 +255,9 @@ function instrument(coreModule, forceHttps) {
       try {
         instanaHeadersHaveBeenAdded = tryToAddHeadersToOpts(options, span, w3cTraceContext);
         clientRequest = originalRequest.apply(coreModule, originalArgs);
+        removeInstanaHeadersFromOpts(options);
       } catch (e) {
+        removeInstanaHeadersFromOpts(options);
         // A synchronous exception indicates a failure that is not covered by the listeners. Using a malformed URL for
         // example is a case that triggers a synchronous exception.
         span.data.http = {};
@@ -421,6 +424,18 @@ function tryToAddW3cHeaderToOpts(options, w3cTraceContext) {
 
 function hasHeadersOption(options) {
   return options && typeof options === 'object' && options.headers && typeof options.headers === 'object';
+}
+
+// CASE: Prevent caching by got/cacheable-request
+function removeInstanaHeadersFromOpts(options) {
+  if (!hasHeadersOption(options)) {
+    return;
+  }
+  delete options.headers[constants.spanIdHeaderName];
+  delete options.headers[constants.traceIdHeaderName];
+  delete options.headers[constants.traceLevelHeaderName];
+  delete options.headers[constants.w3cTraceParent];
+  delete options.headers[constants.w3cTraceState];
 }
 
 function setHeadersOnRequest(clientRequest, span, w3cTraceContext) {
