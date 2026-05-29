@@ -16,7 +16,7 @@ const { HostMetrics } = require('@opentelemetry/host-metrics');
 
 const otlpEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4317';
 const metadata = new grpc.Metadata();
-metadata.set('x-instana-key', process.env.INSTANA_KEY);
+metadata.set('x-instana-key', process.env.INSTANA_AGENT_KEY);
 
 const instanaReader = new PeriodicExportingMetricReader({
   exportIntervalMillis: 1000 * 10,
