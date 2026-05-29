@@ -15,7 +15,13 @@ const { KafkaJsInstrumentation } = require('@opentelemetry/instrumentation-kafka
 const { HostMetrics } = require('@opentelemetry/host-metrics');
 const { InstanaPropagator } = require('@opentelemetry/propagator-instana');
 
-const otlpEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4317';
+const otlpEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
+
+if (!otlpEndpoint) {
+  console.log('Please provide the OTLP serverless endpoint via "OTEL_EXPORTER_OTLP_ENDPOINT".');
+  process.exit(-1);
+}
+
 const metadata = new grpc.Metadata();
 metadata.set('x-instana-key', process.env.INSTANA_AGENT_KEY);
 
