@@ -101,6 +101,12 @@ class AgentStubControls {
     return this.agentPort;
   }
 
+  getDataPort() {
+    // For now, the agent stub uses the same port for both control and data
+    // In the future, this could be configured separately if needed
+    return this.agentPort;
+  }
+
   async waitUntilAgentHasStarted() {
     const url = `http://127.0.0.1:${this.agentPort}`;
 
