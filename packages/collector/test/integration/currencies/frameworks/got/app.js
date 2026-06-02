@@ -26,7 +26,6 @@ let got;
 
 if (process.env.USE_REQUIRE_ESM === 'true') {
   // got v14+ is ESM-only and uses Node.js native require(esm) to load on CJS app
-  // Node.js require(esm) support: v20.19.0+, v22.12.0+, v24.0.0+
   // Reference: https://joyeecheung.github.io/blog/2025/12/30/require-esm-in-node-js-from-experiment-to-stability/
   got = require('got').default;
 } else {
