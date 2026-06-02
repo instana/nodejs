@@ -5,8 +5,10 @@
 'use strict';
 
 module.exports = async function (ioredis, log) {
-  const client = new ioredis(`//${process.env.INSTANA_CONNECT_REDIS}`);
-  const client2 = new ioredis(`//${process.env.INSTANA_CONNECT_REDIS_ALTERNATIVE}`);
+  const redisHost = process.env.INSTANA_CONNECT_REDIS;
+  const redisHost2 = process.env.INSTANA_CONNECT_REDIS_ALTERNATIVE;
+  const client = new ioredis(`redis://${redisHost}`);
+  const client2 = new ioredis(`redis://${redisHost2}`);
 
   return new Promise(resolve => {
     let clientReady = false;
@@ -14,7 +16,7 @@ module.exports = async function (ioredis, log) {
 
     client.on('ready', () => {
       clientReady = true;
-      log(`Connected to client 1 (${process.env.INSTANA_CONNECT_REDIS}).`);
+      log(`Connected to client 1 (${redisHost}).`);
 
       if (client2Ready) {
         resolve({
@@ -26,7 +28,7 @@ module.exports = async function (ioredis, log) {
 
     client2.on('ready', () => {
       client2Ready = true;
-      log(`Connected to client 2 (${process.env.INSTANA_CONNECT_REDIS_ALTERNATIVE}).`);
+      log(`Connected to client 2 (${redisHost2}).`);
 
       if (clientReady) {
         resolve({
