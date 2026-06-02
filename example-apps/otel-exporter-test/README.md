@@ -65,10 +65,10 @@ Edit `tracing.js` and update:
 npm start
 ```
 
-Or for development with auto-reload:
+Or for development with otel:
 
 ```bash
-npm run dev
+npm run start-otel
 ```
 
 ## API Endpoints
@@ -234,7 +234,3 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 ```
-
-## License
-
-MIT

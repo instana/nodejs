@@ -4,9 +4,6 @@
 
 'use strict';
 
-// Load Instana collector from local repository
-require('@instana/collector')();
-
 const express = require('express');
 const { Pool } = require('pg');
 const { sendKafkaMessage, startKafkaConsumer } = require('./kafka');
