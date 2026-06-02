@@ -81,15 +81,11 @@ function normalizeAgentPort(userConfig, defaultConfig) {
  */
 function normalizeAgentDataPort(userConfig, defaultConfig) {
   // Future logic for OTLP enabled check can be added here to determine which port to use
-  const { value } = util.resolve(
-    {
-      envValue: 'INSTANA_AGENT_PORT',
-      inCodeValue: userConfig.agentPort,
-      defaultValue: defaultConfig.agentPort
-    },
-    [validate.numberValidator]
-  );
-  return value;
+  // if (userConfig.otlpEnabled) {
+  //   return defaultConfig.otlpPort; // 4317 or 4318
+  // }
+
+  return normalizeAgentPort(userConfig, defaultConfig);
 }
 
 /**
