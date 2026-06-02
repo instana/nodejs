@@ -545,12 +545,11 @@
     "versions": [
       {
         "v": "15.0.5",
-        "esmOnly": true,
         "node": ">=22"
       },
       {
         "v": "14.6.6",
-        "esmOnly": true
+        "node": ">=20"
       },
       {
         "v": "11.8.6"
@@ -890,7 +889,7 @@
     "versions": [
       {
         "v": "3.3.2",
-        "esmOnly": true
+        "node": ">=20"
       },
       {
         "v": "2.7.0"

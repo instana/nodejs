@@ -4,6 +4,7 @@
 
 'use strict';
 
+const semver = require('semver');
 const expect = require('chai').expect;
 const { retry, verifyHttpRootEntry, verifyExitSpan } = require('@_local/core/test/test_util');
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
@@ -16,13 +17,16 @@ module.exports = function (name, version, isLatest) {
   let controls;
 
   before(async () => {
+    const isGotV14Plus = semver.gte(version, '14.0.0');
+
     controls = new ProcessControls({
       dirname: __dirname,
       useGlobalAgent: true,
       env: {
         LIBRARY_LATEST: isLatest,
         LIBRARY_VERSION: version,
-        LIBRARY_NAME: name
+        LIBRARY_NAME: name,
+        USE_REQUIRE_ESM: isGotV14Plus ? 'true' : 'false'
       }
     });
 

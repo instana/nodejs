@@ -4,6 +4,7 @@
 
 'use strict';
 
+const semver = require('semver');
 const expect = require('chai').expect;
 
 const config = require('@_local/core/test/config');
@@ -20,13 +21,16 @@ module.exports = function (name, version, isLatest) {
   let controls;
 
   before(async () => {
+    const isNodeFetchV3Plus = semver.gte(version, '3.0.0');
+
     controls = new ProcessControls({
       dirname: __dirname,
       useGlobalAgent: true,
       env: {
         LIBRARY_VERSION: version,
         LIBRARY_NAME: name,
-        LIBRARY_LATEST: isLatest
+        LIBRARY_LATEST: isLatest,
+        USE_REQUIRE_ESM: isNodeFetchV3Plus ? 'true' : 'false'
       }
     });
 
