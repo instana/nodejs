@@ -73,7 +73,7 @@
     "@instana/core": "6.1.1",
     "@instana/shared-metrics": "6.1.1",
     "pino": "^9.13.0",
-    "semver": "^7.8.0",
+    "semver": "^7.8.1",
     "serialize-error": "^8.1.0"
   },
   "optionalDependencies": {

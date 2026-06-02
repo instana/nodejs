@@ -71,7 +71,7 @@
   "dependencies": {
     "@instana/core": "6.1.1",
     "@instana/serverless": "6.1.1",
-    "semver": "^7.8.0"
+    "semver": "^7.8.1"
   },
   "devDependencies": {
     "@aws-sdk/client-kms": "3.985.0",
