@@ -53,6 +53,7 @@ function instrument(redis) {
   // v6: expose RedisClient again, but this does NOT imply legacy/class-based behavior.
   // RedisClient presence cannot be used to distinguish v3 from newer versions.
   const isLegacyClassAPI = redis.RedisClient?.prototype && typeof redis.createClient !== 'function';
+
   if (!isLegacyClassAPI) {
     // redis automatically loads @redis/client, which can trigger a second instrumentation call.
     // We track the instrumentation status via `isRedisClientInstrumented  and skip second time.
