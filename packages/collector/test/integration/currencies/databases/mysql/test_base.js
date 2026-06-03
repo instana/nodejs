@@ -22,7 +22,7 @@ module.exports = function (name, version, isLatest, mode) {
 
   describe(`driver mode: ${mode}`, () => {
     const env = {
-      DRIVER_MODE: driverMode,
+      DRIVER_MODE: mode,
       LIBRARY_VERSION: version,
       LIBRARY_NAME: name,
       LIBRARY_LATEST: isLatest
@@ -33,7 +33,7 @@ module.exports = function (name, version, isLatest, mode) {
 
   describe('suppressed', function () {
     const env = {
-      DRIVER_MODE: driverMode,
+      DRIVER_MODE: mode,
       LIBRARY_VERSION: version,
       LIBRARY_NAME: name,
       LIBRARY_LATEST: isLatest
