@@ -51,7 +51,7 @@ function instrument(redis) {
   // NOTE: Redis versions differ in export shape:
   // v4/v5: are strictly factory-based (createClient/createCluster) and do not expose RedisClient.
   // v6: expose RedisClient again, but this does NOT imply legacy/class-based behavior.
-  // RedisClient presence cannot be used to distinguish v3 from newer versions.
+  // RedisClient presence alone cannot be used to distinguish v3 from newer versions.
   const isLegacyClassAPI = redis.RedisClient?.prototype && typeof redis.createClient !== 'function';
 
   if (!isLegacyClassAPI) {
