@@ -27,7 +27,7 @@ jobs:
         run: |
           set -euo pipefail
           TAGS=($(git tag --sort=-creatordate))
-          
+
           TAG_COUNT=${#TAGS[@]}
           if [[ $TAG_COUNT -lt 2 ]]; then
             echo "Not enough release tags found."
@@ -78,6 +78,7 @@ jobs:
           JIRA_EMAIL: katharina.irrgang@ibm.com
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           REFS_LIST: ${{ steps.extract_refs.outputs.refs_list }}
+          EPIC_KEY: INSTA-87139
         run: |
           set -euo pipefail
 
@@ -96,6 +97,7 @@ jobs:
           CREATE_PAYLOAD=$(jq -n \
             --arg summary "$SUMMARY" \
             --arg description "$DESCRIPTION" \
+            --arg epic "$EPIC_KEY" \
             '{
               fields:{
                 project:{key:"INSTA"},
@@ -105,7 +107,8 @@ jobs:
                 labels:["release"],
                 components:[
                   {name:"Tracers Node.js Team"}
-                ]
+                ],
+                customfield_10100:$epic
               }
             }')
 
