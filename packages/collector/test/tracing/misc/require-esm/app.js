@@ -15,7 +15,8 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 require('@instana/collector')();
 
 // Load ESM-only dependency using Node.js native require(esm) support
-// got v14+ is ESM-only and exports a default export
+// 'got' is pure ESM from v14+. Since require(esm) returns the full Module Namespace Object
+// rather than an unwrapped default function, we must explicitly destructure `.default`.
 const { default: got } = require('got');
 
 const express = require('express');
@@ -24,7 +25,7 @@ const app = express();
 const logPrefix = `require(esm) test app (${process.pid}):\t`;
 
 function log() {
-const args = Array.prototype.slice.call(arguments);
+  const args = Array.prototype.slice.call(arguments);
   args[0] = `${logPrefix}${args[0]}`;
   // eslint-disable-next-line no-console
   console.log.apply(console, args);

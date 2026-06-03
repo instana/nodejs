@@ -25,7 +25,6 @@ const app = express();
 const logPrefix = `fetch App (${process.pid}):\t`;
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
-
 const fetch = require('node-fetch');
 
 if (process.env.WITH_STDOUT) {

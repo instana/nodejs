@@ -23,7 +23,6 @@ const logPrefix = `Got App (${process.pid}):\t`;
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 const got = require('got');
-
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
 }
