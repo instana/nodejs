@@ -108,7 +108,7 @@ jobs:
                 components:[
                   {name:"Tracers Node.js Team"}
                 ],
-                parent:{key:$epic}
+                customfield_10100:$epic
               }
             }')
 
