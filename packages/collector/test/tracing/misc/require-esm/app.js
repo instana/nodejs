@@ -24,7 +24,7 @@ const app = express();
 const logPrefix = `require(esm) test app (${process.pid}):\t`;
 
 function log() {
-  const args = Array.prototype.slice.call(arguments);
+const args = Array.prototype.slice.call(arguments);
   args[0] = `${logPrefix}${args[0]}`;
   // eslint-disable-next-line no-console
   console.log.apply(console, args);

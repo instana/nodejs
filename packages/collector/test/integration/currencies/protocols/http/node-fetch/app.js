@@ -26,16 +26,7 @@ const logPrefix = `fetch App (${process.pid}):\t`;
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-// node-fetch v3+ is ESM-only and uses Node.js native require(esm) to load on CJS app
-// Reference: https://joyeecheung.github.io/blog/2025/12/30/require-esm-in-node-js-from-experiment-to-stability/
-let fetch;
-if (process.env.USE_REQUIRE_ESM === 'true') {
-  const fetchModule = require('node-fetch');
-  fetch = fetchModule.default;
-} else {
-  // For node-fetch v2 and below: Use traditional CommonJS require
-  fetch = require('node-fetch');
-}
+const fetch = require('node-fetch');
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));

@@ -22,15 +22,7 @@ const app = express();
 const logPrefix = `Got App (${process.pid}):\t`;
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
-let got;
-
-if (process.env.USE_REQUIRE_ESM === 'true') {
-  // got v14+ is ESM-only and uses Node.js native require(esm) to load on CJS app
-  // Reference: https://joyeecheung.github.io/blog/2025/12/30/require-esm-in-node-js-from-experiment-to-stability/
-  got = require('got').default;
-} else {
-  got = require('got');
-}
+const got = require('got');
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
