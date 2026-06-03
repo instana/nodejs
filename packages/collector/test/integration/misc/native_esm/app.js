@@ -10,8 +10,6 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const mock = require('@_local/core/test/test_util/mockRequire');
-mock('square-calc', 'square-calc-v2');
 require('@instana/collector')();
 const express = require('express');
 const morgan = require('morgan');
