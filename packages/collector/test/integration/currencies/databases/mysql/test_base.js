@@ -14,82 +14,74 @@ const testUtils = require('@_local/core/test/test_util');
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 const globalAgent = require('@_local/collector/test/globalAgent');
 
-module.exports = function (name, version, isLatest) {
+module.exports = function (name, version, isLatest, driverMode) {
   this.timeout(config.getTestTimeout() * 10);
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  const drivers = ['mysql', 'mysql-cluster'];
+  describe(`driver mode: ${driverMode}`, () => {
+    const env = {
+      DRIVER_MODE: driverMode,
+      LIBRARY_VERSION: version,
+      LIBRARY_NAME: name,
+      LIBRARY_LATEST: isLatest
+    };
 
-  drivers.forEach(driverMode => {
-    registerSuite.call(this, driverMode);
+    test(env);
   });
 
-  function registerSuite(driverMode) {
-    describe(`driver mode: ${driverMode}`, () => {
-      const env = {
-        DRIVER_MODE: driverMode,
-        LIBRARY_VERSION: version,
-        LIBRARY_NAME: name,
-        LIBRARY_LATEST: isLatest
-      };
+  describe('suppressed', function () {
+    const env = {
+      DRIVER_MODE: driverMode,
+      LIBRARY_VERSION: version,
+      LIBRARY_NAME: name,
+      LIBRARY_LATEST: isLatest
+    };
+    let controls;
 
-      test(env);
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env
+      });
+
+      await controls.startAndWaitForAgentConnection(5000, Date.now() * 30 * 1000);
     });
 
-    describe('suppressed', function () {
-      const env = {
-        DRIVER_MODE: driverMode,
-        LIBRARY_VERSION: version,
-        LIBRARY_NAME: name,
-        LIBRARY_LATEST: isLatest
-      };
-      let controls;
-
-      before(async () => {
-        controls = new ProcessControls({
-          dirname: __dirname,
-          useGlobalAgent: true,
-          env
-        });
-
-        await controls.startAndWaitForAgentConnection(5000, Date.now() * 30 * 1000);
-      });
-
-      beforeEach(async () => {
-        await agentControls.clearReceivedTraceData();
-      });
-
-      after(async () => {
-        await controls.stop();
-      });
-
-      afterEach(async () => {
-        await controls.clearIpcMessages();
-      });
-
-      it('should not trace', async function () {
-        await controls.sendRequest({
-          method: 'POST',
-          path: '/values',
-          qs: {
-            value: 42
-          },
-          suppressTracing: true
-        });
-
-        return testUtils
-          .retry(() => testUtils.delay(1000))
-          .then(() => agentControls.getSpans())
-          .then(spans => {
-            if (spans.length > 0) {
-              fail(`Unexpected spans ${testUtils.stringifyItems(spans)}.`);
-            }
-          });
-      });
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
     });
-  }
+
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
+
+    it('should not trace', async function () {
+      await controls.sendRequest({
+        method: 'POST',
+        path: '/values',
+        qs: {
+          value: 42
+        },
+        suppressTracing: true
+      });
+
+      return testUtils
+        .retry(() => testUtils.delay(1000))
+        .then(() => agentControls.getSpans())
+        .then(spans => {
+          if (spans.length > 0) {
+            fail(`Unexpected spans ${testUtils.stringifyItems(spans)}.`);
+          }
+        });
+    });
+  });
 
   function test(env) {
     let controls;
@@ -321,5 +313,74 @@ module.exports = function (name, version, isLatest) {
             })
           )
         ));
+
+    describe('with bind variables enabled', function () {
+      const envWithBindVariables = {
+        DRIVER_MODE: env.DRIVER_MODE,
+        LIBRARY_VERSION: env.LIBRARY_VERSION,
+        LIBRARY_NAME: env.LIBRARY_NAME,
+        LIBRARY_LATEST: env.LIBRARY_LATEST,
+        INSTANA_TRACING_BIND_VARIABLES: 'true'
+      };
+      let controlsWithBindVariables;
+
+      before(async () => {
+        controlsWithBindVariables = new ProcessControls({
+          dirname: __dirname,
+          useGlobalAgent: true,
+          env: envWithBindVariables
+        });
+
+        await controlsWithBindVariables.startAndWaitForAgentConnection(5000, Date.now() * 30 * 1000);
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await controlsWithBindVariables.stop();
+      });
+
+      afterEach(async () => {
+        await controlsWithBindVariables.clearIpcMessages();
+      });
+
+      it('must capture bind variables when enabled', () =>
+        controlsWithBindVariables
+          .sendRequest({
+            method: 'POST',
+            path: '/valuesWithBindVariables',
+            qs: {
+              value: 99.5
+            }
+          })
+          .then(() =>
+            testUtils.retry(() =>
+              agentControls.getSpans().then(spans => {
+                expect(spans.length).to.equal(2);
+                const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                  span => expect(span.n).to.equal('node.http.server'),
+                  span => expect(span.f.e).to.equal(String(controlsWithBindVariables.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid')
+                ]);
+
+                testUtils.expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(entrySpan.t),
+                  span => expect(span.p).to.equal(entrySpan.s),
+                  span => expect(span.n).to.equal('mysql'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controlsWithBindVariables.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.data.mysql.stmt).to.equal('INSERT INTO random_values (value) VALUES (?)'),
+                  span => expect(span.data.mysql.binds).to.equal('["99.5"]')
+                ]);
+              })
+            )
+          ));
+    });
   }
 };

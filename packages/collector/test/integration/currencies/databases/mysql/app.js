@@ -179,6 +179,28 @@ app.post('/error', (req, res) => {
   });
 });
 
+app.post('/valuesWithBindVariables', (req, res) => {
+  pool.getConnection((err, connection) => {
+    if (err) {
+      log('Failed to get connection', err);
+      res.sendStatus(500);
+      return;
+    }
+
+    connection.query('INSERT INTO random_values (value) VALUES (?)', [req.query.value], queryError => {
+      connection.release();
+
+      if (queryError) {
+        log('Failed to execute query', queryError);
+        res.sendStatus(500);
+        return;
+      }
+
+      return res.json(instana.opentracing.getCurrentlyActiveInstanaSpanContext());
+    });
+  });
+});
+
 app.listen(port, () => {
   log(`Listening on port: ${port} (driver: mysql, cluster: ${useCluster})`);
 });
