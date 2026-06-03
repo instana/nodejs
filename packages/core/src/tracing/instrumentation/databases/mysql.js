@@ -13,11 +13,14 @@ const constants = require('../../constants');
 const cls = require('../../cls');
 
 let isActive = false;
+let captureBindVariables;
 
 exports.spanName = 'mysql';
 exports.batchable = true;
 
 exports.init = function init() {
+  // TODO: move to config
+  captureBindVariables = process.env.INSTANA_TRACING_BIND_VARIABLES === 'true';
   hook.onModuleLoad('mysql', instrumentMysql);
   hook.onModuleLoad('mysql2', instrumentMysql2);
   hook.onModuleLoad('mysql2/promise', instrumentMysql2WithPromises);
@@ -178,6 +181,11 @@ function instrumentedAccessFunction(
       user,
       db
     };
+
+    // CASE: Capture bind variables if turned on
+    if (captureBindVariables && valuesOrCallback && Array.isArray(valuesOrCallback)) {
+      span.data.mysql.binds = JSON.stringify(valuesOrCallback);
+    }
 
     if (isPromiseImpl) {
       const resultPromise = originalFunction.apply(ctx, originalArgs);
