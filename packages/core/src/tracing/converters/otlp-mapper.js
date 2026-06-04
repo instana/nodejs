@@ -11,7 +11,7 @@ const {
   convertEndTime,
   convertStartTime,
   toUpperCase
-} = require('./transform-functions');
+} = require('./transform-utils');
 
 // OTLP LOOKUP MAP
 const OTLP = {
