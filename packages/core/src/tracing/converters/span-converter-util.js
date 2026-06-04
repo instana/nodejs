@@ -20,73 +20,17 @@
  */
 
 const { MAPPINGS, METADATA_MAPPINGS } = require('./otlp-mapper');
-
-// ============================================================================
-// ID and Timestamp Conversion Functions
-// ============================================================================
-
-/**
- * Converts Instana trace ID to OTLP format (32-character hex string)
- */
-function convertTraceId(instanaTraceId) {
-  if (!instanaTraceId) return '00000000000000000000000000000000';
-  return String(instanaTraceId).padStart(32, '0');
-}
-
-/**
- * Converts Instana span ID to OTLP format (16-character hex string)
- */
-function convertSpanId(instanaSpanId) {
-  if (!instanaSpanId) return '0000000000000000';
-  return String(instanaSpanId).padStart(16, '0');
-}
-
-/**
- * Converts Instana timestamp to OTLP nanosecond format
- */
-function convertTimestamp(timestamp, duration = 0) {
-  if (!timestamp) return '0';
-  const totalMs = timestamp + duration;
-  return String(totalMs * 1000000); // Convert ms to ns
-}
-
-/**
- * Converts start timestamp to nanoseconds
- */
-function convertStartTime(timestamp) {
-  return convertTimestamp(timestamp, 0);
-}
-
-/**
- * Converts end timestamp to nanoseconds (start + duration)
- */
-function convertEndTime(span) {
-  return convertTimestamp(span.ts, span.d);
-}
-
-// ============================================================================
-// Span Kind Conversion
-// ============================================================================
-
-const SpanKind = {
-  UNSPECIFIED: 0,
-  INTERNAL: 1,
-  SERVER: 2,
-  CLIENT: 3,
-  PRODUCER: 4,
-  CONSUMER: 5
-};
-
-/**
- * Determines OTLP span kind from Instana span
- * k=1: Entry/Server, k=2: Exit/Client, k=3: Internal
- */
-function convertSpanKind(instanaSpanKind) {
-  if (instanaSpanKind === 1) return SpanKind.SERVER;
-  if (instanaSpanKind === 2) return SpanKind.CLIENT;
-  if (instanaSpanKind === 3) return SpanKind.INTERNAL;
-  return SpanKind.UNSPECIFIED;
-}
+const {
+  convertTraceId,
+  convertSpanId,
+  convertTimestamp,
+  convertStartTime,
+  convertEndTime,
+  convertSpanKind,
+  toUpperCase,
+  toInteger,
+  SpanKind
+} = require('./transform-functions');
 
 // ============================================================================
 // Status Conversion
@@ -97,25 +41,6 @@ const StatusCode = {
   OK: 1,
   ERROR: 2
 };
-
-// ============================================================================
-// Value Transform Functions
-// ============================================================================
-
-/**
- * Converts value to uppercase string
- */
-function toUpperCase(value) {
-  return value ? String(value).toUpperCase() : null;
-}
-
-/**
- * Converts value to integer
- */
-function toInteger(value) {
-  const num = parseInt(value, 10);
-  return isNaN(num) ? null : num;
-}
 
 /**
  * Combines host and port into address string
@@ -222,22 +147,13 @@ function getSpanType(instanaSpan) {
 function applyMapping(mapping, spanData) {
   let value;
 
-  // Map of transform function names to actual functions
-  const transformFunctions = {
-    toUpperCase,
-    toInteger,
-    combineHostPort
-  };
-
   // Case 1: Static value
   if (mapping.value !== undefined && !mapping.instanaKey && !mapping.instanaKeys) {
     value = mapping.value;
   } else if (mapping.instanaKeys && Array.isArray(mapping.instanaKeys)) {
     // Case 2: Multi-field mapping
     if (mapping.transform) {
-      const transformFn =
-        typeof mapping.transform === 'string' ? transformFunctions[mapping.transform] : mapping.transform;
-      value = transformFn ? transformFn(spanData, mapping.instanaKeys) : combineFields(spanData, mapping.instanaKeys);
+      value = mapping.transform(spanData, mapping.instanaKeys);
     } else {
       value = combineFields(spanData, mapping.instanaKeys);
     }
@@ -247,13 +163,7 @@ function applyMapping(mapping, spanData) {
     if (rawValue === undefined || rawValue === null) {
       return null;
     }
-    if (mapping.transform) {
-      const transformFn =
-        typeof mapping.transform === 'string' ? transformFunctions[mapping.transform] : mapping.transform;
-      value = transformFn ? transformFn(rawValue) : rawValue;
-    } else {
-      value = rawValue;
-    }
+    value = mapping.transform ? mapping.transform(rawValue) : rawValue;
   } else {
     return null;
   }
@@ -504,18 +414,22 @@ function generateSpanStatus(instanaSpan) {
 function applyMetadataTransformations(instanaSpan) {
   const result = {};
 
-  // Map of transform function names to actual functions
-  const transformFunctions = {
-    convertTraceId,
-    convertSpanId,
-    convertSpanKind,
-    convertStartTime,
-    convertEndTime
+  // Map of getter function names to actual functions
+  const getterFunctions = {
+    generateSpanName,
+    generateSpanStatus
   };
 
   Object.entries(METADATA_MAPPINGS).forEach(([instanaField, mapping]) => {
-    // Skip getter-based mappings (handled separately)
+    // Handle getter-based mappings (functions that need full span context)
     if (mapping.getter) {
+      const getterFn = typeof mapping.getter === 'string' ? getterFunctions[mapping.getter] : mapping.getter;
+      if (getterFn) {
+        const value = getterFn(instanaSpan);
+        if (value !== null && value !== undefined) {
+          result[mapping.otlp] = value;
+        }
+      }
       return;
     }
 
@@ -529,12 +443,9 @@ function applyMetadataTransformations(instanaSpan) {
 
     // Apply transformation
     if (mapping.transform) {
-      const transformFn = transformFunctions[mapping.transform];
-      if (transformFn) {
-        const transformedValue = transformFn(instanaValue);
-        if (transformedValue !== null && transformedValue !== undefined) {
-          result[mapping.otlp] = transformedValue;
-        }
+      const transformedValue = mapping.transform(instanaValue);
+      if (transformedValue !== null && transformedValue !== undefined) {
+        result[mapping.otlp] = transformedValue;
       }
     }
   });
@@ -598,26 +509,18 @@ function convertInstanaSpanToOTLP(instanaSpan) {
     throw new Error('Invalid Instana span: must be an object');
   }
 
-  // Step 1: Convert metadata (IDs, timestamps, kind)
+  // Step 1: Convert metadata (IDs, timestamps, kind, name, status)
   const metadata = applyMetadataTransformations(instanaSpan);
 
-  // Step 2: Generate span name
-  const name = generateSpanName(instanaSpan);
-
-  // Step 3: Generate status
-  const status = generateSpanStatus(instanaSpan);
-
-  // Step 4: Convert span data to attributes
+  // Step 2: Convert span data to attributes
   const attributes = convertSpanDataToOTLP(instanaSpan);
 
-  // Step 5: Create resource attributes
+  // Step 3: Create resource attributes
   const resourceAttributes = createResourceAttributes(instanaSpan);
 
-  // Step 6: Assemble OTLP span
+  // Step 4: Assemble OTLP span (metadata already includes name and status)
   const otelSpan = {
     ...metadata,
-    name,
-    status,
     attributes,
     events: [],
     links: [],
