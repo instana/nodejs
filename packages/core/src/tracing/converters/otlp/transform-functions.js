@@ -19,7 +19,12 @@
  */
 
 const { METADATA_MAPPINGS } = require('./mappers');
-const { convertEndTime, generateSpanName, generateSpanStatus, applyMappingsForSpanType } = require('./transform-utils');
+const {
+  convertEndTime,
+  generateSpanName,
+  generateSpanStatus,
+  applyMappingsForSpanType
+} = require('./utils/transform-utils');
 
 // ============================================================================
 // Span Data Extraction

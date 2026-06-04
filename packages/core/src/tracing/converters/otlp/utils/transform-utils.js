@@ -28,7 +28,7 @@ const {
   convertSpanKind,
   SpanKind
 } = require('./id-converters');
-const { MAPPINGS } = require('./mappers');
+const { MAPPINGS } = require('../mappers');
 
 // ============================================================================
 // ID and Timestamp Conversion Functions (imported from id-converters.js)
