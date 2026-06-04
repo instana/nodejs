@@ -7,7 +7,7 @@
 
 const tracingMetrics = require('./metrics');
 const { transform } = require('./backend_mappers');
-const { convertBatch } = require('./converters/instana-to-otel-converter');
+const { convertBatch } = require('./converters/otlp');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
