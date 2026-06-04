@@ -504,10 +504,10 @@ function applyMetadataTransformations(instanaSpan) {
     }
 
     // Apply transformation
-    if (mapping.value) {
-      const transformedValue = mapping.value(instanaValue);
+    if (mapping.transform) {
+      const transformedValue = mapping.transform(instanaValue);
       if (transformedValue !== null && transformedValue !== undefined) {
-        result[mapping.key] = transformedValue;
+        result[mapping.otlp] = transformedValue;
       }
     }
   });
