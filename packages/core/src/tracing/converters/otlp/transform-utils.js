@@ -18,6 +18,8 @@
  * - Status generation
  */
 
+const { MAPPINGS } = require('./mappers');
+
 // ============================================================================
 // ID and Timestamp Conversion Functions
 // ============================================================================
@@ -256,7 +258,6 @@ function applyMapping(mapping, spanData) {
  * Applies all mappings for a specific span type
  */
 function applyMappingsForSpanType(spanType, spanData) {
-  const { MAPPINGS } = require('./mappers');
   const mappings = MAPPINGS[spanType];
 
   if (!mappings || !Array.isArray(mappings)) {
@@ -485,26 +486,3 @@ module.exports = {
   combineFields,
 
   // OTLP formatting
-  formatOTLPValue,
-
-  // Span type detection
-  getSpanType,
-
-  // Mapping application
-  applyMapping,
-  applyMappingsForSpanType,
-
-  // Span name generation
-  generateSpanName,
-  generateHttpSpanName,
-  generateMessagingSpanName,
-  generateDatabaseSpanName,
-
-  // Status generation
-  generateSpanStatus,
-  generateHttpStatus,
-  generateMessagingStatus,
-  generateDatabaseStatus
-};
-
-// Made with Bob

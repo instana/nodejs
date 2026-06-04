@@ -7,7 +7,7 @@
 
 const tracingMetrics = require('./metrics');
 const { transform } = require('./backend_mappers');
-const { convertBatch } = require('./converters/otlp');
+const { convertInstanaSpanBatchToOTLP } = require('./converters/otlp');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -454,7 +454,8 @@ function transmitSpans() {
   batchingBuckets.clear();
 
   // Convert to OTLP format if enabled
-  const processedSpans = process.env.INSTANA_OTLP_FORMAT === 'true' ? convertBatch(spansToSend) : spansToSend;
+  const processedSpans =
+    process.env.INSTANA_OTLP_FORMAT === 'true' ? convertInstanaSpanBatchToOTLP(spansToSend) : spansToSend;
 
   // We restore the content of the spans array if sending them downstream was not successful. We do not restore
   // batchingBuckets, though. This is deliberate. In the worst case, we might miss some batching opportunities, but
