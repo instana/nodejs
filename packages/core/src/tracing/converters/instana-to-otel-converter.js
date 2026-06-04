@@ -7,21 +7,11 @@
 /* eslint-disable no-console */
 
 /**
- * Instana Span to OpenTelemetry Span Converter
- *
- * Converts Instana spans to OpenTelemetry format with proper OTLP structure.
- * Entry point: convertBatch() called from spanBuffer.js
- *
- * This module now uses the unified function-based converter for better
- * performance and maintainability.
- *
- * Usage:
- *   const { convertBatch } = require('./instana-to-otel-converter');
- *   const otlpTraces = convertBatch(instanaSpans);
+  TEST FILE ONLY
  */
 
 const fs = require('fs');
-const { convertInstanaSpanToOTLP, convertBatch: convertBatchFunctional } = require('./otlp/transform-functions');
+const { convertInstanaSpanToOTLP, convertInstanaSpanBatchToOTLP } = require('./otlp/transform-functions');
 
 // ============================================================================
 // Type Definitions
@@ -55,7 +45,7 @@ function convertInstanaToOtel(instanaSpan) {
  * @returns {Object} OTLP traces object with resourceSpans
  */
 function convertBatch(instanaSpans) {
-  return convertBatchFunctional(instanaSpans);
+  return convertInstanaSpanBatchToOTLP(instanaSpans);
 }
 
 // ============================================================================
