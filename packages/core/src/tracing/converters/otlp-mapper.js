@@ -380,15 +380,15 @@ const MAPPINGS = {
 };
 
 const METADATA_MAPPINGS = {
-  t: { key: 'traceId', value: convertTraceId },
-  s: { key: 'spanId', value: convertSpanId },
-  p: { key: 'parentSpanId', value: convertSpanId },
-  k: { key: 'kind', value: convertSpanKind },
-  ts: { key: 'startTimeUnixNano', value: convertStartTime },
-  d: { key: 'endTimeUnixNano', value: convertEndTime },
+  t: { otlp: 'traceId', transform: convertTraceId },
+  s: { otlp: 'spanId', transform: convertSpanId },
+  p: { otlp: 'parentSpanId', transform: convertSpanId },
+  k: { otlp: 'kind', transform: convertSpanKind },
+  ts: { otlp: 'startTimeUnixNano', transform: convertStartTime },
+  d: { otlp: 'endTimeUnixNano', transform: convertEndTime },
   // Transformer-based fields (require transformer context)
-  name: { key: 'name', getter: 'getSpanName' },
-  status: { key: 'status', getter: 'getStatus' }
+  name: { otlp: 'name', getter: 'getSpanName' },
+  status: { otlp: 'status', getter: 'getStatus' }
 };
 
 module.exports = {
