@@ -11,7 +11,7 @@
  */
 
 const fs = require('fs');
-const { convertInstanaSpanToOTLP, convertInstanaSpanBatchToOTLP } = require('./otlp/transform-functions');
+const { convertInstanaSpanToOTLP, convertInstanaSpanBatchToOTLP } = require('./otlp');
 
 // ============================================================================
 // Type Definitions

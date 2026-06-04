@@ -4,10 +4,9 @@
 
 'use strict';
 
-const { toUpperCase } = require('../transform-utils');
-
-const { combineHostPort } = require('../transform-utils');
+const { toUpperCase, combineHostPort } = require('../value-transformers');
 const { OTLP } = require('./lookup');
+
 // INSTANA -> OTLP MAPPING
 const MAPPINGS = {
   http: [
