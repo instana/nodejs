@@ -1,0 +1,9 @@
+{
+  "name": "require-esm-test",
+  "version": "1.0.0",
+  "description": "Test for Node.js require(esm) support",
+  "main": "app.js",
+  "dependencies": {
+    "got": "latest"
+  }
+}
