@@ -4,15 +4,6 @@
 
 'use strict';
 
-const {
-  convertSpanId,
-  convertTraceId,
-  convertSpanKind,
-  convertEndTime,
-  convertStartTime,
-  toUpperCase
-} = require('./span-converter-util');
-
 // OTLP LOOKUP MAP
 const OTLP = {
   http: {
@@ -128,8 +119,8 @@ const OTLP = {
 // INSTANA -> OTLP MAPPING
 const MAPPINGS = {
   http: [
-    { otlp: OTLP.http.REQUEST_METHOD, instanaKey: 'operation', transform: toUpperCase },
-    { otlp: OTLP.http.REQUEST_METHOD, instanaKey: 'method', transform: toUpperCase },
+    { otlp: OTLP.http.REQUEST_METHOD, instanaKey: 'operation', transform: 'toUpperCase' },
+    { otlp: OTLP.http.REQUEST_METHOD, instanaKey: 'method', transform: 'toUpperCase' },
     { otlp: OTLP.http.URL_PATH, instanaKey: 'endpoints' },
     { otlp: OTLP.http.SERVER_ADDRESS, instanaKey: 'connection' },
     { otlp: OTLP.http.URL_FULL, instanaKey: 'url' },
@@ -380,12 +371,12 @@ const MAPPINGS = {
 };
 
 const METADATA_MAPPINGS = {
-  t: { otlp: 'traceId', transform: convertTraceId },
-  s: { otlp: 'spanId', transform: convertSpanId },
-  p: { otlp: 'parentSpanId', transform: convertSpanId },
-  k: { otlp: 'kind', transform: convertSpanKind },
-  ts: { otlp: 'startTimeUnixNano', transform: convertStartTime },
-  d: { otlp: 'endTimeUnixNano', transform: convertEndTime },
+  t: { otlp: 'traceId', transform: 'convertTraceId' },
+  s: { otlp: 'spanId', transform: 'convertSpanId' },
+  p: { otlp: 'parentSpanId', transform: 'convertSpanId' },
+  k: { otlp: 'kind', transform: 'convertSpanKind' },
+  ts: { otlp: 'startTimeUnixNano', transform: 'convertStartTime' },
+  d: { otlp: 'endTimeUnixNano', transform: 'convertEndTime' },
   // Transformer-based fields (require transformer context)
   name: { otlp: 'name', getter: 'getSpanName' },
   status: { otlp: 'status', getter: 'getStatus' }

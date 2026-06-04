@@ -222,13 +222,22 @@ function getSpanType(instanaSpan) {
 function applyMapping(mapping, spanData) {
   let value;
 
+  // Map of transform function names to actual functions
+  const transformFunctions = {
+    toUpperCase,
+    toInteger,
+    combineHostPort
+  };
+
   // Case 1: Static value
   if (mapping.value !== undefined && !mapping.instanaKey && !mapping.instanaKeys) {
     value = mapping.value;
   } else if (mapping.instanaKeys && Array.isArray(mapping.instanaKeys)) {
     // Case 2: Multi-field mapping
     if (mapping.transform) {
-      value = mapping.transform(spanData, mapping.instanaKeys);
+      const transformFn =
+        typeof mapping.transform === 'string' ? transformFunctions[mapping.transform] : mapping.transform;
+      value = transformFn ? transformFn(spanData, mapping.instanaKeys) : combineFields(spanData, mapping.instanaKeys);
     } else {
       value = combineFields(spanData, mapping.instanaKeys);
     }
@@ -238,7 +247,13 @@ function applyMapping(mapping, spanData) {
     if (rawValue === undefined || rawValue === null) {
       return null;
     }
-    value = mapping.transform ? mapping.transform(rawValue) : rawValue;
+    if (mapping.transform) {
+      const transformFn =
+        typeof mapping.transform === 'string' ? transformFunctions[mapping.transform] : mapping.transform;
+      value = transformFn ? transformFn(rawValue) : rawValue;
+    } else {
+      value = rawValue;
+    }
   } else {
     return null;
   }
@@ -489,6 +504,15 @@ function generateSpanStatus(instanaSpan) {
 function applyMetadataTransformations(instanaSpan) {
   const result = {};
 
+  // Map of transform function names to actual functions
+  const transformFunctions = {
+    convertTraceId,
+    convertSpanId,
+    convertSpanKind,
+    convertStartTime,
+    convertEndTime
+  };
+
   Object.entries(METADATA_MAPPINGS).forEach(([instanaField, mapping]) => {
     // Skip getter-based mappings (handled separately)
     if (mapping.getter) {
@@ -505,9 +529,12 @@ function applyMetadataTransformations(instanaSpan) {
 
     // Apply transformation
     if (mapping.transform) {
-      const transformedValue = mapping.transform(instanaValue);
-      if (transformedValue !== null && transformedValue !== undefined) {
-        result[mapping.otlp] = transformedValue;
+      const transformFn = transformFunctions[mapping.transform];
+      if (transformFn) {
+        const transformedValue = transformFn(instanaValue);
+        if (transformedValue !== null && transformedValue !== undefined) {
+          result[mapping.otlp] = transformedValue;
+        }
       }
     }
   });
