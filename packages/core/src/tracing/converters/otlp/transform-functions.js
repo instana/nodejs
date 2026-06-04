@@ -19,7 +19,7 @@
  * - No side effects, easier to test and reason about
  */
 
-const { MAPPINGS, METADATA_MAPPINGS } = require('./otlp-mapper');
+const { MAPPINGS, METADATA_MAPPINGS } = require('./mappers');
 const {
   convertTraceId,
   convertSpanId,
