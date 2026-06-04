@@ -106,6 +106,7 @@ function extractMetaAttributes(instanaSpan) {
 /**
  * Creates resource attributes for OTLP format
  */
+// TODO: get the data dynamically from package.json
 function extractResourceAttributes(instanaSpan) {
   const attributes = [];
 
