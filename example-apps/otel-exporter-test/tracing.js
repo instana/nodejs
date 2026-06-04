@@ -5,37 +5,30 @@
 'use strict';
 
 const { diag, DiagConsoleLogger, DiagLogLevel } = require('@opentelemetry/api');
-const { Resource } = require('@opentelemetry/resources');
+const { resourceFromAttributes } = require('@opentelemetry/resources');
 const { SemanticResourceAttributes } = require('@opentelemetry/semantic-conventions');
 const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
 const { BatchSpanProcessor, SimpleSpanProcessor, ConsoleSpanExporter } = require('@opentelemetry/sdk-trace-base');
 const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-http');
 const { registerInstrumentations } = require('@opentelemetry/instrumentation');
 const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
-
-// ---------------------------------------------------
-// Explicit instrumentations
-// ---------------------------------------------------
-
 const { HttpInstrumentation } = require('@opentelemetry/instrumentation-http');
 const { ExpressInstrumentation } = require('@opentelemetry/instrumentation-express');
 const { PgInstrumentation } = require('@opentelemetry/instrumentation-pg');
 const { KafkaJsInstrumentation } = require('@opentelemetry/instrumentation-kafkajs');
 
 // ---------------------------------------------------
-// OTel internal logs
+// OTel diagnostics
 // ---------------------------------------------------
 
 diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.INFO);
 
 // ---------------------------------------------------
-// Provider
+// Resource
 // ---------------------------------------------------
 
-const provider = new NodeTracerProvider({
-  resource: new Resource({
-    [SemanticResourceAttributes.SERVICE_NAME]: 'test-sample-nodejs-app'
-  })
+const resource = resourceFromAttributes({
+  [SemanticResourceAttributes.SERVICE_NAME]: 'test-sample-nodejs-app'
 });
 
 // ---------------------------------------------------
@@ -45,18 +38,21 @@ const provider = new NodeTracerProvider({
 const instanaExporter = new OTLPTraceExporter({
   url: 'https://otlp-red-saas.instana.io:4318/v1/traces',
   headers: {
-    'x-instana-key': 'nqtbV5cEQ5ev0MFzOIwskg'
+    'x-instana-key': process.env.INSTANA_AGENT_KEY
   }
 });
 
 const consoleExporter = new ConsoleSpanExporter();
 
 // ---------------------------------------------------
-// Span processors
+// Provider
 // ---------------------------------------------------
 
-provider.addSpanProcessor(new BatchSpanProcessor(instanaExporter));
-provider.addSpanProcessor(new SimpleSpanProcessor(consoleExporter));
+const provider = new NodeTracerProvider({
+  resource,
+
+  spanProcessors: [new BatchSpanProcessor(instanaExporter), new SimpleSpanProcessor(consoleExporter)]
+});
 
 // ---------------------------------------------------
 // Register provider
@@ -69,16 +65,15 @@ provider.register();
 // ---------------------------------------------------
 
 registerInstrumentations({
+  tracerProvider: provider,
+
   instrumentations: [
-    // Generic node auto instrumentation
     getNodeAutoInstrumentations({
-      // optional noisy instrumentations disable
       '@opentelemetry/instrumentation-fs': {
         enabled: false
       }
     }),
 
-    // Explicit instrumentations
     new HttpInstrumentation(),
     new ExpressInstrumentation(),
     new PgInstrumentation(),
@@ -94,8 +89,3 @@ registerInstrumentations({
     })
   ]
 });
-
-// eslint-disable-next-line no-console
-console.log('OpenTelemetry initialized');
-
-// Made with Bob
