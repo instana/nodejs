@@ -12,7 +12,7 @@ const {
   convertSpanKind,
   convertEndTime,
   convertStartTime
-} = require('../id-converters');
+} = require('../utils/id-converters');
 
 const METADATA_MAPPINGS = {
   t: { otlp: OTLP.metadata.TRACE_ID, transform: convertTraceId },
