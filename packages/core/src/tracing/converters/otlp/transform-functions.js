@@ -8,152 +8,14 @@
  * Core OTLP Conversion Functions
  *
  * This module contains the main conversion logic for transforming Instana spans to OTLP format.
- * It orchestrates the conversion process using helper functions from transform-utils.js
+ * It orchestrates the conversion process using transformer modules.
  *
  * Main Functions:
  * - convertInstanaSpanToOTLP: Converts a single Instana span to OTLP format
  * - convertInstanaSpanBatchToOTLP: Converts multiple Instana spans with resourceSpans structure
- * - extractResourceAttributes: Creates resource attributes for OTLP format
- * - extractMetaAttributes: Converts Instana base fields to OTLP metadata
- * - extractSpanDataAttributes: Extracts and converts span data to OTLP attributes
  */
 
-const { METADATA_MAPPINGS } = require('./mappers');
-const { generateSpanName, generateSpanStatus, applyMappingsForSpanType } = require('./utils/transform-utils');
-
-// ============================================================================
-// Span Data Extraction
-// ============================================================================
-
-/**
- * Extracts and converts Instana span data to OTLP attributes
- * Handles multiple data keys (e.g., mongo + peer)
- * Stores the primary span type as metadata for later use
- */
-function extractSpanDataAttributes(instanaSpan) {
-  if (!instanaSpan || !instanaSpan.data) {
-    return [];
-  }
-
-  const allAttributes = [];
-  const dataKeys = Object.keys(instanaSpan.data);
-
-  // Store the first significant span type (excluding 'peer' which is supplementary)
-  // This will be used by generateSpanName and generateSpanStatus
-  if (!instanaSpan._span_type && dataKeys.length > 0) {
-    // Prefer non-peer keys as the primary span type
-    instanaSpan._span_type = dataKeys.find(key => key !== 'peer') || dataKeys[0];
-  }
-
-  // Process each data key
-  Object.entries(instanaSpan.data).forEach(([spanType, spanData]) => {
-    const attributes = applyMappingsForSpanType(spanType, spanData);
-    allAttributes.push(...attributes);
-  });
-
-  return allAttributes;
-}
-
-// ============================================================================
-// Metadata Transformation
-// ============================================================================
-
-/**
- * Applies metadata transformations to convert Instana base fields to OTLP
- */
-function extractMetaAttributes(instanaSpan) {
-  const result = {};
-
-  // Map of getter function names to actual functions
-  const getterFunctions = {
-    generateSpanName,
-    generateSpanStatus
-  };
-
-  Object.entries(METADATA_MAPPINGS).forEach(([instanaField, mapping]) => {
-    // Handle getter-based mappings (functions that need full span context)
-    if (mapping.getter) {
-      const getterFn = typeof mapping.getter === 'string' ? getterFunctions[mapping.getter] : mapping.getter;
-      if (getterFn) {
-        const value = getterFn(instanaSpan);
-        if (value !== null && value !== undefined) {
-          result[mapping.otlp] = value;
-        }
-      }
-      return;
-    }
-
-    const instanaValue = instanaSpan[instanaField];
-
-    // Skip if field doesn't exist (except optional parent)
-    if (instanaValue === undefined) {
-      if (instanaField === 'p') return; // Parent is optional
-      return;
-    }
-
-    // Apply transformation
-    if (mapping.transform) {
-      const transformedValue = mapping.transform(instanaValue);
-      if (transformedValue !== null && transformedValue !== undefined) {
-        result[mapping.otlp] = transformedValue;
-      }
-    }
-  });
-
-  // Handle parent span context if parentId exists
-  if (instanaSpan.p) {
-    const parentSpanId = result.parentId;
-    if (parentSpanId) {
-      result.parentSpanContext = {
-        traceId: result.traceId,
-        spanId: parentSpanId,
-        traceFlags: undefined,
-        isRemote: undefined
-      };
-      // Keep parentId for backward compatibility
-    }
-  }
-
-  return result;
-}
-
-// ============================================================================
-// Resource Attributes
-// ============================================================================
-
-/**
- * Creates resource attributes for OTLP format
- */
-// TODO: get the data dynamically from package.json
-function extractResourceAttributes(instanaSpan) {
-  const attributes = [];
-
-  // TODO: instead of unknown service, use config.service-name ?
-  const serviceName = instanaSpan.data?.service || 'b-test-sample-nodejs-app';
-
-  attributes.push({
-    key: 'service.name',
-    value: { stringValue: serviceName }
-  });
-
-  // SDK information
-  attributes.push(
-    {
-      key: 'telemetry.sdk.language',
-      value: { stringValue: 'nodejs' }
-    },
-    {
-      key: 'telemetry.sdk.name',
-      value: { stringValue: '@instana/collector' }
-    },
-    {
-      key: 'telemetry.sdk.version',
-      value: { stringValue: '3.0.0' }
-    }
-  );
-
-  return attributes;
-}
+const { extractMetaAttributes, extractResourceAttributes, extractSpanDataAttributes } = require('./transformers');
 
 // ============================================================================
 // Main Conversion Functions
@@ -266,12 +128,7 @@ function convertInstanaSpanBatchToOTLP(instanaSpans) {
 module.exports = {
   // Main conversion functions
   convertInstanaSpanToOTLP,
-  convertInstanaSpanBatchToOTLP,
-
-  // Helper functions (used by main conversion functions)
-  extractMetaAttributes,
-  extractSpanDataAttributes,
-  extractResourceAttributes
+  convertInstanaSpanBatchToOTLP
 };
 
 // Made with Bob
