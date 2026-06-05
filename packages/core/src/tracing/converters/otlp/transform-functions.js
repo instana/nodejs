@@ -39,6 +39,8 @@ function convertInstanaSpanToOTLP(instanaSpan) {
   // Step 3: Create resource attributes
   const resourceAttributes = extractResourceAttributes(instanaSpan);
 
+  // TODO: Move this to a separate functoin and if there are differences in semconv,
+  // we can put this inside version sp[ecific folder]
   // Step 4: Assemble OTLP span (metadata already includes name and status)
   const otelSpan = {
     ...metadata,
