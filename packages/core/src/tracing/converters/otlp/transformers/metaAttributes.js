@@ -59,20 +59,6 @@ function extractMetaAttributes(instanaSpan) {
     }
   });
 
-  // Handle parent span context if parentSpanId exists
-  if (instanaSpan.p) {
-    const parentSpanId = result.parentSpanId;
-    if (parentSpanId) {
-      result.parentSpanContext = {
-        traceId: result.traceId,
-        spanId: parentSpanId,
-        traceFlags: undefined,
-        isRemote: undefined
-      };
-      // Keep parentSpanId for backward compatibility
-    }
-  }
-
   return result;
 }
 
