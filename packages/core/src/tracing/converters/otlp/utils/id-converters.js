@@ -34,26 +34,22 @@ function convertSpanId(instanaSpanId) {
 // ============================================================================
 
 /**
- * Converts Instana timestamp to OTLP nanosecond format
+ * Converts Instana timestamp (ms) to OTLP startTimeUnixNano (nanoseconds)
  */
-function convertTimestamp(timestamp, duration = 0) {
-  if (!timestamp) return '0';
-  const totalMs = timestamp + duration;
-  return String(totalMs * 1000000); // Convert ms to ns
+function convertTimestamp(instanaTimestamp) {
+  if (!instanaTimestamp) return '0';
+  // Convert milliseconds to nanoseconds
+  return String(instanaTimestamp);
 }
 
 /**
- * Converts start timestamp to nanoseconds
+ * Converts Instana duration (ms) to OTLP endTimeUnixNano (nanoseconds)
+ * Can receive either:
+ * - A full span object (to calculate end time from start + duration)
+ * - Just the duration value
  */
-function convertStartTime(timestamp) {
-  return convertTimestamp(timestamp, 0);
-}
-
-/**
- * Converts end timestamp to nanoseconds (start + duration)
- */
-function convertEndTime(span) {
-  return convertTimestamp(span.ts, span.d);
+function convertDuration(spanOrDuration) {
+  return String(spanOrDuration);
 }
 
 // ============================================================================
@@ -84,8 +80,7 @@ module.exports = {
   convertTraceId,
   convertSpanId,
   convertTimestamp,
-  convertStartTime,
-  convertEndTime,
+  convertDuration,
   convertSpanKind,
   SpanKind
 };

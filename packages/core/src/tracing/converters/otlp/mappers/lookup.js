@@ -11,11 +11,14 @@ const OTLP = {
     TRACE_ID: 'traceId',
     SPAN_ID: 'spanId',
     PARENT_ID: 'parentSpanId',
+    PARENT_SPAN_CONTEXT: 'parentSpanContext',
     SPAN_KIND: 'kind',
-    START_TIME: 'startTimeUnixNano',
-    END_TIME: 'endTimeUnixNano',
+    TIMESTAMP: 'timestamp',
+    DURATION: 'duration',
     NAME: 'name',
-    STATUS: 'status'
+    STATUS: 'status',
+    RESOURCE: 'resource',
+    INSTRUMENTATION_SCOPE: 'instrumentationScope'
   },
 
   http: {
