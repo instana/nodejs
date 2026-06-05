@@ -11,7 +11,6 @@ const OTLP = {
     TRACE_ID: 'traceId',
     SPAN_ID: 'spanId',
     PARENT_ID: 'parentSpanId',
-    PARENT_SPAN_CONTEXT: 'parentSpanContext',
     SPAN_KIND: 'kind',
     TIMESTAMP: 'timestamp',
     DURATION: 'duration',
