@@ -4,6 +4,8 @@
 
 'use strict';
 
+const config = require('../config');
+
 // Cached Resource information for Metrics (when no "from" field is present)
 let cachedHostId = null;
 let cachedPid = null;
@@ -43,8 +45,7 @@ function createResourceAttributes(from) {
     value: { stringValue: '@instana/collector' }
   });
 
-  // Service Name - support both OTEL_SERVICE_NAME (standard) and SERVICE_NAME (legacy)
-  const serviceName = process.env.OTEL_SERVICE_NAME || process.env.SERVICE_NAME || 'unknown-service';
+  const serviceName = config.serviceName || 'nodejs-service-1';
   attributes.push({
     key: 'service.name',
     value: { stringValue: serviceName }
