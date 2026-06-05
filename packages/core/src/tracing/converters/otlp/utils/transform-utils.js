@@ -23,8 +23,7 @@ const {
   convertTraceId,
   convertSpanId,
   convertTimestamp,
-  convertStartTime,
-  convertEndTime,
+  convertDuration,
   convertSpanKind,
   SpanKind
 } = require('./id-converters');
@@ -74,52 +73,21 @@ function formatOTLPValue(value) {
 // ============================================================================
 
 /**
- * Priority order for span type selection when multiple data keys exist
- */
-const SPAN_TYPE_PRIORITY = [
-  'http',
-  'kafka',
-  'rabbitmq',
-  'sqs',
-  'sns',
-  'nats',
-  'bull',
-  'gcps',
-  'pg',
-  'mysql',
-  'mssql',
-  'mongo',
-  'redis',
-  'couchbase',
-  'elasticsearch',
-  'dynamodb',
-  'db2',
-  'memcached',
-  'rpc',
-  'graphql',
-  'gcs',
-  's3',
-  'kinesis',
-  'azstorage',
-  'aws.lambda.invoke',
-  'peer'
-];
-
-/**
  * Determines the primary span type from span data
+ * Uses the stored _span_type if available (set during attribute extraction)
+ * Otherwise falls back to detecting from data keys
  */
 function getSpanType(instanaSpan) {
   if (!instanaSpan?.data) return null;
 
+  // Use stored span type if available (set during extractSpanDataAttributes)
+  if (instanaSpan._span_type) {
+    return instanaSpan._span_type;
+  }
+
+  // Fallback: detect from data keys (prefer non-peer keys)
   const dataKeys = Object.keys(instanaSpan.data);
-
-  // Find first matching type in priority order
-  const matchedType = SPAN_TYPE_PRIORITY.find(type => dataKeys.includes(type));
-
-  if (matchedType) return matchedType;
-
-  // Fallback to first available key
-  return dataKeys[0] || null;
+  return dataKeys.find(key => key !== 'peer') || dataKeys[0] || null;
 }
 
 // ============================================================================
@@ -380,8 +348,7 @@ module.exports = {
 
   // Timestamp conversions
   convertTimestamp,
-  convertStartTime,
-  convertEndTime,
+  convertDuration,
 
   // Span kind
   convertSpanKind,

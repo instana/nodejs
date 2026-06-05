@@ -87,6 +87,21 @@ export interface OtelSpanLink {
 }
 
 /**
+ * OpenTelemetry Parent Span Context
+ * Contains information about the parent span
+ */
+export interface OtelParentSpanContext {
+  /** Trace ID of the parent span */
+  traceId: string;
+  /** Span ID of the parent span */
+  spanId: string;
+  /** Trace flags (1 = sampled) */
+  traceFlags?: number;
+  /** Whether the parent is from a remote process */
+  isRemote?: boolean;
+}
+
+/**
  * OpenTelemetry Span
  *
  * Represents a span in OpenTelemetry format following the OTLP specification.
@@ -106,6 +121,9 @@ export interface OtelSpan {
 
   /** Parent span ID (16 hex characters) */
   parentSpanId?: string;
+
+  /** Parent span context (alternative to parentSpanId) */
+  parentSpanContext?: OtelParentSpanContext;
 
   /** Span name */
   name?: string;
@@ -127,8 +145,8 @@ export interface OtelSpan {
   /** End time in nanoseconds since Unix epoch */
   endTimeUnixNano?: string;
 
-  /** Span attributes as key-value pairs */
-  attributes: Record<string, OtelAttributeValue>;
+  /** Span attributes as array of key-value pairs */
+  attributes: OtelAttribute[];
 
   /** Number of dropped attributes */
   droppedAttributesCount?: number;

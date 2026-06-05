@@ -19,12 +19,7 @@
  */
 
 const { METADATA_MAPPINGS } = require('./mappers');
-const {
-  convertEndTime,
-  generateSpanName,
-  generateSpanStatus,
-  applyMappingsForSpanType
-} = require('./utils/transform-utils');
+const { generateSpanName, generateSpanStatus, applyMappingsForSpanType } = require('./utils/transform-utils');
 
 // ============================================================================
 // Span Data Extraction
@@ -33,6 +28,7 @@ const {
 /**
  * Extracts and converts Instana span data to OTLP attributes
  * Handles multiple data keys (e.g., mongo + peer)
+ * Stores the primary span type as metadata for later use
  */
 function extractSpanDataAttributes(instanaSpan) {
   if (!instanaSpan || !instanaSpan.data) {
@@ -40,6 +36,14 @@ function extractSpanDataAttributes(instanaSpan) {
   }
 
   const allAttributes = [];
+  const dataKeys = Object.keys(instanaSpan.data);
+
+  // Store the first significant span type (excluding 'peer' which is supplementary)
+  // This will be used by generateSpanName and generateSpanStatus
+  if (!instanaSpan._span_type && dataKeys.length > 0) {
+    // Prefer non-peer keys as the primary span type
+    instanaSpan._span_type = dataKeys.find(key => key !== 'peer') || dataKeys[0];
+  }
 
   // Process each data key
   Object.entries(instanaSpan.data).forEach(([spanType, spanData]) => {
@@ -96,9 +100,18 @@ function extractMetaAttributes(instanaSpan) {
     }
   });
 
-  // Calculate end time from start + duration
-  if (instanaSpan.ts !== undefined && instanaSpan.d !== undefined) {
-    result.endTimeUnixNano = convertEndTime(instanaSpan);
+  // Handle parent span context if parentId exists
+  if (instanaSpan.p) {
+    const parentSpanId = result.parentId;
+    if (parentSpanId) {
+      result.parentSpanContext = {
+        traceId: result.traceId,
+        spanId: parentSpanId,
+        traceFlags: undefined,
+        isRemote: undefined
+      };
+      // Keep parentId for backward compatibility
+    }
   }
 
   return result;
@@ -116,7 +129,7 @@ function extractResourceAttributes(instanaSpan) {
   const attributes = [];
 
   // TODO: instead of unknown service, use config.service-name ?
-  const serviceName = instanaSpan.data?.service || 'unknown-service';
+  const serviceName = instanaSpan.data?.service || 'b-test-sample-nodejs-app';
 
   attributes.push({
     key: 'service.name',
