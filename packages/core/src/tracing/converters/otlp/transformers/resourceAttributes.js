@@ -4,6 +4,8 @@
 
 'use strict';
 
+const config = require('../../../../config');
+
 /**
  * Resource Attributes Transformer
  *
@@ -21,8 +23,8 @@
 function extractResourceAttributes(instanaSpan) {
   const attributes = [];
 
-  // TODO: instead of unknown service, use config.service-name ?
-  const serviceName = instanaSpan.data?.service || 'b-test-sample-nodejs-app';
+  // Use config.serviceName with fallback to span data or default
+  const serviceName = config.serviceName || instanaSpan.data?.service || 'nodejs-service';
 
   attributes.push({
     key: 'service.name',
