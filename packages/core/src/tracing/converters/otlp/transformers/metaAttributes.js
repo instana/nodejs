@@ -4,57 +4,34 @@
 
 'use strict';
 
-/**
- * Meta Attributes Transformer
- *
- * This module handles the extraction and transformation of metadata attributes
- * from Instana spans to OTLP format. This includes base fields like span IDs,
- * timestamps, span kind, name, and status.
- */
-
-const { METADATA_MAPPINGS } = require('../mappers');
-const { generateSpanName, generateSpanStatus } = require('../utils/transform-utils');
+const { DIRECT_MAPPINGS, COMPUTED_MAPPINGS } = require('../mappers/metadata-mapper');
 
 /**
  * Applies metadata transformations to convert Instana base fields to OTLP
- * @param {Object} instanaSpan - The Instana span object
- * @returns {Object} Object containing OTLP metadata fields
+ * @param {Object} instanaSpan - The raw Instana span object
+ * @returns {Object} Target OTLP metadata dictionary fields
  */
 function extractMetaAttributes(instanaSpan) {
+  if (!instanaSpan) return {};
+
   const result = {};
 
-  // Map of getter function names to actual functions
-  const getterFunctions = {
-    generateSpanName,
-    generateSpanStatus
-  };
+  // Step 1: Optimized direct field extraction via fast key lookup (No sub-array allocations)
+  Object.keys(DIRECT_MAPPINGS).forEach(field => {
+    const value = instanaSpan[field];
+    if (value === undefined) return;
 
-  Object.entries(METADATA_MAPPINGS).forEach(([instanaField, mapping]) => {
-    // Handle getter-based mappings (functions that need full span context)
-    if (mapping.getter) {
-      const getterFn = typeof mapping.getter === 'string' ? getterFunctions[mapping.getter] : mapping.getter;
-      if (getterFn) {
-        const value = getterFn(instanaSpan);
-        if (value !== null && value !== undefined) {
-          result[mapping.otlp] = value;
-        }
-      }
-      return;
-    }
+    const mapping = DIRECT_MAPPINGS[field];
+    result[mapping.otlp] = typeof mapping.transform === 'function' ? mapping.transform(value) : value;
+  });
 
-    const instanaValue = instanaSpan[instanaField];
+  // Step 2: Computed fields utilizing direct function pointers
+  COMPUTED_MAPPINGS.forEach(mapping => {
+    if (typeof mapping.compute === 'function') {
+      const value = mapping.compute(instanaSpan);
 
-    // Skip if field doesn't exist (except optional parent)
-    if (instanaValue === undefined) {
-      if (instanaField === 'p') return; // Parent is optional
-      return;
-    }
-
-    // Apply transformation
-    if (mapping.transform) {
-      const transformedValue = mapping.transform(instanaValue);
-      if (transformedValue !== null && transformedValue !== undefined) {
-        result[mapping.otlp] = transformedValue;
+      if (value !== null && value !== undefined) {
+        result[mapping.otlp] = value;
       }
     }
   });
@@ -65,5 +42,3 @@ function extractMetaAttributes(instanaSpan) {
 module.exports = {
   extractMetaAttributes
 };
-
-// Made with Bob

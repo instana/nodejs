@@ -520,3 +520,15 @@ function applySpanTransformation(spansToSend) {
       })
   );
 }
+
+/**
+ * @param {import("../core").InstanaBaseSpan[]} spansToSend
+ * @returns {any}
+ */
+function prepareSpansForExport(spansToSend) {
+  if (process.env.INSTANA_OTLP_FORMAT === 'true') {
+    return otlp.transform(spansToSend);
+  }
+
+  return spansToSend;
+}

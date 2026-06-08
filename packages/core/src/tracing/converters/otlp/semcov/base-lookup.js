@@ -4,9 +4,7 @@
 
 'use strict';
 
-// OTLP LOOKUP MAP
-
-const OTLP = {
+const BASE_OTLP = {
   metadata: {
     TRACE_ID: 'traceId',
     SPAN_ID: 'spanId',
@@ -21,15 +19,15 @@ const OTLP = {
   },
 
   http: {
-    REQUEST_METHOD: 'http.request.method',
-    RESPONSE_STATUS: 'http.response.status_code',
+    REQUEST_METHOD: 'http.method', // Default v1.23
+    RESPONSE_STATUS: 'http.status_code', // Default v1.23
     ROUTE: 'http.route',
     STATUS_TEXT: 'http.status_text',
     REQUEST_HEADER: 'http.request.header',
-    URL_FULL: 'url.full',
-    URL_PATH: 'url.path',
-    URL_QUERY: 'url.query',
-    URL_TEMPLATE: 'url.template',
+    URL_FULL: 'http.url', // Default v1.23
+    URL_PATH: 'http.target', // Default v1.23
+    URL_QUERY: 'http.url.query',
+    URL_TEMPLATE: 'http.url.template',
     SERVER_ADDRESS: 'server.address',
     NETWORK_PROTOCOL: 'network.protocol.name',
     ERROR_TYPE: 'error.type'
@@ -38,13 +36,13 @@ const OTLP = {
   messaging: {
     SYSTEM: 'messaging.system',
     OPERATION_TYPE: 'messaging.operation.type',
-    DESTINATION_NAME: 'messaging.destination.name',
+    DESTINATION_NAME: 'messaging.destination', // Default v1.23
     SERVER_ADDRESS: 'server.address',
     CONSUMER_GROUP: 'messaging.consumer.group.name',
     MESSAGE_ID: 'messaging.message.id',
     MESSAGE_BODY_SIZE: 'messaging.message.body.size',
     kafka: {
-      PARTITION: 'messaging.kafka.destination.partition',
+      PARTITION: 'messaging.kafka.partition', // Default v1.23
       OFFSET: 'messaging.kafka.message.offset',
       MESSAGE_KEY: 'messaging.kafka.message.key'
     },
@@ -52,9 +50,7 @@ const OTLP = {
       ROUTING_KEY: 'messaging.rabbitmq.destination.routing_key',
       MESSAGE_ROUTING_KEY: 'messaging.rabbitmq.message.routing_key'
     },
-    gcp: {
-      PROJECT_ID: 'gcp.project_id'
-    }
+    gcp: { PROJECT_ID: 'gcp.project_id' }
   },
 
   database: {
@@ -67,8 +63,8 @@ const OTLP = {
     COLLECTION: 'db.collection.name',
     TABLE: 'db.sql.table',
     SERVER_ADDRESS: 'server.address',
-    PEER_NAME: 'net.peer.name',
-    PEER_PORT: 'net.peer.port',
+    PEER_NAME: 'net.peer.name', // Default v1.23
+    PEER_PORT: 'net.peer.port', // Default v1.23
     CONNECTION_STRING: 'db.connection_string'
   },
 
@@ -125,11 +121,9 @@ const OTLP = {
   },
 
   network: {
-    PEER_NAME: 'net.peer.name',
-    PEER_PORT: 'net.peer.port'
+    PEER_NAME: 'net.peer.name', // Default v1.23
+    PEER_PORT: 'net.peer.port' // Default v1.23
   }
 };
 
-module.exports = {
-  OTLP
-};
+module.exports = { BASE_OTLP };

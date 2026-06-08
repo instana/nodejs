@@ -7,51 +7,52 @@
 const config = require('../../../../config');
 
 /**
- * Resource Attributes Transformer
- *
- * This module handles the extraction and transformation of resource attributes
- * for OTLP format. Resource attributes describe the entity producing telemetry
- * data (e.g., service name, SDK information).
+ * Resource attributes definition (declarative)
  */
+const RESOURCE_ATTRIBUTES = [
+  {
+    key: 'service.name',
+    // config not available here, we need to properly get it here
+    resolve: instanaSpan => config.serviceName || instanaSpan?.data?.service || 'nodejs-service'
+  },
+  {
+    key: 'telemetry.sdk.language',
+    value: 'nodejs'
+  },
+  {
+    key: 'telemetry.sdk.name',
+    value: '@instana/collector'
+  },
+  {
+    key: 'telemetry.sdk.version',
+    value: '3.0.0'
+  }
+];
 
 /**
- * Creates resource attributes for OTLP format
- * @param {Object} instanaSpan - The Instana span object
- * @returns {Array} Array of OTLP resource attributes
+ * Extract OTLP resource attributes
  */
-// TODO: get the data dynamically from package.json
 function extractResourceAttributes(instanaSpan) {
-  const attributes = [];
+  if (!instanaSpan) {
+    return [];
+  }
 
-  // Use config.serviceName with fallback to span data or default
-  const serviceName = config.serviceName || instanaSpan.data?.service || 'nodejs-service';
+  return RESOURCE_ATTRIBUTES.map(attr => {
+    const value = attr.resolve ? attr.resolve(instanaSpan) : attr.value;
 
-  attributes.push({
-    key: 'service.name',
-    value: { stringValue: serviceName }
-  });
-
-  // SDK information
-  attributes.push(
-    {
-      key: 'telemetry.sdk.language',
-      value: { stringValue: 'nodejs' }
-    },
-    {
-      key: 'telemetry.sdk.name',
-      value: { stringValue: '@instana/collector' }
-    },
-    {
-      key: 'telemetry.sdk.version',
-      value: { stringValue: '3.0.0' }
+    if (value == null) {
+      return null;
     }
-  );
 
-  return attributes;
+    return {
+      key: attr.key,
+      value: {
+        stringValue: String(value)
+      }
+    };
+  }).filter(Boolean);
 }
 
 module.exports = {
   extractResourceAttributes
 };
-
-// Made with Bob
