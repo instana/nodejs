@@ -14,6 +14,7 @@ const cls = require('../../cls');
 
 let logger;
 let isActive = false;
+exports.spanName = 'kafka';
 
 // FYI: officially deprecated. No release since 4 years. But still very
 //      high usage on npm trends. We will drop it in any upcoming major release.
@@ -66,7 +67,7 @@ function instrumentedSend(ctx, originalSend, produceRequests, cb) {
 
   return cls.ns.runAndReturn(() => {
     const span = cls.startSpan({
-      spanName: 'kafka',
+      spanName: exports.spanName,
       kind: constants.EXIT
     });
     const produceRequest = produceRequests[0];
@@ -119,7 +120,7 @@ function shimEmit(original) {
 
     return cls.ns.runAndReturn(() => {
       const span = cls.startSpan({
-        spanName: 'kafka',
+        spanName: exports.spanName,
         kind: constants.ENTRY
       });
       span.stack = [];

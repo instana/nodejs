@@ -26,6 +26,8 @@ const sqsConsumer = require('./sqs-consumer');
 /** @type {Object.<string, import('./instana_aws_product').InstanaAWSProduct} */
 const operationMap = {};
 let isActive = false;
+exports.spanName = 'aws.sdk.v3';
+
 
 exports.init = function init(config) {
   awsProducts.forEach(AwsProductClass => {

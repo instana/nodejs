@@ -21,6 +21,8 @@ const awsProducts = [
 /** @type {Object.<string, import('./instana_aws_product').InstanaAWSProduct} */
 const operationMap = {};
 let isActive = false;
+exports.spanName = 'aws.sdk.v2';
+
 let logger;
 
 exports.isActive = function () {

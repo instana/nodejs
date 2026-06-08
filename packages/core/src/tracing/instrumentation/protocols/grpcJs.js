@@ -13,6 +13,7 @@ const cls = require('../../cls');
 let logger;
 let Metadata;
 let isActive = false;
+exports.spanName = 'rpc';
 
 const TYPES = {
   UNARY: 'unary',
