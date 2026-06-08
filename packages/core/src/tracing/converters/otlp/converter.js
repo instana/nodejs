@@ -22,7 +22,25 @@ exports.convert = function convert(spans) {
     return { resourceSpans: [] };
   }
 
-  const groups = groupSpansByResource(spans.map(convertSpanToOTLP).filter(Boolean));
+  const convertedSpans = [];
+
+  spans.forEach(span => {
+    if (!span) return;
+
+    // 1. Intercept log signals immediately at the front gate
+    if (span.data?.log) {
+      //  logSignalExporter
+      return; // Skip mapping and do not add to trace pipelines
+    }
+
+    // 2. Process valid trace spans normally
+    const mappedSpan = convertSpanToOTLP(span);
+    if (mappedSpan) {
+      convertedSpans.push(mappedSpan);
+    }
+  });
+
+  const groups = groupSpansByResource(convertedSpans);
 
   return {
     resourceSpans: buildResourceSpans(groups)
