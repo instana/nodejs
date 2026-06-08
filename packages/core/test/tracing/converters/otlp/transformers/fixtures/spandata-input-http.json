@@ -1,0 +1,27 @@
+{
+  "t": "1234567890abcdef1234567890abcdef",
+  "s": "abcdef1234567890",
+  "p": "fedcba0987654321",
+  "k": 1,
+  "ts": 1609459200000,
+  "d": 150,
+  "n": "node.http.server",
+  "ec": 0,
+  "f": {
+    "e": "12345",
+    "h": "my-service-host"
+  },
+  "data": {
+    "http": {
+      "method": "GET",
+      "path": "/api/users/123",
+      "status": 200,
+      "url": "http://localhost:3000/api/users/123",
+      "header": {
+        "user-agent": "Mozilla/5.0",
+        "accept": "application/json"
+      },
+      "params": "filter=active&sort=name"
+    }
+  }
+}

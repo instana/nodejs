@@ -1,0 +1,26 @@
+{
+  "t": "fedcba0987654321fedcba0987654321",
+  "s": "123abc456def7890",
+  "p": "999888777666555",
+  "k": 3,
+  "ts": 1609459300000,
+  "d": 50,
+  "n": "kafka",
+  "ec": 0,
+  "f": {
+    "e": "67890",
+    "h": "kafka-producer-host"
+  },
+  "data": {
+    "kafka": {
+      "operation": "produce",
+      "service": "orders-topic",
+      "access": "send",
+      "endpoints": "orders-topic"
+    },
+    "peer": {
+      "hostname": "kafka-broker-1.example.com",
+      "port": 9092
+    }
+  }
+}

@@ -4,49 +4,112 @@
 
 'use strict';
 
+const MAPPINGS = require('../mappers/span-data-mapper');
+const { formatOTLPValue, combineFields } = require('../util');
+
 /**
- * Span Data Attributes Transformer
- *
- * This module handles the extraction and transformation of span data attributes
- * from Instana spans to OTLP format. It processes the span.data field and applies
- * appropriate mappings based on the span type.
+ * Special handlers
  */
-
-const { applyMappingsForSpanType } = require('../utils/transform-utils');
+const SPECIAL_HANDLERS = {
+  peer: applyPeerMappings
+};
 
 /**
- * Extracts and converts Instana span data to OTLP attributes
- * Handles multiple data keys (e.g., mongo + peer)
- * Stores the primary span type as metadata for later use
- * @param {Object} instanaSpan - The Instana span object
- * @returns {Array} Array of OTLP attributes
+ * Entry point: extract OTLP attributes from Instana span
  */
 function extractSpanDataAttributes(instanaSpan) {
-  if (!instanaSpan || !instanaSpan.data) {
+  if (!instanaSpan?.data) {
     return [];
   }
 
-  const allAttributes = [];
-  const dataKeys = Object.keys(instanaSpan.data);
+  return Object.entries(instanaSpan.data).flatMap(([key, spanData]) => {
+    const handler = SPECIAL_HANDLERS[key];
 
-  // Store the first significant span type (excluding 'peer' which is supplementary)
-  // This will be used by generateSpanName and generateSpanStatus
-  if (!instanaSpan._span_type && dataKeys.length > 0) {
-    // Prefer non-peer keys as the primary span type
-    instanaSpan._span_type = dataKeys.find(key => key !== 'peer') || dataKeys[0];
+    if (handler) {
+      return handler(spanData);
+    }
+
+    return applyMappingsForSpanType(key, spanData);
+  });
+}
+
+/**
+ * Peer mapping (resource/network metadata)
+ */
+function applyPeerMappings(peerData) {
+  if (!peerData) {
+    return [];
   }
 
-  // Process each data key
-  Object.entries(instanaSpan.data).forEach(([spanType, spanData]) => {
-    const attributes = applyMappingsForSpanType(spanType, spanData);
-    allAttributes.push(...attributes);
-  });
+  const result = [];
 
-  return allAttributes;
+  if (peerData.hostname != null) {
+    result.push({
+      key: 'peer.hostname',
+      value: formatOTLPValue(peerData.hostname)
+    });
+  }
+
+  if (peerData.port != null) {
+    result.push({
+      key: 'peer.port',
+      value: formatOTLPValue(peerData.port)
+    });
+  }
+
+  return result;
+}
+
+/**
+ * Apply all mappings for a given span type
+ */
+function applyMappingsForSpanType(spanType, spanData) {
+  const mappings = MAPPINGS?.[spanType];
+
+  if (!Array.isArray(mappings)) {
+    return [];
+  }
+
+  return mappings.map(mapping => applyMapping(mapping, spanData)).filter(Boolean);
+}
+
+/**
+ * Apply a single mapping rule
+ */
+function applyMapping(mapping, spanData) {
+  let value;
+
+  // Case 1: static value
+  if (mapping.value !== undefined && !mapping.instana && !mapping.instanaKeys) {
+    value = mapping.value;
+  }
+
+  // Case 2: multi-field mapping
+  else if (Array.isArray(mapping.instanaKeys)) {
+    value = mapping.transform
+      ? mapping.transform(spanData, mapping.instanaKeys)
+      : combineFields(spanData, mapping.instanaKeys);
+  }
+
+  // Case 3: single field mapping
+  else if (mapping.instana) {
+    const rawValue = spanData[mapping.instana];
+
+    if (rawValue == null) return null;
+
+    value = mapping.transform ? mapping.transform(rawValue) : rawValue;
+  } else {
+    return null;
+  }
+
+  if (value == null) return null;
+
+  return {
+    key: mapping.otlp,
+    value: formatOTLPValue(value)
+  };
 }
 
 module.exports = {
   extractSpanDataAttributes
 };
-
-// Made with Bob
