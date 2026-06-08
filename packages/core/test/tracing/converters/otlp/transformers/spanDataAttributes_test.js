@@ -15,11 +15,11 @@ describe('tracing/converters/otlp/transformers/spanDataAttributes', () => {
     return JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
   }
 
-  describe('extractSpanDataAttributes', () => {
+  describe.only('extractSpanDataAttributes', () => {
     describe('JSON Fixture Tests - Complete Span Data Transformations', () => {
       it('should transform HTTP span data from JSON fixture correctly', () => {
-        const input = loadFixture('spandata-input-http.json');
-        const expectedOutput = loadFixture('spandata-output-http.json');
+        const input = loadFixture('./input/http.json');
+        const expectedOutput = loadFixture('./output/dataAttributes/http.json');
 
         const result = extractSpanDataAttributes(input);
         expect(result).to.be.an('array');
@@ -33,8 +33,8 @@ describe('tracing/converters/otlp/transformers/spanDataAttributes', () => {
       });
 
       it('should transform Kafka span data with peer from JSON fixture correctly', () => {
-        const input = loadFixture('spandata-input-kafka.json');
-        const expectedOutput = loadFixture('spandata-output-kafka.json');
+        const input = loadFixture('./input/kafka.json');
+        const expectedOutput = loadFixture('./output/dataAttributes/kafka.json');
 
         const result = extractSpanDataAttributes(input);
 
@@ -50,9 +50,8 @@ describe('tracing/converters/otlp/transformers/spanDataAttributes', () => {
       });
 
       it('should transform MongoDB span data with peer from JSON fixture correctly', () => {
-        const input = loadFixture('spandata-input-mongodb.json');
-        const expectedOutput = loadFixture('spandata-output-mongodb.json');
-
+        const input = loadFixture('./input/mongodb.json');
+        const expectedOutput = loadFixture('./output/dataAttributes/mongodb.json');
         const result = extractSpanDataAttributes(input);
 
         expect(result).to.be.an('array');
@@ -66,8 +65,8 @@ describe('tracing/converters/otlp/transformers/spanDataAttributes', () => {
       });
 
       it('should transform PostgreSQL span data from JSON fixture correctly', () => {
-        const input = loadFixture('spandata-input-postgresql.json');
-        const expectedOutput = loadFixture('spandata-output-postgresql.json');
+        const input = loadFixture('./input/postgresql.json');
+        const expectedOutput = loadFixture('./output/dataAttributes/postgresql.json');
 
         const result = extractSpanDataAttributes(input);
 

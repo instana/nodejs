@@ -5,7 +5,7 @@
 'use strict';
 
 const { toUpperCase, combineHostPort } = require('../util');
-const { getLookupConfig } = require('../semcov');
+const { getLookupConfig } = require('../semconv');
 const OTLP = getLookupConfig();
 
 // these 1:1 mapping check in detail

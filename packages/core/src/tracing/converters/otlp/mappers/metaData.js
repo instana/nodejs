@@ -14,7 +14,7 @@ const {
   generateSpanStatus
 } = require('./helper');
 
-const { getLookupConfig } = require('../semcov');
+const { getLookupConfig } = require('../semconv');
 const OTLP = getLookupConfig();
 
 const DIRECT_MAPPINGS = {
