@@ -79,6 +79,22 @@ describe('tracing/converters/otlp/transformers/spanDataAttributes', () => {
           expect(actualAttr.value).to.deep.equal(expectedAttr.value);
         });
       });
+
+      it('should transform otel span data from JSON fixture correctly', () => {
+        const input = loadFixture('./input/otel.json');
+        const expectedOutput = loadFixture('./output/dataAttributes/otel.json');
+
+        const result = extractSpanDataAttributes(input);
+        console.log(result);
+        expect(result).to.be.an('array');
+        expect(result).to.have.lengthOf(expectedOutput.length);
+
+        expectedOutput.forEach(expectedAttr => {
+          const actualAttr = result.find(attr => attr.key === expectedAttr.key);
+          expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
+          expect(actualAttr.value).to.deep.equal(expectedAttr.value);
+        });
+      });
     });
   });
 });

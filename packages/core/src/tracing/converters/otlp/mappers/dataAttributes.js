@@ -91,7 +91,7 @@ const MAPPINGS = {
     {
       otlp: OTLP.database.SERVER_ADDRESS,
       transform: combineHostPort,
-      instanas: ['host', 'port']
+      instana: ['host', 'port']
     },
     { otlp: OTLP.database.PEER_NAME, instana: 'host' },
     { otlp: OTLP.database.PEER_PORT, instana: 'port' },

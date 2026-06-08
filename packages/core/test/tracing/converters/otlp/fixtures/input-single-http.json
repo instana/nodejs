@@ -1,0 +1,19 @@
+{
+  "t": "1234567890abcdef1234567890abcdef",
+  "s": "abcdef1234567890",
+  "p": "fedcba0987654321",
+  "k": 1,
+  "ts": 1609459200000,
+  "d": 150,
+  "n": "node.http.server",
+  "ec": 0,
+  "data": {
+    "http": {
+      "method": "get",
+      "path": "/api/users",
+      "status": 200,
+      "url": "http://localhost:3000/api/users"
+    },
+    "service": "user-service"
+  }
+}

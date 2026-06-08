@@ -12,20 +12,19 @@ const config = require('../../../../config');
 const RESOURCE_ATTRIBUTES = [
   {
     key: 'service.name',
-    // config not available here, we need to properly get it here
     resolve: instanaSpan => config.serviceName || instanaSpan?.data?.service || 'nodejs-service'
   },
   {
     key: 'telemetry.sdk.language',
-    value: 'nodejs'
+    resolve: instanaSpan => instanaSpan?.data?.resource?.['telemetry.sdk.language'] || 'nodejs'
   },
   {
     key: 'telemetry.sdk.name',
-    value: '@instana/collector'
+    resolve: instanaSpan => instanaSpan?.data?.resource?.['telemetry.sdk.name'] || '@instana/collector'
   },
   {
     key: 'telemetry.sdk.version',
-    value: '3.0.0'
+    resolve: instanaSpan => instanaSpan?.data?.resource?.['telemetry.sdk.version'] || '3.0.0'
   }
 ];
 
