@@ -8,11 +8,12 @@ const { toUpperCase, combineHostPort } = require('../util');
 const { getLookupConfig } = require('../semcov');
 const OTLP = getLookupConfig();
 
+// these 1:1 mapping check in detail
+// it seems not accurate
 const MAPPINGS = {
   http: [
-    { otlp: OTLP.http.REQUEST_METHOD, instana: 'operation', transform: toUpperCase },
     { otlp: OTLP.http.REQUEST_METHOD, instana: 'method', transform: toUpperCase },
-    { otlp: OTLP.http.URL_PATH, instana: 'endpoints' },
+    { otlp: OTLP.http.URL_PATH, instana: 'path' },
     { otlp: OTLP.http.SERVER_ADDRESS, instana: 'connection' },
     { otlp: OTLP.http.URL_FULL, instana: 'url' },
     { otlp: OTLP.http.RESPONSE_STATUS, instana: 'status' },
@@ -24,8 +25,7 @@ const MAPPINGS = {
 
   kafka: [
     { otlp: OTLP.messaging.SYSTEM, value: 'kafka' },
-    { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'endpoints' },
-    { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'service' },
+    { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'access' },
     { otlp: OTLP.messaging.OPERATION_TYPE, instana: 'operation' },
     { otlp: OTLP.messaging.OPERATION_TYPE, instana: 'access' },
     { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
@@ -212,11 +212,6 @@ const MAPPINGS = {
     // fields — no OTLP key
     // args — no OTLP key
     // errors — no OTLP key
-  ],
-
-  log: [
-    { otlp: OTLP.log.BODY, instana: 'message' },
-    { otlp: OTLP.log.SEVERITY, instana: 'level' }
   ],
 
   gcs: [

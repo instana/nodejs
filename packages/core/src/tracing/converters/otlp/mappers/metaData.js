@@ -12,7 +12,7 @@ const {
   convertDuration,
   generateSpanName,
   generateSpanStatus
-} = require('./metadata-rules');
+} = require('./helper');
 
 const { getLookupConfig } = require('../semcov');
 const OTLP = getLookupConfig();

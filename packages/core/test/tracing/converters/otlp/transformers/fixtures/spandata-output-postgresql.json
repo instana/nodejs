@@ -1,0 +1,14 @@
+[
+  { "key": "db.system", "value": { "stringValue": "postgresql" } },
+  {
+    "key": "db.statement",
+    "value": { "stringValue": "SELECT * FROM users WHERE id = $1" }
+  },
+  {
+    "key": "net.peer.name",
+    "value": { "stringValue": "postgres.example.com" }
+  },
+  { "key": "net.peer.port", "value": { "intValue": 5432 } },
+  { "key": "db.user", "value": { "stringValue": "app_user" } },
+  { "key": "db.name", "value": { "stringValue": "production_db" } }
+]

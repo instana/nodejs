@@ -1,0 +1,22 @@
+[
+  { "key": "db.system", "value": { "stringValue": "mongodb" } },
+  { "key": "db.operation.name", "value": { "stringValue": "insert" } },
+  {
+    "key": "server.address",
+    "value": { "stringValue": "mongodb://localhost:27017" }
+  },
+  { "key": "db.namespace", "value": { "stringValue": "mydb.users" } },
+  {
+    "key": "db.statement",
+    "value": { "stringValue": "{\"name\":\"John Doe\",\"email\":\"john@example.com\"}" }
+  },
+  {
+    "key": "error.type",
+    "value": { "stringValue": "E11000 duplicate key error collection" }
+  },
+  {
+    "key": "peer.hostname",
+    "value": { "stringValue": "mongodb-primary.example.com" }
+  },
+  { "key": "peer.port", "value": { "intValue": 27017 } }
+]

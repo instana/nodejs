@@ -4,6 +4,7 @@
 
 'use strict';
 
+// base loopup based on v1.23 with some common mappings as well
 const BASE_OTLP = {
   metadata: {
     TRACE_ID: 'traceId',
@@ -15,7 +16,9 @@ const BASE_OTLP = {
     NAME: 'name',
     STATUS: 'status',
     RESOURCE: 'resource',
-    INSTRUMENTATION_SCOPE: 'instrumentationScope'
+    INSTRUMENTATION_SCOPE: 'instrumentationScope',
+    EVENTS: 'events',
+    LINKS: 'links'
   },
 
   http: {

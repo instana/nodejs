@@ -1,0 +1,13 @@
+{
+  "traceId": "aabbccdd11223344aabbccdd11223344",
+  "spanId": "5566778899aabbcc",
+  "parentSpanId": "8899aabbccddeeff",
+  "kind": 3,
+  "duration": "200000000",
+  "timestamp": "1609459400000000000",
+  "name": "mongo.insert",
+  "status": {
+    "code": 2,
+    "message": "mongo operation failed"
+  }
+}
