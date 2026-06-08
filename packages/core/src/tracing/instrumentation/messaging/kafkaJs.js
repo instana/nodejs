@@ -15,6 +15,7 @@ const cls = require('../../cls');
 let traceCorrelationEnabled = constants.kafkaTraceCorrelationDefault;
 let logger;
 let isActive = false;
+exports.spanName = 'kafka';
 
 exports.init = function init(config) {
   logger = config.logger;
@@ -83,7 +84,7 @@ function instrumentedSend(ctx, originalSend, originalArgs, topic, messages) {
   };
   return cls.ns.runAndReturn(() => {
     const span = cls.startSpan({
-      spanName: 'kafka',
+      spanName: exports.spanName,
       kind: constants.EXIT,
       spanData
     });
@@ -155,7 +156,7 @@ function instrumentedSendBatch(ctx, originalSendBatch, originalArgs, topicMessag
       }
     };
     const span = cls.startSpan({
-      spanName: 'kafka',
+      spanName: exports.spanName,
       kind: constants.EXIT,
       spanData
     });
@@ -273,7 +274,7 @@ function instrumentedEachMessage(originalEachMessage) {
         }
       };
       const span = cls.startSpan({
-        spanName: 'kafka',
+        spanName: exports.spanName,
         kind: constants.ENTRY,
         traceId: traceId,
         parentSpanId: parentSpanId,
@@ -363,7 +364,7 @@ function instrumentedEachBatch(originalEachBatch) {
         }
       };
       const span = cls.startSpan({
-        spanName: 'kafka',
+        spanName: exports.spanName,
         kind: constants.ENTRY,
         traceId: traceId,
         parentSpanId: parentSpanId,
