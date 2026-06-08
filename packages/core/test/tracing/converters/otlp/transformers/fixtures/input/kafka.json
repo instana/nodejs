@@ -17,10 +17,6 @@
       "service": "orders-topic",
       "access": "send",
       "endpoints": "orders-topic"
-    },
-    "peer": {
-      "hostname": "kafka-broker-1.example.com",
-      "port": 9092
     }
   }
 }

@@ -17,11 +17,11 @@ function loadFixture(filename) {
   return JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
 }
 
-describe('tracing/converters/otlp/transformers/metaAttributes', () => {
+describe.only('tracing/converters/otlp/transformers/metaAttributes', () => {
   describe('JSON Fixture Tests - Complete Span Transformations', () => {
     it('should transform HTTP server span from JSON fixture correctly', () => {
-      const input = loadFixture('spandata-input-http.json');
-      const expectedOutput = loadFixture('output-http-server-span.json');
+      const input = loadFixture('./input/http.json');
+      const expectedOutput = loadFixture('./output/metaData/http.json');
 
       const result = extractMetaDataAttributes(input);
 
@@ -29,8 +29,8 @@ describe('tracing/converters/otlp/transformers/metaAttributes', () => {
     });
 
     it('should transform Kafka producer span from JSON fixture correctly', () => {
-      const input = loadFixture('spandata-input-kafka.json');
-      const expectedOutput = loadFixture('output-kafka-producer-span.json');
+      const input = loadFixture('./input/kafka.json');
+      const expectedOutput = loadFixture('./output/metaData/kafka.json');
 
       const result = extractMetaDataAttributes(input);
 
@@ -38,8 +38,8 @@ describe('tracing/converters/otlp/transformers/metaAttributes', () => {
     });
 
     it('should transform MongoDB error span from JSON fixture correctly', () => {
-      const input = loadFixture('spandata-input-mongodb.json');
-      const expectedOutput = loadFixture('output-mongodb-error-span.json');
+      const input = loadFixture('./input/mongodb.json');
+      const expectedOutput = loadFixture('./output/metaData/mongodb.json');
 
       const result = extractMetaDataAttributes(input);
 

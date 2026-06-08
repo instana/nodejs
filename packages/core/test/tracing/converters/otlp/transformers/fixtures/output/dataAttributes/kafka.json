@@ -5,10 +5,5 @@
     "key": "messaging.operation.type",
     "value": { "stringValue": "produce" }
   },
-  { "key": "messaging.operation.type", "value": { "stringValue": "send" } },
-  {
-    "key": "peer.hostname",
-    "value": { "stringValue": "kafka-broker-1.example.com" }
-  },
-  { "key": "peer.port", "value": { "intValue": 9092 } }
+  { "key": "messaging.operation.type", "value": { "stringValue": "send" } }
 ]
