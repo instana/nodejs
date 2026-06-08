@@ -18,46 +18,47 @@ const SPECIAL_HANDLERS = {
  * Entry point: extract OTLP attributes from Instana span
  */
 function extractSpanDataAttributes(instanaSpan) {
-  if (!instanaSpan?.data) {
+  const dataBlock = instanaSpan?.data;
+
+  if (!dataBlock) {
     return [];
   }
 
-  return Object.entries(instanaSpan.data).flatMap(([key, spanData]) => {
-    const handler = SPECIAL_HANDLERS[key];
+  // OpenTelemetry bridge spans
+  if (instanaSpan.n === 'otel') {
+    // key: 'otel.operation' ignored for now
+    return Object.entries(dataBlock.tags || {}).map(([key, value]) => ({
+      key,
+      value: formatOTLPValue(value)
+    }));
+  }
 
-    if (handler) {
-      return handler(spanData);
-    }
-
-    return applyMappingsForSpanType(key, spanData);
-  });
+  return Object.entries(dataBlock)
+    .filter(([key]) => key !== 'resource')
+    .flatMap(([key, spanData]) => {
+      const handler = SPECIAL_HANDLERS[key];
+      return handler ? handler(spanData) : applyMappingsForSpanType(key, spanData);
+    });
 }
 
 /**
- * Peer mapping (resource/network metadata)
+ * Peer mapping processor
  */
 function applyPeerMappings(peerData) {
   if (!peerData) {
     return [];
   }
 
-  const result = [];
-
-  if (peerData.hostname != null) {
-    result.push({
+  return [
+    peerData.hostname != null && {
       key: 'peer.hostname',
       value: formatOTLPValue(peerData.hostname)
-    });
-  }
-
-  if (peerData.port != null) {
-    result.push({
+    },
+    peerData.port != null && {
       key: 'peer.port',
       value: formatOTLPValue(peerData.port)
-    });
-  }
-
-  return result;
+    }
+  ].filter(Boolean);
 }
 
 /**
@@ -79,30 +80,27 @@ function applyMappingsForSpanType(spanType, spanData) {
 function applyMapping(mapping, spanData) {
   let value;
 
-  // Case 1: static value
   if (mapping.value !== undefined && !mapping.instana && !mapping.instanaKeys) {
     value = mapping.value;
-  }
-
-  // Case 2: multi-field mapping
-  else if (Array.isArray(mapping.instanaKeys)) {
+  } else if (Array.isArray(mapping.instanaKeys)) {
     value = mapping.transform
       ? mapping.transform(spanData, mapping.instanaKeys)
       : combineFields(spanData, mapping.instanaKeys);
-  }
+  } else if (mapping.instana) {
+    const rawValue = spanData?.[mapping.instana];
 
-  // Case 3: single field mapping
-  else if (mapping.instana) {
-    const rawValue = spanData[mapping.instana];
-
-    if (rawValue == null) return null;
+    if (rawValue == null) {
+      return null;
+    }
 
     value = mapping.transform ? mapping.transform(rawValue) : rawValue;
   } else {
     return null;
   }
 
-  if (value == null) return null;
+  if (value == null) {
+    return null;
+  }
 
   return {
     key: mapping.otlp,

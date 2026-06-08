@@ -45,5 +45,14 @@ describe.only('tracing/converters/otlp/transformers/metaAttributes', () => {
 
       expect(result).to.deep.equal(expectedOutput);
     });
+
+    it('should transform otel  span from JSON fixture correctly', () => {
+      const input = loadFixture('./input/otel.json');
+      const expectedOutput = loadFixture('./output/metaData/otel.json');
+
+      const result = extractMetaDataAttributes(input);
+
+      expect(result).to.deep.equal(expectedOutput);
+    });
   });
 });

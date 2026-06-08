@@ -1,0 +1,12 @@
+{
+  "traceId": "00000000000000005c53939869360e85",
+  "parentSpanId": "0d5b4595ebbea217",
+  "spanId": "483993efeb585b71",
+  "kind": 3,
+  "duration": "1000000",
+  "timestamp": "1780587628468000000",
+  "name": "otel",
+  "status": {
+    "code": 1
+  }
+}
