@@ -1,0 +1,26 @@
+{
+  "t": "5c53939869360e85",
+  "s": "483993efeb585b71",
+  "p": "0d5b4595ebbea217",
+  "n": "otel",
+  "k": 2,
+  "f": {
+    "e": "40519",
+    "h": "7a:71:ec:ff:fe:3e:a2:e6"
+  },
+  "ec": 0,
+  "ts": 1780587628468,
+  "d": 1,
+  "stack": [],
+  "data": {
+    "operation": "fs",
+    "tags": {
+      "name": "fs writeFile"
+    },
+    "resource": {
+      "telemetry.sdk.language": "nodejs",
+      "telemetry.sdk.name": "opentelemetry",
+      "telemetry.sdk.version": "2.3.0"
+    }
+  }
+}
