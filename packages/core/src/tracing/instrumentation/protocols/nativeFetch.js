@@ -20,6 +20,8 @@ const { sanitizeUrl, splitAndFilter } = require('../../../util/url');
 const originalFetch = global.fetch;
 
 let extraHttpHeadersToCapture;
+exports.spanName = 'node.http.client';
+
 let isActive = false;
 
 // This determines whether we need to apply a workaround for a bug in Node.js fetch implementation (or rather, the
@@ -99,7 +101,7 @@ function instrument() {
     return cls.ns.runAndReturn(() => {
       // NOTE: Check for parentSpan existence, because of allowRootExitSpan is being enabled
       const span = cls.startSpan({
-        spanName: 'node.http.client',
+        spanName: exports.spanName,
         kind: constants.EXIT,
         traceId: parentSpan?.t,
         parentSpanId: parentSpan?.s
