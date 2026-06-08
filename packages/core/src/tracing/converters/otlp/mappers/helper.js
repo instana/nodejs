@@ -7,6 +7,8 @@
 const { STATUS_CODES, SPAN_KINDS } = require('../constants');
 const instrRegistry = require('../../../instrumentationRegistry');
 
+// this is mapper helper
+// help map value
 // TBD
 const formatters = {
   http(data) {

@@ -4,7 +4,7 @@
 
 'use strict';
 
-const { extractMetaAttributes, extractResourceAttributes, extractSpanDataAttributes } = require('./transformers');
+const { extractMetaDataAttributes, extractResourceAttributes, extractSpanDataAttributes } = require('./transformers');
 
 const SCOPE = {
   name: '@instana/collector',
@@ -38,7 +38,7 @@ exports.convert = function convert(spans) {
 function convertSpanToOTLP(span) {
   try {
     return {
-      ...extractMetaAttributes(span),
+      ...extractMetaDataAttributes(span),
       attributes: extractSpanDataAttributes(span),
       resource: {
         attributes: extractResourceAttributes(span)

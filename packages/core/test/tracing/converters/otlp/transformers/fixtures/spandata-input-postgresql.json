@@ -1,0 +1,14 @@
+{
+  "n": "pg",
+  "t": "1111222233334444555566667777888",
+  "s": "aaabbbcccdddeeef",
+  "data": {
+    "pg": {
+      "stmt": "SELECT * FROM users WHERE id = $1",
+      "host": "postgres.example.com",
+      "port": 5432,
+      "user": "app_user",
+      "db": "production_db"
+    }
+  }
+}
