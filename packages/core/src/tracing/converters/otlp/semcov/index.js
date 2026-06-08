@@ -28,10 +28,12 @@ function mergeDeltas(base, delta) {
 
 /**
  * Exports complete lookups based on semantic version requirements
- * @param {string} version - '1.23' or 'latest'
+ * @param {string} [version] - '1.23' or 'latest'
  */
-function getLookupConfig(version = '1.23') {
-  if (version === '1.23') {
+function getLookupConfig(version) {
+  const targetVersion = version || '1.23';
+
+  if (targetVersion === '1.23') {
     return mergeDeltas(BASE_OTLP, v123Overrides);
   }
 

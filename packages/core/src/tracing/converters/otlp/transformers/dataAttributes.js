@@ -4,7 +4,7 @@
 
 'use strict';
 
-const MAPPINGS = require('../mappers/span-data-mapper');
+const MAPPINGS = require('../mappers/dataAttributes');
 const { formatOTLPValue, combineFields } = require('../util');
 
 /**

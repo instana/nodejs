@@ -4,7 +4,12 @@
 
 'use strict';
 
+// 1.41.0
+
 const LOOKUP_OVERRIDES = {
+  metadata: {
+    PARENT_ID: 'parentSpanContext.spanId' // Overwritten to reflect the modern nested path
+  },
   http: {
     REQUEST_METHOD: 'http.request.method', // Upgraded to modern namespace
     RESPONSE_STATUS: 'http.response.status_code', // Upgraded to modern namespace
