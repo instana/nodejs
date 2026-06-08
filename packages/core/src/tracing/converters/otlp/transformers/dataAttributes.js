@@ -8,37 +8,47 @@ const MAPPINGS = require('../mappers/dataAttributes');
 const { formatOTLPValue, combineFields } = require('../util');
 
 /**
- * Special handlers
+ * Special span handlers
  */
-const SPECIAL_HANDLERS = {
+const SPAN_HANDLERS = {
+  otel: extractOtelAttributes
+};
+
+/**
+ * Special data block handlers
+ */
+const DATA_HANDLERS = {
   peer: applyPeerMappings
 };
 
 /**
  * Entry point: extract OTLP attributes from Instana span
  */
-function extractSpanDataAttributes(instanaSpan) {
-  const dataBlock = instanaSpan?.data;
-
-  if (!dataBlock) {
+function extractDataAttributes(instanaSpan) {
+  if (!instanaSpan?.data) {
     return [];
   }
 
-  // OpenTelemetry bridge spans
-  if (instanaSpan.n === 'otel') {
-    // key: 'otel.operation' ignored for now
-    return Object.entries(dataBlock.tags || {}).map(([key, value]) => ({
-      key,
-      value: formatOTLPValue(value)
-    }));
+  const spanHandler = SPAN_HANDLERS[instanaSpan.n];
+
+  if (spanHandler) {
+    return spanHandler(instanaSpan.data);
   }
 
-  return Object.entries(dataBlock)
+  return Object.entries(instanaSpan.data)
     .filter(([key]) => key !== 'resource')
     .flatMap(([key, spanData]) => {
-      const handler = SPECIAL_HANDLERS[key];
+      const handler = DATA_HANDLERS[key];
       return handler ? handler(spanData) : applyMappingsForSpanType(key, spanData);
     });
+}
+
+function extractOtelAttributes(data) {
+  // key: 'otel.operation' ignored for now
+  return Object.entries(data?.tags || {}).map(([key, value]) => ({
+    key,
+    value: formatOTLPValue(value)
+  }));
 }
 
 /**
@@ -109,5 +119,5 @@ function applyMapping(mapping, spanData) {
 }
 
 module.exports = {
-  extractSpanDataAttributes
+  extractDataAttributes
 };

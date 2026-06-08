@@ -18,10 +18,10 @@
 
 const { extractMetaDataAttributes } = require('./metaDataAttributes');
 const { extractResourceAttributes } = require('./resourceAttributes');
-const { extractSpanDataAttributes } = require('./dataAttributes');
+const { extractDataAttributes } = require('./dataAttributes');
 
 module.exports = {
   extractMetaDataAttributes,
   extractResourceAttributes,
-  extractSpanDataAttributes
+  extractDataAttributes
 };

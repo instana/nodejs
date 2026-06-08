@@ -7,7 +7,7 @@
 const expect = require('chai').expect;
 const fs = require('fs');
 const path = require('path');
-const { extractSpanDataAttributes } = require('../../../../../src/tracing/converters/otlp/transformers/dataAttributes');
+const { extractDataAttributes } = require('../../../../../src/tracing/converters/otlp/transformers/dataAttributes');
 
 describe('tracing/converters/otlp/transformers/spanDataAttributes', () => {
   function loadFixture(filename) {
@@ -21,7 +21,7 @@ describe('tracing/converters/otlp/transformers/spanDataAttributes', () => {
         const input = loadFixture('./input/http.json');
         const expectedOutput = loadFixture('./output/dataAttributes/http.json');
 
-        const result = extractSpanDataAttributes(input);
+        const result = extractDataAttributes(input);
         expect(result).to.be.an('array');
         expect(result).to.have.lengthOf(expectedOutput.length);
 
@@ -36,7 +36,7 @@ describe('tracing/converters/otlp/transformers/spanDataAttributes', () => {
         const input = loadFixture('./input/kafka.json');
         const expectedOutput = loadFixture('./output/dataAttributes/kafka.json');
 
-        const result = extractSpanDataAttributes(input);
+        const result = extractDataAttributes(input);
 
         expect(result).to.be.an('array');
         expect(result.length).to.be.at.least(expectedOutput.length);
@@ -52,7 +52,7 @@ describe('tracing/converters/otlp/transformers/spanDataAttributes', () => {
       it('should transform MongoDB span data with peer from JSON fixture correctly', () => {
         const input = loadFixture('./input/mongodb.json');
         const expectedOutput = loadFixture('./output/dataAttributes/mongodb.json');
-        const result = extractSpanDataAttributes(input);
+        const result = extractDataAttributes(input);
 
         expect(result).to.be.an('array');
         expect(result).to.have.lengthOf(expectedOutput.length);
@@ -68,7 +68,7 @@ describe('tracing/converters/otlp/transformers/spanDataAttributes', () => {
         const input = loadFixture('./input/postgresql.json');
         const expectedOutput = loadFixture('./output/dataAttributes/postgresql.json');
 
-        const result = extractSpanDataAttributes(input);
+        const result = extractDataAttributes(input);
 
         expect(result).to.be.an('array');
         expect(result).to.have.lengthOf(expectedOutput.length);
@@ -84,7 +84,7 @@ describe('tracing/converters/otlp/transformers/spanDataAttributes', () => {
         const input = loadFixture('./input/otel.json');
         const expectedOutput = loadFixture('./output/dataAttributes/otel.json');
 
-        const result = extractSpanDataAttributes(input);
+        const result = extractDataAttributes(input);
         console.log(result);
         expect(result).to.be.an('array');
         expect(result).to.have.lengthOf(expectedOutput.length);

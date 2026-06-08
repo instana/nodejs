@@ -4,7 +4,7 @@
 
 'use strict';
 
-const { extractMetaDataAttributes, extractResourceAttributes, extractSpanDataAttributes } = require('./transformers');
+const { extractMetaDataAttributes, extractResourceAttributes, extractDataAttributes } = require('./transformers');
 const { isLogSpan } = require('./util');
 
 const SCOPE = {
@@ -56,7 +56,7 @@ function convertSpanToOTLP(span) {
   try {
     return {
       ...extractMetaDataAttributes(span),
-      attributes: extractSpanDataAttributes(span),
+      attributes: extractDataAttributes(span),
       resource: {
         attributes: extractResourceAttributes(span)
       }
