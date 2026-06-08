@@ -4,268 +4,266 @@
 
 'use strict';
 
-const { toUpperCase, combineHostPort } = require('../utils/value-transformers');
-const { OTLP } = require('./lookup');
+const { toUpperCase, combineHostPort } = require('../util');
+const { getLookupConfig } = require('../semcov');
+const OTLP = getLookupConfig();
 
-// INSTANA -> OTLP MAPPING
 const MAPPINGS = {
   http: [
-    { otlp: OTLP.http.REQUEST_METHOD, instanaKey: 'operation', transform: toUpperCase },
-    { otlp: OTLP.http.REQUEST_METHOD, instanaKey: 'method', transform: toUpperCase },
-    { otlp: OTLP.http.URL_PATH, instanaKey: 'endpoints' },
-    { otlp: OTLP.http.SERVER_ADDRESS, instanaKey: 'connection' },
-    { otlp: OTLP.http.URL_FULL, instanaKey: 'url' },
-    { otlp: OTLP.http.RESPONSE_STATUS, instanaKey: 'status' },
-    { otlp: OTLP.http.URL_QUERY, instanaKey: 'params' },
-    { otlp: OTLP.http.REQUEST_HEADER, instanaKey: 'header' },
-    { otlp: OTLP.http.URL_TEMPLATE, instanaKey: 'path_tpl' },
-    { otlp: OTLP.http.ERROR_TYPE, instanaKey: 'error' }
+    { otlp: OTLP.http.REQUEST_METHOD, instana: 'operation', transform: toUpperCase },
+    { otlp: OTLP.http.REQUEST_METHOD, instana: 'method', transform: toUpperCase },
+    { otlp: OTLP.http.URL_PATH, instana: 'endpoints' },
+    { otlp: OTLP.http.SERVER_ADDRESS, instana: 'connection' },
+    { otlp: OTLP.http.URL_FULL, instana: 'url' },
+    { otlp: OTLP.http.RESPONSE_STATUS, instana: 'status' },
+    { otlp: OTLP.http.URL_QUERY, instana: 'params' },
+    { otlp: OTLP.http.REQUEST_HEADER, instana: 'header' },
+    { otlp: OTLP.http.URL_TEMPLATE, instana: 'path_tpl' },
+    { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
   ],
 
   kafka: [
     { otlp: OTLP.messaging.SYSTEM, value: 'kafka' },
-    { otlp: OTLP.messaging.DESTINATION_NAME, instanaKey: 'endpoints' },
-    { otlp: OTLP.messaging.DESTINATION_NAME, instanaKey: 'service' },
-    { otlp: OTLP.messaging.OPERATION_TYPE, instanaKey: 'operation' },
-    { otlp: OTLP.messaging.OPERATION_TYPE, instanaKey: 'access' },
-    { otlp: OTLP.http.ERROR_TYPE, instanaKey: 'error' }
+    { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'endpoints' },
+    { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'service' },
+    { otlp: OTLP.messaging.OPERATION_TYPE, instana: 'operation' },
+    { otlp: OTLP.messaging.OPERATION_TYPE, instana: 'access' },
+    { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
   ],
 
   rabbitmq: [
     { otlp: OTLP.messaging.SYSTEM, value: 'rabbitmq' },
-    { otlp: OTLP.messaging.OPERATION_TYPE, instanaKey: 'sort' },
-    { otlp: OTLP.messaging.SERVER_ADDRESS, instanaKey: 'address' },
-    { otlp: OTLP.messaging.rabbitmq.ROUTING_KEY, instanaKey: 'exchange' },
-    { otlp: OTLP.messaging.rabbitmq.MESSAGE_ROUTING_KEY, instanaKey: 'key' }
+    { otlp: OTLP.messaging.OPERATION_TYPE, instana: 'sort' },
+    { otlp: OTLP.messaging.SERVER_ADDRESS, instana: 'address' },
+    { otlp: OTLP.messaging.rabbitmq.ROUTING_KEY, instana: 'exchange' },
+    { otlp: OTLP.messaging.rabbitmq.MESSAGE_ROUTING_KEY, instana: 'key' }
   ],
 
   nats: [
     { otlp: OTLP.messaging.SYSTEM, value: 'nats' },
-    { otlp: OTLP.messaging.OPERATION_TYPE, instanaKey: 'sort' },
-    { otlp: OTLP.messaging.SERVER_ADDRESS, instanaKey: 'address' },
-    { otlp: OTLP.messaging.DESTINATION_NAME, instanaKey: 'subject' },
-    { otlp: OTLP.http.ERROR_TYPE, instanaKey: 'error' }
+    { otlp: OTLP.messaging.OPERATION_TYPE, instana: 'sort' },
+    { otlp: OTLP.messaging.SERVER_ADDRESS, instana: 'address' },
+    { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'subject' },
+    { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
   ],
 
   bull: [
     { otlp: OTLP.messaging.SYSTEM, value: 'bull' },
-    { otlp: OTLP.messaging.OPERATION_TYPE, instanaKey: 'sort' },
-    { otlp: OTLP.messaging.DESTINATION_NAME, instanaKey: 'queue' },
-    { otlp: OTLP.messaging.MESSAGE_ID, instanaKey: 'messageId' },
-    { otlp: OTLP.http.ERROR_TYPE, instanaKey: 'error' }
+    { otlp: OTLP.messaging.OPERATION_TYPE, instana: 'sort' },
+    { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'queue' },
+    { otlp: OTLP.messaging.MESSAGE_ID, instana: 'messageId' },
+    { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
   ],
 
   sqs: [
     { otlp: OTLP.messaging.SYSTEM, value: 'aws.sqs' },
-    { otlp: OTLP.messaging.OPERATION_TYPE, instanaKey: 'sort' },
-    { otlp: OTLP.messaging.OPERATION_TYPE, instanaKey: 'type' },
-    { otlp: OTLP.messaging.CONSUMER_GROUP, instanaKey: 'group' },
-    { otlp: OTLP.messaging.DESTINATION_NAME, instanaKey: 'queue' },
-    { otlp: OTLP.messaging.MESSAGE_BODY_SIZE, instanaKey: 'size' },
-    { otlp: OTLP.messaging.MESSAGE_ID, instanaKey: 'messageId' },
-    { otlp: OTLP.http.ERROR_TYPE, instanaKey: 'error' }
+    { otlp: OTLP.messaging.OPERATION_TYPE, instana: 'sort' },
+    { otlp: OTLP.messaging.OPERATION_TYPE, instana: 'type' },
+    { otlp: OTLP.messaging.CONSUMER_GROUP, instana: 'group' },
+    { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'queue' },
+    { otlp: OTLP.messaging.MESSAGE_BODY_SIZE, instana: 'size' },
+    { otlp: OTLP.messaging.MESSAGE_ID, instana: 'messageId' },
+    { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
   ],
 
   sns: [
     { otlp: OTLP.messaging.SYSTEM, value: 'aws.sns' },
-    { otlp: OTLP.messaging.DESTINATION_NAME, instanaKey: 'topic' },
-    { otlp: OTLP.messaging.DESTINATION_NAME, instanaKey: 'subject' },
-    { otlp: OTLP.messaging.DESTINATION_NAME, instanaKey: 'phone' },
-    { otlp: OTLP.messaging.DESTINATION_NAME, instanaKey: 'target' },
-    { otlp: OTLP.http.ERROR_TYPE, instanaKey: 'error' }
+    { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'topic' },
+    { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'subject' },
+    { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'phone' },
+    { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'target' },
+    { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
   ],
 
   gcps: [
     { otlp: OTLP.messaging.SYSTEM, value: 'gcp.pubsub' },
-    { otlp: OTLP.messaging.OPERATION_TYPE, instanaKey: 'op' },
-    { otlp: OTLP.messaging.gcp.PROJECT_ID, instanaKey: 'projid' },
-    { otlp: OTLP.messaging.DESTINATION_NAME, instanaKey: 'top' },
-    { otlp: OTLP.messaging.DESTINATION_NAME, instanaKey: 'sub' },
-    { otlp: OTLP.messaging.MESSAGE_ID, instanaKey: 'messageId' },
-    { otlp: OTLP.http.ERROR_TYPE, instanaKey: 'error' }
+    { otlp: OTLP.messaging.OPERATION_TYPE, instana: 'op' },
+    { otlp: OTLP.messaging.gcp.PROJECT_ID, instana: 'projid' },
+    { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'top' },
+    { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'sub' },
+    { otlp: OTLP.messaging.MESSAGE_ID, instana: 'messageId' },
+    { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
   ],
 
   pg: [
     { otlp: OTLP.database.SYSTEM, value: 'postgresql' },
-    { otlp: OTLP.database.STATEMENT, instanaKey: 'stmt' },
+    { otlp: OTLP.database.STATEMENT, instana: 'stmt' },
     {
       otlp: OTLP.database.SERVER_ADDRESS,
       transform: combineHostPort,
-      instanaKeys: ['host', 'port']
+      instanas: ['host', 'port']
     },
-    { otlp: OTLP.database.PEER_NAME, instanaKey: 'host' },
-    { otlp: OTLP.database.PEER_PORT, instanaKey: 'port' },
-    { otlp: OTLP.database.USER, instanaKey: 'user' },
-    { otlp: OTLP.database.NAME, instanaKey: 'db' },
-    { otlp: OTLP.http.ERROR_TYPE, instanaKey: 'error' }
+    { otlp: OTLP.database.PEER_NAME, instana: 'host' },
+    { otlp: OTLP.database.PEER_PORT, instana: 'port' },
+    { otlp: OTLP.database.USER, instana: 'user' },
+    { otlp: OTLP.database.NAME, instana: 'db' },
+    { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
   ],
 
   mysql: [
     { otlp: OTLP.database.SYSTEM, value: 'mysql' },
-    { otlp: OTLP.database.STATEMENT, instanaKey: 'stmt' },
-    { otlp: OTLP.database.PEER_NAME, instanaKey: 'host' },
-    { otlp: OTLP.database.PEER_PORT, instanaKey: 'port' },
-    { otlp: OTLP.database.USER, instanaKey: 'user' },
-    { otlp: OTLP.database.NAME, instanaKey: 'db' },
-    { otlp: OTLP.http.ERROR_TYPE, instanaKey: 'error' }
+    { otlp: OTLP.database.STATEMENT, instana: 'stmt' },
+    { otlp: OTLP.database.PEER_NAME, instana: 'host' },
+    { otlp: OTLP.database.PEER_PORT, instana: 'port' },
+    { otlp: OTLP.database.USER, instana: 'user' },
+    { otlp: OTLP.database.NAME, instana: 'db' },
+    { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
   ],
 
   mssql: [
     { otlp: OTLP.database.SYSTEM, value: 'mssql' },
-    { otlp: OTLP.database.STATEMENT, instanaKey: 'stmt' },
-    { otlp: OTLP.database.PEER_NAME, instanaKey: 'host' },
-    { otlp: OTLP.database.PEER_PORT, instanaKey: 'port' },
-    { otlp: OTLP.database.USER, instanaKey: 'user' },
-    { otlp: OTLP.database.NAME, instanaKey: 'db' },
-    { otlp: OTLP.http.ERROR_TYPE, instanaKey: 'error' }
+    { otlp: OTLP.database.STATEMENT, instana: 'stmt' },
+    { otlp: OTLP.database.PEER_NAME, instana: 'host' },
+    { otlp: OTLP.database.PEER_PORT, instana: 'port' },
+    { otlp: OTLP.database.USER, instana: 'user' },
+    { otlp: OTLP.database.NAME, instana: 'db' },
+    { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
   ],
 
   mongo: [
     { otlp: OTLP.database.SYSTEM, value: 'mongodb' },
-    { otlp: OTLP.database.OPERATION, instanaKey: 'command' },
-    { otlp: OTLP.database.SERVER_ADDRESS, instanaKey: 'service' },
-    { otlp: OTLP.database.NAMESPACE, instanaKey: 'namespace' },
-    { otlp: OTLP.database.STATEMENT, instanaKey: 'json' },
-    { otlp: OTLP.database.STATEMENT, instanaKey: 'filter' },
-    { otlp: OTLP.http.ERROR_TYPE, instanaKey: 'error' }
+    { otlp: OTLP.database.OPERATION, instana: 'command' },
+    { otlp: OTLP.database.SERVER_ADDRESS, instana: 'service' },
+    { otlp: OTLP.database.NAMESPACE, instana: 'namespace' },
+    { otlp: OTLP.database.STATEMENT, instana: 'json' },
+    { otlp: OTLP.database.STATEMENT, instana: 'filter' },
+    { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
   ],
 
   peer: [
-    { otlp: OTLP.network.PEER_NAME, instanaKey: 'hostname' },
-    { otlp: OTLP.network.PEER_PORT, instanaKey: 'port' }
+    { otlp: OTLP.network.PEER_NAME, instana: 'hostname' },
+    { otlp: OTLP.network.PEER_PORT, instana: 'port' }
   ],
 
   redis: [
     { otlp: OTLP.database.SYSTEM, value: 'redis' },
-    { otlp: OTLP.database.SERVER_ADDRESS, instanaKey: 'connection' },
-    { otlp: OTLP.database.OPERATION, instanaKey: 'operation' },
-    { otlp: OTLP.http.ERROR_TYPE, instanaKey: 'error' }
+    { otlp: OTLP.database.SERVER_ADDRESS, instana: 'connection' },
+    { otlp: OTLP.database.OPERATION, instana: 'operation' },
+    { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
     // subCommands — no OTLP key
   ],
 
   couchbase: [
     { otlp: OTLP.database.SYSTEM, value: 'couchbase' },
-    { otlp: OTLP.database.PEER_NAME, instanaKey: 'hostname' },
-    { otlp: OTLP.database.COLLECTION, instanaKey: 'bucket' },
+    { otlp: OTLP.database.PEER_NAME, instana: 'hostname' },
+    { otlp: OTLP.database.COLLECTION, instana: 'bucket' },
     // type — no OTLP key
-    { otlp: OTLP.database.STATEMENT, instanaKey: 'sql' },
-    { otlp: OTLP.http.ERROR_TYPE, instanaKey: 'error' }
+    { otlp: OTLP.database.STATEMENT, instana: 'sql' },
+    { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
   ],
 
   elasticsearch: [
     { otlp: OTLP.database.SYSTEM, value: 'elasticsearch' },
-    { otlp: OTLP.database.OPERATION, instanaKey: 'action' },
-    { otlp: OTLP.database.SERVER_ADDRESS, instanaKey: 'cluster' },
-    { otlp: OTLP.database.SERVER_ADDRESS, instanaKey: 'endpoint' },
-    { otlp: OTLP.database.PEER_NAME, instanaKey: 'address' },
-    { otlp: OTLP.database.PEER_PORT, instanaKey: 'port' },
-    { otlp: OTLP.database.COLLECTION, instanaKey: 'index' },
-    { otlp: OTLP.database.NAMESPACE, instanaKey: 'type' },
-    { otlp: OTLP.database.NAME, instanaKey: 'id' },
-    { otlp: OTLP.database.STATEMENT, instanaKey: 'query' },
+    { otlp: OTLP.database.OPERATION, instana: 'action' },
+    { otlp: OTLP.database.SERVER_ADDRESS, instana: 'cluster' },
+    { otlp: OTLP.database.SERVER_ADDRESS, instana: 'endpoint' },
+    { otlp: OTLP.database.PEER_NAME, instana: 'address' },
+    { otlp: OTLP.database.PEER_PORT, instana: 'port' },
+    { otlp: OTLP.database.COLLECTION, instana: 'index' },
+    { otlp: OTLP.database.NAMESPACE, instana: 'type' },
+    { otlp: OTLP.database.NAME, instana: 'id' },
+    { otlp: OTLP.database.STATEMENT, instana: 'query' },
     // hits — no OTLP key
-    { otlp: OTLP.http.ERROR_TYPE, instanaKey: 'error' }
+    { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
   ],
 
   dynamodb: [
     { otlp: OTLP.database.SYSTEM, value: 'dynamodb' },
-    { otlp: OTLP.database.OPERATION, instanaKey: 'operation' },
-    { otlp: OTLP.cloud.REGION, instanaKey: 'region' },
-    { otlp: OTLP.database.NAME, instanaKey: 'table' },
-    { otlp: OTLP.http.ERROR_TYPE, instanaKey: 'error' }
+    { otlp: OTLP.database.OPERATION, instana: 'operation' },
+    { otlp: OTLP.cloud.REGION, instana: 'region' },
+    { otlp: OTLP.database.NAME, instana: 'table' },
+    { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
   ],
 
   db2: [
     { otlp: OTLP.database.SYSTEM, value: 'db2' },
-    { otlp: OTLP.database.STATEMENT, instanaKey: 'stmt' },
-    { otlp: OTLP.database.CONNECTION_STRING, instanaKey: 'dsn' },
-    { otlp: OTLP.http.ERROR_TYPE, instanaKey: 'error' }
+    { otlp: OTLP.database.STATEMENT, instana: 'stmt' },
+    { otlp: OTLP.database.CONNECTION_STRING, instana: 'dsn' },
+    { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
   ],
 
   memcached: [
     { otlp: OTLP.database.SYSTEM, value: 'memcached' },
-    { otlp: OTLP.database.STATEMENT, instanaKey: 'key' },
-    { otlp: OTLP.database.SERVER_ADDRESS, instanaKey: 'connection' },
-    { otlp: OTLP.database.OPERATION, instanaKey: 'operation' },
-    { otlp: OTLP.http.ERROR_TYPE, instanaKey: 'error' }
+    { otlp: OTLP.database.STATEMENT, instana: 'key' },
+    { otlp: OTLP.database.SERVER_ADDRESS, instana: 'connection' },
+    { otlp: OTLP.database.OPERATION, instana: 'operation' },
+    { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
   ],
 
   prisma: [
-    { otlp: OTLP.database.SYSTEM, instanaKey: 'provider', value: 'other_sql' },
-    { otlp: OTLP.database.COLLECTION, instanaKey: 'model' },
-    { otlp: OTLP.database.OPERATION, instanaKey: 'action' },
-    { otlp: OTLP.database.CONNECTION_STRING, instanaKey: 'url' },
-    { otlp: OTLP.http.ERROR_TYPE, instanaKey: 'error' }
+    { otlp: OTLP.database.SYSTEM, instana: 'provider', value: 'other_sql' },
+    { otlp: OTLP.database.COLLECTION, instana: 'model' },
+    { otlp: OTLP.database.OPERATION, instana: 'action' },
+    { otlp: OTLP.database.CONNECTION_STRING, instana: 'url' },
+    { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
   ],
 
   rpc: [
-    { otlp: OTLP.rpc.METHOD, instanaKey: 'call' },
-    { otlp: OTLP.rpc.SYSTEM, instanaKey: 'flavor' },
-    { otlp: OTLP.network.PEER_NAME, instanaKey: 'host' },
-    { otlp: OTLP.network.PEER_PORT, instanaKey: 'port' },
-    { otlp: OTLP.rpc.GRPC_ERROR, instanaKey: 'error' }
+    { otlp: OTLP.rpc.METHOD, instana: 'call' },
+    { otlp: OTLP.rpc.SYSTEM, instana: 'flavor' },
+    { otlp: OTLP.network.PEER_NAME, instana: 'host' },
+    { otlp: OTLP.network.PEER_PORT, instana: 'port' },
+    { otlp: OTLP.rpc.GRPC_ERROR, instana: 'error' }
   ],
 
   graphql: [
-    { otlp: OTLP.graphql.OPERATION_NAME, instanaKey: 'operationName' },
-    { otlp: OTLP.graphql.OPERATION_TYPE, instanaKey: 'operationType' }
+    { otlp: OTLP.graphql.OPERATION_NAME, instana: 'operationName' },
+    { otlp: OTLP.graphql.OPERATION_TYPE, instana: 'operationType' }
     // fields — no OTLP key
     // args — no OTLP key
     // errors — no OTLP key
   ],
 
   log: [
-    { otlp: OTLP.log.BODY, instanaKey: 'message' },
-    { otlp: OTLP.log.SEVERITY, instanaKey: 'level' }
+    { otlp: OTLP.log.BODY, instana: 'message' },
+    { otlp: OTLP.log.SEVERITY, instana: 'level' }
   ],
 
   gcs: [
-    { otlp: OTLP.database.OPERATION, instanaKey: 'op' },
-    { otlp: OTLP.cloud.gcp.STORAGE_BUCKET, instanaKey: 'bucket' },
-    { otlp: OTLP.cloud.gcp.STORAGE_OBJECT, instanaKey: 'object' },
-    { otlp: OTLP.cloud.gcp.PROJECT_ID, instanaKey: 'projectId' },
+    { otlp: OTLP.database.OPERATION, instana: 'op' },
+    { otlp: OTLP.cloud.gcp.STORAGE_BUCKET, instana: 'bucket' },
+    { otlp: OTLP.cloud.gcp.STORAGE_OBJECT, instana: 'object' },
+    { otlp: OTLP.cloud.gcp.PROJECT_ID, instana: 'projectId' },
     // accessId — no OTLP key
-    { otlp: OTLP.cloud.gcp.STORAGE_SOURCE_BUCKET, instanaKey: 'sourceBucket' },
-    { otlp: OTLP.cloud.gcp.STORAGE_SOURCE_OBJECT, instanaKey: 'sourceObject' },
-    { otlp: OTLP.cloud.gcp.STORAGE_DESTINATION_BUCKET, instanaKey: 'destinationBucket' },
-    { otlp: OTLP.cloud.gcp.STORAGE_DESTINATION_OBJECT, instanaKey: 'destinationObject' },
-    { otlp: OTLP.http.ERROR_TYPE, instanaKey: 'error' }
+    { otlp: OTLP.cloud.gcp.STORAGE_SOURCE_BUCKET, instana: 'sourceBucket' },
+    { otlp: OTLP.cloud.gcp.STORAGE_SOURCE_OBJECT, instana: 'sourceObject' },
+    { otlp: OTLP.cloud.gcp.STORAGE_DESTINATION_BUCKET, instana: 'destinationBucket' },
+    { otlp: OTLP.cloud.gcp.STORAGE_DESTINATION_OBJECT, instana: 'destinationObject' },
+    { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
   ],
 
   s3: [
-    { otlp: OTLP.database.OPERATION, instanaKey: 'op' },
-    { otlp: OTLP.cloud.aws.S3_BUCKET, instanaKey: 'bucket' },
-    { otlp: OTLP.cloud.aws.S3_KEY, instanaKey: 'key' },
-    { otlp: OTLP.http.ERROR_TYPE, instanaKey: 'error' }
+    { otlp: OTLP.database.OPERATION, instana: 'op' },
+    { otlp: OTLP.cloud.aws.S3_BUCKET, instana: 'bucket' },
+    { otlp: OTLP.cloud.aws.S3_KEY, instana: 'key' },
+    { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
   ],
 
   kinesis: [
     { otlp: OTLP.messaging.SYSTEM, value: 'aws.kinesis' },
-    { otlp: OTLP.database.OPERATION, instanaKey: 'op' },
-    { otlp: OTLP.cloud.aws.KINESIS_STREAM, instanaKey: 'stream' },
-    { otlp: OTLP.cloud.aws.KINESIS_EXPLICIT_HASH_KEY, instanaKey: 'record' },
-    { otlp: OTLP.cloud.aws.KINESIS_SHARD_ITERATOR_TYPE, instanaKey: 'shardType' },
-    { otlp: OTLP.cloud.aws.KINESIS_STARTING_SEQUENCE_NUMBER, instanaKey: 'startSequenceNumber' },
-    { otlp: OTLP.cloud.aws.KINESIS_SHARD, instanaKey: 'shard' },
-    { otlp: OTLP.http.ERROR_TYPE, instanaKey: 'error' }
+    { otlp: OTLP.database.OPERATION, instana: 'op' },
+    { otlp: OTLP.cloud.aws.KINESIS_STREAM, instana: 'stream' },
+    { otlp: OTLP.cloud.aws.KINESIS_EXPLICIT_HASH_KEY, instana: 'record' },
+    { otlp: OTLP.cloud.aws.KINESIS_SHARD_ITERATOR_TYPE, instana: 'shardType' },
+    { otlp: OTLP.cloud.aws.KINESIS_STARTING_SEQUENCE_NUMBER, instana: 'startSequenceNumber' },
+    { otlp: OTLP.cloud.aws.KINESIS_SHARD, instana: 'shard' },
+    { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
   ],
 
   azstorage: [
     { otlp: OTLP.cloud.PROVIDER, value: 'azure' },
-    { otlp: OTLP.database.OPERATION, instanaKey: 'op' },
-    { otlp: OTLP.cloud.azure.STORAGE_ACCOUNT, instanaKey: 'accountName' },
-    { otlp: OTLP.cloud.azure.CONTAINER, instanaKey: 'containerName' },
-    { otlp: OTLP.cloud.azure.BLOB, instanaKey: 'blobName' },
-    { otlp: OTLP.http.ERROR_TYPE, instanaKey: 'error' }
+    { otlp: OTLP.database.OPERATION, instana: 'op' },
+    { otlp: OTLP.cloud.azure.STORAGE_ACCOUNT, instana: 'accountName' },
+    { otlp: OTLP.cloud.azure.CONTAINER, instana: 'containerName' },
+    { otlp: OTLP.cloud.azure.BLOB, instana: 'blobName' },
+    { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
   ],
 
   'aws.lambda.invoke': [
-    { otlp: OTLP.faas.NAME, instanaKey: 'function' },
-    { otlp: OTLP.faas.INVOCATION_TYPE, instanaKey: 'type' },
-    { otlp: OTLP.http.ERROR_TYPE, instanaKey: 'error' }
+    { otlp: OTLP.faas.NAME, instana: 'function' },
+    { otlp: OTLP.faas.INVOCATION_TYPE, instana: 'type' },
+    { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
   ]
 };
 
-module.exports = {
-  MAPPINGS
-};
+module.exports = MAPPINGS;

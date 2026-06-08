@@ -1,0 +1,12 @@
+{
+  "traceId": "1234567890abcdef1234567890abcdef",
+  "spanId": "abcdef1234567890",
+  "parentSpanId": "fedcba0987654321",
+  "kind": 2,
+  "duration": "150000000",
+  "timestamp": "1609459200000000000",
+  "name": "GET /api/users/123",
+  "status": {
+    "code": 1
+  }
+}

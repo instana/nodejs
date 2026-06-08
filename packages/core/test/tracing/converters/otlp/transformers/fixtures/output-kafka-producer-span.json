@@ -1,0 +1,12 @@
+{
+  "traceId": "fedcba0987654321fedcba0987654321",
+  "spanId": "123abc456def7890",
+  "parentSpanId": "0999888777666555",
+  "kind": 1,
+  "timestamp": "1609459300000000000",
+  "duration": "50000000",
+  "name": "produce orders-topic",
+  "status": {
+    "code": 1
+  }
+}

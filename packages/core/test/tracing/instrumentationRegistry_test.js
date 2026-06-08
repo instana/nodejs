@@ -6,7 +6,7 @@
 
 const expect = require('chai').expect;
 
-describe.only('tracing/instrumentationRegistry', () => {
+describe('tracing/instrumentationRegistry', () => {
   let registry;
 
   afterEach(() => {
