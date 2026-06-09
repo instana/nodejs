@@ -6,10 +6,21 @@
 
 const { extractSpanMetadata, extractResourceAttributes, extractSpanAttributes } = require('./transformers');
 const { isLogSpan } = require('./util');
+const { INSTRUMENTATION_SCOPE_NAME } = require('./constants');
+
+/** @type {import('../../../core').GenericLogger} */
+let logger;
 
 const SCOPE = {
-  name: '@instana/collector',
+  name: INSTRUMENTATION_SCOPE_NAME,
   version: '3.0.0'
+};
+
+/**
+ * @param {Object} config - Configuration object
+ */
+exports.init = function init(config) {
+  logger = config.logger;
 };
 
 /**
@@ -59,7 +70,14 @@ function mapSpanToOTLP(span) {
         attributes: extractResourceAttributes(span)
       }
     };
-  } catch {
+  } catch (error) {
+    if (logger) {
+      logger.debug(`Failed to convert span to OTLP format: ${error.message}`, {
+        spanId: span?.s,
+        traceId: span?.t,
+        spanName: span?.n
+      });
+    }
     return null;
   }
 }
