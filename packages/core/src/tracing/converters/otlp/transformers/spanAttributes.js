@@ -4,7 +4,7 @@
 
 'use strict';
 
-const MAPPINGS = require('../mappers/dataAttributes');
+const MAPPINGS = require('../mappers/spanAttributes');
 const { formatOTLPValue, combineFields } = require('../util');
 
 /**
@@ -24,7 +24,7 @@ const DATA_HANDLERS = {
 /**
  * Entry point: extract OTLP attributes from Instana span
  */
-function extractDataAttributes(instanaSpan) {
+function extractSpanAttributes(instanaSpan) {
   if (!instanaSpan?.data) {
     return [];
   }
@@ -119,5 +119,5 @@ function applyMapping(mapping, spanData) {
 }
 
 module.exports = {
-  extractDataAttributes
+  extractSpanAttributes
 };
