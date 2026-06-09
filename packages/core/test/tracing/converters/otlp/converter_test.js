@@ -36,9 +36,6 @@ describe('tracing/converters/otlp', () => {
     return JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
   }
 
-  // ============================================================================
-  // CONVERTER TESTS
-  // ============================================================================
   describe('converter', () => {
     describe('basic conversion', () => {
       it('should convert single HTTP span correctly', () => {
@@ -72,7 +69,7 @@ describe('tracing/converters/otlp', () => {
 
     describe('error handling', () => {
       it('should handle spans with missing required fields gracefully', () => {
-        const invalidSpan = { n: 'test' }; // Missing trace ID, span ID, etc.
+        const invalidSpan = { n: 'test' };
         const result = convert([invalidSpan]);
 
         expect(result).to.have.property('resourceSpans');
@@ -123,9 +120,6 @@ describe('tracing/converters/otlp', () => {
     });
   });
 
-  // ============================================================================
-  // TRANSFORMER TESTS
-  // ============================================================================
   describe('transformers', () => {
     describe('spanMetaData', () => {
       it('should extract HTTP server span metadata correctly', () => {
@@ -197,7 +191,6 @@ describe('tracing/converters/otlp', () => {
         const expectedOutput = loadTransformerOutputFixture('dataAttributes/kafka.json');
 
         const result = extractSpanAttributes(input);
-        console.log(result);
 
         expect(result).to.be.an('array');
         expect(result.length).to.be.at.least(expectedOutput.length);
@@ -318,9 +311,6 @@ describe('tracing/converters/otlp', () => {
     });
   });
 
-  // ============================================================================
-  // MAPPER TESTS
-  // ============================================================================
   describe('mappers', () => {
     describe('http', () => {
       it('should map HTTP method to uppercase', () => {
