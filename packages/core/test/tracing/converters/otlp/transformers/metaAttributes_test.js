@@ -5,9 +5,7 @@
 'use strict';
 
 const expect = require('chai').expect;
-const {
-  extractMetaDataAttributes
-} = require('../../../../../src/tracing/converters/otlp/transformers/metaDataAttributes');
+const { extractSpanMetadata } = require('../../../../../src/tracing/converters/otlp/transformers/spanMetaData');
 
 const fs = require('fs');
 const path = require('path');
@@ -23,7 +21,7 @@ describe.only('tracing/converters/otlp/transformers/metaAttributes', () => {
       const input = loadFixture('./input/http.json');
       const expectedOutput = loadFixture('./output/metaData/http.json');
 
-      const result = extractMetaDataAttributes(input);
+      const result = extractSpanMetadata(input);
 
       expect(result).to.deep.equal(expectedOutput);
     });
@@ -32,7 +30,7 @@ describe.only('tracing/converters/otlp/transformers/metaAttributes', () => {
       const input = loadFixture('./input/kafka.json');
       const expectedOutput = loadFixture('./output/metaData/kafka.json');
 
-      const result = extractMetaDataAttributes(input);
+      const result = extractSpanMetadata(input);
 
       expect(result).to.deep.equal(expectedOutput);
     });
@@ -41,7 +39,7 @@ describe.only('tracing/converters/otlp/transformers/metaAttributes', () => {
       const input = loadFixture('./input/mongodb.json');
       const expectedOutput = loadFixture('./output/metaData/mongodb.json');
 
-      const result = extractMetaDataAttributes(input);
+      const result = extractSpanMetadata(input);
 
       expect(result).to.deep.equal(expectedOutput);
     });
@@ -50,7 +48,7 @@ describe.only('tracing/converters/otlp/transformers/metaAttributes', () => {
       const input = loadFixture('./input/otel.json');
       const expectedOutput = loadFixture('./output/metaData/otel.json');
 
-      const result = extractMetaDataAttributes(input);
+      const result = extractSpanMetadata(input);
 
       expect(result).to.deep.equal(expectedOutput);
     });
