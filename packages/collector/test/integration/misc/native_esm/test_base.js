@@ -4,16 +4,20 @@
 
 'use strict';
 
+const semver = require('semver');
 const expect = require('chai').expect;
 const config = require('@_local/core/test/config');
 const { retry, verifyEntrySpan } = require('@_local/core/test/test_util');
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 const globalAgent = require('@_local/collector/test/globalAgent');
 const constants = require('@_local/core').tracing.constants;
+const { supportedVersion } = require('@instana/core').tracing;
 const path = require('path');
 
 module.exports = function () {
-  describe('tracing/native-esm modules', function () {
+  const supportsRequireESM = semver.gte(process.versions.node, '20.19.0');
+  const mochaSuiteFn = supportedVersion(process.versions.node) && supportsRequireESM ? describe : describe.skip;
+  mochaSuiteFn('tracing/native-esm modules', function () {
     this.timeout(config.getTestTimeout());
 
     globalAgent.setUpCleanUpHooks();
