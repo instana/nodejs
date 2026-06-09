@@ -73,7 +73,9 @@
                     "intValue": 200
                   }
                 }
-              ]
+              ],
+              "events": [],
+              "links": []
             }
           ]
         }

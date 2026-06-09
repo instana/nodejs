@@ -8,5 +8,7 @@
   "name": "produce orders-topic",
   "status": {
     "code": 1
-  }
+  },
+  "events": [],
+  "links": []
 }

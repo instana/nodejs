@@ -28,7 +28,11 @@ const DIRECT_MAPPINGS = {
 
 const COMPUTED_MAPPINGS = [
   { otlp: OTLP.metadata.NAME, compute: generateSpanName },
-  { otlp: OTLP.metadata.STATUS, compute: generateSpanStatus }
+  { otlp: OTLP.metadata.STATUS, compute: generateSpanStatus },
+  // Instana spans do not currently expose event or link data.
+  // Export empty arrays to remain OTLP-compliant.
+  { otlp: OTLP.metadata.EVENTS, compute: () => [] },
+  { otlp: OTLP.metadata.LINKS, compute: () => [] }
 ];
 
 module.exports = {

@@ -9,5 +9,7 @@
   "status": {
     "code": 2,
     "message": "mongo operation failed"
-  }
+  },
+  "events": [],
+  "links": []
 }
