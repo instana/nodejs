@@ -17,7 +17,6 @@ const cls = require('../../cls');
 let isActive = false;
 let clientHasBeenInstrumented = false;
 let logger;
-exports.spanName = 'nats-streaming';
 
 exports.init = function init(config) {
   logger = config.logger;
@@ -69,7 +68,7 @@ function instrumentedPublish(ctx, originalPublish, originalArgs) {
 
   return cls.ns.runAndReturn(() => {
     const span = cls.startSpan({
-      spanName: exports.spanName,
+      spanName: 'nats.streaming',
       kind: constants.EXIT
     });
     span.ts = Date.now();
@@ -155,7 +154,7 @@ function captureMessageSpan(ctx, originalEmit, originalArgs, subject) {
       // Unexpected: There was no raw nats entry, in fact, there was no active span at all. We can still trace the
       // current nats.streaming entry.
       span = cls.startSpan({
-        spanName: exports.spanName,
+        spanName: 'nats.streaming',
         kind: constants.ENTRY
       });
     }

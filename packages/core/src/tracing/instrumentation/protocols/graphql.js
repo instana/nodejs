@@ -13,7 +13,6 @@ const cls = require('../../cls');
 
 let logger;
 let isActive = false;
-exports.spanName = 'graphql.server';
 
 const queryOperationType = 'query';
 const mutationOperationType = 'mutation';
@@ -139,7 +138,7 @@ function traceQueryOrMutation(
       // If there hasn't been an entry span that we repurposed into a graphql.server entry span, we need to start a new
       // root entry span here.
       span = cls.startSpan({
-        spanName: exports.spanName,
+        spanName: 'graphql.server',
         kind: constants.ENTRY
       });
     }
