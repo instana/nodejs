@@ -8,5 +8,7 @@
   "name": "GET /api/users/123",
   "status": {
     "code": 1
-  }
+  },
+  "events": [],
+  "links": []
 }

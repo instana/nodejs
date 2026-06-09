@@ -22,7 +22,9 @@
               "duration": "1000000",
               "name": "otel",
               "status": { "code": 1 },
-              "attributes": [{ "key": "name", "value": { "stringValue": "fs writeFile" } }]
+              "attributes": [{ "key": "name", "value": { "stringValue": "fs writeFile" } }],
+              "events": [],
+              "links": []
             }
           ]
         }
