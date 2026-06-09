@@ -39,7 +39,7 @@ function extractSpanAttributes(instanaSpan) {
     .filter(([key]) => key !== 'resource')
     .flatMap(([key, spanData]) => {
       const handler = DATA_HANDLERS[key];
-      return handler ? handler(spanData) : applyMappingsForSpanType(key, spanData);
+      return handler ? handler(spanData) : applyAttributeMapping(key, spanData);
     });
 }
 
@@ -74,7 +74,7 @@ function applyPeerMappings(peerData) {
 /**
  * Apply all mappings for a given span type
  */
-function applyMappingsForSpanType(spanType, spanData) {
+function applyAttributeMapping(spanType, spanData) {
   const mappings = MAPPINGS?.[spanType];
 
   if (!Array.isArray(mappings)) {
@@ -90,32 +90,32 @@ function applyMappingsForSpanType(spanType, spanData) {
 function applyMapping(mapping, spanData) {
   let value;
 
-  if (mapping.value !== undefined && !mapping.instana && !mapping.instanaKeys) {
-    value = mapping.value;
-  } else if (Array.isArray(mapping.instanaKeys)) {
-    value = mapping.transform
-      ? mapping.transform(spanData, mapping.instanaKeys)
-      : combineFields(spanData, mapping.instanaKeys);
-  } else if (mapping.instana) {
-    const rawValue = spanData?.[mapping.instana];
+    if (mapping.value !== undefined && !mapping.instana && !mapping.instanaKeys) {
+      value = mapping.value;
+    } else if (Array.isArray(mapping.instanaKeys)) {
+      value = mapping.transform
+        ? mapping.transform(spanData, mapping.instanaKeys)
+        : combineFields(spanData, mapping.instanaKeys);
+    } else if (mapping.instana) {
+      const rawValue = spanData?.[mapping.instana];
 
-    if (rawValue == null) {
+      if (rawValue == null) {
+        return null;
+      }
+
+      value = mapping.transform ? mapping.transform(rawValue) : rawValue;
+    } else {
       return null;
     }
 
-    value = mapping.transform ? mapping.transform(rawValue) : rawValue;
-  } else {
-    return null;
-  }
+    if (value == null) {
+      return null;
+    }
 
-  if (value == null) {
-    return null;
-  }
-
-  return {
-    key: mapping.otlp,
-    value: formatOTLPValue(value)
-  };
+    return {
+      key: mapping.otlp,
+      value: formatOTLPValue(value)
+    };
 }
 
 module.exports = {

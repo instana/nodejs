@@ -4,63 +4,63 @@
 
 'use strict';
 
-const { SPAN_TYPES } = require('../constants');
+const { INSTRUMENTATION_TYPES } = require('../constants');
 
 // we need to find any way to map this value better(eg: groups)
 exports.SPAN_NAME_MAPPING = {
-  [SPAN_TYPES.HTTP]: data => {
+  [INSTRUMENTATION_TYPES.HTTP]: data => {
     const method = (data.method || 'HTTP').toUpperCase();
     return `${method} ${data.path_tpl || data.path || '/'}`;
   },
 
-  [SPAN_TYPES.KAFKA]: data => `${data.access} ${data.service}`,
+  [INSTRUMENTATION_TYPES.KAFKA]: data => `${data.access} ${data.service}`,
 
-  [SPAN_TYPES.RABBITMQ]: data => `${data.sort || 'process'} ${data.exchange || data.key || 'unknown'}`,
+  [INSTRUMENTATION_TYPES.RABBITMQ]: data => `${data.sort || 'process'} ${data.exchange || data.key || 'unknown'}`,
 
-  [SPAN_TYPES.NATS]: data => `${data.sort || 'process'} ${data.subject || 'unknown'}`,
+  [INSTRUMENTATION_TYPES.NATS]: data => `${data.sort || 'process'} ${data.subject || 'unknown'}`,
 
-  [SPAN_TYPES.BULL]: data => `${data.sort || 'process'} ${data.queue || 'unknown'}`,
+  [INSTRUMENTATION_TYPES.BULL]: data => `${data.sort || 'process'} ${data.queue || 'unknown'}`,
 
-  [SPAN_TYPES.SQS]: data => `${data.type || data.sort || 'process'} ${data.queue || 'unknown'}`,
+  [INSTRUMENTATION_TYPES.SQS]: data => `${data.type || data.sort || 'process'} ${data.queue || 'unknown'}`,
 
-  [SPAN_TYPES.SNS]: data => `publish ${data.topic || data.subject || 'unknown'}`,
+  [INSTRUMENTATION_TYPES.SNS]: data => `publish ${data.topic || data.subject || 'unknown'}`,
 
-  [SPAN_TYPES.GCPS]: data => `${data.op || 'process'} ${data.top || data.sub || 'unknown'}`,
+  [INSTRUMENTATION_TYPES.GCPS]: data => `${data.op || 'process'} ${data.top || data.sub || 'unknown'}`,
 
-  [SPAN_TYPES.PG]: data => data.stmt?.split(/\s+/)[0]?.toUpperCase() || 'POSTGRESQL',
+  [INSTRUMENTATION_TYPES.PG]: data => data.stmt?.split(/\s+/)[0]?.toUpperCase() || 'POSTGRESQL',
 
-  [SPAN_TYPES.MYSQL]: data => data.stmt?.split(/\s+/)[0]?.toUpperCase() || 'MYSQL',
+  [INSTRUMENTATION_TYPES.MYSQL]: data => data.stmt?.split(/\s+/)[0]?.toUpperCase() || 'MYSQL',
 
-  [SPAN_TYPES.MSSQL]: data => data.stmt?.split(/\s+/)[0]?.toUpperCase() || 'MSSQL',
+  [INSTRUMENTATION_TYPES.MSSQL]: data => data.stmt?.split(/\s+/)[0]?.toUpperCase() || 'MSSQL',
 
-  [SPAN_TYPES.DB2]: data => data.stmt?.split(/\s+/)[0]?.toUpperCase() || 'DB2',
+  [INSTRUMENTATION_TYPES.DB2]: data => data.stmt?.split(/\s+/)[0]?.toUpperCase() || 'DB2',
 
-  [SPAN_TYPES.MONGO]: data => `mongo.${data.command}`,
+  [INSTRUMENTATION_TYPES.MONGO]: data => `mongo.${data.command}`,
 
-  [SPAN_TYPES.REDIS]: data => `redis.${data.operation || 'command'}`,
+  [INSTRUMENTATION_TYPES.REDIS]: data => `redis.${data.operation || 'command'}`,
 
-  [SPAN_TYPES.COUCHBASE]: data => `couchbase.${data.bucket || 'operation'}`,
+  [INSTRUMENTATION_TYPES.COUCHBASE]: data => `couchbase.${data.bucket || 'operation'}`,
 
-  [SPAN_TYPES.ELASTICSEARCH]: data => `elasticsearch.${data.action || 'request'}`,
+  [INSTRUMENTATION_TYPES.ELASTICSEARCH]: data => `elasticsearch.${data.action || 'request'}`,
 
-  [SPAN_TYPES.DYNAMODB]: data => `dynamodb.${data.operation || 'request'}`,
+  [INSTRUMENTATION_TYPES.DYNAMODB]: data => `dynamodb.${data.operation || 'request'}`,
 
-  [SPAN_TYPES.MEMCACHED]: data => `memcached.${data.operation || 'command'}`,
+  [INSTRUMENTATION_TYPES.MEMCACHED]: data => `memcached.${data.operation || 'command'}`,
 
-  [SPAN_TYPES.PRISMA]: data => `prisma.${data.action || 'query'}`,
+  [INSTRUMENTATION_TYPES.PRISMA]: data => `prisma.${data.action || 'query'}`,
 
-  [SPAN_TYPES.RPC]: data => data.call || 'rpc.call',
+  [INSTRUMENTATION_TYPES.RPC]: data => data.call || 'rpc.call',
 
-  [SPAN_TYPES.GRAPHQL]: data =>
+  [INSTRUMENTATION_TYPES.GRAPHQL]: data =>
     data.operationName ? `${data.operationType || 'query'} ${data.operationName}` : data.operationType || 'graphql',
 
-  [SPAN_TYPES.GCS]: data => `gcs.${data.op || 'operation'}`,
+  [INSTRUMENTATION_TYPES.GCS]: data => `gcs.${data.op || 'operation'}`,
 
-  [SPAN_TYPES.S3]: data => `s3.${data.op || 'operation'}`,
+  [INSTRUMENTATION_TYPES.S3]: data => `s3.${data.op || 'operation'}`,
 
-  [SPAN_TYPES.KINESIS]: data => `kinesis.${data.op || 'operation'}`,
+  [INSTRUMENTATION_TYPES.KINESIS]: data => `kinesis.${data.op || 'operation'}`,
 
-  [SPAN_TYPES.AZSTORAGE]: data => `azure.storage.${data.op || 'operation'}`,
+  [INSTRUMENTATION_TYPES.AZSTORAGE]: data => `azure.storage.${data.op || 'operation'}`,
 
-  [SPAN_TYPES.AWS_LAMBDA_INVOKE]: data => (data.function ? `Invoke ${data.function}` : 'Lambda Invoke')
+  [INSTRUMENTATION_TYPES.AWS_LAMBDA_INVOKE]: data => (data.function ? `Invoke ${data.function}` : 'Lambda Invoke')
 };

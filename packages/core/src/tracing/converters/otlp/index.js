@@ -7,14 +7,13 @@
 const { convert } = require('./converter');
 
 module.exports = {
-  /**
-   * @param {import("../../../core").InstanaBaseSpan[]} spans
-   */
-  transform(spans) {
-    try {
-      return convert(spans);
-    } catch (error) {
-      return spans;
-    }
+  get transform() {
+    return (/** @type {import('../../../core').InstanaBaseSpan[]} */ spans) => {
+      try {
+        return convert(spans);
+      } catch (error) {
+        return spans;
+      }
+    };
   }
 };
