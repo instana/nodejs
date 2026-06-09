@@ -4,7 +4,7 @@
 
 'use strict';
 
-const { STATUS_CODES, SPAN_KINDS, SPAN_TYPES } = require('../constants');
+const { STATUS_CODES, SPAN_KINDS, INSTRUMENTATION_TYPES } = require('../constants');
 const { SPAN_NAME_MAPPING } = require('./spanName');
 
 function generateSpanName(instanaSpan) {
@@ -34,7 +34,7 @@ function generateSpanStatus(instanaSpan) {
   const spanType = getSpanType(instanaSpan);
   const data = spanType ? instanaSpan.data?.[spanType] : null;
 
-  if (spanType === SPAN_TYPES.HTTP) {
+  if (spanType === INSTRUMENTATION_TYPES.HTTP) {
     return computeHttpStatus(instanaSpan, data || {});
   }
 
@@ -57,7 +57,7 @@ function getSpanType(instanaSpan) {
   if (keys.length === 0) return null;
 
   // return first key that is not "peer"
-  const nonPeerKey = keys.find(key => key !== SPAN_TYPES.PEER);
+  const nonPeerKey = keys.find(key => key !== INSTRUMENTATION_TYPES.PEER);
   if (nonPeerKey) return nonPeerKey;
 
   // fallback: if only "peer" exists

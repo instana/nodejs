@@ -4,7 +4,9 @@
 
 'use strict';
 
-exports.SPAN_TYPES = {
+exports.INSTRUMENTATION_SCOPE_NAME = '@instana/collector';
+
+exports.INSTRUMENTATION_TYPES = {
   HTTP: 'http',
   KAFKA: 'kafka',
   RABBITMQ: 'rabbitmq',

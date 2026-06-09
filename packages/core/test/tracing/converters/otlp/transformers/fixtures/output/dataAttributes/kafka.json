@@ -1,9 +1,5 @@
 [
   { "key": "messaging.system", "value": { "stringValue": "kafka" } },
   { "key": "messaging.destination", "value": { "stringValue": "send" } },
-  {
-    "key": "messaging.operation.type",
-    "value": { "stringValue": "produce" }
-  },
   { "key": "messaging.operation.type", "value": { "stringValue": "send" } }
 ]
