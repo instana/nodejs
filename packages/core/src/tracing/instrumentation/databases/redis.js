@@ -48,9 +48,14 @@ function captureCommands(file) {
 }
 
 function instrument(redis) {
-  // NOTE: v4 no longer exposes the RedisClient. We need to wait till `createClient` get's called
-  //       to get the instance of the redis client
-  if (!redis.RedisClient) {
+  // NOTE: Redis versions differ in export shape:
+  // v4/v5: are strictly factory-based (createClient/createCluster) and do not expose RedisClient.
+  // v6: expose RedisClient again, but this does NOT imply legacy/class-based behavior.
+  // RedisClient exists in both v3 and v6. Detect the legacy v3 API via
+  // the combined presence of RedisClient and Multi rather than RedisClient alone.
+  const isLegacyRedisAPI = redis.RedisClient && typeof redis.Multi?.prototype?.exec_transaction === 'function';
+
+  if (!isLegacyRedisAPI) {
     // redis automatically loads @redis/client, which can trigger a second instrumentation call.
     // We track the instrumentation status via `isRedisClientInstrumented  and skip second time.
     if (isRedisClientInstrumented) {
