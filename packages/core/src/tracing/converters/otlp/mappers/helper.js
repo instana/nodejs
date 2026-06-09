@@ -4,47 +4,19 @@
 
 'use strict';
 
-const { STATUS_CODES, SPAN_KINDS } = require('../constants');
-const instrRegistry = require('../../../instrumentationRegistry');
-
-// this is mapper helper
-// help map value
-// TBD
-const formatters = {
-  http(data) {
-    const method = (data.method || data.operation || 'HTTP').toUpperCase();
-    const path = data.path || data.url || '/';
-    return `${method} ${path}`;
-  },
-  messaging(data) {
-    const operation = data.operation || data.access || data.sort || 'messaging';
-    const destination = data.service || data.topic || data.queue || data.subject || 'unknown';
-    return `${operation} ${destination}`;
-  },
-  databases(data, spanType) {
-    const operation = data.command || data.operation || data.action || 'query';
-    const systemName = spanType;
-    return `${systemName}.${operation}`;
-  }
-  // cloud, etc
-};
+const { STATUS_CODES, SPAN_KINDS, SPAN_TYPES } = require('../constants');
+const { SPAN_NAME_MAPPING } = require('./spanName');
 
 function generateSpanName(instanaSpan) {
-  if (!instanaSpan) return 'unknown';
-
   const spanType = getSpanType(instanaSpan);
   const data = spanType ? instanaSpan.data?.[spanType] : null;
+  if (!data) {
+    return instanaSpan.n || spanType || 'unknown';
+  }
 
-  if (!data) return instanaSpan.n || 'unknown';
+  const generator = SPAN_NAME_MAPPING[spanType];
 
-  const group = instrRegistry.getGroupForSpanType(spanType);
-  const fallback = instanaSpan.n || 'unknown';
-
-  if (spanType === 'http') return formatters.http(data);
-  if (group === 'messaging') return formatters.messaging(data);
-  if (group === 'databases') return formatters.databases(data, spanType);
-
-  return fallback;
+  return generator ? generator(data) : instanaSpan.n || spanType;
 }
 
 function computeHttpStatus(span, data) {
@@ -55,26 +27,27 @@ function computeHttpStatus(span, data) {
 }
 
 function generateSpanStatus(instanaSpan) {
-  if (!instanaSpan) return { code: STATUS_CODES.UNSET };
+  if (!instanaSpan) {
+    return { code: STATUS_CODES.UNSET };
+  }
 
   const spanType = getSpanType(instanaSpan);
   const data = spanType ? instanaSpan.data?.[spanType] : null;
 
-  if (spanType === 'http') {
+  if (spanType === SPAN_TYPES.HTTP) {
     return computeHttpStatus(instanaSpan, data || {});
   }
 
   const hasFailure = instanaSpan.ec > 0;
-  const group = instrRegistry.getGroupForSpanType(spanType);
 
-  const isGrouped = group === 'messaging' || group === 'databases';
-
-  if (!isGrouped) {
-    // handle this case
-    return hasFailure ? { code: STATUS_CODES.ERROR, message: 'Error occurred' } : { code: STATUS_CODES.OK };
-  }
-
-  return hasFailure ? { code: STATUS_CODES.ERROR, message: `${spanType} operation failed` } : { code: STATUS_CODES.OK };
+  return hasFailure
+    ? {
+        code: STATUS_CODES.ERROR,
+        message: `${spanType || 'unknown'} operation failed`
+      }
+    : {
+        code: STATUS_CODES.OK
+      };
 }
 
 function getSpanType(instanaSpan) {
@@ -84,7 +57,7 @@ function getSpanType(instanaSpan) {
   if (keys.length === 0) return null;
 
   // return first key that is not "peer"
-  const nonPeerKey = keys.find(key => key !== 'peer');
+  const nonPeerKey = keys.find(key => key !== SPAN_TYPES.PEER);
   if (nonPeerKey) return nonPeerKey;
 
   // fallback: if only "peer" exists
