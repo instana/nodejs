@@ -4,7 +4,7 @@
 
 'use strict';
 
-const { BASE_OTLP } = require('./baseLookup');
+const { BASE_OTLP } = require('./lookupBase');
 const v123Overrides = require('./v123/overrides').LOOKUP_OVERRIDES;
 const latestOverrides = require('./latest/overrides').LOOKUP_OVERRIDES;
 
