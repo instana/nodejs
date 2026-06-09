@@ -14,8 +14,6 @@ const hook = require('../../../../util/hook');
 const tracingUtil = require('../../../tracingUtil');
 
 let isActive = false;
-exports.spanName = 'gcs';
-
 
 exports.init = function init() {
   hook.onModuleLoad('@google-cloud/storage', instrument);
@@ -396,7 +394,7 @@ function shim(instrumented, original) {
 function instrumentedOperation(operation, extractorPre, extractorPost, ctx, original, originalArgs) {
   return cls.ns.runAndReturn(() => {
     const span = cls.startSpan({
-      spanName: exports.spanName,
+      spanName: 'gcs',
       kind: constants.EXIT
     });
     span.stack = tracingUtil.getStackTrace(instrumentedOperation, 1);
@@ -431,7 +429,7 @@ function instrumentedOperation(operation, extractorPre, extractorPost, ctx, orig
 function instrumentedCreateStream(operation, bindEvent, finalEvent, ctx, original, originalArgs) {
   return cls.ns.runAndReturn(() => {
     const span = cls.startSpan({
-      spanName: exports.spanName,
+      spanName: 'gcs',
       kind: constants.EXIT
     });
     span.stack = tracingUtil.getStackTrace(instrumentedCreateStream, 1);

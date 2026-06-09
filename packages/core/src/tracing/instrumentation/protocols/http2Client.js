@@ -19,7 +19,6 @@ const { sanitizeUrl, splitAndFilter } = require('../../../util/url');
 
 let extraHttpHeadersToCapture;
 let isActive = false;
-exports.spanName = 'node.http.client';
 
 const originS = 'Symbol(origin)';
 const sentHeadersS = 'Symbol(sent-headers)';
@@ -84,7 +83,7 @@ function instrumentClientHttp2Session(clientHttp2Session) {
 
     return cls.ns.runAndReturn(() => {
       const span = cls.startSpan({
-        spanName: exports.spanName,
+        spanName: 'node.http.client',
         kind: constants.EXIT,
         traceId: parentSpan?.t,
         parentSpanId: parentSpan?.s
