@@ -4,7 +4,7 @@
 
 'use strict';
 
-const { extractMetaDataAttributes, extractResourceAttributes, extractDataAttributes } = require('./transformers');
+const { extractSpanMetadata, extractResourceAttributes, extractSpanAttributes } = require('./transformers');
 const { isLogSpan } = require('./util');
 
 const SCOPE = {
@@ -22,41 +22,39 @@ exports.convert = function convert(spans) {
     return { resourceSpans: [] };
   }
 
-  const convertedSpans = [];
+  const convertedSpans = spans.reduce((result, span) => {
+    if (!span) {
+      return result;
+    }
 
-  spans.forEach(span => {
-    if (!span) return;
-
-    // 1. Intercept log signals cleanly at the front gate
     if (isLogSpan(span)) {
-      // call logSignalExporter
-      return;
+      // logSignalExporter(span);
+      return result;
     }
 
-    // 2. Process valid trace spans normally
-    const mappedSpan = convertSpanToOTLP(span);
+    const mappedSpan = mapSpanToOTLP(span);
     if (mappedSpan) {
-      convertedSpans.push(mappedSpan);
+      result.push(mappedSpan);
     }
-  });
 
-  const groups = groupSpansByResource(convertedSpans);
+    return result;
+  }, []);
+
   return {
-    resourceSpans: buildResourceSpans(groups)
+    resourceSpans: buildResourceSpans(groupSpansByResource(convertedSpans))
   };
 };
-
 /**
  * Converts a single Instana span to OTLP format.
  *
  * @param {any} span
  * @returns {any|null}
  */
-function convertSpanToOTLP(span) {
+function mapSpanToOTLP(span) {
   try {
     return {
-      ...extractMetaDataAttributes(span),
-      attributes: extractDataAttributes(span),
+      ...extractSpanMetadata(span),
+      attributes: extractSpanAttributes(span),
       resource: {
         attributes: extractResourceAttributes(span)
       }

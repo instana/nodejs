@@ -4,14 +4,14 @@
 
 'use strict';
 
-const { DIRECT_MAPPINGS, COMPUTED_MAPPINGS } = require('../mappers/metaData');
+const { DIRECT_MAPPINGS, COMPUTED_MAPPINGS } = require('../mappers/spanMetaData');
 
 /**
  * Applies metadata transformations to convert Instana base fields to OTLP
  * @param {Object} instanaSpan - The raw Instana span object
  * @returns {Object} Target OTLP metadata dictionary fields
  */
-function extractMetaDataAttributes(instanaSpan) {
+function extractSpanMetadata(instanaSpan) {
   if (!instanaSpan) return {};
 
   const result = {};
@@ -40,5 +40,5 @@ function extractMetaDataAttributes(instanaSpan) {
 }
 
 module.exports = {
-  extractMetaDataAttributes: extractMetaDataAttributes
+  extractSpanMetadata: extractSpanMetadata
 };
