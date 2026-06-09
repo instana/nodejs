@@ -13,8 +13,6 @@ const cls = require('../../cls');
 
 let logger;
 let isActive = false;
-exports.spanName = 'rabbitmq';
-
 
 exports.init = function init(config) {
   logger = config.logger;
@@ -81,7 +79,7 @@ function instrumentedSendMessage(ctx, originalSendMessage, originalArgs) {
     // Otherwise, a normal channel was used and we need to create the context here as usual.
     return cls.ns.runAndReturn(() => {
       const span = cls.startSpan({
-        spanName: exports.spanName,
+        spanName: 'rabbitmq',
         kind: constants.EXIT
       });
       processExitSpan(ctx, span, originalArgs);
@@ -192,7 +190,7 @@ function instrumentedDispatchMessage(ctx, originalDispatchMessage, originalArgs)
     }
 
     const span = cls.startSpan({
-      spanName: exports.spanName,
+      spanName: 'rabbitmq',
       kind: constants.ENTRY,
       traceId: tracingUtil.readAttribCaseInsensitive(headers, constants.traceIdHeaderName),
       parentSpanId: tracingUtil.readAttribCaseInsensitive(headers, constants.spanIdHeaderName)
@@ -250,7 +248,7 @@ function instrumentedChannelModelGet(ctx, originalGet, originalArgs) {
   // we simply cancel the span instead of transmitting it.
   return cls.ns.runPromise(() => {
     const span = cls.startSpan({
-      spanName: exports.spanName,
+      spanName: 'rabbitmq',
       kind: constants.ENTRY
     });
 
@@ -361,7 +359,7 @@ function instrumentedCallbackModelGet(ctx, originalGet, originalArgs) {
       }
 
       const span = cls.startSpan({
-        spanName: exports.spanName,
+        spanName: 'rabbitmq',
         kind: constants.ENTRY,
         traceId: tracingUtil.readAttribCaseInsensitive(headers, constants.traceIdHeaderName),
         parentSpanId: tracingUtil.readAttribCaseInsensitive(headers, constants.spanIdHeaderName)
@@ -422,7 +420,7 @@ function instrumentedChannelModelPublish(ctx, originalFunction, originalArgs) {
 
   return cls.ns.runAndReturn(() => {
     const span = cls.startSpan({
-      spanName: exports.spanName,
+      spanName: 'rabbitmq',
       kind: constants.EXIT
     });
 
@@ -464,7 +462,7 @@ function instrumentedCallbackModelPublish(ctx, originalFunction, originalArgs) {
 
   return cls.ns.runAndReturn(() => {
     const span = cls.startSpan({
-      spanName: exports.spanName,
+      spanName: 'rabbitmq',
       kind: constants.EXIT
     });
 

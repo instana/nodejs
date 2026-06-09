@@ -23,7 +23,6 @@ const URL = url.URL;
 let extraHttpHeadersToCapture;
 let logger;
 let isActive = false;
-exports.spanName = 'node.http.client';
 
 exports.init = function init(config) {
   logger = config.logger;
@@ -196,7 +195,7 @@ function instrument(coreModule, forceHttps) {
     cls.ns.run(() => {
       // NOTE: Check for parentSpan existence, because of allowRootExitSpan is being enabled
       const span = cls.startSpan({
-        spanName: exports.spanName,
+        spanName: 'node.http.client',
         kind: constants.EXIT,
         traceId: parentSpan?.t,
         parentSpanId: parentSpan?.s

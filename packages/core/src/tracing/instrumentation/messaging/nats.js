@@ -15,7 +15,6 @@ const cls = require('../../cls');
 let isActive = false;
 let clientHasBeenInstrumentedV1 = false;
 let clientHasBeenInstrumentedV2 = false;
-exports.spanName = 'nats';
 
 exports.init = function init() {
   hook.onModuleLoad('nats', instrumentNats);
@@ -167,7 +166,7 @@ function instrumentedPublish(ctx, originalPublish, originalArgs, isLatest) {
 
   return cls.ns.runAndReturn(() => {
     const span = cls.startSpan({
-      spanName: exports.spanName,
+      spanName: 'nats',
       kind: constants.EXIT
     });
     span.ts = Date.now();
@@ -360,7 +359,7 @@ function instrumentedSubscribeCallback(natsUrl, subject, originalSubscribeCallba
 
       if (isActive) {
         const span = cls.startSpan({
-          spanName: exports.spanName,
+          spanName: 'nats',
           kind: constants.ENTRY,
           traceId: traceId,
           parentSpanId: parentSpanId

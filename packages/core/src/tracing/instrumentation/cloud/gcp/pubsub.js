@@ -21,8 +21,6 @@ const subscriptionRegex = /^projects\/([^/]+)\/subscriptions\/(.+)$/;
 
 let logger;
 let isActive = false;
-exports.spanName = 'gcps';
-
 
 exports.init = function init(config) {
   logger = config.logger;
@@ -100,7 +98,7 @@ function instrumentedPublishMessage(ctx, originalPublishMessage, originalArgs) {
 
   return cls.ns.runAndReturn(() => {
     const span = cls.startSpan({
-      spanName: exports.spanName,
+      spanName: 'gcps',
       kind: EXIT
     });
     span.ts = Date.now();
@@ -195,7 +193,7 @@ function instrumentedEmitMessage(ctx, originalEmit, originalArgs) {
 
     const { projid, sub } = parseSubscription(message._subscriber && message._subscriber._subscription);
     const span = cls.startSpan({
-      spanName: exports.spanName,
+      spanName: 'gcps',
       kind: ENTRY,
       traceId: tracingUtil.readAttribCaseInsensitive(attribtes, traceIdHeaderNameLowerCase),
       parentSpanId: tracingUtil.readAttribCaseInsensitive(attribtes, spanIdHeaderNameLowerCase)

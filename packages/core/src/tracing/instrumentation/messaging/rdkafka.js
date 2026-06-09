@@ -15,7 +15,6 @@ const { getFunctionArguments } = require('../../../util/function_arguments');
 let traceCorrelationEnabled = constants.kafkaTraceCorrelationDefault;
 
 let isActive = false;
-exports.spanName = 'kafka';
 
 exports.init = function init(config) {
   hook.onFileLoad(/\/node-rdkafka\/lib\/producer\.js/, instrumentProducer);
@@ -140,7 +139,7 @@ function instrumentedProduce(ctx, originalProduce, originalArgs) {
       }
     };
     const span = cls.startSpan({
-      spanName: exports.spanName,
+      spanName: 'kafka',
       kind: constants.EXIT,
       spanData
     });
@@ -282,7 +281,7 @@ function instrumentedConsumerEmit(ctx, originalEmit, originalArgs) {
       };
 
       const span = cls.startSpan({
-        spanName: exports.spanName,
+        spanName: 'kafka',
         kind: constants.ENTRY,
         traceId: traceId,
         parentSpanId: parentSpanId,
