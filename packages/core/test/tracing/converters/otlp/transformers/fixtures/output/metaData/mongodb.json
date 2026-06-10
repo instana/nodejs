@@ -8,7 +8,7 @@
   "name": "mongo.insert",
   "status": {
     "code": 2,
-    "message": "mongo operation failed"
+    "message": "E11000 duplicate key error collection"
   },
   "events": [],
   "links": []

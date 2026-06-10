@@ -19,34 +19,19 @@ function generateSpanName(instanaSpan) {
   return generator ? generator(data) : instanaSpan.n || spanType;
 }
 
-function computeHttpStatus(span, data) {
-  if (span.ec && span.ec > 0) return { code: STATUS_CODES.ERROR, message: data.error || 'Error occurred' };
-  const httpStatus = data.status;
-  if (httpStatus >= 400) return { code: STATUS_CODES.ERROR, message: `HTTP ${httpStatus}` };
-  return { code: STATUS_CODES.OK };
-}
-
 function generateSpanStatus(instanaSpan) {
-  if (!instanaSpan) {
-    return { code: STATUS_CODES.UNSET };
-  }
-
   const spanType = getSpanType(instanaSpan);
   const data = spanType ? instanaSpan.data?.[spanType] : null;
 
-  if (spanType === INSTRUMENTATION_TYPES.HTTP) {
-    return computeHttpStatus(instanaSpan, data || {});
-  }
-
   const hasFailure = instanaSpan.ec > 0;
-
   return hasFailure
     ? {
         code: STATUS_CODES.ERROR,
-        message: `${spanType || 'unknown'} operation failed`
+        message: data?.error || `${spanType} operation failed`
       }
     : {
-        code: STATUS_CODES.OK
+        // todo: research
+        code: STATUS_CODES.UNSET
       };
 }
 

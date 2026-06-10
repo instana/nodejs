@@ -7,7 +7,7 @@
   "timestamp": "1609459200000000000",
   "name": "GET /api/users/123",
   "status": {
-    "code": 1
+    "code": 0
   },
   "events": [],
   "links": []
