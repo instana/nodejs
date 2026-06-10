@@ -10,7 +10,7 @@ const pathUtil = require('path');
 const circularReferenceRemover = require('./util/removeCircular');
 const agentOpts = require('./agent/opts');
 const cmdline = require('./cmdline');
-const otlpTransformer = require('@instana/core/src/tracing/otlpTransformer');
+const otlpConverter = require('@instana/core/src/metrics/converters/otlp');
 /** @typedef {import('@instana/core/src/core').InstanaBaseSpan} InstanaBaseSpan */
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
@@ -41,6 +41,9 @@ let cpuSetFileContent = null;
 exports.init = function init(config, _pidStore) {
   logger = config.logger;
   pidStore = _pidStore;
+
+  // Initialize OTLP metrics converter
+  otlpConverter.setPid(pidStore.pid);
 
   cmdline.init(config);
   cpuSetFileContent = getCpuSetFileContent();
@@ -307,44 +310,8 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
 exports.sendMetrics = function sendMetrics(data, cb) {
   cb = util.atMostOnce('callback for sendMetrics', cb);
 
-  // Zeige nur die ersten 2 Keys für Debugging
-  const dataKeys = Object.keys(data);
-  const firstTwoKeys = {};
-  for (let i = 0; i < Math.min(2, dataKeys.length); i++) {
-    firstTwoKeys[dataKeys[i]] = data[dataKeys[i]];
-  }
-
-  // logger.debug(`sendMetrics called with data (first 2 keys): ${JSON.stringify(firstTwoKeys)}`);
-
   // Transform Instana metrics to OTLP format
-  const otlpMetrics = otlpTransformer.transformMetrics(data);
-
-  // Zeige nur die ersten 2 Metriken für Debugging
-  let otlpPreview = otlpMetrics;
-  if (otlpMetrics.resourceMetrics && otlpMetrics.resourceMetrics.length > 0) {
-    const firstResource = otlpMetrics.resourceMetrics[0];
-    if (firstResource.scopeMetrics && firstResource.scopeMetrics.length > 0) {
-      const metrics = firstResource.scopeMetrics[0].metrics;
-      if (metrics && metrics.length > 2) {
-        otlpPreview = {
-          resourceMetrics: [
-            {
-              ...firstResource,
-              scopeMetrics: [
-                {
-                  ...firstResource.scopeMetrics[0],
-                  metrics: metrics.slice(0, 2)
-                }
-              ]
-            }
-          ],
-          totalMetrics: metrics.length
-        };
-      }
-    }
-  }
-
-  // logger.debug(`Transformed to OTLP (first 2 metrics) ${JSON.stringify(otlpPreview)}`);
+  const otlpMetrics = otlpConverter.transform(data);
 
   // Send directly without using sendData (which would transform again)
   sendOtlpData('/v1/metrics', otlpMetrics, err => {
@@ -352,7 +319,6 @@ exports.sendMetrics = function sendMetrics(data, cb) {
       logger.error('Error sending metrics:', err);
       cb(err, null);
     } else {
-      // logger.debug('Metrics sent successfully');
       // OTLP endpoints don't return requests like the old Instana endpoint
       // Always return empty array for compatibility
       cb(null, []);
@@ -473,11 +439,6 @@ exports.sendTracingMetricsToAgent = function sendTracingMetricsToAgent(tracingMe
  */
 function sendData(path, data, cb, ignore404 = false) {
   cb = util.atMostOnce(`callback for sendData: ${path}`, cb);
-  console.log(JSON.stringify(data));
-  // Transform Instana format to OTLP format
-  // const otlpFormat = otlpTransformer(data);
-
-  // console.log(JSON.stringify(otlpFormat));
 
   const payloadAsString = JSON.stringify(data, circularReferenceRemover());
   if (typeof logger.trace === 'function') {
@@ -512,8 +473,6 @@ function sendData(path, data, cb, ignore404 = false) {
         responseBody += chunk;
       });
       res.on('end', () => {
-        console.log(responseBody);
-
         if (res.statusCode < 200 || res.statusCode >= 300) {
           if (res.statusCode !== 404 || !ignore404) {
             const statusCodeError = new Error(

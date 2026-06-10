@@ -1,0 +1,20 @@
+{
+  "from": {
+    "e": "12345",
+    "h": "host-abc-123"
+  },
+  "nodejs": {
+    "memory": {
+      "heapUsed": 50000000,
+      "heapTotal": 100000000
+    },
+    "cpu": {
+      "usage": 45.5
+    }
+  },
+  "activeHandles": 10,
+  "gc": {
+    "minorGcs": 100,
+    "majorGcs": 5
+  }
+}
