@@ -1,6 +1,6 @@
 [
   { "key": "db.system", "value": { "stringValue": "mongodb" } },
-  { "key": "db.operation.name", "value": { "stringValue": "insert" } },
+  { "key": "db.operation.name", "value": { "stringValue": "INSERT" } },
   {
     "key": "server.address",
     "value": { "stringValue": "mongodb://localhost:27017" }

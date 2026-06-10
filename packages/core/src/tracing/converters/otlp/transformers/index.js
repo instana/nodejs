@@ -16,12 +16,12 @@
  * - spanDataAttributes: Extracts and converts span.data to OTLP attributes
  */
 
-const { extractSpanMetadata } = require('./spanMetaData');
-const { extractResourceAttributes } = require('./resourceAttributes');
-const { extractSpanAttributes } = require('./spanAttributes');
+const spanMetaData = require('./spanMetaData');
+const resourceAttributes = require('./resourceAttributes');
+const spanAttributes = require('./spanAttributes');
 
 module.exports = {
-  extractSpanMetadata,
-  extractResourceAttributes,
-  extractSpanAttributes
+  spanMetaData,
+  resourceAttributes,
+  spanAttributes
 };

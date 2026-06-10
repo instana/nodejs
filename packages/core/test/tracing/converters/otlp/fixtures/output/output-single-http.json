@@ -55,16 +55,17 @@
                     "stringValue": "GET"
                   }
                 },
-                {
-                  "key": "http.target",
-                  "value": {
-                    "stringValue": "/api/users"
-                  }
-                },
+
                 {
                   "key": "http.url",
                   "value": {
                     "stringValue": "http://localhost:3000/api/users"
+                  }
+                },
+                {
+                  "key": "http.target",
+                  "value": {
+                    "stringValue": "/api/users"
                   }
                 },
                 {

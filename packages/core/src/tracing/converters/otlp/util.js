@@ -12,10 +12,41 @@ function toInteger(val) {
   const parsed = parseInt(val, 10);
   return Number.isNaN(parsed) ? 0 : parsed;
 }
+/**
+ * @param {any} _spanData
+ * @param {any[]} values
+ */
+function firstDefined(_spanData, values) {
+  return values.find(v => v != null);
+}
 
-function combineHostPort(host, port) {
-  if (!host) return undefined;
-  return port ? `${host}:${port}` : host;
+/**
+ * @param {any} _spanData
+ * @param {any[]} values
+ */
+function joinWith(_spanData, values, sep = ':') {
+  return values.filter(v => v != null).join(sep);
+}
+
+const extractHost = (/** @type {string | URL} */ connection) => parseConnection(connection).host;
+const extractPort = (/** @type {string | URL} */ connection) => parseConnection(connection).port;
+
+/**
+ * @param {string | URL} connection
+ */
+function parseConnection(connection) {
+  if (!connection) return {};
+
+  try {
+    const url = new URL(connection);
+
+    return {
+      host: url.hostname,
+      port: url.port ? Number(url.port) : undefined
+    };
+  } catch {
+    return {};
+  }
 }
 
 function combineFields(data, keys) {
@@ -53,8 +84,11 @@ function isLogSpan(span) {
 module.exports = {
   toUpperCase,
   toInteger,
-  combineHostPort,
   combineFields,
   formatOTLPValue,
-  isLogSpan
+  isLogSpan,
+  extractHost,
+  extractPort,
+  joinWith,
+  firstDefined
 };
