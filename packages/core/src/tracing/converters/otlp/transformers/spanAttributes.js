@@ -52,12 +52,10 @@ function extractOtelAttributes(data) {
 }
 
 /**
- * Peer mapping processor
+ * Peer mapping
  */
 function applyPeerMappings(peerData) {
-  if (!peerData) {
-    return [];
-  }
+  if (!peerData) return [];
 
   return [
     peerData.hostname != null && {
@@ -77,9 +75,7 @@ function applyPeerMappings(peerData) {
 function applyAttributeMapping(spanType, spanData) {
   const mappings = MAPPINGS?.[spanType];
 
-  if (!Array.isArray(mappings)) {
-    return [];
-  }
+  if (!Array.isArray(mappings)) return [];
 
   return mappings.map(mapping => applyMapping(mapping, spanData)).filter(Boolean);
 }
@@ -90,32 +86,38 @@ function applyAttributeMapping(spanType, spanData) {
 function applyMapping(mapping, spanData) {
   let value;
 
-    if (mapping.value !== undefined && !mapping.instana && !mapping.instanaKeys) {
-      value = mapping.value;
-    } else if (Array.isArray(mapping.instanaKeys)) {
-      value = mapping.transform
-        ? mapping.transform(spanData, mapping.instanaKeys)
-        : combineFields(spanData, mapping.instanaKeys);
-    } else if (mapping.instana) {
-      const rawValue = spanData?.[mapping.instana];
+  // 1. Static value
+  if (mapping.value !== undefined && !mapping.instana) {
+    value = mapping.value;
+  }
 
-      if (rawValue == null) {
-        return null;
-      }
+  // 2. Multi-field mapping (ARRAY)
+  else if (Array.isArray(mapping.instana)) {
+    const values = mapping.instana.map(k => spanData?.[k]);
 
-      value = mapping.transform ? mapping.transform(rawValue) : rawValue;
-    } else {
-      return null;
-    }
+    value = mapping.transform ? mapping.transform(spanData, values) : combineFields(values);
+  }
 
-    if (value == null) {
-      return null;
-    }
+  // 3. Single-field mapping
+  else if (typeof mapping.instana === 'string') {
+    const rawValue = spanData?.[mapping.instana];
 
-    return {
-      key: mapping.otlp,
-      value: formatOTLPValue(value)
-    };
+    if (rawValue == null) return null;
+
+    value = mapping.transform ? mapping.transform(rawValue, spanData) : rawValue;
+  }
+
+  // 4. Invalid mapping
+  else {
+    return null;
+  }
+
+  if (value == null) return null;
+
+  return {
+    key: mapping.otlp,
+    value: formatOTLPValue(value)
+  };
 }
 
 module.exports = {

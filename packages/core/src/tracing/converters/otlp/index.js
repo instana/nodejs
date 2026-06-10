@@ -4,13 +4,25 @@
 
 'use strict';
 
-const { convert } = require('./converter');
+const converter = require('./converter');
+
+/**
+ * @param {Object} config - Configuration object
+ */
+function init(config) {
+  converter.init(config);
+}
 
 module.exports = {
+  init,
+
   get transform() {
-    return (/** @type {import('../../../core').InstanaBaseSpan[]} */ spans) => {
+    return (
+      /** @type {import('../../../core').InstanaBaseSpan[]} */
+      spans
+    ) => {
       try {
-        return convert(spans);
+        return converter.convert(spans);
       } catch (error) {
         return spans;
       }

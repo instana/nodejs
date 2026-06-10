@@ -8,13 +8,14 @@
 
 const LOOKUP_OVERRIDES = {
   metadata: {
-    PARENT_ID: 'parentSpanContext.spanId' // Overwritten to reflect the modern nested path
+    PARENT_ID: 'parentSpanContext.spanId'
   },
   http: {
-    REQUEST_METHOD: 'http.request.method', // Upgraded to modern namespace
-    RESPONSE_STATUS: 'http.response.status_code', // Upgraded to modern namespace
-    URL_FULL: 'url.full', // Migrated to url.*
-    URL_PATH: 'url.path' // Migrated to url.*
+    REQUEST_METHOD: 'http.request.method',
+    RESPONSE_STATUS: 'http.response.status_code',
+    URL_FULL: 'url.full',
+    URL_PATH: 'url.path',
+    URL_QUERY: 'url.query'
   },
   messaging: {
     DESTINATION_NAME: 'messaging.destination.name',
@@ -23,12 +24,13 @@ const LOOKUP_OVERRIDES = {
     }
   },
   database: {
-    PEER_NAME: 'server.address', // Migrated from net.peer.*
-    PEER_PORT: 'server.port' // Migrated from net.peer.*
+    SYSTEM: 'db.system.name',
+    PEER_NAME: 'server.address',
+    PEER_PORT: 'server.port'
   },
   network: {
-    PEER_NAME: 'server.address', // Migrated from net.peer.*
-    PEER_PORT: 'server.port' // Migrated from net.peer.*
+    PEER_NAME: 'server.address',
+    PEER_PORT: 'server.port'
   }
 };
 

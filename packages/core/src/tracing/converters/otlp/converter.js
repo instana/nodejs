@@ -4,7 +4,7 @@
 
 'use strict';
 
-const { extractSpanMetadata, extractResourceAttributes, extractSpanAttributes } = require('./transformers');
+const transformers = require('./transformers');
 const { isLogSpan } = require('./util');
 const { INSTRUMENTATION_SCOPE_NAME } = require('./constants');
 
@@ -21,6 +21,8 @@ const SCOPE = {
  */
 exports.init = function init(config) {
   logger = config.logger;
+  // can also extend this to other downstream logic
+  transformers.resourceAttributes.init(config);
 };
 
 /**
@@ -64,10 +66,10 @@ exports.convert = function convert(spans) {
 function mapSpanToOTLP(span) {
   try {
     return {
-      ...extractSpanMetadata(span),
-      attributes: extractSpanAttributes(span),
+      ...transformers.spanMetaData.extractSpanMetadata(span),
+      attributes: transformers.spanAttributes.extractSpanAttributes(span),
       resource: {
-        attributes: extractResourceAttributes(span)
+        attributes: transformers.resourceAttributes.extractResourceAttributes(span)
       }
     };
   } catch (error) {

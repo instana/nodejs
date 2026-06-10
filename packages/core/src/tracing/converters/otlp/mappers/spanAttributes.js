@@ -4,7 +4,7 @@
 
 'use strict';
 
-const { toUpperCase, combineHostPort } = require('../util');
+const { toUpperCase, joinWith, extractHost, extractPort, firstDefined } = require('../util');
 const { getLookupConfig } = require('../semconv');
 const { INSTRUMENTATION_TYPES } = require('../constants');
 const OTLP = getLookupConfig();
@@ -14,13 +14,14 @@ const OTLP = getLookupConfig();
 const MAPPINGS = {
   [INSTRUMENTATION_TYPES.HTTP]: [
     { otlp: OTLP.http.REQUEST_METHOD, instana: 'method', transform: toUpperCase },
-    { otlp: OTLP.http.URL_PATH, instana: 'path' },
-    { otlp: OTLP.http.SERVER_ADDRESS, instana: 'connection' },
     { otlp: OTLP.http.URL_FULL, instana: 'url' },
-    { otlp: OTLP.http.RESPONSE_STATUS, instana: 'status' },
+    { otlp: OTLP.http.URL_PATH, instana: 'path' },
     { otlp: OTLP.http.URL_QUERY, instana: 'params' },
+    { otlp: OTLP.http.SERVER_ADDRESS, instana: 'host' },
+    { otlp: OTLP.http.RESPONSE_STATUS, instana: 'status' },
     { otlp: OTLP.http.REQUEST_HEADER, instana: 'header' },
     { otlp: OTLP.http.URL_TEMPLATE, instana: 'path_tpl' },
+    { otlp: OTLP.http.ROUTE, instana: 'route' },
     { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
   ],
 
@@ -90,8 +91,9 @@ const MAPPINGS = {
     { otlp: OTLP.database.STATEMENT, instana: 'stmt' },
     {
       otlp: OTLP.database.SERVER_ADDRESS,
-      transform: combineHostPort,
-      instana: ['host', 'port']
+
+      instana: ['host', 'port'],
+      transform: joinWith
     },
     { otlp: OTLP.database.PEER_NAME, instana: 'host' },
     { otlp: OTLP.database.PEER_PORT, instana: 'port' },
@@ -122,11 +124,15 @@ const MAPPINGS = {
 
   [INSTRUMENTATION_TYPES.MONGO]: [
     { otlp: OTLP.database.SYSTEM, value: 'mongodb' },
-    { otlp: OTLP.database.OPERATION, instana: 'command' },
+    { otlp: OTLP.database.OPERATION, instana: 'command', transform: toUpperCase },
+
     { otlp: OTLP.database.SERVER_ADDRESS, instana: 'service' },
+
+    { otlp: OTLP.database.PEER_PORT, instana: 'hostname' },
+
     { otlp: OTLP.database.NAMESPACE, instana: 'namespace' },
-    { otlp: OTLP.database.STATEMENT, instana: 'json' },
-    { otlp: OTLP.database.STATEMENT, instana: 'filter' },
+
+    { otlp: OTLP.database.STATEMENT, instana: ['json', 'filter'], transform: firstDefined },
     { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
   ],
 
@@ -137,10 +143,10 @@ const MAPPINGS = {
 
   [INSTRUMENTATION_TYPES.REDIS]: [
     { otlp: OTLP.database.SYSTEM, value: 'redis' },
-    { otlp: OTLP.database.SERVER_ADDRESS, instana: 'connection' },
-    { otlp: OTLP.database.OPERATION, instana: 'operation' },
+    { otlp: OTLP.database.OPERATION, instana: 'command', transform: toUpperCase },
+    { otlp: OTLP.database.SERVER_ADDRESS, instana: 'connection', transform: extractHost },
+    { otlp: OTLP.database.PEER_PORT, instana: 'connection', transform: extractPort },
     { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
-    // subCommands — no OTLP key
   ],
 
   [INSTRUMENTATION_TYPES.COUCHBASE]: [
