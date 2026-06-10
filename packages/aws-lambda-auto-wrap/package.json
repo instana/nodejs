@@ -1,6 +1,6 @@
 {
   "name": "instana-aws-lambda-auto-wrap",
-  "version": "6.1.1",
+  "version": "6.2.0",
   "private": true,
   "description": "Automatically wrap AWS Lambdas for Instana tracing and monitoring without code modification.",
   "author": {
@@ -65,8 +65,8 @@
     "url": "https://github.com/instana/nodejs/issues"
   },
   "dependencies": {
-    "@instana/aws-lambda": "6.1.1",
-    "@instana/core": "6.1.1",
+    "@instana/aws-lambda": "6.2.0",
+    "@instana/core": "6.2.0",
     "semver": "^7.8.1"
   }
 }

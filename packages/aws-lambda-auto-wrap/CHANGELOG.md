@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.2.0](https://github.com/instana/nodejs/compare/v6.1.1...v6.2.0) (2026-06-10)
+
+
+### Bug Fixes
+
+* bumped semver from 7.8.0 to 7.8.1 ([#2572](https://github.com/instana/nodejs/issues/2572)) ([a1b6aab](https://github.com/instana/nodejs/commit/a1b6aab7596e885ff8649209016b3760cb608a46))
+
+
+
+
+
 ## [6.1.1](https://github.com/instana/nodejs/compare/v6.1.0...v6.1.1) (2026-05-29)
 
 **Note:** Version bump only for package instana-aws-lambda-auto-wrap

@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.2.0](https://github.com/instana/nodejs/compare/v6.1.1...v6.2.0) (2026-06-10)
+
+
+### Bug Fixes
+
+* bumped @opentelemetry/instrumentation-restify from 0.60.0 to 0.63.0 ([#2573](https://github.com/instana/nodejs/issues/2573)) ([f758b73](https://github.com/instana/nodejs/commit/f758b7336aef8b287d1aa41b2cb5aedf07de6ce2))
+* bumped @opentelemetry/instrumentation-socket.io from 0.61.0 to 0.65.0 ([#2587](https://github.com/instana/nodejs/issues/2587)) ([1f17fac](https://github.com/instana/nodejs/commit/1f17fac3354c2d07911380500ecea2b76c454d2e))
+* bumped semver from 7.8.0 to 7.8.1 ([#2572](https://github.com/instana/nodejs/issues/2572)) ([a1b6aab](https://github.com/instana/nodejs/commit/a1b6aab7596e885ff8649209016b3760cb608a46))
+
+
+### Features
+
+* added support for @redis/client v6 ([#2577](https://github.com/instana/nodejs/issues/2577)) ([1841f7b](https://github.com/instana/nodejs/commit/1841f7ba04ed13752104358217c02238bb931fe9))
+* added support for redis v6 ([#2578](https://github.com/instana/nodejs/issues/2578)) ([8801312](https://github.com/instana/nodejs/commit/880131236dd50de62a7788b22ddb9948ce1b77f4))
+* added support for typeorm v1 ([#2564](https://github.com/instana/nodejs/issues/2564)) ([120c3a8](https://github.com/instana/nodejs/commit/120c3a8c89201c13f40a753565cec6579fcc0976))
+
+
+
+
+
 ## [6.1.1](https://github.com/instana/nodejs/compare/v6.1.0...v6.1.1) (2026-05-29)
 
 
