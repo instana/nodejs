@@ -428,7 +428,7 @@ describe('tracing/converters/otlp', () => {
 
         const operationAttr = result.find(attr => attr.key === 'db.operation.name');
         expect(operationAttr).to.exist;
-        expect(operationAttr.value.stringValue).to.equal('find');
+        expect(operationAttr.value.stringValue).to.equal('FIND');
       });
     });
 

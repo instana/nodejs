@@ -4,7 +4,15 @@
 
 'use strict';
 
-const config = require('../../../../config');
+/** @type {import('../../../../config').InstanaConfig} */
+let config;
+
+/**
+ * @param {import('../../../../config').InstanaConfig} _config
+ */
+function init(_config) {
+  config = _config;
+}
 
 /**
  * Resource attributes definition (declarative)
@@ -12,7 +20,7 @@ const config = require('../../../../config');
 const RESOURCE_ATTRIBUTES = [
   {
     key: 'service.name',
-    resolve: instanaSpan => config.serviceName || instanaSpan?.data?.service || 'nodejs-service'
+    resolve: instanaSpan => config?.serviceName || instanaSpan?.data?.service || 'nodejs-service'
   },
   {
     key: 'telemetry.sdk.language',
@@ -53,5 +61,6 @@ function extractResourceAttributes(instanaSpan) {
 }
 
 module.exports = {
-  extractResourceAttributes
+  extractResourceAttributes,
+  init
 };
