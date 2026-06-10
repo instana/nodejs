@@ -6,7 +6,7 @@
 
 const { INSTRUMENTATION_TYPES } = require('../constants');
 
-// we need to find any way to map this value better(eg: groups)
+// we need to find a way to map this value better(eg: groups)
 exports.SPAN_NAME_MAPPING = {
   [INSTRUMENTATION_TYPES.HTTP]: data => {
     const method = (data.method || 'HTTP').toUpperCase();

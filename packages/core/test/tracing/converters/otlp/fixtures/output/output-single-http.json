@@ -46,7 +46,7 @@
 
               "name": "GET /api/users",
               "status": {
-                "code": 1
+                "code": 0
               },
               "attributes": [
                 {
