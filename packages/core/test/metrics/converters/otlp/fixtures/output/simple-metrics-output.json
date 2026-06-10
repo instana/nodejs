@@ -1,0 +1,70 @@
+{
+  "resourceMetrics": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "telemetry.sdk.language",
+            "value": {
+              "stringValue": "nodejs"
+            }
+          },
+          {
+            "key": "telemetry.sdk.name",
+            "value": {
+              "stringValue": "@instana/collector"
+            }
+          },
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "nodejs-service"
+            }
+          },
+          {
+            "key": "process.pid",
+            "value": {
+              "intValue": 12345
+            }
+          },
+          {
+            "key": "host.name",
+            "value": {
+              "stringValue": "host-abc-123"
+            }
+          }
+        ]
+      },
+      "scopeMetrics": [
+        {
+          "scope": {
+            "name": "@instana/collector",
+            "version": "3.0.0"
+          },
+          "metrics": [
+            {
+              "name": "cpu.usage",
+              "sum": {
+                "dataPoints": [
+                  {
+                    "asDouble": 45.5
+                  }
+                ]
+              }
+            },
+            {
+              "name": "memory.used",
+              "sum": {
+                "dataPoints": [
+                  {
+                    "asDouble": 50000000
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

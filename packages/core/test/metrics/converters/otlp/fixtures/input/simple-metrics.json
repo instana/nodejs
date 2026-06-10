@@ -1,0 +1,22 @@
+[
+  {
+    "name": "cpu.usage",
+    "value": 45.5,
+    "timestamp": 1609459200000,
+    "unit": "percent",
+    "from": {
+      "e": "12345",
+      "h": "host-abc-123"
+    }
+  },
+  {
+    "name": "memory.used",
+    "value": 50000000,
+    "timestamp": 1609459200000,
+    "unit": "bytes",
+    "from": {
+      "e": "12345",
+      "h": "host-abc-123"
+    }
+  }
+]

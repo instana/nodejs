@@ -18,6 +18,7 @@ const { constants: tracingConstants } = tracing;
 
 const agentConnection = require('../agentConnection');
 const agentOpts = require('../agent/opts');
+const otlpConverter = require('@instana/core/src/metrics/converters/otlp');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
@@ -116,6 +117,10 @@ function tryToAnnounce(ctx, retryDelay = initialRetryDelay) {
     }
 
     agentOpts.agentUuid = agentResponse.agentUuid;
+
+    // Initialize OTLP converter with host ID
+    otlpConverter.setHostId(agentResponse.agentUuid);
+
     applyAgentConfiguration(agentResponse);
     ctx.transitionTo('announced');
   });
