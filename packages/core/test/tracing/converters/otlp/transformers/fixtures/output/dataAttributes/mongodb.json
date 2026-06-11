@@ -15,8 +15,8 @@
     "value": { "stringValue": "E11000 duplicate key error collection" }
   },
   {
-    "key": "peer.hostname",
+    "key": "net.peer.name",
     "value": { "stringValue": "mongodb-primary.example.com" }
   },
-  { "key": "peer.port", "value": { "intValue": 27017 } }
+  { "key": "net.peer.port", "value": { "intValue": 27017 } }
 ]

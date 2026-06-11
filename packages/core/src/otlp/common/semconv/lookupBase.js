@@ -16,8 +16,9 @@ const BASE_OTLP = {
     RESOURCE: 'resource',
     INSTRUMENTATION_SCOPE: 'instrumentationScope',
     EVENTS: 'events',
-    LINKS: 'links'
-    // Note: Timestamp/duration fields are version-specific and defined in overrides
+    LINKS: 'links',
+    START_TIME_UNIX_NANO: 'start_time_unix_nano',
+    END_TIME_UNIX_NANO: 'end_time_unix_nano'
   },
 
   http: {

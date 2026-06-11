@@ -4,10 +4,14 @@
 
 'use strict';
 
-const { flattenObject, toOtelMetricData, getResourceKey } = require('./util');
+const path = require('path');
+const packageJson = require(path.join(__dirname, '..', '..', '..', '..', 'package.json'));
+
+const { flattenObject, toOtelMetricData } = require('./util');
+const resourceUtil = require('./resource');
+const packageVersion = packageJson?.version;
 
 let config;
-
 let cachedHostId = null;
 let cachedPid = null;
 
@@ -21,50 +25,6 @@ function setHostId(hostId) {
 
 function setPid(pid) {
   cachedPid = String(pid);
-}
-
-/**
- * Build OTEL resource attributes
- * todo: We can make the logic generic with span resource attributes later
- */
-function createResourceAttributes(from) {
-  const attributes = [];
-
-  attributes.push({
-    key: 'telemetry.sdk.language',
-    value: { stringValue: 'nodejs' }
-  });
-
-  attributes.push({
-    key: 'telemetry.sdk.name',
-    value: { stringValue: '@instana/collector' }
-  });
-
-  attributes.push({
-    key: 'service.name',
-    value: {
-      stringValue: config?.serviceName || 'nodejs-service'
-    }
-  });
-
-  const pid = from?.e || cachedPid;
-  const hostId = from?.h || cachedHostId;
-
-  if (pid) {
-    attributes.push({
-      key: 'process.pid',
-      value: { intValue: parseInt(pid, 10) }
-    });
-  }
-
-  if (hostId) {
-    attributes.push({
-      key: 'host.name',
-      value: { stringValue: hostId }
-    });
-  }
-
-  return attributes;
 }
 
 function normalizeMetrics(instanaMetrics) {
@@ -95,15 +55,15 @@ function transform(instanaMetrics) {
     return { resourceMetrics: [] };
   }
 
-  // group by resource
   const grouped = new Map();
 
   metricsArray.forEach(metric => {
-    const key = getResourceKey(metric.from);
+    // use the centralized resource key logic
+    const key = resourceUtil.getResourceKey(metric.from, cachedHostId, cachedPid);
 
     if (!grouped.has(key)) {
       grouped.set(key, {
-        resource: metric.from,
+        resourceContext: metric.from,
         metrics: []
       });
     }
@@ -111,22 +71,32 @@ function transform(instanaMetrics) {
     grouped.get(key).metrics.push(metric);
   });
 
-  // build OTLP output
   const resourceMetrics = Array.from(grouped.values()).map(group => {
     const metrics = group.metrics.map(metric => ({
       name: metric.name || 'unknown.metric',
       ...toOtelMetricData(metric.value)
     }));
 
+    // build the centralized attributes context
+    const attributeContext = {
+      config,
+      packageVersion,
+      hostId: cachedHostId,
+      pid: cachedPid,
+      fromContextHostId: group.resourceContext?.h,
+      fromContextPid: group.resourceContext?.e
+    };
+
     return {
       resource: {
-        attributes: createResourceAttributes(group.resource)
+        // use the centralized attribute creation
+        attributes: resourceUtil.createStandardAttributes(attributeContext)
       },
       scopeMetrics: [
         {
           scope: {
             name: '@instana/collector',
-            version: '3.0.0'
+            version: packageVersion
           },
           metrics
         }
