@@ -3,8 +3,8 @@
   "spanId": "5566778899aabbcc",
   "parentSpanId": "8899aabbccddeeff",
   "kind": 3,
-  "duration": "200000000",
-  "timestamp": "1609459400000000000",
+  "start_time_unix_nano": "1609459400000000000",
+  "end_time_unix_nano": "1609459400200000000",
   "name": "mongo.insert",
   "status": {
     "code": 2,
