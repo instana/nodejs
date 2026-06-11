@@ -16,7 +16,6 @@ class OtlpConfigContext {
   }
 
   /**
-   * Initializes the context with config
    * @param {Object} config
    */
   init(config = {}) {
@@ -31,7 +30,6 @@ class OtlpConfigContext {
   }
 
   get semConv() {
-    // Fallback compilation safety catch if init wasn't called early enough
     if (!this._compiledSemConv) {
       this._compiledSemConv = getLookupConfig(this._semConvVersion);
     }

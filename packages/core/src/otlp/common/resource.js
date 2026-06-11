@@ -8,10 +8,11 @@ const path = require('path');
 const ctx = require('./context');
 
 const packageJson = require(path.join(__dirname, '..', '..', '..', 'package.json'));
-const SDK_VERSION = packageJson?.version || '0.0.0';
+const SDK_VERSION = packageJson?.version || '1.0.0';
+
 // Todo this might be change in case of serverless
 const SCOPE_NAME = '@instana/collector';
-const SCOPE_VERSION = SDK_VERSION || '1.0.0';
+const SCOPE_VERSION = SDK_VERSION;
 
 const RESOURCE_DEFAULTS = {
   'service.name': () => ctx.serviceName || 'unknown_service',
