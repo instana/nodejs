@@ -18,7 +18,7 @@ const { constants: tracingConstants } = tracing;
 
 const agentConnection = require('../agentConnection');
 const agentOpts = require('../agent/opts');
-const otlpConverter = require('@instana/core/src/metrics/converters/otlp');
+const otlpConverter = require('@instana/core/src/otlp/metrics');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;

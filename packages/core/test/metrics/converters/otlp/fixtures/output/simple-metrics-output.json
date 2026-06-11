@@ -3,61 +3,44 @@
     {
       "resource": {
         "attributes": [
-          {
-            "key": "telemetry.sdk.language",
-            "value": {
-              "stringValue": "nodejs"
-            }
-          },
-          {
-            "key": "telemetry.sdk.name",
-            "value": {
-              "stringValue": "@instana/collector"
-            }
-          },
-          {
-            "key": "service.name",
-            "value": {
-              "stringValue": "nodejs-service"
-            }
-          },
-          {
-            "key": "process.pid",
-            "value": {
-              "intValue": 12345
-            }
-          },
-          {
-            "key": "host.name",
-            "value": {
-              "stringValue": "host-abc-123"
-            }
-          }
+          { "key": "service.name", "value": { "stringValue": "unknown_service" } },
+          { "key": "telemetry.sdk.language", "value": { "stringValue": "nodejs" } },
+          { "key": "telemetry.sdk.name", "value": { "stringValue": "instana" } },
+          { "key": "telemetry.sdk.version", "value": { "stringValue": "5.4.1" } }
         ]
       },
       "scopeMetrics": [
         {
-          "scope": {
-            "name": "@instana/collector",
-            "version": "3.0.0"
-          },
+          "scope": { "name": "@instana/collector", "version": "5.4.1" },
           "metrics": [
             {
               "name": "cpu.usage",
+              "unit": "percent",
+              "description": "Metric for cpu.usage",
               "sum": {
+                "aggregationTemporality": 1,
+                "isMonotonic": true,
                 "dataPoints": [
                   {
-                    "asDouble": 45.5
+                    "asDouble": 45.5,
+                    "startTimeUnixNano": "1609459200000000000",
+                    "timeUnixNano": "1609459200000000000"
                   }
                 ]
               }
             },
             {
               "name": "memory.used",
+              "unit": "bytes",
+              "description": "Metric for memory.used",
               "sum": {
+                "aggregationTemporality": 1,
+                "isMonotonic": true,
                 "dataPoints": [
                   {
-                    "asDouble": 50000000
+                    "asDouble": 50000000,
+                    "startTimeUnixNano": "1609459200000000000",
+                    "timeUnixNano": "1609459200000000000"
                   }
                 ]
               }

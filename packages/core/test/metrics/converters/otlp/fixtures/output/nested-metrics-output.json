@@ -3,102 +3,97 @@
     {
       "resource": {
         "attributes": [
-          {
-            "key": "telemetry.sdk.language",
-            "value": {
-              "stringValue": "nodejs"
-            }
-          },
-          {
-            "key": "telemetry.sdk.name",
-            "value": {
-              "stringValue": "@instana/collector"
-            }
-          },
-          {
-            "key": "service.name",
-            "value": {
-              "stringValue": "nodejs-service"
-            }
-          },
-          {
-            "key": "process.pid",
-            "value": {
-              "intValue": 12345
-            }
-          },
-          {
-            "key": "host.name",
-            "value": {
-              "stringValue": "host-abc-123"
-            }
-          }
+          { "key": "service.name", "value": { "stringValue": "unknown_service" } },
+          { "key": "telemetry.sdk.language", "value": { "stringValue": "nodejs" } },
+          { "key": "telemetry.sdk.name", "value": { "stringValue": "instana" } },
+          { "key": "telemetry.sdk.version", "value": { "stringValue": "5.4.1" } }
         ]
       },
       "scopeMetrics": [
         {
-          "scope": {
-            "name": "@instana/collector",
-            "version": "3.0.0"
-          },
+          "scope": { "name": "@instana/collector", "version": "5.4.1" },
           "metrics": [
             {
               "name": "nodejs.memory.heapUsed",
+              "unit": "1",
+              "description": "Metric for nodejs.memory.heapUsed",
               "sum": {
+                "aggregationTemporality": 1,
+                "isMonotonic": true,
                 "dataPoints": [
                   {
-                    "asDouble": 50000000
+                    "asDouble": 50000000,
+                    "startTimeUnixNano": "1781197819569000000",
+                    "timeUnixNano": "1781197819569000000"
                   }
                 ]
               }
             },
             {
               "name": "nodejs.memory.heapTotal",
+              "unit": "1",
+              "description": "Metric for nodejs.memory.heapTotal",
               "sum": {
+                "aggregationTemporality": 1,
+                "isMonotonic": true,
                 "dataPoints": [
                   {
-                    "asDouble": 100000000
+                    "asDouble": 100000000,
+                    "startTimeUnixNano": "1781197819569000000",
+                    "timeUnixNano": "1781197819569000000"
                   }
                 ]
               }
             },
             {
               "name": "nodejs.cpu.usage",
+              "unit": "1",
+              "description": "Metric for nodejs.cpu.usage",
               "sum": {
+                "aggregationTemporality": 1,
+                "isMonotonic": true,
                 "dataPoints": [
                   {
-                    "asDouble": 45.5
+                    "asDouble": 45.5,
+                    "startTimeUnixNano": "1781197819569000000",
+                    "timeUnixNano": "1781197819569000000"
                   }
                 ]
               }
             },
             {
               "name": "activeHandles",
+              "unit": "1",
+              "description": "Metric for activeHandles",
               "sum": {
+                "aggregationTemporality": 1,
+                "isMonotonic": true,
                 "dataPoints": [
-                  {
-                    "asDouble": 10
-                  }
+                  { "asDouble": 10, "startTimeUnixNano": "1781197819569000000", "timeUnixNano": "1781197819569000000" }
                 ]
               }
             },
             {
               "name": "gc.minorGcs",
+              "unit": "1",
+              "description": "Metric for gc.minorGcs",
               "sum": {
+                "aggregationTemporality": 1,
+                "isMonotonic": true,
                 "dataPoints": [
-                  {
-                    "asDouble": 100
-                  }
+                  { "asDouble": 100, "startTimeUnixNano": "1781197819569000000", "timeUnixNano": "1781197819569000000" }
                 ]
               }
             },
             {
               "name": "gc.majorGcs",
+              "unit": "1",
+              "description": "Metric for gc.majorGcs",
               "sum": {
+                "aggregationTemporality": 1,
+                "isMonotonic": true,
                 "dataPoints": [
-                  {
-                    "asDouble": 5
-                  }
+                  { "asDouble": 5, "startTimeUnixNano": "1781197819569000000", "timeUnixNano": "1781197819569000000" }
                 ]
               }
             }

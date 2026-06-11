@@ -41,11 +41,11 @@ const SCHEMA_CACHE = {
 };
 
 /**
- * @param {string} [version] - The target version string ('1.23' or 'latest')
- * @returns {Object} A read-only, deeply nested lookup dictionary
+ * @param {string} [version]
+ * @returns {Object}
  */
 function getLookupConfig(version) {
-  const targetVersion = version || '1.23';
+  const targetVersion = version;
 
   return SCHEMA_CACHE[targetVersion];
 }
