@@ -4,7 +4,14 @@
 
 'use strict';
 
-// 1.23 matches baseline parameters identically. No overrides required.
-const LOOKUP_OVERRIDES = {};
+// v1.23 uses start_time_unix_nano and end_time_unix_nano
+// end_time_unix_nano is computed from start_time + duration
+
+const LOOKUP_OVERRIDES = {
+  metadata: {
+    START_TIME_UNIX_NANO: 'start_time_unix_nano',
+    END_TIME_UNIX_NANO: 'end_time_unix_nano'
+  }
+};
 
 module.exports = { LOOKUP_OVERRIDES };

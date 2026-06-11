@@ -3,8 +3,8 @@
   "spanId": "abcdef1234567890",
   "parentSpanId": "fedcba0987654321",
   "kind": 2,
-  "duration": "150000000",
-  "timestamp": "1609459200000000000",
+  "start_time_unix_nano": "1609459200000000000",
+  "end_time_unix_nano": "1609459200150000000",
   "name": "GET /api/users/123",
   "status": {
     "code": 0

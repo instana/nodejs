@@ -11,14 +11,13 @@ const BASE_OTLP = {
     SPAN_ID: 'spanId',
     PARENT_ID: 'parentSpanId',
     SPAN_KIND: 'kind',
-    TIMESTAMP: 'timestamp',
-    DURATION: 'duration',
     NAME: 'name',
     STATUS: 'status',
     RESOURCE: 'resource',
     INSTRUMENTATION_SCOPE: 'instrumentationScope',
     EVENTS: 'events',
     LINKS: 'links'
+    // Note: Timestamp/duration fields are version-specific and defined in overrides
   },
 
   http: {

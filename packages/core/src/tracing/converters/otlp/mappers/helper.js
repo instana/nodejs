@@ -71,6 +71,16 @@ function convertDuration(msDuration) {
   return String(Math.round(msDuration * 1e6));
 }
 
+/**
+ * @param {number | null | undefined} msDuration
+ * @param {{ ts?: number | null | undefined } | null | undefined} instanaSpan
+ * @returns {string}
+ */
+function convertEndTime(msDuration, instanaSpan) {
+  if (instanaSpan?.ts == null || msDuration == null) return '0';
+  return String(Math.round(instanaSpan.ts * 1e6) + Math.round(msDuration * 1e6));
+}
+
 function convertSpanKind(instanaSpanKind) {
   if (instanaSpanKind === 1) return SPAN_KINDS.SERVER;
   if (instanaSpanKind === 2) return SPAN_KINDS.CLIENT;
@@ -85,5 +95,6 @@ module.exports = {
   convertSpanId,
   convertTimestamp,
   convertDuration,
+  convertEndTime,
   convertSpanKind
 };
