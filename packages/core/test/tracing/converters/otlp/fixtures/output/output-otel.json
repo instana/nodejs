@@ -3,7 +3,12 @@
     {
       "resource": {
         "attributes": [
-          { "key": "service.name", "value": { "stringValue": "nodejs-service" } },
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "unknown_service"
+            }
+          },
           { "key": "telemetry.sdk.language", "value": { "stringValue": "nodejs" } },
           { "key": "telemetry.sdk.name", "value": { "stringValue": "opentelemetry" } },
           { "key": "telemetry.sdk.version", "value": { "stringValue": "2.3.0" } }
@@ -11,7 +16,7 @@
       },
       "scopeSpans": [
         {
-          "scope": { "name": "@instana/collector", "version": "3.0.0" },
+          "scope": { "name": "@instana/collector", "version": "5.4.1" },
           "spans": [
             {
               "traceId": "00000000000000005c53939869360e85",

@@ -18,14 +18,17 @@ module.exports = {
 
   get transform() {
     return (
-      /** @type {import('../../../core').InstanaBaseSpan[]} */
-      spans
+      /** @type {Object|Array} */
+      metrics
     ) => {
       try {
-        return converter.convert(spans);
+        return converter.convert(metrics);
       } catch (error) {
-        return spans;
+        return { resourceMetrics: [] };
       }
     };
-  }
+  },
+
+  setHostId: converter.setHostId,
+  setPid: converter.setPid
 };

@@ -7,7 +7,7 @@
 
 const tracingMetrics = require('./metrics');
 const { transform } = require('./backend_mappers');
-const otlp = require('./converters/otlp');
+const otlp = require('../otlp/traces');
 
 /** @type {import('../core').GenericLogger} */
 let logger;

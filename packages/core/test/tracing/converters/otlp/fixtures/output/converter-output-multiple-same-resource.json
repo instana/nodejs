@@ -24,7 +24,7 @@
           {
             "key": "telemetry.sdk.version",
             "value": {
-              "stringValue": "3.0.0"
+              "stringValue": "5.4.1"
             }
           }
         ]
@@ -33,7 +33,7 @@
         {
           "scope": {
             "name": "@instana/collector",
-            "version": "3.0.0"
+            "version": "5.4.1"
           },
           "spans": [
             {

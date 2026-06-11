@@ -8,11 +8,6 @@
 // Also updates parent ID path and various attribute names
 
 const LOOKUP_OVERRIDES = {
-  metadata: {
-    PARENT_ID: 'parentSpanContext.spanId',
-    TIMESTAMP: 'timestamp',
-    DURATION: 'duration'
-  },
   http: {
     REQUEST_METHOD: 'http.request.method',
     RESPONSE_STATUS: 'http.response.status_code',
