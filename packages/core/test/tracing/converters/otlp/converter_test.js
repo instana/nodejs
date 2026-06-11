@@ -205,7 +205,6 @@ describe('tracing/converters/otlp', () => {
         const expectedOutput = loadTransformerOutputFixture('dataAttributes/mongodb.json');
 
         const result = extractSpanAttributes(input);
-        console.log(result);
 
         expect(result).to.be.an('array');
         expect(result).to.have.lengthOf(expectedOutput.length);

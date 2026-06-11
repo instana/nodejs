@@ -4,8 +4,7 @@
 
 'use strict';
 
-// v1.41.0 (latest) uses timestamp and duration as separate fields
-// Also updates parent ID path and various attribute names
+// v1.41.0 (latest)
 
 const LOOKUP_OVERRIDES = {
   http: {

@@ -10,7 +10,6 @@ const pathUtil = require('path');
 const circularReferenceRemover = require('./util/removeCircular');
 const agentOpts = require('./agent/opts');
 const cmdline = require('./cmdline');
-const otlpConverter = require('@instana/core/src/metrics/converters/otlp');
 /** @typedef {import('@instana/core/src/core').InstanaBaseSpan} InstanaBaseSpan */
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
@@ -41,9 +40,6 @@ let cpuSetFileContent = null;
 exports.init = function init(config, _pidStore) {
   logger = config.logger;
   pidStore = _pidStore;
-
-  // Initialize OTLP metrics converter
-  otlpConverter.setPid(pidStore.pid);
 
   cmdline.init(config);
   cpuSetFileContent = getCpuSetFileContent();
