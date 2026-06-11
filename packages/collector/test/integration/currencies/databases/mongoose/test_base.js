@@ -163,11 +163,11 @@ module.exports = function (name, version, isLatest) {
       expect(span.data.mongo.command).to.equal(command);
 
       if (USE_ATLAS) {
-        expect(span.data.peer.name).to.include('.mongodb.net');
+        expect(span.data.peer.hostname).to.include('.mongodb.net');
         expect(span.data.peer.port).to.equal(27017);
         expect(span.data.mongo.service).to.include('.mongodb.net:27017');
       } else {
-        expect(span.data.peer.name).to.equal('127.0.0.1');
+        expect(span.data.peer.hostname).to.equal('127.0.0.1');
         expect(span.data.peer.port).to.equal(27017);
         expect(span.data.mongo.service).to.equal(process.env.INSTANA_CONNECT_MONGODB);
       }

@@ -4,38 +4,75 @@
 
 'use strict';
 
+/**
+ * @param {Object} from -
+ * @returns {string}
+ */
 function getResourceKey(from) {
   if (!from) return 'h:empty|e:empty';
   return `h:${from.h || 'empty'}|e:${from.e || 'empty'}`;
 }
 
+/**
+ * @param {Object} obj
+ * @param {string} [prefix]
+ * @returns {Object}
+ */
 function flattenObject(obj, prefix = '') {
-  const flattened = {};
-  if (!obj || typeof obj !== 'object') return flattened;
+  if (!obj || typeof obj !== 'object') return {};
 
-  const keys = Object.keys(obj);
-  const len = keys.length;
-
-  for (let i = 0; i < len; i++) {
-    const key = keys[i];
+  return Object.keys(obj).reduce((flattened, key) => {
     const value = obj[key];
-    if (value === null || value === undefined) continue;
+    if (value === null || value === undefined) return flattened;
 
     const newKey = prefix ? `${prefix}.${key}` : key;
 
     if (typeof value === 'object' && !Array.isArray(value)) {
-      const subFlattened = flattenObject(value, newKey);
-      const subKeys = Object.keys(subFlattened);
-      for (let j = 0; j < subKeys.length; j++) {
-        const subKey = subKeys[j];
-        flattened[subKey] = subFlattened[subKey];
-      }
+      Object.assign(flattened, flattenObject(value, newKey));
     } else if (typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean') {
       flattened[newKey] = value;
     }
-  }
 
-  return flattened;
+    return flattened;
+  }, {});
+}
+
+/**
+ * Normalizes flat array-based metric payloads.
+ */
+function normalizeArray(metricsList) {
+  return metricsList.filter(Boolean).map(item => ({
+    name: item.name,
+    value: item.value,
+    timestamp: item.timestamp || 0,
+    unit: item.unit || '',
+    from: item.from
+  }));
+}
+
+function normalizeObject(metricsObj) {
+  const { from, timestamp, ...metricsData } = metricsObj;
+  const flattened = flattenObject(metricsData);
+  const fallbackTimestamp = timestamp || metricsObj.timestamp || 0;
+
+  return Object.keys(flattened).map(key => ({
+    name: key,
+    value: flattened[key],
+    timestamp: fallbackTimestamp,
+    unit: '',
+    from
+  }));
+}
+
+/**
+ * Universal formatter for tracking and structuring incoming telemetry shapes.
+ * Routes parsing elegantly without using loop components.
+ */
+function normalizeMetrics(instanaMetrics) {
+  if (!instanaMetrics) return [];
+  if (Array.isArray(instanaMetrics)) return normalizeArray(instanaMetrics);
+  if (typeof instanaMetrics === 'object') return normalizeObject(instanaMetrics);
+  return [];
 }
 
 /**
@@ -45,10 +82,10 @@ function flattenObject(obj, prefix = '') {
  * @param {string} [explicitType] - Dynamic override hint ('sum' or 'gauge')
  */
 function toOtelMetricData(value, timestampMs, explicitType) {
-  // Safe validation guarding timestamp transformations
-  const ms = Number(timestampMs) || Date.now();
+  const ms = Number(timestampMs) || 0;
   const timeUnixNano = String(ms * 1000000);
 
+  // Path A: Sum Telemetry Structural Mapping
   if (explicitType === 'sum' || (typeof value === 'number' && explicitType !== 'gauge')) {
     return {
       sum: {
@@ -65,6 +102,7 @@ function toOtelMetricData(value, timestampMs, explicitType) {
     };
   }
 
+  // Path B: Gauge Telemetry Structural Mapping (including Booleans and Strings)
   if (explicitType === 'gauge' || typeof value === 'boolean' || typeof value === 'string') {
     let numericValue = 0;
     let customAttributes;
@@ -94,6 +132,7 @@ function toOtelMetricData(value, timestampMs, explicitType) {
     };
   }
 
+  // Path C: Universal Unknown Fallback Block Configuration
   return {
     sum: {
       aggregationTemporality: 1,
@@ -105,6 +144,7 @@ function toOtelMetricData(value, timestampMs, explicitType) {
 
 module.exports = {
   flattenObject,
+  normalizeMetrics,
   toOtelMetricData,
   getResourceKey
 };

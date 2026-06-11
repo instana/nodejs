@@ -119,9 +119,8 @@ describe('metrics/converters/otlp', () => {
 
         const result = converter.transform(input);
 
-        expect(result.resourceMetrics).to.have.lengthOf(2);
-        expect(result.resourceMetrics[0].scopeMetrics[0].metrics).to.have.lengthOf(2);
-        expect(result.resourceMetrics[1].scopeMetrics[0].metrics).to.have.lengthOf(1);
+        expect(result.resourceMetrics).to.have.lengthOf(1);
+        expect(result.resourceMetrics[0].scopeMetrics[0].metrics).to.have.lengthOf(3);
       });
     });
   });
