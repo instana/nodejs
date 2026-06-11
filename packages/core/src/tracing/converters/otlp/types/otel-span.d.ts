@@ -2,6 +2,8 @@
  * (c) Copyright IBM Corp. 2026
  */
 
+// Note: Currently the types is not used anywhere, we will need the type in future
+
 /**
  * OpenTelemetry Span Type Definitions
  *

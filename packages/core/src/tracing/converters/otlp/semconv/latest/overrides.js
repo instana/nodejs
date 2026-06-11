@@ -4,11 +4,14 @@
 
 'use strict';
 
-// 1.41.0
+// v1.41.0 (latest) uses timestamp and duration as separate fields
+// Also updates parent ID path and various attribute names
 
 const LOOKUP_OVERRIDES = {
   metadata: {
-    PARENT_ID: 'parentSpanContext.spanId'
+    PARENT_ID: 'parentSpanContext.spanId',
+    TIMESTAMP: 'timestamp',
+    DURATION: 'duration'
   },
   http: {
     REQUEST_METHOD: 'http.request.method',
