@@ -30,6 +30,8 @@ function setPid(pid) {
 
 /**
  * Converts a batch of Instana metrics to OTLP ResourceMetrics format.
+ * TODO: This conversion is incomplete, its only for the design
+ * for now memory is only converterd to OTLP, all other metrics skipped
  */
 function convert(instanaMetrics) {
   const metricsArray = normalizeMetrics(instanaMetrics);
