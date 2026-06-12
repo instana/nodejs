@@ -454,10 +454,13 @@ function transmitSpans() {
   batchingBuckets.clear();
 
   const payload = prepareSpansForExport(spansToSend);
+  const isOtlpFormat = process.env.INSTANA_OTLP_FORMAT === 'true';
+
   // We restore the content of the spans array if sending them downstream was not successful. We do not restore
   // batchingBuckets, though. This is deliberate. In the worst case, we might miss some batching opportunities, but
   // since sending spans downstream will take a few milliseconds, even that will be rare (and it is acceptable).
-  downstreamConnection.sendSpans(payload, function sendSpans(/** @type {Error} */ error) {
+  // @ts-ignore
+  downstreamConnection.sendSpans(payload, { isOtlpFormat }, function sendSpansCallback(/** @type {Error} */ error) {
     if (error) {
       logger.warn(`Failed to transmit spans, will retry in ${transmissionDelay} ms. ${error?.message} ${error?.stack}`);
       spans = spans.concat(spansToSend);
