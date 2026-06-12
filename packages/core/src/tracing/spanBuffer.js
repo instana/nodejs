@@ -100,7 +100,7 @@ exports.init = function init(config, _downstreamConnection) {
 
     preActivationCleanupIntervalHandle.unref();
   }
-  // TODO: condition only if otlp enabled
+
   otlp.init(config);
 };
 
