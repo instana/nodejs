@@ -8,9 +8,9 @@ const expect = require('chai').expect;
 const fs = require('fs');
 const path = require('path');
 
-const { convert } = require('../../../../src/otlp/traces/converter');
-const { extractSpanMetadata } = require('../../../../src/otlp/traces/transformers/spanMetaData');
-const { extractSpanAttributes } = require('../../../../src/otlp/traces/transformers/spanAttributes');
+const { convert } = require('../../../src/otlp/traces/converter');
+const { extractSpanMetadata } = require('../../../src/otlp/traces/transformers/spanMetaData');
+const { extractSpanAttributes } = require('../../../src/otlp/traces/transformers/spanAttributes');
 
 describe('tracing/converters/otlp', () => {
   function loadInputFixture(filename) {
@@ -24,29 +24,30 @@ describe('tracing/converters/otlp', () => {
   }
 
   function loadTransformerInputFixture(filename) {
-    const fixturePath = path.join(__dirname, 'transformers/fixtures/input', filename);
+    const fixturePath = path.join(__dirname, 'fixtures/input', filename);
     return JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
   }
 
   function loadTransformerOutputFixture(filename) {
-    const fixturePath = path.join(__dirname, 'transformers/fixtures/output', filename);
+    const fixturePath = path.join(__dirname, 'fixtures/output', filename);
     return JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
   }
 
   describe('converter', () => {
     describe('basic conversion', () => {
       it('should convert single HTTP span correctly', () => {
-        const input = [loadInputFixture('input-single-http.json')];
-        const expectedOutput = loadOutputFixture('output-single-http.json');
+        const input = [loadInputFixture('http.json')];
+        const expectedOutput = loadOutputFixture('http.json');
 
         const result = convert(input);
+        console.log(JSON.stringify(result));
 
         expect(result).to.deep.equal(expectedOutput);
       });
 
       it('should convert single otel span correctly', () => {
         const input = [loadInputFixture('otel.json')];
-        const expectedOutput = loadOutputFixture('output-otel.json');
+        const expectedOutput = loadOutputFixture('otel.json');
 
         const result = convert(input);
 
@@ -74,7 +75,7 @@ describe('tracing/converters/otlp', () => {
       });
 
       it('should skip null spans in array', () => {
-        const validSpan = loadInputFixture('input-single-http.json');
+        const validSpan = loadInputFixture('http.json');
         const result = convert([null, validSpan, null]);
 
         expect(result).to.have.property('resourceSpans');
@@ -95,9 +96,9 @@ describe('tracing/converters/otlp', () => {
     });
 
     describe('resource grouping', () => {
-      it.skip('should group spans with same resource attributes', () => {
-        const input = loadInputFixture('converter-input-multiple-same-resource.json');
-        const expectedOutput = loadOutputFixture('converter-output-multiple-same-resource.json');
+      it('should group spans with same resource attributes', () => {
+        const input = loadInputFixture('multiple-same-resource.json');
+        const expectedOutput = loadOutputFixture('multiple-same-resource.json');
 
         const result = convert(input);
 
@@ -105,14 +106,13 @@ describe('tracing/converters/otlp', () => {
         expect(result.resourceSpans).to.have.lengthOf(1);
       });
 
-      it.skip('should separate spans with different resource attributes', () => {
-        const input = loadInputFixture('converter-input-multiple-different-resources.json');
-        const expectedOutput = loadOutputFixture('converter-output-multiple-different-resources.json');
+      it('should separate spans with different resource attributes', () => {
+        const input = loadInputFixture('multiple-different-resources.json');
+        const expectedOutput = loadOutputFixture('multiple-different-resources.json');
 
         const result = convert(input);
 
         expect(result).to.deep.equal(expectedOutput);
-        expect(result.resourceSpans.length).to.be.greaterThan(1);
       });
     });
   });
@@ -256,54 +256,6 @@ describe('tracing/converters/otlp', () => {
       it('should return empty array for null span', () => {
         const result = extractSpanAttributes(null);
         expect(result).to.deep.equal([]);
-      });
-    });
-
-    describe.skip('resourceAttributes', () => {
-      it('should extract resource attributes with default values', () => {
-        const span = {
-          t: '123',
-          s: '456',
-          data: {}
-        };
-
-        // const result = extractResourceAttributes(span);
-
-        // expect(result).to.be.an('array');
-        // expect(result.length).to.be.greaterThan(0);
-
-        // const serviceNameAttr = result.find(attr => attr.key === 'service.name');
-        // expect(serviceNameAttr).to.exist;
-        // expect(serviceNameAttr.value.stringValue).to.equal('unknown_service');
-      });
-
-      it('should extract resource attributes from span data', () => {
-        const span = {
-          t: '123',
-          s: '456',
-          data: {
-            service: 'my-service',
-            resource: {
-              'telemetry.sdk.name': 'custom-sdk',
-              'telemetry.sdk.version': '1.0.0'
-            }
-          }
-        };
-
-        // const result = extractResourceAttributes(span);
-
-        // expect(result).to.be.an('array');
-
-        // const serviceNameAttr = result.find(attr => attr.key === 'service.name');
-        // expect(serviceNameAttr.value.stringValue).to.equal('my-service');
-
-        // const sdkNameAttr = result.find(attr => attr.key === 'telemetry.sdk.name');
-        // expect(sdkNameAttr.value.stringValue).to.equal('custom-sdk');
-      });
-
-      it('should return empty array for null span', () => {
-        //  const result = extractResourceAttributes(null);
-        // expect(result).to.deep.equal([]);
       });
     });
   });
