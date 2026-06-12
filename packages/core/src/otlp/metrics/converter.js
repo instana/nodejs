@@ -35,8 +35,12 @@ function convert(instanaMetrics) {
   const metricsArray = normalizeMetrics(instanaMetrics);
   if (metricsArray.length === 0) return { resourceMetrics: [] };
 
+  // If a new dynamic service name is uncovered from the package payload,
+  // setServiceName will internally bust the resource cache safely.
   if (instanaMetrics?.name && typeof instanaMetrics.name === 'string') {
-    if (!otlpCtx._serviceName) otlpCtx.setServiceName(instanaMetrics.name);
+    if (!otlpCtx._serviceName) {
+      otlpCtx.setServiceName(instanaMetrics.name);
+    }
   }
 
   const otelMetrics = metricsArray

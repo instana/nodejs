@@ -6,7 +6,7 @@
           {
             "key": "service.name",
             "value": {
-              "stringValue": "unknown_service"
+              "stringValue": "otel-exporter-test"
             }
           },
           { "key": "telemetry.sdk.language", "value": { "stringValue": "nodejs" } },
