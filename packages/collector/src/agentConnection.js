@@ -5,7 +5,7 @@
 
 'use strict';
 
-const { util, uninstrumentedHttp, uninstrumentedFs: fs } = require('@instana/core');
+const { util, uninstrumentedHttp, uninstrumentedFs: fs, otlp } = require('@instana/core');
 const pathUtil = require('path');
 const circularReferenceRemover = require('./util/removeCircular');
 const agentOpts = require('./agent/opts');
@@ -307,7 +307,7 @@ exports.sendMetrics = function sendMetrics(data, cb) {
   cb = util.atMostOnce('callback for sendMetrics', cb);
 
   // Transform Instana metrics to OTLP format
-  const otlpMetrics = otlpConverter.transform(data);
+  const otlpMetrics = otlp.metrics.convert(data);
 
   // Send directly without using sendData (which would transform again)
   sendOtlpData('/v1/metrics', otlpMetrics, err => {

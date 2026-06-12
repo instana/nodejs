@@ -14,6 +14,7 @@ const secrets = require('./secrets');
 const tracing = require('./tracing');
 const util = require('./util');
 const coreConfig = require('./config');
+const otlp = require('./otlp');
 
 /**
  * @typedef {{
@@ -98,5 +99,6 @@ module.exports = {
   util,
   init,
   preInit,
-  registerAdditionalInstrumentations
+  registerAdditionalInstrumentations,
+  otlp
 };
