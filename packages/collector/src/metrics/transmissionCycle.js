@@ -6,6 +6,7 @@
 'use strict';
 
 const core = require('@instana/core');
+const otlpMetrics = require('@instana/core/src/otlp/metrics');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
@@ -101,7 +102,17 @@ function sendMetrics() {
     payload = core.util.compression(previousTransmittedValue, newValueToTransmit);
   }
 
-  downstreamConnection.sendMetrics(payload, onMetricsHaveBeenSent.bind(null, isFullTransmission, newValueToTransmit));
+  // Convert to OTLP format if needed (before sending to agentConnection)
+  const isOtlpFormat = process.env.INSTANA_OTLP_FORMAT === 'true';
+  if (isOtlpFormat) {
+    payload = otlpMetrics.transform(payload);
+  }
+
+  downstreamConnection.sendMetrics(
+    payload,
+    { isOtlpFormat },
+    onMetricsHaveBeenSent.bind(null, isFullTransmission, newValueToTransmit)
+  );
 }
 
 /**
