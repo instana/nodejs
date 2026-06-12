@@ -10,7 +10,6 @@ const pathUtil = require('path');
 const circularReferenceRemover = require('./util/removeCircular');
 const agentOpts = require('./agent/opts');
 const cmdline = require('./cmdline');
-const otlpMetrics = require('@instana/core/src/otlp/metrics');
 
 /** @typedef {import('@instana/core/src/core').InstanaBaseSpan} InstanaBaseSpan */
 
@@ -306,30 +305,42 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
 }
 
 /**
- * @param {Object<string, *>} data
- * @param {(...args: *) => *} cb
+ * @param {Object<string, *>} data - Metrics data (already converted to OTLP if needed)
+ * @param {*} optionsOrCallback - Either options object with isOtlpFormat or callback function
+ * @param {(...args: *) => *} [cb]
  */
-exports.sendMetrics = function sendMetrics(data, cb) {
-  cb = util.atMostOnce('callback for sendMetrics', cb);
+exports.sendMetrics = function sendMetrics(data, optionsOrCallback, cb) {
+  /** @type {{ isOtlpFormat?: boolean }} */
+  let options = {};
+  let callback;
 
-  if (process.env.INSTANA_OTLP_FORMAT === 'true') {
-    const otlpFormattedMetrics = otlpMetrics.transform(data);
+  if (typeof optionsOrCallback === 'function') {
+    callback = optionsOrCallback;
+    options = {};
+  } else {
+    options = optionsOrCallback || {};
+    callback = cb;
+  }
 
-    // Send directly without using sendData (which would transform again)
-    sendData('/v1/metrics', otlpFormattedMetrics, err => {
+  callback = util.atMostOnce('callback for sendMetrics', callback);
+
+  const isOtlpFormat = options.isOtlpFormat;
+
+  if (isOtlpFormat) {
+    sendData('/v1/metrics', data, err => {
       if (err) {
         logger.error('Error sending metrics:', err);
-        cb(err, null);
+        callback(err, null);
       } else {
         // OTLP endpoints don't return requests like the old Instana endpoint
         // Always return empty array for compatibility
-        cb(null, []);
+        callback(null, []);
       }
     });
   } else {
     sendData(`/com.instana.plugin.nodejs.${pidStore.pid}`, data, (err, body) => {
       if (err) {
-        cb(err, null);
+        callback(err, null);
       } else {
         try {
           // 2016-09-11
@@ -340,7 +351,7 @@ exports.sendMetrics = function sendMetrics(data, cb) {
           body = [];
         }
 
-        cb(null, body);
+        callback(null, body);
       }
     });
   }
@@ -348,27 +359,46 @@ exports.sendMetrics = function sendMetrics(data, cb) {
 
 /**
  *
- * @param {Array.<InstanaBaseSpan>|Object} spans
- * @param {(...args: *) => *} cb
+ * @param {Array.<InstanaBaseSpan>|Object} spans - Spans data (already converted to OTLP if needed)
+ * @param {*} optionsOrCallback - Either options object with isOtlpFormat or callback function
+ * @param {(...args: *) => *} [cb]
  */
-exports.sendSpans = function sendSpans(spans, cb) {
-  const callback = util.atMostOnce('callback for sendSpans', err => {
+exports.sendSpans = function sendSpans(spans, optionsOrCallback, cb) {
+  /** @type {{ isOtlpFormat?: boolean }} */
+  let options = {};
+  let callback;
+
+  if (typeof optionsOrCallback === 'function') {
+    callback = optionsOrCallback;
+    options = {};
+  } else {
+    options = optionsOrCallback || {};
+    callback = cb;
+  }
+
+  const wrappedCallback = util.atMostOnce('callback for sendSpans', err => {
     if (err && !maxContentErrorHasBeenLogged && err instanceof PayloadTooLargeError) {
-      logLargeSpans(spans);
+      if (Array.isArray(spans)) {
+        logLargeSpans(spans);
+      }
     } else if (err) {
-      const spanInfo = getSpanLengthInfo(spans);
-      logger.debug(`Failed to send: ${JSON.stringify(spanInfo)}`);
-    } else {
+      if (Array.isArray(spans)) {
+        const spanInfo = getSpanLengthInfo(spans);
+        logger.debug(`Failed to send: ${JSON.stringify(spanInfo)}`);
+      }
+    } else if (Array.isArray(spans)) {
       const spanInfo = getSpanLengthInfo(spans);
       logger.debug(`Successfully sent: ${JSON.stringify(spanInfo)}`);
     }
-    cb(err);
+    callback(err);
   });
 
-  if (process.env.INSTANA_OTLP_FORMAT === 'true') {
-    sendData('/v1/traces', spans, callback, true);
+  const isOtlpFormat = options.isOtlpFormat;
+
+  if (isOtlpFormat) {
+    sendData('/v1/traces', spans, wrappedCallback, true);
   } else {
-    sendData(`/com.instana.plugin.nodejs/traces.${pidStore.pid}`, spans, callback, true);
+    sendData(`/com.instana.plugin.nodejs/traces.${pidStore.pid}`, spans, wrappedCallback, true);
   }
 };
 
@@ -478,13 +508,14 @@ function sendData(path, data, cb, ignore404 = false) {
     return setImmediate(cb.bind(null, error));
   }
 
-  if (process.env.INSTANA_OTLP_FORMAT === 'true') {
-    agentOpts.dataPort = 4318;
-  }
+  const isOtlpEndpoint = path.startsWith('/v1/');
+  // TODO: handle upper config
+  const port = isOtlpEndpoint ? 4318 : agentOpts.dataPort;
+
   const req = http.request(
     {
       host: agentOpts.host,
-      port: agentOpts.dataPort,
+      port: port,
       path,
       method: 'POST',
       agent: http.agent,
