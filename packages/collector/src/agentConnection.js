@@ -354,12 +354,12 @@ exports.sendMetrics = function sendMetrics(data, cb) {
 exports.sendSpans = function sendSpans(spans, cb) {
   const callback = util.atMostOnce('callback for sendSpans', err => {
     if (err && !maxContentErrorHasBeenLogged && err instanceof PayloadTooLargeError) {
-      logLargeSpans(spans.resourceSpans || spans);
+      logLargeSpans(spans);
     } else if (err) {
-      const spanInfo = Array.isArray(spans) ? getSpanLengthInfo(spans) : 'Pre-formatted OTLP payload';
+      const spanInfo = getSpanLengthInfo(spans);
       logger.debug(`Failed to send: ${JSON.stringify(spanInfo)}`);
     } else {
-      const spanInfo = Array.isArray(spans) ? getSpanLengthInfo(spans) : 'Pre-formatted OTLP payload';
+      const spanInfo = getSpanLengthInfo(spans);
       logger.debug(`Successfully sent: ${JSON.stringify(spanInfo)}`);
     }
     cb(err);
