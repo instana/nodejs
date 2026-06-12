@@ -8,8 +8,8 @@ const expect = require('chai').expect;
 const fs = require('fs');
 const path = require('path');
 
-const otlpConverter = require('../../../../src/otlp/metrics');
-const converter = require('../../../../src/otlp/metrics');
+const otlpConverter = require('../../../src/otlp/metrics');
+const converter = require('../../../src/otlp/metrics');
 
 describe('metrics/converters/otlp', () => {
   function loadInputFixture(filename) {
@@ -38,7 +38,6 @@ describe('metrics/converters/otlp', () => {
 
         const result = converter.transform(input);
 
-        // Safely adjust timestamps to avoid dynamic clock skew failures
         if (result.resourceMetrics?.[0]?.scopeMetrics?.[0]?.metrics) {
           result.resourceMetrics[0].scopeMetrics[0].metrics.forEach(metric => {
             const typeKey = Object.keys(metric).find(k => metric[k].dataPoints);
@@ -58,8 +57,6 @@ describe('metrics/converters/otlp', () => {
 
         const result = converter.transform(input);
 
-        // Assert against the exact result directly because your converter
-        // now correctly preserves the native 1609459200000 timestamp!
         expect(result).to.deep.equal(expectedOutput);
       });
 
