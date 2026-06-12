@@ -526,6 +526,9 @@ function applySpanTransformation(spansToSend) {
  * @returns {any}
  */
 function prepareSpansForExport(spansToSend) {
+  // TODO-later phase: Delegate OTLP-specific processing to the OTLP trace exporter.
+  // The exporter can transform and send spans, while AgentConnection
+  // remains focused on transporting Instana-formatted spans only.
   if (process.env.INSTANA_OTLP_FORMAT === 'true') {
     return otlp.transform(spansToSend);
   }
