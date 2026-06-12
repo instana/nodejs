@@ -100,8 +100,6 @@ exports.init = function init(config, _downstreamConnection) {
 
     preActivationCleanupIntervalHandle.unref();
   }
-
-  otlp.init(config);
 };
 
 /**
