@@ -312,41 +312,64 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
 exports.sendMetrics = function sendMetrics(data, cb) {
   cb = util.atMostOnce('callback for sendMetrics', cb);
 
-  const otlpFormattedMetrics = otlpMetrics.transform(data);
+  if (process.env.INSTANA_OTLP_FORMAT === 'true') {
+    const otlpFormattedMetrics = otlpMetrics.transform(data);
 
-  // Send directly without using sendData (which would transform again)
-  sendOtlpData('/v1/metrics', otlpFormattedMetrics, err => {
-    if (err) {
-      logger.error('Error sending metrics:', err);
-      cb(err, null);
-    } else {
-      // OTLP endpoints don't return requests like the old Instana endpoint
-      // Always return empty array for compatibility
-      cb(null, []);
-    }
-  });
+    // Send directly without using sendData (which would transform again)
+    sendData('/v1/metrics', otlpFormattedMetrics, err => {
+      if (err) {
+        logger.error('Error sending metrics:', err);
+        cb(err, null);
+      } else {
+        // OTLP endpoints don't return requests like the old Instana endpoint
+        // Always return empty array for compatibility
+        cb(null, []);
+      }
+    });
+  } else {
+    sendData(`/com.instana.plugin.nodejs.${pidStore.pid}`, data, (err, body) => {
+      if (err) {
+        cb(err, null);
+      } else {
+        try {
+          // 2016-09-11
+          // Older sensor versions will not repond with a JSON
+          // structure. Support a smooth update path.
+          body = JSON.parse(body);
+        } catch (e) {
+          body = [];
+        }
+
+        cb(null, body);
+      }
+    });
+  }
 };
 
 /**
  *
- * @param {Array.<InstanaBaseSpan>} spans
+ * @param {Array.<InstanaBaseSpan>|Object} spans
  * @param {(...args: *) => *} cb
  */
 exports.sendSpans = function sendSpans(spans, cb) {
   const callback = util.atMostOnce('callback for sendSpans', err => {
     if (err && !maxContentErrorHasBeenLogged && err instanceof PayloadTooLargeError) {
-      logLargeSpans(spans);
+      logLargeSpans(spans.resourceSpans || spans);
     } else if (err) {
-      const spanInfo = spans;
+      const spanInfo = Array.isArray(spans) ? getSpanLengthInfo(spans) : 'Pre-formatted OTLP payload';
       logger.debug(`Failed to send: ${JSON.stringify(spanInfo)}`);
     } else {
-      const spanInfo = spans;
+      const spanInfo = Array.isArray(spans) ? getSpanLengthInfo(spans) : 'Pre-formatted OTLP payload';
       logger.debug(`Successfully sent: ${JSON.stringify(spanInfo)}`);
     }
     cb(err);
   });
 
-  sendData('/v1/traces', spans, callback, true);
+  if (process.env.INSTANA_OTLP_FORMAT === 'true') {
+    sendData('/v1/traces', spans, callback, true);
+  } else {
+    sendData(`/com.instana.plugin.nodejs/traces.${pidStore.pid}`, spans, callback, true);
+  }
 };
 
 /**
@@ -455,8 +478,9 @@ function sendData(path, data, cb, ignore404 = false) {
     return setImmediate(cb.bind(null, error));
   }
 
-  // Use dataPort for sending all telemetry data (metrics, spans, profiles, events, etc.)
-  // dataPort defaults to agentPort but can be configured separately for future use cases (e.g., OTel format)
+  if (process.env.INSTANA_OTLP_FORMAT === 'true') {
+    agentOpts.dataPort = 4318;
+  }
   const req = http.request(
     {
       host: agentOpts.host,
@@ -470,24 +494,24 @@ function sendData(path, data, cb, ignore404 = false) {
       }
     },
     res => {
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        if (res.statusCode !== 404 || !ignore404) {
+          const statusCodeError = new Error(
+            `Failed to send data to agent via POST ${path}. Got status code ${res.statusCode}.`
+          );
+          // @ts-ignore
+          statusCodeError.statusCode = res.statusCode;
+          cb(statusCodeError);
+          return;
+        }
+      }
+
       res.setEncoding('utf8');
       let responseBody = '';
       res.on('data', chunk => {
         responseBody += chunk;
       });
       res.on('end', () => {
-        if (res.statusCode < 200 || res.statusCode >= 300) {
-          if (res.statusCode !== 404 || !ignore404) {
-            const statusCodeError = new Error(
-              `Failed to send data to agent via POST ${path}. Got status code ${res.statusCode}.`
-            );
-            // @ts-ignore
-            statusCodeError.statusCode = res.statusCode;
-            cb(statusCodeError);
-            return;
-          }
-        }
-
         cb(null, responseBody);
       });
     }
@@ -508,86 +532,6 @@ function sendData(path, data, cb, ignore404 = false) {
     }
 
     cb(new Error(`Send data to agent via POST ${path}. Request failed: ${err.message}`));
-  });
-
-  req.write(payload);
-  req.end();
-}
-
-/**
- * Sendet bereits transformierte OTLP-Daten an den Agent
- * @param {string} path - API path
- * @param {Object} otlpData - Already transformed OTLP data
- * @param {(...args: *) => *} cb - Callback
- * @param {boolean} [ignore404]
- */
-function sendOtlpData(path, otlpData, cb, ignore404 = false) {
-  cb = util.atMostOnce(`callback for sendOtlpData: ${path}`, cb);
-
-  const payloadAsString = JSON.stringify(otlpData, circularReferenceRemover());
-  if (typeof logger.trace === 'function') {
-    logger.trace(`Sending OTLP data to ${path}.`);
-  } else {
-    logger.debug(`Sending OTLP data to ${path}, ${agentOpts}`);
-  }
-
-  // Convert payload to a buffer to correctly identify content-length ahead of time.
-  const payload = Buffer.from(payloadAsString, 'utf8');
-  if (payload.length > maxContentLength) {
-    const error = new PayloadTooLargeError(`Request payload is too large. Will not send data to agent. (POST ${path})`);
-    return setImmediate(cb.bind(null, error));
-  }
-
-  const req = http.request(
-    {
-      host: agentOpts.host,
-      port: 4318,
-      path,
-      method: 'POST',
-      agent: http.agent,
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-        'Content-Length': payload.length
-      }
-    },
-    res => {
-      res.setEncoding('utf8');
-      let responseBody = '';
-      res.on('data', chunk => {
-        responseBody += chunk;
-      });
-      res.on('end', () => {
-        if (res.statusCode < 200 || res.statusCode >= 300) {
-          if (ignore404 && res.statusCode === 404) {
-            return cb(null, responseBody);
-          }
-          return cb(
-            new Error(
-              `Failed to send data to agent via POST ${path}. ` +
-                `Got status code ${res.statusCode}. Response: ${responseBody}`
-            ),
-            responseBody
-          );
-        }
-        cb(null, responseBody);
-      });
-    }
-  );
-
-  req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
-    if (req.destroyed) {
-      return;
-    }
-
-    req.destroy(new Error(`Sending data to agent via POST ${path}. Request timeout.`));
-  });
-
-  req.on('error', err => {
-    if (req.destroyed) {
-      return;
-    }
-
-    cb(new Error(`Send OTLP data to agent via POST ${path}. Request failed: ${err.message}`));
   });
 
   req.write(payload);
