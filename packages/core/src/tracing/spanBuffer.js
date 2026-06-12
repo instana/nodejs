@@ -454,6 +454,7 @@ function transmitSpans() {
   batchingBuckets.clear();
 
   const payload = prepareSpansForExport(spansToSend);
+  // TODO: the config support needs to be added correctly
   const isOtlpFormat = process.env.INSTANA_OTLP_FORMAT === 'true';
 
   // We restore the content of the spans array if sending them downstream was not successful. We do not restore
@@ -519,6 +520,9 @@ function applySpanTransformation(span) {
  * @returns {any}
  */
 function prepareSpansForExport(spansToSend) {
+  // TODO-later phase: Delegate OTLP-specific processing to the OTLP trace exporter.
+  // The exporter can transform and send spans, while AgentConnection
+  // remains focused on transporting Instana-formatted spans only.
   if (process.env.INSTANA_OTLP_FORMAT === 'true') {
     return otlp.transform(spansToSend);
   }

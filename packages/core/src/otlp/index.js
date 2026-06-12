@@ -4,8 +4,8 @@
 
 'use strict';
 
-const traces = require('./traces/index');
-const metrics = require('./metrics/index');
+const traces = require('./traces');
+const metrics = require('./metrics');
 const ctx = require('./common/context');
 
 /**

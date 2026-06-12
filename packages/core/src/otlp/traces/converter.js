@@ -49,14 +49,17 @@ function convert(spans) {
       const originFrom = rawSpan.data?.resource || null;
       const rKey = resourceFactory.getResourceKey(originFrom);
 
-      if (!resourceGroupMap.has(rKey)) {
-        resourceGroupMap.set(rKey, {
+      let group = resourceGroupMap.get(rKey);
+
+      if (!group) {
+        group = {
           representativeSpan: rawSpan,
           otelSpans: []
-        });
+        };
+        resourceGroupMap.set(rKey, group);
       }
 
-      resourceGroupMap.get(rKey).otelSpans.push(mappedSpan);
+      group.otelSpans.push(mappedSpan);
     } catch (error) {
       logger?.debug('Failed to transform individual OTLP span context:', error);
     }

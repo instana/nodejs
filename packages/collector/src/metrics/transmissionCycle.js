@@ -102,7 +102,7 @@ function sendMetrics() {
     payload = core.util.compression(previousTransmittedValue, newValueToTransmit);
   }
 
-  // Convert to OTLP format if needed (before sending to agentConnection)
+  // TODO: the config support needs to be added correctly in config module
   const isOtlpFormat = process.env.INSTANA_OTLP_FORMAT === 'true';
   if (isOtlpFormat) {
     payload = otlpMetrics.transform(payload);
