@@ -11,7 +11,6 @@ const { RESOURCE_ATTRIBUTES } = require('./constants');
 const packageJson = require(path.join(__dirname, '..', '..', '..', 'package.json'));
 const SDK_VERSION = packageJson?.version || '1.0.0';
 
-// Todo this might be change in case of serverless
 const SCOPE_NAME = '@instana/collector';
 const SCOPE_VERSION = SDK_VERSION;
 
@@ -21,6 +20,12 @@ const RESOURCE_DEFAULTS = {
   [RESOURCE_ATTRIBUTES.SDK_NAME]: () => 'instana',
   [RESOURCE_ATTRIBUTES.SDK_VERSION]: () => SDK_VERSION
 };
+
+const resourceCache = new Map();
+
+function clearResourceCache() {
+  resourceCache.clear();
+}
 
 /**
  * Extracts and maps standard OTLP resource attributes
@@ -36,11 +41,23 @@ function extractResourceAttributes(rawPayload, options = {}) {
     return { attributes: [] };
   }
 
+  const includeInfra = options.includeInfrastructure === true;
+  const instanaFrom = rawPayload.from || rawPayload.f || rawPayload.data?.resource || null;
+
+  // Create a unique cache identity key combining service name state, infrastructure preference, and endpoint details
+  const cacheKey = `${ctx._serviceName || 'no_svc'}|infra:${includeInfra}|h:${instanaFrom?.h || 'empty'}|e:${
+    instanaFrom?.e || 'empty'
+  }`;
+
+  if (resourceCache.has(cacheKey)) {
+    return resourceCache.get(cacheKey);
+  }
+
   const spanData = rawPayload.data || {};
   const embeddedResource = spanData.resource || rawPayload.resource || {};
   const attributes = [];
 
-  // 1. Process service identity and SDK base configurations dynamically
+  // 2. Process service identity and SDK defaults
   const keys = Object.keys(RESOURCE_DEFAULTS);
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
@@ -55,9 +72,8 @@ function extractResourceAttributes(rawPayload, options = {}) {
     }
   }
 
-  // 2. Attach infrastructure environment details if requested
-  if (options.includeInfrastructure === true) {
-    const instanaFrom = rawPayload.from || rawPayload.f || null;
+  // 3. Process infrastructure metadata
+  if (includeInfra) {
     const finalPid = instanaFrom?.e || options.fallbackPid || ctx.pid;
     const finalHost = instanaFrom?.h || ctx.hostId;
 
@@ -76,7 +92,11 @@ function extractResourceAttributes(rawPayload, options = {}) {
     }
   }
 
-  return { attributes };
+  const result = { attributes };
+
+  // 4. Save to cache
+  resourceCache.set(cacheKey, result);
+  return result;
 }
 
 /**
@@ -87,12 +107,12 @@ function getResourceKey(instanaFrom) {
   if (!instanaFrom) {
     return 'h:empty|e:empty';
   }
-
   return `h:${instanaFrom.h || 'empty'}|e:${instanaFrom.e || 'empty'}`;
 }
 
 module.exports = {
   extractResourceAttributes,
+  clearResourceCache,
   getResourceKey,
   SCOPE_NAME,
   SCOPE_VERSION
