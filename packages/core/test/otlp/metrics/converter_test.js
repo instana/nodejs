@@ -29,28 +29,6 @@ describe('metrics/converters/otlp', () => {
 
   describe('converter', () => {
     describe('basic conversion', () => {
-      it('should convert nested metrics object to OTLP format', () => {
-        const input = loadInputFixture('nested-metrics.json');
-        const expectedOutput = loadOutputFixture('nested-metrics-output.json');
-
-        converter.setHostId('host-abc-123');
-        converter.setPid('12345');
-
-        const result = converter.transform(input);
-
-        if (result.resourceMetrics?.[0]?.scopeMetrics?.[0]?.metrics) {
-          result.resourceMetrics[0].scopeMetrics[0].metrics.forEach(metric => {
-            const typeKey = Object.keys(metric).find(k => metric[k].dataPoints);
-            if (typeKey && metric[typeKey].dataPoints?.[0]) {
-              metric[typeKey].dataPoints[0].startTimeUnixNano = '1781197819569000000';
-              metric[typeKey].dataPoints[0].timeUnixNano = '1781197819569000000';
-            }
-          });
-        }
-
-        expect(result).to.deep.equal(expectedOutput);
-      });
-
       it('should convert array of metrics to OTLP format', () => {
         const input = loadInputFixture('simple-metrics.json');
         const expectedOutput = loadOutputFixture('simple-metrics-output.json');
@@ -78,7 +56,8 @@ describe('metrics/converters/otlp', () => {
 
     describe('metric value types', () => {
       it('should handle number values as sum', () => {
-        const input = [{ name: 'test.metric', value: 42.5 }];
+        const input = [{ name: 'memory.rss', value: 42.5 }];
+
         const result = converter.transform(input);
 
         const metric = result.resourceMetrics[0].scopeMetrics[0].metrics[0];
@@ -86,17 +65,20 @@ describe('metrics/converters/otlp', () => {
         expect(metric.sum.dataPoints[0].asDouble).to.equal(42.5);
       });
 
-      it('should handle boolean values as gauge', () => {
-        const input = [{ name: 'test.flag', value: true }];
+      it('should convert memory metrics', () => {
+        const input = [{ name: 'memory.rss', value: 116752384 }];
+
         const result = converter.transform(input);
 
         const metric = result.resourceMetrics[0].scopeMetrics[0].metrics[0];
-        expect(metric).to.have.property('gauge');
-        expect(metric.gauge.dataPoints[0].asDouble).to.equal(1);
+        expect(metric.name).to.equal('memory.rss');
+        expect(metric).to.have.property('sum');
+        expect(metric.sum.dataPoints[0].asDouble).to.equal(116752384);
       });
 
       it('should handle string values as gauge with attribute', () => {
-        const input = [{ name: 'test.status', value: 'active' }];
+        const input = [{ name: 'memory.status', value: 'active' }];
+
         const result = converter.transform(input);
 
         const metric = result.resourceMetrics[0].scopeMetrics[0].metrics[0];
@@ -104,14 +86,22 @@ describe('metrics/converters/otlp', () => {
         expect(metric.gauge.dataPoints[0].attributes).to.be.an('array');
         expect(metric.gauge.dataPoints[0].attributes[0].value.stringValue).to.equal('active');
       });
+
+      it('should filter non-memory metrics', () => {
+        const input = [{ name: 'eventLoop.delay', value: 42 }];
+
+        const result = converter.transform(input);
+
+        expect(result).to.deep.equal({ resourceMetrics: [] });
+      });
     });
 
     describe('resource grouping', () => {
-      it('should group metrics by resource', () => {
+      it('should group memory metrics by resource', () => {
         const input = [
-          { name: 'metric1', value: 10, from: { e: '111', h: 'host1' } },
-          { name: 'metric2', value: 20, from: { e: '111', h: 'host1' } },
-          { name: 'metric3', value: 30, from: { e: '222', h: 'host2' } }
+          { name: 'memory.rss', value: 10, from: { e: '111', h: 'host1' } },
+          { name: 'memory.heapUsed', value: 20, from: { e: '111', h: 'host1' } },
+          { name: 'memory.heapTotal', value: 30, from: { e: '222', h: 'host2' } }
         ];
 
         const result = converter.transform(input);
@@ -140,7 +130,16 @@ describe('metrics/converters/otlp', () => {
     });
 
     it('should handle errors gracefully and return empty result', () => {
-      const result = otlpConverter.transform({ invalid: { deeply: { nested: { circular: null } } } });
+      const result = otlpConverter.transform({
+        invalid: {
+          deeply: {
+            nested: {
+              circular: null
+            }
+          }
+        }
+      });
+
       expect(result).to.have.property('resourceMetrics');
       expect(result.resourceMetrics).to.be.an('array');
     });

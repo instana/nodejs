@@ -6,14 +6,28 @@
 
 const { getLookupConfig } = require('./semconv');
 
+const DEFAULT_SEMCONV_VERSION = '1.23';
+
 class OtlpConfigContext {
   constructor() {
     this._config = null;
-    this._semConvVersion = '1.23';
+    this._semConvVersion = DEFAULT_SEMCONV_VERSION;
     this._compiledSemConv = null;
     this._hostId = null;
     this._pid = null;
     this._serviceName = null;
+  }
+
+  _clearResourceCache() {
+    try {
+      const { clearResourceCache } = require('./resource');
+
+      if (typeof clearResourceCache === 'function') {
+        clearResourceCache();
+      }
+    } catch (_) {
+      // ignore
+    }
   }
 
   /**
@@ -21,18 +35,17 @@ class OtlpConfigContext {
    */
   init(config = {}) {
     this._config = config;
-    // future value in config semConvVersion
-    this._semConvVersion = config?.semConvVersion || '1.23';
+    this._semConvVersion = config.semConvVersion || DEFAULT_SEMCONV_VERSION;
     this._compiledSemConv = getLookupConfig(this._semConvVersion);
-    this._pid = process.pid || null;
-    this._serviceName = config.serviceName;
+    this._pid = String(process.pid);
+    this._serviceName = config.serviceName || null;
+
+    this._clearResourceCache();
   }
 
   get semConv() {
-    if (!this._compiledSemConv) {
-      this._compiledSemConv = getLookupConfig(this._semConvVersion);
-    }
-    return this._compiledSemConv;
+    // eslint-disable-next-line no-return-assign
+    return this._compiledSemConv || (this._compiledSemConv = getLookupConfig(this._semConvVersion));
   }
 
   get semConvVersion() {
@@ -40,7 +53,12 @@ class OtlpConfigContext {
   }
 
   setHostId(hostId) {
+    if (this._hostId === hostId) {
+      return;
+    }
+
     this._hostId = hostId;
+    this._clearResourceCache();
   }
 
   get hostId() {
@@ -48,7 +66,14 @@ class OtlpConfigContext {
   }
 
   setPid(pid) {
-    this._pid = pid ? String(pid) : null;
+    const normalizedPid = pid ? String(pid) : null;
+
+    if (this._pid === normalizedPid) {
+      return;
+    }
+
+    this._pid = normalizedPid;
+    this._clearResourceCache();
   }
 
   get pid() {
@@ -59,7 +84,12 @@ class OtlpConfigContext {
    * @param {string} serviceName
    */
   setServiceName(serviceName) {
-    this._serviceName = this._serviceName ? this._serviceName : serviceName;
+    if (!serviceName || this._serviceName === serviceName) {
+      return;
+    }
+
+    this._serviceName = serviceName;
+    this._clearResourceCache();
   }
 
   get serviceName() {

@@ -4,19 +4,17 @@
 
 'use strict';
 
-function getConverter() {
-  return require('./converter');
-}
+const converter = require('./converter');
 
 /**
  * @param {Object} config
  */
 function init(config) {
-  getConverter().init(config);
+  converter.init(config);
 }
 
 function transform(metrics) {
-  return getConverter().convert(metrics);
+  return converter.convert(metrics);
 }
 
 module.exports = {
@@ -24,10 +22,10 @@ module.exports = {
   transform,
 
   get setHostId() {
-    return getConverter().setHostId;
+    return converter.setHostId;
   },
 
   get setPid() {
-    return getConverter().setPid;
+    return converter.setPid;
   }
 };
