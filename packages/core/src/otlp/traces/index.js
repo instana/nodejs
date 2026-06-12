@@ -7,25 +7,20 @@
 const converter = require('./converter');
 
 /**
- * @param {Object} config - Configuration object
+ * @param {Object} config
  */
 function init(config) {
   converter.init(config);
 }
 
+/**
+ * @param {Object[]} spans
+ */
+function transform(spans) {
+  return converter.convert(spans);
+}
+
 module.exports = {
   init,
-
-  get transform() {
-    return (
-      /** @type {import('../../core').InstanaBaseSpan[]} */
-      spans
-    ) => {
-      try {
-        return converter.convert(spans);
-      } catch (error) {
-        return spans;
-      }
-    };
-  }
+  transform
 };
