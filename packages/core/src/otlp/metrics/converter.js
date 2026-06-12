@@ -35,6 +35,10 @@ function convert(instanaMetrics) {
   const metricsArray = normalizeMetrics(instanaMetrics);
   if (metricsArray.length === 0) return { resourceMetrics: [] };
 
+  if (instanaMetrics?.name && typeof instanaMetrics.name === 'string') {
+    if (!otlpCtx._serviceName) otlpCtx.setServiceName(instanaMetrics.name);
+  }
+
   const otelMetrics = metricsArray
     .map(rawMetric => {
       try {
@@ -54,7 +58,8 @@ function convert(instanaMetrics) {
     resourceMetrics: [
       {
         resource: resourceFactory.extractResourceAttributes(metricsArray[0], {
-          includeInfrastructure: true
+          includeInfrastructure: true,
+          fallbackPid: instanaMetrics?.pid
         }),
         scopeMetrics: [
           {

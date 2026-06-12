@@ -13,6 +13,7 @@ class OtlpConfigContext {
     this._compiledSemConv = null;
     this._hostId = null;
     this._pid = null;
+    this._serviceName = null;
   }
 
   /**
@@ -20,13 +21,11 @@ class OtlpConfigContext {
    */
   init(config = {}) {
     this._config = config;
+    // future value in config semConvVersion
     this._semConvVersion = config?.semConvVersion || '1.23';
     this._compiledSemConv = getLookupConfig(this._semConvVersion);
     this._pid = process.pid || null;
-  }
-
-  get serviceName() {
-    return this._config?.serviceName || 'unknown_service';
+    this._serviceName = config.serviceName;
   }
 
   get semConv() {
@@ -54,6 +53,17 @@ class OtlpConfigContext {
 
   get pid() {
     return this._pid;
+  }
+
+  /**
+   * @param {string} serviceName
+   */
+  setServiceName(serviceName) {
+    this._serviceName = this._serviceName ? this._serviceName : serviceName;
+  }
+
+  get serviceName() {
+    return this._serviceName;
   }
 }
 
