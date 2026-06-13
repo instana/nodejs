@@ -28,7 +28,7 @@ function getMetadataMappings(OTLP) {
   };
 
   const computedMappings = [
-    { otlp: OTLP.metadata.NAME, compute: generateSpanName },
+    { otlp: OTLP.metadata.NAME, compute: span => generateSpanName(span, OTLP) },
     { otlp: OTLP.metadata.STATUS, compute: generateSpanStatus },
     { otlp: OTLP.metadata.END_TIME_UNIX_NANO, compute: generateEndTime },
 

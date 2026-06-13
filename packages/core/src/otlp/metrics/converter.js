@@ -7,11 +7,11 @@
 const otlpCtx = require('../common/context');
 const { normalizeMetrics } = require('./util');
 const transformers = require('./transformers');
-const resourceFactory = require('../common/resource');
+const resource = require('../common/transformers/resource');
 
 const SCOPE = {
-  name: resourceFactory.SCOPE_NAME,
-  version: resourceFactory.SCOPE_VERSION
+  name: resource.SCOPE_NAME,
+  version: resource.SCOPE_VERSION
 };
 
 let logger;
@@ -63,7 +63,7 @@ function convert(instanaMetrics) {
   return {
     resourceMetrics: [
       {
-        resource: resourceFactory.extractResourceAttributes(metricsArray[0], {
+        resource: resource.extractResourceAttributes(metricsArray[0], {
           includeInfrastructure: true,
           fallbackPid: instanaMetrics?.pid
         }),
