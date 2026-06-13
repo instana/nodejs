@@ -157,5 +157,3 @@ export interface OtelSpan {
    */
   resource?: OtelResource;
 }
-
-// Made with Bob

@@ -20,7 +20,7 @@ class OtlpConfigContext {
 
   _clearResourceCache() {
     try {
-      const { clearResourceCache } = require('./resource');
+      const { clearResourceCache } = require('./transformers/resource');
 
       if (typeof clearResourceCache === 'function') {
         clearResourceCache();

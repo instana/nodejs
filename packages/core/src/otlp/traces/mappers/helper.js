@@ -4,21 +4,25 @@
 
 'use strict';
 
-const { STATUS_CODES, SPAN_KINDS, INSTRUMENTATION_TYPES } = require('../constants');
-const { SPAN_NAME_MAPPING } = require('./spanName');
+const { STATUS_CODES, SPAN_KINDS } = require('../constants');
+const { getSpanType, getSpanData } = require('./spanUtil');
+const { getInstrumentationMappings } = require('./spanAttributes');
 
 /**
  * @param {Object} instanaSpan
+ * @param {Object} OTLP - Semantic convention mappings
  * @returns {string} Evaluated name string
  */
-function generateSpanName(instanaSpan) {
+function generateSpanName(instanaSpan, OTLP) {
   const spanType = getSpanType(instanaSpan);
-  const data = spanType ? instanaSpan.data?.[spanType] : null;
+  const data = getSpanData(instanaSpan, spanType);
   if (!data) {
     return instanaSpan?.n || spanType || 'unknown';
   }
 
-  const generator = SPAN_NAME_MAPPING[spanType];
+  const instrumentationMappings = getInstrumentationMappings(OTLP);
+  const mapping = instrumentationMappings?.[spanType];
+  const generator = mapping?.spanName;
   return generator ? generator(data) : instanaSpan.n || spanType;
 }
 
@@ -28,7 +32,7 @@ function generateSpanName(instanaSpan) {
  */
 function generateSpanStatus(instanaSpan) {
   const spanType = getSpanType(instanaSpan);
-  const data = spanType ? instanaSpan.data?.[spanType] : null;
+  const data = getSpanData(instanaSpan, spanType);
 
   const hasFailure = instanaSpan && instanaSpan.ec > 0;
   return hasFailure
@@ -39,27 +43,6 @@ function generateSpanStatus(instanaSpan) {
     : {
         code: STATUS_CODES.UNSET
       };
-}
-
-/**
- * @param {Object} instanaSpan
- * @returns {string|null}
- */
-function getSpanType(instanaSpan) {
-  if (!instanaSpan || !instanaSpan.data) return null;
-
-  const keys = Object.keys(instanaSpan.data);
-  const len = keys.length;
-  if (len === 0) return null;
-
-  for (let i = 0; i < len; i++) {
-    const key = keys[i];
-    if (key !== INSTRUMENTATION_TYPES.PEER && key !== 'resource') {
-      return key;
-    }
-  }
-
-  return keys[0];
 }
 
 /**

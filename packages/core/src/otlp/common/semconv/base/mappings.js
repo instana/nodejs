@@ -4,8 +4,18 @@
 
 'use strict';
 
-// base loopup based on v1.23 with some common mappings as well
-const BASE_OTLP = {
+// Base mappings (v1.23 semantic conventions)
+const MAPPINGS = {
+  // Resource attributes - https://opentelemetry.io/docs/specs/semconv/resource/
+  resource: {
+    SERVICE_NAME: 'service.name',
+    SDK_LANGUAGE: 'telemetry.sdk.language',
+    SDK_NAME: 'telemetry.sdk.name',
+    SDK_VERSION: 'telemetry.sdk.version',
+    HOST_NAME: 'host.name',
+    PROCESS_PID: 'process.pid'
+  },
+
   metadata: {
     TRACE_ID: 'traceId',
     SPAN_ID: 'spanId',
@@ -22,13 +32,13 @@ const BASE_OTLP = {
   },
 
   http: {
-    REQUEST_METHOD: 'http.method', // Default v1.23
-    RESPONSE_STATUS: 'http.status_code', // Default v1.23
+    REQUEST_METHOD: 'http.method',
+    RESPONSE_STATUS: 'http.status_code',
     ROUTE: 'http.route',
     STATUS_TEXT: 'http.status_text',
     REQUEST_HEADER: 'http.request.header',
-    URL_FULL: 'http.url', // Default v1.23
-    URL_PATH: 'http.target', // Default v1.23
+    URL_FULL: 'http.url',
+    URL_PATH: 'http.target',
     URL_QUERY: 'http.url.query',
     URL_TEMPLATE: 'http.url.template',
     SERVER_ADDRESS: 'server.address',
@@ -39,13 +49,13 @@ const BASE_OTLP = {
   messaging: {
     SYSTEM: 'messaging.system',
     OPERATION_TYPE: 'messaging.operation.type',
-    DESTINATION_NAME: 'messaging.destination', // Default v1.23
+    DESTINATION_NAME: 'messaging.destination',
     SERVER_ADDRESS: 'server.address',
     CONSUMER_GROUP: 'messaging.consumer.group.name',
     MESSAGE_ID: 'messaging.message.id',
     MESSAGE_BODY_SIZE: 'messaging.message.body.size',
     kafka: {
-      PARTITION: 'messaging.kafka.partition', // Default v1.23
+      PARTITION: 'messaging.kafka.partition',
       OFFSET: 'messaging.kafka.message.offset',
       MESSAGE_KEY: 'messaging.kafka.message.key'
     },
@@ -66,8 +76,8 @@ const BASE_OTLP = {
     COLLECTION: 'db.collection.name',
     TABLE: 'db.sql.table',
     SERVER_ADDRESS: 'server.address',
-    PEER_NAME: 'net.peer.name', // Default v1.23
-    PEER_PORT: 'net.peer.port', // Default v1.23
+    PEER_NAME: 'net.peer.name',
+    PEER_PORT: 'net.peer.port',
     CONNECTION_STRING: 'db.connection_string'
   },
 
@@ -124,9 +134,9 @@ const BASE_OTLP = {
   },
 
   network: {
-    PEER_NAME: 'net.peer.name', // Default v1.23
-    PEER_PORT: 'net.peer.port' // Default v1.23
+    PEER_NAME: 'net.peer.name',
+    PEER_PORT: 'net.peer.port'
   }
 };
 
-module.exports = { BASE_OTLP };
+module.exports = { MAPPINGS };
