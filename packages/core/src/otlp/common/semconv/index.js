@@ -4,50 +4,25 @@
 
 'use strict';
 
-const { BASE_OTLP } = require('./lookupBase');
-const v123Overrides = require('./v123/overrides').LOOKUP_OVERRIDES;
-const latestOverrides = require('./latest/overrides').LOOKUP_OVERRIDES;
-
-/**
- * Deeply compiles and freezes a semantic convention structure by blending a
- * base layout map with version-specific overrides.
- *
- * @param {Object} baseSchema - The foundational fallback mapping configuration
- * @param {Object} overrides - The targeted changes to overlay onto the base map
- * @returns {Object} A fresh, immutable compiled configuration tier
- */
-function compileSchema(baseSchema, overrides) {
-  if (!overrides) return Object.freeze({ ...baseSchema });
-
-  const compiledSchema = { ...baseSchema };
-
-  Object.keys(overrides).forEach(key => {
-    const overrideValue = overrides[key];
-
-    // If the override value is a nested dictionary, traverse down recursively
-    if (overrideValue && typeof overrideValue === 'object' && !Array.isArray(overrideValue)) {
-      compiledSchema[key] = compileSchema(baseSchema[key] || {}, overrideValue);
-    } else {
-      compiledSchema[key] = overrideValue;
-    }
-  });
-
-  return Object.freeze(compiledSchema);
-}
-
-const SCHEMA_CACHE = {
-  1.23: compileSchema(BASE_OTLP, v123Overrides),
-  latest: compileSchema(BASE_OTLP, latestOverrides)
+const VERSIONS = {
+  1.23: require('./v1.23'),
+  1.43: require('./v1.43')
 };
 
 /**
- * @param {string} [version]
- * @returns {Object}
+ * Get the semantic convention lookup configuration for a specific version.
+ *
+ * @param {string} [version] - The semantic convention version (e.g., '1.23', '1.43')
+ * @returns {Object} The compiled semantic convention mappings
  */
 function getLookupConfig(version) {
-  const targetVersion = version;
+  const targetVersion = version || '1.23';
 
-  return SCHEMA_CACHE[targetVersion];
+  if (!VERSIONS[targetVersion]) {
+    throw new Error(`Unknown semantic convention version: ${targetVersion}`);
+  }
+
+  return VERSIONS[targetVersion];
 }
 
 module.exports = {

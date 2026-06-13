@@ -17,7 +17,6 @@ const ALLOWED_METRIC_PREFIXES = ['memory.'];
  * @returns {Object|null} Spec-compliant OTLP Metric schema object, or null if filtered out
  */
 function extractMetricData(rawMetric) {
-  console.log("56654567",rawMetric);
   if (!rawMetric?.name) {
     return null;
   }

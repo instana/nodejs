@@ -4,9 +4,8 @@
 
 'use strict';
 
-// v1.41.0 (latest)
-
-const LOOKUP_OVERRIDES = {
+// v1.43 semantic conventions - overrides for changes from v1.23
+const MAPPINGS = {
   http: {
     REQUEST_METHOD: 'http.request.method',
     RESPONSE_STATUS: 'http.response.status_code',
@@ -31,4 +30,4 @@ const LOOKUP_OVERRIDES = {
   }
 };
 
-module.exports = { LOOKUP_OVERRIDES };
+module.exports = { MAPPINGS };

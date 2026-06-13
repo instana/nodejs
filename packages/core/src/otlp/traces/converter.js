@@ -5,13 +5,11 @@
 'use strict';
 
 const transformers = require('./transformers');
-const resourceFactory = require('../common/resource');
-const { SCOPE_NAME, SCOPE_VERSION } = require('../common/resource');
 const { isLogSpan } = require('./util');
 
 const SCOPE = {
-  name: SCOPE_NAME,
-  version: SCOPE_VERSION
+  name: transformers.resource.SCOPE_NAME,
+  version: transformers.resource.SCOPE_VERSION
 };
 
 let logger;
@@ -32,11 +30,11 @@ function convert(spans) {
     return { resourceSpans: [] };
   }
 
-  const resourceGroupMap = new Map();
+  const otelSpans = [];
 
   spans.forEach(rawSpan => {
+    // TODO: Add log span converter
     if (isLogSpan(rawSpan)) {
-      // logSignalExporter(span);
       return;
     }
 
@@ -46,36 +44,31 @@ function convert(spans) {
         attributes: transformers.spanAttributes.extractSpanAttributes(rawSpan)
       };
 
-      const originFrom = rawSpan.data?.resource || null;
-      const rKey = resourceFactory.getResourceKey(originFrom);
-
-      let group = resourceGroupMap.get(rKey);
-
-      if (!group) {
-        group = {
-          representativeSpan: rawSpan,
-          otelSpans: []
-        };
-        resourceGroupMap.set(rKey, group);
-      }
-
-      group.otelSpans.push(mappedSpan);
+      otelSpans.push(mappedSpan);
     } catch (error) {
       logger?.debug('Failed to transform individual OTLP span context:', error);
     }
   });
 
-  const resourceSpans = Array.from(resourceGroupMap.values()).map(group => ({
-    resource: resourceFactory.extractResourceAttributes(group.representativeSpan),
-    scopeSpans: [
+  if (otelSpans.length === 0) return { resourceSpans: [] };
+
+  // All spans in the same process share the same resource
+  // Extract resource once from the first span
+  const resource = transformers.resource.extractResourceAttributes(spans[0]);
+
+  return {
+    resourceSpans: [
       {
-        scope: SCOPE,
-        spans: group.otelSpans
+        resource,
+        scopeSpans: [
+          {
+            scope: SCOPE,
+            spans: otelSpans
+          }
+        ]
       }
     ]
-  }));
-
-  return { resourceSpans };
+  };
 }
 
 module.exports = {
