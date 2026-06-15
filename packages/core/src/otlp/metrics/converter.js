@@ -36,47 +36,56 @@ function setPid(pid) {
   otlpCtx.setPid(pid);
 }
 
-/**
- * TODO: This conversion is incomplete, its only for the design
- * for now memory is only converterd to OTLP, all other metrics skipped
- */
-function convert(metrics) {
-  const metricsArray = normalizeMetrics(metrics);
-  if (metricsArray.length === 0) return { resourceMetrics: [] };
-
-  // The service name can be convered from merics, not all metrics have this service name in payload
-  // If service name is not loaded from config we use the value
-  if (metrics?.name && typeof metrics.name === 'string') {
-    if (!otlpCtx._serviceName) {
-      otlpCtx.setServiceName(metrics.name);
-    }
+function resolveServiceName(metrics) {
+  if (metrics?.name && typeof metrics.name === 'string' && !otlpCtx._serviceName) {
+    otlpCtx.setServiceName(metrics.name);
   }
+}
 
-  const otelMetrics = metricsArray
+// This is not really required in phase 1 implemetation
+function transformMetrics(metricsArray) {
+  return metricsArray
     .map(rawMetric => {
       try {
         return transformers.metricData.extractMetricData(rawMetric);
       } catch (error) {
-        if (logger?.debug) {
-          logger.debug('Failed to transform individual OTLP metric data block:', error);
-        }
+        logger?.debug?.('Failed to transform individual OTLP metric data block:', error);
         return null;
       }
     })
     .filter(Boolean);
+}
 
-  if (otelMetrics.length === 0) return { resourceMetrics: [] };
+/**
+ * TODO:
+ * This conversion is currently a prototype implementation.
+ */
+function convert(metrics) {
+  const metricsArray = normalizeMetrics(metrics);
 
-  // All metrics in the same process share the same resource
-  // Extract resource once from the first metric
+  if (metricsArray.length === 0) {
+    return { resourceMetrics: [] };
+  }
+
+  resolveServiceName(metrics);
+
+  // Todo: currently return empty metrics
+  const otelMetrics = [];
+  //   const otelMetrics = transformMetrics(metricsArray);
+
   const resource = transformers.resource.extractResourceAttributes(metricsArray[0]);
+
   return {
     resourceMetrics: [
       {
-        resource: resource,
+        resource,
         scopeMetrics: [
           {
             scope: SCOPE,
+
+            // TODO:
+            // Emit transformed metrics once backend support and
+            // OTLP metric mapping are fully implemented.
             metrics: otelMetrics
           }
         ]
