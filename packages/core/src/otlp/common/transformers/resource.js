@@ -42,7 +42,7 @@ function extractResourceAttributes(rawPayload, options = {}) {
 
   // Cache resources by service identity and infrastructure metadata.
   const cacheKey = [
-    ctx._serviceName || 'unknown_service',
+    ctx.serviceName || 'unknown_service',
     `host:${sourceMetadata?.h || 'none'}`,
     `pid:${sourceMetadata?.e || options.fallbackPid || 'none'}`
   ].join('|');

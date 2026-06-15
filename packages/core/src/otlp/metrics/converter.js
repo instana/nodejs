@@ -37,24 +37,24 @@ function setPid(pid) {
 }
 
 function resolveServiceName(metrics) {
-  if (metrics?.name && typeof metrics.name === 'string' && !otlpCtx._serviceName) {
+  if (metrics?.name && typeof metrics.name === 'string' && !otlpCtx.serviceName) {
     otlpCtx.setServiceName(metrics.name);
   }
 }
 
 // This is not really required in phase 1 implemetation
-function transformMetrics(metricsArray) {
-  return metricsArray
-    .map(rawMetric => {
-      try {
-        return transformers.metricData.extractMetricData(rawMetric);
-      } catch (error) {
-        logger?.debug?.('Failed to transform individual OTLP metric data block:', error);
-        return null;
-      }
-    })
-    .filter(Boolean);
-}
+// function transformMetrics(metricsArray) {
+//   return metricsArray
+//     .map(rawMetric => {
+//       try {
+//         return transformers.metricData.extractMetricData(rawMetric);
+//       } catch (error) {
+//         logger?.debug?.('Failed to transform individual OTLP metric data block:', error);
+//         return null;
+//       }
+//     })
+//     .filter(Boolean);
+// }
 
 /**
  * TODO:
