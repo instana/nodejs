@@ -15,8 +15,7 @@ const {
 } = require('./helper');
 
 /**
- * * @param {Object} OTLP
- * @returns {{ directMappings: Object, computedMappings: Array }}
+ * @param {Object} OTLP
  */
 function getMetadataMappings(OTLP) {
   const directMappings = {
@@ -32,6 +31,8 @@ function getMetadataMappings(OTLP) {
     { otlp: OTLP.metadata.STATUS, compute: generateSpanStatus },
     { otlp: OTLP.metadata.END_TIME_UNIX_NANO, compute: generateEndTime },
 
+    // Events and links are not currently captured, emit empty arrays to preserve
+    // the  OTLP wire format
     { otlp: OTLP.metadata.EVENTS, compute: () => [] },
     { otlp: OTLP.metadata.LINKS, compute: () => [] }
   ];

@@ -4,37 +4,36 @@
 
 'use strict';
 
-const { STATUS_CODES, SPAN_KINDS } = require('../constants');
-const { getSpanType, getSpanData } = require('./spanUtil');
 const { getInstrumentationMappings } = require('./spanAttributes');
+const { STATUS_CODES, SPAN_KINDS } = require('../constants');
+const { getSpanType, getSpanData } = require('../util');
 
 /**
- * @param {Object} instanaSpan
- * @param {Object} OTLP - Semantic convention mappings
- * @returns {string} Evaluated name string
+ * @param {import('../../../core').InstanaBaseSpan} span
+ * @param {Object} OTLP
  */
-function generateSpanName(instanaSpan, OTLP) {
-  const spanType = getSpanType(instanaSpan);
-  const data = getSpanData(instanaSpan, spanType);
+function generateSpanName(span, OTLP) {
+  const spanType = getSpanType(span);
+  const data = getSpanData(span, spanType);
   if (!data) {
-    return instanaSpan?.n || spanType || 'unknown';
+    return span?.n || spanType || 'unknown';
   }
 
   const instrumentationMappings = getInstrumentationMappings(OTLP);
   const mapping = instrumentationMappings?.[spanType];
   const generator = mapping?.spanName;
-  return generator ? generator(data) : instanaSpan.n || spanType;
+  return generator ? generator(data) : span.n || spanType;
 }
 
 /**
- * @param {Object} instanaSpan
+ * @param {import('../../../core').InstanaBaseSpan} span
  * @returns {Object}
  */
-function generateSpanStatus(instanaSpan) {
-  const spanType = getSpanType(instanaSpan);
-  const data = getSpanData(instanaSpan, spanType);
+function generateSpanStatus(span) {
+  const spanType = getSpanType(span);
+  const data = getSpanData(span, spanType);
 
-  const hasFailure = instanaSpan && instanaSpan.ec > 0;
+  const hasFailure = span && span.ec > 0;
   return hasFailure
     ? {
         code: STATUS_CODES.ERROR,
@@ -46,19 +45,19 @@ function generateSpanStatus(instanaSpan) {
 }
 
 /**
- * @param {any} instanaTraceId
+ * @param {string} traceId
  */
-function convertTraceId(instanaTraceId) {
-  if (!instanaTraceId) return '';
-  return String(instanaTraceId).padStart(32, '0');
+function convertTraceId(traceId) {
+  if (!traceId) return '';
+  return String(traceId).padStart(32, '0');
 }
 
 /**
- * @param {any} instanaSpanId
+ * @param {string} spanId
  */
-function convertSpanId(instanaSpanId) {
-  if (!instanaSpanId) return '';
-  return String(instanaSpanId).padStart(16, '0');
+function convertSpanId(spanId) {
+  if (!spanId) return '';
+  return String(spanId).padStart(16, '0');
 }
 
 /**
@@ -72,24 +71,24 @@ function convertTimestamp(tsMs) {
 }
 
 /**
- * Contextual end time translation mapping (d -> END_TIME_UNIX_NANO)
- * @param {Object} instanaSpan
+ * @param {import('../../../core').InstanaBaseSpan} span
  * @returns {string}
  */
-function generateEndTime(instanaSpan) {
-  const startMs = instanaSpan && instanaSpan.ts !== undefined ? Number(instanaSpan.ts) : 0;
-  const deltaMs = instanaSpan && instanaSpan.d !== undefined ? Number(instanaSpan.d) : 0;
+function generateEndTime(span) {
+  // OTLP end time = Instana start time + duration (ms → ns).
+  const startMs = span && span.ts !== undefined ? Number(span.ts) : 0;
+  const deltaMs = span && span.d !== undefined ? Number(span.d) : 0;
   const endMs = startMs + deltaMs;
   return String(endMs * 1000000);
 }
 
 /**
- * @param {number} instanaSpanKind
+ * @param {number} spanKind
  */
-function convertSpanKind(instanaSpanKind) {
-  if (instanaSpanKind === 1) return SPAN_KINDS.SERVER;
-  if (instanaSpanKind === 2) return SPAN_KINDS.CLIENT;
-  if (instanaSpanKind === 3) return SPAN_KINDS.INTERNAL;
+function convertSpanKind(spanKind) {
+  if (spanKind === 1) return SPAN_KINDS.SERVER;
+  if (spanKind === 2) return SPAN_KINDS.CLIENT;
+  if (spanKind === 3) return SPAN_KINDS.INTERNAL;
   return SPAN_KINDS.UNSPECIFIED;
 }
 

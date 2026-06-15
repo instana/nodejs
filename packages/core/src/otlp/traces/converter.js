@@ -12,17 +12,20 @@ const SCOPE = {
   version: transformers.resource.SCOPE_VERSION
 };
 
+/**
+ * @type {import("../../core").GenericLogger | undefined}
+ */
 let logger;
 
 /**
- * @param {Object} config
+ * @param {import('../../config').InstanaConfig} config
  */
 function init(config) {
-  logger = config?.logger;
+  logger = config.logger;
 }
 
 /**
- * @param {Array<Object>} spans
+ * @param {import('../../core').InstanaBaseSpan[]} spans
  * @returns {Object} Payload matching { resourceSpans: [...] }
  */
 function convert(spans) {
@@ -30,27 +33,27 @@ function convert(spans) {
     return { resourceSpans: [] };
   }
 
-  const otelSpans = [];
+  const otlpFormattedSpans = [];
 
-  spans.forEach(rawSpan => {
+  spans.forEach(span => {
     // TODO: Add log span converter
-    if (isLogSpan(rawSpan)) {
+    if (isLogSpan(span)) {
       return;
     }
 
     try {
       const mappedSpan = {
-        ...transformers.spanMetaData.extractSpanMetadata(rawSpan),
-        attributes: transformers.spanAttributes.extractSpanAttributes(rawSpan)
+        ...transformers.spanMetaData.extractSpanMetadata(span),
+        attributes: transformers.spanAttributes.extractSpanAttributes(span)
       };
 
-      otelSpans.push(mappedSpan);
+      otlpFormattedSpans.push(mappedSpan);
     } catch (error) {
       logger?.debug('Failed to transform individual OTLP span context:', error);
     }
   });
 
-  if (otelSpans.length === 0) return { resourceSpans: [] };
+  if (otlpFormattedSpans.length === 0) return { resourceSpans: [] };
 
   // All spans in the same process share the same resource
   // Extract resource once from the first span
@@ -63,7 +66,7 @@ function convert(spans) {
         scopeSpans: [
           {
             scope: SCOPE,
-            spans: otelSpans
+            spans: otlpFormattedSpans
           }
         ]
       }

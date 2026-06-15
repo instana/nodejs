@@ -9,7 +9,7 @@ const metrics = require('./metrics');
 const ctx = require('./common/context');
 
 /**
- * @param {Object} config
+@param {import('../config').InstanaConfig} config
  */
 function init(config) {
   ctx.init(config);

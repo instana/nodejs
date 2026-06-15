@@ -4,6 +4,30 @@
 
 'use strict';
 
+const { INSTRUMENTATION_TYPES } = require('./constants');
+
+/**
+ * @param {import('../../core').InstanaBaseSpan} span
+ */
+function getSpanType(span) {
+  // special case for otel spans
+  if (span?.n === 'otel') {
+    return 'otel';
+  }
+
+  const keys = Object.keys(span?.data || {});
+
+  return keys.find(key => key !== INSTRUMENTATION_TYPES.PEER && key !== 'resource') || null;
+}
+
+/**
+ * @param {import('../../core').InstanaBaseSpan} span
+ * @param {string} [type]
+ */
+function getSpanData(span, type) {
+  return type ? span.data?.[type] : null;
+}
+
 function toUpperCase(str) {
   return typeof str === 'string' ? str.toUpperCase() : '';
 }
@@ -90,5 +114,7 @@ module.exports = {
   extractHost,
   extractPort,
   joinWith,
-  firstDefined
+  firstDefined,
+  getSpanData,
+  getSpanType
 };
