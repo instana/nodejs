@@ -4,8 +4,4 @@
 
 'use strict';
 
-const metricTypes = require('./metricType');
-
-module.exports = {
-  ...metricTypes
-};
+module.exports = require('./metricType');
