@@ -8,30 +8,40 @@ const ctx = require('../../common/context');
 const MAPPINGS = require('../mappers/spanAttributes');
 const { formatOTLPValue, combineFields } = require('../util');
 
+const RESOURCE_KEY = 'resource';
+
 const SPAN_HANDLERS = {
   otel: extractOtelAttributes
 };
 
 /**
- * Orchestrates span data attribute extraction.
+ * @param {import('../../../core').InstanaBaseSpan} span
  */
-function extractSpanAttributes(instanaSpan) {
-  if (!instanaSpan || !instanaSpan.data) return [];
-
-  // Direct short-circuit route for specialized span handlers (like 'otel')
-  const spanHandler = SPAN_HANDLERS[instanaSpan.n];
-  if (spanHandler) {
-    return spanHandler(instanaSpan.data);
+function extractSpanAttributes(span) {
+  if (!span?.data) {
+    return [];
   }
 
+  // Note: OTEL spans use a different payload structure and do not follow
+  // instrumentation-specific attribute mappings.
+  const attributeExtractor = SPAN_HANDLERS[span.n];
+  if (attributeExtractor) {
+    return attributeExtractor(span.data);
+  }
+
+  const mappings = getAttributeMappings(MAPPINGS, ctx.semConv);
+
   const attributes = [];
-  const dataKeys = Object.keys(instanaSpan.data);
+  const spanTypes = Object.keys(span.data);
 
-  for (let i = 0; i < dataKeys.length; i++) {
-    const key = dataKeys[i];
-    if (key === 'resource') continue;
+  for (let i = 0; i < spanTypes.length; i++) {
+    const spanType = spanTypes[i];
 
-    const mappedAttributes = applyAttributeMapping(key, instanaSpan.data[key]);
+    if (spanType === RESOURCE_KEY) {
+      continue;
+    }
+
+    const mappedAttributes = applyAttributeMapping(mappings, spanType, span.data[spanType]);
 
     for (let j = 0; j < mappedAttributes.length; j++) {
       attributes.push(mappedAttributes[j]);
@@ -42,16 +52,35 @@ function extractSpanAttributes(instanaSpan) {
 }
 
 /**
- * Extracts raw tags from native Otel instrumentation payloads.
+ * Extract attributes from otel spans.
+ *
+ * @param {Object} data
  */
 function extractOtelAttributes(data) {
-  if (!data || !data.tags) return [];
+  if (!data) {
+    return [];
+  }
 
   const attributes = [];
+
+  // OTel spans may contain metadata outside `tags`.
+  // Export `operation` until dedicated semantic mapping is introduced.
+  if (data.operation) {
+    attributes.push({
+      key: 'operation',
+      value: formatOTLPValue(data.operation)
+    });
+  }
+
+  if (!data.tags) {
+    return attributes;
+  }
+
   const tagKeys = Object.keys(data.tags);
 
   for (let i = 0; i < tagKeys.length; i++) {
     const key = tagKeys[i];
+
     attributes.push({
       key,
       value: formatOTLPValue(data.tags[key])
@@ -62,62 +91,99 @@ function extractOtelAttributes(data) {
 }
 
 /**
- * Coordinates matching rules for specific span classifications.
+ * Applies attribute mappings for a specific instrumentation type.
+ *
+ * @param {Object} mappings
  * @param {string} spanType
  * @param {any} spanData
  */
-function applyAttributeMapping(spanType, spanData) {
-  const activeMappings =
-    typeof MAPPINGS.getAttributeMappings === 'function' ? MAPPINGS.getAttributeMappings(ctx.semConv) : MAPPINGS;
+function applyAttributeMapping(mappings, spanType, spanData) {
+  const attributeMappings = mappings?.[spanType];
 
-  const rules = activeMappings?.[spanType];
-  if (!Array.isArray(rules)) return [];
+  if (!Array.isArray(attributeMappings)) {
+    return [];
+  }
 
-  const result = [];
-  for (let i = 0; i < rules.length; i++) {
-    const attribute = applyMapping(rules[i], spanData);
+  const attributes = [];
+
+  for (let i = 0; i < attributeMappings.length; i++) {
+    const attribute = applyMapping(attributeMappings[i], spanData);
+
     if (attribute) {
-      result.push(attribute);
+      attributes.push(attribute);
     }
   }
 
-  return result;
+  return attributes;
 }
 
 /**
- * Resolves an individual attribute translation rule configuration.
+ * Resolves an individual attribute translation rule.
+ *
+ * @param {Object} mapping
+ * @param {any} spanData
+ * @returns {Object|null}
  */
 function applyMapping(mapping, spanData) {
-  if (!mapping) return null;
+  if (!mapping) {
+    return null;
+  }
+
   let value;
 
-  // Case 1: Hardcoded static configurations
+  // Static value mapping.
   if (mapping.value !== undefined && !mapping.instana) {
     value = mapping.value;
   }
-  // Case 2: Multi-field compound mappings
+  // Multi-field mapping.
   else if (Array.isArray(mapping.instana)) {
     const values = [];
+
     for (let i = 0; i < mapping.instana.length; i++) {
       values.push(spanData?.[mapping.instana[i]]);
     }
+
     value = mapping.transform ? mapping.transform(spanData, values) : combineFields(values);
   }
-  // Case 3: Flat single-key extractions
+  // Single-field mapping.
   else if (typeof mapping.instana === 'string') {
     const rawValue = spanData?.[mapping.instana];
-    if (rawValue === null || rawValue === undefined) return null;
+
+    if (rawValue === null || rawValue === undefined) {
+      return null;
+    }
+
     value = mapping.transform ? mapping.transform(rawValue, spanData) : rawValue;
   } else {
     return null;
   }
 
-  if (value === null || value === undefined) return null;
+  if (value === null || value === undefined) {
+    return null;
+  }
 
   return {
     key: mapping.otlp,
     value: formatOTLPValue(value)
   };
+}
+
+function getAttributeMappings(mappingsModule, OTLP) {
+  const instrumentationMappings = mappingsModule.getInstrumentationMappings(OTLP);
+
+  const attributeMappings = {};
+  const types = Object.keys(instrumentationMappings);
+
+  for (let i = 0; i < types.length; i++) {
+    const type = types[i];
+    const { spanAttributes } = instrumentationMappings[type];
+
+    if (spanAttributes) {
+      attributeMappings[type] = spanAttributes;
+    }
+  }
+
+  return attributeMappings;
 }
 
 module.exports = {

@@ -16,14 +16,23 @@ const SCOPE = {
 
 let logger;
 
+/**
+ * @param {import('../../config').InstanaConfig} config
+ */
 function init(config) {
   logger = config?.logger;
 }
 
+/**
+ * @param {any} hostId
+ */
 function setHostId(hostId) {
   otlpCtx.setHostId(hostId);
 }
 
+/**
+ * @param {any} pid
+ */
 function setPid(pid) {
   otlpCtx.setPid(pid);
 }
@@ -33,15 +42,15 @@ function setPid(pid) {
  * TODO: This conversion is incomplete, its only for the design
  * for now memory is only converterd to OTLP, all other metrics skipped
  */
-function convert(instanaMetrics) {
-  const metricsArray = normalizeMetrics(instanaMetrics);
+function convert(metrics) {
+  const metricsArray = normalizeMetrics(metrics);
   if (metricsArray.length === 0) return { resourceMetrics: [] };
 
   // If a new dynamic service name is uncovered from the package payload,
   // setServiceName will internally bust the resource cache safely.
-  if (instanaMetrics?.name && typeof instanaMetrics.name === 'string') {
+  if (metrics?.name && typeof metrics.name === 'string') {
     if (!otlpCtx._serviceName) {
-      otlpCtx.setServiceName(instanaMetrics.name);
+      otlpCtx.setServiceName(metrics.name);
     }
   }
 
@@ -65,7 +74,7 @@ function convert(instanaMetrics) {
       {
         resource: resource.extractResourceAttributes(metricsArray[0], {
           includeInfrastructure: true,
-          fallbackPid: instanaMetrics?.pid
+          fallbackPid: metrics?.pid
         }),
         scopeMetrics: [
           {

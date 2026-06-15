@@ -11,6 +11,7 @@ const resource = require('../mappers/resource');
 const packageJson = require(path.join(__dirname, '..', '..', '..', '..', 'package.json'));
 const SDK_VERSION = packageJson?.version || '1.0.0';
 
+// TODO: this is not correct
 const SCOPE_NAME = '@instana/collector';
 const SCOPE_VERSION = SDK_VERSION;
 
@@ -29,31 +30,51 @@ function clearResourceCache() {
  * @param {string|number} [options.fallbackPid]
  * @returns {{ attributes: Array<Object> }}
  */
+/**
+ * Extracts and transforms resource attributes for OTLP format.
+ *
+ * Resource attributes are cached by service identity and infrastructure
+ * metadata to avoid rebuilding identical resource payloads.
+ *
+ * @param {Object} rawPayload
+ * @param {Object} [options]
+ * @param {boolean} [options.includeInfrastructure=false]
+ * @param {string|number} [options.fallbackPid]
+ * @returns {{ attributes: Array<Object> }}
+ */
 function extractResourceAttributes(rawPayload, options = {}) {
   if (!rawPayload) {
     return { attributes: [] };
   }
 
-  const includeInfra = options.includeInfrastructure === true;
-  const instanaFrom = rawPayload.from || rawPayload.f || rawPayload.data?.resource || null;
+  const includeInfrastructure = options.includeInfrastructure === true;
 
-  // Create a unique cache identity key combining service name state, infrastructure preference, and endpoint details
-  const cacheKey = `${ctx._serviceName || 'no_svc'}|infra:${includeInfra}|h:${instanaFrom?.h || 'empty'}|e:${
-    instanaFrom?.e || 'empty'
-  }`;
+  // Instana source metadata:
+  //   e -> process id
+  //   h -> host identifier
+  const sourceMetadata = rawPayload.f || null;
 
-  if (resourceCache.has(cacheKey)) {
-    return resourceCache.get(cacheKey);
+  // Cache resources by service identity and infrastructure metadata.
+  const cacheKey = [
+    ctx._serviceName || 'no_service',
+    `infra:${includeInfrastructure}`,
+    `host:${sourceMetadata?.h || 'none'}`,
+    `pid:${sourceMetadata?.e || options.fallbackPid || 'none'}`
+  ].join('|');
+
+  const cached = resourceCache.get(cacheKey);
+  if (cached) {
+    return cached;
   }
 
-  const attributes = resource.mapResourceAttributes(rawPayload, options);
-  const result = { attributes };
+  const result = {
+    attributes: resource.mapResourceAttributes(rawPayload, options)
+  };
 
-  // Save to cache
   resourceCache.set(cacheKey, result);
+
   return result;
 }
-
 module.exports = {
   extractResourceAttributes,
   clearResourceCache,

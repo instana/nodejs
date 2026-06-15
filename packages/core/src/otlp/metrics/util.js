@@ -5,7 +5,7 @@
 'use strict';
 
 /**
- * @param {Object} from -
+ * @param {Object} from
  * @returns {string}
  */
 function getResourceKey(from) {
@@ -68,10 +68,10 @@ function normalizeObject(metricsObj) {
  * Universal formatter for tracking and structuring incoming telemetry shapes.
  * Routes parsing elegantly without using loop components.
  */
-function normalizeMetrics(instanaMetrics) {
-  if (!instanaMetrics) return [];
-  if (Array.isArray(instanaMetrics)) return normalizeArray(instanaMetrics);
-  if (typeof instanaMetrics === 'object') return normalizeObject(instanaMetrics);
+function normalizeMetrics(metrics) {
+  if (!metrics) return [];
+  if (Array.isArray(metrics)) return normalizeArray(metrics);
+  if (typeof metrics === 'object') return normalizeObject(metrics);
   return [];
 }
 

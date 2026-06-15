@@ -7,14 +7,14 @@
 const converter = require('./converter');
 
 /**
- * @param {Object} config
+ * @param {import('../../config').InstanaConfig} config
  */
 function init(config) {
   converter.init(config);
 }
 
 /**
- * @param {Object[]} spans
+ * @param {import('../../core').InstanaBaseSpan[]} spans
  */
 function transform(spans) {
   return converter.convert(spans);

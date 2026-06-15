@@ -13,6 +13,9 @@ function init(config) {
   converter.init(config);
 }
 
+/**
+ * @param {any} metrics
+ */
 function transform(metrics) {
   return converter.convert(metrics);
 }

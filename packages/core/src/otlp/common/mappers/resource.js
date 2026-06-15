@@ -10,10 +10,6 @@ const ctx = require('../context');
 const packageJson = require(path.join(__dirname, '..', '..', '..', '..', 'package.json'));
 const SDK_VERSION = packageJson?.version || '1.0.0';
 
-/**
- * Get resource defaults with current semconv keys
- * @returns {Object}
- */
 function getResourceDefaults() {
   const attrs = ctx.semConv.resource;
   return {
@@ -25,32 +21,53 @@ function getResourceDefaults() {
 }
 
 /**
- * Maps resource attributes using semantic convention version
- *
- * @param {Object} rawPayload - Individual metric element block or trace record
+ * @param {Object} rawPayload
  * @param {Object} [options]
- * @param {boolean} [options.includeInfrastructure=false] - Explicitly pass true for Metrics to include PID/Host
+ * @param {boolean} [options.includeInfrastructure=false]
  * @param {string|number} [options.fallbackPid]
- * @returns {Array<Object>} Array of OTLP attribute objects
+ * @returns {Array<Object>}
+ */
+/**
+ * Maps resource-level attributes from the span payload.
+ *
+ * Resource attributes can originate from:
+ *   - Embedded OpenTelemetry resource data (`data.resource`)
+ *   - SDK defaults (service name, SDK metadata)
+ *
+ * Infrastructure attributes such as process id and host id are derived
+ * from the Instana source metadata (`f`) when requested.
+ *
+ * @param {Object} rawPayload
+ * @param {Object} [options]
+ * @param {boolean} [options.includeInfrastructure=false]
+ * @param {string|number} [options.fallbackPid]
+ * @returns {Array<Object>}
  */
 function mapResourceAttributes(rawPayload, options = {}) {
   if (!rawPayload) {
     return [];
   }
 
-  const includeInfra = options.includeInfrastructure === true;
-  const instanaFrom = rawPayload.from || rawPayload.f || rawPayload.data?.resource || null;
-  const spanData = rawPayload.data || {};
-  const embeddedResource = spanData.resource || rawPayload.resource || {};
+  const includeInfrastructure = options.includeInfrastructure === true;
+
+  // Instana source metadata:
+  //   e -> process id
+  //   h -> host identifier
+  const sourceMetadata = rawPayload.f || null;
+
+  // OpenTelemetry resource attributes attached to the span.
+  const resourceAttributes = rawPayload.data?.resource || rawPayload.resource || {};
+
   const attributes = [];
 
-  // Process service identity and SDK defaults
+  // Apply embedded resource attributes and SDK defaults.
   const resourceDefaults = getResourceDefaults();
-  const keys = Object.keys(resourceDefaults);
-  for (let i = 0; i < keys.length; i++) {
-    const key = keys[i];
-    // @ts-ignore
-    const value = embeddedResource[key] !== undefined ? embeddedResource[key] : resourceDefaults[key]();
+  const resourceKeys = Object.keys(resourceDefaults);
+
+  for (let i = 0; i < resourceKeys.length; i++) {
+    const key = resourceKeys[i];
+
+    const value = resourceAttributes[key] !== undefined ? resourceAttributes[key] : resourceDefaults[key]();
 
     if (value !== null && value !== undefined) {
       attributes.push({
@@ -60,23 +77,25 @@ function mapResourceAttributes(rawPayload, options = {}) {
     }
   }
 
-  // Process infrastructure metadata
-  if (includeInfra) {
+  // Optionally enrich resources with infrastructure metadata.
+  if (includeInfrastructure) {
     const attrs = ctx.semConv.resource;
-    const finalPid = instanaFrom?.e || options.fallbackPid || ctx.pid;
-    const finalHost = instanaFrom?.h || ctx.hostId;
 
-    if (finalPid) {
+    const processId = sourceMetadata?.e || options.fallbackPid || ctx.pid;
+
+    const hostName = sourceMetadata?.h || ctx.hostId;
+
+    if (processId) {
       attributes.push({
         key: attrs.PROCESS_PID,
-        value: { intValue: parseInt(finalPid, 10) }
+        value: { intValue: parseInt(processId, 10) }
       });
     }
 
-    if (finalHost) {
+    if (hostName) {
       attributes.push({
         key: attrs.HOST_NAME,
-        value: { stringValue: String(finalHost) }
+        value: { stringValue: String(hostName) }
       });
     }
   }
