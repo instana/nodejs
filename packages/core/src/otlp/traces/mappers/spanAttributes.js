@@ -20,15 +20,22 @@ function getInstrumentationMappings(OTLP) {
   return {
     [INSTRUMENTATION_TYPES.HTTP]: {
       spanName: data => {
-        const method = (data.operation || 'HTTP').toUpperCase();
+        const method = (data.operation || data.method).toUpperCase();
         return `${method} ${data.path_tpl || data.path || '/'}`;
       },
       spanAttributes: [
-        { otlp: OTLP.http.REQUEST_METHOD, instana: 'operation', transform: toUpperCase },
-        { otlp: OTLP.http.URL_FULL, instana: 'endpoints' },
+        {
+          otlp: OTLP.http.REQUEST_METHOD,
+          instana: ['operation', 'method'],
+          transform: (spanData, values) => {
+            const value = firstDefined(spanData, values);
+            return value ? toUpperCase(value) : value;
+          }
+        },
+        { otlp: OTLP.http.URL_FULL, instana: ['endpoints', 'url'] },
         { otlp: OTLP.http.URL_PATH, instana: 'path' },
         { otlp: OTLP.http.URL_QUERY, instana: 'params' },
-        { otlp: OTLP.http.SERVER_ADDRESS, instana: 'connection' },
+        { otlp: OTLP.http.SERVER_ADDRESS, instana: ['connection', 'host'] },
         { otlp: OTLP.http.RESPONSE_STATUS, instana: 'status' },
         { otlp: OTLP.http.REQUEST_HEADER, instana: 'header' },
         { otlp: OTLP.http.URL_TEMPLATE, instana: 'path_tpl' },
