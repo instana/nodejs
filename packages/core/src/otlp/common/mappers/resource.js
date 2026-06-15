@@ -23,7 +23,6 @@ function getResourceDefaults() {
 /**
  * @param {Object} rawPayload
  * @param {Object} [options]
- * @param {boolean} [options.includeInfrastructure=false]
  * @param {string|number} [options.fallbackPid]
  * @returns {Array<Object>}
  */
@@ -39,7 +38,6 @@ function getResourceDefaults() {
  *
  * @param {Object} rawPayload
  * @param {Object} [options]
- * @param {boolean} [options.includeInfrastructure=false]
  * @param {string|number} [options.fallbackPid]
  * @returns {Array<Object>}
  */
@@ -47,8 +45,6 @@ function mapResourceAttributes(rawPayload, options = {}) {
   if (!rawPayload) {
     return [];
   }
-
-  const includeInfrastructure = options.includeInfrastructure === true;
 
   // Instana source metadata:
   //   e -> process id
@@ -77,27 +73,24 @@ function mapResourceAttributes(rawPayload, options = {}) {
     }
   }
 
-  // Optionally enrich resources with infrastructure metadata.
-  if (includeInfrastructure) {
-    const attrs = ctx.semConv.resource;
+  const attrs = ctx.semConv.resource;
 
-    const processId = sourceMetadata?.e || options.fallbackPid || ctx.pid;
+  const processId = sourceMetadata?.e || options.fallbackPid || ctx.pid;
 
-    const hostName = sourceMetadata?.h || ctx.hostId;
+  const hostName = sourceMetadata?.h || ctx.hostId;
 
-    if (processId) {
-      attributes.push({
-        key: attrs.PROCESS_PID,
-        value: { intValue: parseInt(processId, 10) }
-      });
-    }
+  if (processId) {
+    attributes.push({
+      key: attrs.PROCESS_PID,
+      value: { intValue: parseInt(processId, 10) }
+    });
+  }
 
-    if (hostName) {
-      attributes.push({
-        key: attrs.HOST_NAME,
-        value: { stringValue: String(hostName) }
-      });
-    }
+  if (hostName) {
+    attributes.push({
+      key: attrs.HOST_NAME,
+      value: { stringValue: String(hostName) }
+    });
   }
 
   return attributes;
