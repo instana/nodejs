@@ -5,7 +5,9 @@
 'use strict';
 
 const metricData = require('./metricData');
+const resource = require('../../common/transformers/resource');
 
 module.exports = {
-  metricData
+  metricData,
+  resource
 };

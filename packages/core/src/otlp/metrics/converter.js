@@ -7,11 +7,10 @@
 const otlpCtx = require('../common/context');
 const { normalizeMetrics } = require('./util');
 const transformers = require('./transformers');
-const resource = require('../common/transformers/resource');
 
 const SCOPE = {
-  name: resource.SCOPE_NAME,
-  version: resource.SCOPE_VERSION
+  name: transformers.resource.SCOPE_NAME,
+  version: transformers.resource.SCOPE_VERSION
 };
 
 let logger;
@@ -38,7 +37,6 @@ function setPid(pid) {
 }
 
 /**
- * Converts a batch of Instana metrics to OTLP ResourceMetrics format.
  * TODO: This conversion is incomplete, its only for the design
  * for now memory is only converterd to OTLP, all other metrics skipped
  */
@@ -46,8 +44,8 @@ function convert(metrics) {
   const metricsArray = normalizeMetrics(metrics);
   if (metricsArray.length === 0) return { resourceMetrics: [] };
 
-  // If a new dynamic service name is uncovered from the package payload,
-  // setServiceName will internally bust the resource cache safely.
+  // The service name can be convered from merics, not all metrics have this service name in payload
+  // If service name is not loaded from config we use the value
   if (metrics?.name && typeof metrics.name === 'string') {
     if (!otlpCtx._serviceName) {
       otlpCtx.setServiceName(metrics.name);
@@ -69,13 +67,13 @@ function convert(metrics) {
 
   if (otelMetrics.length === 0) return { resourceMetrics: [] };
 
+  // All metrics in the same process share the same resource
+  // Extract resource once from the first metric
+  const resource = transformers.resource.extractResourceAttributes(metricsArray[0]);
   return {
     resourceMetrics: [
       {
-        resource: resource.extractResourceAttributes(metricsArray[0], {
-          includeInfrastructure: true,
-          fallbackPid: metrics?.pid
-        }),
+        resource: resource,
         scopeMetrics: [
           {
             scope: SCOPE,
