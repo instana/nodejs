@@ -46,7 +46,6 @@ function convert(spans) {
         ...transformers.spanMetaData.extractSpanMetadata(span),
         attributes: transformers.spanAttributes.extractSpanAttributes(span)
       };
-
       otlpFormattedSpans.push(mappedSpan);
     } catch (error) {
       logger?.debug('Failed to transform individual OTLP span context:', error);
