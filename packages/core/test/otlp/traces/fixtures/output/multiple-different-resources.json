@@ -33,12 +33,16 @@
               "spanId": "2222333344445555",
               "kind": 2,
               "start_time_unix_nano": "1609459300000000000",
-              "name": "undefined events-topic",
+              "name": "consume events-topic",
               "status": { "code": 0 },
               "end_time_unix_nano": "1609459300080000000",
               "events": [],
               "links": [],
-              "attributes": [{ "key": "messaging.system", "value": { "stringValue": "kafka" } }]
+              "attributes": [
+                { "key": "messaging.system", "value": { "stringValue": "kafka" } },
+                { "key": "messaging.destination", "value": { "stringValue": "consume" } },
+                { "key": "messaging.operation.type", "value": { "stringValue": "consume" } }
+              ]
             }
           ]
         }

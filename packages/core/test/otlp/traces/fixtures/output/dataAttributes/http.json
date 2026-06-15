@@ -1,15 +1,9 @@
 [
   { "key": "http.method", "value": { "stringValue": "GET" } },
+  { "key": "http.url", "value": { "stringValue": "http://localhost:3000/api/users/123" } },
   { "key": "http.target", "value": { "stringValue": "/api/users/123" } },
-  {
-    "key": "http.url",
-    "value": { "stringValue": "http://localhost:3000/api/users/123" }
-  },
+  { "key": "http.url.query", "value": { "stringValue": "filter=active&sort=name" } },
   { "key": "http.status_code", "value": { "intValue": 200 } },
-  {
-    "key": "http.url.query",
-    "value": { "stringValue": "filter=active&sort=name" }
-  },
   {
     "key": "http.request.header",
     "value": {

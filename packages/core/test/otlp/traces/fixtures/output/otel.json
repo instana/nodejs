@@ -27,7 +27,10 @@
               "end_time_unix_nano": "1780587628469000000",
               "name": "otel",
               "status": { "code": 0 },
-              "attributes": [{ "key": "name", "value": { "stringValue": "fs writeFile" } }],
+              "attributes": [
+                { "key": "operation", "value": { "stringValue": "fs" } },
+                { "key": "name", "value": { "stringValue": "fs writeFile" } }
+              ],
               "events": [],
               "links": []
             }
