@@ -20,15 +20,15 @@ function getInstrumentationMappings(OTLP) {
   return {
     [INSTRUMENTATION_TYPES.HTTP]: {
       spanName: data => {
-        const method = (data.method || 'HTTP').toUpperCase();
+        const method = (data.operation || 'HTTP').toUpperCase();
         return `${method} ${data.path_tpl || data.path || '/'}`;
       },
       spanAttributes: [
-        { otlp: OTLP.http.REQUEST_METHOD, instana: 'method', transform: toUpperCase },
-        { otlp: OTLP.http.URL_FULL, instana: 'url' },
+        { otlp: OTLP.http.REQUEST_METHOD, instana: 'operation', transform: toUpperCase },
+        { otlp: OTLP.http.URL_FULL, instana: 'endpoints' },
         { otlp: OTLP.http.URL_PATH, instana: 'path' },
         { otlp: OTLP.http.URL_QUERY, instana: 'params' },
-        { otlp: OTLP.http.SERVER_ADDRESS, instana: 'host' },
+        { otlp: OTLP.http.SERVER_ADDRESS, instana: 'connection' },
         { otlp: OTLP.http.RESPONSE_STATUS, instana: 'status' },
         { otlp: OTLP.http.REQUEST_HEADER, instana: 'header' },
         { otlp: OTLP.http.URL_TEMPLATE, instana: 'path_tpl' },
@@ -38,11 +38,11 @@ function getInstrumentationMappings(OTLP) {
     },
 
     [INSTRUMENTATION_TYPES.KAFKA]: {
-      spanName: data => `${data.access} ${data.service}`,
+      spanName: data => `${data.operation} ${data.endpoints}`,
       spanAttributes: [
         { otlp: OTLP.messaging.SYSTEM, value: 'kafka' },
-        { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'access' },
-        { otlp: OTLP.messaging.OPERATION_TYPE, instana: 'access' },
+        { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'operation' },
+        { otlp: OTLP.messaging.OPERATION_TYPE, instana: 'operation' },
         { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
       ]
     },
@@ -186,7 +186,7 @@ function getInstrumentationMappings(OTLP) {
       spanName: data => `redis.${data.operation || 'command'}`,
       spanAttributes: [
         { otlp: OTLP.database.SYSTEM, value: 'redis' },
-        { otlp: OTLP.database.OPERATION, instana: 'command', transform: toUpperCase },
+        { otlp: OTLP.database.OPERATION, instana: 'operation', transform: toUpperCase },
         { otlp: OTLP.database.SERVER_ADDRESS, instana: 'connection', transform: extractHost },
         { otlp: OTLP.database.PEER_PORT, instana: 'connection', transform: extractPort },
         { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
