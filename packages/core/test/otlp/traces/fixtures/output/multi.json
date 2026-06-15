@@ -1,0 +1,67 @@
+{
+  "resourceSpans": [
+    {
+      "resource": {
+        "attributes": [
+          { "key": "service.name", "value": { "stringValue": "otel-exporter-test" } },
+          { "key": "telemetry.sdk.language", "value": { "stringValue": "nodejs" } },
+          { "key": "telemetry.sdk.name", "value": { "stringValue": "instana" } },
+          { "key": "telemetry.sdk.version", "value": { "stringValue": "5.4.1" } }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": { "name": "@instana/collector", "version": "5.4.1" },
+          "spans": [
+            {
+              "traceId": "1234567890abcdef1234567890abcdef",
+              "spanId": "abcdef1234567890",
+              "parentSpanId": "fedcba0987654321",
+              "kind": 2,
+              "start_time_unix_nano": "1609459200000000000",
+              "name": "GET /api/users/123",
+              "status": { "code": 0 },
+              "end_time_unix_nano": "1609459200150000000",
+              "events": [],
+              "links": [],
+              "attributes": [
+                { "key": "http.method", "value": { "stringValue": "GET" } },
+                { "key": "http.url", "value": { "stringValue": "http://localhost:3000/api/users/123" } },
+                { "key": "http.target", "value": { "stringValue": "/api/users/123" } },
+                { "key": "http.url.query", "value": { "stringValue": "filter=active&sort=name" } },
+                { "key": "http.status_code", "value": { "intValue": 200 } },
+                {
+                  "key": "http.request.header",
+                  "value": { "stringValue": "{\"user-agent\":\"Mozilla/5.0\",\"accept\":\"application/json\"}" }
+                }
+              ]
+            },
+            {
+              "traceId": "1234567890abcdef1234567890abcdef",
+              "spanId": "abcdef1234567890",
+              "parentSpanId": "fedcba0987654321",
+              "kind": 2,
+              "start_time_unix_nano": "1609459200000000000",
+              "name": "GET /api/users/123",
+              "status": { "code": 0 },
+              "end_time_unix_nano": "1609459200150000000",
+              "events": [],
+              "links": [],
+              "attributes": [
+                { "key": "http.method", "value": { "stringValue": "GET" } },
+                { "key": "http.url", "value": { "stringValue": "http://localhost:3000/api/users/123" } },
+                { "key": "http.target", "value": { "stringValue": "/api/users/123" } },
+                { "key": "http.url.query", "value": { "stringValue": "filter=active&sort=name" } },
+                { "key": "http.status_code", "value": { "intValue": 200 } },
+                {
+                  "key": "http.request.header",
+                  "value": { "stringValue": "{\"user-agent\":\"Mozilla/5.0\",\"accept\":\"application/json\"}" }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
