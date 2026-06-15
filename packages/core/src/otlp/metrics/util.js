@@ -50,6 +50,9 @@ function normalizeArray(metricsList) {
   }));
 }
 
+/**
+ * Normalized to internal format for easier mapping
+ */
 function normalizeObject(metricsObj) {
   const { from, timestamp, ...metricsData } = metricsObj;
   const flattened = flattenObject(metricsData);
@@ -59,7 +62,7 @@ function normalizeObject(metricsObj) {
     name: key,
     value: flattened[key],
     timestamp: fallbackTimestamp,
-    unit: '',
+    unit: '', // we don't have any unit
     from
   }));
 }
@@ -75,76 +78,8 @@ function normalizeMetrics(metrics) {
   return [];
 }
 
-/**
- * Maps raw metric values into precise OTLP types with the required protocol metadata.
- * @param {string|number|boolean} value - Inbound target value cell
- * @param {number} timestampMs - Millisecond epoch timestamp from the source record
- * @param {string} [explicitType] - Dynamic override hint ('sum' or 'gauge')
- */
-function toOtelMetricData(value, timestampMs, explicitType) {
-  const ms = Number(timestampMs) || 0;
-  const timeUnixNano = String(ms * 1000000);
-
-  // Path A: Sum Telemetry Structural Mapping
-  if (explicitType === 'sum' || (typeof value === 'number' && explicitType !== 'gauge')) {
-    return {
-      sum: {
-        aggregationTemporality: 1,
-        isMonotonic: true,
-        dataPoints: [
-          {
-            asDouble: Number(value) || 0,
-            startTimeUnixNano: timeUnixNano,
-            timeUnixNano: timeUnixNano
-          }
-        ]
-      }
-    };
-  }
-
-  // Path B: Gauge Telemetry Structural Mapping (including Booleans and Strings)
-  if (explicitType === 'gauge' || typeof value === 'boolean' || typeof value === 'string') {
-    let numericValue = 0;
-    let customAttributes;
-
-    if (typeof value === 'boolean') {
-      numericValue = value ? 1 : 0;
-    } else if (typeof value === 'string') {
-      numericValue = 0;
-      customAttributes = [{ key: 'value', value: { stringValue: value } }];
-    } else {
-      numericValue = Number(value) || 0;
-    }
-
-    const dataPoint = {
-      asDouble: numericValue,
-      timeUnixNano: timeUnixNano
-    };
-
-    if (customAttributes) {
-      dataPoint.attributes = customAttributes;
-    }
-
-    return {
-      gauge: {
-        dataPoints: [dataPoint]
-      }
-    };
-  }
-
-  // Path C: Universal Unknown Fallback Block Configuration
-  return {
-    sum: {
-      aggregationTemporality: 1,
-      isMonotonic: true,
-      dataPoints: [{ asDouble: 0, timeUnixNano: timeUnixNano }]
-    }
-  };
-}
-
 module.exports = {
   flattenObject,
   normalizeMetrics,
-  toOtelMetricData,
   getResourceKey
 };
