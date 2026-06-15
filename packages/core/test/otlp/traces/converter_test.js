@@ -8,11 +8,20 @@ const expect = require('chai').expect;
 const fs = require('fs');
 const path = require('path');
 
+const otlp = require('../../../src/otlp');
 const { convert } = require('../../../src/otlp/traces/converter');
 const { extractSpanMetadata } = require('../../../src/otlp/traces/transformers/spanMetaData');
 const { extractSpanAttributes } = require('../../../src/otlp/traces/transformers/spanAttributes');
 
 describe('tracing/converters/otlp', () => {
+  before(() => {
+    // Initialize OTLP context before running tests
+    otlp.init({
+      serviceName: 'otel-exporter-test',
+      logger: console
+    });
+  });
+
   function loadInputFixture(filename) {
     const fixturePath = path.join(__dirname, 'fixtures/input', filename);
     return JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
@@ -38,6 +47,16 @@ describe('tracing/converters/otlp', () => {
       it('should convert single HTTP span correctly', () => {
         const input = [loadInputFixture('http.json')];
         const expectedOutput = loadOutputFixture('http.json');
+
+        const result = convert(input);
+        console.log(JSON.stringify(result));
+
+        expect(result).to.deep.equal(expectedOutput);
+      });
+
+      it.only('should convert multiple spans correctly', () => {
+        const input = loadInputFixture('multi.json');
+        const expectedOutput = loadOutputFixture('multi.json');
 
         const result = convert(input);
         console.log(JSON.stringify(result));
