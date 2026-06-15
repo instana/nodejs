@@ -155,6 +155,17 @@ describe('tracing/converters/otlp', () => {
         expect(result).to.deep.equal(expectedOutput);
       });
 
+      // it('should extract Azure Blob span metadata correctly', () => {
+      //   const input = loadTransformerInputFixture('azure-blob.json');
+      //   const expectedOutput = loadTransformerOutputFixture('metaData/azure-blob.json');
+
+      //   const result = extractSpanMetadata(input);
+
+      //   console.log(JSON.stringify(result, null, 2));
+
+      //   expect(result).to.deep.equal(expectedOutput);
+      // });
+
       it('should return empty object for null span', () => {
         const result = extractSpanMetadata(null);
         expect(result).to.deep.equal({});
@@ -248,6 +259,24 @@ describe('tracing/converters/otlp', () => {
         });
       });
 
+      // it('should extract Azure Blob span attributes correctly', () => {
+      //   const input = loadTransformerInputFixture('azure-blob.json');
+      //   const expectedOutput = loadTransformerOutputFixture('dataAttributes/azure-blob.json');
+
+      //   const result = extractSpanAttributes(input);
+
+      //   console.log(JSON.stringify(result, null, 2));
+
+      //   expect(result).to.be.an('array');
+      //   expect(result).to.have.lengthOf(expectedOutput.length);
+
+      //   expectedOutput.forEach(expectedAttr => {
+      //     const actualAttr = result.find(attr => attr.key === expectedAttr.key);
+      //     expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
+      //     expect(actualAttr.value).to.deep.equal(expectedAttr.value);
+      //   });
+      // });
+
       it('should return empty array for span without data', () => {
         const result = extractSpanAttributes({ t: '123', s: '456' });
         expect(result).to.deep.equal([]);
@@ -268,7 +297,7 @@ describe('tracing/converters/otlp', () => {
           s: '456',
           data: {
             http: {
-              method: 'get',
+              operation: 'get',
               path: '/api/users',
               status: 200
             }
@@ -288,7 +317,7 @@ describe('tracing/converters/otlp', () => {
           s: '456',
           data: {
             http: {
-              method: 'post',
+              operation: 'post',
               path: '/api/users',
               status: 201
             }
@@ -308,7 +337,7 @@ describe('tracing/converters/otlp', () => {
           s: '456',
           data: {
             http: {
-              method: 'get',
+              operation: 'get',
               path: '/api/error',
               status: 500,
               error: 'Internal Server Error'
@@ -388,8 +417,8 @@ describe('tracing/converters/otlp', () => {
           s: '456',
           data: {
             kafka: {
-              access: 'send',
-              service: 'my-topic'
+              operation: 'send',
+              endpoints: 'my-topic'
             }
           }
         };

@@ -9,7 +9,7 @@
     "ec": 0,
     "data": {
       "http": {
-        "method": "get",
+        "operation": "get",
         "path": "/api/users"
       },
       "service": "api-service"
