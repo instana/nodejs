@@ -1,0 +1,34 @@
+{
+  "t": "4d1cf5ed498d50ad",
+  "s": "eda95416b48887d2",
+  "p": "cfac86941cae2c0c",
+  "n": "azstorage",
+  "k": 2,
+  "f": {
+    "e": "42504",
+    "h": "agent-stub-uuid"
+  },
+  "ec": 0,
+  "ts": 1781508373056,
+  "d": 1248,
+  "stack": [
+    {
+      "m": "BlockBlobClient.instrumentedOperation",
+      "c": "packages/collector/test/integration/currencies/cloud/@azure/storage-blob/_v12.32.0/node_modules/@instana/core/src/tracing/instrumentation/cloud/azure/blob.js",
+      "n": 51
+    },
+    {
+      "m": "BlockBlobClient.instanaShimmerWrapInner",
+      "c": "packages/collector/test/integration/currencies/cloud/@azure/storage-blob/_v12.32.0/node_modules/@instana/core/src/tracing/shimmer.js",
+      "n": 75
+    }
+  ],
+  "data": {
+    "azstorage": {
+      "containerName": "nodejs-team-test",
+      "blobName": "first.pdf",
+      "accountName": "nodejstracerteam",
+      "op": "upload"
+    }
+  }
+}

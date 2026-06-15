@@ -155,16 +155,16 @@ describe('tracing/converters/otlp', () => {
         expect(result).to.deep.equal(expectedOutput);
       });
 
-      // it('should extract Azure Blob span metadata correctly', () => {
-      //   const input = loadTransformerInputFixture('azure-blob.json');
-      //   const expectedOutput = loadTransformerOutputFixture('metaData/azure-blob.json');
+      it('should extract Azure Blob span metadata correctly', () => {
+        const input = loadTransformerInputFixture('azure-blob.json');
+        const expectedOutput = loadTransformerOutputFixture('metaData/azure-blob.json');
 
-      //   const result = extractSpanMetadata(input);
+        const result = extractSpanMetadata(input);
 
-      //   console.log(JSON.stringify(result, null, 2));
+        console.log(JSON.stringify(result, null, 2));
 
-      //   expect(result).to.deep.equal(expectedOutput);
-      // });
+        expect(result).to.deep.equal(expectedOutput);
+      });
 
       it('should return empty object for null span', () => {
         const result = extractSpanMetadata(null);
@@ -259,23 +259,23 @@ describe('tracing/converters/otlp', () => {
         });
       });
 
-      // it('should extract Azure Blob span attributes correctly', () => {
-      //   const input = loadTransformerInputFixture('azure-blob.json');
-      //   const expectedOutput = loadTransformerOutputFixture('dataAttributes/azure-blob.json');
+      it('should extract Azure Blob span attributes correctly', () => {
+        const input = loadTransformerInputFixture('azure-blob.json');
+        const expectedOutput = loadTransformerOutputFixture('dataAttributes/azure-blob.json');
 
-      //   const result = extractSpanAttributes(input);
+        const result = extractSpanAttributes(input);
 
-      //   console.log(JSON.stringify(result, null, 2));
+        console.log(JSON.stringify(result, null, 2));
 
-      //   expect(result).to.be.an('array');
-      //   expect(result).to.have.lengthOf(expectedOutput.length);
+        expect(result).to.be.an('array');
+        expect(result).to.have.lengthOf(expectedOutput.length);
 
-      //   expectedOutput.forEach(expectedAttr => {
-      //     const actualAttr = result.find(attr => attr.key === expectedAttr.key);
-      //     expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
-      //     expect(actualAttr.value).to.deep.equal(expectedAttr.value);
-      //   });
-      // });
+        expectedOutput.forEach(expectedAttr => {
+          const actualAttr = result.find(attr => attr.key === expectedAttr.key);
+          expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
+          expect(actualAttr.value).to.deep.equal(expectedAttr.value);
+        });
+      });
 
       it('should return empty array for span without data', () => {
         const result = extractSpanAttributes({ t: '123', s: '456' });
