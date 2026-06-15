@@ -186,13 +186,7 @@ exports.addSpan = function (span) {
     return;
   }
 
-  // Transform internal span data format into external (backend) readable format.
-  span = applySpanTransformation(span);
-
-  if (span.t == null) {
-    logger.warn(`Span of type ${span.n} has no trace ID. Not transmitting this span`);
-    return;
-  }
+  //
 
   // CASE: if we no longer want to buffer spans after we have already send the bundle
   if (transmitImmediate) {
@@ -516,6 +510,9 @@ function applySpanTransformation(span) {
 }
 
 /**
+ * Prepares spans for export by transforming them to the appropriate format.
+ * Filters out invalid spans (those without trace IDs).
+ *
  * @param {import("../core").InstanaBaseSpan[]} spansToSend
  * @returns {any}
  */
@@ -527,5 +524,21 @@ function prepareSpansForExport(spansToSend) {
     return otlp.transform(spansToSend);
   }
 
-  return spansToSend;
+  // Transform internal span data format into external (backend) readable format.
+  /** @type {import("../core").InstanaBaseSpan[]} */
+  const transformedSpans = [];
+
+  spansToSend.forEach(span => {
+    const transformedSpan = applySpanTransformation(span);
+
+    // Validate that the span has a trace ID before including it
+    if (transformedSpan.t == null) {
+      logger.warn(`Span of type ${transformedSpan.n} has no trace ID. Not transmitting this span.`);
+      return;
+    }
+
+    transformedSpans.push(transformedSpan);
+  });
+
+  return transformedSpans;
 }
