@@ -5,8 +5,6 @@
 'use strict';
 
 /**
- * OTLP Traces Transformers Module - Signal Entry Point
- *
  * This module acts as the centralized aggregation point for trace-specific
  * transformation routines converting Instana span footprints to OTLP compliance format.
  *

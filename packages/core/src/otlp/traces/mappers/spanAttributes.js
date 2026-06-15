@@ -13,8 +13,8 @@ const { INSTRUMENTATION_TYPES } = require('../constants');
  * - spanName: Function to generate span name from data
  * - spanAttributes: Array of attribute mappings
  *
- * @param {Object} OTLP - Semantic convention mappings
- * @returns {Object} Unified mappings for all instrumentation types
+ * @param {Object} OTLP
+ * @returns {Object}
  */
 function getInstrumentationMappings(OTLP) {
   return {
@@ -344,29 +344,6 @@ function getInstrumentationMappings(OTLP) {
   };
 }
 
-/**
- * Generates custom protocol mapping tables dynamically based on the active schema configuration context.
- * Extracts only the spanAttributes from the unified instrumentation mappings.
- *
- * @param {Object} OTLP - Semantic convention mappings
- * @returns {Object} Attribute mappings for all instrumentation types
- */
-function getAttributeMappings(OTLP) {
-  const instrumentationMappings = getInstrumentationMappings(OTLP);
-  const attributeMappings = {};
-
-  // Extract only spanAttributes from each instrumentation type
-  Object.keys(instrumentationMappings).forEach(type => {
-    const mapping = instrumentationMappings[type];
-    if (mapping.spanAttributes) {
-      attributeMappings[type] = mapping.spanAttributes;
-    }
-  });
-
-  return attributeMappings;
-}
-
 module.exports = {
-  getInstrumentationMappings,
-  getAttributeMappings
+  getInstrumentationMappings
 };
