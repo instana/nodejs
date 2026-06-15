@@ -143,7 +143,7 @@ function applyMapping(mapping, spanData) {
       values.push(spanData?.[mapping.instana[i]]);
     }
 
-    value = mapping.transform ? mapping.transform(spanData, values) : combineFields(values);
+    value = mapping.transform ? mapping.transform(spanData, values) : combineFields(spanData, mapping.instana);
   }
   // Single-field mapping.
   else if (typeof mapping.instana === 'string') {
