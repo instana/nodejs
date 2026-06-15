@@ -1,76 +1,88 @@
 [
   {
-    "t": "d2f14377d32a8d0a",
-    "s": "0f9d75ed9656c512",
-    "p": "44285f7ae5cdb2d9",
-    "n": "redis",
+    "t": "1db7b39d68d9349e",
+    "s": "c0c7e57cb9643a69",
+    "p": "3a4b27aea7a7fdf0",
+    "n": "node.http.client",
     "k": 2,
-    "f": { "e": "88538", "h": "7a:71:ec:ff:fe:3e:a2:e6" },
+    "f": { "e": "32791", "h": "7a:71:ec:ff:fe:3e:a2:e6" },
     "ec": 0,
-    "ts": 1781508493283,
-    "d": 7,
+    "ts": 1781517126966,
+    "d": 271,
     "stack": [
       {
-        "m": "Object.captureStackTrace",
-        "c": "/Users/aryamohanan/Desktop/code/otel-app/instana/node_modules/@instana/core/src/util/stackTrace.js",
-        "n": 38
-      },
-      {
-        "m": "Object.getStackTrace",
-        "c": "/Users/aryamohanan/Desktop/code/otel-app/instana/node_modules/@instana/core/src/tracing/tracingUtil.js",
-        "n": 53
+        "m": "<anonymous>",
+        "c": "/Users/aryamohanan/Desktop/code/Instana/nodejs/example-apps/otel-exporter-test/app.js",
+        "n": 30
       },
       {
         "m": "<anonymous>",
-        "c": "/Users/aryamohanan/Desktop/code/otel-app/instana/node_modules/@instana/core/src/tracing/instrumentation/databases/redis.js",
-        "n": 325
+        "c": "/Users/aryamohanan/Desktop/code/Instana/nodejs/packages/core/src/tracing/instrumentation/frameworks/express.js",
+        "n": 145
+      },
+      {
+        "m": "Layer.handle [as handle_request]",
+        "c": "/Users/aryamohanan/Desktop/code/Instana/nodejs/example-apps/otel-exporter-test/node_modules/express/lib/router/layer.js",
+        "n": 95
+      },
+      {
+        "m": "next",
+        "c": "/Users/aryamohanan/Desktop/code/Instana/nodejs/example-apps/otel-exporter-test/node_modules/express/lib/router/route.js",
+        "n": 149
+      },
+      {
+        "m": "Route.dispatch",
+        "c": "/Users/aryamohanan/Desktop/code/Instana/nodejs/example-apps/otel-exporter-test/node_modules/express/lib/router/route.js",
+        "n": 119
+      },
+      {
+        "m": "Layer.handle [as handle_request]",
+        "c": "/Users/aryamohanan/Desktop/code/Instana/nodejs/example-apps/otel-exporter-test/node_modules/express/lib/router/layer.js",
+        "n": 95
       },
       {
         "m": "<anonymous>",
-        "c": "/Users/aryamohanan/Desktop/code/otel-app/instana/node_modules/@instana/core/src/tracing/clsHooked/async_local_storage_context.js",
-        "n": 161
+        "c": "/Users/aryamohanan/Desktop/code/Instana/nodejs/example-apps/otel-exporter-test/node_modules/express/lib/router/index.js",
+        "n": 284
+      },
+      {
+        "m": "router.process_params",
+        "c": "/Users/aryamohanan/Desktop/code/Instana/nodejs/example-apps/otel-exporter-test/node_modules/express/lib/router/index.js",
+        "n": 346
+      },
+      {
+        "m": "next",
+        "c": "/Users/aryamohanan/Desktop/code/Instana/nodejs/example-apps/otel-exporter-test/node_modules/express/lib/router/index.js",
+        "n": 280
       },
       {
         "m": "<anonymous>",
-        "c": "/Users/aryamohanan/Desktop/code/otel-app/instana/node_modules/@instana/core/src/tracing/clsHooked/async_local_storage_context.js",
-        "n": 148
-      },
-      { "m": "AsyncLocalStorage.run", "c": "node:internal/async_local_storage/async_context_frame", "n": 63 },
-      {
-        "m": "Namespace.run",
-        "c": "/Users/aryamohanan/Desktop/code/otel-app/instana/node_modules/@instana/core/src/tracing/clsHooked/async_local_storage_context.js",
-        "n": 148
-      },
-      {
-        "m": "Namespace.runAndReturn",
-        "c": "/Users/aryamohanan/Desktop/code/otel-app/instana/node_modules/@instana/core/src/tracing/clsHooked/async_local_storage_context.js",
-        "n": 160
-      },
-      {
-        "m": "Class.instrumentedCommandInstana",
-        "c": "/Users/aryamohanan/Desktop/code/otel-app/instana/node_modules/@instana/core/src/tracing/instrumentation/databases/redis.js",
-        "n": 313
-      },
-      {
-        "m": "Class.instanaShimmerWrapInner",
-        "c": "/Users/aryamohanan/Desktop/code/otel-app/instana/node_modules/@instana/core/src/tracing/shimmer.js",
-        "n": 75
+        "c": "/Users/aryamohanan/Desktop/code/Instana/nodejs/example-apps/otel-exporter-test/node_modules/body-parser/lib/read.js",
+        "n": 137
       }
     ],
-    "data": { "redis": { "connection": "redis://127.0.0.1:6379", "command": "set" } }
+    "data": {
+      "http": { "method": "GET", "url": "https://jsonplaceholder.typicode.com/todos/1", "params": null, "status": 200 }
+    }
   },
   {
-    "t": "d2f14377d32a8d0a",
-    "s": "44285f7ae5cdb2d9",
+    "t": "1db7b39d68d9349e",
+    "s": "3a4b27aea7a7fdf0",
     "n": "node.http.server",
     "k": 1,
-    "f": { "e": "88538", "h": "7a:71:ec:ff:fe:3e:a2:e6" },
+    "f": { "e": "32791", "h": "7a:71:ec:ff:fe:3e:a2:e6" },
     "ec": 0,
-    "ts": 1781508493273,
-    "d": 19,
+    "ts": 1781517126956,
+    "d": 284,
     "stack": [],
     "data": {
-      "http": { "path_tpl": "/data", "status": 200, "method": "POST", "url": "/data", "host": "localhost:3001" }
+      "http": {
+        "operation": "GET",
+        "endpoints": "/external-api",
+        "connection": "localhost:3000",
+        "path_tpl": "/external-api",
+        "status": 200
+      }
     }
   }
 ]

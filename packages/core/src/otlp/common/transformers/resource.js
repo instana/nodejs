@@ -26,28 +26,14 @@ function clearResourceCache() {
  *
  * @param {Object} rawPayload - Individual metric element block or trace record
  * @param {Object} [options]
- * @param {boolean} [options.includeInfrastructure=false] - Explicitly pass true for Metrics to include PID/Host
  * @param {string|number} [options.fallbackPid]
  * @returns {{ attributes: Array<Object> }}
  */
-/**
- * Extracts and transforms resource attributes for OTLP format.
- *
- * Resource attributes are cached by service identity and infrastructure
- * metadata to avoid rebuilding identical resource payloads.
- *
- * @param {Object} rawPayload
- * @param {Object} [options]
- * @param {boolean} [options.includeInfrastructure=false]
- * @param {string|number} [options.fallbackPid]
- * @returns {{ attributes: Array<Object> }}
- */
+
 function extractResourceAttributes(rawPayload, options = {}) {
   if (!rawPayload) {
     return { attributes: [] };
   }
-
-  const includeInfrastructure = options.includeInfrastructure === true;
 
   // Instana source metadata:
   //   e -> process id
@@ -56,8 +42,7 @@ function extractResourceAttributes(rawPayload, options = {}) {
 
   // Cache resources by service identity and infrastructure metadata.
   const cacheKey = [
-    ctx._serviceName || 'no_service',
-    `infra:${includeInfrastructure}`,
+    ctx._serviceName || 'unknown_service',
     `host:${sourceMetadata?.h || 'none'}`,
     `pid:${sourceMetadata?.e || options.fallbackPid || 'none'}`
   ].join('|');
