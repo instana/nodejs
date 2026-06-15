@@ -13,10 +13,10 @@
   },
   "data": {
     "http": {
-      "method": "GET",
+      "operation": "GET",
       "path": "/api/users/123",
       "status": 200,
-      "url": "http://localhost:3000/api/users/123",
+      "endpoints": "http://localhost:3000/api/users/123",
       "header": {
         "user-agent": "Mozilla/5.0",
         "accept": "application/json"

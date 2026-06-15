@@ -9,7 +9,7 @@
     "ec": 0,
     "data": {
       "http": {
-        "method": "post",
+        "operation": "post",
         "path": "/api/orders"
       },
       "service": "order-service"
@@ -26,7 +26,7 @@
     "data": {
       "kafka": {
         "operation": "consume",
-        "service": "events-topic"
+        "endpoints": "events-topic"
       },
       "service": "event-processor"
     }

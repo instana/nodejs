@@ -13,9 +13,7 @@
   },
   "data": {
     "kafka": {
-      "operation": "produce",
-      "service": "orders-topic",
-      "access": "send",
+      "operation": "send",
       "endpoints": "orders-topic"
     }
   }
