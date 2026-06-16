@@ -54,6 +54,7 @@ const MAPPINGS = {
     CONSUMER_GROUP: 'messaging.consumer.group.name',
     MESSAGE_ID: 'messaging.message.id',
     MESSAGE_BODY_SIZE: 'messaging.message.body.size',
+    ERROR_TYPE: 'error.type',
     kafka: {
       PARTITION: 'messaging.kafka.partition',
       OFFSET: 'messaging.kafka.message.offset',
@@ -78,7 +79,8 @@ const MAPPINGS = {
     SERVER_ADDRESS: 'server.address',
     PEER_NAME: 'net.peer.name',
     PEER_PORT: 'net.peer.port',
-    CONNECTION_STRING: 'db.connection_string'
+    CONNECTION_STRING: 'db.connection_string',
+    ERROR_TYPE: 'error.type'
   },
 
   rpc: {
@@ -86,7 +88,8 @@ const MAPPINGS = {
     METHOD: 'rpc.method',
     SERVICE: 'rpc.service',
     GRPC_STATUS: 'rpc.grpc.status_code',
-    GRPC_ERROR: 'rpc.grpc.status_message'
+    GRPC_ERROR: 'rpc.grpc.status_message',
+    ERROR_TYPE: 'error.type'
   },
 
   graphql: {
@@ -103,6 +106,7 @@ const MAPPINGS = {
   cloud: {
     REGION: 'cloud.region',
     PROVIDER: 'cloud.provider',
+    ERROR_TYPE: 'error.type',
     gcp: {
       PROJECT_ID: 'gcp.project_id',
       STORAGE_BUCKET: 'gcp.storage.bucket',
