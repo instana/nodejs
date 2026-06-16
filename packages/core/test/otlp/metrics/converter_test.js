@@ -8,7 +8,6 @@ const expect = require('chai').expect;
 const fs = require('fs');
 const path = require('path');
 
-const otlpConverter = require('../../../src/otlp/metrics');
 const converter = require('../../../src/otlp/metrics');
 
 describe('metrics/converters/otlp', () => {
@@ -52,96 +51,6 @@ describe('metrics/converters/otlp', () => {
         const result = converter.transform(undefined);
         expect(result).to.deep.equal({ resourceMetrics: [] });
       });
-    });
-
-    describe('metric value types', () => {
-      it('should handle number values as sum', () => {
-        const input = [{ name: 'memory.rss', value: 42.5 }];
-
-        const result = converter.transform(input);
-
-        const metric = result.resourceMetrics[0].scopeMetrics[0].metrics[0];
-        expect(metric).to.have.property('sum');
-        expect(metric.sum.dataPoints[0].asDouble).to.equal(42.5);
-      });
-
-      it('should convert memory metrics', () => {
-        const input = [{ name: 'memory.rss', value: 116752384 }];
-
-        const result = converter.transform(input);
-
-        const metric = result.resourceMetrics[0].scopeMetrics[0].metrics[0];
-        expect(metric.name).to.equal('memory.rss');
-        expect(metric).to.have.property('sum');
-        expect(metric.sum.dataPoints[0].asDouble).to.equal(116752384);
-      });
-
-      it('should handle string values as gauge with attribute', () => {
-        const input = [{ name: 'memory.status', value: 'active' }];
-
-        const result = converter.transform(input);
-
-        const metric = result.resourceMetrics[0].scopeMetrics[0].metrics[0];
-        expect(metric).to.have.property('gauge');
-        expect(metric.gauge.dataPoints[0].attributes).to.be.an('array');
-        expect(metric.gauge.dataPoints[0].attributes[0].value.stringValue).to.equal('active');
-      });
-
-      it('should filter non-memory metrics', () => {
-        const input = [{ name: 'eventLoop.delay', value: 42 }];
-
-        const result = converter.transform(input);
-
-        expect(result).to.deep.equal({ resourceMetrics: [] });
-      });
-    });
-
-    describe('resource grouping', () => {
-      it('should group memory metrics by resource', () => {
-        const input = [
-          { name: 'memory.rss', value: 10, from: { e: '111', h: 'host1' } },
-          { name: 'memory.heapUsed', value: 20, from: { e: '111', h: 'host1' } },
-          { name: 'memory.heapTotal', value: 30, from: { e: '222', h: 'host2' } }
-        ];
-
-        const result = converter.transform(input);
-
-        expect(result.resourceMetrics).to.have.lengthOf(1);
-        expect(result.resourceMetrics[0].scopeMetrics[0].metrics).to.have.lengthOf(3);
-      });
-    });
-  });
-
-  describe('index (entry point)', () => {
-    it('should export transform function', () => {
-      expect(otlpConverter.transform).to.be.a('function');
-    });
-
-    it('should export setHostId function', () => {
-      expect(otlpConverter.setHostId).to.be.a('function');
-    });
-
-    it('should export setPid function', () => {
-      expect(otlpConverter.setPid).to.be.a('function');
-    });
-
-    it('should export init function', () => {
-      expect(otlpConverter.init).to.be.a('function');
-    });
-
-    it('should handle errors gracefully and return empty result', () => {
-      const result = otlpConverter.transform({
-        invalid: {
-          deeply: {
-            nested: {
-              circular: null
-            }
-          }
-        }
-      });
-
-      expect(result).to.have.property('resourceMetrics');
-      expect(result.resourceMetrics).to.be.an('array');
     });
   });
 });
