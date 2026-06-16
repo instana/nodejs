@@ -4,21 +4,22 @@
 
 'use strict';
 
+const common = require('./common');
 const traces = require('./traces');
 const metrics = require('./metrics');
-const ctx = require('./common/context');
 
 /**
-@param {import('../config').InstanaConfig} config
+ * @param {import('../config').InstanaConfig} config
  */
 function init(config) {
-  ctx.init(config);
+  common.init(config);
   traces.init(config);
   metrics.init(config);
 }
 
 module.exports = {
   init,
+  common,
   traces,
   metrics
 };

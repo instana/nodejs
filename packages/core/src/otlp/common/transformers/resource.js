@@ -7,7 +7,13 @@
 const ctx = require('../context');
 const { INSTRUMENTATION_SCOPE_NAME } = require('../../traces/mappers/constants');
 
-const { version: SDK_VERSION = '1.0.0' } = require('../../../../package.json');
+let SDK_VERSION = '1.0.0';
+try {
+  SDK_VERSION = require('../../../../package.json').version || '1.0.0';
+} catch (_) {
+  // ignore
+}
+
 const SDK_LANGUAGE = 'nodejs';
 const SDK_NAME = 'instana';
 

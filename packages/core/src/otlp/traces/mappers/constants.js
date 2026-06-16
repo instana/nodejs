@@ -50,3 +50,9 @@ exports.SPAN_KINDS = {
   PRODUCER: 4,
   CONSUMER: 5
 };
+
+exports.SPECIAL_SPAN_TYPES = {
+  RESOURCE: 'resource',
+  TAGS: 'tags',
+  OTEL: 'otel'
+};

@@ -40,7 +40,7 @@ function convert(spans) {
 
     try {
       const mappedSpan = {
-        ...transformers.spanMetaData.extractSpanMetadata(span, mappers),
+        ...transformers.spanMetadata.extractSpanMetadata(span, mappers),
         attributes: transformers.spanAttributes.extractSpanAttributes(span, mappers)
       };
       otlpFormattedSpans.push(mappedSpan);

@@ -15,11 +15,11 @@
  */
 
 const resource = require('../../common/transformers/resource');
-const spanMetaData = require('./spanMetaData');
+const spanMetadata = require('./spanMetadata');
 const spanAttributes = require('./spanAttributes');
 
 module.exports = {
   resource,
-  spanMetaData,
+  spanMetadata,
   spanAttributes
 };
