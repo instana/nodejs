@@ -58,9 +58,9 @@
     "@opentelemetry/auto-instrumentations-node": "^0.67.3",
     "@opentelemetry/exporter-trace-otlp-http": "^0.209.0",
     "@opentelemetry/propagator-instana": "^0.5.0",
-    "@opentelemetry/resources": "^2.3.0",
+    "@opentelemetry/resources": "^2.8.0",
     "@opentelemetry/sdk-node": "^0.209.0",
-    "@opentelemetry/sdk-trace-base": "^2.3.0",
+    "@opentelemetry/sdk-trace-base": "^2.8.0",
     "@opentelemetry/semantic-conventions": "^1.38.0",
     "nock": "^14.0.10"
   }
