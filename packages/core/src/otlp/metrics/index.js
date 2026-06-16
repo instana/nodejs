@@ -23,12 +23,6 @@ function transform(metrics) {
 module.exports = {
   init,
   transform,
-  // TODO: added these methods, may be we can set host from outside of core
-  get setHostId() {
-    return converter.setHostId;
-  },
-
-  get setPid() {
-    return converter.setPid;
-  }
+  setHostId: converter.setHostId,
+  setPid: converter.setPid
 };

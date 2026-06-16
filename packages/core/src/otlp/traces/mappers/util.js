@@ -12,6 +12,9 @@ function toUpperCase(str) {
  * @param {any[]} values
  */
 function firstDefined(values) {
+  if (!Array.isArray(values)) {
+    return values != null ? values : undefined;
+  }
   return values.find(v => v != null);
 }
 

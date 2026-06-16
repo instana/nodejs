@@ -18,18 +18,6 @@ class OtlpConfigContext {
     this._serviceName = null;
   }
 
-  _clearResourceCache() {
-    try {
-      const { clearResourceCache } = require('./transformers/resource');
-
-      if (typeof clearResourceCache === 'function') {
-        clearResourceCache();
-      }
-    } catch (_) {
-      // ignore
-    }
-  }
-
   /**
    * @param {Object} config
    */
@@ -39,8 +27,6 @@ class OtlpConfigContext {
     this._compiledSemConv = getLookupConfig(this._semConvVersion);
     this._pid = String(process.pid);
     this._serviceName = config.serviceName || null;
-
-    this._clearResourceCache();
   }
 
   get semConv() {
@@ -56,9 +42,7 @@ class OtlpConfigContext {
     if (this._hostId === hostId) {
       return;
     }
-
     this._hostId = hostId;
-    this._clearResourceCache();
   }
 
   get hostId() {
@@ -71,9 +55,7 @@ class OtlpConfigContext {
     if (this._pid === normalizedPid) {
       return;
     }
-
     this._pid = normalizedPid;
-    this._clearResourceCache();
   }
 
   get pid() {
@@ -87,9 +69,7 @@ class OtlpConfigContext {
     if (!serviceName || this._serviceName === serviceName) {
       return;
     }
-
     this._serviceName = serviceName;
-    this._clearResourceCache();
   }
 
   get serviceName() {

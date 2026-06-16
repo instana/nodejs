@@ -14,11 +14,15 @@ const {
   extractPort
 } = require('./util');
 const ctx = require('../../common/context');
-const { INSTRUMENTATION_TYPES, STATUS_CODES } = require('./constants');
+const { INSTRUMENTATION_TYPES, STATUS_CODES, SPECIAL_SPAN_TYPES } = require('./constants');
 
-const OTLP = ctx.semConv;
+/**
+ * Get instrumentation mappings with current OTLP semantic conventions
+ */
+function getInstrumentationMappings() {
+  const OTLP = ctx.semConv;
 
-const instrumentationMappings = {
+  return {
   [INSTRUMENTATION_TYPES.HTTP]: {
     spanName: data => {
       const method = (data.operation || data.method).toUpperCase();
@@ -363,16 +367,16 @@ const instrumentationMappings = {
       { otlp: OTLP.network.PEER_NAME, instana: 'hostname' },
       { otlp: OTLP.network.PEER_PORT, instana: 'port' }
     ]
-  }
-};
+    }
+  };
+}
 
 /**
  * @param {import('../../../core').InstanaBaseSpan} span
  */
 function getSpanType(span) {
   const keys = Object.keys(span?.data || {});
-
-  return keys.find(key => key !== INSTRUMENTATION_TYPES.PEER && key !== 'resource') || null;
+  return keys.find(key => key !== INSTRUMENTATION_TYPES.PEER && key !== SPECIAL_SPAN_TYPES.RESOURCE) || null;
 }
 
 /**
@@ -419,7 +423,8 @@ module.exports = {
   /** @param {import('../../../core').InstanaBaseSpan} span */
   spanName(span) {
     const type = getSpanType(span);
-    const handler = instrumentationMappings[type]?.spanName;
+    const mappings = getInstrumentationMappings();
+    const handler = mappings[type]?.spanName;
     const spanData = type ? span.data?.[type] : null;
 
     if (typeof handler === 'function' && spanData) {
@@ -433,15 +438,16 @@ module.exports = {
   spanAttributes(span) {
     const attributes = [];
     const spanTypes = Object.keys(span.data || {});
+    const mappings = getInstrumentationMappings();
 
     for (let i = 0; i < spanTypes.length; i++) {
       const spanType = spanTypes[i];
 
-      if (spanType === 'resource') {
+      if (spanType === SPECIAL_SPAN_TYPES.RESOURCE) {
         continue;
       }
 
-      const handler = instrumentationMappings[spanType]?.spanAttributes;
+      const handler = mappings[spanType]?.spanAttributes;
       const spanData = span.data[spanType];
 
       if (!Array.isArray(handler) || !spanData) {
