@@ -6,10 +6,10 @@
           { "key": "service.name", "value": { "stringValue": "otel-exporter-test" } },
           { "key": "telemetry.sdk.language", "value": { "stringValue": "nodejs" } },
           { "key": "telemetry.sdk.name", "value": { "stringValue": "instana" } },
-          { "key": "telemetry.sdk.version", "value": { "stringValue": "5.4.1" } }
+          { "key": "telemetry.sdk.version", "value": { "stringValue": "6.2.0" } }
         ]
       },
-      "scopeMetrics": [{ "scope": { "name": "@instana/collector", "version": "5.4.1" }, "metrics": [] }]
+      "scopeMetrics": [{ "scope": { "name": "@instana/collector", "version": "6.2.0" }, "metrics": [] }]
     }
   ]
 }

@@ -6,14 +6,14 @@
           { "key": "service.name", "value": { "stringValue": "otel-exporter-test" } },
           { "key": "telemetry.sdk.language", "value": { "stringValue": "nodejs" } },
           { "key": "telemetry.sdk.name", "value": { "stringValue": "instana" } },
-          { "key": "telemetry.sdk.version", "value": { "stringValue": "5.4.1" } },
+          { "key": "telemetry.sdk.version", "value": { "stringValue": "6.2.0" } },
           { "key": "process.pid", "value": { "intValue": 32791 } },
           { "key": "host.name", "value": { "stringValue": "7a:71:ec:ff:fe:3e:a2:e6" } }
         ]
       },
       "scopeSpans": [
         {
-          "scope": { "name": "@instana/collector", "version": "5.4.1" },
+          "scope": { "name": "@instana/collector", "version": "6.2.0" },
           "spans": [
             {
               "traceId": "00000000000000001db7b39d68d9349e",

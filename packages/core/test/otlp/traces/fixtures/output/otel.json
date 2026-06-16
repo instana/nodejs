@@ -13,7 +13,7 @@
       },
       "scopeSpans": [
         {
-          "scope": { "name": "@instana/collector", "version": "5.4.1" },
+          "scope": { "name": "@instana/collector", "version": "6.2.0" },
           "spans": [
             {
               "traceId": "00000000000000005c53939869360e85",
