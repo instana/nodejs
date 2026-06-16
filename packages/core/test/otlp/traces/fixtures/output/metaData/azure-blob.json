@@ -8,7 +8,5 @@
   "name": "azure.storage.upload",
   "status": {
     "code": 0
-  },
-  "events": [],
-  "links": []
+  }
 }

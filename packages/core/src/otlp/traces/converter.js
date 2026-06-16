@@ -7,9 +7,10 @@
 const ctx = require('../common/context');
 const transformers = require('./transformers');
 const { getInstrumentationMappings } = require('./mappers/spanAttributes');
+const { getMetadataMappings } = require('./mappers/spanMetaData');
 const { isLogSpan } = require('./util');
 
-const SCOPE = {
+const INSTRUMENTATION_SCOPE = {
   name: transformers.resource.SCOPE_NAME,
   version: transformers.resource.SCOPE_VERSION
 };
@@ -27,19 +28,21 @@ function init(config) {
 }
 
 /**
+ * Converts Instana spans into an OTLP trace export payload.
+ *
  * @param {import('../../core').InstanaBaseSpan[]} spans
- * @returns {Object} Payload matching { resourceSpans: [...] }
+ * @returns {{ resourceSpans: Array }}
  */
 function convert(spans) {
   if (!Array.isArray(spans) || spans.length === 0) {
     return { resourceSpans: [] };
   }
+  // Mapping definitions are shared across all spans in the batch.
+  const otlpSemConv = ctx.semConv;
+  const instrumentationMappings = getInstrumentationMappings(otlpSemConv);
+  const metadataMappings = getMetadataMappings(otlpSemConv, instrumentationMappings);
 
-  // Get instrumentation mappings once for all spans
-  const OTLP = ctx.semConv;
-  const instrumentationMappings = getInstrumentationMappings(OTLP);
-
-  const otlpFormattedSpans = [];
+  const otlpSpans = [];
 
   spans.forEach(span => {
     // TODO: Add log span converter
@@ -48,30 +51,41 @@ function convert(spans) {
     }
 
     try {
-      const mappedSpan = {
-        ...transformers.spanMetaData.extractSpanMetadata(span, instrumentationMappings),
+      const otlpSpan = {
+        ...transformers.spanMetaData.extractSpanMetadata(span, metadataMappings),
         attributes: transformers.spanAttributes.extractSpanAttributes(span, instrumentationMappings)
       };
-      otlpFormattedSpans.push(mappedSpan);
+      otlpSpans.push(otlpSpan);
     } catch (error) {
-      logger?.debug('Failed to transform individual OTLP span context:', error);
+      logger?.debug('Failed to convert span to OTLP format.', error);
     }
   });
 
-  if (otlpFormattedSpans.length === 0) return { resourceSpans: [] };
+  if (otlpSpans.length === 0) return { resourceSpans: [] };
 
   // All spans in the same process share the same resource
   // Extract resource once from the first span
   const resource = transformers.resource.extractResourceAttributes(spans[0]);
 
+  return buildOtlpPayload(resource, otlpSpans);
+}
+
+/**
+ * Builds the OTLP Trace Export payload structure.
+ *
+ * @param {Object} resource
+ * @param {Object[]} spans
+ * @returns {{ resourceSpans: Array }}
+ */
+function buildOtlpPayload(resource, spans) {
   return {
     resourceSpans: [
       {
         resource,
         scopeSpans: [
           {
-            scope: SCOPE,
-            spans: otlpFormattedSpans
+            scope: INSTRUMENTATION_SCOPE,
+            spans
           }
         ]
       }

@@ -95,7 +95,7 @@ exports.init = function init(config, _downstreamConnection) {
   batchingEnabled = config.tracing.spanBatchingEnabled;
   isFaaS = false;
   transmitImmediate = false;
-  exportToOtlp = config.tracing.otlp.enabled;
+  exportToOtlp = config.tracing.otlp?.enabled;
 
   if (config.tracing.activateImmediately) {
     preActivationCleanupIntervalHandle = setInterval(() => {
@@ -124,7 +124,7 @@ exports.activate = function activate(_config) {
   }
 
   batchingEnabled = _config.tracing.spanBatchingEnabled;
-  exportToOtlp = _config.tracing.otlp.enabled;
+  exportToOtlp = _config.tracing.otlp?.enabled;
 
   isActive = true;
   if (activatedAt == null) {
@@ -189,8 +189,6 @@ exports.addSpan = function (span) {
   if (!isActive) {
     return;
   }
-
-  
 
   // CASE: if we no longer want to buffer spans after we have already send the bundle
   if (transmitImmediate) {
@@ -528,15 +526,17 @@ function buildExportPayload(spansToSend) {
   if (exportToOtlp) {
     return otlp.traces.transform(spansToSend);
   }
-  return spansToSend
-    // Transform internal span data format into external (backend) readable format.
-    .map(span => instanaBackendMapper.transform(span))
-    .filter(span => {
-      if (span.t != null) {
-        return true;
-      }
+  return (
+    spansToSend
+      // Transform internal span data format into external (backend) readable format.
+      .map(span => instanaBackendMapper.transform(span))
+      .filter(span => {
+        if (span.t != null) {
+          return true;
+        }
 
-      logger.debug(`Span of type ${span.n} has no trace ID. Not transmitting this span.`);
-      return false;
-    });
+        logger.debug(`Span of type ${span.n} has no trace ID. Not transmitting this span.`);
+        return false;
+      })
+  );
 }
