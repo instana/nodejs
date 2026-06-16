@@ -35,7 +35,22 @@ function getInstrumentationMappings(OTLP) {
         { otlp: OTLP.http.URL_FULL, instana: ['endpoints', 'url'] },
         { otlp: OTLP.http.URL_PATH, instana: 'path' },
         { otlp: OTLP.http.URL_QUERY, instana: 'params' },
-        { otlp: OTLP.http.SERVER_ADDRESS, instana: ['connection', 'host'] },
+        {
+          otlp: OTLP.http.SERVER_ADDRESS,
+          instana: ['connection', 'host'],
+          transform: (spanData, values) => {
+            const value = firstDefined(spanData, values);
+            return value || '';
+          }
+        },
+        {
+          otlp: OTLP.http.SERVER_PORT,
+          instana: ['connection', 'host'],
+          transform: (spanData, values) => {
+            const value = firstDefined(spanData, values);
+            return value ? extractPort(value) : undefined;
+          }
+        },
         { otlp: OTLP.http.RESPONSE_STATUS, instana: 'status' },
         { otlp: OTLP.http.REQUEST_HEADER, instana: 'header' },
         { otlp: OTLP.http.URL_TEMPLATE, instana: 'path_tpl' },
