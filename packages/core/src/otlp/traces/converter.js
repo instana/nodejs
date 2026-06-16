@@ -4,9 +4,8 @@
 
 'use strict';
 
-const ctx = require('../common/context');
 const transformers = require('./transformers');
-const { getInstrumentationMappings } = require('./mappers/spanAttributes');
+const mappers = require('./mappers');
 const { isLogSpan } = require('./util');
 
 const SCOPE = {
@@ -35,10 +34,6 @@ function convert(spans) {
     return { resourceSpans: [] };
   }
 
-  // Get instrumentation mappings once for all spans
-  const OTLP = ctx.semConv;
-  const instrumentationMappings = getInstrumentationMappings(OTLP);
-
   const otlpFormattedSpans = [];
 
   spans.forEach(span => {
@@ -49,8 +44,8 @@ function convert(spans) {
 
     try {
       const mappedSpan = {
-        ...transformers.spanMetaData.extractSpanMetadata(span, instrumentationMappings),
-        attributes: transformers.spanAttributes.extractSpanAttributes(span, instrumentationMappings)
+        ...transformers.spanMetaData.extractSpanMetadata(span, mappers),
+        attributes: transformers.spanAttributes.extractSpanAttributes(span, mappers)
       };
       otlpFormattedSpans.push(mappedSpan);
     } catch (error) {

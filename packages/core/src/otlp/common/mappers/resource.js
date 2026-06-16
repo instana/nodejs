@@ -21,12 +21,6 @@ function getResourceDefaults() {
 }
 
 /**
- * @param {Object} rawPayload
- * @param {Object} [options]
- * @param {string|number} [options.fallbackPid]
- * @returns {Array<Object>}
- */
-/**
  * Maps resource-level attributes from the span payload.
  *
  * Resource attributes can originate from:

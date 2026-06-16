@@ -3,21 +3,14 @@
  */
 
 'use strict';
+  
+const { toUpperCase, joinWith, firstDefined, formatOTLPValue, combineFields, extractHost, extractPort } = require('./util');
+const ctx = require('../../common/context');
+const { INSTRUMENTATION_TYPES, STATUS_CODES } = require('./constants');
 
-const { toUpperCase, joinWith, extractHost, extractPort, firstDefined } = require('../util');
-const { INSTRUMENTATION_TYPES } = require('./constants');
+const OTLP = ctx.semConv;
 
-/**
- * Unified mapping for all instrumentation types.
- * Each type contains:
- * - spanName: Function to generate span name from data
- * - spanAttributes: Array of attribute mappings
- *
- * @param {Object} OTLP
- * @returns {Object}
- */
-function getInstrumentationMappings(OTLP) {
-  return {
+const instrumentationMappings = {
     [INSTRUMENTATION_TYPES.HTTP]: {
       spanName: data => {
         const method = (data.operation || data.method).toUpperCase();
@@ -27,8 +20,8 @@ function getInstrumentationMappings(OTLP) {
         {
           otlp: OTLP.http.REQUEST_METHOD,
           instana: ['operation', 'method'],
-          transform: (spanData, values) => {
-            const value = firstDefined(spanData, values);
+          transform: values => {
+            const value = firstDefined(values);
             return value ? toUpperCase(value) : value;
           }
         },
@@ -349,8 +342,113 @@ function getInstrumentationMappings(OTLP) {
       ]
     }
   };
+
+/**
+ * @param {import('../../../core').InstanaBaseSpan} span
+ */
+function getSpanType(span) {
+  const keys = Object.keys(span?.data || {});
+
+  return keys.find(key => key !== INSTRUMENTATION_TYPES.PEER && key !== 'resource') || null;
+}
+
+/**
+ * @param {Object} mapping
+ * @param {Object} spanData
+ * @returns {Object|null}
+ */
+function applyMapping(mapping, spanData) {
+  if (!mapping) {
+    return null;
+  }
+
+  let value;
+
+  if (mapping.value !== undefined && !mapping.instana) {
+    value = mapping.value;
+  } else if (Array.isArray(mapping.instana)) {
+    const values = mapping.instana.map(key => spanData?.[key]);
+
+    value = mapping.transform ? mapping.transform(values, spanData) : combineFields(spanData, mapping.instana);
+  } else if (typeof mapping.instana === 'string') {
+    const rawValue = spanData?.[mapping.instana];
+
+    if (rawValue === null || rawValue === undefined) {
+      return null;
+    }
+
+    value = mapping.transform ? mapping.transform(rawValue, spanData) : rawValue;
+  } else {
+    return null;
+  }
+
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  return {
+    key: mapping.otlp,
+    value: formatOTLPValue(value)
+  };
 }
 
 module.exports = {
-  getInstrumentationMappings
+  /** @param {import('../../../core').InstanaBaseSpan} span */
+  spanName(span) {
+    const type = getSpanType(span);
+    const handler = instrumentationMappings[type]?.spanName;
+    const spanData = type ? span.data?.[type] : null;
+
+    if (typeof handler === 'function' && spanData) {
+      return handler(spanData);
+    }
+
+    return span?.n || type || 'unknown';
+  },
+
+  /** @param {import('../../../core').InstanaBaseSpan} span */
+  spanAttributes(span) {
+    const attributes = [];
+    const spanTypes = Object.keys(span.data || {});
+
+    for (let i = 0; i < spanTypes.length; i++) {
+      const spanType = spanTypes[i];
+
+      if (spanType === 'resource') {
+        continue;
+      }
+
+      const handler = instrumentationMappings[spanType]?.spanAttributes;
+      const spanData = span.data[spanType];
+
+      if (!Array.isArray(handler) || !spanData) {
+        continue;
+      }
+
+      for (let j = 0; j < handler.length; j++) {
+        const attribute = applyMapping(handler[j], spanData);
+
+        if (attribute) {
+          attributes.push(attribute);
+        }
+      }
+    }
+
+    return attributes;
+  },
+
+  /** @param {import('../../../core').InstanaBaseSpan} span */
+  spanStatus(span) {
+    if (!span?.ec) {
+      return { code: STATUS_CODES.UNSET };
+    }
+
+    const type = getSpanType(span);
+    const data = type ? span.data?.[type] : null;
+
+    return {
+      code: STATUS_CODES.ERROR,
+      message: String(data?.error || `${type || span?.n || 'operation'} failed`)
+    };
+  }
 };

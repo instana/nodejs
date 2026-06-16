@@ -10,6 +10,7 @@ const path = require('path');
 
 const otlp = require('../../../src/otlp');
 const { convert } = require('../../../src/otlp/traces/converter');
+const mappers = require('../../../src/otlp/traces/mappers');
 const { extractSpanMetadata } = require('../../../src/otlp/traces/transformers/spanMetaData');
 const { extractSpanAttributes } = require('../../../src/otlp/traces/transformers/spanAttributes');
 
@@ -119,7 +120,7 @@ describe('tracing/converters/otlp', () => {
         const input = loadTransformerInputFixture('http.json');
         const expectedOutput = loadTransformerOutputFixture('metaData/http.json');
 
-        const result = extractSpanMetadata(input);
+        const result = extractSpanMetadata(input, mappers);
 
         expect(result).to.deep.equal(expectedOutput);
       });
@@ -128,7 +129,7 @@ describe('tracing/converters/otlp', () => {
         const input = loadTransformerInputFixture('kafka.json');
         const expectedOutput = loadTransformerOutputFixture('metaData/kafka.json');
 
-        const result = extractSpanMetadata(input);
+        const result = extractSpanMetadata(input, mappers);
 
         expect(result).to.deep.equal(expectedOutput);
       });
@@ -137,7 +138,7 @@ describe('tracing/converters/otlp', () => {
         const input = loadTransformerInputFixture('mongodb.json');
         const expectedOutput = loadTransformerOutputFixture('metaData/mongodb.json');
 
-        const result = extractSpanMetadata(input);
+        const result = extractSpanMetadata(input, mappers);
 
         expect(result).to.deep.equal(expectedOutput);
       });
@@ -146,7 +147,7 @@ describe('tracing/converters/otlp', () => {
         const input = loadTransformerInputFixture('otel.json');
         const expectedOutput = loadTransformerOutputFixture('metaData/otel.json');
 
-        const result = extractSpanMetadata(input);
+        const result = extractSpanMetadata(input, mappers);
 
         expect(result).to.deep.equal(expectedOutput);
       });
@@ -155,18 +156,18 @@ describe('tracing/converters/otlp', () => {
         const input = loadTransformerInputFixture('azure-blob.json');
         const expectedOutput = loadTransformerOutputFixture('metaData/azure-blob.json');
 
-        const result = extractSpanMetadata(input);
+        const result = extractSpanMetadata(input, mappers);
 
         expect(result).to.deep.equal(expectedOutput);
       });
 
       it('should return empty object for null span', () => {
-        const result = extractSpanMetadata(null);
+        const result = extractSpanMetadata(null, mappers);
         expect(result).to.deep.equal({});
       });
 
       it('should return empty object for undefined span', () => {
-        const result = extractSpanMetadata(undefined);
+        const result = extractSpanMetadata(undefined, mappers);
         expect(result).to.deep.equal({});
       });
     });
@@ -176,7 +177,7 @@ describe('tracing/converters/otlp', () => {
         const input = loadTransformerInputFixture('http.json');
         const expectedOutput = loadTransformerOutputFixture('dataAttributes/http.json');
 
-        const result = extractSpanAttributes(input);
+        const result = extractSpanAttributes(input, mappers);
 
         expect(result).to.be.an('array');
         expect(result).to.have.lengthOf(expectedOutput.length);
@@ -192,7 +193,7 @@ describe('tracing/converters/otlp', () => {
         const input = loadTransformerInputFixture('kafka.json');
         const expectedOutput = loadTransformerOutputFixture('dataAttributes/kafka.json');
 
-        const result = extractSpanAttributes(input);
+        const result = extractSpanAttributes(input, mappers);
 
         expect(result).to.be.an('array');
         expect(result.length).to.be.at.least(expectedOutput.length);
@@ -209,7 +210,7 @@ describe('tracing/converters/otlp', () => {
         const input = loadTransformerInputFixture('mongodb.json');
         const expectedOutput = loadTransformerOutputFixture('dataAttributes/mongodb.json');
 
-        const result = extractSpanAttributes(input);
+        const result = extractSpanAttributes(input, mappers);
 
         expect(result).to.be.an('array');
         expect(result).to.have.lengthOf(expectedOutput.length);
@@ -225,7 +226,7 @@ describe('tracing/converters/otlp', () => {
         const input = loadTransformerInputFixture('postgresql.json');
         const expectedOutput = loadTransformerOutputFixture('dataAttributes/postgresql.json');
 
-        const result = extractSpanAttributes(input);
+        const result = extractSpanAttributes(input, mappers);
 
         expect(result).to.be.an('array');
         expect(result).to.have.lengthOf(expectedOutput.length);
@@ -241,7 +242,7 @@ describe('tracing/converters/otlp', () => {
         const input = loadTransformerInputFixture('otel.json');
         const expectedOutput = loadTransformerOutputFixture('dataAttributes/otel.json');
 
-        const result = extractSpanAttributes(input);
+        const result = extractSpanAttributes(input, mappers);
 
         expect(result).to.be.an('array');
         expect(result).to.have.lengthOf(expectedOutput.length);
@@ -257,7 +258,7 @@ describe('tracing/converters/otlp', () => {
         const input = loadTransformerInputFixture('azure-blob.json');
         const expectedOutput = loadTransformerOutputFixture('dataAttributes/azure-blob.json');
 
-        const result = extractSpanAttributes(input);
+        const result = extractSpanAttributes(input, mappers);
 
         expect(result).to.be.an('array');
         expect(result).to.have.lengthOf(expectedOutput.length);
@@ -270,12 +271,12 @@ describe('tracing/converters/otlp', () => {
       });
 
       it('should return empty array for span without data', () => {
-        const result = extractSpanAttributes({ t: '123', s: '456' });
+        const result = extractSpanAttributes({ t: '123', s: '456' }, mappers);
         expect(result).to.deep.equal([]);
       });
 
       it('should return empty array for null span', () => {
-        const result = extractSpanAttributes(null);
+        const result = extractSpanAttributes(null, mappers);
         expect(result).to.deep.equal([]);
       });
     });
@@ -296,7 +297,7 @@ describe('tracing/converters/otlp', () => {
           }
         };
 
-        const result = extractSpanAttributes(span);
+        const result = extractSpanAttributes(span, mappers);
         const methodAttr = result.find(attr => attr.key === 'http.method');
 
         expect(methodAttr).to.exist;
@@ -316,7 +317,7 @@ describe('tracing/converters/otlp', () => {
           }
         };
 
-        const result = extractSpanAttributes(span);
+        const result = extractSpanAttributes(span, mappers);
         const statusAttr = result.find(attr => attr.key === 'http.status_code');
 
         expect(statusAttr).to.exist;
@@ -337,7 +338,7 @@ describe('tracing/converters/otlp', () => {
           }
         };
 
-        const result = extractSpanAttributes(span);
+        const result = extractSpanAttributes(span, mappers);
         const errorAttr = result.find(attr => attr.key === 'error.type');
 
         expect(errorAttr).to.exist;
@@ -361,7 +362,7 @@ describe('tracing/converters/otlp', () => {
           }
         };
 
-        const result = extractSpanAttributes(span);
+        const result = extractSpanAttributes(span, mappers);
 
         const systemAttr = result.find(attr => attr.key === 'db.system');
         expect(systemAttr).to.exist;
@@ -390,7 +391,7 @@ describe('tracing/converters/otlp', () => {
           }
         };
 
-        const result = extractSpanAttributes(span);
+        const result = extractSpanAttributes(span, mappers);
 
         const systemAttr = result.find(attr => attr.key === 'db.system');
         expect(systemAttr).to.exist;
@@ -415,7 +416,7 @@ describe('tracing/converters/otlp', () => {
           }
         };
 
-        const result = extractSpanAttributes(span);
+        const result = extractSpanAttributes(span, mappers);
 
         const systemAttr = result.find(attr => attr.key === 'messaging.system');
         expect(systemAttr).to.exist;
@@ -439,7 +440,7 @@ describe('tracing/converters/otlp', () => {
           }
         };
 
-        const result = extractSpanAttributes(span);
+        const result = extractSpanAttributes(span, mappers);
 
         const systemAttr = result.find(attr => attr.key === 'messaging.system');
         expect(systemAttr).to.exist;
