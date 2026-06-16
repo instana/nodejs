@@ -535,22 +535,14 @@ function prepareSpansForExport(spansToSend) {
   if (process.env.INSTANA_OTLP_FORMAT === 'true') {
     return otlp.transform(spansToSend);
   }
+  return spansToSend
+    .map(span => instanaBackendMapper.transform(span))
+    .filter(span => {
+      if (span.t != null) {
+        return true;
+      }
 
-  // Transform internal span data format into external (backend) readable format.
-  /** @type {import("../core").InstanaBaseSpan[]} */
-  const transformedSpans = [];
-
-  spansToSend.forEach(span => {
-    const transformedSpan = applySpanTransformation(span);
-
-    // Validate that the span has a trace ID before including it
-    if (transformedSpan.t == null) {
-      logger.warn(`Span of type ${transformedSpan.n} has no trace ID. Not transmitting this span.`);
-      return;
-    }
-
-    transformedSpans.push(transformedSpan);
-  });
-
-  return transformedSpans;
+      logger.debug(`Span of type ${span.n} has no trace ID. Not transmitting this span.`);
+      return false;
+    });
 }

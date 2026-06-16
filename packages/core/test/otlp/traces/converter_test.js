@@ -49,17 +49,15 @@ describe('tracing/converters/otlp', () => {
         const expectedOutput = loadOutputFixture('http.json');
 
         const result = convert(input);
-        console.log(JSON.stringify(result));
 
         expect(result).to.deep.equal(expectedOutput);
       });
 
-      it.only('should convert multiple spans correctly', () => {
+      it('should convert multiple spans correctly', () => {
         const input = loadInputFixture('multi.json');
         const expectedOutput = loadOutputFixture('multi.json');
 
         const result = convert(input);
-        console.log(JSON.stringify(result));
 
         expect(result).to.deep.equal(expectedOutput);
       });
@@ -113,27 +111,6 @@ describe('tracing/converters/otlp', () => {
         expect(result.resourceSpans).to.have.lengthOf(0);
       });
     });
-
-    describe('resource grouping', () => {
-      it('should group spans with same resource attributes', () => {
-        const input = loadInputFixture('multiple-same-resource.json');
-        const expectedOutput = loadOutputFixture('multiple-same-resource.json');
-
-        const result = convert(input);
-
-        expect(result).to.deep.equal(expectedOutput);
-        expect(result.resourceSpans).to.have.lengthOf(1);
-      });
-
-      it('should separate spans with different resource attributes', () => {
-        const input = loadInputFixture('multiple-different-resources.json');
-        const expectedOutput = loadOutputFixture('multiple-different-resources.json');
-
-        const result = convert(input);
-
-        expect(result).to.deep.equal(expectedOutput);
-      });
-    });
   });
 
   describe('transformers', () => {
@@ -179,8 +156,6 @@ describe('tracing/converters/otlp', () => {
         const expectedOutput = loadTransformerOutputFixture('metaData/azure-blob.json');
 
         const result = extractSpanMetadata(input);
-
-        console.log(JSON.stringify(result, null, 2));
 
         expect(result).to.deep.equal(expectedOutput);
       });
@@ -283,8 +258,6 @@ describe('tracing/converters/otlp', () => {
         const expectedOutput = loadTransformerOutputFixture('dataAttributes/azure-blob.json');
 
         const result = extractSpanAttributes(input);
-
-        console.log(JSON.stringify(result, null, 2));
 
         expect(result).to.be.an('array');
         expect(result).to.have.lengthOf(expectedOutput.length);

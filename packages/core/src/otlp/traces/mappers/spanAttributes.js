@@ -5,7 +5,7 @@
 'use strict';
 
 const { toUpperCase, joinWith, extractHost, extractPort, firstDefined } = require('../util');
-const { INSTRUMENTATION_TYPES } = require('../constants');
+const { INSTRUMENTATION_TYPES } = require('./constants');
 
 /**
  * Unified mapping for all instrumentation types.
