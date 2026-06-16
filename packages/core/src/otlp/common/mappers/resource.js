@@ -6,16 +6,14 @@
 
 const path = require('path');
 const ctx = require('../context');
+const { computeProcessId, computeHostName } = require('./helper');
 
 const packageJson = require(path.join(__dirname, '..', '..', '..', '..', 'package.json'));
 
 const SDK_VERSION = packageJson?.version || '1.0.0';
 
-const SDK_DEFAULTS = {
-  language: 'nodejs',
-  name: 'instana',
-  version: SDK_VERSION
-};
+const SDK_LANGUAGE = 'nodejs';
+const SDK_NAME = 'instana';
 
 const INSTRUMENTATION_SCOPE = {
   name: '@instana/collector',
@@ -23,78 +21,47 @@ const INSTRUMENTATION_SCOPE = {
 };
 
 /**
- * @param {Object} resourceAttributes
- * @param {Object} rawPayload
- * @param {Object} [options]
- * @returns {Array<Object>}
+ * @param {Object} OTLP
  */
-function mapResourceAttributes(resourceAttributes = {}, rawPayload, options = {}) {
-  const attrs = ctx.semConv.resource;
+function getResourceMappings(OTLP) {
+  const attrs = OTLP.resource;
 
-  const sourceMetadata = rawPayload?.f;
-
-  const mappings = [
-    {
-      key: attrs.SERVICE_NAME,
-      value: resourceAttributes[attrs.SERVICE_NAME] ?? ctx.serviceName
-    },
-    {
-      key: attrs.SDK_LANGUAGE,
-      value: resourceAttributes[attrs.SDK_LANGUAGE] ?? SDK_DEFAULTS.language
-    },
-    {
-      key: attrs.SDK_NAME,
-      value: resourceAttributes[attrs.SDK_NAME] ?? SDK_DEFAULTS.name
-    },
-    {
-      key: attrs.SDK_VERSION,
-      value: resourceAttributes[attrs.SDK_VERSION] ?? SDK_DEFAULTS.version
-    }
-  ];
-
-  const attributes = [];
-
-  mappings.forEach(mapping => {
-    if (mapping.value !== undefined && mapping.value !== null) {
-      attributes.push({
-        key: mapping.key,
-        value: {
-          stringValue: String(mapping.value)
-        }
-      });
-    }
-  });
-
-  const processId = sourceMetadata?.e || options.fallbackPid || ctx.pid;
-
-  if (processId) {
-    const pid = Number(processId);
-
-    if (Number.isInteger(pid)) {
-      attributes.push({
-        key: attrs.PROCESS_PID,
-        value: {
-          intValue: pid
-        }
-      });
-    }
-  }
-
-  const hostName = sourceMetadata?.h || ctx.hostId;
-
-  if (hostName) {
-    attributes.push({
-      key: attrs.HOST_NAME,
-      value: {
-        stringValue: String(hostName)
+  return {
+    directMappings: {
+      service_name: {
+        otlp: attrs.SERVICE_NAME,
+        transform: (value, resource) => value ?? resource[attrs.SERVICE_NAME] ?? ctx.serviceName
+      },
+      sdk_language: {
+        otlp: attrs.SDK_LANGUAGE,
+        transform: (value, resource) => value ?? resource[attrs.SDK_LANGUAGE] ?? SDK_LANGUAGE
+      },
+      sdk_name: {
+        otlp: attrs.SDK_NAME,
+        transform: (value, resource) => value ?? resource[attrs.SDK_NAME] ?? SDK_NAME
+      },
+      sdk_version: {
+        otlp: attrs.SDK_VERSION,
+        transform: (value, resource) => value ?? resource[attrs.SDK_VERSION] ?? SDK_VERSION
       }
-    });
-  }
+    },
 
-  return attributes;
+    computedMappings: [
+      {
+        otlp: attrs.PROCESS_PID,
+        valueType: 'int',
+        compute: computeProcessId
+      },
+      {
+        otlp: attrs.HOST_NAME,
+        valueType: 'string',
+        compute: computeHostName
+      }
+    ]
+  };
 }
 
 module.exports = {
-  mapResourceAttributes,
+  getResourceMappings,
   INSTRUMENTATION_SCOPE
 };

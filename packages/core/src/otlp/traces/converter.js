@@ -8,7 +8,7 @@ const ctx = require('../common/context');
 const transformers = require('./transformers');
 const { getInstrumentationMappings } = require('./mappers/spanAttributes');
 const { getMetadataMappings } = require('./mappers/spanMetaData');
-const { INSTRUMENTATION_SCOPE } = require('../common/mappers/resource');
+const { getResourceMappings, INSTRUMENTATION_SCOPE } = require('../common/mappers/resource');
 const { isLogSpan } = require('./util');
 
 /**
@@ -37,6 +37,7 @@ function convert(spans) {
   const otlpSemConv = ctx.semConv;
   const instrumentationMappings = getInstrumentationMappings(otlpSemConv);
   const metadataMappings = getMetadataMappings(otlpSemConv, instrumentationMappings);
+  const resourceMappings = getResourceMappings(otlpSemConv);
 
   const otlpSpans = [];
 
@@ -61,7 +62,7 @@ function convert(spans) {
 
   // All spans in the same process share the same resource
   // Extract resource once from the first span
-  const resource = transformers.resource.extractResourceAttributes(spans[0]);
+  const resource = transformers.resource.extractResourceAttributes(spans[0], resourceMappings);
 
   return buildOtlpPayload(resource, otlpSpans);
 }
