@@ -21,6 +21,12 @@ function getResourceDefaults() {
 }
 
 /**
+ * @param {Object} rawPayload
+ * @param {Object} [options]
+ * @param {string|number} [options.fallbackPid]
+ * @returns {Array<Object>}
+ */
+/**
  * Maps resource-level attributes from the span payload.
  *
  * Resource attributes can originate from:
@@ -30,9 +36,10 @@ function getResourceDefaults() {
  * Infrastructure attributes such as process id and host id are derived
  * from the Instana source metadata (`f`) when requested.
  *
- * @param {import('../types').OtlpResourceSource | null | undefined} rawPayload
- * @param {import('../types').OtlpResourceExtractOptions} [options]
- * @returns {import('../../types/otel-span').OtelAttribute[]}
+ * @param {Object} rawPayload
+ * @param {Object} [options]
+ * @param {string|number} [options.fallbackPid]
+ * @returns {Array<Object>}
  */
 function mapResourceAttributes(rawPayload, options = {}) {
   if (!rawPayload) {
@@ -75,7 +82,7 @@ function mapResourceAttributes(rawPayload, options = {}) {
   if (processId) {
     attributes.push({
       key: attrs.PROCESS_PID,
-      value: { intValue: parseInt(String(processId), 10) }
+      value: { intValue: parseInt(processId, 10) }
     });
   }
 
