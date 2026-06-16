@@ -11,7 +11,8 @@ const resource = require('../mappers/resource');
 const packageJson = require(path.join(__dirname, '..', '..', '..', '..', 'package.json'));
 const SDK_VERSION = packageJson?.version || '1.0.0';
 
-// TODO: this is not correct
+// TODO: we need to correct the packagename later
+// in case of serverless collectors the value will be different
 const SCOPE_NAME = '@instana/collector';
 const SCOPE_VERSION = SDK_VERSION;
 
