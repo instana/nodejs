@@ -133,7 +133,6 @@ exports.announceNodeCollector = function announceNodeCollector(callback) {
 
   logger.debug(`Announcing the Node.js collector to the Instana host agent at ${agentOpts.host}:${agentOpts.port}`);
 
-  // Agent announcement uses agentOpts.port (agent connection port)
   const req = http.request(
     {
       host: agentOpts.host,
@@ -236,8 +235,6 @@ exports.sendLogToAgent = function sendLogToAgent(logLevel, message, stackTrace) 
 
   const payload = Buffer.from(JSON.stringify(payloadObject), 'utf8');
 
-  // Log forwarding uses agentOpts.port (agent connection port) for now
-  // this can be customized if we use OTLP transformation for logs in the future
   const req = http.request(
     {
       host: agentOpts.host,
@@ -274,7 +271,6 @@ exports.sendLogToAgent = function sendLogToAgent(logLevel, message, stackTrace) 
 function checkWhetherResponseForPathIsOkay(path, cb) {
   cb = util.atMostOnce('callback for checkWhetherResponseForPathIsOkay', cb);
 
-  // Agent readiness check uses agentOpts.port (agent connection port)
   const req = http.request(
     {
       host: agentOpts.host,
@@ -305,7 +301,7 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
 }
 
 /**
- * @param {Object<string, *>} data - Metrics data (already converted to OTLP if needed)
+ * @param {Object<string, *>} data 
  * @param {*} optionsOrCallback - Either options object with isOtlpFormat or callback function
  * @param {(...args: *) => *} [cb]
  */
@@ -359,7 +355,7 @@ exports.sendMetrics = function sendMetrics(data, optionsOrCallback, cb) {
 
 /**
  *
- * @param {Array.<InstanaBaseSpan>|Object} spans - Spans data (already converted to OTLP if needed)
+ * @param {Array.<InstanaBaseSpan>|Object} spans 
  * @param {*} optionsOrCallback - Either options object with isOtlpFormat or callback function
  * @param {(...args: *) => *} [cb]
  */
@@ -480,7 +476,7 @@ exports.sendTracingMetricsToAgent = function sendTracingMetricsToAgent(tracingMe
     cb(err);
   });
 
-  // sendData('/tracermetrics', tracingMetrics, callback);
+  sendData('/tracermetrics', tracingMetrics, callback);
   cb();
 };
 
