@@ -15,7 +15,5 @@
       "url": "http://localhost:3000/api/users"
     },
     "service": "user-service"
-  },
-  "events": [],
-  "links": []
+  }
 }

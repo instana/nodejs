@@ -9,7 +9,5 @@
   "status": {
     "code": 2,
     "message": "E11000 duplicate key error collection"
-  },
-  "events": [],
-  "links": []
+  }
 }

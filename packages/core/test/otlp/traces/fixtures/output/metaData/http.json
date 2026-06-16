@@ -6,7 +6,5 @@
   "start_time_unix_nano": "1781517126966000000",
   "name": "GET /",
   "status": { "code": 0 },
-  "end_time_unix_nano": "1781517127237000000",
-  "events": [],
-  "links": []
+  "end_time_unix_nano": "1781517127237000000"
 }

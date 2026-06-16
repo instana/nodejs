@@ -8,7 +8,5 @@
   "name": "send orders-topic",
   "status": {
     "code": 0
-  },
-  "events": [],
-  "links": []
+  }
 }
