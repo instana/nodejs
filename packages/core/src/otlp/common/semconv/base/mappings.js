@@ -42,6 +42,7 @@ const MAPPINGS = {
     URL_QUERY: 'http.url.query',
     URL_TEMPLATE: 'http.url.template',
     SERVER_ADDRESS: 'server.address',
+    SERVER_PORT: 'server.port',
     NETWORK_PROTOCOL: 'network.protocol.name',
     ERROR_TYPE: 'error.type'
   },
