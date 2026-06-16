@@ -116,7 +116,6 @@ function tryToAnnounce(ctx, retryDelay = initialRetryDelay) {
     }
 
     agentOpts.agentUuid = agentResponse.agentUuid;
-
     applyAgentConfiguration(agentResponse);
     ctx.transitionTo('announced');
   });
