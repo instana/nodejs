@@ -5,6 +5,7 @@
 
 'use strict';
 
+// Require this first to ensure that we have non-instrumented http available.
 const uninstrumentedHttp = require('./uninstrumentedHttp');
 const uninstrumentedFs = require('./uninstrumentedFs');
 
