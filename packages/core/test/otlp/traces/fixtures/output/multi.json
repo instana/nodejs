@@ -24,8 +24,6 @@
               "name": "GET /",
               "status": { "code": 0 },
               "end_time_unix_nano": "1781517127237000000",
-              "events": [],
-              "links": [],
               "attributes": [
                 { "key": "http.method", "value": { "stringValue": "GET" } },
                 { "key": "http.url", "value": { "stringValue": "https://jsonplaceholder.typicode.com/todos/1" } },
@@ -41,8 +39,6 @@
               "name": "GET /external-api",
               "status": { "code": 0 },
               "end_time_unix_nano": "1781517127240000000",
-              "events": [],
-              "links": [],
               "attributes": [
                 { "key": "http.method", "value": { "stringValue": "GET" } },
                 { "key": "http.url", "value": { "stringValue": "/external-api" } },

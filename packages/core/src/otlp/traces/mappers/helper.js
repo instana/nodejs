@@ -66,7 +66,7 @@ function convertSpanId(spanId) {
  * @param {number|string} tsMs
  * @returns {string}
  */
-function convertTimestamp(tsMs) {
+function convertTimestampToUnixNano(tsMs) {
   const ms = Number(tsMs);
   return String(ms * 1000000);
 }
@@ -75,7 +75,7 @@ function convertTimestamp(tsMs) {
  * @param {import('../../../core').InstanaBaseSpan} span
  * @returns {string}
  */
-function generateEndTime(span) {
+function computeEndTimeUnixNano(span) {
   // OTLP end time = Instana start time + duration (ms → ns).
   const startMs = span && span.ts !== undefined ? Number(span.ts) : 0;
   const deltaMs = span && span.d !== undefined ? Number(span.d) : 0;
@@ -120,7 +120,7 @@ module.exports = {
   generateSpanStatus,
   convertTraceId,
   convertSpanId,
-  convertTimestamp,
-  generateEndTime,
+  convertTimestampToUnixNano,
+  computeEndTimeUnixNano,
   convertSpanKind
 };

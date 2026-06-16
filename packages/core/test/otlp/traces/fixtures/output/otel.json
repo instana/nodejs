@@ -24,8 +24,6 @@
               "name": "otel",
               "status": { "code": 0 },
               "end_time_unix_nano": "1780587628469000000",
-              "events": [],
-              "links": [],
               "attributes": [
                 { "key": "operation", "value": { "stringValue": "fs" } },
                 { "key": "name", "value": { "stringValue": "fs writeFile" } }
