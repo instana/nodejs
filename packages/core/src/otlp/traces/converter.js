@@ -8,12 +8,8 @@ const ctx = require('../common/context');
 const transformers = require('./transformers');
 const { getInstrumentationMappings } = require('./mappers/spanAttributes');
 const { getMetadataMappings } = require('./mappers/spanMetaData');
+const { INSTRUMENTATION_SCOPE } = require('../common/mappers/resource');
 const { isLogSpan } = require('./util');
-
-const INSTRUMENTATION_SCOPE = {
-  name: transformers.resource.SCOPE_NAME,
-  version: transformers.resource.SCOPE_VERSION
-};
 
 /**
  * @type {import("../../core").GenericLogger | undefined}
