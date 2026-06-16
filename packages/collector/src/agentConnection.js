@@ -301,7 +301,7 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
 }
 
 /**
- * @param {Object<string, *>} data - Metrics data (already converted to OTLP if needed)
+ * @param {Object<string, *>} data 
  * @param {*} optionsOrCallback - Either options object with isOtlpFormat or callback function
  * @param {(...args: *) => *} [cb]
  */
@@ -355,7 +355,7 @@ exports.sendMetrics = function sendMetrics(data, optionsOrCallback, cb) {
 
 /**
  *
- * @param {Array.<InstanaBaseSpan>|Object} spans - Spans data (already converted to OTLP if needed)
+ * @param {Array.<InstanaBaseSpan>|Object} spans 
  * @param {*} optionsOrCallback - Either options object with isOtlpFormat or callback function
  * @param {(...args: *) => *} [cb]
  */
@@ -476,7 +476,7 @@ exports.sendTracingMetricsToAgent = function sendTracingMetricsToAgent(tracingMe
     cb(err);
   });
 
-  // sendData('/tracermetrics', tracingMetrics, callback);
+  sendData('/tracermetrics', tracingMetrics, callback);
   cb();
 };
 
