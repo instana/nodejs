@@ -7,11 +7,7 @@
 const otlpCtx = require('../common/context');
 const { normalizeMetrics } = require('./util');
 const transformers = require('./transformers');
-
-const SCOPE = {
-  name: transformers.resource.SCOPE_NAME,
-  version: transformers.resource.SCOPE_VERSION
-};
+const { INSTRUMENTATION_SCOPE } = require('../common/mappers/resource');
 
 let logger;
 
@@ -81,7 +77,7 @@ function convert(metrics) {
         resource,
         scopeMetrics: [
           {
-            scope: SCOPE,
+            scope: INSTRUMENTATION_SCOPE,
 
             // TODO:
             // Emit transformed metrics once backend support and

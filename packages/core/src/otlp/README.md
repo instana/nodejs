@@ -49,7 +49,7 @@ Instana Spans (Array)
 │ 3. Transform each span:             │
 │    - Extract metadata (IDs, times)  │
 │    - Extract attributes             │
-│ 4. Build resource groups            │
+│ 4. Build resource            │
 └─────────────────────────────────────┘
     ↓
 OTLP Format: { resourceSpans: [...] }
