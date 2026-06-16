@@ -7,7 +7,7 @@
 const otlpCtx = require('../common/context');
 const { normalizeMetrics } = require('./util');
 const transformers = require('./transformers');
-const { INSTRUMENTATION_SCOPE } = require('../common/mappers/resource');
+const { getResourceMappings, INSTRUMENTATION_SCOPE } = require('../common/mappers/resource');
 
 let logger;
 
@@ -64,12 +64,13 @@ function convert(metrics) {
   }
 
   resolveServiceName(metrics);
-
+  const otlpSemConv = otlpCtx.semConv;
+  const resourceMappings = getResourceMappings(otlpSemConv);
   // Todo: currently return empty metrics
   const otelMetrics = [];
   //   const otelMetrics = transformMetrics(metricsArray);
 
-  const resource = transformers.resource.extractResourceAttributes(metricsArray[0]);
+  const resource = transformers.resource.extractResourceAttributes(metricsArray[0], resourceMappings);
 
   return {
     resourceMetrics: [
