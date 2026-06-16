@@ -16,8 +16,9 @@ const {
 
 /**
  * @param {Object} OTLP
+ * @param {Object} [instrumentationMappings] - Pre-computed instrumentation mappings (optional)
  */
-function getMetadataMappings(OTLP) {
+function getMetadataMappings(OTLP, instrumentationMappings) {
   const directMappings = {
     t: { otlp: OTLP.metadata.TRACE_ID, transform: convertTraceId },
     s: { otlp: OTLP.metadata.SPAN_ID, transform: convertSpanId },
@@ -27,7 +28,7 @@ function getMetadataMappings(OTLP) {
   };
 
   const computedMappings = [
-    { otlp: OTLP.metadata.NAME, compute: span => generateSpanName(span, OTLP) },
+    { otlp: OTLP.metadata.NAME, compute: span => generateSpanName(span, OTLP, instrumentationMappings) },
     { otlp: OTLP.metadata.STATUS, compute: generateSpanStatus },
     { otlp: OTLP.metadata.END_TIME_UNIX_NANO, compute: generateEndTime },
 

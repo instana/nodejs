@@ -9,13 +9,14 @@ const { getMetadataMappings } = require('../mappers/spanMetaData');
 
 /**
  * @param {import('../../../core').InstanaBaseSpan} span
+ * @param {Object} [instrumentationMappings] - Pre-computed instrumentation mappings (optional, for performance)
  * @returns {Object}
  */
-function extractSpanMetadata(span) {
+function extractSpanMetadata(span, instrumentationMappings) {
   if (!span) return {};
 
   const OTLP = ctx.semConv;
-  const { directMappings, computedMappings } = getMetadataMappings(OTLP);
+  const { directMappings, computedMappings } = getMetadataMappings(OTLP, instrumentationMappings);
 
   const result = Object.keys(directMappings).reduce((acc, field) => {
     const value = span[field];

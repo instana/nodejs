@@ -3,15 +3,12 @@
     {
       "resource": {
         "attributes": [
-          {
-            "key": "service.name",
-            "value": {
-              "stringValue": "otel-exporter-test"
-            }
-          },
+          { "key": "service.name", "value": { "stringValue": "otel-exporter-test" } },
           { "key": "telemetry.sdk.language", "value": { "stringValue": "nodejs" } },
           { "key": "telemetry.sdk.name", "value": { "stringValue": "opentelemetry" } },
-          { "key": "telemetry.sdk.version", "value": { "stringValue": "2.3.0" } }
+          { "key": "telemetry.sdk.version", "value": { "stringValue": "2.3.0" } },
+          { "key": "process.pid", "value": { "intValue": 40519 } },
+          { "key": "host.name", "value": { "stringValue": "7a:71:ec:ff:fe:3e:a2:e6" } }
         ]
       },
       "scopeSpans": [
@@ -24,15 +21,15 @@
               "parentSpanId": "0d5b4595ebbea217",
               "kind": 3,
               "start_time_unix_nano": "1780587628468000000",
-              "end_time_unix_nano": "1780587628469000000",
               "name": "otel",
               "status": { "code": 0 },
+              "end_time_unix_nano": "1780587628469000000",
+              "events": [],
+              "links": [],
               "attributes": [
                 { "key": "operation", "value": { "stringValue": "fs" } },
                 { "key": "name", "value": { "stringValue": "fs writeFile" } }
-              ],
-              "events": [],
-              "links": []
+              ]
             }
           ]
         }
