@@ -5,9 +5,9 @@
 'use strict';
 
 const { formatOTLPValue } = require('./util');
-const { STATUS_CODES } = require('./constants');
+const { STATUS_CODES, SPECIAL_SPAN_TYPES } = require('./constants');
 
-const OTEL_SPAN_NAME = 'otel';
+const OTEL_SPAN_NAME = SPECIAL_SPAN_TYPES.OTEL;
 
 const instrumentationMappings = {
   operation: {
@@ -68,13 +68,13 @@ module.exports = {
     for (let i = 0; i < spanTypes.length; i++) {
       const spanType = spanTypes[i];
 
-      if (spanType === 'resource') {
+      if (spanType === SPECIAL_SPAN_TYPES.RESOURCE) {
         continue;
       }
 
       const spanData = span.data[spanType];
 
-      if (spanType === 'tags' && spanData) {
+      if (spanType === SPECIAL_SPAN_TYPES.TAGS && spanData) {
         const tagKeys = Object.keys(spanData);
 
         for (let j = 0; j < tagKeys.length; j++) {
