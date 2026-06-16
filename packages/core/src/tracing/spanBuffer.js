@@ -36,6 +36,8 @@ let preActivationCleanupIntervalHandle;
 let isFaaS;
 /** @type {boolean} */
 let transmitImmediate;
+/** @type {boolean} */
+let otlpEnabled = false;
 
 /** @type {Array.<import('../core').InstanaBaseSpan>} */
 let spans = [];
@@ -93,6 +95,7 @@ exports.init = function init(config, _downstreamConnection) {
   batchingEnabled = config.tracing.spanBatchingEnabled;
   isFaaS = false;
   transmitImmediate = false;
+  otlpEnabled = config.tracing?.otlp?.enabled;
 
   if (config.tracing.activateImmediately) {
     preActivationCleanupIntervalHandle = setInterval(() => {
@@ -121,6 +124,7 @@ exports.activate = function activate(_config) {
   }
 
   batchingEnabled = _config.tracing.spanBatchingEnabled;
+  otlpEnabled = _config.tracing?.otlp?.enabled;
 
   isActive = true;
   if (activatedAt == null) {
@@ -449,13 +453,12 @@ function transmitSpans() {
 
   const payload = prepareSpansForExport(spansToSend);
   // TODO: the config support needs to be added correctly
-  const isOtlpFormat = process.env.INSTANA_OTLP_FORMAT === 'true';
 
   // We restore the content of the spans array if sending them downstream was not successful. We do not restore
   // batchingBuckets, though. This is deliberate. In the worst case, we might miss some batching opportunities, but
   // since sending spans downstream will take a few milliseconds, even that will be rare (and it is acceptable).
   // @ts-ignore
-  downstreamConnection.sendSpans(payload, { isOtlpFormat }, function sendSpansCallback(/** @type {Error} */ error) {
+  downstreamConnection.sendSpans(payload, { otlpEnabled }, function sendSpansCallback(/** @type {Error} */ error) {
     if (error) {
       logger.warn(`Failed to transmit spans, will retry in ${transmissionDelay} ms. ${error?.message} ${error?.stack}`);
       spans = spans.concat(spansToSend);
@@ -520,7 +523,7 @@ function prepareSpansForExport(spansToSend) {
   // TODO-later phase: Delegate OTLP-specific processing to the OTLP trace exporter.
   // The exporter can transform and send spans, while AgentConnection
   // remains focused on transporting Instana-formatted spans only.
-  if (process.env.INSTANA_OTLP_FORMAT === 'true') {
+  if (otlpEnabled) {
     return otlp.transform(spansToSend);
   }
   return spansToSend
