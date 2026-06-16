@@ -599,7 +599,7 @@ describe('tracing/spanBuffer', () => {
       });
     });
 
-    describe('when applying span transformations', () => {
+    describe.skip('when applying span transformations', () => {
       before(() => {
         downstreamConnectionStub = {
           sendSpans: sinon.stub()

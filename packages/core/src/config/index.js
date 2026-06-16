@@ -73,6 +73,7 @@ let currentConfig;
  * @property {boolean} [ignoreEndpointsDisableSuppression]
  * @property {boolean} [disableEOLEvents]
  * @property {globalStackTraceConfig} [global]
+ * @property {otlpOptions} [otlp]
  */
 
 /**
@@ -83,6 +84,11 @@ let currentConfig;
 /**
  * @typedef {Object} KafkaTracingOptions
  * @property {boolean} [traceCorrelation]
+ */
+
+/**
+ * @typedef {Object} otlpOptions
+ * @property {boolean} [enabled]
  */
 
 /**
@@ -166,6 +172,9 @@ let defaults = {
   secrets: {
     matcherMode: 'contains-ignore-case',
     keywords: ['key', 'pass', 'secret']
+  },
+  otlp: {
+    enabled: false
   }
 };
 
@@ -341,6 +350,7 @@ function normalizeTracingConfig({ userConfig = {}, defaultConfig = {}, finalConf
   normalizeIgnoreEndpoints({ userConfig, defaultConfig, finalConfig });
   normalizeIgnoreEndpointsDisableSuppression({ userConfig, defaultConfig, finalConfig });
   normalizeDisableEOLEvents({ userConfig, defaultConfig, finalConfig });
+  normalizeOtlp({ userConfig, defaultConfig, finalConfig });
 }
 
 /**
@@ -1092,6 +1102,33 @@ function normalizePreloadOpentelemetry({ userConfig = {}, defaultConfig = {}, fi
     configPath: 'config.preloadOpentelemetry',
     source,
     value
+  });
+}
+
+/**
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
+ */
+function normalizeOtlp({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
+  // TODO: This needs to be extended for the rest of the otlp configurations
+  const userOtlp = userConfig.tracing?.otlp || {};
+
+  finalConfig.tracing.otlp = finalConfig.tracing.otlp || {};
+  const { value, source } = util.resolve(
+    {
+      envValue: 'INSTANA_OTLP_ENABLED',
+      inCodeValue: userOtlp.enabled,
+      defaultValue: defaultConfig.tracing?.otlp?.enabled
+    },
+    [validate.booleanValidator]
+  );
+
+  configStore.set('config.tracing.otlp.enabled', { source });
+  finalConfig.tracing.otlp = value;
+  util.log({
+    configPath: 'config.tracing.otlp.enabled',
+    source,
+    value,
+    envVarName: 'INSTANA_OTLP_ENABLED'
   });
 }
 

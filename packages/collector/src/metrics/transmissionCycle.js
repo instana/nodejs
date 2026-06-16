@@ -32,6 +32,7 @@ let previousTransmittedValue;
 let transmissionTimeoutHandle;
 let transmissionDelay = 1000;
 let isActive = false;
+let otlpEnabled = false;
 
 /**
  * @param {import('@instana/core/src/metrics').InstanaConfig} config
@@ -39,6 +40,7 @@ let isActive = false;
 exports.init = function init(config) {
   logger = config.logger;
   transmissionDelay = config.metrics.transmissionDelay;
+  otlpEnabled = config.tracing.otlp?.enabled;
 };
 
 /**
@@ -102,15 +104,13 @@ function sendMetrics() {
     payload = core.util.compression(previousTransmittedValue, newValueToTransmit);
   }
 
-  // TODO: the config support needs to be added correctly in config module
-  const isOtlpFormat = process.env.INSTANA_OTLP_FORMAT === 'true';
-  if (isOtlpFormat) {
+  if (otlpEnabled) {
     payload = otlpMetrics.transform(payload);
   }
 
   downstreamConnection.sendMetrics(
     payload,
-    { isOtlpFormat },
+    { otlpEnabled },
     onMetricsHaveBeenSent.bind(null, isFullTransmission, newValueToTransmit)
   );
 }
