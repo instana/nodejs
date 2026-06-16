@@ -9,7 +9,7 @@ const { getMetadataMappings } = require('../mappers/spanMetaData');
 
 /**
  * @param {import('../../../core').InstanaBaseSpan} span
- * @param {Object} [instrumentationMappings] - Pre-computed instrumentation mappings (optional, for performance)
+ * @param {Object} instrumentationMappings
  * @returns {Object}
  */
 function extractSpanMetadata(span, instrumentationMappings) {

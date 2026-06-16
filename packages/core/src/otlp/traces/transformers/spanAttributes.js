@@ -4,19 +4,17 @@
 
 'use strict';
 
-const ctx = require('../../common/context');
-const MAPPINGS = require('../mappers/spanAttributes');
 const { formatOTLPValue, combineFields } = require('../util');
 
 const RESOURCE_KEY = 'resource';
 
-const SPAN_HANDLERS = {
+const SPAN_SPECIAL_HANDLERS = {
   otel: extractOtelAttributes
 };
 
 /**
  * @param {import('../../../core').InstanaBaseSpan} span
- * @param {Object} [instrumentationMappings] - Pre-computed instrumentation mappings (optional)
+ * @param {Object} instrumentationMappings
  */
 function extractSpanAttributes(span, instrumentationMappings) {
   if (!span?.data) {
@@ -25,14 +23,12 @@ function extractSpanAttributes(span, instrumentationMappings) {
 
   // Note: OTEL spans use a different payload structure and do not follow
   // instrumentation-specific attribute mappings.
-  const attributeExtractor = SPAN_HANDLERS[span.n];
+  const attributeExtractor = SPAN_SPECIAL_HANDLERS[span.n];
   if (attributeExtractor) {
     return attributeExtractor(span.data);
   }
 
-  const mappings = instrumentationMappings
-    ? getAttributeMappingsFromInstrumentation(instrumentationMappings)
-    : getAttributeMappings(MAPPINGS, ctx.semConv);
+  const mappings = getAttributeMappingsFromInstrumentation(instrumentationMappings);
 
   const attributes = [];
   const spanTypes = Object.keys(span.data);
@@ -190,11 +186,6 @@ function getAttributeMappingsFromInstrumentation(instrumentationMappings) {
   }
 
   return attributeMappings;
-}
-
-function getAttributeMappings(mappingsModule, OTLP) {
-  const instrumentationMappings = mappingsModule.getInstrumentationMappings(OTLP);
-  return getAttributeMappingsFromInstrumentation(instrumentationMappings);
 }
 
 module.exports = {
