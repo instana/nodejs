@@ -5,22 +5,23 @@
 'use strict';
 
 const { getInstrumentationMappings } = require('./spanAttributes');
-const { STATUS_CODES, SPAN_KINDS } = require('../constants');
-const { getSpanType, getSpanData } = require('../util');
+const { STATUS_CODES, SPAN_KINDS, INSTRUMENTATION_TYPES } = require('./constants');
 
 /**
  * @param {import('../../../core').InstanaBaseSpan} span
  * @param {Object} OTLP
+ * @param {Object} [instrumentationMappings] - Pre-computed instrumentation mappings (optional)
  */
-function generateSpanName(span, OTLP) {
+function generateSpanName(span, OTLP, instrumentationMappings) {
   const spanType = getSpanType(span);
   const data = getSpanData(span, spanType);
   if (!data) {
     return span?.n || spanType || 'unknown';
   }
 
-  const instrumentationMappings = getInstrumentationMappings(OTLP);
-  const mapping = instrumentationMappings?.[spanType];
+  // Use provided mappings or fetch them
+  const mappings = instrumentationMappings || getInstrumentationMappings(OTLP);
+  const mapping = mappings?.[spanType];
   const generator = mapping?.spanName;
   return generator ? generator(data) : span.n || spanType;
 }
@@ -90,6 +91,28 @@ function convertSpanKind(spanKind) {
   if (spanKind === 2) return SPAN_KINDS.CLIENT;
   if (spanKind === 3) return SPAN_KINDS.INTERNAL;
   return SPAN_KINDS.UNSPECIFIED;
+}
+
+/**
+ * @param {import('../../../core').InstanaBaseSpan} span
+ */
+function getSpanType(span) {
+  // special case for otel spans
+  if (span?.n === 'otel') {
+    return 'otel';
+  }
+
+  const keys = Object.keys(span?.data || {});
+
+  return keys.find(key => key !== INSTRUMENTATION_TYPES.PEER && key !== 'resource') || null;
+}
+
+/**
+ * @param {import('../../../core').InstanaBaseSpan} span
+ * @param {string} [type]
+ */
+function getSpanData(span, type) {
+  return type ? span.data?.[type] : null;
 }
 
 module.exports = {

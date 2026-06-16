@@ -16,8 +16,9 @@ const SPAN_HANDLERS = {
 
 /**
  * @param {import('../../../core').InstanaBaseSpan} span
+ * @param {Object} [instrumentationMappings] - Pre-computed instrumentation mappings (optional)
  */
-function extractSpanAttributes(span) {
+function extractSpanAttributes(span, instrumentationMappings) {
   if (!span?.data) {
     return [];
   }
@@ -29,7 +30,9 @@ function extractSpanAttributes(span) {
     return attributeExtractor(span.data);
   }
 
-  const mappings = getAttributeMappings(MAPPINGS, ctx.semConv);
+  const mappings = instrumentationMappings
+    ? getAttributeMappingsFromInstrumentation(instrumentationMappings)
+    : getAttributeMappings(MAPPINGS, ctx.semConv);
 
   const attributes = [];
   const spanTypes = Object.keys(span.data);
@@ -168,9 +171,12 @@ function applyMapping(mapping, spanData) {
   };
 }
 
-function getAttributeMappings(mappingsModule, OTLP) {
-  const instrumentationMappings = mappingsModule.getInstrumentationMappings(OTLP);
-
+/**
+ * Extract attribute mappings from pre-computed instrumentation mappings
+ * @param {Object} instrumentationMappings
+ * @returns {Object}
+ */
+function getAttributeMappingsFromInstrumentation(instrumentationMappings) {
   const attributeMappings = {};
   const types = Object.keys(instrumentationMappings);
 
@@ -184,6 +190,11 @@ function getAttributeMappings(mappingsModule, OTLP) {
   }
 
   return attributeMappings;
+}
+
+function getAttributeMappings(mappingsModule, OTLP) {
+  const instrumentationMappings = mappingsModule.getInstrumentationMappings(OTLP);
+  return getAttributeMappingsFromInstrumentation(instrumentationMappings);
 }
 
 module.exports = {
