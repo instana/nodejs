@@ -36,7 +36,7 @@ let isFaaS;
 /** @type {boolean} */
 let transmitImmediate;
 /** @type {boolean} */
-let otlpEnabled = false;
+let exportToOtlp = false;
 
 /** @type {Array.<import('../core').InstanaBaseSpan>} */
 let spans = [];
@@ -94,7 +94,7 @@ exports.init = function init(config, _downstreamConnection) {
   batchingEnabled = config.tracing.spanBatchingEnabled;
   isFaaS = false;
   transmitImmediate = false;
-  otlpEnabled = config.tracing?.otlp?.enabled;
+  exportToOtlp = config.tracing.otlp.enabled;
 
   if (config.tracing.activateImmediately) {
     preActivationCleanupIntervalHandle = setInterval(() => {
@@ -123,7 +123,7 @@ exports.activate = function activate(_config) {
   }
 
   batchingEnabled = _config.tracing.spanBatchingEnabled;
-  otlpEnabled = _config.tracing?.otlp?.enabled;
+  exportToOtlp = _config.tracing.otlp.enabled;
 
   isActive = true;
   if (activatedAt == null) {
@@ -526,20 +526,25 @@ function applySpanTransformation(spansToSend) {
 }
 
 /**
- * Prepares spans for export by transforming them to the appropriate format.
- * Filters out invalid spans (those without trace IDs).
+ * Builds the payload for span export.
+ *
+ * Depending on configuration, spans are transformed either to:
+ * - Instana backend format
+ * - OTLP format
  *
  * @param {import("../core").InstanaBaseSpan[]} spansToSend
  * @returns {any}
  */
-function prepareSpansForExport(spansToSend) {
-  // TODO-later phase: Delegate OTLP-specific processing to the OTLP trace exporter.
-  // The exporter can transform and send spans, while AgentConnection
-  // remains focused on transporting Instana-formatted spans only.
-  if (otlpEnabled) {
-    return otlp.transform(spansToSend);
+function buildExportPayload(spansToSend) {
+  // TODO:
+  // Move OTLP transformation into the OTLP exporter implementation.
+  // The span buffer should remain transport-agnostic and only hand off
+  // collected spans to the configured exporter.
+  if (exportToOtlp) {
+    return otlp.traces.transform(spansToSend);
   }
   return spansToSend
+    // Transform internal span data format into external (backend) readable format.
     .map(span => instanaBackendMapper.transform(span))
     .filter(span => {
       if (span.t != null) {
