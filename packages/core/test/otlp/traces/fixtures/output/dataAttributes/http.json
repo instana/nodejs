@@ -1,13 +1,6 @@
 [
   { "key": "http.method", "value": { "stringValue": "GET" } },
-  { "key": "http.url", "value": { "stringValue": "http://localhost:3000/api/users/123" } },
-  { "key": "http.target", "value": { "stringValue": "/api/users/123" } },
-  { "key": "http.url.query", "value": { "stringValue": "filter=active&sort=name" } },
-  { "key": "http.status_code", "value": { "intValue": 200 } },
-  {
-    "key": "http.request.header",
-    "value": {
-      "stringValue": "{\"user-agent\":\"Mozilla/5.0\",\"accept\":\"application/json\"}"
-    }
-  }
+  { "key": "http.url", "value": { "stringValue": "https://jsonplaceholder.typicode.com/todos/1" } },
+  { "key": "server.address", "value": { "stringValue": "" } },
+  { "key": "http.status_code", "value": { "intValue": 200 } }
 ]
