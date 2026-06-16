@@ -35,6 +35,8 @@ let preActivationCleanupIntervalHandle;
 let isFaaS;
 /** @type {boolean} */
 let transmitImmediate;
+/** @type {boolean} */
+let otlpEnabled = false;
 
 /** @type {Array.<import('../core').InstanaBaseSpan>} */
 let spans = [];
@@ -92,6 +94,7 @@ exports.init = function init(config, _downstreamConnection) {
   batchingEnabled = config.tracing.spanBatchingEnabled;
   isFaaS = false;
   transmitImmediate = false;
+  otlpEnabled = config.tracing?.otlp?.enabled;
 
   if (config.tracing.activateImmediately) {
     preActivationCleanupIntervalHandle = setInterval(() => {
@@ -120,6 +123,7 @@ exports.activate = function activate(_config) {
   }
 
   batchingEnabled = _config.tracing.spanBatchingEnabled;
+  otlpEnabled = _config.tracing?.otlp?.enabled;
 
   isActive = true;
   if (activatedAt == null) {
@@ -532,7 +536,7 @@ function prepareSpansForExport(spansToSend) {
   // TODO-later phase: Delegate OTLP-specific processing to the OTLP trace exporter.
   // The exporter can transform and send spans, while AgentConnection
   // remains focused on transporting Instana-formatted spans only.
-  if (process.env.INSTANA_OTLP_FORMAT === 'true') {
+  if (otlpEnabled) {
     return otlp.transform(spansToSend);
   }
   return spansToSend
