@@ -27,7 +27,6 @@
               "attributes": [
                 { "key": "http.method", "value": { "stringValue": "GET" } },
                 { "key": "http.url", "value": { "stringValue": "https://jsonplaceholder.typicode.com/todos/1" } },
-                { "key": "server.address", "value": { "stringValue": "" } },
                 { "key": "http.status_code", "value": { "intValue": 200 } }
               ]
             }
