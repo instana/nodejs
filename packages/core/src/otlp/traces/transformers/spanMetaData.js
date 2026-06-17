@@ -56,33 +56,33 @@ const metaMapper = {
 
 /**
  * @param {import('../../../core').InstanaBaseSpan} span
- * @param { Object} mapper
+ * @param {Object} mapper
  * @returns {Record<string, any>}
  */
 function extractSpanMetadata(span, mapper) {
   if (!span) return {};
 
+  // Resolve the primary instrumentation type once so it can be reused by
+  // span name/status generation without re-inspecting the span data.
+  const spanType = mapper.getSpanType ? mapper.getSpanType(span) : null;
   const OTLP = ctx.semConv;
 
   const metadataMappings = [
-    { otlp: OTLP.metadata.TRACE_ID, transform: metaMapper.convertTraceId },
-    { otlp: OTLP.metadata.SPAN_ID, transform: metaMapper.convertSpanId },
-    { otlp: OTLP.metadata.PARENT_ID, transform: metaMapper.convertParentId },
-    { otlp: OTLP.metadata.SPAN_KIND, transform: metaMapper.convertSpanKind },
-    { otlp: OTLP.metadata.START_TIME_UNIX_NANO, transform: metaMapper.convertStartTime },
-    { otlp: OTLP.metadata.END_TIME_UNIX_NANO, transform: metaMapper.generateEndTime },
-    { otlp: OTLP.metadata.NAME, transform: mapper.spanName },
-    { otlp: OTLP.metadata.STATUS, transform: mapper.spanStatus }
+    { otlp: OTLP.metadata.TRACE_ID, value: metaMapper.convertTraceId(span) },
+    { otlp: OTLP.metadata.SPAN_ID, value: metaMapper.convertSpanId(span) },
+    { otlp: OTLP.metadata.PARENT_ID, value: metaMapper.convertParentId(span) },
+    { otlp: OTLP.metadata.SPAN_KIND, value: metaMapper.convertSpanKind(span) },
+    { otlp: OTLP.metadata.START_TIME_UNIX_NANO, value: metaMapper.convertStartTime(span) },
+    { otlp: OTLP.metadata.END_TIME_UNIX_NANO, value: metaMapper.generateEndTime(span) },
+    { otlp: OTLP.metadata.NAME, value: mapper.spanName(span, spanType) },
+    { otlp: OTLP.metadata.STATUS, value: mapper.spanStatus(span, spanType) }
   ];
 
-  return metadataMappings.reduce((result, mapping) => {
-    const value = mapping.transform(span);
-
-    if (value !== null && value !== undefined) {
-      result[mapping.otlp] = value;
+  return metadataMappings.reduce((acc, current) => {
+    if (current.value !== undefined) {
+      acc[current.otlp] = current.value;
     }
-
-    return result;
+    return acc;
   }, {});
 }
 
