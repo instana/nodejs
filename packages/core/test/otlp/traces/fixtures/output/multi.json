@@ -27,7 +27,6 @@
               "attributes": [
                 { "key": "http.method", "value": { "stringValue": "GET" } },
                 { "key": "http.url", "value": { "stringValue": "https://jsonplaceholder.typicode.com/todos/1" } },
-                { "key": "server.address", "value": { "stringValue": "" } },
                 { "key": "http.status_code", "value": { "intValue": 200 } }
               ]
             },
@@ -42,7 +41,8 @@
               "attributes": [
                 { "key": "http.method", "value": { "stringValue": "GET" } },
                 { "key": "http.url", "value": { "stringValue": "/external-api" } },
-                { "key": "server.address", "value": { "stringValue": "localhost:3000" } },
+                { "key": "server.address", "value": { "stringValue": "localhost" } },
+                { "key": "server.port", "value": { "intValue": 3000 } },
                 { "key": "http.status_code", "value": { "intValue": 200 } },
                 { "key": "http.url.template", "value": { "stringValue": "/external-api" } }
               ]
