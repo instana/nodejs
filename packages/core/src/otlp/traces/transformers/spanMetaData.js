@@ -56,14 +56,13 @@ const metaMapper = {
 
 /**
  * @param {import('../../../core').InstanaBaseSpan} span
- * @param {{ get: Function }} mappers
+ * @param { Object} mapper
  * @returns {Record<string, any>}
  */
-function extractSpanMetadata(span, mappers) {
+function extractSpanMetadata(span, mapper) {
   if (!span) return {};
 
   const OTLP = ctx.semConv;
-  const mapper = mappers.get(span);
 
   const metadataMappings = [
     { otlp: OTLP.metadata.TRACE_ID, transform: metaMapper.convertTraceId },
