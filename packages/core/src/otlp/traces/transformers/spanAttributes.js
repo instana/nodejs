@@ -6,15 +6,15 @@
 
 /**
  * @param {import('../../../core').InstanaBaseSpan} span
- * @param {{ get: Function }} mappers
+ * @param {Object} mapper
  * @returns {Array<Object>}
  */
-function extractSpanAttributes(span, mappers) {
+function extractSpanAttributes(span, mapper) {
   if (!span?.data) {
     return [];
   }
 
-  return mappers.get(span).spanAttributes(span);
+  return mapper.spanAttributes(span);
 }
 
 module.exports = {

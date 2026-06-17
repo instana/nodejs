@@ -16,16 +16,12 @@ const {
 const ctx = require('../../common/context');
 const { INSTRUMENTATION_TYPES, STATUS_CODES, SPECIAL_SPAN_TYPES } = require('./constants');
 
-/**
- * Get instrumentation mappings with current OTLP semantic conventions
- */
-function getInstrumentationMappings() {
-  const OTLP = ctx.semConv;
+const OTLP = ctx.semConv;
 
-  return {
+const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.HTTP]: {
     spanName: data => {
-      const method = (data.operation || data.method).toUpperCase();
+      const method = (data.operation || data.method || '').toUpperCase();
       return `${method} ${data.path_tpl || data.path || '/'}`;
     },
     spanAttributes: [
@@ -43,16 +39,16 @@ function getInstrumentationMappings() {
       {
         otlp: OTLP.http.SERVER_ADDRESS,
         instana: ['connection', 'host'],
-        transform: (spanData, values) => {
-          const value = firstDefined(spanData, values);
-          return value || '';
+        transform: values => {
+          const value = firstDefined(values);
+          return value ? extractHost(value) : undefined;
         }
       },
       {
         otlp: OTLP.http.SERVER_PORT,
         instana: ['connection', 'host'],
-        transform: (spanData, values) => {
-          const value = firstDefined(spanData, values);
+        transform: values => {
+          const value = firstDefined(values);
           return value ? extractPort(value) : undefined;
         }
       },
@@ -367,16 +363,24 @@ function getInstrumentationMappings() {
       { otlp: OTLP.network.PEER_NAME, instana: 'hostname' },
       { otlp: OTLP.network.PEER_PORT, instana: 'port' }
     ]
-    }
-  };
-}
+  }
+};
 
 /**
  * @param {import('../../../core').InstanaBaseSpan} span
  */
 function getSpanType(span) {
-  const keys = Object.keys(span?.data || {});
-  return keys.find(key => key !== INSTRUMENTATION_TYPES.PEER && key !== SPECIAL_SPAN_TYPES.RESOURCE) || null;
+  if (!span || !span.data) return null;
+
+  // eslint-disable-next-line no-restricted-syntax
+  for (const key in span.data) {
+    if (Object.prototype.hasOwnProperty.call(span.data, key)) {
+      if (key !== INSTRUMENTATION_TYPES.PEER && key !== SPECIAL_SPAN_TYPES.RESOURCE) {
+        return key;
+      }
+    }
+  }
+  return null;
 }
 
 /**
@@ -423,8 +427,7 @@ module.exports = {
   /** @param {import('../../../core').InstanaBaseSpan} span */
   spanName(span) {
     const type = getSpanType(span);
-    const mappings = getInstrumentationMappings();
-    const handler = mappings[type]?.spanName;
+    const handler = instrumentationMappings[type]?.spanName;
     const spanData = type ? span.data?.[type] : null;
 
     if (typeof handler === 'function' && spanData) {
@@ -438,7 +441,6 @@ module.exports = {
   spanAttributes(span) {
     const attributes = [];
     const spanTypes = Object.keys(span.data || {});
-    const mappings = getInstrumentationMappings();
 
     for (let i = 0; i < spanTypes.length; i++) {
       const spanType = spanTypes[i];
@@ -447,7 +449,7 @@ module.exports = {
         continue;
       }
 
-      const handler = mappings[spanType]?.spanAttributes;
+      const handler = instrumentationMappings[spanType]?.spanAttributes;
       const spanData = span.data[spanType];
 
       if (!Array.isArray(handler) || !spanData) {

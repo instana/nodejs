@@ -23,9 +23,9 @@ const INSTRUMENTATION_SCOPE = {
 };
 
 const resourceMapper = {
-  serviceName(rawPayload, mapper) {
+  serviceName(rawPayload) {
     const r = rawPayload.data?.resource || rawPayload.resource || {};
-    return r.service_name || r['service.name'] || mapper?.resourceServiceName || ctx.serviceName;
+    return r['service.name'] || ctx.serviceName;
   },
 
   sdkLanguage(rawPayload) {
@@ -65,10 +65,10 @@ const resourceMapper = {
 
 /**
  * @param {Object} rawPayload
- * @param {Object} [mapper]
+
  * @returns {{ attributes: Array<Object> }}
  */
-function extractResourceAttributes(rawPayload, mapper) {
+function extractResourceAttributes(rawPayload) {
   if (!rawPayload) {
     return { attributes: [] };
   }
@@ -78,7 +78,7 @@ function extractResourceAttributes(rawPayload, mapper) {
   const resourceMappings = [
     {
       otlp: OTLP.resource.SERVICE_NAME,
-      transform: span => resourceMapper.serviceName(span, mapper),
+      transform: span => resourceMapper.serviceName(span),
       valueType: 'string'
     },
     { otlp: OTLP.resource.SDK_LANGUAGE, transform: resourceMapper.sdkLanguage, valueType: 'string' },
