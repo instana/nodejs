@@ -37,7 +37,7 @@ let isFaaS;
 /** @type {boolean} */
 let transmitImmediate;
 /** @type {boolean} */
-let exportToOtlp = false;
+let isOtlpEnabled = false;
 
 /** @type {Array.<import('../core').InstanaBaseSpan>} */
 let spans = [];
@@ -95,7 +95,7 @@ exports.init = function init(config, _downstreamConnection) {
   batchingEnabled = config.tracing.spanBatchingEnabled;
   isFaaS = false;
   transmitImmediate = false;
-  exportToOtlp = config.tracing.otlp?.enabled;
+  isOtlpEnabled = config.tracing.otlp?.enabled;
 
   if (config.tracing.activateImmediately) {
     preActivationCleanupIntervalHandle = setInterval(() => {
@@ -124,7 +124,7 @@ exports.activate = function activate(_config) {
   }
 
   batchingEnabled = _config.tracing.spanBatchingEnabled;
-  exportToOtlp = _config.tracing.otlp?.enabled;
+  isOtlpEnabled = _config.tracing.otlp?.enabled;
 
   isActive = true;
   if (activatedAt == null) {
@@ -523,7 +523,7 @@ function buildExportPayload(spansToSend) {
   // Move OTLP transformation into the OTLP exporter implementation.
   // The span buffer should remain transport-agnostic and only hand off
   // collected spans to the configured exporter.
-  if (exportToOtlp) {
+  if (isOtlpEnabled) {
     return otlp.traces.transform(spansToSend);
   }
   return (
