@@ -31,29 +31,40 @@ function convert(spans) {
     return { resourceSpans: [] };
   }
 
-  const otlpFormattedSpans = [];
+  const otlpSpans = [];
+  let sampleResourceSpan = null;
 
-  spans.forEach(span => {
+  for (let i = 0; i < spans.length; i++) {
+    const span = spans[i];
     if (isLogSpan(span)) {
-      return;
+      // TODO: Add log span converter
+      continue;
     }
 
     try {
-      const mappedSpan = {
-        ...transformers.spanMetadata.extractSpanMetadata(span, mappers),
-        attributes: transformers.spanAttributes.extractSpanAttributes(span, mappers)
+      const mapper = mappers.get(span);
+      const otlpSpan = {
+        ...transformers.spanMetadata.extractSpanMetadata(span, mapper),
+        attributes: transformers.spanAttributes.extractSpanAttributes(span, mapper)
       };
-      otlpFormattedSpans.push(mappedSpan);
-    } catch (error) {
-      logger?.debug('Failed to transform individual OTLP span context:', error);
-    }
-  });
 
-  if (otlpFormattedSpans.length === 0) {
+      // All spans in the same process share the same resource
+      // Extract resource once from the first valid span
+      if (sampleResourceSpan === null) {
+        sampleResourceSpan = span;
+      }
+
+      otlpSpans.push(otlpSpan);
+    } catch (error) {
+      logger?.debug('Failed to convert span to OTLP format.', error);
+    }
+  }
+
+  if (otlpSpans.length === 0) {
     return { resourceSpans: [] };
   }
 
-  const resource = transformers.resource.extractResourceAttributes(spans[0]);
+  const resource = transformers.resource.extractResourceAttributes(sampleResourceSpan);
 
   return {
     resourceSpans: [
@@ -62,7 +73,7 @@ function convert(spans) {
         scopeSpans: [
           {
             scope: INSTRUMENTATION_SCOPE,
-            spans: otlpFormattedSpans
+            spans: otlpSpans
           }
         ]
       }
