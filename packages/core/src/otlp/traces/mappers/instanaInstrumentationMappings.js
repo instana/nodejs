@@ -13,6 +13,7 @@ const {
   extractHost,
   extractPort
 } = require('./util');
+
 const ctx = require('../../common/context');
 const { INSTRUMENTATION_TYPES, STATUS_CODES, SPECIAL_SPAN_TYPES } = require('./constants');
 
@@ -368,11 +369,11 @@ const instrumentationMappings = {
 
 /**
  * @param {import('../../../core').InstanaBaseSpan} span
+ * @returns {string|null}
  */
 function getSpanType(span) {
   if (!span || !span.data) return null;
 
-  // eslint-disable-next-line no-restricted-syntax
   for (const key in span.data) {
     if (Object.prototype.hasOwnProperty.call(span.data, key)) {
       if (key !== INSTRUMENTATION_TYPES.PEER && key !== SPECIAL_SPAN_TYPES.RESOURCE) {
@@ -389,16 +390,14 @@ function getSpanType(span) {
  * @returns {Object|null}
  */
 function applyMapping(mapping, spanData) {
-  if (!mapping) {
-    return null;
-  }
+  if (!mapping) return null;
 
   let value;
 
   if (mapping.value !== undefined && !mapping.instana) {
     value = mapping.value;
   } else if (Array.isArray(mapping.instana)) {
-    const values = mapping.instana.map(key => spanData?.[key]);
+    const values = mapping.instana.map(k => spanData?.[k]);
 
     value = mapping.transform ? mapping.transform(values, spanData) : combineFields(spanData, mapping.instana);
   } else if (typeof mapping.instana === 'string') {
@@ -424,9 +423,13 @@ function applyMapping(mapping, spanData) {
 }
 
 module.exports = {
-  /** @param {import('../../../core').InstanaBaseSpan} span */
-  spanName(span) {
-    const type = getSpanType(span);
+  getSpanType,
+  /**
+   * @param {import('../../../core').InstanaBaseSpan} span
+   * @param {string | null} spanType
+   */
+  spanName(span, spanType) {
+    const type = spanType ?? getSpanType(span);
     const handler = instrumentationMappings[type]?.spanName;
     const spanData = type ? span.data?.[type] : null;
 
@@ -468,13 +471,16 @@ module.exports = {
     return attributes;
   },
 
-  /** @param {import('../../../core').InstanaBaseSpan} span */
-  spanStatus(span) {
+  /**
+   * @param {import('../../../core').InstanaBaseSpan} span
+   * @param {string | null} spanType
+   */
+  spanStatus(span, spanType) {
     if (!span?.ec) {
       return { code: STATUS_CODES.UNSET };
     }
 
-    const type = getSpanType(span);
+    const type = spanType ?? getSpanType(span);
     const data = type ? span.data?.[type] : null;
 
     return {

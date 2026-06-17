@@ -24,48 +24,51 @@ const INSTRUMENTATION_SCOPE = {
 
 const resourceMapper = {
   serviceName(rawPayload) {
-    const r = rawPayload.data?.resource || rawPayload.resource || {};
-    return r['service.name'] || ctx.serviceName;
+    const resource = rawPayload.data?.resource || rawPayload.resource || {};
+    return resource['service.name'] || ctx.serviceName;
   },
 
   sdkLanguage(rawPayload) {
-    const r = rawPayload.data?.resource || rawPayload.resource || {};
-    return r.sdk_language || r['telemetry.sdk.language'] || SDK_LANGUAGE;
+    const resource = rawPayload.data?.resource || rawPayload.resource || {};
+    return resource['telemetry.sdk.language'] || SDK_LANGUAGE;
   },
 
   sdkName(rawPayload) {
-    const r = rawPayload.data?.resource || rawPayload.resource || {};
-    return r.sdk_name || r['telemetry.sdk.name'] || SDK_NAME;
+    const resource = rawPayload.data?.resource || rawPayload.resource || {};
+    return resource['telemetry.sdk.name'] || SDK_NAME;
   },
 
   sdkVersion(rawPayload) {
-    const r = rawPayload.data?.resource || rawPayload.resource || {};
-    return r.sdk_version || r['telemetry.sdk.version'] || SDK_VERSION;
+    const resource = rawPayload.data?.resource || rawPayload.resource || {};
+    return resource['telemetry.sdk.version'] || SDK_VERSION;
   },
 
   processId(rawPayload) {
-    const r = rawPayload.data?.resource || rawPayload.resource || {};
-    const metadata = rawPayload.f || null;
-    const pid = r.process_pid || r['process.pid'] || metadata?.e || ctx.pid;
+    const resource = rawPayload.data?.resource || rawPayload.resource || {};
+    const metadata = rawPayload.f || {};
 
-    if (pid === null || pid === undefined) return undefined;
+    const pid = resource['process.pid'] || metadata.e || ctx.pid;
+
+    if (pid === null || pid === undefined) {
+      return undefined;
+    }
 
     const value = Number(pid);
     return Number.isInteger(value) && value > 0 ? value : undefined;
   },
 
   hostName(rawPayload) {
-    const r = rawPayload.data?.resource || rawPayload.resource || {};
-    const metadata = rawPayload.f || null;
-    const hostName = r.host_name || r['host.name'] || metadata?.h || ctx.hostId;
+    const resource = rawPayload.data?.resource || rawPayload.resource || {};
+    const metadata = rawPayload.f || {};
 
-    return hostName && typeof hostName === 'string' ? hostName : undefined;
+    const hostName = resource['host.name'] || metadata.h || ctx.hostId;
+
+    return typeof hostName === 'string' ? hostName : undefined;
   }
 };
 
 /**
  * @param {Object} rawPayload
-
  * @returns {{ attributes: Array<Object> }}
  */
 function extractResourceAttributes(rawPayload) {
@@ -78,20 +81,40 @@ function extractResourceAttributes(rawPayload) {
   const resourceMappings = [
     {
       otlp: OTLP.resource.SERVICE_NAME,
-      transform: span => resourceMapper.serviceName(span),
+      transform: resourceMapper.serviceName,
       valueType: 'string'
     },
-    { otlp: OTLP.resource.SDK_LANGUAGE, transform: resourceMapper.sdkLanguage, valueType: 'string' },
-    { otlp: OTLP.resource.SDK_NAME, transform: resourceMapper.sdkName, valueType: 'string' },
-    { otlp: OTLP.resource.SDK_VERSION, transform: resourceMapper.sdkVersion, valueType: 'string' },
-    { otlp: OTLP.resource.PROCESS_PID, transform: resourceMapper.processId, valueType: 'int' },
-    { otlp: OTLP.resource.HOST_NAME, transform: resourceMapper.hostName, valueType: 'string' }
+    {
+      otlp: OTLP.resource.SDK_LANGUAGE,
+      transform: resourceMapper.sdkLanguage,
+      valueType: 'string'
+    },
+    {
+      otlp: OTLP.resource.SDK_NAME,
+      transform: resourceMapper.sdkName,
+      valueType: 'string'
+    },
+    {
+      otlp: OTLP.resource.SDK_VERSION,
+      transform: resourceMapper.sdkVersion,
+      valueType: 'string'
+    },
+    {
+      otlp: OTLP.resource.PROCESS_PID,
+      transform: resourceMapper.processId,
+      valueType: 'int'
+    },
+    {
+      otlp: OTLP.resource.HOST_NAME,
+      transform: resourceMapper.hostName,
+      valueType: 'string'
+    }
   ];
 
   const attributes = resourceMappings.reduce((result, mapping) => {
     const value = mapping.transform(rawPayload);
 
-    if (value !== null && value !== undefined) {
+    if (value !== undefined && value !== null) {
       result.push({
         key: mapping.otlp,
         value: mapping.valueType === 'int' ? { intValue: value } : { stringValue: String(value) }
