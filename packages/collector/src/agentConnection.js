@@ -380,8 +380,7 @@ exports.sendSpans = function sendSpans(spans, cb) {
     }
     cb(err);
   });
-
-  if (agentOpts.config.tracing.otlp?.enabled) {
+  if (agentOpts.config.tracing?.otlp?.enabled) {
     sendData({
       path: OTLP_ENDPOINTS.TRACES,
       data: spans,
