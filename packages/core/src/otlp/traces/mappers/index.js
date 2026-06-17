@@ -4,14 +4,14 @@
 
 'use strict';
 
-const instanaMapper = require('./instanaMapper');
-const otelMapper = require('./otelMapper');
+const instanaMappings = require('./instanaInstrumentationMappings');
+const otelMappings = require('./otelInstrumentationMappings');
 
 /**
  * @param {import('../../../core').InstanaBaseSpan} span
  */
 function get(span) {
-  return otelMapper.isOtelSpan(span) ? otelMapper : instanaMapper;
+  return otelMappings.isOtelSpan(span) ? otelMappings : instanaMappings;
 }
 
 module.exports = {

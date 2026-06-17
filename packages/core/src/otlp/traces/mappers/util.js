@@ -51,10 +51,12 @@ function formatOTLPValue(value) {
  * @param {string | URL} connection
  */
 function parseConnection(connection) {
-  if (!connection) return {};
+  if (!connection) {
+    return {};
+  }
 
   try {
-    const url = new URL(connection);
+    const url = new URL(connection.includes('://') ? connection : `http://${connection}`);
 
     return {
       host: url.hostname,
