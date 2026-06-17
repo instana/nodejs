@@ -128,6 +128,7 @@ const transmissionDelayMaxValue = 5000;
  * @property {InstanaSecretsOption} [secrets]
  * @property {number} [timeBetweenHealthcheckCalls]
  * @property {boolean} [preloadOpentelemetry]
+ * @property {boolean} [preloadOpentelemetry]
  */
 
 /** @type {import('../core').GenericLogger} */
@@ -166,15 +167,15 @@ let defaults = {
     },
     ignoreEndpoints: {},
     ignoreEndpointsDisableSuppression: false,
-    disableEOLEvents: false
+    disableEOLEvents: false,
+    otlp: {
+      enabled: false
+    }
   },
   preloadOpentelemetry: false,
   secrets: {
     matcherMode: 'contains-ignore-case',
     keywords: ['key', 'pass', 'secret']
-  },
-  otlp: {
-    enabled: false
   }
 };
 
@@ -1123,7 +1124,7 @@ function normalizeOtlp({ userConfig = {}, defaultConfig = {}, finalConfig = {} }
   );
 
   configStore.set('config.tracing.otlp.enabled', { source });
-  finalConfig.tracing.otlp = value;
+  finalConfig.tracing.otlp.enabled = value;
   util.log({
     configPath: 'config.tracing.otlp.enabled',
     source,

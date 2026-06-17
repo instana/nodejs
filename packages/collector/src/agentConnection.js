@@ -31,8 +31,18 @@ let maxContentErrorHasBeenLogged = false;
 const http = uninstrumentedHttp.http;
 let isConnected = false;
 
+// Default OTLP data port
+const OTLP_DATA_PORT = 4318;
+
 /** @type {string | null} */
 let cpuSetFileContent = null;
+
+/**
+ * @returns {number}
+ */
+function getEffectiveDataPort() {
+  return agentOpts.config.tracing?.otlp?.enabled ? OTLP_DATA_PORT : agentOpts.dataPort;
+}
 
 /**
  * @param {import('@instana/core/src/config').InstanaConfig} config
@@ -301,28 +311,13 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
 }
 
 /**
- * @param {Object<string, *>} data 
- * @param {*} optionsOrCallback - Either options object with isOtlpFormat or callback function
- * @param {(...args: *) => *} [cb]
+ * @param {Object<string, *>} data
+ * @param {(...args: *) => *} callback
  */
-exports.sendMetrics = function sendMetrics(data, optionsOrCallback, cb) {
-  /** @type {{ isOtlpFormat?: boolean }} */
-  let options = {};
-  let callback;
-
-  if (typeof optionsOrCallback === 'function') {
-    callback = optionsOrCallback;
-    options = {};
-  } else {
-    options = optionsOrCallback || {};
-    callback = cb;
-  }
-
+exports.sendMetrics = function sendMetrics(data, callback) {
   callback = util.atMostOnce('callback for sendMetrics', callback);
 
-  const isOtlpFormat = options.isOtlpFormat;
-
-  if (isOtlpFormat) {
+  if (agentOpts.config.tracing?.otlp?.enabled) {
     sendData('/v1/metrics', data, err => {
       if (err) {
         logger.error('Error sending metrics:', err);
@@ -355,23 +350,10 @@ exports.sendMetrics = function sendMetrics(data, optionsOrCallback, cb) {
 
 /**
  *
- * @param {Array.<InstanaBaseSpan>|Object} spans 
- * @param {*} optionsOrCallback - Either options object with isOtlpFormat or callback function
- * @param {(...args: *) => *} [cb]
+ * @param {Array.<InstanaBaseSpan>|Object} spans
+ * @param {(...args: *) => *} callback
  */
-exports.sendSpans = function sendSpans(spans, optionsOrCallback, cb) {
-  /** @type {{ isOtlpFormat?: boolean }} */
-  let options = {};
-  let callback;
-
-  if (typeof optionsOrCallback === 'function') {
-    callback = optionsOrCallback;
-    options = {};
-  } else {
-    options = optionsOrCallback || {};
-    callback = cb;
-  }
-
+exports.sendSpans = function sendSpans(spans, callback) {
   const wrappedCallback = util.atMostOnce('callback for sendSpans', err => {
     if (err && !maxContentErrorHasBeenLogged && err instanceof PayloadTooLargeError) {
       if (Array.isArray(spans)) {
@@ -389,9 +371,7 @@ exports.sendSpans = function sendSpans(spans, optionsOrCallback, cb) {
     callback(err);
   });
 
-  const isOtlpFormat = options.isOtlpFormat;
-
-  if (isOtlpFormat) {
+  if (agentOpts.config.tracing?.otlp?.enabled) {
     sendData('/v1/traces', spans, wrappedCallback, true);
   } else {
     sendData(`/com.instana.plugin.nodejs/traces.${pidStore.pid}`, spans, wrappedCallback, true);
@@ -477,7 +457,6 @@ exports.sendTracingMetricsToAgent = function sendTracingMetricsToAgent(tracingMe
   });
 
   sendData('/tracermetrics', tracingMetrics, callback);
-  cb();
 };
 
 /**

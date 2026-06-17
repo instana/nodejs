@@ -110,7 +110,6 @@ function sendMetrics() {
 
   downstreamConnection.sendMetrics(
     payload,
-    { otlpEnabled },
     onMetricsHaveBeenSent.bind(null, isFullTransmission, newValueToTransmit)
   );
 }

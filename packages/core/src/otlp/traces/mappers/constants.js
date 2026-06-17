@@ -4,7 +4,9 @@
 
 'use strict';
 
-exports.INSTRUMENTATION_SCOPE_NAME = '@instana/collector';
+const { INSTRUMENTATION_SCOPE_NAME } = require('../../common/constants');
+
+exports.INSTRUMENTATION_SCOPE_NAME = INSTRUMENTATION_SCOPE_NAME;
 
 exports.INSTRUMENTATION_TYPES = {
   HTTP: 'http',
