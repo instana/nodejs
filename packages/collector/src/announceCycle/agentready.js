@@ -122,7 +122,8 @@ function enter(_ctx) {
       },
       function onError() {
         ctx.transitionTo('unannounced');
-      }
+      },
+      agentOpts.config
     );
     scheduleTracingMetrics();
     if (!disableEOLEvents) {
