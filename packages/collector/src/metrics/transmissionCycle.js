@@ -6,7 +6,7 @@
 'use strict';
 
 const core = require('@instana/core');
-const otlpMetrics = require('@instana/core/src/otlp/metrics');
+const otlp = require('@instana/core/src/otlp');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
@@ -32,7 +32,7 @@ let previousTransmittedValue;
 let transmissionTimeoutHandle;
 let transmissionDelay = 1000;
 let isActive = false;
-let otlpEnabled = false;
+let isOtlpEnabled = false;
 
 /**
  * @param {import('@instana/core/src/metrics').InstanaConfig} config
@@ -40,7 +40,7 @@ let otlpEnabled = false;
 exports.init = function init(config) {
   logger = config.logger;
   transmissionDelay = config.metrics.transmissionDelay;
-  otlpEnabled = config.tracing.otlp?.enabled;
+  isOtlpEnabled = config.tracing.otlp?.enabled;
 };
 
 /**
@@ -48,13 +48,18 @@ exports.init = function init(config) {
  * @param {import('../agentConnection')} _downstreamConnection
  * @param {(requests: Array.<import('../agent/requestHandler').AnnounceRequest>) => void} _onSuccess
  * @param {() => void} _onError
+ * @param {import('@instana/collector/src/types/collector').AgentConfig} [_config]
  * @returns
  */
-exports.activate = function activate(_metrics, _downstreamConnection, _onSuccess, _onError) {
+exports.activate = function activate(_metrics, _downstreamConnection, _onSuccess, _onError, _config) {
   metrics = _metrics;
   downstreamConnection = _downstreamConnection;
   onSuccess = _onSuccess;
   onError = _onError;
+
+  if (_config && _config.tracing && _config.tracing.otlp) {
+    isOtlpEnabled = _config.tracing.otlp.enabled;
+  }
 
   if (!metrics) {
     logger.error('No metrics have been set.');
@@ -104,14 +109,11 @@ function sendMetrics() {
     payload = core.util.compression(previousTransmittedValue, newValueToTransmit);
   }
 
-  if (otlpEnabled) {
-    payload = otlpMetrics.transform(payload);
+  if (isOtlpEnabled) {
+    payload = otlp.metrics.transform(payload);
   }
 
-  downstreamConnection.sendMetrics(
-    payload,
-    onMetricsHaveBeenSent.bind(null, isFullTransmission, newValueToTransmit)
-  );
+  downstreamConnection.sendMetrics(payload, onMetricsHaveBeenSent.bind(null, isFullTransmission, newValueToTransmit));
 }
 
 /**
