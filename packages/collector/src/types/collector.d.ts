@@ -17,6 +17,9 @@ export interface AgentConfig {
       stackTrace?: string;
       stackTraceLength?: number;
     };
+    otlp?: {
+      enabled?: boolean;
+    };
   };
   [key: string]: any;
 }

@@ -5,7 +5,7 @@
 'use strict';
 
 const ctx = require('../context');
-const { INSTRUMENTATION_SCOPE_NAME } = require('../../traces/mappers/constants');
+const { INSTRUMENTATION_SCOPE_NAME } = require('../constants');
 
 let SDK_VERSION = '1.0.0';
 try {
