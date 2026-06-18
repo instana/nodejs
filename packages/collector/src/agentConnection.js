@@ -35,10 +35,9 @@ const http = uninstrumentedHttp.http;
 let isConnected = false;
 
 /**
- * TODO: I added INSTANA_OTLP_PORT here to intregtion test
- * @type {number}
+ * @type {number || undefined}
  */
-let otlpPort = process.env.INSTANA_OTLP_PORT ? parseInt(process.env.INSTANA_OTLP_PORT, 10) : 4318;
+let otlpPort;
 
 /** @type {string | null} */
 let cpuSetFileContent = null;
