@@ -611,124 +611,353 @@ describe('tracing/spanBuffer', () => {
       });
     });
 
-    describe.skip('when applying span transformations', () => {
-      before(() => {
-        downstreamConnectionStub = {
-          sendSpans: sinon.stub()
-        };
+    describe('OTLP transformation', () => {
+      describe('when OTLP is disabled', () => {
+        before(() => {
+          downstreamConnectionStub = {
+            sendSpans: sinon.stub()
+          };
 
-        spanBuffer.init(
-          {
-            logger: testUtils.createFakeLogger(),
+          spanBuffer.init(
+            {
+              logger: testUtils.createFakeLogger(),
+              tracing: {
+                maxBufferedSpans: 1000,
+                forceTransmissionStartingAt: 500,
+                transmissionDelay: 1000,
+                spanBatchingEnabled: false,
+                otlp: {
+                  enabled: false
+                }
+              }
+            },
+            downstreamConnectionStub
+          );
+        });
+
+        beforeEach(() => {
+          spanBuffer.activate({
             tracing: {
-              maxBufferedSpans: 1000,
-              forceTransmissionStartingAt: 500,
-              transmissionDelay: 1000,
               spanBatchingEnabled: false,
               otlp: {
                 enabled: false
               }
             }
-          },
-          downstreamConnectionStub
-        );
-      });
+          });
+          downstreamConnectionStub.sendSpans.resetHistory();
+        });
 
-      beforeEach(() => {
-        spanBuffer.activate();
-        downstreamConnectionStub.sendSpans.resetHistory();
-      });
+        afterEach(() => spanBuffer.deactivate());
 
-      afterEach(() => spanBuffer.deactivate());
+        it('should keep spans in Instana internal format', () => {
+          spanBuffer.setTransmitImmediate(true);
 
-      const span = {
-        t: '1234567803',
-        s: '1234567892',
-        p: '1234567891',
-        n: 'redis',
-        k: 2,
-        data: {
-          redis: {
-            operation: 'get'
-          }
-        }
-      };
-
-      it('should keep the Redis span with operation property in internal format', () => {
-        span.data.redis.operation = 'set';
-        spanBuffer.addSpan(span);
-        const spans = spanBuffer.getAndResetSpans();
-        expect(spans).to.have.lengthOf(1);
-        expect(span.data.redis.operation).to.equal('set');
-        expect(span.data.redis).to.have.property('operation');
-      });
-      it('should return the span unchanged for non-mapped types', () => {
-        span.n = 'http';
-        spanBuffer.addSpan(span);
-        const spans = spanBuffer.getAndResetSpans();
-        expect(spans).to.have.lengthOf(1);
-        expect(span).to.deep.equal(span);
-      });
-
-      it('should transform http spans before buffering and convert the transmitted batch to OTLP when INSTANA_OTLP_FORMAT is true', () => {
-        const previousValue = process.env.INSTANA_OTLP_FORMAT;
-        process.env.INSTANA_OTLP_FORMAT = 'true';
-        downstreamConnectionStub.sendSpans.resetHistory();
-        spanBuffer.setTransmitImmediate(true);
-
-        const httpSpan = {
-          t: '1234567803',
-          s: '1234567892',
-          p: '1234567891',
-          n: 'node.http.server',
-          k: 1,
-          f: {
-            e: '45543',
-            h: 'localhost'
-          },
-          ts: timestamp(Date.now()),
-          d: 25,
-          ec: 0,
-          data: {
-            http: {
-              operation: 'GET',
-              path: '/orders',
-              connection: 'localhost',
-              status: 200
+          const span = {
+            t: '1234567803',
+            s: '1234567892',
+            p: '1234567891',
+            n: 'redis',
+            k: 2,
+            ts: timestamp(Date.now()),
+            d: 10,
+            ec: 0,
+            data: {
+              redis: {
+                command: 'get',
+                connection: 'localhost:6379'
+              }
             }
-          }
-        };
+          };
 
-        spanBuffer.addSpan(httpSpan);
+          spanBuffer.addSpan(span);
 
-        expect(downstreamConnectionStub.sendSpans.calledOnce).to.be.true;
-        const sentPayload = downstreamConnectionStub.sendSpans.getCall(0).args[0];
-        const sentSpan = sentPayload.resourceSpans[0].scopeSpans[0].spans[0];
+          expect(downstreamConnectionStub.sendSpans.calledOnce).to.be.true;
+          const sentPayload = downstreamConnectionStub.sendSpans.getCall(0).args[0];
+          expect(Array.isArray(sentPayload)).to.be.true;
+          expect(sentPayload).to.have.lengthOf(1);
+          expect(sentPayload[0]).to.have.property('t');
+          expect(sentPayload[0]).to.have.property('s');
+          expect(sentPayload[0]).to.have.property('n');
+          expect(sentPayload[0].n).to.equal('redis');
+        });
+      });
 
-        expect(sentSpan.traceId).to.have.lengthOf(32);
-        expect(sentSpan.name).to.equal('GET /orders');
-        expect(sentSpan.kind).to.equal(2);
-        expect(sentSpan.attributes).to.deep.include.members([
-          {
-            key: 'http.method',
-            value: { stringValue: 'GET' }
-          },
-          {
-            key: 'http.target',
-            value: { stringValue: '/orders' }
-          },
-          {
-            key: 'http.status_code',
-            value: { intValue: 200 }
-          }
-        ]);
+      describe('when OTLP is enabled', () => {
+        before(() => {
+          downstreamConnectionStub = {
+            sendSpans: sinon.stub()
+          };
 
-        spanBuffer.setTransmitImmediate(false);
-        if (previousValue === undefined) {
-          delete process.env.INSTANA_OTLP_FORMAT;
-        } else {
-          process.env.INSTANA_OTLP_FORMAT = previousValue;
-        }
+          spanBuffer.init(
+            {
+              logger: testUtils.createFakeLogger(),
+              tracing: {
+                maxBufferedSpans: 1000,
+                forceTransmissionStartingAt: 500,
+                transmissionDelay: 1000,
+                spanBatchingEnabled: false,
+                otlp: {
+                  enabled: true
+                }
+              }
+            },
+            downstreamConnectionStub
+          );
+        });
+
+        beforeEach(() => {
+          spanBuffer.activate({
+            tracing: {
+              spanBatchingEnabled: false,
+              otlp: {
+                enabled: true
+              }
+            }
+          });
+          downstreamConnectionStub.sendSpans.resetHistory();
+        });
+
+        afterEach(() => spanBuffer.deactivate());
+
+        it('should transform HTTP server spans to OTLP format', () => {
+          spanBuffer.setTransmitImmediate(true);
+
+          const httpSpan = {
+            t: '1234567803',
+            s: '1234567892',
+            p: '1234567891',
+            n: 'node.http.server',
+            k: 1,
+            f: {
+              e: '45543',
+              h: 'localhost'
+            },
+            ts: timestamp(Date.now()),
+            d: 25,
+            ec: 0,
+            data: {
+              http: {
+                method: 'GET',
+                url: '/orders',
+                host: 'localhost',
+                status: 200
+              }
+            }
+          };
+
+          spanBuffer.addSpan(httpSpan);
+
+          expect(downstreamConnectionStub.sendSpans.calledOnce).to.be.true;
+          const sentPayload = downstreamConnectionStub.sendSpans.getCall(0).args[0];
+          expect(sentPayload).to.have.property('resourceSpans');
+          expect(sentPayload.resourceSpans).to.be.an('array');
+          expect(sentPayload.resourceSpans).to.have.lengthOf(1);
+
+          const resourceSpan = sentPayload.resourceSpans[0];
+          expect(resourceSpan).to.have.property('resource');
+          expect(resourceSpan).to.have.property('scopeSpans');
+          expect(resourceSpan.scopeSpans).to.have.lengthOf(1);
+
+          const scopeSpan = resourceSpan.scopeSpans[0];
+          expect(scopeSpan).to.have.property('scope');
+          expect(scopeSpan).to.have.property('spans');
+          expect(scopeSpan.spans).to.have.lengthOf(1);
+
+          const sentSpan = scopeSpan.spans[0];
+          expect(sentSpan).to.have.property('traceId');
+          expect(sentSpan).to.have.property('spanId');
+          expect(sentSpan).to.have.property('parentSpanId');
+          expect(sentSpan).to.have.property('name');
+          expect(sentSpan).to.have.property('kind');
+          expect(sentSpan).to.have.property('start_time_unix_nano');
+          expect(sentSpan).to.have.property('end_time_unix_nano');
+          expect(sentSpan).to.have.property('attributes');
+
+          expect(sentSpan.traceId).to.have.lengthOf(32);
+          expect(sentSpan.traceId).to.match(/^[0-9a-f]{32}$/);
+
+          expect(sentSpan.kind).to.equal(2);
+        });
+
+        it('should transform HTTP client spans to OTLP format', () => {
+          spanBuffer.setTransmitImmediate(true);
+
+          const httpClientSpan = {
+            t: '1234567803',
+            s: '1234567893',
+            p: '1234567892',
+            n: 'node.http.client',
+            k: 2,
+            f: {
+              e: '45543',
+              h: 'localhost'
+            },
+            ts: timestamp(Date.now()),
+            d: 15,
+            ec: 0,
+            data: {
+              http: {
+                method: 'POST',
+                url: 'https://api.example.com/users',
+                status: 201
+              }
+            }
+          };
+
+          spanBuffer.addSpan(httpClientSpan);
+
+          expect(downstreamConnectionStub.sendSpans.calledOnce).to.be.true;
+          const sentPayload = downstreamConnectionStub.sendSpans.getCall(0).args[0];
+          const sentSpan = sentPayload.resourceSpans[0].scopeSpans[0].spans[0];
+          expect(sentSpan.kind).to.equal(3);
+          expect(sentSpan.traceId).to.have.lengthOf(32);
+        });
+
+        it('should transform database spans to OTLP format', () => {
+          spanBuffer.setTransmitImmediate(true);
+
+          const dbSpan = {
+            t: '1234567803',
+            s: '1234567894',
+            p: '1234567892',
+            n: 'postgres',
+            k: 2,
+            f: {
+              e: '45543',
+              h: 'localhost'
+            },
+            ts: timestamp(Date.now()),
+            d: 8,
+            ec: 0,
+            data: {
+              pg: {
+                stmt: 'SELECT * FROM users WHERE id = $1',
+                host: 'localhost',
+                port: 5432,
+                db: 'myapp'
+              }
+            }
+          };
+
+          spanBuffer.addSpan(dbSpan);
+
+          expect(downstreamConnectionStub.sendSpans.calledOnce).to.be.true;
+          const sentPayload = downstreamConnectionStub.sendSpans.getCall(0).args[0];
+          const sentSpan = sentPayload.resourceSpans[0].scopeSpans[0].spans[0];
+
+          expect(sentSpan).to.have.property('traceId');
+          expect(sentSpan.traceId).to.have.lengthOf(32);
+          expect(sentSpan).to.have.property('attributes');
+        });
+
+        it('should transform multiple spans in a batch to OTLP format', () => {
+          spanBuffer.setTransmitImmediate(true);
+
+          const span1 = {
+            t: '1234567803',
+            s: '1234567892',
+            p: '1234567891',
+            n: 'node.http.server',
+            k: 1,
+            f: { e: '45543', h: 'localhost' },
+            ts: timestamp(Date.now()),
+            d: 25,
+            ec: 0,
+            data: { http: { method: 'GET', url: '/api/users', status: 200 } }
+          };
+
+          const span2 = {
+            t: '1234567803',
+            s: '1234567893',
+            p: '1234567892',
+            n: 'postgres',
+            k: 2,
+            f: { e: '45543', h: 'localhost' },
+            ts: timestamp(Date.now() + 5),
+            d: 10,
+            ec: 0,
+            data: { pg: { stmt: 'SELECT * FROM users', db: 'myapp' } }
+          };
+
+          spanBuffer.addSpan(span1);
+          spanBuffer.addSpan(span2);
+
+          expect(downstreamConnectionStub.sendSpans.callCount).to.equal(2);
+
+          const payload1 = downstreamConnectionStub.sendSpans.getCall(0).args[0];
+          const payload2 = downstreamConnectionStub.sendSpans.getCall(1).args[0];
+
+          expect(payload1.resourceSpans[0].scopeSpans[0].spans).to.have.lengthOf(1);
+          expect(payload2.resourceSpans[0].scopeSpans[0].spans).to.have.lengthOf(1);
+        });
+
+        it('should handle spans with error count in OTLP format', () => {
+          spanBuffer.setTransmitImmediate(true);
+
+          const errorSpan = {
+            t: '1234567803',
+            s: '1234567892',
+            p: '1234567891',
+            n: 'node.http.server',
+            k: 1,
+            f: { e: '45543', h: 'localhost' },
+            ts: timestamp(Date.now()),
+            d: 25,
+            ec: 1,
+            data: {
+              http: {
+                method: 'GET',
+                url: '/error',
+                status: 500,
+                error: 'Internal Server Error'
+              }
+            }
+          };
+
+          spanBuffer.addSpan(errorSpan);
+
+          expect(downstreamConnectionStub.sendSpans.calledOnce).to.be.true;
+          const sentPayload = downstreamConnectionStub.sendSpans.getCall(0).args[0];
+          const sentSpan = sentPayload.resourceSpans[0].scopeSpans[0].spans[0];
+
+          expect(sentSpan).to.have.property('traceId');
+          expect(sentSpan.traceId).to.have.lengthOf(32);
+        });
+
+        it('should include resource attributes in OTLP payload', () => {
+          spanBuffer.setTransmitImmediate(true);
+
+          const span = {
+            t: '1234567803',
+            s: '1234567892',
+            p: '1234567891',
+            n: 'node.http.server',
+            k: 1,
+            f: {
+              e: '45543',
+              h: 'localhost'
+            },
+            ts: timestamp(Date.now()),
+            d: 25,
+            ec: 0,
+            data: {
+              http: {
+                method: 'GET',
+                url: '/test',
+                status: 200
+              }
+            }
+          };
+
+          spanBuffer.addSpan(span);
+
+          expect(downstreamConnectionStub.sendSpans.calledOnce).to.be.true;
+          const sentPayload = downstreamConnectionStub.sendSpans.getCall(0).args[0];
+          const resource = sentPayload.resourceSpans[0].resource;
+
+          expect(resource).to.have.property('attributes');
+          expect(resource.attributes).to.be.an('array');
+        });
       });
     });
   });
