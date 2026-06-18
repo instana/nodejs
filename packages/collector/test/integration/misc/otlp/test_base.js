@@ -122,12 +122,12 @@ module.exports = function () {
 
     it.skip('should send spans in OTLP format when enabled by agent configuration', async () => {
       const { AgentStubControls } = require('@_local/collector/test/apps/agentStubControls');
+
       const customAgentControls = new AgentStubControls();
 
       await customAgentControls.startAgent({
         otlpEnabled: true
       });
-
       const cfg = new ProcessControls({
         agentControls: customAgentControls,
         dirname: __dirname
