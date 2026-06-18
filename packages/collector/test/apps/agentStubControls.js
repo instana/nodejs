@@ -15,8 +15,9 @@ const { retry, delay } = require('@_local/core/test/test_util');
 const config = require('@_local/core/test/config');
 
 class AgentStubControls {
-  constructor(agentPort) {
+  constructor(agentPort, otlpPort) {
     this.agentPort = agentPort || portFinder();
+    this.otlpPort = otlpPort || portFinder();
   }
 
   async startAgent(opts = {}) {
@@ -27,6 +28,11 @@ class AgentStubControls {
     env.SECRETS_LIST = (opts.secretsList || []).join(',');
     env.SECRETS_LIST = (opts.secretsList || []).join(',');
     env.AGENT_UNIQUE_UUIDS = opts.uniqueAgentUuids === true;
+
+    if (opts.otlpEnabled) {
+      env.ENABLE_OTLP_SERVER = 'true';
+      env.OTLP_PORT = this.otlpPort.toString();
+    }
 
     if (opts.rejectTraces) {
       env.REJECT_TRACES = 'true';
@@ -105,6 +111,10 @@ class AgentStubControls {
     // For now, the agent stub uses the same port for both control and data
     // In the future, this could be configured separately if needed
     return this.agentPort;
+  }
+
+  getOtlpPort() {
+    return this.otlpPort;
   }
 
   async waitUntilAgentHasStarted() {

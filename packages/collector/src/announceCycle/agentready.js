@@ -107,6 +107,13 @@ function enter(_ctx) {
 
   logger.debug(`isMainThread: ${isMainThread}`);
 
+  const updatedConfig = coreConfig.update({
+    externalConfig: agentOpts.config,
+    source: util.constants.CONFIG_SOURCES.AGENT
+  });
+
+  agentConnection.activate(updatedConfig);
+
   if (isMainThread) {
     uncaught.activate();
     metrics.activate();
@@ -123,7 +130,7 @@ function enter(_ctx) {
       function onError() {
         ctx.transitionTo('unannounced');
       },
-      agentOpts.config
+      updatedConfig
     );
     scheduleTracingMetrics();
     if (!disableEOLEvents) {
@@ -131,10 +138,6 @@ function enter(_ctx) {
     }
   }
 
-  const updatedConfig = coreConfig.update({
-    externalConfig: agentOpts.config,
-    source: util.constants.CONFIG_SOURCES.AGENT
-  });
   tracing.activate(updatedConfig);
 
   if (agentOpts.autoProfile && autoprofile) {
