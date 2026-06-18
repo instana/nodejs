@@ -33,8 +33,7 @@ exports.startGlobalAgent = function start() {
       'X-Response-Header-App-To-Test',
       'X-Request-Header-App-To-Downstream',
       'X-Response-Header-Downstream-To-App'
-    ],
-    otlpEnabled: true
+    ]
   });
 };
 

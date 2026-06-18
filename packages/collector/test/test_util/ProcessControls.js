@@ -142,7 +142,6 @@ class ProcessControls {
     }
 
     const agentPort = this.agentControls ? this.agentControls.agentPort : undefined;
-    const otlpPort = this.agentControls ? this.agentControls.otlpPort : undefined;
 
     this.env = _.assign(
       {},
@@ -151,7 +150,6 @@ class ProcessControls {
         APP_PORT: this.port,
         APP_CWD: this.cwd,
         INSTANA_AGENT_PORT: agentPort,
-        INSTANA_OTLP_PORT: otlpPort,
         INSTANA_LOG_LEVEL: 'warn',
         INSTANA_FORCE_TRANSMISSION_STARTING_AT: '1',
         INSTANA_FULL_METRICS_INTERNAL_IN_S: 1,

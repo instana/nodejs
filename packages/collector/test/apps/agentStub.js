@@ -27,8 +27,6 @@ if (process.env.INSTANA_DEBUG === 'true') {
 
 // NOTE: we can leave the hardcoded port here as this file is not used in the test env!
 const port = process.env.AGENT_PORT || 42699;
-const otlpPort = process.env.OTLP_PORT ? parseInt(process.env.OTLP_PORT, 10) : 4318;
-const enableOtlpServer = process.env.ENABLE_OTLP_SERVER === 'true';
 const uniqueAgentUuids = process.env.AGENT_UNIQUE_UUIDS === 'true';
 const slowHostResponse = process.env.SLOW_HOST_RESPONSE === 'true';
 const extraHeaders = process.env.EXTRA_HEADERS ? process.env.EXTRA_HEADERS.split(',') : [];
@@ -126,8 +124,7 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
     enableSpanBatching ||
     ignoreEndpoints ||
     disable ||
-    stackTraceConfig ||
-    enableOtlpServer
+    stackTraceConfig
   ) {
     response.tracing = {};
 
@@ -154,12 +151,6 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
     if (stackTraceConfig) {
       response.tracing.global = response.tracing.global || {};
       deepMerge(response.tracing.global, stackTraceConfig);
-    }
-    if (enableOtlpServer) {
-      response.tracing.otlp = {
-        enabled: true,
-        port: otlpPort
-      };
     }
   }
 
@@ -415,65 +406,6 @@ app
     logger.error('Agent stub failed to start on port %s: %s', port, err.message);
     process.exit(1);
   });
-
-// OTLP server (optional, enabled via ENABLE_OTLP_SERVER=true)
-if (enableOtlpServer) {
-  const otlpApp = express();
-
-  otlpApp.use(
-    bodyParser.json({
-      limit: '40mb'
-    })
-  );
-
-  otlpApp.post('/v1/traces', function handleOtlpTraces(req, res) {
-    logger.debug('Got OTLP traces on port %s, dropAllData %s', otlpPort, dropAllData);
-    if (rejectTraces) {
-      logger.debug('Rejecting OTLP traces');
-      return res.sendStatus(400);
-    }
-    if (!dropAllData) {
-      logger.debug('Storing OTLP traces');
-      receivedData.traces.push({
-        time: Date.now(),
-        data: req.body
-      });
-      logger.debug(`Received ${receivedData.traces.length} traces so far (OTLP format)`);
-    }
-    if (logTraces) {
-      /* eslint-disable no-console */
-      console.log('OTLP Traces:');
-      console.log(JSON.stringify(req.body, null, 2));
-      console.log('--\n');
-    }
-    res.send('OK');
-  });
-
-  // OTLP metrics endpoint
-  otlpApp.post('/v1/metrics', function handleOtlpMetrics(req, res) {
-    logger.debug('Got OTLP metrics on port %s, dropAllData %s', otlpPort, dropAllData);
-    if (!dropAllData) {
-      logger.debug('Storing OTLP metrics');
-      receivedData.metrics.push({
-        time: Date.now(),
-        data: req.body
-      });
-      logger.debug(`Received ${receivedData.metrics.length} metrics so far (OTLP format)`);
-    }
-    res.send('OK');
-  });
-
-  otlpApp
-    .listen(otlpPort, '127.0.0.1', () => {
-      logger.info('OTLP stub listening on 127.0.0.1:%s', otlpPort);
-    })
-    .on('error', err => {
-      logger.warn('OTLP stub failed to start on port %s: %s', otlpPort, err.message);
-      logger.warn('OTLP endpoints will not be available. Main agent stub continues running.');
-    });
-} else {
-  logger.debug('OTLP server disabled. Set ENABLE_OTLP_SERVER=true to enable.');
-}
 
 function aggregateMetrics(entityId, snapshotUpdate) {
   if (!receivedData.aggregatedMetrics[entityId]) {
