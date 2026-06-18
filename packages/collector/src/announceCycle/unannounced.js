@@ -224,7 +224,7 @@ function applyOtlpConfiguration(agentResponse) {
     if (otlpConfigFromAgent.enabled != null) {
       ensureNestedObjectExists(agentOpts.config, ['tracing', 'otlp']);
       agentOpts.config.tracing.otlp.enabled = otlpConfigFromAgent.enabled;
-      logger.info(`OTLP export ${otlpConfigFromAgent.enabled ? 'enabled' : 'disabled'} via agent configuration.`);
+      logger.debug(`OTLP export ${otlpConfigFromAgent.enabled ? 'enabled' : 'disabled'} via agent configuration.`);
     }
   }
 }
