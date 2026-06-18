@@ -59,7 +59,7 @@ exports.init = function init(_config, _pidStore) {
  */
 exports.activate = function activate(_config) {
   config = _config;
-  isOtlpEnabled = config.tracing?.otlp?.enabled || false;
+  isOtlpEnabled = config.tracing.otlp.enabled || false;
 };
 
 exports.AgentEventSeverity = {

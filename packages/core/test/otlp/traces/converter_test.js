@@ -8,11 +8,11 @@ const expect = require('chai').expect;
 const fs = require('fs');
 const path = require('path');
 
-const otlp = require('../../../src/otlp');
-const { convert } = require('../../../src/otlp/traces/converter');
-const { extractSpanMetadata } = require('../../../src/otlp/traces/transformers/spanMetadata');
-const { extractSpanAttributes } = require('../../../src/otlp/traces/transformers/spanAttributes');
-const mappers = require('../../../src/otlp/traces/mappers');
+const otlp = require('../../../src/otlpExporter');
+const { convert } = require('../../../src/otlpExporter/traces/converter');
+const { extractSpanMetadata } = require('../../../src/otlpExporter/traces/transformers/spanMetadata');
+const { extractSpanAttributes } = require('../../../src/otlpExporter/traces/transformers/spanAttributes');
+const mappers = require('../../../src/otlpExporter/traces/mappers');
 
 describe('tracing/converters/otlp', () => {
   before(() => {
