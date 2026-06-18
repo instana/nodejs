@@ -94,7 +94,7 @@ exports.init = function init(config, _downstreamConnection) {
   batchingEnabled = config.tracing.spanBatchingEnabled;
   isFaaS = false;
   transmitImmediate = false;
-  isOtlpEnabled = config.tracing.otlp?.enabled;
+  isOtlpEnabled = config.tracing.otlp.enabled;
 
   if (config.tracing.activateImmediately) {
     preActivationCleanupIntervalHandle = setInterval(() => {
@@ -541,7 +541,7 @@ function buildExportPayload(spansToSend) {
   // The span buffer should remain transport-agnostic and only hand off
   // collected spans to the configured exporter.
   if (isOtlpEnabled) {
-    return otlp.traces.transform(spansToSend);
+    return otlpExporter.traces.transform(spansToSend);
   }
   return (
     spansToSend

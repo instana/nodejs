@@ -8,7 +8,7 @@ const expect = require('chai').expect;
 const fs = require('fs');
 const path = require('path');
 
-const converter = require('../../../src/otlp/metrics');
+const converter = require('../../../src/otlpExporter/metrics');
 
 describe('metrics/converters/otlp', () => {
   function loadInputFixture(filename) {
