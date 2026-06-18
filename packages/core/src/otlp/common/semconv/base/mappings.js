@@ -4,7 +4,8 @@
 
 'use strict';
 
-// Base mappings (v1.23 semantic conventions)
+// Base mappings - common across all semantic convention versions
+// Version-specific attribute names should be defined in their respective version directories
 const MAPPINGS = {
   // Resource attributes - https://opentelemetry.io/docs/specs/semconv/resource/
   resource: {
@@ -32,14 +33,9 @@ const MAPPINGS = {
   },
 
   http: {
-    REQUEST_METHOD: 'http.method',
-    RESPONSE_STATUS: 'http.status_code',
     ROUTE: 'http.route',
     STATUS_TEXT: 'http.status_text',
     REQUEST_HEADER: 'http.request.header',
-    URL_FULL: 'http.url',
-    URL_PATH: 'http.target',
-    URL_QUERY: 'http.url.query',
     URL_TEMPLATE: 'http.url.template',
     SERVER_ADDRESS: 'server.address',
     SERVER_PORT: 'server.port',
@@ -50,14 +46,12 @@ const MAPPINGS = {
   messaging: {
     SYSTEM: 'messaging.system',
     OPERATION_TYPE: 'messaging.operation.type',
-    DESTINATION_NAME: 'messaging.destination',
     SERVER_ADDRESS: 'server.address',
     CONSUMER_GROUP: 'messaging.consumer.group.name',
     MESSAGE_ID: 'messaging.message.id',
     MESSAGE_BODY_SIZE: 'messaging.message.body.size',
     ERROR_TYPE: 'error.type',
     kafka: {
-      PARTITION: 'messaging.kafka.partition',
       OFFSET: 'messaging.kafka.message.offset',
       MESSAGE_KEY: 'messaging.kafka.message.key'
     },
@@ -69,24 +63,24 @@ const MAPPINGS = {
   },
 
   database: {
-    SYSTEM: 'db.system',
     OPERATION: 'db.operation.name',
     NAMESPACE: 'db.namespace',
     STATEMENT: 'db.statement',
+    QUERY_TEXT: 'db.query.text',
     NAME: 'db.name',
     USER: 'db.user',
     COLLECTION: 'db.collection.name',
     TABLE: 'db.sql.table',
     SERVER_ADDRESS: 'server.address',
-    PEER_NAME: 'net.peer.name',
-    PEER_PORT: 'net.peer.port',
     CONNECTION_STRING: 'db.connection_string',
     ERROR_TYPE: 'error.type'
   },
 
   rpc: {
     SYSTEM: 'rpc.system',
+    SYSTEM_NAME: 'rpc.system.name',
     METHOD: 'rpc.method',
+    METHOD_ORIGINAL: 'rpc.method_original',
     SERVICE: 'rpc.service',
     GRPC_STATUS: 'rpc.grpc.status_code',
     GRPC_ERROR: 'rpc.grpc.status_message',
@@ -107,6 +101,7 @@ const MAPPINGS = {
   cloud: {
     REGION: 'cloud.region',
     PROVIDER: 'cloud.provider',
+    ACCOUNT_ID: 'cloud.account.id',
     ERROR_TYPE: 'error.type',
     gcp: {
       PROJECT_ID: 'gcp.project_id',
@@ -135,13 +130,16 @@ const MAPPINGS = {
 
   faas: {
     NAME: 'faas.name',
-    INVOCATION_TYPE: 'faas.invocation_type'
+    INVOCATION_TYPE: 'faas.invocation_type',
+    TRIGGER: 'faas.trigger'
   },
 
-  network: {
-    PEER_NAME: 'net.peer.name',
-    PEER_PORT: 'net.peer.port'
+  exception: {
+    MESSAGE: 'exception.message',
+    STACKTRACE: 'exception.stacktrace',
+    TYPE: 'exception.type'
   }
 };
 
 module.exports = { MAPPINGS };
+
