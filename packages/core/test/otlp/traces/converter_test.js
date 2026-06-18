@@ -14,6 +14,26 @@ const { extractSpanMetadata } = require('../../../src/otlpExporter/traces/transf
 const { extractSpanAttributes } = require('../../../src/otlpExporter/traces/transformers/spanAttributes');
 const mappers = require('../../../src/otlpExporter/traces/mappers');
 
+function loadInputFixture(filename) {
+  const fixturePath = path.join(__dirname, 'fixtures/input', filename);
+  return JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
+}
+
+function loadOutputFixture(filename) {
+  const fixturePath = path.join(__dirname, 'fixtures/output', filename);
+  return JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
+}
+
+function loadTransformerInputFixture(filename) {
+  const fixturePath = path.join(__dirname, 'fixtures/input', filename);
+  return JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
+}
+
+function loadTransformerOutputFixture(filename) {
+  const fixturePath = path.join(__dirname, 'fixtures/output', filename);
+  return JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
+}
+
 describe('tracing/converters/otlp', () => {
   before(() => {
     // Initialize OTLP context before running tests
@@ -22,26 +42,6 @@ describe('tracing/converters/otlp', () => {
       logger: console
     });
   });
-
-  function loadInputFixture(filename) {
-    const fixturePath = path.join(__dirname, 'fixtures/input', filename);
-    return JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
-  }
-
-  function loadOutputFixture(filename) {
-    const fixturePath = path.join(__dirname, 'fixtures/output', filename);
-    return JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
-  }
-
-  function loadTransformerInputFixture(filename) {
-    const fixturePath = path.join(__dirname, 'fixtures/input', filename);
-    return JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
-  }
-
-  function loadTransformerOutputFixture(filename) {
-    const fixturePath = path.join(__dirname, 'fixtures/output', filename);
-    return JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
-  }
 
   describe('converter', () => {
     describe('basic conversion', () => {

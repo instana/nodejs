@@ -10,17 +10,16 @@ const path = require('path');
 
 const converter = require('../../../src/otlpExporter/metrics');
 
+function loadInputFixture(filename) {
+  const fixturePath = path.join(__dirname, 'fixtures/input', filename);
+  return JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
+}
+
+function loadOutputFixture(filename) {
+  const fixturePath = path.join(__dirname, 'fixtures/output', filename);
+  return JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
+}
 describe('metrics/converters/otlp', () => {
-  function loadInputFixture(filename) {
-    const fixturePath = path.join(__dirname, 'fixtures/input', filename);
-    return JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
-  }
-
-  function loadOutputFixture(filename) {
-    const fixturePath = path.join(__dirname, 'fixtures/output', filename);
-    return JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
-  }
-
   beforeEach(() => {
     converter.setHostId(null);
     converter.setPid(null);
