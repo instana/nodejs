@@ -17,6 +17,9 @@ const cmdline = require('./cmdline');
 let logger;
 /** @type {{ pid: number }} */
 let pidStore;
+/** @type {import('@instana/core/src/config').InstanaConfig} */
+let config;
+let isOtlpEnabled = false;
 
 // How many extra characters are to be reserved for the inode and
 // file descriptor fields in the collector announce cycle.
@@ -32,27 +35,31 @@ const http = uninstrumentedHttp.http;
 let isConnected = false;
 
 // Default OTLP data port
-// Future the port can be configurable
-// TODO: populate from config default
-const OTLP_DATA_PORT = 4318;
-const OTLP_ENDPOINTS = {
-  TRACES: '/v1/traces',
-  METRICS: '/v1/metrics'
-};
+// TODO: Can be overridden via INSTANA_OTLP_PORT environment variable (used in tests)
+const OTLP_DATA_PORT = process.env.INSTANA_OTLP_PORT ? parseInt(process.env.INSTANA_OTLP_PORT, 10) : 4318;
 
 /** @type {string | null} */
 let cpuSetFileContent = null;
 
 /**
- * @param {import('@instana/core/src/config').InstanaConfig} config
+ * @param {import('@instana/core/src/config').InstanaConfig} _config
  * @param {any} _pidStore
  */
-exports.init = function init(config, _pidStore) {
+exports.init = function init(_config, _pidStore) {
+  config = _config;
   logger = config.logger;
   pidStore = _pidStore;
 
   cmdline.init(config);
   cpuSetFileContent = getCpuSetFileContent();
+};
+
+/**
+ * @param {import('@instana/core/src/config').InstanaConfig} _config
+ */
+exports.activate = function activate(_config) {
+  config = _config;
+  isOtlpEnabled = config.tracing?.otlp?.enabled || false;
 };
 
 exports.AgentEventSeverity = {
@@ -95,6 +102,36 @@ exports.AgentEventSeverity = {
  * @property {string} [cpuSetFileContent]
  */
 
+const EXPORT_ENDPOINTS = {
+  traces: {
+    otlpPath: '/v1/traces',
+    instanaPath: () => `/com.instana.plugin.nodejs/traces.${pidStore.pid}`
+  },
+  metrics: {
+    otlpPath: '/v1/metrics',
+    instanaPath: () => `/com.instana.plugin.nodejs.${pidStore.pid}`
+  }
+};
+
+/**
+ * @param {string} type
+ * @returns { {path: string, port: number} }
+ */
+function resolveExportEndpoint(type) {
+  const endpoint = EXPORT_ENDPOINTS[type];
+
+  if (isOtlpEnabled) {
+    return {
+      path: endpoint.otlpPath,
+      port: OTLP_DATA_PORT
+    };
+  }
+
+  return {
+    path: endpoint.instanaPath(),
+    port: agentOpts.port
+  };
+}
 /**
  * @param {(err: Error, rawResponse?: string) => void} callback
  */
@@ -320,42 +357,36 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
 exports.sendMetrics = function sendMetrics(data, cb) {
   cb = util.atMostOnce('callback for sendMetrics', cb);
 
-  if (agentOpts.config.tracing?.otlp?.enabled) {
-    sendData({
-      path: OTLP_ENDPOINTS.METRICS,
-      data,
-      cb: err => {
-        if (err) {
+  const endpoint = resolveExportEndpoint('metrics');
+  sendData({
+    ...endpoint,
+    data,
+    cb: (err, body) => {
+      if (err) {
+        if (isOtlpEnabled) {
           logger.error('Error sending metrics:', err);
-          cb(err, null);
-        } else {
-          cb(null, []);
         }
-      },
-      port: OTLP_DATA_PORT
-    });
-  } else {
-    sendData({
-      path: `/com.instana.plugin.nodejs.${pidStore.pid}`,
-      data,
-      cb: (err, body) => {
-        if (err) {
-          cb(err, null);
-        } else {
-          try {
-            // 2016-09-11
-            // Older sensor versions will not respond with a JSON
-            // structure. Support a smooth update path.
-            body = JSON.parse(body);
-          } catch (e) {
-            body = [];
-          }
-
-          cb(null, body);
-        }
+        cb(err, null);
+        return;
       }
-    });
-  }
+
+      if (isOtlpEnabled) {
+        cb(null, []);
+        return;
+      }
+
+      try {
+        // 2016-09-11
+        // Older sensor versions will not respond with a JSON
+        // structure. Support a smooth update path.
+        body = JSON.parse(body);
+      } catch (e) {
+        body = [];
+      }
+
+      cb(null, body);
+    }
+  });
 };
 
 /**
@@ -380,22 +411,13 @@ exports.sendSpans = function sendSpans(spans, cb) {
     }
     cb(err);
   });
-  if (agentOpts.config.tracing?.otlp?.enabled) {
-    sendData({
-      path: OTLP_ENDPOINTS.TRACES,
-      data: spans,
-      cb: callback,
-      ignore404: true,
-      port: OTLP_DATA_PORT
-    });
-  } else {
-    sendData({
-      path: `/com.instana.plugin.nodejs/traces.${pidStore.pid}`,
-      data: spans,
-      cb: callback,
-      ignore404: true
-    });
-  }
+  const endpoint = resolveExportEndpoint('traces');
+  sendData({
+    ...endpoint,
+    data: spans,
+    cb: callback,
+    ignore404: true
+  });
 };
 
 /**
@@ -417,6 +439,7 @@ exports.sendProfiles = function sendProfiles(profiles, cb) {
 
   sendData({
     path: `/com.instana.plugin.nodejs/profiles.${pidStore.pid}`,
+    port: agentOpts.port,
     data: profiles,
     cb: callback
   });
@@ -432,6 +455,7 @@ exports.sendEvent = function sendEvent(eventData, cb) {
   });
   sendData({
     path: '/com.instana.plugin.generic.event',
+    port: agentOpts.port,
     data: eventData,
     cb: callback
   });
@@ -458,6 +482,7 @@ exports.sendAgentMonitoringEvent = function sendAgentMonitoringEvent(code, categ
 
   sendData({
     path: '/com.instana.plugin.generic.agent-monitoring-event',
+    port: agentOpts.port,
     data: event,
     cb: callback
   });
@@ -473,6 +498,7 @@ exports.sendAgentResponseToAgent = function sendAgentResponseToAgent(messageId, 
 
   sendData({
     path: `/com.instana.plugin.nodejs/response.${pidStore.pid}?messageId=${encodeURIComponent(messageId)}`,
+    port: agentOpts.port,
     data: response,
     cb
   });
@@ -489,6 +515,7 @@ exports.sendTracingMetricsToAgent = function sendTracingMetricsToAgent(tracingMe
 
   sendData({
     path: '/tracermetrics',
+    port: agentOpts.port,
     data: tracingMetrics,
     cb: callback
   });
@@ -500,7 +527,7 @@ exports.sendTracingMetricsToAgent = function sendTracingMetricsToAgent(tracingMe
  * @param {*} params.data
  * @param {(...args: *) => *} params.cb
  * @param {boolean} [params.ignore404]
- * @param {number} [params.port]
+ * @param {number} params.port
  * @returns {*}
  */
 function sendData({ path, data, cb, ignore404 = false, port }) {
@@ -519,11 +546,10 @@ function sendData({ path, data, cb, ignore404 = false, port }) {
     const error = new PayloadTooLargeError(`Request payload is too large. Will not send data to agent. (POST ${path})`);
     return setImmediate(cb.bind(null, error));
   }
-  const dataPort = port ?? agentOpts.port;
   const req = http.request(
     {
       host: agentOpts.host,
-      port: dataPort,
+      port,
       path,
       method: 'POST',
       agent: http.agent,

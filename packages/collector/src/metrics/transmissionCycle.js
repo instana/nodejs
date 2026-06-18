@@ -48,7 +48,7 @@ exports.init = function init(config) {
  * @param {import('../agentConnection')} _downstreamConnection
  * @param {(requests: Array.<import('../agent/requestHandler').AnnounceRequest>) => void} _onSuccess
  * @param {() => void} _onError
- * @param {import('@instana/collector/src/types/collector').AgentConfig} [_config]
+ * @param {import('@instana/core/src/metrics').InstanaConfig} _config
  * @returns
  */
 exports.activate = function activate(_metrics, _downstreamConnection, _onSuccess, _onError, _config) {
@@ -57,9 +57,7 @@ exports.activate = function activate(_metrics, _downstreamConnection, _onSuccess
   onSuccess = _onSuccess;
   onError = _onError;
 
-  if (_config && _config.tracing && _config.tracing.otlp) {
-    isOtlpEnabled = _config.tracing.otlp.enabled;
-  }
+  isOtlpEnabled = _config.tracing.otlp.enabled;
 
   if (!metrics) {
     logger.error('No metrics have been set.');
