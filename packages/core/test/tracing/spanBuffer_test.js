@@ -35,7 +35,10 @@ describe('tracing/spanBuffer', () => {
           tracing: {
             maxBufferedSpans: 1000,
             forceTransmissionStartingAt: 500,
-            transmissionDelay: 1000
+            transmissionDelay: 1000,
+            otlp: {
+              enabled: false
+            }
           }
         },
         downstreamConnectionStub
@@ -120,7 +123,10 @@ describe('tracing/spanBuffer', () => {
             maxBufferedSpans: 1000,
             forceTransmissionStartingAt: 2,
             initialTransmissionDelay: 200,
-            transmissionDelay: 200
+            transmissionDelay: 200,
+            otlp: {
+              enabled: false
+            }
           }
         },
         downstreamConnectionStub
@@ -218,7 +224,10 @@ describe('tracing/spanBuffer', () => {
               maxBufferedSpans: 1000,
               forceTransmissionStartingAt: 500,
               transmissionDelay: 1000,
-              spanBatchingEnabled: true
+              spanBatchingEnabled: true,
+              otlp: {
+                enabled: false
+              }
             }
           },
           {
@@ -570,7 +579,10 @@ describe('tracing/spanBuffer', () => {
               maxBufferedSpans: 1000,
               forceTransmissionStartingAt: 500,
               transmissionDelay: 1000,
-              spanBatchingEnabled: false
+              spanBatchingEnabled: false,
+              otlp: {
+                enabled: false
+              }
             }
           },
           {
@@ -612,7 +624,10 @@ describe('tracing/spanBuffer', () => {
               maxBufferedSpans: 1000,
               forceTransmissionStartingAt: 500,
               transmissionDelay: 1000,
-              spanBatchingEnabled: false
+              spanBatchingEnabled: false,
+              otlp: {
+                enabled: false
+              }
             }
           },
           downstreamConnectionStub

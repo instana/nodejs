@@ -6,7 +6,7 @@
 'use strict';
 
 const core = require('@instana/core');
-const otlp = require('@instana/core/src/otlp');
+const otlpExporter = require('@instana/core/src/otlpExporter');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
@@ -40,7 +40,7 @@ let isOtlpEnabled = false;
 exports.init = function init(config) {
   logger = config.logger;
   transmissionDelay = config.metrics.transmissionDelay;
-  isOtlpEnabled = config.tracing.otlp?.enabled;
+  isOtlpEnabled = config.tracing.otlp.enabled;
 };
 
 /**
@@ -108,7 +108,7 @@ function sendMetrics() {
   }
 
   if (isOtlpEnabled) {
-    payload = otlp.metrics.transform(payload);
+    payload = otlpExporter.metrics.transform(payload);
   }
 
   downstreamConnection.sendMetrics(payload, onMetricsHaveBeenSent.bind(null, isFullTransmission, newValueToTransmit));

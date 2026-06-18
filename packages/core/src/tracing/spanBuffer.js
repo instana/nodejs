@@ -7,7 +7,7 @@
 
 const tracingMetrics = require('./metrics');
 const instanaBackendMapper = require('./backend_mappers');
-const otlp = require('../otlp');
+const otlpExporter = require('../otlpExporter');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -95,7 +95,7 @@ exports.init = function init(config, _downstreamConnection) {
   batchingEnabled = config.tracing.spanBatchingEnabled;
   isFaaS = false;
   transmitImmediate = false;
-  isOtlpEnabled = config.tracing.otlp?.enabled;
+  isOtlpEnabled = config.tracing.otlp.enabled;
 
   if (config.tracing.activateImmediately) {
     preActivationCleanupIntervalHandle = setInterval(() => {
@@ -500,13 +500,6 @@ function removeSpansIfNecessary() {
     spans = spans.slice(-maxBufferedSpans);
   }
 }
-/**
- * @param {import('../core').InstanaBaseSpan} span
- * @returns {import('../core').InstanaBaseSpan} span
- */
-function applySpanTransformation(span) {
-  return transform(span);
-}
 
 /**
  * Builds the payload for span export.
@@ -524,7 +517,7 @@ function buildExportPayload(spansToSend) {
   // The span buffer should remain transport-agnostic and only hand off
   // collected spans to the configured exporter.
   if (isOtlpEnabled) {
-    return otlp.traces.transform(spansToSend);
+    return otlpExporter.traces.transform(spansToSend);
   }
   return (
     spansToSend
