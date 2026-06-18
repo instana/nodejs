@@ -38,30 +38,6 @@ class OtlpConfigContext {
     return this._semConvVersion;
   }
 
-  setHostId(hostId) {
-    if (this._hostId === hostId) {
-      return;
-    }
-    this._hostId = hostId;
-  }
-
-  get hostId() {
-    return this._hostId;
-  }
-
-  setPid(pid) {
-    const normalizedPid = pid ? String(pid) : null;
-
-    if (this._pid === normalizedPid) {
-      return;
-    }
-    this._pid = normalizedPid;
-  }
-
-  get pid() {
-    return this._pid;
-  }
-
   /**
    * @param {string} serviceName
    */

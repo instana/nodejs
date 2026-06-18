@@ -10,6 +10,7 @@ const transformers = require('./transformers');
 
 const { INSTRUMENTATION_SCOPE } = transformers.resource;
 
+/** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
 
 /**
@@ -17,20 +18,6 @@ let logger;
  */
 function init(config) {
   logger = config?.logger;
-}
-
-/**
- * @param {any} hostId
- */
-function setHostId(hostId) {
-  otlpCtx.setHostId(hostId);
-}
-
-/**
- * @param {any} pid
- */
-function setPid(pid) {
-  otlpCtx.setPid(pid);
 }
 
 /**
@@ -53,8 +40,10 @@ function convert(metrics) {
     return { resourceMetrics: [] };
   }
 
+  // Service name resolution, it not come from first metric once it set it will be used for all metrics
   resolveServiceName(metrics);
 
+  // All metrics share the same resource, so we can extract the attributes from the first one
   const resource = transformers.resource.extractResourceAttributes(metricsArray[0]);
 
   return {
@@ -64,6 +53,7 @@ function convert(metrics) {
         scopeMetrics: [
           {
             scope: INSTRUMENTATION_SCOPE,
+            // TODO: implement metrics transformation later
             metrics: []
           }
         ]
@@ -74,7 +64,5 @@ function convert(metrics) {
 
 module.exports = {
   init,
-  setHostId,
-  setPid,
   convert
 };

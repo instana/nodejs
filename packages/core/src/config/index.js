@@ -89,6 +89,7 @@ let currentConfig;
 /**
  * @typedef {Object} otlpOptions
  * @property {boolean} [enabled]
+ * @property {number} [port]
  */
 
 /**
@@ -169,7 +170,8 @@ let defaults = {
     ignoreEndpointsDisableSuppression: false,
     disableEOLEvents: false,
     otlp: {
-      enabled: false
+      enabled: false,
+      port: 4318
     }
   },
   preloadOpentelemetry: false,
@@ -231,6 +233,7 @@ module.exports.normalize = ({ userConfig = {}, finalConfigBase = {}, defaultsOve
   currentConfig = finalConfig;
   return finalConfig;
 };
+
 
 /**
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]

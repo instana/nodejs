@@ -22,7 +22,5 @@ function transform(metrics) {
 
 module.exports = {
   init,
-  transform,
-  setHostId: converter.setHostId,
-  setPid: converter.setPid
+  transform
 };
