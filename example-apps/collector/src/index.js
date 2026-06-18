@@ -19,9 +19,6 @@ if (config.mode === 'npm') {
   packageToRequire = '@instana/collector';
 }
 
-process.env.INSTANA_METRICS_TRANSMISSION_DELAY = 5000;
-process.env.INSTANA_OTLP_ENABLED = 'true';
-
 if (config.collectorEnabled) {
   console.log(`enabling @instana/collector (requiring ${packageToRequire})`);
   require(packageToRequire)({
