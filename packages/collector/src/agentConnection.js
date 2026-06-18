@@ -34,9 +34,11 @@ let maxContentErrorHasBeenLogged = false;
 const http = uninstrumentedHttp.http;
 let isConnected = false;
 
-// Default OTLP data port
-// TODO: Can be overridden via INSTANA_OTLP_PORT environment variable (used in tests)
-const OTLP_DATA_PORT = process.env.INSTANA_OTLP_PORT ? parseInt(process.env.INSTANA_OTLP_PORT, 10) : 4318;
+/**
+ * TODO: I added INSTANA_OTLP_PORT here to intregtion test
+ * @type {number}
+ */
+let otlpPort = process.env.INSTANA_OTLP_PORT ? parseInt(process.env.INSTANA_OTLP_PORT, 10) : 4318;
 
 /** @type {string | null} */
 let cpuSetFileContent = null;
@@ -52,6 +54,9 @@ exports.init = function init(_config, _pidStore) {
 
   cmdline.init(config);
   cpuSetFileContent = getCpuSetFileContent();
+  isOtlpEnabled = config.tracing.otlp.enabled;
+  otlpPort = config.tracing.otlp.port;
+
 };
 
 /**
@@ -59,7 +64,7 @@ exports.init = function init(_config, _pidStore) {
  */
 exports.activate = function activate(_config) {
   config = _config;
-  isOtlpEnabled = config.tracing.otlp.enabled || false;
+  isOtlpEnabled = config.tracing.otlp.enabled;
 };
 
 exports.AgentEventSeverity = {
@@ -123,7 +128,7 @@ function resolveExportEndpoint(type) {
   if (isOtlpEnabled) {
     return {
       path: endpoint.otlpPath,
-      port: OTLP_DATA_PORT
+      port: otlpPort
     };
   }
 
