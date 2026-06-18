@@ -9,6 +9,7 @@ const { INSTRUMENTATION_SCOPE_NAME } = require('../constants');
 
 let SDK_VERSION = '1.0.0';
 try {
+  // @ts-ignore
   SDK_VERSION = require('../../../../package.json').version || '1.0.0';
 } catch (_) {
   // ignore
@@ -23,31 +24,46 @@ const INSTRUMENTATION_SCOPE = {
 };
 
 const resourceMapper = {
+  /**
+   * @param {{ data: { resource: any; }; resource: any; }} rawPayload
+   */
   serviceName(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
     return resource['service.name'] || ctx.serviceName;
   },
 
+  /**
+   * @param {{ data: { resource: any; }; resource: any; }} rawPayload
+   */
   sdkLanguage(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
     return resource['telemetry.sdk.language'] || SDK_LANGUAGE;
   },
 
+  /**
+   * @param {{ data: { resource: any; }; resource: any; }} rawPayload
+   */
   sdkName(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
     return resource['telemetry.sdk.name'] || SDK_NAME;
   },
 
+  /**
+   * @param {{ data: { resource: any; }; resource: any; }} rawPayload
+   */
   sdkVersion(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
     return resource['telemetry.sdk.version'] || SDK_VERSION;
   },
 
+  /**
+   * @param {{ data: { resource: any; }; resource: any; f: {}; }} rawPayload
+   */
   processId(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
     const metadata = rawPayload.f || {};
 
-    const pid = resource['process.pid'] || metadata.e || ctx.pid;
+    const pid = resource['process.pid'] || metadata.e || ctx._pid;
 
     if (pid === null || pid === undefined) {
       return undefined;
@@ -57,11 +73,14 @@ const resourceMapper = {
     return Number.isInteger(value) && value > 0 ? value : undefined;
   },
 
+  /**
+   * @param {{ data: { resource: any; }; resource: any; f: {}; }} rawPayload
+   */
   hostName(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
     const metadata = rawPayload.f || {};
 
-    const hostName = resource['host.name'] || metadata.h || ctx.hostId;
+    const hostName = resource['host.name'] || metadata.h;
 
     return typeof hostName === 'string' ? hostName : undefined;
   }

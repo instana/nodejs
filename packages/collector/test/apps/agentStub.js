@@ -126,7 +126,8 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
     enableSpanBatching ||
     ignoreEndpoints ||
     disable ||
-    stackTraceConfig
+    stackTraceConfig ||
+    enableOtlpServer
   ) {
     response.tracing = {};
 
@@ -153,6 +154,12 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
     if (stackTraceConfig) {
       response.tracing.global = response.tracing.global || {};
       deepMerge(response.tracing.global, stackTraceConfig);
+    }
+    if (enableOtlpServer) {
+      response.tracing.otlp = {
+        enabled: true,
+        port: otlpPort
+      };
     }
   }
 

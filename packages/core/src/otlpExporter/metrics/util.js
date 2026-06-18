@@ -10,35 +10,57 @@
  */
 function getResourceKey(from) {
   if (!from) return 'h:empty|e:empty';
+  // @ts-ignore
   return `h:${from.h || 'empty'}|e:${from.e || 'empty'}`;
 }
 
 /**
  * @param {Object} obj
  * @param {string} [prefix]
- * @returns {Object}
+ * @returns {Record<string, any>}
  */
 function flattenObject(obj, prefix = '') {
   if (!obj || typeof obj !== 'object') return {};
 
-  return Object.keys(obj).reduce((flattened, key) => {
-    const value = obj[key];
-    if (value === null || value === undefined) return flattened;
+  return Object.keys(obj).reduce(
+    /**
+     * @param {Record<string, any>} flattened
+     * @param {string} key
+     */
+    (flattened, key) => {
+      // @ts-ignore
+      const value = obj[key];
+      if (value === null || value === undefined) return flattened;
 
-    const newKey = prefix ? `${prefix}.${key}` : key;
+      const newKey = prefix ? `${prefix}.${key}` : key;
 
-    if (typeof value === 'object' && !Array.isArray(value)) {
-      Object.assign(flattened, flattenObject(value, newKey));
-    } else if (typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean') {
-      flattened[newKey] = value;
-    }
+      if (typeof value === 'object' && !Array.isArray(value)) {
+        Object.assign(flattened, flattenObject(value, newKey));
+      } else if (typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean') {
+        flattened[newKey] = value;
+      }
 
-    return flattened;
-  }, {});
+      return flattened;
+    },
+    /** @type {Record<string, any>} */ ({})
+  );
 }
 
 /**
- * Normalizes flat array-based metric payloads.
+ * Normalized to internal format for easier mapping
+ * @param {any} metrics
+ */
+function normalizeMetrics(metrics) {
+  if (Array.isArray(metrics)) {
+    return normalizeArray(metrics);
+  } else if (typeof metrics === 'object' && metrics !== null) {
+    return normalizeObject(metrics);
+  }
+  return [];
+}
+
+/**
+ * @param {any[]} metricsList
  */
 function normalizeArray(metricsList) {
   return metricsList.filter(Boolean).map(item => ({
@@ -52,6 +74,7 @@ function normalizeArray(metricsList) {
 
 /**
  * Normalized to internal format for easier mapping
+ * @param {{ [x: string]: any; timestamp: any; from?: any; }} metricsObj
  */
 function normalizeObject(metricsObj) {
   const { from, timestamp, ...metricsData } = metricsObj;
@@ -60,22 +83,12 @@ function normalizeObject(metricsObj) {
 
   return Object.keys(flattened).map(key => ({
     name: key,
+    // @ts-ignore
     value: flattened[key],
     timestamp: fallbackTimestamp,
     unit: '', // we don't have any unit
     from
   }));
-}
-
-/**
- * Universal formatter for tracking and structuring incoming telemetry shapes.
- * Routes parsing elegantly without using loop components.
- */
-function normalizeMetrics(metrics) {
-  if (!metrics) return [];
-  if (Array.isArray(metrics)) return normalizeArray(metrics);
-  if (typeof metrics === 'object') return normalizeObject(metrics);
-  return [];
 }
 
 module.exports = {

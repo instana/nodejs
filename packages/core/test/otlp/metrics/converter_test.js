@@ -5,8 +5,8 @@
 'use strict';
 
 const expect = require('chai').expect;
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const converter = require('../../../src/otlpExporter/metrics');
 
@@ -20,11 +20,6 @@ function loadOutputFixture(filename) {
   return JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
 }
 describe('metrics/converters/otlp', () => {
-  beforeEach(() => {
-    converter.setHostId(null);
-    converter.setPid(null);
-  });
-
   describe('converter', () => {
     describe('basic conversion', () => {
       it('should convert array of metrics to OTLP format', () => {
