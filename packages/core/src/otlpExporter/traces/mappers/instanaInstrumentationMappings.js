@@ -90,9 +90,10 @@ const instrumentationMappings = {
     spanName: data => `${data.sort || 'process'} ${data.subject || 'unknown'}`,
     spanAttributes: [
       { otlp: OTLP.messaging.SYSTEM, value: 'nats' },
-      { otlp: OTLP.messaging.OPERATION_TYPE, instana: 'sort' },
-      { otlp: OTLP.messaging.SERVER_ADDRESS, instana: 'address' },
-      { otlp: OTLP.messaging.OPERATION_NAME, instana: 'subject' },
+      { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'subject' },
+      { otlp: OTLP.messaging.OPERATION_NAME, instana: 'sort' },
+      { otlp: OTLP.messaging.SERVER_ADDRESS, instana: 'address', transform: extractHost },
+      { otlp: OTLP.messaging.SERVER_PORT, instana: 'address', transform: extractPort },
       { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
     ]
   },

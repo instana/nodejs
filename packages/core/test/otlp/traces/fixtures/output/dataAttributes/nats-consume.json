@@ -1,0 +1,7 @@
+[
+  { "key": "messaging.system", "value": { "stringValue": "nats" } },
+  { "key": "messaging.destination.name", "value": { "stringValue": "orders.created" } },
+  { "key": "messaging.operation.name", "value": { "stringValue": "consume" } },
+  { "key": "server.address", "value": { "stringValue": "nats-server" } },
+  { "key": "server.port", "value": { "intValue": "4222" } }
+]
