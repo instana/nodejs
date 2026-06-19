@@ -1062,6 +1062,220 @@ describe('unannounced state', () => {
       });
     });
 
+    describe('OTLP exporter configuration', () => {
+      it('should apply OTLP exporter configuration when enabled is true', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            otlp: {
+              enabled: true
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                otlp: {
+                  enabled: true
+                }
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should apply OTLP exporter configuration when enabled is false', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            otlp: {
+              enabled: false
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                otlp: {
+                  enabled: false
+                }
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should preserve existing OTLP configuration when tracing.otlp is missing', done => {
+        agentOptsStub.config = {
+          tracing: {
+            otlp: {
+              enabled: true,
+              port: 4318
+            }
+          }
+        };
+
+        prepareAnnounceResponse({
+          tracing: {}
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                otlp: {
+                  enabled: true,
+                  port: 4318
+                }
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should create tracing.otlp object but not set enabled when enabled is missing', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            otlp: {}
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                otlp: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should preserve existing OTLP configuration when enabled is null', done => {
+        agentOptsStub.config = {
+          tracing: {
+            otlp: {
+              enabled: true,
+              port: 4318
+            }
+          }
+        };
+
+        prepareAnnounceResponse({
+          tracing: {
+            otlp: {
+              enabled: null
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                otlp: {
+                  enabled: true,
+                  port: 4318
+                }
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should preserve existing OTLP configuration when enabled is undefined', done => {
+        agentOptsStub.config = {
+          tracing: {
+            otlp: {
+              enabled: false,
+              port: 4318
+            }
+          }
+        };
+
+        prepareAnnounceResponse({
+          tracing: {
+            otlp: {}
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                otlp: {
+                  enabled: false,
+                  port: 4318
+                }
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should apply non-boolean enabled values as provided by the agent', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            otlp: {
+              enabled: 'true'
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                otlp: {
+                  enabled: 'true'
+                }
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should override only tracing.otlp.enabled and preserve existing sibling properties', done => {
+        agentOptsStub.config = {
+          tracing: {
+            otlp: {
+              enabled: false,
+              port: 9999
+            },
+            kafka: {
+              traceCorrelation: false
+            }
+          }
+        };
+
+        prepareAnnounceResponse({
+          tracing: {
+            otlp: {
+              enabled: true
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                otlp: {
+                  enabled: true,
+                  port: 9999
+                },
+                kafka: {
+                  traceCorrelation: false
+                }
+              }
+            });
+            done();
+          }
+        });
+      });
+    });
+
     function prepareAnnounceResponse(announceResponse) {
       agentConnectionStub.announceNodeCollector.callsArgWithAsync(0, null, JSON.stringify(announceResponse));
     }

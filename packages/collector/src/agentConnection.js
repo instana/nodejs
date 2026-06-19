@@ -19,7 +19,7 @@ let logger;
 let pidStore;
 /** @type {import('@instana/core/src/config').InstanaConfig} */
 let config;
-let isOtlpEnabled = false;
+let isOtlpExportEnabled = false;
 
 // How many extra characters are to be reserved for the inode and
 // file descriptor fields in the collector announce cycle.
@@ -53,7 +53,7 @@ exports.init = function init(_config, _pidStore) {
 
   cmdline.init(config);
   cpuSetFileContent = getCpuSetFileContent();
-  isOtlpEnabled = config.tracing.otlp.enabled;
+  isOtlpExportEnabled = config.tracing.otlp.enabled;
   otlpPort = config.tracing.otlp.port;
 
 };
@@ -63,7 +63,7 @@ exports.init = function init(_config, _pidStore) {
  */
 exports.activate = function activate(_config) {
   config = _config;
-  isOtlpEnabled = config.tracing.otlp.enabled;
+  isOtlpExportEnabled = config.tracing.otlp.enabled;
 };
 
 exports.AgentEventSeverity = {
@@ -124,7 +124,7 @@ const EXPORT_ENDPOINTS = {
 function resolveExportEndpoint(type) {
   const endpoint = EXPORT_ENDPOINTS[type];
 
-  if (isOtlpEnabled) {
+  if (isOtlpExportEnabled) {
     return {
       path: endpoint.otlpPath,
       port: otlpPort
@@ -367,14 +367,14 @@ exports.sendMetrics = function sendMetrics(data, cb) {
     data,
     cb: (err, body) => {
       if (err) {
-        if (isOtlpEnabled) {
+        if (isOtlpExportEnabled) {
           logger.error('Error sending metrics:', err);
         }
         cb(err, null);
         return;
       }
 
-      if (isOtlpEnabled) {
+      if (isOtlpExportEnabled) {
         cb(null, []);
         return;
       }
