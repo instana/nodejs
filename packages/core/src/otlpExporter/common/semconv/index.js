@@ -12,7 +12,7 @@ const VERSIONS = {
 /**
  * Get the semantic convention lookup configuration for a specific version.
  *
- * @param {string} [version] - The semantic convention version (e.g., '1.23', '1.43')
+ * @param {string} [version] - The semantic convention version (e.g., '1.23', '1.41')
  * @returns {Object} The compiled semantic convention mappings
  */
 function getLookupConfig(version) {
