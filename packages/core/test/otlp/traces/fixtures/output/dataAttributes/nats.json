@@ -1,7 +1,7 @@
 [
   { "key": "messaging.system", "value": { "stringValue": "nats" } },
-  { "key": "messaging.destination.name", "value": { "stringValue": "orders.created" } },
+  { "key": "messaging.destination", "value": { "stringValue": "orders.created" } },
   { "key": "messaging.operation.name", "value": { "stringValue": "publish" } },
   { "key": "server.address", "value": { "stringValue": "localhost" } },
-  { "key": "server.port", "value": { "intValue": "4222" } }
+  { "key": "server.port", "value": { "intValue": 4222 } }
 ]
