@@ -1117,7 +1117,7 @@ function normalizeOtlpExporter({ userConfig = {}, defaultConfig = {}, finalConfi
   // TODO: This needs to be extended for the rest of the otlp configurations
   const userOtlp = userConfig.tracing?.otlp || {};
 
-  finalConfig.tracing.otlp = finalConfig.tracing.otlp || {};
+  finalConfig.tracing.otlp = Object.assign({}, defaultConfig.tracing?.otlp, finalConfig.tracing.otlp);
   const { value, source } = util.resolve(
     {
       envValue: 'INSTANA_TRACING_OTLP_ENABLED',
