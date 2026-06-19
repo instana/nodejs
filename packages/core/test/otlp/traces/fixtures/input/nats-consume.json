@@ -1,0 +1,21 @@
+{
+  "t": "fedcba0987654321",
+  "s": "9876543210abcdef",
+  "p": "1234567890fedcba",
+  "k": 1,
+  "ts": 1609459350000,
+  "d": 15,
+  "n": "nats",
+  "ec": 0,
+  "f": {
+    "e": "67890",
+    "h": "nats-consumer-host"
+  },
+  "data": {
+    "nats": {
+      "sort": "consume",
+      "address": "nats://nats-server:4222",
+      "subject": "orders.created"
+    }
+  }
+}

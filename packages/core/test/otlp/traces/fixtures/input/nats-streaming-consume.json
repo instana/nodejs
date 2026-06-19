@@ -1,0 +1,21 @@
+{
+  "t": "1122334455667788",
+  "s": "aabbccddeeff0011",
+  "p": "ffeeddccbbaa9988",
+  "k": 1,
+  "ts": 1609459450000,
+  "d": 20,
+  "n": "nats.streaming",
+  "ec": 0,
+  "f": {
+    "e": "22222",
+    "h": "nats-streaming-consumer"
+  },
+  "data": {
+    "nats": {
+      "sort": "consume",
+      "address": "nats://nats-streaming-server:4222",
+      "subject": "events.user.signup"
+    }
+  }
+}

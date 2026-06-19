@@ -268,6 +268,70 @@ describe('tracing/converters/otlp', () => {
           expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
           expect(actualAttr.value).to.deep.equal(expectedAttr.value);
         });
+
+        it('should extract NATS publish span attributes correctly', () => {
+          const input = loadTransformerInputFixture('nats-publish.json');
+          const expectedOutput = loadTransformerOutputFixture('dataAttributes/nats-publish.json');
+
+          const result = extractSpanAttributes(input, mappers.get(input));
+
+          expect(result).to.be.an('array');
+          expect(result).to.have.lengthOf(expectedOutput.length);
+
+          expectedOutput.forEach(expectedAttr => {
+            const actualAttr = result.find(attr => attr.key === expectedAttr.key);
+            expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
+            expect(actualAttr.value).to.deep.equal(expectedAttr.value);
+          });
+        });
+
+        it('should extract NATS consume span attributes correctly', () => {
+          const input = loadTransformerInputFixture('nats-consume.json');
+          const expectedOutput = loadTransformerOutputFixture('dataAttributes/nats-consume.json');
+
+          const result = extractSpanAttributes(input, mappers.get(input));
+
+          expect(result).to.be.an('array');
+          expect(result).to.have.lengthOf(expectedOutput.length);
+
+          expectedOutput.forEach(expectedAttr => {
+            const actualAttr = result.find(attr => attr.key === expectedAttr.key);
+            expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
+            expect(actualAttr.value).to.deep.equal(expectedAttr.value);
+          });
+        });
+
+        it('should extract NATS Streaming publish span attributes correctly', () => {
+          const input = loadTransformerInputFixture('nats-streaming-publish.json');
+          const expectedOutput = loadTransformerOutputFixture('dataAttributes/nats-streaming-publish.json');
+
+          const result = extractSpanAttributes(input, mappers.get(input));
+
+          expect(result).to.be.an('array');
+          expect(result).to.have.lengthOf(expectedOutput.length);
+
+          expectedOutput.forEach(expectedAttr => {
+            const actualAttr = result.find(attr => attr.key === expectedAttr.key);
+            expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
+            expect(actualAttr.value).to.deep.equal(expectedAttr.value);
+          });
+        });
+
+        it('should extract NATS Streaming consume span attributes correctly', () => {
+          const input = loadTransformerInputFixture('nats-streaming-consume.json');
+          const expectedOutput = loadTransformerOutputFixture('dataAttributes/nats-streaming-consume.json');
+
+          const result = extractSpanAttributes(input, mappers.get(input));
+
+          expect(result).to.be.an('array');
+          expect(result).to.have.lengthOf(expectedOutput.length);
+
+          expectedOutput.forEach(expectedAttr => {
+            const actualAttr = result.find(attr => attr.key === expectedAttr.key);
+            expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
+            expect(actualAttr.value).to.deep.equal(expectedAttr.value);
+          });
+        });
       });
 
       it('should return empty array for span without data', () => {
