@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [6.2.1](https://github.com/instana/nodejs/compare/v6.2.0...v6.2.1) (2026-06-19)
+
+
+### Bug Fixes
+
+* bumped otel core packages ([b08138d](https://github.com/instana/nodejs/commit/b08138d179515f0a5137e624a3b6b883e5317959))
+
+
+
+
+
 # [6.2.0](https://github.com/instana/nodejs/compare/v6.1.1...v6.2.0) (2026-06-10)
 
 **Note:** Version bump only for package @instana/opentelemetry-sampler

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [6.2.1](https://github.com/instana/nodejs/compare/v6.2.0...v6.2.1) (2026-06-19)
+
+
+### Bug Fixes
+
+* bumped tar from 7.5.11 to 7.5.16 ([8b62abe](https://github.com/instana/nodejs/commit/8b62abefde46a07abc811620c15c84edeb3686e9))
+
+
+
+
+
 # [6.2.0](https://github.com/instana/nodejs/compare/v6.1.1...v6.2.0) (2026-06-10)
 
 
