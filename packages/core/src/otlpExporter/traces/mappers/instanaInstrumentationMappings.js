@@ -102,7 +102,7 @@ const instrumentationMappings = {
     spanName: data => `${data.sort || 'process'} ${data.queue || 'unknown'}`,
     spanAttributes: [
       { otlp: OTLP.messaging.SYSTEM, value: 'bull' },
-      { otlp: OTLP.messaging.OPERATION_TYPE, instana: 'sort' },
+      { otlp: OTLP.messaging.OPERATION_NAME, instana: 'sort' },
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'queue' },
       { otlp: OTLP.messaging.MESSAGE_ID, instana: 'messageId' },
       { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
