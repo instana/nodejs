@@ -112,9 +112,8 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.SQS]: {
     spanName: data => `${data.type || data.sort || 'process'} ${data.queue || 'unknown'}`,
     spanAttributes: [
-      { otlp: OTLP.messaging.SYSTEM, value: 'aws.sqs' },
-      { otlp: OTLP.messaging.OPERATION_TYPE, instana: 'sort' },
-      { otlp: OTLP.messaging.OPERATION_TYPE, instana: 'type' },
+      { otlp: OTLP.messaging.SYSTEM, value: OTLP.messaging.sqs?.SYSTEM || 'aws.sqs' },
+      { otlp: OTLP.messaging.OPERATION_NAME, instana: 'type' },
       { otlp: OTLP.messaging.CONSUMER_GROUP, instana: 'group' },
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'queue' },
       { otlp: OTLP.messaging.MESSAGE_BODY_SIZE, instana: 'size' },

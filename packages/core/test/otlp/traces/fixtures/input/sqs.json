@@ -1,0 +1,23 @@
+{
+  "t": "aabbccdd11223344",
+  "s": "1122334455667788",
+  "p": "9988776655443322",
+  "k": 3,
+  "ts": 1609459500000,
+  "d": 35,
+  "n": "sqs",
+  "ec": 0,
+  "f": {
+    "e": "33333",
+    "h": "sqs-producer-host"
+  },
+  "data": {
+    "sqs": {
+      "sort": "exit",
+      "type": "single.sync",
+      "queue": "https://sqs.us-east-1.amazonaws.com/123456789012/my-queue",
+      "group": "order-group-1",
+      "messageId": "msg-abc-123"
+    }
+  }
+}
