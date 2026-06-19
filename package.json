@@ -166,7 +166,7 @@
     "underscore": "1.13.1",
     "uuid": "9.0.1",
     "ws": "8.16.0",
-    "yargs": "17.5.1"
+    "yargs": "17.7.3"
   },
   "overrides": {
     "prebuildify": {
@@ -178,6 +178,9 @@
     },
     "gcstats.js": {
       "nan": "2.27.0"
+    },
+    "mocha": {
+      "yargs": "17.7.3"
     }
   },
   "config": {
