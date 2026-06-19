@@ -73,13 +73,16 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.RABBITMQ]: {
-    spanName: data => `${data.sort || 'process'} ${data.exchange || data.key || 'unknown'}`,
+    spanName: data => `${data.sort || 'process'} ${data.exchange || data.key || data.queue || 'unknown'}`,
     spanAttributes: [
       { otlp: OTLP.messaging.SYSTEM, value: 'rabbitmq' },
-      { otlp: OTLP.messaging.OPERATION_TYPE, instana: 'sort' },
-      { otlp: OTLP.messaging.SERVER_ADDRESS, instana: 'address' },
+      { otlp: OTLP.messaging.OPERATION_NAME, instana: 'sort' },
+      { otlp: OTLP.messaging.DESTINATION_NAME, instana: ['exchange', 'key', 'queue'] },
+      { otlp: OTLP.messaging.SERVER_ADDRESS, instana: 'address', transform: extractHost },
+      { otlp: OTLP.messaging.SERVER_PORT, instana: 'address', transform: extractPort },
       { otlp: OTLP.messaging.rabbitmq.ROUTING_KEY, instana: 'exchange' },
-      { otlp: OTLP.messaging.rabbitmq.MESSAGE_ROUTING_KEY, instana: 'key' }
+      { otlp: OTLP.messaging.rabbitmq.MESSAGE_ROUTING_KEY, instana: 'key' },
+      { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
     ]
   },
 

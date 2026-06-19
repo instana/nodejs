@@ -48,6 +48,7 @@ const MAPPINGS = {
     OPERATION_TYPE: 'messaging.operation.type',
     OPERATION_NAME: 'messaging.operation.name',
     SERVER_ADDRESS: 'server.address',
+    SERVER_PORT: 'server.port',
     CONSUMER_GROUP: 'messaging.consumer.group.name',
     MESSAGE_ID: 'messaging.message.id',
     MESSAGE_BODY_SIZE: 'messaging.message.body.size',
