@@ -62,11 +62,12 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.KAFKA]: {
-    spanName: data => `${data.operation} ${data.endpoints}`,
+    // In KafkaNode, we collect service directly
+    spanName: data => `${data.operation} ${data.service || data.endpoints}`,
     spanAttributes: [
       { otlp: OTLP.messaging.SYSTEM, value: 'kafka' },
-      { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'operation' },
-      { otlp: OTLP.messaging.OPERATION_TYPE, instana: 'operation' },
+      { otlp: OTLP.messaging.DESTINATION_NAME, instana: ['service', 'endpoints'], transform: firstDefined },
+      { otlp: OTLP.messaging.OPERATION_NAME, instana: ['access', 'operation'], transform: firstDefined },
       { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
     ]
   },
@@ -88,7 +89,7 @@ const instrumentationMappings = {
       { otlp: OTLP.messaging.SYSTEM, value: 'nats' },
       { otlp: OTLP.messaging.OPERATION_TYPE, instana: 'sort' },
       { otlp: OTLP.messaging.SERVER_ADDRESS, instana: 'address' },
-      { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'subject' },
+      { otlp: OTLP.messaging.OPERATION_NAME, instana: 'subject' },
       { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
     ]
   },
