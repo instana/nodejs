@@ -52,6 +52,7 @@ const MAPPINGS = {
     CONSUMER_GROUP: 'messaging.consumer.group.name',
     MESSAGE_ID: 'messaging.message.id',
     MESSAGE_BODY_SIZE: 'messaging.message.body.size',
+    DESTINATION_NAME: 'messaging.destination.name',
     DESTINATION_TEMPLATE: 'messaging.destination.template',
     DESTINATION_PARTITION_ID: 'messaging.destination.partition.id',
     ERROR_TYPE: 'error.type',
