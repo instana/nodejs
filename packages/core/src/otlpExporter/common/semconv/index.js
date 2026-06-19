@@ -6,7 +6,7 @@
 
 const VERSIONS = {
   1.23: require('./v1.23'),
-  1.43: require('./v1.43')
+  1.41: require('./v1.41')
 };
 
 /**
