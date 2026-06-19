@@ -1531,10 +1531,11 @@ describe('config.normalizeConfig', () => {
     });
 
     describe('OTLP exporter configuration', () => {
-      it('should use default (false) for tracing.otlp.enabled when neither env nor config is set', () => {
+      it('should use default OTLP configuration when neither env nor config is set', () => {
         const config = coreConfig.normalize({});
         expect(config.tracing.otlp).to.deep.equal({
-          enabled: false
+          enabled: false,
+          port: 4318
         });
       });
 
@@ -1543,13 +1544,15 @@ describe('config.normalizeConfig', () => {
           userConfig: {
             tracing: {
               otlp: {
-                enabled: true
+                enabled: true,
+                port: 7908
               }
             }
           }
         });
         expect(config.tracing.otlp).to.deep.equal({
-          enabled: true
+          enabled: true,
+          port: 4318
         });
       });
 
@@ -1564,7 +1567,8 @@ describe('config.normalizeConfig', () => {
           }
         });
         expect(config.tracing.otlp).to.deep.equal({
-          enabled: false
+          enabled: false,
+          port: 4318
         });
       });
 
@@ -1579,7 +1583,8 @@ describe('config.normalizeConfig', () => {
           }
         });
         expect(config.tracing.otlp).to.deep.equal({
-          enabled: true
+          enabled: true,
+          port: 4318
         });
       });
 
@@ -1594,7 +1599,8 @@ describe('config.normalizeConfig', () => {
           }
         });
         expect(config.tracing.otlp).to.deep.equal({
-          enabled: false
+          enabled: false,
+          port: 4318
         });
       });
 
@@ -1609,7 +1615,8 @@ describe('config.normalizeConfig', () => {
           }
         });
         expect(config.tracing.otlp).to.deep.equal({
-          enabled: true
+          enabled: true,
+          port: 4318
         });
       });
 
@@ -1624,7 +1631,8 @@ describe('config.normalizeConfig', () => {
           }
         });
         expect(config.tracing.otlp).to.deep.equal({
-          enabled: false
+          enabled: false,
+          port: 4318
         });
       });
 
@@ -1640,7 +1648,8 @@ describe('config.normalizeConfig', () => {
           }
         });
         expect(config.tracing.otlp).to.deep.equal({
-          enabled: true
+          enabled: true,
+          port: 4318
         });
       });
 
@@ -1656,7 +1665,8 @@ describe('config.normalizeConfig', () => {
           }
         });
         expect(config.tracing.otlp).to.deep.equal({
-          enabled: false
+          enabled: false,
+          port: 4318
         });
       });
 
@@ -1664,7 +1674,8 @@ describe('config.normalizeConfig', () => {
         process.env.INSTANA_TRACING_OTLP_ENABLED = '1';
         const config = coreConfig.normalize();
         expect(config.tracing.otlp).to.deep.equal({
-          enabled: true
+          enabled: true,
+          port: 4318
         });
       });
 
@@ -1672,7 +1683,8 @@ describe('config.normalizeConfig', () => {
         process.env.INSTANA_TRACING_OTLP_ENABLED = '0';
         const config = coreConfig.normalize();
         expect(config.tracing.otlp).to.deep.equal({
-          enabled: false
+          enabled: false,
+          port: 4318
         });
       });
 
@@ -1688,7 +1700,8 @@ describe('config.normalizeConfig', () => {
           }
         });
         expect(config.tracing.otlp).to.deep.equal({
-          enabled: true
+          enabled: true,
+          port: 4318
         });
       });
 
@@ -1704,7 +1717,8 @@ describe('config.normalizeConfig', () => {
           }
         });
         expect(config.tracing.otlp).to.deep.equal({
-          enabled: false
+          enabled: false,
+          port: 4318
         });
       });
 
