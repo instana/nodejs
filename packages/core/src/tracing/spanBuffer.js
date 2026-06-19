@@ -37,7 +37,7 @@ let isFaaS;
 /** @type {boolean} */
 let transmitImmediate;
 /** @type {boolean} */
-let isOtlpEnabled = false;
+let useOtlpExporter = false;
 
 /** @type {Array.<import('../core').InstanaBaseSpan>} */
 let spans = [];
@@ -95,7 +95,7 @@ exports.init = function init(config, _downstreamConnection) {
   batchingEnabled = config.tracing.spanBatchingEnabled;
   isFaaS = false;
   transmitImmediate = false;
-  isOtlpEnabled = config.tracing.otlp.enabled;
+  useOtlpExporter = config.tracing.otlp.enabled;
 
   if (config.tracing.activateImmediately) {
     preActivationCleanupIntervalHandle = setInterval(() => {
@@ -124,7 +124,7 @@ exports.activate = function activate(_config) {
   }
 
   batchingEnabled = _config.tracing.spanBatchingEnabled;
-  isOtlpEnabled = _config.tracing.otlp?.enabled;
+  useOtlpExporter = _config.tracing.otlp?.enabled;
 
   isActive = true;
   if (activatedAt == null) {
@@ -449,12 +449,12 @@ function transmitSpans() {
   spans = [];
   batchingBuckets.clear();
 
-  const payload = buildExportPayload(spansToSend);
+  const transformedSpans = transformSpansForExport(spansToSend);
 
   // We restore the content of the spans array if sending them downstream was not successful. We do not restore
   // batchingBuckets, though. This is deliberate. In the worst case, we might miss some batching opportunities, but
   // since sending spans downstream will take a few milliseconds, even that will be rare (and it is acceptable).
-  downstreamConnection.sendSpans(payload, function sendSpansCallback(/** @type {Error} */ error) {
+  downstreamConnection.sendSpans(transformedSpans, function sendSpansCallback(/** @type {Error} */ error) {
     if (error) {
       logger.warn(`Failed to transmit spans, will retry in ${transmissionDelay} ms. ${error?.message} ${error?.stack}`);
       spans = spans.concat(spansToSend);
@@ -502,21 +502,20 @@ function removeSpansIfNecessary() {
 }
 
 /**
- * Builds the payload for span export.
+ * Transforms internal spans into the format required by the configured exporter.
  *
- * Depending on configuration, spans are transformed either to:
+ * Depending on configuration, spans are transformed to either:
  * - Instana backend format
  * - OTLP format
- *
  * @param {import("../core").InstanaBaseSpan[]} spansToSend
  * @returns {any}
  */
-function buildExportPayload(spansToSend) {
+function transformSpansForExport(spansToSend) {
   // TODO:
   // Move OTLP transformation into the OTLP exporter implementation.
   // The span buffer should remain transport-agnostic and only hand off
   // collected spans to the configured exporter.
-  if (isOtlpEnabled) {
+  if (useOtlpExporter) {
     return otlpExporter.traces.transform(spansToSend);
   }
   return (

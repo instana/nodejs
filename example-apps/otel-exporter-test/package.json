@@ -4,7 +4,7 @@
   "description": "Sample app for testing OpenTelemetry exporter with Instana (HTTP, PostgreSQL, Kafka)",
   "main": "app.js",
   "scripts": {
-    "start": "INSTANA_OTLP_ENABLED=true NODE_OPTIONS='--require ./node_modules/@instana/collector/src/immediate' node app.js",
+    "start": "INSTANA_TRACING_OTLP_ENABLED=true NODE_OPTIONS='--require ./node_modules/@instana/collector/src/immediate' node app.js",
     "start-otel": "nodemon -r ./tracing.js app.js"
   },
   "keywords": [

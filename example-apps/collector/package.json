@@ -4,7 +4,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "start:otlp": "INSTANA_OTLP_ENABLED=true node src/index.js"
+    "start:otlp": "INSTANA_TRACING_OTLP_ENABLED=true node src/index.js"
   },
   "dependencies": {
     "@instana/collector": "latest",

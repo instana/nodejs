@@ -38,6 +38,4 @@ exports.init = function init(config) {
   exports.requestTimeout = config.agentRequestTimeout;
 
   exports.disableCollectorInitEvent = config.disableCollectorInitEvent;
-
-  exports.config = config;
 };
