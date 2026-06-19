@@ -135,7 +135,7 @@ function applyAgentConfiguration(agentResponse) {
   applySecretsConfiguration(agentResponse);
   applyExtraHttpHeaderConfiguration(agentResponse);
   applyKafkaTracingConfiguration(agentResponse);
-  applyOtlpConfiguration(agentResponse);
+  applyOtlpExporterConfiguration(agentResponse);
   applySpanBatchingConfiguration(agentResponse);
   applyIgnoreEndpointsConfiguration(agentResponse);
   applyStackTraceConfiguration(agentResponse);
@@ -219,7 +219,7 @@ function applyKafkaTracingConfiguration(agentResponse) {
 /**
  * @param {AgentAnnounceResponse} agentResponse
  */
-function applyOtlpConfiguration(agentResponse) {
+function applyOtlpExporterConfiguration(agentResponse) {
   if (agentResponse.tracing && agentResponse.tracing.otlp) {
     const otlpConfigFromAgent = agentResponse.tracing.otlp;
     ensureNestedObjectExists(agentOpts.config, ['tracing', 'otlp']);

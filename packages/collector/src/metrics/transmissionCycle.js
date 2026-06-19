@@ -32,7 +32,7 @@ let previousTransmittedValue;
 let transmissionTimeoutHandle;
 let transmissionDelay = 1000;
 let isActive = false;
-let isOtlpEnabled = false;
+let useOtlpExporter = false;
 
 /**
  * @param {import('@instana/core/src/metrics').InstanaConfig} config
@@ -40,7 +40,7 @@ let isOtlpEnabled = false;
 exports.init = function init(config) {
   logger = config.logger;
   transmissionDelay = config.metrics.transmissionDelay;
-  isOtlpEnabled = config.tracing.otlp.enabled;
+  useOtlpExporter = config.tracing.otlp.enabled;
 };
 
 /**
@@ -57,7 +57,7 @@ exports.activate = function activate(_metrics, _downstreamConnection, _onSuccess
   onSuccess = _onSuccess;
   onError = _onError;
 
-  isOtlpEnabled = _config.tracing.otlp.enabled;
+  useOtlpExporter = _config.tracing.otlp.enabled;
 
   if (!metrics) {
     logger.error('No metrics have been set.');
@@ -107,7 +107,7 @@ function sendMetrics() {
     payload = core.util.compression(previousTransmittedValue, newValueToTransmit);
   }
 
-  if (isOtlpEnabled) {
+  if (useOtlpExporter) {
     payload = otlpExporter.metrics.transform(payload);
   }
 

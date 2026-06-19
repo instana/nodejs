@@ -73,7 +73,7 @@ let currentConfig;
  * @property {boolean} [ignoreEndpointsDisableSuppression]
  * @property {boolean} [disableEOLEvents]
  * @property {globalStackTraceConfig} [global]
- * @property {otlpOptions} [otlp]
+ * @property {otlpExporterOptions} [otlp]
  */
 
 /**
@@ -87,7 +87,7 @@ let currentConfig;
  */
 
 /**
- * @typedef {Object} otlpOptions
+ * @typedef {Object} otlpExporterOptions
  * @property {boolean} [enabled]
  * @property {number} [port]
  */
@@ -171,6 +171,8 @@ let defaults = {
     disableEOLEvents: false,
     otlp: {
       enabled: false,
+      // Currently, we only have http protocol support and default to 4318
+      // This option is internal and not exposed
       port: 4318
     }
   },
@@ -233,7 +235,6 @@ module.exports.normalize = ({ userConfig = {}, finalConfigBase = {}, defaultsOve
   currentConfig = finalConfig;
   return finalConfig;
 };
-
 
 /**
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
@@ -354,7 +355,7 @@ function normalizeTracingConfig({ userConfig = {}, defaultConfig = {}, finalConf
   normalizeIgnoreEndpoints({ userConfig, defaultConfig, finalConfig });
   normalizeIgnoreEndpointsDisableSuppression({ userConfig, defaultConfig, finalConfig });
   normalizeDisableEOLEvents({ userConfig, defaultConfig, finalConfig });
-  normalizeOtlp({ userConfig, defaultConfig, finalConfig });
+  normalizeOtlpExporter({ userConfig, defaultConfig, finalConfig });
 }
 
 /**
@@ -1112,14 +1113,14 @@ function normalizePreloadOpentelemetry({ userConfig = {}, defaultConfig = {}, fi
 /**
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
-function normalizeOtlp({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
+function normalizeOtlpExporter({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
   // TODO: This needs to be extended for the rest of the otlp configurations
   const userOtlp = userConfig.tracing?.otlp || {};
 
   finalConfig.tracing.otlp = finalConfig.tracing.otlp || {};
   const { value, source } = util.resolve(
     {
-      envValue: 'INSTANA_OTLP_ENABLED',
+      envValue: 'INSTANA_TRACING_OTLP_ENABLED',
       inCodeValue: userOtlp.enabled,
       defaultValue: defaultConfig.tracing?.otlp?.enabled
     },
@@ -1132,7 +1133,7 @@ function normalizeOtlp({ userConfig = {}, defaultConfig = {}, finalConfig = {} }
     configPath: 'config.tracing.otlp.enabled',
     source,
     value,
-    envVarName: 'INSTANA_OTLP_ENABLED'
+    envVarName: 'INSTANA_TRACING_OTLP_ENABLED'
   });
 }
 
