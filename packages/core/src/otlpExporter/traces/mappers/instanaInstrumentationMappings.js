@@ -329,6 +329,8 @@ const instrumentationMappings = {
       { otlp: OTLP.messaging.SYSTEM, value: 'aws.kinesis' },
       { otlp: OTLP.database.OPERATION, instana: 'op' },
       { otlp: OTLP.cloud.aws.KINESIS_STREAM, instana: 'stream' },
+      { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'stream' },
+      { otlp: OTLP.messaging.DESTINATION_PARTITION_ID, instana: 'shard' },
       { otlp: OTLP.cloud.aws.KINESIS_EXPLICIT_HASH_KEY, instana: 'record' },
       { otlp: OTLP.cloud.aws.KINESIS_SHARD_ITERATOR_TYPE, instana: 'shardType' },
       { otlp: OTLP.cloud.aws.KINESIS_STARTING_SEQUENCE_NUMBER, instana: 'startSequenceNumber' },

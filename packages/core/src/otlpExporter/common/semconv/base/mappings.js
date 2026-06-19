@@ -46,10 +46,13 @@ const MAPPINGS = {
   messaging: {
     SYSTEM: 'messaging.system',
     OPERATION_TYPE: 'messaging.operation.type',
+    OPERATION_NAME: 'messaging.operation.name',
     SERVER_ADDRESS: 'server.address',
     CONSUMER_GROUP: 'messaging.consumer.group.name',
     MESSAGE_ID: 'messaging.message.id',
     MESSAGE_BODY_SIZE: 'messaging.message.body.size',
+    DESTINATION_TEMPLATE: 'messaging.destination.template',
+    DESTINATION_PARTITION_ID: 'messaging.destination.partition.id',
     ERROR_TYPE: 'error.type',
     kafka: {
       OFFSET: 'messaging.kafka.message.offset',
@@ -142,4 +145,3 @@ const MAPPINGS = {
 };
 
 module.exports = { MAPPINGS };
-
