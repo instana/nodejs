@@ -535,10 +535,6 @@ function applySpanTransformation(spansToSend) {
  * @returns {any}
  */
 function transformSpansForExport(spansToSend) {
-  // TODO:
-  // Move OTLP transformation into the OTLP exporter implementation.
-  // The span buffer should remain transport-agnostic and only hand off
-  // collected spans to the configured exporter.
   if (useOtlpExporter) {
     return otlpExporter.traces.transform(spansToSend);
   }
