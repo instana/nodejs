@@ -268,69 +268,53 @@ describe('tracing/converters/otlp', () => {
           expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
           expect(actualAttr.value).to.deep.equal(expectedAttr.value);
         });
+      });
 
-        it('should extract NATS publish span attributes correctly', () => {
-          const input = loadTransformerInputFixture('nats-publish.json');
-          const expectedOutput = loadTransformerOutputFixture('dataAttributes/nats-publish.json');
+      it('should extract NATS span attributes correctly', () => {
+        const input = loadTransformerInputFixture('nats.json');
+        const expectedOutput = loadTransformerOutputFixture('dataAttributes/nats.json');
 
-          const result = extractSpanAttributes(input, mappers.get(input));
+        const result = extractSpanAttributes(input, mappers.get(input));
 
-          expect(result).to.be.an('array');
-          expect(result).to.have.lengthOf(expectedOutput.length);
+        expect(result).to.be.an('array');
+        expect(result).to.have.lengthOf(expectedOutput.length);
 
-          expectedOutput.forEach(expectedAttr => {
-            const actualAttr = result.find(attr => attr.key === expectedAttr.key);
-            expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
-            expect(actualAttr.value).to.deep.equal(expectedAttr.value);
-          });
+        expectedOutput.forEach(expectedAttr => {
+          const actualAttr = result.find(attr => attr.key === expectedAttr.key);
+          expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
+          expect(actualAttr.value).to.deep.equal(expectedAttr.value);
         });
+      });
 
-        it('should extract NATS consume span attributes correctly', () => {
-          const input = loadTransformerInputFixture('nats-consume.json');
-          const expectedOutput = loadTransformerOutputFixture('dataAttributes/nats-consume.json');
+      it('should extract NATS Streaming span attributes correctly', () => {
+        const input = loadTransformerInputFixture('nats-streaming.json');
+        const expectedOutput = loadTransformerOutputFixture('dataAttributes/nats-streaming.json');
 
-          const result = extractSpanAttributes(input, mappers.get(input));
+        const result = extractSpanAttributes(input, mappers.get(input));
 
-          expect(result).to.be.an('array');
-          expect(result).to.have.lengthOf(expectedOutput.length);
+        expect(result).to.be.an('array');
+        expect(result).to.have.lengthOf(expectedOutput.length);
 
-          expectedOutput.forEach(expectedAttr => {
-            const actualAttr = result.find(attr => attr.key === expectedAttr.key);
-            expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
-            expect(actualAttr.value).to.deep.equal(expectedAttr.value);
-          });
+        expectedOutput.forEach(expectedAttr => {
+          const actualAttr = result.find(attr => attr.key === expectedAttr.key);
+          expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
+          expect(actualAttr.value).to.deep.equal(expectedAttr.value);
         });
+      });
 
-        it('should extract NATS Streaming publish span attributes correctly', () => {
-          const input = loadTransformerInputFixture('nats-streaming-publish.json');
-          const expectedOutput = loadTransformerOutputFixture('dataAttributes/nats-streaming-publish.json');
+      it('should extract Bull span attributes correctly', () => {
+        const input = loadTransformerInputFixture('bull.json');
+        const expectedOutput = loadTransformerOutputFixture('dataAttributes/bull.json');
 
-          const result = extractSpanAttributes(input, mappers.get(input));
+        const result = extractSpanAttributes(input, mappers.get(input));
 
-          expect(result).to.be.an('array');
-          expect(result).to.have.lengthOf(expectedOutput.length);
+        expect(result).to.be.an('array');
+        expect(result).to.have.lengthOf(expectedOutput.length);
 
-          expectedOutput.forEach(expectedAttr => {
-            const actualAttr = result.find(attr => attr.key === expectedAttr.key);
-            expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
-            expect(actualAttr.value).to.deep.equal(expectedAttr.value);
-          });
-        });
-
-        it('should extract NATS Streaming consume span attributes correctly', () => {
-          const input = loadTransformerInputFixture('nats-streaming-consume.json');
-          const expectedOutput = loadTransformerOutputFixture('dataAttributes/nats-streaming-consume.json');
-
-          const result = extractSpanAttributes(input, mappers.get(input));
-
-          expect(result).to.be.an('array');
-          expect(result).to.have.lengthOf(expectedOutput.length);
-
-          expectedOutput.forEach(expectedAttr => {
-            const actualAttr = result.find(attr => attr.key === expectedAttr.key);
-            expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
-            expect(actualAttr.value).to.deep.equal(expectedAttr.value);
-          });
+        expectedOutput.forEach(expectedAttr => {
+          const actualAttr = result.find(attr => attr.key === expectedAttr.key);
+          expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
+          expect(actualAttr.value).to.deep.equal(expectedAttr.value);
         });
       });
 
