@@ -4,7 +4,7 @@
 
 'use strict';
 
-// v1.43 semantic conventions - overrides for changes from v1.23
+// v1.43 semantic conventions - overrides to base
 const MAPPINGS = {
   http: {
     REQUEST_METHOD: 'http.request.method',
