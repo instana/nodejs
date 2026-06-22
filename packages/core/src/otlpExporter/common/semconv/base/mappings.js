@@ -70,7 +70,6 @@ const MAPPINGS = {
   database: {
     OPERATION: 'db.operation.name',
     NAMESPACE: 'db.namespace',
-    STATEMENT: 'db.statement',
     QUERY_TEXT: 'db.query.text',
     NAME: 'db.name',
     USER: 'db.user',
