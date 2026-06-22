@@ -259,7 +259,8 @@ const instrumentationMappings = {
       { otlp: OTLP.database.ERROR_TYPE, instana: 'error' }
     ]
   },
-
+  // Note: There is no official OpenTelemetry semantic convention for Prisma, and it is not covered in our RFD either.
+  // We can therefore adopt a generic database convention, using the Prisma provider as the database system identifier.
   [INSTRUMENTATION_TYPES.PRISMA]: {
     spanName: data => `prisma.${data.action || 'query'}`,
     spanAttributes: [
