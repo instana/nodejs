@@ -20,6 +20,9 @@ const MAPPINGS = {
     },
     sqs: {
       SYSTEM: 'aws_sqs'
+    },
+    gcp: {
+      SYSTEM: 'gcp_pubsub'
     }
   },
   database: {

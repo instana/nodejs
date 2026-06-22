@@ -334,6 +334,22 @@ describe('tracing/converters/otlp', () => {
         });
       });
 
+      it('should extract GCP Pub/Sub span attributes correctly', () => {
+        const input = loadTransformerInputFixture('gcps.json');
+        const expectedOutput = loadTransformerOutputFixture('dataAttributes/gcps.json');
+
+        const result = extractSpanAttributes(input, mappers.get(input));
+
+        expect(result).to.be.an('array');
+        expect(result).to.have.lengthOf(expectedOutput.length);
+
+        expectedOutput.forEach(expectedAttr => {
+          const actualAttr = result.find(attr => attr.key === expectedAttr.key);
+          expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
+          expect(actualAttr.value).to.deep.equal(expectedAttr.value);
+        });
+      });
+
       it('should extract Bull span attributes correctly', () => {
         const input = loadTransformerInputFixture('bull.json');
         const expectedOutput = loadTransformerOutputFixture('dataAttributes/bull.json');
