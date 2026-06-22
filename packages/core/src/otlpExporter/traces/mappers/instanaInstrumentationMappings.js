@@ -211,10 +211,9 @@ const instrumentationMappings = {
     spanName: data => `redis.${data.operation || 'command'}`,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'redis' },
-      { otlp: OTLP.database.OPERATION, instana: 'operation', transform: toUpperCase },
-      { otlp: OTLP.database.SERVER_ADDRESS, instana: 'connection', transform: extractHost },
-      { otlp: OTLP.database.PEER_PORT, instana: 'connection', transform: extractPort },
-      { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.database.OPERATION, instana: 'operation' },
+      { otlp: OTLP.database.CONNECTION, instana: 'connection' },
+      { otlp: OTLP.database.ERROR_TYPE, instana: 'error' }
     ]
   },
 
