@@ -222,6 +222,22 @@ describe('tracing/converters/otlp', () => {
         });
       });
 
+      it('should extract Couchbase span attributes correctly', () => {
+        const input = loadTransformerInputFixture('couchbase.json');
+        const expectedOutput = loadTransformerOutputFixture('dataAttributes/couchbase.json');
+
+        const result = extractSpanAttributes(input, mappers.get(input));
+
+        expect(result).to.be.an('array');
+        expect(result).to.have.lengthOf(expectedOutput.length);
+
+        expectedOutput.forEach(expectedAttr => {
+          const actualAttr = result.find(attr => attr.key === expectedAttr.key);
+          expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
+          expect(actualAttr.value).to.deep.equal(expectedAttr.value);
+        });
+      });
+
       it('should extract PostgreSQL span attributes correctly', () => {
         const input = loadTransformerInputFixture('postgresql.json');
         const expectedOutput = loadTransformerOutputFixture('dataAttributes/postgresql.json');
@@ -496,6 +512,35 @@ describe('tracing/converters/otlp', () => {
         const operationAttr = result.find(attr => attr.key === 'db.operation.name');
         expect(operationAttr).to.exist;
         expect(operationAttr.value.stringValue).to.equal('FIND');
+      });
+
+      it('should map Couchbase attributes', () => {
+        const span = {
+          t: '123',
+          s: '456',
+          data: {
+            couchbase: {
+              hostname: 'couchbase://localhost:8091',
+              bucket: 'my-bucket',
+              type: 'couchbase',
+              sql: 'SELECT * FROM users WHERE age > 18'
+            }
+          }
+        };
+
+        const result = extractSpanAttributes(span, mappers.get(span));
+
+        const systemAttr = result.find(attr => attr.key === 'db.system');
+        expect(systemAttr).to.exist;
+        expect(systemAttr.value.stringValue).to.equal('other_nosql');
+
+        const bucketAttr = result.find(attr => attr.key === 'db.name');
+        expect(bucketAttr).to.exist;
+        expect(bucketAttr.value.stringValue).to.equal('my-bucket');
+
+        const sqlAttr = result.find(attr => attr.key === 'db.query.text');
+        expect(sqlAttr).to.exist;
+        expect(sqlAttr.value.stringValue).to.equal('SELECT * FROM users WHERE age > 18');
       });
     });
 
