@@ -1,0 +1,7 @@
+[
+  { "key": "messaging.system", "value": { "stringValue": "gcp.pubsub" } },
+  { "key": "messaging.operation.name", "value": { "stringValue": "publish" } },
+  { "key": "messaging.destination", "value": { "stringValue": "my-topic" } },
+  { "key": "gcp.project_id", "value": { "stringValue": "my-gcp-project" } },
+  { "key": "messaging.message.id", "value": { "stringValue": "1234567890" } }
+]
