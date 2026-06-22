@@ -127,9 +127,7 @@ const instrumentationMappings = {
     spanAttributes: [
       { otlp: OTLP.messaging.SYSTEM, value: 'aws.sns' },
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'topic' },
-      { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'subject' },
-      { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'phone' },
-      { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'target' },
+      { otlp: OTLP.messaging.OPERATION_NAME, value: 'send' },
       { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
     ]
   },
