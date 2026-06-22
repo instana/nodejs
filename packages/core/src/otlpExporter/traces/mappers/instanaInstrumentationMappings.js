@@ -220,11 +220,10 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.COUCHBASE]: {
     spanName: data => `couchbase.${data.bucket || 'operation'}`,
     spanAttributes: [
-      { otlp: OTLP.database.SYSTEM, value: 'couchbase' },
-      { otlp: OTLP.database.PEER_NAME, instana: 'hostname' },
-      { otlp: OTLP.database.COLLECTION, instana: 'bucket' },
-      { otlp: OTLP.database.STATEMENT, instana: 'sql' },
-      { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.database.SYSTEM, value: 'other_nosql' },
+      { otlp: OTLP.database.NAME, instana: 'bucket' },
+      { otlp: OTLP.database.QUERY_TEXT, instana: 'sql' },
+      { otlp: OTLP.database.ERROR_TYPE, instana: 'error' }
     ]
   },
 

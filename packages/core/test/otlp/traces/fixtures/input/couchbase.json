@@ -1,0 +1,22 @@
+{
+  "t": "aabbccdd11223344aabbccdd11223344",
+  "s": "5566778899aabbcc",
+  "p": "8899aabbccddeeff",
+  "k": 2,
+  "ts": 1609459400000,
+  "d": 150,
+  "n": "couchbase",
+  "ec": 0,
+  "f": {
+    "e": "54321",
+    "h": "couchbase-client-host"
+  },
+  "data": {
+    "couchbase": {
+      "hostname": "couchbase://localhost:8091",
+      "bucket": "my-bucket",
+      "type": "couchbase",
+      "sql": "SELECT * FROM users WHERE age > 18"
+    }
+  }
+}
