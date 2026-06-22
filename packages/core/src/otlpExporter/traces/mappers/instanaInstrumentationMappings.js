@@ -254,10 +254,9 @@ const instrumentationMappings = {
     spanName: data => `memcached.${data.operation || 'command'}`,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'memcached' },
-      { otlp: OTLP.database.STATEMENT, instana: 'key' },
-      { otlp: OTLP.database.SERVER_ADDRESS, instana: 'connection' },
+      { otlp: OTLP.database.CONNECTION, instana: 'connection' },
       { otlp: OTLP.database.OPERATION, instana: 'operation' },
-      { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.database.ERROR_TYPE, instana: 'error' }
     ]
   },
 
