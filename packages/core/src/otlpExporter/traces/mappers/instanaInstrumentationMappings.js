@@ -4,15 +4,7 @@
 
 'use strict';
 
-const {
-  toUpperCase,
-  joinWith,
-  firstDefined,
-  formatOTLPValue,
-  combineFields,
-  extractHost,
-  extractPort
-} = require('./util');
+const { toUpperCase, firstDefined, formatOTLPValue, combineFields, extractHost, extractPort } = require('./util');
 
 const ctx = require('../../common/context');
 const { INSTRUMENTATION_TYPES, STATUS_CODES, SPECIAL_SPAN_TYPES } = require('./constants');
@@ -153,13 +145,12 @@ const instrumentationMappings = {
     spanName: data => data.stmt?.split(/\s+/)[0]?.toUpperCase() || 'POSTGRESQL',
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'postgresql' },
-      { otlp: OTLP.database.STATEMENT, instana: 'stmt' },
-      { otlp: OTLP.database.SERVER_ADDRESS, instana: ['host', 'port'], transform: joinWith },
-      { otlp: OTLP.database.PEER_NAME, instana: 'host' },
-      { otlp: OTLP.database.PEER_PORT, instana: 'port' },
+      { otlp: OTLP.database.QUERY_TEXT, instana: 'stmt' },
+      { otlp: OTLP.database.SERVER_ADDRESS, instana: 'host' },
+      { otlp: OTLP.database.SERVER_PORT, instana: 'port' },
       { otlp: OTLP.database.USER, instana: 'user' },
       { otlp: OTLP.database.NAME, instana: 'db' },
-      { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.database.ERROR_TYPE, instana: 'error' }
     ]
   },
 

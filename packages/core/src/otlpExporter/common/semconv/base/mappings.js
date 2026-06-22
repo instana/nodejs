@@ -77,6 +77,7 @@ const MAPPINGS = {
     COLLECTION: 'db.collection.name',
     TABLE: 'db.sql.table',
     SERVER_ADDRESS: 'server.address',
+    SERVER_PORT: 'server.port',
     CONNECTION_STRING: 'db.connection_string',
     ERROR_TYPE: 'error.type'
   },
