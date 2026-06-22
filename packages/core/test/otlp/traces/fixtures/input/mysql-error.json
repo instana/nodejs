@@ -1,0 +1,33 @@
+{
+  "n": "mysql",
+  "t": "abcdef1234567890abcdef1234567890",
+  "s": "9876543210fedcba",
+  "p": "fedcba0987654321",
+  "k": 3,
+  "ts": 1650000000000,
+  "d": 250,
+  "ec": 1,
+  "f": {
+    "e": "98765",
+    "h": "mysql-client-host"
+  },
+  "data": {
+    "mysql": {
+      "stmt": "UPDATE inventory SET quantity = ? WHERE product_id = ?",
+      "host": "mysql-primary.prod.example.com",
+      "port": 3306,
+      "user": "app_writer",
+      "db": "inventory_db",
+      "error": "Deadlock found when trying to get lock"
+    },
+    "peer": {
+      "hostname": "mysql-primary.prod.example.com",
+      "port": 3306
+    },
+    "service": "inventory-service",
+    "tags": {
+      "db.operation": "update",
+      "db.table": "inventory"
+    }
+  }
+}
