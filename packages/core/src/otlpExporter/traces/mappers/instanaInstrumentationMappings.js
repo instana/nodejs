@@ -184,9 +184,12 @@ const instrumentationMappings = {
     spanName: data => data.stmt?.split(/\s+/)[0]?.toUpperCase() || 'DB2',
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'db2' },
-      { otlp: OTLP.database.STATEMENT, instana: 'stmt' },
-      { otlp: OTLP.database.CONNECTION_STRING, instana: 'dsn' },
-      { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.database.QUERY_TEXT, instana: 'stmt' },
+      { otlp: OTLP.database.SERVER_ADDRESS, instana: 'host' },
+      { otlp: OTLP.database.SERVER_PORT, instana: 'port' },
+      { otlp: OTLP.database.USER, instana: 'user' },
+      { otlp: OTLP.database.NAME, instana: 'db' },
+      { otlp: OTLP.database.ERROR_TYPE, instana: 'error' }
     ]
   },
 
