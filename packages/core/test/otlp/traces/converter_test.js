@@ -464,7 +464,7 @@ describe('tracing/converters/otlp', () => {
         expect(systemAttr).to.exist;
         expect(systemAttr.value.stringValue).to.equal('postgresql');
 
-        const stmtAttr = result.find(attr => attr.key === 'db.statement');
+        const stmtAttr = result.find(attr => attr.key === 'db.query.text');
         expect(stmtAttr).to.exist;
         expect(stmtAttr.value.stringValue).to.equal('SELECT * FROM users');
 
