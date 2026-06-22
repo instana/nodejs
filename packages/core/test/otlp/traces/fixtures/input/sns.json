@@ -1,0 +1,22 @@
+{
+  "t": "aabbccdd11223344",
+  "s": "1122334455667788",
+  "p": "9988776655443322",
+  "k": 3,
+  "ts": 1609459500000,
+  "d": 35,
+  "n": "sns",
+  "ec": 0,
+  "f": {
+    "e": "33333",
+    "h": "sns-producer-host"
+  },
+  "data": {
+    "sns": {
+      "topic": "arn:aws:sns:us-east-1:123456789012:my-topic",
+      "subject": "Order Notification",
+      "phone": "+1234567890",
+      "target": "arn:aws:sns:us-east-1:123456789012:endpoint/GCM/MyApplication/12345678-1234-1234-1234-123456789012"
+    }
+  }
+}
