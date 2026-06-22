@@ -245,8 +245,8 @@ const instrumentationMappings = {
       { otlp: OTLP.database.SYSTEM, value: 'dynamodb' },
       { otlp: OTLP.database.OPERATION, instana: 'operation' },
       { otlp: OTLP.cloud.REGION, instana: 'region' },
-      { otlp: OTLP.database.NAME, instana: 'table' },
-      { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.database.COLLECTION, instana: 'table' },
+      { otlp: OTLP.database.ERROR_TYPE, instana: 'error' }
     ]
   },
 
