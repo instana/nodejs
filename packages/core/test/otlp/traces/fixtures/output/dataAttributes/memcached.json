@@ -1,0 +1,12 @@
+[
+  { "key": "db.system", "value": { "stringValue": "memcached" } },
+  {
+    "key": "db.connection",
+    "value": { "stringValue": "localhost:11211" }
+  },
+  { "key": "db.operation.name", "value": { "stringValue": "get" } },
+  {
+    "key": "error.type",
+    "value": { "stringValue": "Connection timeout" }
+  }
+]

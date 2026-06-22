@@ -1,0 +1,21 @@
+{
+  "t": "aabbccdd11223344aabbccdd11223344",
+  "s": "5566778899aabbcc",
+  "p": "8899aabbccddeeff",
+  "k": 2,
+  "ts": 1609459400000,
+  "d": 150,
+  "n": "memcached",
+  "ec": 1,
+  "f": {
+    "e": "54321",
+    "h": "memcached-client-host"
+  },
+  "data": {
+    "memcached": {
+      "operation": "get",
+      "connection": "localhost:11211",
+      "error": "Connection timeout"
+    }
+  }
+}
