@@ -232,15 +232,10 @@ const instrumentationMappings = {
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'elasticsearch' },
       { otlp: OTLP.database.OPERATION, instana: 'action' },
-      { otlp: OTLP.database.SERVER_ADDRESS, instana: 'cluster' },
-      { otlp: OTLP.database.SERVER_ADDRESS, instana: 'endpoint' },
-      { otlp: OTLP.database.PEER_NAME, instana: 'address' },
-      { otlp: OTLP.database.PEER_PORT, instana: 'port' },
+      { otlp: OTLP.database.NAME, instana: 'cluster' },
       { otlp: OTLP.database.COLLECTION, instana: 'index' },
-      { otlp: OTLP.database.NAMESPACE, instana: 'type' },
-      { otlp: OTLP.database.NAME, instana: 'id' },
-      { otlp: OTLP.database.STATEMENT, instana: 'query' },
-      { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.database.QUERY_TEXT, instana: 'query' },
+      { otlp: OTLP.database.ERROR_TYPE, instana: 'error' }
     ]
   },
 
