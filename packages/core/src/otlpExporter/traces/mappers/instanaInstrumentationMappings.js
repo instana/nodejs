@@ -197,12 +197,13 @@ const instrumentationMappings = {
     spanName: data => `mongo.${data.command}`,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'mongodb' },
-      { otlp: OTLP.database.OPERATION, instana: 'command', transform: toUpperCase },
-      { otlp: OTLP.database.SERVER_ADDRESS, instana: 'service' },
-      { otlp: OTLP.database.PEER_PORT, instana: 'hostname' },
       { otlp: OTLP.database.NAMESPACE, instana: 'namespace' },
-      { otlp: OTLP.database.STATEMENT, instana: ['json', 'filter'], transform: firstDefined },
-      { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.database.COLLECTION, instana: 'collection' },
+      { otlp: OTLP.database.OPERATION, instana: 'command', transform: toUpperCase },
+      { otlp: OTLP.database.SERVER_ADDRESS, instana: 'service', transform: extractHost },
+      { otlp: OTLP.database.SERVER_PORT, instana: 'service', transform: extractPort },
+      { otlp: OTLP.database.QUERY_TEXT, instana: ['json', 'filter'], transform: firstDefined },
+      { otlp: OTLP.database.ERROR_TYPE, instana: 'error' }
     ]
   },
 

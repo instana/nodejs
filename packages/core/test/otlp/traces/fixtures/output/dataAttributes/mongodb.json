@@ -1,13 +1,14 @@
 [
   { "key": "db.system", "value": { "stringValue": "mongodb" } },
+  { "key": "db.namespace", "value": { "stringValue": "mydb.users" } },
   { "key": "db.operation.name", "value": { "stringValue": "INSERT" } },
   {
     "key": "server.address",
-    "value": { "stringValue": "mongodb://localhost:27017" }
+    "value": { "stringValue": "localhost" }
   },
-  { "key": "db.namespace", "value": { "stringValue": "mydb.users" } },
+  { "key": "server.port", "value": { "intValue": 27017 } },
   {
-    "key": "db.statement",
+    "key": "db.query.text",
     "value": { "stringValue": "{\"name\":\"John Doe\",\"email\":\"john@example.com\"}" }
   },
   {
