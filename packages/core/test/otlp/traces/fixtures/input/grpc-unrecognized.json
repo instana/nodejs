@@ -1,0 +1,21 @@
+{
+  "t": "bbccdd11223344aabbccdd11223344aa",
+  "s": "66778899aabbccdd",
+  "p": "99aabbccddeeff00",
+  "k": 2,
+  "ts": 1609459400100,
+  "d": 140,
+  "n": "rpc-client",
+  "f": {
+    "e": "54321",
+    "h": "grpc-client-host"
+  },
+  "data": {
+    "rpc": {
+      "call": "com.myservice.EchoService/unknownMethod",
+      "flavor": "grpc",
+      "host": "localhost",
+      "port": "50051"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+[
+  {
+    "key": "rpc.method",
+    "value": {
+      "stringValue": "EchoService/Echo"
+    }
+  },
+  {
+    "key": "rpc.system.name",
+    "value": {
+      "stringValue": "grpc"
+    }
+  }
+]

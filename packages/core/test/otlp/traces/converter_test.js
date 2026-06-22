@@ -172,7 +172,7 @@ describe('tracing/converters/otlp', () => {
       });
     });
 
-    describe('spanAttributes', () => {
+    describe.only('spanAttributes', () => {
       it('should extract HTTP span attributes correctly', () => {
         const input = loadTransformerInputFixture('http.json');
         const expectedOutput = loadTransformerOutputFixture('dataAttributes/http.json');
@@ -399,6 +399,41 @@ describe('tracing/converters/otlp', () => {
       it('should extract Prisma span attributes correctly', () => {
         const input = loadTransformerInputFixture('prisma.json');
         const expectedOutput = loadTransformerOutputFixture('dataAttributes/prisma.json');
+
+        const result = extractSpanAttributes(input, mappers.get(input));
+
+        expect(result).to.be.an('array');
+        expect(result).to.have.lengthOf(expectedOutput.length);
+
+        expectedOutput.forEach(expectedAttr => {
+          const actualAttr = result.find(attr => attr.key === expectedAttr.key);
+          expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
+          expect(actualAttr.value).to.deep.equal(expectedAttr.value);
+        });
+      });
+
+      it('should extract gRPC span attributes correctly for recognized methods', () => {
+        const input = loadTransformerInputFixture('grpc-recognized.json');
+        const expectedOutput = loadTransformerOutputFixture('dataAttributes/grpc-recognized.json');
+
+        const result = extractSpanAttributes(input, mappers.get(input));
+
+        expect(result).to.be.an('array');
+        expect(result).to.have.lengthOf(expectedOutput.length);
+
+        expectedOutput.forEach(expectedAttr => {
+          const actualAttr = result.find(attr => attr.key === expectedAttr.key);
+          expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
+          expect(actualAttr.value).to.deep.equal(expectedAttr.value);
+        });
+
+        const methodOriginal = result.find(attr => attr.key === 'rpc.method_original');
+        expect(methodOriginal).to.be.undefined;
+      });
+
+      it('should extract gRPC span attributes correctly for unrecognized methods', () => {
+        const input = loadTransformerInputFixture('grpc-unrecognized.json');
+        const expectedOutput = loadTransformerOutputFixture('dataAttributes/grpc-unrecognized.json');
 
         const result = extractSpanAttributes(input, mappers.get(input));
 

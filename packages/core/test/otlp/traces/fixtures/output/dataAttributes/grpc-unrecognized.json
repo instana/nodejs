@@ -1,0 +1,32 @@
+[
+  {
+    "key": "rpc.method",
+    "value": {
+      "stringValue": "_OTHER"
+    }
+  },
+  {
+    "key": "rpc.method_original",
+    "value": {
+      "stringValue": "com.myservice.EchoService/unknownMethod"
+    }
+  },
+  {
+    "key": "rpc.system.name",
+    "value": {
+      "stringValue": "grpc"
+    }
+  },
+  {
+    "key": "server.address",
+    "value": {
+      "stringValue": "localhost"
+    }
+  },
+  {
+    "key": "server.port",
+    "value": {
+      "stringValue": "50051"
+    }
+  }
+]

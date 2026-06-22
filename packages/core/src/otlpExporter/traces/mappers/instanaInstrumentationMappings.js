@@ -275,10 +275,42 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.RPC]: {
     spanName: data => data.call || 'rpc.call',
     spanAttributes: [
-      { otlp: OTLP.rpc.METHOD, instana: 'call' },
-      { otlp: OTLP.rpc.SYSTEM, instana: 'flavor' },
-      { otlp: OTLP.network.PEER_NAME, instana: 'host' },
-      { otlp: OTLP.network.PEER_PORT, instana: 'port' },
+      {
+        otlp: OTLP.rpc.METHOD,
+        instana: 'call',
+        transform: (value, spanData) => {
+          // For gRPC, check if the method is recognized (simple format without package prefix)
+          if (spanData?.flavor === 'grpc' && typeof value === 'string') {
+            // Recognized methods have format "ServiceName/MethodName" (no dots in service name)
+            // Unrecognized methods have format "package.name.ServiceName/MethodName"
+            const parts = value.split('/');
+            if (parts.length === 2 && parts[0].includes('.')) {
+              // Unrecognized method - has package prefix with dots
+              return '_OTHER';
+            }
+          }
+          return value;
+        }
+      },
+      {
+        otlp: OTLP.rpc.METHOD_ORIGINAL,
+        instana: 'call',
+        transform: (value, spanData) => {
+          // Only set method_original for unrecognized gRPC methods
+          if (spanData?.flavor === 'grpc' && typeof value === 'string') {
+            const parts = value.split('/');
+            if (parts.length === 2 && parts[0].includes('.')) {
+              // Unrecognized method - return original value
+              return value;
+            }
+          }
+          // For recognized methods or non-gRPC, don't set method_original
+          return undefined;
+        }
+      },
+      { otlp: OTLP.rpc.SYSTEM_NAME, instana: 'flavor' },
+      { otlp: OTLP.rpc.SERVER_ADDRESS, instana: 'host' },
+      { otlp: OTLP.rpc.SERVER_PORT, instana: 'port' },
       { otlp: OTLP.rpc.GRPC_ERROR, instana: 'error' }
     ]
   },

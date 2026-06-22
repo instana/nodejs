@@ -82,13 +82,13 @@ const MAPPINGS = {
   },
 
   rpc: {
-    SYSTEM: 'rpc.system',
     SYSTEM_NAME: 'rpc.system.name',
     METHOD: 'rpc.method',
     METHOD_ORIGINAL: 'rpc.method_original',
-    SERVICE: 'rpc.service',
     GRPC_STATUS: 'rpc.grpc.status_code',
     GRPC_ERROR: 'rpc.grpc.status_message',
+    SERVER_ADDRESS: 'server.address',
+    SERVER_PORT: 'server.port',
     ERROR_TYPE: 'error.type'
   },
 

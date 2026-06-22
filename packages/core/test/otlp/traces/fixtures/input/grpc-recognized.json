@@ -1,0 +1,19 @@
+{
+  "t": "aabbccdd11223344aabbccdd11223344",
+  "s": "5566778899aabbcc",
+  "p": "8899aabbccddeeff",
+  "k": 2,
+  "ts": 1609459400000,
+  "d": 120,
+  "n": "rpc-client",
+  "f": {
+    "e": "54321",
+    "h": "grpc-client-host"
+  },
+  "data": {
+    "rpc": {
+      "call": "EchoService/Echo",
+      "flavor": "grpc"
+    }
+  }
+}
