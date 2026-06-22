@@ -263,11 +263,11 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.PRISMA]: {
     spanName: data => `prisma.${data.action || 'query'}`,
     spanAttributes: [
-      { otlp: OTLP.database.SYSTEM, instana: 'provider', value: 'other_sql' },
+      { otlp: OTLP.database.SYSTEM, instana: 'provider' },
       { otlp: OTLP.database.COLLECTION, instana: 'model' },
       { otlp: OTLP.database.OPERATION, instana: 'action' },
-      { otlp: OTLP.database.CONNECTION_STRING, instana: 'url' },
-      { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.database.CONNECTION, instana: 'url' },
+      { otlp: OTLP.database.ERROR_TYPE, instana: 'error' }
     ]
   },
 
