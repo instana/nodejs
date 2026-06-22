@@ -132,14 +132,18 @@ const instrumentationMappings = {
     ]
   },
 
+  // Entry and Exit
   [INSTRUMENTATION_TYPES.GCPS]: {
     spanName: data => `${data.op || 'process'} ${data.top || data.sub || 'unknown'}`,
     spanAttributes: [
-      { otlp: OTLP.messaging.SYSTEM, value: 'gcp.pubsub' },
-      { otlp: OTLP.messaging.OPERATION_TYPE, instana: 'op' },
+      { otlp: OTLP.messaging.SYSTEM, value: OTLP.messaging.gcp?.SYSTEM || 'gcp.pubsub' },
+      { otlp: OTLP.messaging.OPERATION_NAME, instana: 'op' },
+      {
+        otlp: OTLP.messaging.DESTINATION_NAME,
+        instana: ['top', 'sub'],
+        transform: firstDefined
+      },
       { otlp: OTLP.messaging.gcp.PROJECT_ID, instana: 'projid' },
-      { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'top' },
-      { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'sub' },
       { otlp: OTLP.messaging.MESSAGE_ID, instana: 'messageId' },
       { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
     ]
