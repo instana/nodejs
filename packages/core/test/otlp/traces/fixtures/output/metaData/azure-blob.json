@@ -3,8 +3,8 @@
   "spanId": "eda95416b48887d2",
   "parentSpanId": "cfac86941cae2c0c",
   "kind": 3,
-  "start_time_unix_nano": "1781508373056000000",
-  "end_time_unix_nano": "1781508374304000000",
+  "startTimeUnixNano": "1781508373056000000",
+  "endTimeUnixNano": "1781508374304000000",
   "name": "azure.storage.upload",
   "status": {
     "code": 0

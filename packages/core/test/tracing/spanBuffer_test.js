@@ -769,8 +769,8 @@ describe('tracing/spanBuffer', () => {
           expect(sentSpan).to.have.property('parentSpanId');
           expect(sentSpan).to.have.property('name');
           expect(sentSpan).to.have.property('kind');
-          expect(sentSpan).to.have.property('start_time_unix_nano');
-          expect(sentSpan).to.have.property('end_time_unix_nano');
+          expect(sentSpan).to.have.property('startTimeUnixNano');
+          expect(sentSpan).to.have.property('endTimeUnixNano');
           expect(sentSpan).to.have.property('attributes');
 
           expect(sentSpan.traceId).to.have.lengthOf(32);

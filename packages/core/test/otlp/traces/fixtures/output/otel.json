@@ -20,10 +20,10 @@
               "spanId": "483993efeb585b71",
               "parentSpanId": "0d5b4595ebbea217",
               "kind": 3,
-              "start_time_unix_nano": "1780587628468000000",
+              "startTimeUnixNano": "1780587628468000000",
               "name": "otel",
               "status": { "code": 0 },
-              "end_time_unix_nano": "1780587628469000000",
+              "endTimeUnixNano": "1780587628469000000",
               "attributes": [
                 { "key": "operation", "value": { "stringValue": "fs" } },
                 { "key": "name", "value": { "stringValue": "fs writeFile" } }
