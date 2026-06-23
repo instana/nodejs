@@ -4,6 +4,7 @@
 
 'use strict';
 
+const os = require('os');
 const ctx = require('../context');
 const { INSTRUMENTATION_SCOPE_NAME } = require('../constants');
 
@@ -78,11 +79,30 @@ const resourceMapper = {
    */
   hostName(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
-    const metadata = rawPayload.f || {};
+    let hostName = resource['host.name'];
 
-    const hostName = resource['host.name'] || metadata.h;
+    if (!hostName) {
+      try {
+        hostName = os.hostname();
+      } catch (err) {
+        // If os.hostname() fails, return undefined
+        hostName = undefined;
+      }
+    }
 
     return typeof hostName === 'string' ? hostName : undefined;
+  },
+
+  /**
+   * @param {{ data: { resource: any; }; resource: any; f: {}; }} rawPayload
+   */
+  hostId(rawPayload) {
+    const resource = rawPayload.data?.resource || rawPayload.resource || {};
+    const metadata = rawPayload.f || {};
+
+    const hostId = resource['host.id'] || metadata.h || ctx.hostId;
+
+    return typeof hostId === 'string' ? hostId : undefined;
   }
 };
 
@@ -126,6 +146,11 @@ function extractResourceAttributes(rawPayload) {
     {
       otlp: OTLP.resource.HOST_NAME,
       transform: resourceMapper.hostName,
+      valueType: 'string'
+    },
+    {
+      otlp: OTLP.resource.HOST_ID,
+      transform: resourceMapper.hostId,
       valueType: 'string'
     }
   ];
