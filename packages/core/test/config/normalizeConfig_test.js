@@ -1731,7 +1731,8 @@ describe('config.normalizeConfig', () => {
           }
         });
         expect(config.tracing.otlp).to.deep.equal({
-          enabled: false
+          enabled: false,
+          port: 4318
         });
       });
 
@@ -1744,7 +1745,8 @@ describe('config.normalizeConfig', () => {
           }
         });
         expect(config.tracing.otlp).to.deep.equal({
-          enabled: false
+          enabled: false,
+          port: 4318
         });
       });
 
@@ -1759,7 +1761,8 @@ describe('config.normalizeConfig', () => {
           }
         });
         expect(config.tracing.otlp).to.deep.equal({
-          enabled: false
+          enabled: false,
+          port: 4318
         });
       });
 
@@ -1774,7 +1777,8 @@ describe('config.normalizeConfig', () => {
           }
         });
         expect(config.tracing.otlp).to.deep.equal({
-          enabled: false
+          enabled: false,
+          port: 4318
         });
       });
 
@@ -1789,7 +1793,8 @@ describe('config.normalizeConfig', () => {
           }
         });
         expect(config.tracing.otlp).to.deep.equal({
-          enabled: false
+          enabled: false,
+          port: 4318
         });
       });
     });
@@ -2391,7 +2396,8 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.allowRootExitSpan).to.equal(false);
 
     expect(config.tracing.otlp).to.deep.equal({
-      enabled: false
+      enabled: false,
+      port: 4318
     });
     expect(config.preloadOpentelemetry).to.equal(false);
 
