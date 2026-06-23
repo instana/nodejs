@@ -28,8 +28,8 @@ const MAPPINGS = {
     INSTRUMENTATION_SCOPE: 'instrumentationScope',
     EVENTS: 'events',
     LINKS: 'links',
-    START_TIME_UNIX_NANO: 'start_time_unix_nano',
-    END_TIME_UNIX_NANO: 'end_time_unix_nano'
+    START_TIME_UNIX_NANO: 'startTimeUnixNano',
+    END_TIME_UNIX_NANO: 'endTimeUnixNano'
   },
 
   http: {
