@@ -53,5 +53,4 @@ class OtlpConfigContext {
   }
 }
 
-// Exported as a singleton to serve as the unified source of truth
 module.exports = new OtlpConfigContext();

@@ -19,7 +19,7 @@ let logger;
 let pidStore;
 /** @type {import('@instana/core/src/config').InstanaConfig} */
 let config;
-let isOtlpExportEnabled = false;
+let isOtlpExporterEnabled = false;
 
 // How many extra characters are to be reserved for the inode and
 // file descriptor fields in the collector announce cycle.
@@ -53,9 +53,8 @@ exports.init = function init(_config, _pidStore) {
 
   cmdline.init(config);
   cpuSetFileContent = getCpuSetFileContent();
-  isOtlpExportEnabled = config.tracing.otlp.enabled;
+  isOtlpExporterEnabled = config.tracing.otlp.enabled;
   otlpPort = config.tracing.otlp.port;
-
 };
 
 /**
@@ -63,7 +62,7 @@ exports.init = function init(_config, _pidStore) {
  */
 exports.activate = function activate(_config) {
   config = _config;
-  isOtlpExportEnabled = config.tracing.otlp.enabled;
+  isOtlpExporterEnabled = config.tracing.otlp.enabled;
 };
 
 exports.AgentEventSeverity = {
@@ -124,7 +123,7 @@ const EXPORT_ENDPOINTS = {
 function resolveExportEndpoint(type) {
   const endpoint = EXPORT_ENDPOINTS[type];
 
-  if (isOtlpExportEnabled) {
+  if (isOtlpExporterEnabled) {
     return {
       path: endpoint.otlpPath,
       port: otlpPort
@@ -361,20 +360,20 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
 exports.sendMetrics = function sendMetrics(data, cb) {
   cb = util.atMostOnce('callback for sendMetrics', cb);
 
-  const endpoint = resolveExportEndpoint('metrics');
+  const exportTarget = resolveExportEndpoint('metrics');
   sendData({
-    ...endpoint,
+    ...exportTarget,
     data,
     cb: (err, body) => {
       if (err) {
-        if (isOtlpExportEnabled) {
+        if (isOtlpExporterEnabled) {
           logger.error('Error sending metrics:', err);
         }
         cb(err, null);
         return;
       }
 
-      if (isOtlpExportEnabled) {
+      if (isOtlpExporterEnabled) {
         cb(null, []);
         return;
       }
@@ -415,9 +414,9 @@ exports.sendSpans = function sendSpans(spans, cb) {
     }
     cb(err);
   });
-  const endpoint = resolveExportEndpoint('traces');
+  const exportTarget = resolveExportEndpoint('traces');
   sendData({
-    ...endpoint,
+    ...exportTarget,
     data: spans,
     cb: callback,
     ignore404: true

@@ -223,10 +223,14 @@ function applyOtlpExporterConfiguration(agentResponse) {
   if (agentResponse.tracing && agentResponse.tracing.otlp) {
     const otlpConfigFromAgent = agentResponse.tracing.otlp;
     ensureNestedObjectExists(agentOpts.config, ['tracing', 'otlp']);
-    if (otlpConfigFromAgent.enabled != null) {
-      agentOpts.config.tracing.otlp.enabled = otlpConfigFromAgent.enabled;
-      logger.debug(`OTLP export ${otlpConfigFromAgent.enabled ? 'enabled' : 'disabled'} via agent configuration.`);
-    }
+
+    Object.keys(otlpConfigFromAgent).forEach(key => {
+      // @ts-ignore
+      const value = otlpConfigFromAgent[key];
+      if (value != null) {
+        agentOpts.config.tracing.otlp[key] = value;
+      }
+    });
   }
 }
 

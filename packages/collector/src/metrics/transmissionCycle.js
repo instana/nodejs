@@ -44,6 +44,7 @@ exports.init = function init(config) {
 };
 
 /**
+ * TODO: Consider using an options object
  * @param {import('./')} _metrics
  * @param {import('../agentConnection')} _downstreamConnection
  * @param {(requests: Array.<import('../agent/requestHandler').AnnounceRequest>) => void} _onSuccess

@@ -30,6 +30,7 @@ module.exports = function normalizeConfig(userConfig = {}) {
   // as extraFinalConfig to core's normalize function.
   finalConfig.agentHost = normalizeAgentHost(userConfig, defaults);
   finalConfig.agentPort = normalizeAgentPort(userConfig, defaults);
+  finalConfig.agentDataPort = normalizeAgentDataPort(userConfig, defaults);
   finalConfig.agentRequestTimeout = normalizeAgentRequestTimeout(userConfig, defaults);
   finalConfig.autoProfile = normalizeAutoProfile(userConfig, defaults);
   finalConfig.reportUnhandledPromiseRejections = normalizeUnhandledRejections(userConfig);
@@ -71,6 +72,20 @@ function normalizeAgentPort(userConfig, defaultConfig) {
     [validate.numberValidator]
   );
   return value;
+}
+
+/**
+ * @param {import('../types/collector').CollectorConfig} userConfig
+ * @param {{ agentPort: number }} defaultConfig
+ * @returns {number}
+ */
+function normalizeAgentDataPort(userConfig, defaultConfig) {
+  // Future logic for OTLP enabled check can be added here to determine which port to use
+  // if (userConfig.otlpEnabled) {
+  //   return defaultConfig.otlpPort; // 4317 or 4318
+  // }
+
+  return normalizeAgentPort(userConfig, defaultConfig);
 }
 
 /**

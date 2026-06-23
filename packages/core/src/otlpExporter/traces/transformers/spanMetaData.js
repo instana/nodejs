@@ -44,7 +44,7 @@ const metaMapper = {
     const deltaMs = span.d !== undefined ? Number(span.d) : 0;
     return String((startMs + deltaMs) * 1000000);
   },
-
+  // TODO: currently not supported and not added in the payload
   events() {
     return [];
   },
@@ -62,8 +62,7 @@ const metaMapper = {
 function extractSpanMetadata(span, mapper) {
   if (!span) return {};
 
-  // Resolve the primary instrumentation type once so it can be reused by
-  // span name/status generation without re-inspecting the span data.
+  // Resolve the primary instrumentation type once so it can be reused
   const spanType = mapper.getSpanType ? mapper.getSpanType(span) : null;
   const OTLP = ctx.semConv;
 
