@@ -36,7 +36,6 @@ function loadTransformerOutputFixture(filename) {
 
 describe('tracing/converters/otlp', () => {
   before(() => {
-    // Initialize OTLP context before running tests
     otlp.init({
       serviceName: 'otel-exporter-test',
       logger: console

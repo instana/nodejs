@@ -6,12 +6,12 @@
 
 const expect = require('chai').expect;
 
-const { merge } = require('../../../../src/otlpExporter/common/semconv/merge');
+const { merge } = require('../../../src/otlpExporter/common/semconv/merge');
 
-describe('otlpExporter/common/semconv/merge', () => {
+describe('otlpExporter/common/semconv', () => {
   describe('merge function', () => {
     describe('basic merging', () => {
-      it('should merge two simple objects', () => {
+      it('should merge two simple objects without conflicts', () => {
         const base = { a: 1, b: 2 };
         const overrides = { c: 3 };
         const result = merge(base, overrides);
@@ -19,7 +19,7 @@ describe('otlpExporter/common/semconv/merge', () => {
         expect(result).to.deep.equal({ a: 1, b: 2, c: 3 });
       });
 
-      it('should override base values with override values', () => {
+      it('should override base property values when conflicts exist', () => {
         const base = { a: 1, b: 2 };
         const overrides = { b: 99 };
         const result = merge(base, overrides);
@@ -27,7 +27,7 @@ describe('otlpExporter/common/semconv/merge', () => {
         expect(result).to.deep.equal({ a: 1, b: 99 });
       });
 
-      it('should handle multiple overrides', () => {
+      it('should correctly apply multiple property overrides simultaneously', () => {
         const base = { a: 1, b: 2, c: 3 };
         const overrides = { b: 20, c: 30 };
         const result = merge(base, overrides);
@@ -36,8 +36,8 @@ describe('otlpExporter/common/semconv/merge', () => {
       });
     });
 
-    describe('nested object merging', () => {
-      it('should recursively merge nested objects', () => {
+    describe('Nested object merging', () => {
+      it('should recursively merge nested objects while preserving structure', () => {
         const base = {
           level1: {
             a: 1,
@@ -60,7 +60,7 @@ describe('otlpExporter/common/semconv/merge', () => {
         });
       });
 
-      it('should override nested values', () => {
+      it('should override values within nested objects correctly', () => {
         const base = {
           level1: {
             a: 1,
@@ -82,7 +82,7 @@ describe('otlpExporter/common/semconv/merge', () => {
         });
       });
 
-      it('should handle deeply nested objects', () => {
+      it('should handle deeply nested object hierarchies (3+ levels)', () => {
         const base = {
           level1: {
             level2: {
@@ -115,7 +115,7 @@ describe('otlpExporter/common/semconv/merge', () => {
         });
       });
 
-      it('should merge multiple nested levels', () => {
+      it('should merge multiple nested object branches simultaneously', () => {
         const base = {
           http: { method: 'GET', status: 200 },
           db: { system: 'postgresql' }
@@ -134,8 +134,8 @@ describe('otlpExporter/common/semconv/merge', () => {
       });
     });
 
-    describe('array handling', () => {
-      it('should replace arrays instead of merging them', () => {
+    describe('Array handling', () => {
+      it('should replace arrays completely instead of merging elements', () => {
         const base = { arr: [1, 2, 3] };
         const overrides = { arr: [4, 5] };
         const result = merge(base, overrides);
@@ -143,7 +143,7 @@ describe('otlpExporter/common/semconv/merge', () => {
         expect(result).to.deep.equal({ arr: [4, 5] });
       });
 
-      it('should handle arrays in nested objects', () => {
+      it('should replace arrays within nested object structures', () => {
         const base = {
           data: {
             items: [1, 2, 3]
@@ -164,8 +164,8 @@ describe('otlpExporter/common/semconv/merge', () => {
       });
     });
 
-    describe('edge cases', () => {
-      it('should return frozen copy of base when overrides is null', () => {
+    describe('Edge cases and boundary conditions', () => {
+      it('should return a frozen copy of base when overrides is null', () => {
         const base = { a: 1, b: 2 };
         const result = merge(base, null);
 
@@ -173,7 +173,7 @@ describe('otlpExporter/common/semconv/merge', () => {
         expect(Object.isFrozen(result)).to.be.true;
       });
 
-      it('should return frozen copy of base when overrides is undefined', () => {
+      it('should return a frozen copy of base when overrides is undefined', () => {
         const base = { a: 1, b: 2 };
         const result = merge(base, undefined);
 
@@ -181,7 +181,7 @@ describe('otlpExporter/common/semconv/merge', () => {
         expect(Object.isFrozen(result)).to.be.true;
       });
 
-      it('should return frozen copy of base when overrides is empty object', () => {
+      it('should return a frozen copy of base when overrides is an empty object', () => {
         const base = { a: 1, b: 2 };
         const result = merge(base, {});
 
@@ -189,7 +189,7 @@ describe('otlpExporter/common/semconv/merge', () => {
         expect(Object.isFrozen(result)).to.be.true;
       });
 
-      it('should handle empty base object', () => {
+      it('should successfully merge when base object is empty', () => {
         const base = {};
         const overrides = { a: 1 };
         const result = merge(base, overrides);
@@ -197,7 +197,7 @@ describe('otlpExporter/common/semconv/merge', () => {
         expect(result).to.deep.equal({ a: 1 });
       });
 
-      it('should handle null values in overrides', () => {
+      it('should correctly handle null values in override properties', () => {
         const base = { a: 1, b: 2 };
         const overrides = { b: null };
         const result = merge(base, overrides);
@@ -205,7 +205,7 @@ describe('otlpExporter/common/semconv/merge', () => {
         expect(result).to.deep.equal({ a: 1, b: null });
       });
 
-      it('should handle undefined values in overrides', () => {
+      it('should correctly handle undefined values in override properties', () => {
         const base = { a: 1, b: 2 };
         const overrides = { b: undefined };
         const result = merge(base, overrides);
@@ -213,7 +213,7 @@ describe('otlpExporter/common/semconv/merge', () => {
         expect(result).to.deep.equal({ a: 1, b: undefined });
       });
 
-      it('should handle boolean values', () => {
+      it('should correctly merge boolean values', () => {
         const base = { flag: false };
         const overrides = { flag: true };
         const result = merge(base, overrides);
@@ -221,7 +221,7 @@ describe('otlpExporter/common/semconv/merge', () => {
         expect(result).to.deep.equal({ flag: true });
       });
 
-      it('should handle number values including zero', () => {
+      it('should correctly handle numeric values including zero', () => {
         const base = { count: 10 };
         const overrides = { count: 0 };
         const result = merge(base, overrides);
@@ -229,7 +229,7 @@ describe('otlpExporter/common/semconv/merge', () => {
         expect(result).to.deep.equal({ count: 0 });
       });
 
-      it('should handle string values including empty strings', () => {
+      it('should correctly handle string values including empty strings', () => {
         const base = { name: 'test' };
         const overrides = { name: '' };
         const result = merge(base, overrides);
@@ -238,8 +238,8 @@ describe('otlpExporter/common/semconv/merge', () => {
       });
     });
 
-    describe('immutability', () => {
-      it('should return a frozen object', () => {
+    describe('Immutability guarantees', () => {
+      it('should return a deeply frozen immutable object', () => {
         const base = { a: 1 };
         const overrides = { b: 2 };
         const result = merge(base, overrides);
@@ -247,7 +247,7 @@ describe('otlpExporter/common/semconv/merge', () => {
         expect(Object.isFrozen(result)).to.be.true;
       });
 
-      it('should not modify the base object', () => {
+      it('should not mutate the original base object', () => {
         const base = { a: 1, b: 2 };
         const baseCopy = { ...base };
         const overrides = { c: 3 };
@@ -257,7 +257,7 @@ describe('otlpExporter/common/semconv/merge', () => {
         expect(base).to.deep.equal(baseCopy);
       });
 
-      it('should not modify the overrides object', () => {
+      it('should not mutate the original overrides object', () => {
         const base = { a: 1 };
         const overrides = { b: 2 };
         const overridesCopy = { ...overrides };
@@ -267,7 +267,7 @@ describe('otlpExporter/common/semconv/merge', () => {
         expect(overrides).to.deep.equal(overridesCopy);
       });
 
-      it('should freeze nested objects', () => {
+      it('should recursively freeze all nested objects', () => {
         const base = { nested: { a: 1 } };
         const overrides = { nested: { b: 2 } };
         const result = merge(base, overrides);
@@ -275,7 +275,7 @@ describe('otlpExporter/common/semconv/merge', () => {
         expect(Object.isFrozen(result.nested)).to.be.true;
       });
 
-      it('should prevent modification of returned object', () => {
+      it('should throw error when attempting to modify the returned object', () => {
         const base = { a: 1 };
         const overrides = { b: 2 };
         const result = merge(base, overrides);
@@ -286,8 +286,8 @@ describe('otlpExporter/common/semconv/merge', () => {
       });
     });
 
-    describe('complex real-world scenarios', () => {
-      it('should merge semantic convention mappings', () => {
+    describe('Complex real-world scenarios', () => {
+      it('should merge OpenTelemetry semantic convention attribute mappings', () => {
         const base = {
           http: {
             method: 'http.method',
@@ -329,7 +329,7 @@ describe('otlpExporter/common/semconv/merge', () => {
         });
       });
 
-      it('should handle mixed data types in nested structures', () => {
+      it('should handle configuration objects with mixed data types', () => {
         const base = {
           config: {
             enabled: true,
@@ -358,8 +358,8 @@ describe('otlpExporter/common/semconv/merge', () => {
       });
     });
 
-    describe('type preservation', () => {
-      it('should preserve string types', () => {
+    describe('Type preservation', () => {
+      it('should preserve string data types during merge', () => {
         const base = { str: 'hello' };
         const overrides = { str: 'world' };
         const result = merge(base, overrides);
@@ -368,7 +368,7 @@ describe('otlpExporter/common/semconv/merge', () => {
         expect(result.str).to.equal('world');
       });
 
-      it('should preserve number types', () => {
+      it('should preserve number data types during merge', () => {
         const base = { num: 42 };
         const overrides = { num: 100 };
         const result = merge(base, overrides);
@@ -377,7 +377,7 @@ describe('otlpExporter/common/semconv/merge', () => {
         expect(result.num).to.equal(100);
       });
 
-      it('should preserve boolean types', () => {
+      it('should preserve boolean data types during merge', () => {
         const base = { bool: false };
         const overrides = { bool: true };
         const result = merge(base, overrides);
@@ -386,7 +386,7 @@ describe('otlpExporter/common/semconv/merge', () => {
         expect(result.bool).to.equal(true);
       });
 
-      it('should preserve array types', () => {
+      it('should preserve array data types during merge', () => {
         const base = { arr: [1, 2] };
         const overrides = { arr: [3, 4] };
         const result = merge(base, overrides);

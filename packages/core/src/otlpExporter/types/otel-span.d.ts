@@ -2,19 +2,9 @@
  * (c) Copyright IBM Corp. 2026
  */
 
-// Note: Currently the types is not used anywhere, we will need the type in future
+// TODO: The type is not defined yet, this needs to be fixed after approving design and before merging the PR
+// ignore this file from initial review
 
-/**
- * OpenTelemetry Span Type Definitions
- *
- * Type definitions for OpenTelemetry spans following the OTLP specification.
- * These types are used when converting Instana spans to OpenTelemetry format.
- */
-
-/**
- * OpenTelemetry Attribute Value
- * Represents the value of an OTLP attribute, which can be of various types
- */
 export interface OtelAttributeValue {
   stringValue?: string;
   boolValue?: boolean;
@@ -25,10 +15,6 @@ export interface OtelAttributeValue {
   bytesValue?: string;
 }
 
-/**
- * OpenTelemetry Attribute
- * Key-value pair structure for span attributes
- */
 export interface OtelAttribute {
   /** The attribute key */
   key: string;
