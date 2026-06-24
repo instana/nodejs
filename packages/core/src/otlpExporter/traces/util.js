@@ -6,6 +6,8 @@
 
 /**
  * Fast interceptor to identify log frames on the hot path
+ * @param {import('../../core').InstanaBaseSpan} span
+ * @returns {boolean}
  */
 function isLogSpan(span) {
   if (!span) return false;

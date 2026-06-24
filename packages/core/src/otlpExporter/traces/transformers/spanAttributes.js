@@ -5,9 +5,14 @@
 'use strict';
 
 /**
+ * @typedef {Object} AttributeMapper
+ * @property {function(import('../../../core').InstanaBaseSpan): Array<{ key: string, value: any }>} spanAttributes
+ */
+
+/**
  * @param {import('../../../core').InstanaBaseSpan} span
- * @param {Object} mapper
- * @returns {Array<Object>}
+ * @param {AttributeMapper} mapper
+ * @returns {Array<{ key: string, value: any }>}
  */
 function extractSpanAttributes(span, mapper) {
   if (!span?.data) {

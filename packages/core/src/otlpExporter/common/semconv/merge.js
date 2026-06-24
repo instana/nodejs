@@ -9,15 +9,16 @@
  * The merge function recursively combines nested objects, with overrides
  * taking precedence over base values.
  *
- * @param {Object} base - The base mapping configuration
- * @param {Object} overrides - The version-specific overrides
- * @returns {Object} A frozen, merged configuration object
+ * @param {Record<string, any>} base - The base mapping configuration
+ * @param {Record<string, any>} overrides - The version-specific overrides
+ * @returns {Record<string, any>} A frozen, merged configuration object
  */
 function merge(base, overrides) {
   if (!overrides || Object.keys(overrides).length === 0) {
     return Object.freeze({ ...base });
   }
 
+  /** @type {Record<string, any>} */
   const merged = { ...base };
 
   Object.keys(overrides).forEach(key => {

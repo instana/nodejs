@@ -162,6 +162,162 @@ describe('otlpExporter/common/semconv', () => {
           }
         });
       });
+
+      describe('getLookupConfig', () => {
+        const { getLookupConfig } = require('../../../src/otlpExporter/common/semconv');
+
+        describe('version switching', () => {
+          it('should return version 1.23 configuration when no version is specified', () => {
+            const config = getLookupConfig();
+
+            expect(config).to.be.an('object');
+            expect(config).to.have.property('http');
+            expect(config).to.have.property('metadata');
+            expect(config).to.have.property('resource');
+          });
+
+          it('should return version 1.23 configuration when explicitly requested', () => {
+            const config = getLookupConfig('1.23');
+
+            expect(config).to.be.an('object');
+            expect(config).to.have.property('http');
+            expect(config).to.have.property('metadata');
+            expect(config).to.have.property('resource');
+          });
+
+          it('should return version 1.41 configuration when explicitly requested', () => {
+            const config = getLookupConfig('1.41');
+
+            expect(config).to.be.an('object');
+            expect(config).to.have.property('http');
+            expect(config).to.have.property('metadata');
+            expect(config).to.have.property('resource');
+          });
+
+          it('should throw error for unknown semantic convention version', () => {
+            expect(() => getLookupConfig('2.0')).to.throw('Unknown semantic convention version: 2.0');
+          });
+
+          it('should throw error for invalid version format', () => {
+            expect(() => getLookupConfig('invalid')).to.throw('Unknown semantic convention version: invalid');
+          });
+
+          it('should return different configurations for different versions', () => {
+            const config123 = getLookupConfig('1.23');
+            const config141 = getLookupConfig('1.41');
+
+            // Configurations should be different objects
+            expect(config123).to.not.equal(config141);
+          });
+
+          it('should have consistent metadata structure across versions', () => {
+            const config123 = getLookupConfig('1.23');
+            const config141 = getLookupConfig('1.41');
+
+            // Both should have metadata with core fields
+            expect(config123.metadata).to.have.property('TRACE_ID');
+            expect(config123.metadata).to.have.property('SPAN_ID');
+            expect(config123.metadata).to.have.property('PARENT_ID');
+
+            expect(config141.metadata).to.have.property('TRACE_ID');
+            expect(config141.metadata).to.have.property('SPAN_ID');
+            expect(config141.metadata).to.have.property('PARENT_ID');
+          });
+
+          it('should have consistent resource structure across versions', () => {
+            const config123 = getLookupConfig('1.23');
+            const config141 = getLookupConfig('1.41');
+
+            expect(config123.resource).to.have.property('SERVICE_NAME');
+            expect(config123.resource).to.have.property('SDK_LANGUAGE');
+            expect(config123.resource).to.have.property('SDK_NAME');
+
+            expect(config141.resource).to.have.property('SERVICE_NAME');
+            expect(config141.resource).to.have.property('SDK_LANGUAGE');
+            expect(config141.resource).to.have.property('SDK_NAME');
+          });
+
+          it('should return frozen/immutable configuration objects', () => {
+            const config123 = getLookupConfig('1.23');
+            const config141 = getLookupConfig('1.41');
+
+            expect(Object.isFrozen(config123)).to.be.true;
+            expect(Object.isFrozen(config141)).to.be.true;
+          });
+
+          it('should cache and return same instance for repeated calls with same version', () => {
+            const config1 = getLookupConfig('1.23');
+            const config2 = getLookupConfig('1.23');
+
+            expect(config1).to.equal(config2);
+          });
+
+          it('should have http semantic conventions in both versions', () => {
+            const config123 = getLookupConfig('1.23');
+            const config141 = getLookupConfig('1.41');
+
+            expect(config123.http).to.be.an('object');
+            expect(config141.http).to.be.an('object');
+
+            expect(config123.http).to.have.property('REQUEST_METHOD');
+            expect(config141.http).to.have.property('REQUEST_METHOD');
+          });
+
+          it('should have database semantic conventions in both versions', () => {
+            const config123 = getLookupConfig('1.23');
+            const config141 = getLookupConfig('1.41');
+
+            expect(config123.database).to.be.an('object');
+            expect(config141.database).to.be.an('object');
+
+            expect(config123.database).to.have.property('SYSTEM');
+            expect(config141.database).to.have.property('SYSTEM');
+          });
+
+          it('should have messaging semantic conventions in both versions', () => {
+            const config123 = getLookupConfig('1.23');
+            const config141 = getLookupConfig('1.41');
+
+            expect(config123.messaging).to.be.an('object');
+            expect(config141.messaging).to.be.an('object');
+
+            expect(config123.messaging).to.have.property('SYSTEM');
+            expect(config141.messaging).to.have.property('SYSTEM');
+          });
+
+          it('should handle version as string with proper type checking', () => {
+            const config = getLookupConfig('1.23');
+            expect(config).to.be.an('object');
+
+            expect(() => getLookupConfig('1.41')).to.not.throw();
+          });
+
+          it('should maintain attribute naming consistency for metadata fields', () => {
+            const config123 = getLookupConfig('1.23');
+            const config141 = getLookupConfig('1.41');
+
+            expect(config123.metadata.TRACE_ID).to.equal('traceId');
+            expect(config141.metadata.TRACE_ID).to.equal('traceId');
+
+            expect(config123.metadata.SPAN_ID).to.equal('spanId');
+            expect(config141.metadata.SPAN_ID).to.equal('spanId');
+
+            expect(config123.metadata.PARENT_ID).to.equal('parentSpanId');
+            expect(config141.metadata.PARENT_ID).to.equal('parentSpanId');
+          });
+
+          it('should support switching between versions multiple times', () => {
+            const config123First = getLookupConfig('1.23');
+            const config141First = getLookupConfig('1.41');
+            const config123Second = getLookupConfig('1.23');
+            const config141Second = getLookupConfig('1.41');
+            expect(config123First).to.equal(config123Second);
+            expect(config141First).to.equal(config141Second);
+
+            expect(config123First).to.not.equal(config141First);
+          });
+        });
+      });
     });
 
     describe('Edge cases and boundary conditions', () => {

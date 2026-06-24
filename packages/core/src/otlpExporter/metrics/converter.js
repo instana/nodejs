@@ -34,32 +34,37 @@ function resolveServiceName(metrics) {
  * @returns {Object}
  */
 function convert(metrics) {
-  const metricsArray = normalizeMetrics(metrics);
+  try {
+    const metricsArray = normalizeMetrics(metrics);
 
-  if (metricsArray.length === 0) {
+    if (metricsArray.length === 0) {
+      return { resourceMetrics: [] };
+    }
+
+    // Service name resolution, it not come from first metric once it set it will be used for all metrics
+    resolveServiceName(metrics);
+
+    // All metrics share the same resource, so we can extract the attributes from the first one
+    const resource = transformers.resource.extractResourceAttributes(/** @type {any} */ (metricsArray[0]));
+
+    return {
+      resourceMetrics: [
+        {
+          resource,
+          scopeMetrics: [
+            {
+              scope: INSTRUMENTATION_SCOPE,
+              // TODO: implement metrics transformation later
+              metrics: []
+            }
+          ]
+        }
+      ]
+    };
+  } catch (error) {
+    logger?.debug('Failed to convert metrics to OTLP format.', error);
     return { resourceMetrics: [] };
   }
-
-  // Service name resolution, it not come from first metric once it set it will be used for all metrics
-  resolveServiceName(metrics);
-
-  // All metrics share the same resource, so we can extract the attributes from the first one
-  const resource = transformers.resource.extractResourceAttributes(metricsArray[0]);
-
-  return {
-    resourceMetrics: [
-      {
-        resource,
-        scopeMetrics: [
-          {
-            scope: INSTRUMENTATION_SCOPE,
-            // TODO: implement metrics transformation later
-            metrics: []
-          }
-        ]
-      }
-    ]
-  };
 }
 
 module.exports = {

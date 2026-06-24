@@ -24,9 +24,17 @@ const INSTRUMENTATION_SCOPE = {
   version: SDK_VERSION
 };
 
+/**
+ * @typedef {Object} RawPayload
+ * @property {Record<string, any>} [data]
+ * @property {Record<string, any>} [resource]
+ * @property {Record<string, any>} [f]
+ */
+
 const resourceMapper = {
   /**
-   * @param {{ data: { resource: any; }; resource: any; }} rawPayload
+   * @param {RawPayload} rawPayload
+   * @returns {string | undefined}
    */
   serviceName(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
@@ -34,7 +42,8 @@ const resourceMapper = {
   },
 
   /**
-   * @param {{ data: { resource: any; }; resource: any; }} rawPayload
+   * @param {RawPayload} rawPayload
+   * @returns {string}
    */
   sdkLanguage(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
@@ -42,7 +51,8 @@ const resourceMapper = {
   },
 
   /**
-   * @param {{ data: { resource: any; }; resource: any; }} rawPayload
+   * @param {RawPayload} rawPayload
+   * @returns {string}
    */
   sdkName(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
@@ -50,7 +60,8 @@ const resourceMapper = {
   },
 
   /**
-   * @param {{ data: { resource: any; }; resource: any; }} rawPayload
+   * @param {RawPayload} rawPayload
+   * @returns {string}
    */
   sdkVersion(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
@@ -58,7 +69,8 @@ const resourceMapper = {
   },
 
   /**
-   * @param {{ data: { resource: any; }; resource: any; f: {}; }} rawPayload
+   * @param {RawPayload} rawPayload
+   * @returns {number | undefined}
    */
   processId(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
@@ -75,7 +87,8 @@ const resourceMapper = {
   },
 
   /**
-   * @param {{ data: { resource: any; }; resource: any; f: {}; }} rawPayload
+   * @param {RawPayload} rawPayload
+   * @returns {string | undefined}
    */
   hostName(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
@@ -94,28 +107,29 @@ const resourceMapper = {
   },
 
   /**
-   * @param {{ data: { resource: any; }; resource: any; f: {}; }} rawPayload
+   * @param {RawPayload} rawPayload
+   * @returns {string | undefined}
    */
   hostId(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
     const metadata = rawPayload.f || {};
 
-    const hostId = resource['host.id'] || metadata.h || ctx.hostId;
+    const hostId = resource['host.id'] || metadata.h || ctx._hostId;
 
     return typeof hostId === 'string' ? hostId : undefined;
   }
 };
 
 /**
- * @param {Object} rawPayload
- * @returns {{ attributes: Array<Object> }}
+ * @param {RawPayload} rawPayload
+ * @returns {{ attributes: Array<{ key: string, value: { intValue?: number, stringValue?: string } }> }}
  */
 function extractResourceAttributes(rawPayload) {
   if (!rawPayload) {
     return { attributes: [] };
   }
 
-  const OTLP = ctx.semConv;
+  const OTLP = /** @type {any} */ (ctx.semConv);
 
   const resourceMappings = [
     {
@@ -155,18 +169,20 @@ function extractResourceAttributes(rawPayload) {
     }
   ];
 
+  /** @type {Array<{ key: string, value: { intValue?: number, stringValue?: string } }>} */
   const attributes = resourceMappings.reduce((result, mapping) => {
     const value = mapping.transform(rawPayload);
 
     if (value !== undefined && value !== null) {
       result.push({
         key: mapping.otlp,
-        value: mapping.valueType === 'int' ? { intValue: value } : { stringValue: String(value) }
+        value:
+          mapping.valueType === 'int' ? { intValue: /** @type {number} */ (value) } : { stringValue: String(value) }
       });
     }
 
     return result;
-  }, []);
+  }, /** @type {Array<{ key: string, value: { intValue?: number, stringValue?: string } }>} */ ([]));
 
   return { attributes };
 }

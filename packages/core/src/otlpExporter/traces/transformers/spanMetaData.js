@@ -8,24 +8,40 @@ const ctx = require('../../common/context');
 const { SPAN_KINDS } = require('../mappers/constants');
 
 const metaMapper = {
+  /**
+   * @param {import('../../../core').InstanaBaseSpan} span
+   * @returns {string | undefined}
+   */
   convertTraceId(span) {
     if (span.t === undefined) return undefined;
     if (!span.t) return '';
     return String(span.t).padStart(32, '0');
   },
 
+  /**
+   * @param {import('../../../core').InstanaBaseSpan} span
+   * @returns {string | undefined}
+   */
   convertSpanId(span) {
     if (span.s === undefined) return undefined;
     if (!span.s) return '';
     return String(span.s).padStart(16, '0');
   },
 
+  /**
+   * @param {import('../../../core').InstanaBaseSpan} span
+   * @returns {string | undefined}
+   */
   convertParentId(span) {
     if (span.p === undefined) return undefined;
     if (!span.p) return '';
     return String(span.p).padStart(16, '0');
   },
 
+  /**
+   * @param {import('../../../core').InstanaBaseSpan} span
+   * @returns {number | undefined}
+   */
   convertSpanKind(span) {
     if (span.k === undefined) return undefined;
     if (span.k === 1) return SPAN_KINDS.SERVER;
@@ -34,33 +50,54 @@ const metaMapper = {
     return SPAN_KINDS.UNSPECIFIED;
   },
 
+  /**
+   * @param {import('../../../core').InstanaBaseSpan} span
+   * @returns {string | undefined}
+   */
   convertStartTime(span) {
     if (span.ts === undefined) return undefined;
     return String(Number(span.ts) * 1000000);
   },
 
+  /**
+   * @param {import('../../../core').InstanaBaseSpan} span
+   * @returns {string}
+   */
   generateEndTime(span) {
     const startMs = span.ts !== undefined ? Number(span.ts) : 0;
     const deltaMs = span.d !== undefined ? Number(span.d) : 0;
     return String((startMs + deltaMs) * 1000000);
   },
+
+  /**
+   * @returns {any[]}
+   */
   // TODO: currently not supported and not added in the payload
   events() {
     return [];
   },
 
+  /**
+   * @returns {any[]}
+   */
   links() {
     return [];
   }
 };
 
 /**
+ * @typedef {Object} SpanMapper
+ * @property {function(import('../../../core').InstanaBaseSpan): string} spanName
+ * @property {function(import('../../../core').InstanaBaseSpan): { code: number, message?: string }} spanStatus
+ */
+
+/**
  * @param {import('../../../core').InstanaBaseSpan} span
- * @param {Object} mapper
+ * @param {SpanMapper} mapper
  * @returns {Record<string, any>}
  */
 function extractSpanMetadata(span, mapper) {
-  const OTLP = ctx.semConv;
+  const OTLP = /** @type {any} */ (ctx.semConv);
 
   const metadataMappings = [
     { otlp: OTLP.metadata.TRACE_ID, value: metaMapper.convertTraceId(span) },
@@ -73,7 +110,7 @@ function extractSpanMetadata(span, mapper) {
     { otlp: OTLP.metadata.STATUS, value: mapper.spanStatus(span) }
   ];
 
-  return metadataMappings.reduce((acc, current) => {
+  return metadataMappings.reduce((/** @type {Record<string, any>} */ acc, current) => {
     if (current.value !== undefined) {
       acc[current.otlp] = current.value;
     }

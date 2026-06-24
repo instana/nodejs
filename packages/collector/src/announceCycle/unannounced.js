@@ -221,14 +221,13 @@ function applyKafkaTracingConfiguration(agentResponse) {
  */
 function applyOtlpExporterConfiguration(agentResponse) {
   if (agentResponse.tracing && agentResponse.tracing.otlp) {
-    const otlpConfigFromAgent = agentResponse.tracing.otlp;
+    const otlpConfigFromAgent = /** @type {Record<string, any>} */ (agentResponse.tracing.otlp);
     ensureNestedObjectExists(agentOpts.config, ['tracing', 'otlp']);
 
     Object.keys(otlpConfigFromAgent).forEach(key => {
-      // @ts-ignore
       const value = otlpConfigFromAgent[key];
       if (value != null) {
-        agentOpts.config.tracing.otlp[key] = value;
+        /** @type {Record<string, any>} */ (agentOpts.config.tracing.otlp)[key] = value;
       }
     });
   }
