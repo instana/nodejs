@@ -285,8 +285,6 @@ exports.sendLogToAgent = function sendLogToAgent(logLevel, message, stackTrace) 
 
   const payload = Buffer.from(JSON.stringify(payloadObject), 'utf8');
 
-  // Log forwarding uses agentOpts.port (agent connection port) for now
-  // this can be customized if we use OTLP transformation for logs in the future
   const req = http.request(
     {
       host: agentOpts.host,
@@ -323,7 +321,6 @@ exports.sendLogToAgent = function sendLogToAgent(logLevel, message, stackTrace) 
 function checkWhetherResponseForPathIsOkay(path, cb) {
   cb = util.atMostOnce('callback for checkWhetherResponseForPathIsOkay', cb);
 
-  // Agent readiness check uses agentOpts.port (agent connection port)
   const req = http.request(
     {
       host: agentOpts.host,
