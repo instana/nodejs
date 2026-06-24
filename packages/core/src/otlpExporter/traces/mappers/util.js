@@ -4,12 +4,17 @@
 
 'use strict';
 
+/**
+ * @param {any} str
+ * @returns {string}
+ */
 function toUpperCase(str) {
   return typeof str === 'string' ? str.toUpperCase() : '';
 }
 
 /**
- * @param {any[]} values
+ * @param {any[] | any} values
+ * @returns {any}
  */
 function firstDefined(values) {
   if (!Array.isArray(values)) {
@@ -20,13 +25,20 @@ function firstDefined(values) {
 
 /**
  * @param {any[]} values
+ * @returns {string}
  */
 function joinWith(values) {
   return values.filter(v => v != null).join(':');
 }
 
+/**
+ * @param {Record<string, any>} data
+ * @param {string[]} keys
+ * @returns {string}
+ */
 function combineFields(data, keys) {
   if (!data || !Array.isArray(keys)) return '';
+  /** @type {any[]} */
   const parts = [];
   keys.forEach(key => {
     if (data[key] !== undefined && data[key] !== null) {
@@ -36,6 +48,10 @@ function combineFields(data, keys) {
   return parts.join('.');
 }
 
+/**
+ * @param {any} value
+ * @returns {{ stringValue?: string, intValue?: number, doubleValue?: number, boolValue?: boolean }}
+ */
 function formatOTLPValue(value) {
   const type = typeof value;
   if (type === 'string') return { stringValue: value };
@@ -49,6 +65,7 @@ function formatOTLPValue(value) {
 
 /**
  * @param {string | URL} connection
+ * @returns {{ host?: string, port?: number }}
  */
 function parseConnection(connection) {
   if (!connection) {
@@ -56,7 +73,8 @@ function parseConnection(connection) {
   }
 
   try {
-    const url = new URL(connection.includes('://') ? connection : `http://${connection}`);
+    const connectionStr = typeof connection === 'string' ? connection : connection.toString();
+    const url = new URL(connectionStr.includes('://') ? connectionStr : `http://${connectionStr}`);
 
     return {
       host: url.hostname,
@@ -67,8 +85,17 @@ function parseConnection(connection) {
   }
 }
 
-const extractHost = (/** @type {string | URL} */ connection) => parseConnection(connection).host;
-const extractPort = (/** @type {string | URL} */ connection) => parseConnection(connection).port;
+/**
+ * @param {string | URL} connection
+ * @returns {string | undefined}
+ */
+const extractHost = connection => parseConnection(connection).host;
+
+/**
+ * @param {string | URL} connection
+ * @returns {number | undefined}
+ */
+const extractPort = connection => parseConnection(connection).port;
 
 module.exports = {
   toUpperCase,

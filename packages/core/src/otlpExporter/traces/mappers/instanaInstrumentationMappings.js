@@ -9,8 +9,49 @@ const { toUpperCase, firstDefined, formatOTLPValue, combineFields, extractHost, 
 const ctx = require('../../common/context');
 const { INSTRUMENTATION_TYPES, STATUS_CODES, SPECIAL_SPAN_TYPES } = require('./constants');
 
-const OTLP = ctx.semConv;
+const OTLP = /** @type {any} */ (ctx.semConv);
 
+/**
+ * @typedef {Object} OTLPFormattedValue
+ * @property {string} [stringValue]
+ * @property {number} [intValue]
+ * @property {number} [doubleValue]
+ * @property {boolean} [boolValue]
+ */
+
+/**
+ * @typedef {Object} SpanAttribute
+ * @property {string} key
+ * @property {OTLPFormattedValue} value
+ */
+
+/**
+ * @typedef {(values: any, spanData?: Record<string, any>) => any} TransformFunction
+ */
+
+/**
+ * @typedef {Object} AttributeMapping
+ * @property {string} otlp
+ * @property {string | string[]} [instana]
+ * @property {any} [value]
+ * @property {TransformFunction} [transform]
+ */
+
+/**
+ * @typedef {(data: Record<string, any>) => string} SpanNameFunction
+ */
+
+/**
+ * @typedef {Object} InstrumentationMapping
+ * @property {SpanNameFunction} [spanName]
+ * @property {AttributeMapping[]} [spanAttributes]
+ */
+
+/**
+ * @typedef {Record<string, InstrumentationMapping>} InstrumentationMappings
+ */
+
+/** @type {InstrumentationMappings} */
 const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.HTTP]: {
     spanName: data => {
@@ -368,22 +409,20 @@ const instrumentationMappings = {
  * @returns {string|null}
  */
 function getSpanType(span) {
-  if (!span || !span.data) return null;
-
-  for (const key in span.data) {
-    if (Object.prototype.hasOwnProperty.call(span.data, key)) {
-      if (key !== INSTRUMENTATION_TYPES.PEER && key !== SPECIAL_SPAN_TYPES.RESOURCE) {
-        return key;
-      }
-    }
+  if (!span || !span.data) {
+    return null;
   }
-  return null;
+
+  const key = Object.keys(span.data).find(k => k !== INSTRUMENTATION_TYPES.PEER && k !== SPECIAL_SPAN_TYPES.RESOURCE);
+
+  return key || null;
 }
 
 /**
- * @param {Object} mapping
- * @param {Object} spanData
- * @returns {Object|null}
+ *
+ * @param {AttributeMapping} mapping
+ * @param {Record<string, any>} spanData
+ * @returns {SpanAttribute|null}
  */
 function applyMapping(mapping, spanData) {
   if (!mapping) return null;

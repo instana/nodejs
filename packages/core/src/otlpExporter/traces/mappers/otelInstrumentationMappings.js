@@ -9,6 +9,19 @@ const { STATUS_CODES, SPECIAL_SPAN_TYPES } = require('./constants');
 
 const OTEL_SPAN_NAME = SPECIAL_SPAN_TYPES.OTEL;
 
+/**
+ * @typedef {Object} OtelMapping
+ * @property {string} otlp
+ * @property {any} [value]
+ * @property {(data: any) => any} [transform]
+ */
+
+/**
+ * @typedef {Object} OtelInstrumentationMapping
+ * @property {OtelMapping[]} [spanAttributes]
+ */
+
+/** @type {Record<string, OtelInstrumentationMapping>} */
 const instrumentationMappings = {
   operation: {
     spanAttributes: [{ otlp: 'operation' }]
@@ -24,9 +37,8 @@ function isOtelSpan(span) {
 }
 
 /**
- * @param {Object} mapping
- * @param {Object} spanData
- * @returns {Object|null}
+ * @param {OtelMapping} mapping
+ * @param {any} spanData
  */
 function applyMapping(mapping, spanData) {
   if (!mapping) {

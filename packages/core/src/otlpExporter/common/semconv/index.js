@@ -4,6 +4,7 @@
 
 'use strict';
 
+/** @type {Record<string, any>} */
 const VERSIONS = {
   1.23: require('./v1.23'),
   1.41: require('./v1.41')
@@ -13,7 +14,7 @@ const VERSIONS = {
  * Get the semantic convention lookup configuration for a specific version.
  *
  * @param {string} [version] - The semantic convention version (e.g., '1.23', '1.41')
- * @returns {Object} The compiled semantic convention mappings
+ * @returns {any} The compiled semantic convention mappings
  */
 function getLookupConfig(version) {
   const targetVersion = version || '1.23';

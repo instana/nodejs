@@ -35,7 +35,7 @@ const http = uninstrumentedHttp.http;
 let isConnected = false;
 
 /**
- * @type {number || undefined}
+ * @type {number | undefined}
  */
 let otlpPort;
 
@@ -105,6 +105,7 @@ exports.AgentEventSeverity = {
  * @property {string} [cpuSetFileContent]
  */
 
+/** @type {Record<string, { otlpPath: string, instanaPath: () => string }>} */
 const EXPORT_ENDPOINTS = {
   traces: {
     otlpPath: '/v1/traces',

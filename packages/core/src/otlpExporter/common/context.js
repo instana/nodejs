@@ -10,16 +10,22 @@ const DEFAULT_SEMCONV_VERSION = '1.23';
 
 class OtlpConfigContext {
   constructor() {
+    /** @type {Record<string, any> | null} */
     this._config = null;
+    /** @type {string} */
     this._semConvVersion = DEFAULT_SEMCONV_VERSION;
+    /** @type {any} */
     this._compiledSemConv = null;
+    /** @type {string | null} */
     this._hostId = null;
+    /** @type {string | null} */
     this._pid = null;
+    /** @type {string | null} */
     this._serviceName = null;
   }
 
   /**
-   * @param {Object} config
+   * @param {Record<string, any>} config
    */
   init(config = {}) {
     this._config = config;
