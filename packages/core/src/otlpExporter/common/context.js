@@ -23,7 +23,7 @@ class OtlpConfigContext {
    */
   init(config = {}) {
     this._config = config;
-    this._semConvVersion = config.semConvVersion || DEFAULT_SEMCONV_VERSION;
+    this._semConvVersion = DEFAULT_SEMCONV_VERSION;
     this._compiledSemConv = getLookupConfig(this._semConvVersion);
     this._pid = String(process.pid);
     this._serviceName = config.serviceName || null;

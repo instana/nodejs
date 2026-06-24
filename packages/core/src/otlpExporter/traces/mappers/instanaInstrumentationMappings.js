@@ -419,13 +419,11 @@ function applyMapping(mapping, spanData) {
 }
 
 module.exports = {
-  getSpanType,
   /**
    * @param {import('../../../core').InstanaBaseSpan} span
-   * @param {string | null} spanType
    */
-  spanName(span, spanType) {
-    const type = spanType ?? getSpanType(span);
+  spanName(span) {
+    const type = getSpanType(span);
     const handler = instrumentationMappings[type]?.spanName;
     const spanData = type ? span.data?.[type] : null;
 
@@ -469,14 +467,13 @@ module.exports = {
 
   /**
    * @param {import('../../../core').InstanaBaseSpan} span
-   * @param {string | null} spanType
    */
-  spanStatus(span, spanType) {
+  spanStatus(span) {
     if (!span?.ec) {
       return { code: STATUS_CODES.UNSET };
     }
 
-    const type = spanType ?? getSpanType(span);
+    const type = getSpanType(span);
     const data = type ? span.data?.[type] : null;
 
     return {

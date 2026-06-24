@@ -60,10 +60,6 @@ const metaMapper = {
  * @returns {Record<string, any>}
  */
 function extractSpanMetadata(span, mapper) {
-  if (!span) return {};
-
-  // Resolve the primary instrumentation type once so it can be reused
-  const spanType = mapper.getSpanType ? mapper.getSpanType(span) : null;
   const OTLP = ctx.semConv;
 
   const metadataMappings = [
@@ -73,8 +69,8 @@ function extractSpanMetadata(span, mapper) {
     { otlp: OTLP.metadata.SPAN_KIND, value: metaMapper.convertSpanKind(span) },
     { otlp: OTLP.metadata.START_TIME_UNIX_NANO, value: metaMapper.convertStartTime(span) },
     { otlp: OTLP.metadata.END_TIME_UNIX_NANO, value: metaMapper.generateEndTime(span) },
-    { otlp: OTLP.metadata.NAME, value: mapper.spanName(span, spanType) },
-    { otlp: OTLP.metadata.STATUS, value: mapper.spanStatus(span, spanType) }
+    { otlp: OTLP.metadata.NAME, value: mapper.spanName(span) },
+    { otlp: OTLP.metadata.STATUS, value: mapper.spanStatus(span) }
   ];
 
   return metadataMappings.reduce((acc, current) => {

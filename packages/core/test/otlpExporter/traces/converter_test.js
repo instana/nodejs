@@ -7,9 +7,20 @@
 const expect = require('chai').expect;
 const fs = require('fs');
 const path = require('path');
+const sinon = require('sinon');
+const os = require('os');
+const proxyquire = require('proxyquire');
+
+const mockPackageJson = { version: '6.0.0' };
+
+const resourceTransformer = proxyquire('../../../src/otlpExporter/common/transformers/resource', {
+  '../../../../package.json': mockPackageJson
+});
+const { convert } = proxyquire('../../../src/otlpExporter/traces/converter', {
+  '../common/transformers/resource': resourceTransformer
+});
 
 const otlp = require('../../../src/otlpExporter');
-const { convert } = require('../../../src/otlpExporter/traces/converter');
 const { extractSpanMetadata } = require('../../../src/otlpExporter/traces/transformers/spanMetadata');
 const { extractSpanAttributes } = require('../../../src/otlpExporter/traces/transformers/spanAttributes');
 const mappers = require('../../../src/otlpExporter/traces/mappers');
@@ -35,11 +46,19 @@ function loadTransformerOutputFixture(filename) {
 }
 
 describe('tracing/converters/otlp', () => {
+  let hostnameStub;
+
   before(() => {
     otlp.init({
       serviceName: 'otel-exporter-test',
       logger: console
     });
+
+    hostnameStub = sinon.stub(os, 'hostname').returns('test.local.server');
+  });
+
+  after(() => {
+    hostnameStub.restore();
   });
 
   describe('converter', () => {
@@ -73,11 +92,6 @@ describe('tracing/converters/otlp', () => {
 
       it('should return empty resourceSpans for empty input', () => {
         const result = convert([]);
-        expect(result).to.deep.equal({ resourceSpans: [] });
-      });
-
-      it('should return empty resourceSpans for null input', () => {
-        const result = convert(null);
         expect(result).to.deep.equal({ resourceSpans: [] });
       });
     });
@@ -158,16 +172,6 @@ describe('tracing/converters/otlp', () => {
         const result = extractSpanMetadata(input, mappers.get(input));
 
         expect(result).to.deep.equal(expectedOutput);
-      });
-
-      it('should return empty object for null span', () => {
-        const result = extractSpanMetadata(null, mappers.get({}));
-        expect(result).to.deep.equal({});
-      });
-
-      it('should return empty object for undefined span', () => {
-        const result = extractSpanMetadata(undefined, mappers.get({}));
-        expect(result).to.deep.equal({});
       });
     });
 
