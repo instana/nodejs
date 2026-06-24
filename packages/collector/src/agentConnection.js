@@ -182,7 +182,6 @@ exports.announceNodeCollector = function announceNodeCollector(callback) {
 
   logger.debug(`Announcing the Node.js collector to the Instana host agent at ${agentOpts.host}:${agentOpts.port}`);
 
-  // Agent announcement uses agentOpts.port (agent connection port)
   const req = http.request(
     {
       host: agentOpts.host,

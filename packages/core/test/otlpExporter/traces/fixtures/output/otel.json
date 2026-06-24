@@ -8,12 +8,13 @@
           { "key": "telemetry.sdk.name", "value": { "stringValue": "opentelemetry" } },
           { "key": "telemetry.sdk.version", "value": { "stringValue": "2.3.0" } },
           { "key": "process.pid", "value": { "intValue": 40519 } },
-          { "key": "host.name", "value": { "stringValue": "7a:71:ec:ff:fe:3e:a2:e6" } }
+          { "key": "host.name", "value": { "stringValue": "test.local.server" } },
+                 { "key": "host.id", "value": { "stringValue": "7a:71:ec:ff:fe:3e:a2:e6" } }
         ]
       },
       "scopeSpans": [
         {
-          "scope": { "name": "@instana/collector", "version": "6.2.0" },
+          "scope": { "name": "@instana/collector", "version": "6.2.1" },
           "spans": [
             {
               "traceId": "00000000000000005c53939869360e85",

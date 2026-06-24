@@ -14,6 +14,7 @@ const MAPPINGS = {
     SDK_NAME: 'telemetry.sdk.name',
     SDK_VERSION: 'telemetry.sdk.version',
     HOST_NAME: 'host.name',
+    HOST_ID: 'host.id',
     PROCESS_PID: 'process.pid'
   },
 

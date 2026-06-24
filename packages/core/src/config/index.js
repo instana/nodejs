@@ -129,7 +129,6 @@ const transmissionDelayMaxValue = 5000;
  * @property {InstanaSecretsOption} [secrets]
  * @property {number} [timeBetweenHealthcheckCalls]
  * @property {boolean} [preloadOpentelemetry]
- * @property {boolean} [preloadOpentelemetry]
  */
 
 /** @type {import('../core').GenericLogger} */

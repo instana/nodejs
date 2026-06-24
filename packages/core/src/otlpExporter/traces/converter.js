@@ -27,10 +27,6 @@ function init(config) {
  * @returns {Object} Payload matching { resourceSpans: [...] }
  */
 function convert(spans) {
-  if (!Array.isArray(spans) || spans.length === 0) {
-    return { resourceSpans: [] };
-  }
-
   const otlpSpans = [];
   let sampleResourceSpan = null;
 
