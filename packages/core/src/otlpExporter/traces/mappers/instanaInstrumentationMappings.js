@@ -469,12 +469,17 @@ module.exports = {
    * @param {import('../../../core').InstanaBaseSpan} span
    */
   spanStatus(span) {
-    if (!span?.ec) {
-      return { code: STATUS_CODES.UNSET };
-    }
-
     const type = getSpanType(span);
     const data = type ? span.data?.[type] : null;
+
+    // Special case: HTTP client 4xx responses are reported as errors according to OTel semantic conventions, even
+    // though Instana leaves span.ec unset for these responses. We handled it here.
+    // Remove this handling once INSTA-98209 is implemented.
+    const shouldReportHttpClientAsError = span.n === 'node.http.client' && data?.status >= 400 && data?.status < 500;
+
+    if (!span?.ec && !shouldReportHttpClientAsError) {
+      return { code: STATUS_CODES.UNSET };
+    }
 
     return {
       code: STATUS_CODES.ERROR,
