@@ -5,10 +5,10 @@
 'use strict';
 
 const expect = require('chai').expect;
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 const sinon = require('sinon');
-const os = require('os');
+const os = require('node:os');
 const proxyquire = require('proxyquire');
 
 const mockPackageJson = { version: '6.0.0' };
