@@ -75,7 +75,6 @@ module.exports = function () {
 
   beforeEach(async () => {
     agentOpts.port = agentControls.getPort();
-    agentOpts.dataPort = agentControls.getPort();
     agentConnection = require('@_local/collector/src/agentConnection');
     pidStore.init(config);
     agentConnection.init(config, pidStore);
@@ -86,7 +85,6 @@ module.exports = function () {
 
   afterEach(() => {
     agentOpts.port = originalPort;
-    agentOpts.dataPort = originalPort;
   });
 
   it('should send traces to agent', done => {
