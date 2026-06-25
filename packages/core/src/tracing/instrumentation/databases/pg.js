@@ -13,11 +13,13 @@ const constants = require('../../constants');
 const cls = require('../../cls');
 
 let isActive = false;
+let captureBindVariables = false;
 
 exports.spanName = 'postgres';
 exports.batchable = true;
 
-exports.init = function init() {
+exports.init = function init(config) {
+  captureBindVariables = config && config.tracing && config.tracing.captureBindVariables === true;
   hook.onModuleLoad('pg', instrumentPg);
 };
 
@@ -59,18 +61,6 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
     });
     span.stack = tracingUtil.getStackTrace(instrumentedQuery);
 
-    // Extract bind variables/parameters
-    let params;
-    if (typeof config === 'string') {
-      // Query is a string, parameters might be in argsForOriginalQuery[1]
-      if (argsForOriginalQuery.length > 1 && Array.isArray(argsForOriginalQuery[1])) {
-        params = argsForOriginalQuery[1];
-      }
-    } else if (config && config.values) {
-      // Query config object with values property
-      params = config.values;
-    }
-
     span.data.pg = {
       stmt: tracingUtil.shortenDatabaseStatement(typeof config === 'string' ? config : config.text),
       host,
@@ -79,9 +69,19 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
       db
     };
 
-    // Add masked bind parameters to span data if present
-    if (params && params.length > 0) {
-      span.data.pg.params = tracingUtil.maskBindVariables(params);
+    // Capture raw bind variables if enabled
+    if (captureBindVariables) {
+      let binds;
+      if (typeof config === 'string') {
+        if (argsForOriginalQuery.length > 1 && Array.isArray(argsForOriginalQuery[1])) {
+          binds = argsForOriginalQuery[1];
+        }
+      } else if (config && config.values) {
+        binds = config.values;
+      }
+      if (binds && binds.length > 0) {
+        span.data.pg.binds = binds;
+      }
     }
 
     let originalCallback;
