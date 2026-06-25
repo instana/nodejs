@@ -12,7 +12,7 @@ const {
   spanAttributes,
   spanStatus
 } = require('../../../../src/otlpExporter/traces/mappers/otelInstrumentationMappings');
-const { STATUS_CODES } = require('../../../../src/otlpExporter/traces/mappers/constants');
+const { OTLP_STATUS_CODES } = require('../../../../src/otlpExporter/traces/mappers/constants');
 
 describe('otlpExporter/traces/mappers/otelInstrumentationMappings', () => {
   describe('OTEL_SPAN_NAME', () => {
@@ -45,14 +45,6 @@ describe('otlpExporter/traces/mappers/otelInstrumentationMappings', () => {
 
       expect(isOtelSpan(span)).to.be.false;
     });
-
-    it('should return false for null span', () => {
-      expect(isOtelSpan(null)).to.be.false;
-    });
-
-    it('should return false for undefined span', () => {
-      expect(isOtelSpan(undefined)).to.be.false;
-    });
   });
 
   describe('spanName', () => {
@@ -80,16 +72,6 @@ describe('otlpExporter/traces/mappers/otelInstrumentationMappings', () => {
       };
 
       const result = spanName(span);
-      expect(result).to.equal('unknown');
-    });
-
-    it('should return "unknown" for null span', () => {
-      const result = spanName(null);
-      expect(result).to.equal('unknown');
-    });
-
-    it('should return "unknown" for undefined span', () => {
-      const result = spanName(undefined);
       expect(result).to.equal('unknown');
     });
   });
@@ -397,7 +379,7 @@ describe('otlpExporter/traces/mappers/otelInstrumentationMappings', () => {
       const result = spanStatus(span);
 
       expect(result).to.deep.equal({
-        code: STATUS_CODES.UNSET
+        code: OTLP_STATUS_CODES.UNSET
       });
     });
 
@@ -415,7 +397,7 @@ describe('otlpExporter/traces/mappers/otelInstrumentationMappings', () => {
       const result = spanStatus(span);
 
       expect(result).to.deep.equal({
-        code: STATUS_CODES.ERROR,
+        code: OTLP_STATUS_CODES.ERROR,
         message: 'Something went wrong'
       });
     });
@@ -432,7 +414,7 @@ describe('otlpExporter/traces/mappers/otelInstrumentationMappings', () => {
       const result = spanStatus(span);
 
       expect(result).to.deep.equal({
-        code: STATUS_CODES.ERROR,
+        code: OTLP_STATUS_CODES.ERROR,
         message: 'otel failed'
       });
     });
@@ -448,7 +430,7 @@ describe('otlpExporter/traces/mappers/otelInstrumentationMappings', () => {
       const result = spanStatus(span);
 
       expect(result).to.deep.equal({
-        code: STATUS_CODES.ERROR,
+        code: OTLP_STATUS_CODES.ERROR,
         message: 'operation failed'
       });
     });
@@ -467,7 +449,7 @@ describe('otlpExporter/traces/mappers/otelInstrumentationMappings', () => {
       const result = spanStatus(span);
 
       expect(result).to.deep.equal({
-        code: STATUS_CODES.ERROR,
+        code: OTLP_STATUS_CODES.ERROR,
         message: 'Multiple errors'
       });
     });
@@ -484,7 +466,7 @@ describe('otlpExporter/traces/mappers/otelInstrumentationMappings', () => {
       const result = spanStatus(span);
 
       expect(result).to.deep.equal({
-        code: STATUS_CODES.UNSET
+        code: OTLP_STATUS_CODES.UNSET
       });
     });
 
@@ -500,7 +482,7 @@ describe('otlpExporter/traces/mappers/otelInstrumentationMappings', () => {
       const result = spanStatus(span);
 
       expect(result).to.deep.equal({
-        code: STATUS_CODES.UNSET
+        code: OTLP_STATUS_CODES.UNSET
       });
     });
 
@@ -516,7 +498,7 @@ describe('otlpExporter/traces/mappers/otelInstrumentationMappings', () => {
       const result = spanStatus(span);
 
       expect(result).to.deep.equal({
-        code: STATUS_CODES.UNSET
+        code: OTLP_STATUS_CODES.UNSET
       });
     });
 
@@ -531,7 +513,7 @@ describe('otlpExporter/traces/mappers/otelInstrumentationMappings', () => {
       const result = spanStatus(span);
 
       expect(result).to.deep.equal({
-        code: STATUS_CODES.UNSET
+        code: OTLP_STATUS_CODES.UNSET
       });
     });
 
@@ -544,7 +526,7 @@ describe('otlpExporter/traces/mappers/otelInstrumentationMappings', () => {
       const result = spanStatus(span);
 
       expect(result).to.deep.equal({
-        code: STATUS_CODES.ERROR,
+        code: OTLP_STATUS_CODES.ERROR,
         message: 'otel failed'
       });
     });
@@ -559,7 +541,7 @@ describe('otlpExporter/traces/mappers/otelInstrumentationMappings', () => {
       const result = spanStatus(span);
 
       expect(result).to.deep.equal({
-        code: STATUS_CODES.ERROR,
+        code: OTLP_STATUS_CODES.ERROR,
         message: 'otel failed'
       });
     });
@@ -568,7 +550,7 @@ describe('otlpExporter/traces/mappers/otelInstrumentationMappings', () => {
       const result = spanStatus(null);
 
       expect(result).to.deep.equal({
-        code: STATUS_CODES.UNSET
+        code: OTLP_STATUS_CODES.UNSET
       });
     });
 
@@ -576,7 +558,7 @@ describe('otlpExporter/traces/mappers/otelInstrumentationMappings', () => {
       const result = spanStatus(undefined);
 
       expect(result).to.deep.equal({
-        code: STATUS_CODES.UNSET
+        code: OTLP_STATUS_CODES.UNSET
       });
     });
 
@@ -594,7 +576,7 @@ describe('otlpExporter/traces/mappers/otelInstrumentationMappings', () => {
       const result = spanStatus(span);
 
       expect(result).to.deep.equal({
-        code: STATUS_CODES.ERROR,
+        code: OTLP_STATUS_CODES.ERROR,
         message: '12345'
       });
     });

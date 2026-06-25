@@ -38,13 +38,13 @@ exports.INSTRUMENTATION_TYPES = {
   AWS_LAMBDA_INVOKE: 'aws.lambda.invoke'
 };
 
-exports.STATUS_CODES = {
+exports.OTLP_STATUS_CODES = {
   UNSET: 0,
   OK: 1,
   ERROR: 2
 };
 
-exports.SPAN_KINDS = {
+exports.OTLP_SPAN_KINDS = {
   UNSPECIFIED: 0,
   INTERNAL: 1,
   SERVER: 2,
@@ -53,8 +53,14 @@ exports.SPAN_KINDS = {
   CONSUMER: 5
 };
 
-exports.SPECIAL_SPAN_TYPES = {
+exports.SPECIAL_SPAN_DATA_TYPES = {
   RESOURCE: 'resource',
   TAGS: 'tags',
   OTEL: 'otel'
+};
+
+exports.INSTANA_SPAN_KINDS = {
+  ENTRY: 1,
+  EXIT: 2,
+  INTERMEDIATE: 3
 };

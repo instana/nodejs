@@ -1,8 +1,0 @@
-[
-  { "key": "db.system", "value": { "stringValue": "other_nosql" } },
-  { "key": "db.name", "value": { "stringValue": "my-bucket" } },
-  {
-    "key": "db.query.text",
-    "value": { "stringValue": "SELECT * FROM users WHERE age > 18" }
-  }
-]

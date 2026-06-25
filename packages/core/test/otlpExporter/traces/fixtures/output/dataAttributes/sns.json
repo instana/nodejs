@@ -1,8 +1,0 @@
-[
-  { "key": "messaging.system", "value": { "stringValue": "aws.sns" } },
-  {
-    "key": "messaging.destination",
-    "value": { "stringValue": "arn:aws:sns:us-east-1:123456789012:my-topic" }
-  },
-  { "key": "messaging.operation.name", "value": { "stringValue": "send" } }
-]

@@ -5,8 +5,6 @@
 'use strict';
 
 const expect = require('chai').expect;
-const fs = require('node:fs');
-const path = require('node:path');
 const sinon = require('sinon');
 const os = require('node:os');
 const proxyquire = require('proxyquire');
@@ -17,7 +15,10 @@ const resourceTransformer = proxyquire('../../../src/otlpExporter/common/transfo
   '../../../../package.json': mockPackageJson
 });
 const { convert } = proxyquire('../../../src/otlpExporter/traces/converter', {
-  '../common/transformers/resource': resourceTransformer
+  './transformers': {
+    ...require('../../../src/otlpExporter/traces/transformers'),
+    resource: resourceTransformer
+  }
 });
 
 const otlp = require('../../../src/otlpExporter');
@@ -25,24 +26,152 @@ const { extractSpanMetadata } = require('../../../src/otlpExporter/traces/transf
 const { extractSpanAttributes } = require('../../../src/otlpExporter/traces/transformers/spanAttributes');
 const mappers = require('../../../src/otlpExporter/traces/mappers');
 
-function loadInputFixture(filename) {
-  const fixturePath = path.join(__dirname, 'fixtures/input', filename);
-  return JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
+function createSpan(overrides = {}) {
+  return {
+    t: 'trace-1',
+    s: 'span-1',
+    ts: 1710000000000,
+    d: 25,
+    n: 'custom.span',
+    k: 1,
+    ...overrides,
+    f: {
+      e: '321',
+      h: 'host-id-1',
+      ...(overrides.f || {})
+    },
+    data: {
+      ...(overrides.data || {})
+    }
+  };
 }
 
-function loadOutputFixture(filename) {
-  const fixturePath = path.join(__dirname, 'fixtures/output', filename);
-  return JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
+function createHttpSpan(overrides = {}) {
+  const http = {
+    operation: 'get',
+    path: '/users/42',
+    path_tpl: '/users/:id',
+    route: '/users/:id',
+    endpoints: 'https://example.test/users/42',
+    params: 'active=true',
+    status: 200,
+    connection: 'api.example.test:443',
+    ...(overrides.data?.http || {})
+  };
+
+  return createSpan({
+    n: 'node.http.server',
+    k: 1,
+    ...overrides,
+    data: {
+      http,
+      ...(overrides.data || {})
+    }
+  });
 }
 
-function loadTransformerInputFixture(filename) {
-  const fixturePath = path.join(__dirname, 'fixtures/input', filename);
-  return JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
+function createPgSpan(overrides = {}) {
+  const pg = {
+    stmt: 'SELECT * FROM users WHERE id = $1',
+    host: 'db.example.test',
+    port: 5432,
+    db: 'users',
+    user: 'instana',
+    ...(overrides.data?.pg || {})
+  };
+
+  return createSpan({
+    n: 'postgres',
+    k: 2,
+    ...overrides,
+    data: {
+      pg,
+      ...(overrides.data || {})
+    }
+  });
 }
 
-function loadTransformerOutputFixture(filename) {
-  const fixturePath = path.join(__dirname, 'fixtures/output', filename);
-  return JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
+function createKafkaSpan(overrides = {}) {
+  const kafka = {
+    operation: 'send',
+    endpoints: 'orders',
+    error: undefined,
+    ...(overrides.data?.kafka || {})
+  };
+
+  return createSpan({
+    n: 'kafka',
+    k: 2,
+    ...overrides,
+    data: {
+      kafka,
+      ...(overrides.data || {})
+    }
+  });
+}
+
+function createInternalSpan(overrides = {}) {
+  return createSpan({
+    n: 'custom.internal',
+    k: 3,
+    ...overrides
+  });
+}
+
+function createAzureBlobSpan(overrides = {}) {
+  const azstorage = {
+    op: 'put',
+    accountName: 'storage-account',
+    containerName: 'uploads',
+    blobName: 'invoice.pdf',
+    ...(overrides.data?.azstorage || {})
+  };
+
+  return createSpan({
+    n: 'azure.blob',
+    k: 2,
+    ...overrides,
+    data: {
+      azstorage,
+      ...(overrides.data || {})
+    }
+  });
+}
+
+function createOtelSpan(overrides = {}) {
+  return createSpan({
+    n: 'otel',
+    k: 2,
+    data: {
+      operation: 'publish',
+      tags: {
+        'http.method': 'POST',
+        'messaging.system': 'custom-bus',
+        success: true
+      },
+      ...(overrides.data || {})
+    },
+    ...overrides
+  });
+}
+
+function getConvertedSpans(result) {
+  return result.resourceSpans[0].scopeSpans[0].spans;
+}
+
+function getResourceAttributes(result) {
+  return result.resourceSpans[0].resource.attributes;
+}
+
+function findAttribute(attributes, key) {
+  return attributes.find(attribute => attribute.key === key);
+}
+
+function expectAttribute(attributes, key, expectedValue) {
+  expect(findAttribute(attributes, key), `Missing attribute ${key}`).to.deep.equal({
+    key,
+    value: expectedValue
+  });
 }
 
 describe('tracing/converters/otlp', () => {
@@ -62,563 +191,297 @@ describe('tracing/converters/otlp', () => {
   });
 
   describe('converter', () => {
-    describe('basic conversion', () => {
-      it('should convert single HTTP span correctly', () => {
-        const input = [loadInputFixture('http.json')];
-        const expectedOutput = loadOutputFixture('http.json');
+    it('converts a representative batch of spans with focused assertions', () => {
+      const spans = [
+        createHttpSpan(),
+        createPgSpan({
+          t: 'trace-1',
+          s: 'span-2',
+          p: 'span-1',
+          ts: 1710000000100,
+          d: 40
+        }),
+        createKafkaSpan({
+          t: 'trace-1',
+          s: 'span-3',
+          p: 'span-2',
+          ts: 1710000000200,
+          d: 15
+        }),
+        createInternalSpan({
+          t: 'trace-1',
+          s: 'span-4',
+          p: 'span-3',
+          ts: 1710000000300,
+          d: 5
+        }),
+        createAzureBlobSpan({
+          t: 'trace-1',
+          s: 'span-5',
+          p: 'span-4',
+          ts: 1710000000400,
+          d: 12
+        }),
+        createOtelSpan({
+          t: 'trace-1',
+          s: 'span-6',
+          p: 'span-5',
+          ts: 1710000000500,
+          d: 8
+        })
+      ];
 
-        const result = convert(input);
+      const result = convert(spans);
 
-        expect(result).to.deep.equal(expectedOutput);
+      expect(result.resourceSpans).to.have.lengthOf(1);
+      expect(result.resourceSpans[0].scopeSpans).to.have.lengthOf(1);
+      expect(result.resourceSpans[0].scopeSpans[0].scope).to.deep.equal({
+        name: '@instana/collector',
+        version: '6.0.0'
       });
 
-      it('should convert multiple spans correctly', () => {
-        const input = loadInputFixture('multi.json');
-        const expectedOutput = loadOutputFixture('multi.json');
+      const resourceAttributes = getResourceAttributes(result);
+      expectAttribute(resourceAttributes, 'service.name', { stringValue: 'otel-exporter-test' });
+      expectAttribute(resourceAttributes, 'telemetry.sdk.language', { stringValue: 'nodejs' });
+      expectAttribute(resourceAttributes, 'telemetry.sdk.name', { stringValue: 'instana' });
+      expectAttribute(resourceAttributes, 'telemetry.sdk.version', { stringValue: '6.0.0' });
+      expectAttribute(resourceAttributes, 'process.pid', { intValue: 321 });
+      expectAttribute(resourceAttributes, 'host.name', { stringValue: 'test.local.server' });
+      expectAttribute(resourceAttributes, 'host.id', { stringValue: 'host-id-1' });
 
-        const result = convert(input);
+      const convertedSpans = getConvertedSpans(result);
+      expect(convertedSpans).to.have.lengthOf(6);
 
-        expect(result).to.deep.equal(expectedOutput);
-      });
+      const httpSpan = convertedSpans[0];
+      expect(httpSpan.name).to.equal('GET /users/:id');
+      expect(httpSpan.kind).to.equal(2);
+      expect(httpSpan.traceId).to.equal('0000000000000000000000000trace-1');
+      expect(httpSpan.spanId).to.equal('0000000000span-1');
+      expect(httpSpan.startTimeUnixNano).to.equal('1710000000000000000');
+      expect(httpSpan.endTimeUnixNano).to.equal('1710000000025000000');
+      expect(httpSpan.status).to.deep.equal({ code: 0 });
+      expectAttribute(httpSpan.attributes, 'http.method', { stringValue: 'GET' });
+      expectAttribute(httpSpan.attributes, 'http.url', { stringValue: 'https://example.test/users/42' });
+      expectAttribute(httpSpan.attributes, 'http.target', { stringValue: '/users/42' });
+      expectAttribute(httpSpan.attributes, 'http.route', { stringValue: '/users/:id' });
+      expectAttribute(httpSpan.attributes, 'server.address', { stringValue: 'api.example.test' });
+      expectAttribute(httpSpan.attributes, 'server.port', { intValue: 443 });
 
-      it('should convert single otel span correctly', () => {
-        const input = [loadInputFixture('otel.json')];
-        const expectedOutput = loadOutputFixture('otel.json');
+      const pgSpan = convertedSpans[1];
+      expect(pgSpan.name).to.equal('SELECT');
+      expect(pgSpan.kind).to.equal(3);
+      expect(pgSpan.parentSpanId).to.equal('0000000000span-1');
+      expectAttribute(pgSpan.attributes, 'db.system', { stringValue: 'postgresql' });
+      expectAttribute(pgSpan.attributes, 'db.query.text', { stringValue: 'SELECT * FROM users WHERE id = $1' });
+      expectAttribute(pgSpan.attributes, 'db.user', { stringValue: 'instana' });
+      expectAttribute(pgSpan.attributes, 'db.name', { stringValue: 'users' });
 
-        const result = convert(input);
+      const kafkaSpan = convertedSpans[2];
+      expect(kafkaSpan.name).to.equal('send orders');
+      expect(kafkaSpan.kind).to.equal(3);
+      expectAttribute(kafkaSpan.attributes, 'messaging.system', { stringValue: 'kafka' });
+      expectAttribute(kafkaSpan.attributes, 'messaging.destination', { stringValue: 'orders' });
+      expectAttribute(kafkaSpan.attributes, 'messaging.operation.name', { stringValue: 'send' });
 
-        expect(result).to.deep.equal(expectedOutput);
-      });
+      const internalSpan = convertedSpans[3];
+      expect(internalSpan.name).to.equal('custom.internal');
+      expect(internalSpan.kind).to.equal(1);
+      expect(internalSpan.attributes).to.deep.equal([]);
 
-      it('should return empty resourceSpans for empty input', () => {
-        const result = convert([]);
-        expect(result).to.deep.equal({ resourceSpans: [] });
-      });
+      const azureBlobSpan = convertedSpans[4];
+      expect(azureBlobSpan.name).to.equal('azure.storage.put');
+      expect(azureBlobSpan.kind).to.equal(3);
+      expectAttribute(azureBlobSpan.attributes, 'cloud.provider', { stringValue: 'azure' });
+      expectAttribute(azureBlobSpan.attributes, 'db.operation.name', { stringValue: 'put' });
+      expect(azureBlobSpan.attributes.some(attribute => attribute.value.stringValue === 'storage-account')).to.be.true;
+      expect(azureBlobSpan.attributes.some(attribute => attribute.value.stringValue === 'uploads')).to.be.true;
+      expect(azureBlobSpan.attributes.some(attribute => attribute.value.stringValue === 'invoice.pdf')).to.be.true;
+
+      const otelSpan = convertedSpans[5];
+      expect(otelSpan.name).to.equal('otel');
+      expect(otelSpan.kind).to.equal(3);
+      expectAttribute(otelSpan.attributes, 'operation', { stringValue: 'publish' });
+      expectAttribute(otelSpan.attributes, 'http.method', { stringValue: 'POST' });
+      expectAttribute(otelSpan.attributes, 'messaging.system', { stringValue: 'custom-bus' });
+      expectAttribute(otelSpan.attributes, 'success', { boolValue: true });
     });
 
-    describe('error handling', () => {
-      it('should handle spans with missing required fields gracefully', () => {
-        const invalidSpan = { n: 'test' };
-        const result = convert([invalidSpan]);
+    it('returns empty resourceSpans for empty input', () => {
+      expect(convert([])).to.deep.equal({ resourceSpans: [] });
+    });
 
-        expect(result).to.have.property('resourceSpans');
-        expect(result.resourceSpans).to.be.an('array');
-      });
+    it('skips invalid, null and log spans while keeping valid spans', () => {
+      const validSpan = createHttpSpan();
+      const invalidSpan = null;
+      const logSpan = {
+        t: 'trace-2',
+        s: 'log-1',
+        n: 'log.console',
+        data: { log: { message: 'test' } }
+      };
 
-      it('should skip null spans in array', () => {
-        const validSpan = loadInputFixture('http.json');
-        const result = convert([null, validSpan, null]);
+      const result = convert([null, invalidSpan, logSpan, validSpan, null]);
 
-        expect(result).to.have.property('resourceSpans');
-        expect(result.resourceSpans).to.be.an('array');
-      });
-
-      it('should filter out log spans', () => {
-        const logSpan = {
-          t: '123',
-          s: '456',
-          n: 'log.console',
-          data: { log: { message: 'test' } }
-        };
-        const result = convert([logSpan]);
-
-        expect(result.resourceSpans).to.have.lengthOf(0);
-      });
+      expect(result.resourceSpans).to.have.lengthOf(1);
+      expect(getConvertedSpans(result)).to.have.lengthOf(1);
+      expect(getConvertedSpans(result)[0].name).to.equal('GET /users/:id');
     });
   });
 
   describe('transformers', () => {
     describe('spanMetaData', () => {
-      it('should extract HTTP server span metadata correctly', () => {
-        const input = loadTransformerInputFixture('http.json');
-        const expectedOutput = loadTransformerOutputFixture('metaData/http.json');
+      it('extracts metadata for server, client, internal and error spans', () => {
+        const httpSpan = createHttpSpan();
+        const kafkaSpan = createKafkaSpan({
+          ec: 1,
+          data: {
+            kafka: {
+              operation: 'send',
+              endpoints: 'orders',
+              error: 'broker unavailable'
+            }
+          }
+        });
+        const internalSpan = createInternalSpan();
+        const otelSpan = createOtelSpan({
+          ec: 1,
+          data: {
+            operation: 'publish',
+            tags: {
+              error: 'otel failed'
+            }
+          }
+        });
 
-        const result = extractSpanMetadata(input, mappers.get(input));
+        expect(extractSpanMetadata(httpSpan, mappers.get(httpSpan))).to.include({
+          traceId: '0000000000000000000000000trace-1',
+          spanId: '0000000000span-1',
+          kind: 2,
+          name: 'GET /users/:id'
+        });
+        expect(extractSpanMetadata(httpSpan, mappers.get(httpSpan)).status).to.deep.equal({ code: 0 });
 
-        expect(result).to.deep.equal(expectedOutput);
+        expect(extractSpanMetadata(kafkaSpan, mappers.get(kafkaSpan))).to.include({
+          kind: 3,
+          name: 'send orders'
+        });
+        expect(extractSpanMetadata(kafkaSpan, mappers.get(kafkaSpan)).status).to.deep.equal({
+          code: 2,
+          message: 'broker unavailable'
+        });
+
+        expect(extractSpanMetadata(internalSpan, mappers.get(internalSpan))).to.include({
+          kind: 1,
+          name: 'custom.internal'
+        });
+
+        expect(extractSpanMetadata(otelSpan, mappers.get(otelSpan)).status).to.deep.equal({
+          code: 2,
+          message: 'otel failed'
+        });
       });
 
-      it('should extract Kafka producer span metadata correctly', () => {
-        const input = loadTransformerInputFixture('kafka.json');
-        const expectedOutput = loadTransformerOutputFixture('metaData/kafka.json');
+      it('marks HTTP client 4xx spans as errors', () => {
+        const httpClientSpan = createHttpSpan({
+          n: 'node.http.client',
+          k: 2,
+          ec: 0,
+          data: {
+            http: {
+              operation: 'get',
+              path: '/missing',
+              status: 404
+            }
+          }
+        });
 
-        const result = extractSpanMetadata(input, mappers.get(input));
+        const result = extractSpanMetadata(httpClientSpan, mappers.get(httpClientSpan));
 
-        expect(result).to.deep.equal(expectedOutput);
-      });
-
-      it('should extract MongoDB error span metadata correctly', () => {
-        const input = loadTransformerInputFixture('mongodb.json');
-        const expectedOutput = loadTransformerOutputFixture('metaData/mongodb.json');
-
-        const result = extractSpanMetadata(input, mappers.get(input));
-
-        expect(result).to.deep.equal(expectedOutput);
-      });
-
-      it('should extract otel span metadata correctly', () => {
-        const input = loadTransformerInputFixture('otel.json');
-        const expectedOutput = loadTransformerOutputFixture('metaData/otel.json');
-
-        const result = extractSpanMetadata(input, mappers.get(input));
-
-        expect(result).to.deep.equal(expectedOutput);
-      });
-
-      it('should extract Azure Blob span metadata correctly', () => {
-        const input = loadTransformerInputFixture('azure-blob.json');
-        const expectedOutput = loadTransformerOutputFixture('metaData/azure-blob.json');
-
-        const result = extractSpanMetadata(input, mappers.get(input));
-
-        expect(result).to.deep.equal(expectedOutput);
+        expect(result.kind).to.equal(3);
+        expect(result.status).to.deep.equal({
+          code: 2,
+          message: 'http failed'
+        });
       });
     });
 
     describe('spanAttributes', () => {
-      it('should extract HTTP span attributes correctly', () => {
-        const input = loadTransformerInputFixture('http.json');
-        const expectedOutput = loadTransformerOutputFixture('dataAttributes/http.json');
-
-        const result = extractSpanAttributes(input, mappers.get(input));
-
-        expect(result).to.be.an('array');
-        expect(result).to.have.lengthOf(expectedOutput.length);
-
-        expectedOutput.forEach(expectedAttr => {
-          const actualAttr = result.find(attr => attr.key === expectedAttr.key);
-          expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
-          expect(actualAttr.value).to.deep.equal(expectedAttr.value);
-        });
-      });
-
-      it('should extract Kafka span attributes with peer data correctly', () => {
-        const input = loadTransformerInputFixture('kafka.json');
-        const expectedOutput = loadTransformerOutputFixture('dataAttributes/kafka.json');
-
-        const result = extractSpanAttributes(input, mappers.get(input));
-
-        expect(result).to.be.an('array');
-        expect(result.length).to.be.at.least(expectedOutput.length);
-
-        expectedOutput.forEach(expectedAttr => {
-          const actualAttr = result.find(
-            attr => attr.key === expectedAttr.key && JSON.stringify(attr.value) === JSON.stringify(expectedAttr.value)
-          );
-          expect(actualAttr, `Missing or incorrect attribute: ${expectedAttr.key}`).to.exist;
-        });
-      });
-
-      it('should extract MongoDB span attributes with peer data correctly', () => {
-        const input = loadTransformerInputFixture('mongodb.json');
-        const expectedOutput = loadTransformerOutputFixture('dataAttributes/mongodb.json');
-
-        const result = extractSpanAttributes(input, mappers.get(input));
-
-        expect(result).to.be.an('array');
-        expect(result).to.have.lengthOf(expectedOutput.length);
-
-        expectedOutput.forEach(expectedAttr => {
-          const actualAttr = result.find(attr => attr.key === expectedAttr.key);
-          expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
-          expect(actualAttr.value).to.deep.equal(expectedAttr.value);
-        });
-      });
-
-      it('should extract Couchbase span attributes correctly', () => {
-        const input = loadTransformerInputFixture('couchbase.json');
-        const expectedOutput = loadTransformerOutputFixture('dataAttributes/couchbase.json');
-
-        const result = extractSpanAttributes(input, mappers.get(input));
-
-        expect(result).to.be.an('array');
-        expect(result).to.have.lengthOf(expectedOutput.length);
-
-        expectedOutput.forEach(expectedAttr => {
-          const actualAttr = result.find(attr => attr.key === expectedAttr.key);
-          expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
-          expect(actualAttr.value).to.deep.equal(expectedAttr.value);
-        });
-      });
-
-      it('should extract PostgreSQL span attributes correctly', () => {
-        const input = loadTransformerInputFixture('postgresql.json');
-        const expectedOutput = loadTransformerOutputFixture('dataAttributes/postgresql.json');
-
-        const result = extractSpanAttributes(input, mappers.get(input));
-
-        expect(result).to.be.an('array');
-        expect(result).to.have.lengthOf(expectedOutput.length);
-
-        expectedOutput.forEach(expectedAttr => {
-          const actualAttr = result.find(attr => attr.key === expectedAttr.key);
-          expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
-          expect(actualAttr.value).to.deep.equal(expectedAttr.value);
-        });
-      });
-
-      it('should extract otel span attributes correctly', () => {
-        const input = loadTransformerInputFixture('otel.json');
-        const expectedOutput = loadTransformerOutputFixture('dataAttributes/otel.json');
-
-        const result = extractSpanAttributes(input, mappers.get(input));
-
-        expect(result).to.be.an('array');
-        expect(result).to.have.lengthOf(expectedOutput.length);
-
-        expectedOutput.forEach(expectedAttr => {
-          const actualAttr = result.find(attr => attr.key === expectedAttr.key);
-          expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
-          expect(actualAttr.value).to.deep.equal(expectedAttr.value);
-        });
-      });
-
-      it('should extract Azure Blob span attributes correctly', () => {
-        const input = loadTransformerInputFixture('azure-blob.json');
-        const expectedOutput = loadTransformerOutputFixture('dataAttributes/azure-blob.json');
-
-        const result = extractSpanAttributes(input, mappers.get(input));
-
-        expect(result).to.be.an('array');
-        expect(result).to.have.lengthOf(expectedOutput.length);
-
-        expectedOutput.forEach(expectedAttr => {
-          const actualAttr = result.find(attr => attr.key === expectedAttr.key);
-          expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
-          expect(actualAttr.value).to.deep.equal(expectedAttr.value);
-        });
-      });
-
-      it('should extract NATS span attributes correctly', () => {
-        const input = loadTransformerInputFixture('nats.json');
-        const expectedOutput = loadTransformerOutputFixture('dataAttributes/nats.json');
-
-        const result = extractSpanAttributes(input, mappers.get(input));
-
-        expect(result).to.be.an('array');
-        expect(result).to.have.lengthOf(expectedOutput.length);
-
-        expectedOutput.forEach(expectedAttr => {
-          const actualAttr = result.find(attr => attr.key === expectedAttr.key);
-          expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
-          expect(actualAttr.value).to.deep.equal(expectedAttr.value);
-        });
-      });
-
-      it('should extract NATS Streaming span attributes correctly', () => {
-        const input = loadTransformerInputFixture('nats-streaming.json');
-        const expectedOutput = loadTransformerOutputFixture('dataAttributes/nats-streaming.json');
-
-        const result = extractSpanAttributes(input, mappers.get(input));
-
-        expect(result).to.be.an('array');
-        expect(result).to.have.lengthOf(expectedOutput.length);
-
-        expectedOutput.forEach(expectedAttr => {
-          const actualAttr = result.find(attr => attr.key === expectedAttr.key);
-          expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
-          expect(actualAttr.value).to.deep.equal(expectedAttr.value);
-        });
-      });
-
-      it('should extract SQS span attributes correctly', () => {
-        const input = loadTransformerInputFixture('sqs.json');
-        const expectedOutput = loadTransformerOutputFixture('dataAttributes/sqs.json');
-
-        const result = extractSpanAttributes(input, mappers.get(input));
-
-        expect(result).to.be.an('array');
-        expect(result).to.have.lengthOf(expectedOutput.length);
-
-        expectedOutput.forEach(expectedAttr => {
-          const actualAttr = result.find(attr => attr.key === expectedAttr.key);
-          expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
-          expect(actualAttr.value).to.deep.equal(expectedAttr.value);
-        });
-      });
-
-      it('should extract SNS span attributes correctly', () => {
-        const input = loadTransformerInputFixture('sns.json');
-        const expectedOutput = loadTransformerOutputFixture('dataAttributes/sns.json');
-
-        const result = extractSpanAttributes(input, mappers.get(input));
-
-        expect(result).to.be.an('array');
-        expect(result).to.have.lengthOf(expectedOutput.length);
-
-        expectedOutput.forEach(expectedAttr => {
-          const actualAttr = result.find(attr => attr.key === expectedAttr.key);
-          expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
-          expect(actualAttr.value).to.deep.equal(expectedAttr.value);
-        });
-      });
-
-      it('should extract GCP Pub/Sub span attributes correctly', () => {
-        const input = loadTransformerInputFixture('gcps.json');
-        const expectedOutput = loadTransformerOutputFixture('dataAttributes/gcps.json');
-
-        const result = extractSpanAttributes(input, mappers.get(input));
-
-        expect(result).to.be.an('array');
-        expect(result).to.have.lengthOf(expectedOutput.length);
-
-        expectedOutput.forEach(expectedAttr => {
-          const actualAttr = result.find(attr => attr.key === expectedAttr.key);
-          expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
-          expect(actualAttr.value).to.deep.equal(expectedAttr.value);
-        });
-      });
-
-      it('should extract Bull span attributes correctly', () => {
-        const input = loadTransformerInputFixture('bull.json');
-        const expectedOutput = loadTransformerOutputFixture('dataAttributes/bull.json');
-
-        const result = extractSpanAttributes(input, mappers.get(input));
-
-        expect(result).to.be.an('array');
-        expect(result).to.have.lengthOf(expectedOutput.length);
-
-        expectedOutput.forEach(expectedAttr => {
-          const actualAttr = result.find(attr => attr.key === expectedAttr.key);
-          expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
-          expect(actualAttr.value).to.deep.equal(expectedAttr.value);
-        });
-      });
-      it('should extract Memcached span attributes correctly', () => {
-        const input = loadTransformerInputFixture('memcached.json');
-        const expectedOutput = loadTransformerOutputFixture('dataAttributes/memcached.json');
-
-        const result = extractSpanAttributes(input, mappers.get(input));
-
-        expect(result).to.be.an('array');
-        expect(result).to.have.lengthOf(expectedOutput.length);
-
-        expectedOutput.forEach(expectedAttr => {
-          const actualAttr = result.find(attr => attr.key === expectedAttr.key);
-          expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
-          expect(actualAttr.value).to.deep.equal(expectedAttr.value);
-        });
-      });
-      it('should extract Prisma span attributes correctly', () => {
-        const input = loadTransformerInputFixture('prisma.json');
-        const expectedOutput = loadTransformerOutputFixture('dataAttributes/prisma.json');
-
-        const result = extractSpanAttributes(input, mappers.get(input));
-
-        expect(result).to.be.an('array');
-        expect(result).to.have.lengthOf(expectedOutput.length);
-
-        expectedOutput.forEach(expectedAttr => {
-          const actualAttr = result.find(attr => attr.key === expectedAttr.key);
-          expect(actualAttr, `Missing attribute: ${expectedAttr.key}`).to.exist;
-          expect(actualAttr.value).to.deep.equal(expectedAttr.value);
-        });
-      });
-
-      it('should return empty array for span without data', () => {
-        const result = extractSpanAttributes({ t: '123', s: '456' }, mappers.get({}));
-        expect(result).to.deep.equal([]);
-      });
-
-      it('should return empty array for null span', () => {
-        const result = extractSpanAttributes(null, mappers.get({}));
-        expect(result).to.deep.equal([]);
-      });
-    });
-  });
-
-  describe('mappers', () => {
-    describe('http', () => {
-      it('should map HTTP method to uppercase', () => {
-        const span = {
-          t: '123',
-          s: '456',
-          data: {
-            http: {
-              operation: 'get',
-              path: '/api/users',
-              status: 200
-            }
-          }
-        };
-
-        const result = extractSpanAttributes(span, mappers.get(span));
-        const methodAttr = result.find(attr => attr.key === 'http.method');
-
-        expect(methodAttr).to.exist;
-        expect(methodAttr.value.stringValue).to.equal('GET');
-      });
-
-      it('should map HTTP status code', () => {
-        const span = {
-          t: '123',
-          s: '456',
+      it('extracts representative attributes for http, database, messaging, cloud and otel spans', () => {
+        const httpSpan = createHttpSpan({
           data: {
             http: {
               operation: 'post',
-              path: '/api/users',
-              status: 201
+              path: '/orders',
+              endpoints: 'https://example.test/orders',
+              status: 201,
+              error: 'validation failed'
             }
           }
-        };
-
-        const result = extractSpanAttributes(span, mappers.get(span));
-        const statusAttr = result.find(attr => attr.key === 'http.status_code');
-
-        expect(statusAttr).to.exist;
-        expect(statusAttr.value.intValue).to.equal(201);
-      });
-
-      it('should map HTTP error', () => {
-        const span = {
-          t: '123',
-          s: '456',
-          data: {
-            http: {
-              operation: 'get',
-              path: '/api/error',
-              status: 500,
-              error: 'Internal Server Error'
-            }
-          }
-        };
-
-        const result = extractSpanAttributes(span, mappers.get(span));
-        const errorAttr = result.find(attr => attr.key === 'error.type');
-
-        expect(errorAttr).to.exist;
-        expect(errorAttr.value.stringValue).to.equal('Internal Server Error');
-      });
-    });
-
-    describe('database', () => {
-      it('should map PostgreSQL attributes', () => {
-        const span = {
-          t: '123',
-          s: '456',
-          data: {
-            pg: {
-              stmt: 'SELECT * FROM users',
-              host: 'localhost',
-              port: 5432,
-              db: 'mydb',
-              user: 'admin'
-            }
-          }
-        };
-
-        const result = extractSpanAttributes(span, mappers.get(span));
-
-        const systemAttr = result.find(attr => attr.key === 'db.system');
-        expect(systemAttr).to.exist;
-        expect(systemAttr.value.stringValue).to.equal('postgresql');
-
-        const stmtAttr = result.find(attr => attr.key === 'db.query.text');
-        expect(stmtAttr).to.exist;
-        expect(stmtAttr.value.stringValue).to.equal('SELECT * FROM users');
-
-        const dbAttr = result.find(attr => attr.key === 'db.name');
-        expect(dbAttr).to.exist;
-        expect(dbAttr.value.stringValue).to.equal('mydb');
-      });
-
-      it('should map MongoDB attributes', () => {
-        const span = {
-          t: '123',
-          s: '456',
+        });
+        const pgSpan = createPgSpan();
+        const mongoSpan = createSpan({
+          n: 'mongo',
           data: {
             mongo: {
               command: 'find',
-              service: 'mongodb://localhost:27017',
-              namespace: 'mydb.users',
-              filter: '{"age": {"$gt": 18}}'
+              service: 'mongodb://mongo.example.test:27017',
+              namespace: 'users.accounts',
+              collection: 'accounts',
+              filter: '{"active":true}'
             }
           }
-        };
-
-        const result = extractSpanAttributes(span, mappers.get(span));
-
-        const systemAttr = result.find(attr => attr.key === 'db.system');
-        expect(systemAttr).to.exist;
-        expect(systemAttr.value.stringValue).to.equal('mongodb');
-
-        const operationAttr = result.find(attr => attr.key === 'db.operation.name');
-        expect(operationAttr).to.exist;
-        expect(operationAttr.value.stringValue).to.equal('FIND');
-      });
-
-      it('should map Couchbase attributes', () => {
-        const span = {
-          t: '123',
-          s: '456',
-          data: {
-            couchbase: {
-              hostname: 'couchbase://localhost:8091',
-              bucket: 'my-bucket',
-              type: 'couchbase',
-              sql: 'SELECT * FROM users WHERE age > 18'
-            }
-          }
-        };
-
-        const result = extractSpanAttributes(span, mappers.get(span));
-
-        const systemAttr = result.find(attr => attr.key === 'db.system');
-        expect(systemAttr).to.exist;
-        expect(systemAttr.value.stringValue).to.equal('other_nosql');
-
-        const bucketAttr = result.find(attr => attr.key === 'db.name');
-        expect(bucketAttr).to.exist;
-        expect(bucketAttr.value.stringValue).to.equal('my-bucket');
-
-        const sqlAttr = result.find(attr => attr.key === 'db.query.text');
-        expect(sqlAttr).to.exist;
-        expect(sqlAttr.value.stringValue).to.equal('SELECT * FROM users WHERE age > 18');
-      });
-    });
-
-    describe('messaging', () => {
-      it('should map Kafka attributes', () => {
-        const span = {
-          t: '123',
-          s: '456',
-          data: {
-            kafka: {
-              operation: 'send',
-              endpoints: 'my-topic'
-            }
-          }
-        };
-
-        const result = extractSpanAttributes(span, mappers.get(span));
-
-        const systemAttr = result.find(attr => attr.key === 'messaging.system');
-        expect(systemAttr).to.exist;
-        expect(systemAttr.value.stringValue).to.equal('kafka');
-
-        const destAttr = result.find(attr => attr.key === 'messaging.destination');
-        expect(destAttr).to.exist;
-      });
-
-      it('should map RabbitMQ attributes', () => {
-        const span = {
-          t: '123',
-          s: '456',
+        });
+        const rabbitmqSpan = createSpan({
+          n: 'rabbitmq',
           data: {
             rabbitmq: {
               sort: 'publish',
-              exchange: 'my-exchange',
-              key: 'routing.key',
-              address: 'localhost:5672'
+              exchange: 'orders',
+              key: 'orders.created',
+              address: 'mq.example.test:5672'
             }
           }
-        };
+        });
+        const azureBlobSpan = createAzureBlobSpan();
+        const otelSpan = createOtelSpan();
 
-        const result = extractSpanAttributes(span, mappers.get(span));
+        const httpAttributes = extractSpanAttributes(httpSpan, mappers.get(httpSpan));
+        expectAttribute(httpAttributes, 'http.method', { stringValue: 'POST' });
+        expectAttribute(httpAttributes, 'http.status_code', { intValue: 201 });
+        expectAttribute(httpAttributes, 'error.type', { stringValue: 'validation failed' });
 
-        const systemAttr = result.find(attr => attr.key === 'messaging.system');
-        expect(systemAttr).to.exist;
-        expect(systemAttr.value.stringValue).to.equal('rabbitmq');
+        const pgAttributes = extractSpanAttributes(pgSpan, mappers.get(pgSpan));
+        expectAttribute(pgAttributes, 'db.system', { stringValue: 'postgresql' });
+        expectAttribute(pgAttributes, 'server.address', { stringValue: 'db.example.test' });
+        expectAttribute(pgAttributes, 'server.port', { intValue: 5432 });
+
+        const mongoAttributes = extractSpanAttributes(mongoSpan, mappers.get(mongoSpan));
+        expectAttribute(mongoAttributes, 'db.system', { stringValue: 'mongodb' });
+        expectAttribute(mongoAttributes, 'db.operation.name', { stringValue: 'FIND' });
+        expectAttribute(mongoAttributes, 'db.collection.name', { stringValue: 'accounts' });
+        expectAttribute(mongoAttributes, 'server.address', { stringValue: 'mongo.example.test' });
+        expectAttribute(mongoAttributes, 'server.port', { intValue: 27017 });
+
+        const rabbitmqAttributes = extractSpanAttributes(rabbitmqSpan, mappers.get(rabbitmqSpan));
+        expectAttribute(rabbitmqAttributes, 'messaging.system', { stringValue: 'rabbitmq' });
+        expectAttribute(rabbitmqAttributes, 'messaging.operation.name', { stringValue: 'publish' });
+        expectAttribute(rabbitmqAttributes, 'messaging.destination', { stringValue: 'orders.orders.created' });
+        expectAttribute(rabbitmqAttributes, 'server.address', { stringValue: 'mq.example.test' });
+        expectAttribute(rabbitmqAttributes, 'server.port', { intValue: 5672 });
+
+        const azureBlobAttributes = extractSpanAttributes(azureBlobSpan, mappers.get(azureBlobSpan));
+        expectAttribute(azureBlobAttributes, 'cloud.provider', { stringValue: 'azure' });
+        expect(azureBlobAttributes.some(attribute => attribute.value.stringValue === 'invoice.pdf')).to.be.true;
+
+        const otelAttributes = extractSpanAttributes(otelSpan, mappers.get(otelSpan));
+        expectAttribute(otelAttributes, 'operation', { stringValue: 'publish' });
+        expectAttribute(otelAttributes, 'http.method', { stringValue: 'POST' });
+        expectAttribute(otelAttributes, 'success', { boolValue: true });
+      });
+
+      it('returns empty array for spans without data', () => {
+        expect(extractSpanAttributes({ t: '123', s: '456' }, mappers.get({}))).to.deep.equal([]);
+        expect(extractSpanAttributes(null, mappers.get({}))).to.deep.equal([]);
       });
     });
   });

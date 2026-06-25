@@ -5,7 +5,7 @@
 'use strict';
 
 const ctx = require('../../common/context');
-const { SPAN_KINDS } = require('../mappers/constants');
+const { OTLP_SPAN_KINDS, INSTANA_SPAN_KINDS } = require('../mappers/constants');
 
 const metaMapper = {
   /**
@@ -43,11 +43,18 @@ const metaMapper = {
    * @returns {number | undefined}
    */
   convertSpanKind(span) {
-    if (span.k === undefined) return undefined;
-    if (span.k === 1) return SPAN_KINDS.SERVER;
-    if (span.k === 2) return SPAN_KINDS.CLIENT;
-    if (span.k === 3) return SPAN_KINDS.INTERNAL;
-    return SPAN_KINDS.UNSPECIFIED;
+    if (span.k === INSTANA_SPAN_KINDS.ENTRY) {
+      return OTLP_SPAN_KINDS.SERVER;
+    }
+    if (span.k === INSTANA_SPAN_KINDS.EXIT) {
+      return OTLP_SPAN_KINDS.CLIENT;
+    }
+
+    if (span.k === INSTANA_SPAN_KINDS.INTERMEDIATE) {
+      return OTLP_SPAN_KINDS.INTERNAL;
+    }
+
+    return OTLP_SPAN_KINDS.UNSPECIFIED;
   },
 
   /**
@@ -70,14 +77,15 @@ const metaMapper = {
   },
 
   /**
+   * TODO: currently not supported in Instana and not added in the payload
    * @returns {any[]}
    */
-  // TODO: currently not supported and not added in the payload
   events() {
     return [];
   },
 
   /**
+   * TODO: currently not supported in Instana and not added in the payload
    * @returns {any[]}
    */
   links() {

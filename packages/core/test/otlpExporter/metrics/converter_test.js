@@ -18,7 +18,11 @@ const resourceTransformer = proxyquire('../../../src/otlpExporter/common/transfo
 });
 
 const converter = proxyquire('../../../src/otlpExporter/metrics', {
-  '../common/transformers/resource': resourceTransformer
+  './converter': proxyquire('../../../src/otlpExporter/metrics/converter', {
+    './transformers': {
+      resource: resourceTransformer
+    }
+  })
 });
 
 function loadInputFixture(filename) {

@@ -7,7 +7,7 @@
 const { toUpperCase, firstDefined, formatOTLPValue, combineFields, extractHost, extractPort } = require('./util');
 
 const ctx = require('../../common/context');
-const { INSTRUMENTATION_TYPES, STATUS_CODES, SPECIAL_SPAN_TYPES } = require('./constants');
+const { INSTRUMENTATION_TYPES, OTLP_STATUS_CODES, SPECIAL_SPAN_DATA_TYPES } = require('./constants');
 
 const OTLP = /** @type {any} */ (ctx.semConv);
 
@@ -393,7 +393,9 @@ function getSpanType(span) {
     return null;
   }
 
-  const key = Object.keys(span.data).find(k => k !== INSTRUMENTATION_TYPES.PEER && k !== SPECIAL_SPAN_TYPES.RESOURCE);
+  const key = Object.keys(span.data).find(
+    k => k !== INSTRUMENTATION_TYPES.PEER && k !== SPECIAL_SPAN_DATA_TYPES.RESOURCE
+  );
 
   return key || null;
 }
@@ -461,7 +463,7 @@ module.exports = {
     for (let i = 0; i < spanTypes.length; i++) {
       const spanType = spanTypes[i];
 
-      if (spanType === SPECIAL_SPAN_TYPES.RESOURCE) {
+      if (spanType === SPECIAL_SPAN_DATA_TYPES.RESOURCE) {
         continue;
       }
 
@@ -497,12 +499,12 @@ module.exports = {
     const shouldReportHttpClientAsError = span.n === 'node.http.client' && data?.status >= 400 && data?.status < 500;
 
     if (!span?.ec && !shouldReportHttpClientAsError) {
-      return { code: STATUS_CODES.UNSET };
+      return { code: OTLP_STATUS_CODES.UNSET };
     }
 
     return {
-      code: STATUS_CODES.ERROR,
-      message: String(data?.error || `${type || span?.n || 'operation'} failed`)
+      code: OTLP_STATUS_CODES.ERROR,
+      message: String(data?.error || `${type || span.n || 'operation'} failed`)
     };
   }
 };

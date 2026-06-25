@@ -1,5 +1,0 @@
-[
-  { "key": "http.method", "value": { "stringValue": "GET" } },
-  { "key": "http.url", "value": { "stringValue": "https://jsonplaceholder.typicode.com/todos/1" } },
-  { "key": "http.status_code", "value": { "intValue": 200 } }
-]

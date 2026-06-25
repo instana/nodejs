@@ -11,9 +11,9 @@ const { INSTRUMENTATION_SCOPE_NAME } = require('../constants');
 let SDK_VERSION = '1.0.0';
 try {
   // @ts-ignore
-  SDK_VERSION = require('../../../../package.json').version || '1.0.0';
+  SDK_VERSION = require('../../../../package.json').version;
 } catch (_) {
-  // ignore
+  // ignore the error
 }
 
 const SDK_LANGUAGE = 'nodejs';
