@@ -45,6 +45,7 @@ describe('config.normalizeConfig', () => {
     delete process.env.INSTANA_IGNORE_ENDPOINTS;
     delete process.env.INSTANA_IGNORE_ENDPOINTS_PATH;
     delete process.env.INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION;
+    delete process.env.INSTANA_TRACING_BIND_VARIABLES;
   }
 
   describe('default configuration', () => {
@@ -2094,6 +2095,63 @@ describe('config.normalizeConfig', () => {
     });
   });
 
+  describe('captureBindVariables configuration', () => {
+    it('should default captureBindVariables to false', () => {
+      const config = coreConfig.normalize();
+      expect(config.tracing.captureBindVariables).to.equal(false);
+    });
+
+    it('should use default (false) when neither env nor config is set', () => {
+      const config = coreConfig.normalize({});
+      expect(config.tracing.captureBindVariables).to.be.false;
+    });
+
+    it('should enable captureBindVariables via config', () => {
+      const config = coreConfig.normalize({ userConfig: { tracing: { captureBindVariables: true } } });
+      expect(config.tracing.captureBindVariables).to.equal(true);
+    });
+
+    it('should disable captureBindVariables via config', () => {
+      const config = coreConfig.normalize({ userConfig: { tracing: { captureBindVariables: false } } });
+      expect(config.tracing.captureBindVariables).to.equal(false);
+    });
+
+    it('should enable captureBindVariables via INSTANA_TRACING_BIND_VARIABLES=true', () => {
+      process.env.INSTANA_TRACING_BIND_VARIABLES = 'true';
+      const config = coreConfig.normalize();
+      expect(config.tracing.captureBindVariables).to.equal(true);
+    });
+
+    it('should not enable captureBindVariables when INSTANA_TRACING_BIND_VARIABLES is not "true"', () => {
+      process.env.INSTANA_TRACING_BIND_VARIABLES = 'false';
+      const config = coreConfig.normalize();
+      expect(config.tracing.captureBindVariables).to.equal(false);
+    });
+
+    it('should default to false when INSTANA_TRACING_BIND_VARIABLES is set to an invalid value', () => {
+      process.env.INSTANA_TRACING_BIND_VARIABLES = 'invalid';
+      const config = coreConfig.normalize();
+      expect(config.tracing.captureBindVariables).to.equal(false);
+    });
+
+    it('should use config value when env is not set', () => {
+      const config = coreConfig.normalize({ userConfig: { tracing: { captureBindVariables: true } } });
+      expect(config.tracing.captureBindVariables).to.be.true;
+    });
+
+    it('should give precedence to INSTANA_TRACING_BIND_VARIABLES env var over config', () => {
+      process.env.INSTANA_TRACING_BIND_VARIABLES = 'true';
+      const config = coreConfig.normalize({ userConfig: { tracing: { captureBindVariables: false } } });
+      expect(config.tracing.captureBindVariables).to.equal(true);
+    });
+
+    it('should give precedence to INSTANA_TRACING_BIND_VARIABLES=false over config=true', () => {
+      process.env.INSTANA_TRACING_BIND_VARIABLES = 'false';
+      const config = coreConfig.normalize({ userConfig: { tracing: { captureBindVariables: true } } });
+      expect(config.tracing.captureBindVariables).to.equal(false);
+    });
+  });
+
   function checkDefaults(config) {
     expect(config).to.be.an('object');
 
@@ -2124,6 +2182,7 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.kafka.traceCorrelation).to.be.true;
     expect(config.tracing.useOpentelemetry).to.equal(true);
     expect(config.tracing.allowRootExitSpan).to.equal(false);
+    expect(config.tracing.captureBindVariables).to.equal(false);
 
     expect(config.preloadOpentelemetry).to.equal(false);
 
