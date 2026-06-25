@@ -4,11 +4,15 @@
 
 'use strict';
 
-const { expect } = require('chai');
+const chai = require('chai');
+const { expect } = chai;
 const proxyquire = require('proxyquire');
 const EventEmitter = require('events');
 const sinon = require('sinon');
+const sinonChai = require('sinon-chai');
 const testUtils = require('@_local/core/test/test_util');
+
+chai.use(sinonChai);
 
 class MockRequestEmitter extends EventEmitter {
   setTimeout() {}
