@@ -35,7 +35,10 @@ describe('agent connection/bazel', function () {
         '@instana/core': mockInstanaCoreHttp()
       });
 
-      agentConnection.init({ logger: testUtils.createFakeLogger() }, { pid: 1234 });
+      agentConnection.init(
+        { logger: testUtils.createFakeLogger(), tracing: { otlp: { enabled: false } } },
+        { pid: 1234 }
+      );
     });
 
     it('should remove the leading path segmentes which node-patches prepends', done => {
@@ -60,7 +63,10 @@ describe('agent connection/bazel', function () {
         '@instana/core': mockInstanaCoreHttp()
       });
 
-      agentConnection.init({ logger: testUtils.createFakeLogger() }, { pid: 1234 });
+      agentConnection.init(
+        { logger: testUtils.createFakeLogger(), tracing: { otlp: { enabled: false } } },
+        { pid: 1234 }
+      );
     });
 
     it('should not modify the readlinkSync result', done => {
