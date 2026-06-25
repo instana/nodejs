@@ -49,8 +49,8 @@ describe('metrics/converters/otlp', () => {
   describe('converter', () => {
     describe('basic conversion', () => {
       it('should convert array of metrics to OTLP format', () => {
-        const input = loadInputFixture('simple-metrics.json');
-        const expectedOutput = loadOutputFixture('simple-metrics-output.json');
+        const input = loadInputFixture('metrics.json');
+        const expectedOutput = loadOutputFixture('metrics-output.json');
 
         const result = converter.transform(input);
 
