@@ -1,6 +1,0 @@
-[
-  { "key": "messaging.system", "value": { "stringValue": "bull" } },
-  { "key": "messaging.operation.name", "value": { "stringValue": "exit" } },
-  { "key": "messaging.destination", "value": { "stringValue": "email-notifications" } },
-  { "key": "messaging.message.id", "value": { "stringValue": "job-12345" } }
-]

@@ -1,7 +1,0 @@
-[
-  { "key": "messaging.system", "value": { "stringValue": "nats" } },
-  { "key": "messaging.destination", "value": { "stringValue": "events.user.signup" } },
-  { "key": "messaging.operation.name", "value": { "stringValue": "publish" } },
-  { "key": "server.address", "value": { "stringValue": "localhost" } },
-  { "key": "server.port", "value": { "intValue": 4222 } }
-]

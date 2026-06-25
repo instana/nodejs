@@ -5,9 +5,9 @@
 'use strict';
 
 const { formatOTLPValue } = require('./util');
-const { STATUS_CODES, SPECIAL_SPAN_TYPES } = require('./constants');
+const { OTLP_STATUS_CODES, SPECIAL_SPAN_DATA_TYPES } = require('./constants');
 
-const OTEL_SPAN_NAME = SPECIAL_SPAN_TYPES.OTEL;
+const OTEL_SPAN_NAME = SPECIAL_SPAN_DATA_TYPES.OTEL;
 
 /**
  * @typedef {Object} OtelMapping
@@ -33,7 +33,7 @@ const instrumentationMappings = {
  * @returns {boolean}
  */
 function isOtelSpan(span) {
-  return span?.n === OTEL_SPAN_NAME;
+  return span.n === OTEL_SPAN_NAME;
 }
 
 /**
@@ -70,7 +70,7 @@ module.exports = {
   isOtelSpan,
   /** @param {import('../../../core').InstanaBaseSpan} span */
   spanName(span) {
-    return span?.n || 'unknown';
+    return span.n || 'unknown';
   },
   /** @param {import('../../../core').InstanaBaseSpan} span */
   spanAttributes(span) {
@@ -80,13 +80,13 @@ module.exports = {
     for (let i = 0; i < spanTypes.length; i++) {
       const spanType = spanTypes[i];
 
-      if (spanType === SPECIAL_SPAN_TYPES.RESOURCE) {
+      if (spanType === SPECIAL_SPAN_DATA_TYPES.RESOURCE) {
         continue;
       }
 
       const spanData = span.data[spanType];
 
-      if (spanType === SPECIAL_SPAN_TYPES.TAGS && spanData) {
+      if (spanType === SPECIAL_SPAN_DATA_TYPES.TAGS && spanData) {
         const tagKeys = Object.keys(spanData);
 
         for (let j = 0; j < tagKeys.length; j++) {
@@ -122,11 +122,11 @@ module.exports = {
   /** @param {import('../../../core').InstanaBaseSpan} span */
   spanStatus(span) {
     if (!span?.ec) {
-      return { code: STATUS_CODES.UNSET };
+      return { code: OTLP_STATUS_CODES.UNSET };
     }
 
     return {
-      code: STATUS_CODES.ERROR,
+      code: OTLP_STATUS_CODES.ERROR,
       message: String(span.data?.tags?.error || `${span?.n || 'operation'} failed`)
     };
   }

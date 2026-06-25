@@ -1,4 +1,0 @@
-[
-  { "key": "operation", "value": { "stringValue": "fs" } },
-  { "key": "name", "value": { "stringValue": "fs writeFile" } }
-]

@@ -10,7 +10,7 @@ const {
   spanAttributes,
   spanStatus
 } = require('../../../../src/otlpExporter/traces/mappers/instanaInstrumentationMappings');
-const { STATUS_CODES } = require('../../../../src/otlpExporter/traces/mappers/constants');
+const { OTLP_STATUS_CODES } = require('../../../../src/otlpExporter/traces/mappers/constants');
 
 describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
   describe('spanName', () => {
@@ -270,7 +270,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       const result = spanStatus(span);
 
       expect(result).to.deep.equal({
-        code: STATUS_CODES.UNSET
+        code: OTLP_STATUS_CODES.UNSET
       });
     });
 
@@ -291,7 +291,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       const result = spanStatus(span);
 
       expect(result).to.deep.equal({
-        code: STATUS_CODES.ERROR,
+        code: OTLP_STATUS_CODES.ERROR,
         message: 'Internal Server Error'
       });
     });
@@ -311,7 +311,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       const result = spanStatus(span);
 
       expect(result).to.deep.equal({
-        code: STATUS_CODES.ERROR,
+        code: OTLP_STATUS_CODES.ERROR,
         message: 'http failed'
       });
     });
@@ -331,7 +331,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       const result = spanStatus(span);
 
       expect(result).to.deep.equal({
-        code: STATUS_CODES.ERROR,
+        code: OTLP_STATUS_CODES.ERROR,
         message: 'http failed'
       });
     });
@@ -351,7 +351,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       const result = spanStatus(span);
 
       expect(result).to.deep.equal({
-        code: STATUS_CODES.ERROR,
+        code: OTLP_STATUS_CODES.ERROR,
         message: 'http failed'
       });
     });
@@ -372,7 +372,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
 
       // 5xx without ec should be UNSET (not in 4xx range)
       expect(result).to.deep.equal({
-        code: STATUS_CODES.UNSET
+        code: OTLP_STATUS_CODES.UNSET
       });
     });
 
@@ -391,7 +391,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       const result = spanStatus(span);
 
       expect(result).to.deep.equal({
-        code: STATUS_CODES.UNSET
+        code: OTLP_STATUS_CODES.UNSET
       });
     });
 
@@ -410,7 +410,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       const result = spanStatus(span);
 
       expect(result).to.deep.equal({
-        code: STATUS_CODES.ERROR,
+        code: OTLP_STATUS_CODES.ERROR,
         message: 'Connection refused'
       });
     });
@@ -429,7 +429,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       const result = spanStatus(span);
 
       expect(result).to.deep.equal({
-        code: STATUS_CODES.ERROR,
+        code: OTLP_STATUS_CODES.ERROR,
         message: 'redis failed'
       });
     });
@@ -444,7 +444,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       const result = spanStatus(span);
 
       expect(result).to.deep.equal({
-        code: STATUS_CODES.ERROR,
+        code: OTLP_STATUS_CODES.ERROR,
         message: 'custom.operation failed'
       });
     });
@@ -458,7 +458,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       const result = spanStatus(span);
 
       expect(result).to.deep.equal({
-        code: STATUS_CODES.ERROR,
+        code: OTLP_STATUS_CODES.ERROR,
         message: 'operation failed'
       });
     });

@@ -54,7 +54,7 @@ function convert(metrics) {
           scopeMetrics: [
             {
               scope: INSTRUMENTATION_SCOPE,
-              // TODO: implement metrics transformation later
+              // TODO: implement metrics transformation later in phase2
               metrics: []
             }
           ]

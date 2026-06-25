@@ -7,7 +7,6 @@
 // Base mappings - common across all semantic convention versions
 // Version-specific attribute names should be defined in their respective version directories
 const MAPPINGS = {
-  // Resource attributes - https://opentelemetry.io/docs/specs/semconv/resource/
   resource: {
     SERVICE_NAME: 'service.name',
     SDK_LANGUAGE: 'telemetry.sdk.language',

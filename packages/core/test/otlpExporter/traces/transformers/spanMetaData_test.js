@@ -8,7 +8,7 @@ const expect = require('chai').expect;
 const sinon = require('sinon');
 const proxyquire = require('proxyquire');
 
-const { SPAN_KINDS, STATUS_CODES } = require('../../../../src/otlpExporter/traces/mappers/constants');
+const { OTLP_SPAN_KINDS, OTLP_STATUS_CODES } = require('../../../../src/otlpExporter/traces/mappers/constants');
 
 describe('otlpExporter/traces/transformers/spanMetaData', () => {
   let extractSpanMetadata;
@@ -33,7 +33,7 @@ describe('otlpExporter/traces/transformers/spanMetaData', () => {
 
     mockMapper = {
       spanName: sinon.stub().returns('test.span'),
-      spanStatus: sinon.stub().returns({ code: STATUS_CODES.UNSET })
+      spanStatus: sinon.stub().returns({ code: OTLP_STATUS_CODES.UNSET })
     };
 
     const spanMetaDataModule = proxyquire('../../../../src/otlpExporter/traces/transformers/spanMetaData', {
@@ -60,11 +60,11 @@ describe('otlpExporter/traces/transformers/spanMetaData', () => {
         traceId: '00000000000000001234567890abcdef',
         spanId: 'fedcba0987654321',
         parentSpanId: '1111222233334444',
-        kind: SPAN_KINDS.SERVER,
+        kind: OTLP_SPAN_KINDS.SERVER,
         startTimeUnixNano: '1609459200000000000',
         endTimeUnixNano: '1609459200100000000',
         name: 'test.span',
-        status: { code: STATUS_CODES.UNSET }
+        status: { code: OTLP_STATUS_CODES.UNSET }
       });
 
       expect(mockMapper.spanName.calledOnceWith(span)).to.be.true;
@@ -125,7 +125,7 @@ describe('otlpExporter/traces/transformers/spanMetaData', () => {
 
       const result = extractSpanMetadata(span, mockMapper);
 
-      expect(result.kind).to.equal(SPAN_KINDS.SERVER);
+      expect(result.kind).to.equal(OTLP_SPAN_KINDS.SERVER);
     });
 
     it('should convert span kind 2 to CLIENT', () => {
@@ -139,7 +139,7 @@ describe('otlpExporter/traces/transformers/spanMetaData', () => {
 
       const result = extractSpanMetadata(span, mockMapper);
 
-      expect(result.kind).to.equal(SPAN_KINDS.CLIENT);
+      expect(result.kind).to.equal(OTLP_SPAN_KINDS.CLIENT);
     });
 
     it('should convert span kind 3 to INTERNAL', () => {
@@ -153,7 +153,7 @@ describe('otlpExporter/traces/transformers/spanMetaData', () => {
 
       const result = extractSpanMetadata(span, mockMapper);
 
-      expect(result.kind).to.equal(SPAN_KINDS.INTERNAL);
+      expect(result.kind).to.equal(OTLP_SPAN_KINDS.INTERNAL);
     });
 
     it('should convert unknown span kind to UNSPECIFIED', () => {
@@ -167,7 +167,7 @@ describe('otlpExporter/traces/transformers/spanMetaData', () => {
 
       const result = extractSpanMetadata(span, mockMapper);
 
-      expect(result.kind).to.equal(SPAN_KINDS.UNSPECIFIED);
+      expect(result.kind).to.equal(OTLP_SPAN_KINDS.UNSPECIFIED);
     });
 
     it('should convert span kind 0 to UNSPECIFIED', () => {
@@ -181,7 +181,7 @@ describe('otlpExporter/traces/transformers/spanMetaData', () => {
 
       const result = extractSpanMetadata(span, mockMapper);
 
-      expect(result.kind).to.equal(SPAN_KINDS.UNSPECIFIED);
+      expect(result.kind).to.equal(OTLP_SPAN_KINDS.UNSPECIFIED);
     });
 
     it('should convert timestamps to nanoseconds', () => {
@@ -288,7 +288,7 @@ describe('otlpExporter/traces/transformers/spanMetaData', () => {
       expect(result).to.not.have.property('parentSpanId');
     });
 
-    it('should exclude undefined span kind', () => {
+    it('should include undefined span kind as unspecified', () => {
       const span = {
         t: '1234567890abcdef',
         s: 'fedcba0987654321',
@@ -298,7 +298,7 @@ describe('otlpExporter/traces/transformers/spanMetaData', () => {
 
       const result = extractSpanMetadata(span, mockMapper);
 
-      expect(result).to.not.have.property('kind');
+      expect(result).to.have.property('kind');
     });
 
     it('should exclude undefined start time', () => {
@@ -395,7 +395,7 @@ describe('otlpExporter/traces/transformers/spanMetaData', () => {
       };
 
       const expectedStatus = {
-        code: STATUS_CODES.ERROR,
+        code: OTLP_STATUS_CODES.ERROR,
         message: 'Test error'
       };
       mockMapper.spanStatus.returns(expectedStatus);
@@ -488,9 +488,9 @@ describe('otlpExporter/traces/transformers/spanMetaData', () => {
       expect(result).to.have.property('spanId');
       expect(result).to.have.property('name');
       expect(result).to.have.property('status');
+      expect(result).to.have.property('kind');
       expect(result).to.have.property('endTimeUnixNano');
       expect(result).to.not.have.property('parentSpanId');
-      expect(result).to.not.have.property('kind');
       expect(result).to.not.have.property('startTimeUnixNano');
     });
 

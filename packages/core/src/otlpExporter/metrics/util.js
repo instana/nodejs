@@ -5,17 +5,16 @@
 'use strict';
 
 /**
- * @param {Object} from
+ * @param {Record<string, any>} from
  * @returns {string}
  */
 function getResourceKey(from) {
   if (!from) return 'h:empty|e:empty';
-  // @ts-ignore
   return `h:${from.h || 'empty'}|e:${from.e || 'empty'}`;
 }
 
 /**
- * @param {Object} obj
+ * @param {Record<string, any>} obj
  * @param {string} [prefix]
  * @returns {Record<string, any>}
  */
@@ -28,7 +27,6 @@ function flattenObject(obj, prefix = '') {
      * @param {string} key
      */
     (flattened, key) => {
-      // @ts-ignore
       const value = obj[key];
       if (value === null || value === undefined) return flattened;
 
@@ -83,7 +81,6 @@ function normalizeObject(metricsObj) {
 
   return Object.keys(flattened).map(key => ({
     name: key,
-    // @ts-ignore
     value: flattened[key],
     timestamp: fallbackTimestamp,
     unit: '', // we don't have any unit
