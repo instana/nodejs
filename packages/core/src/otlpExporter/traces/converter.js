@@ -30,6 +30,7 @@ function convert(spans) {
   const otlpSpans = [];
   let sampleResourceSpan = null;
 
+  // TODO: consider parallel processing of spans in later phase
   for (let i = 0; i < spans.length; i++) {
     const span = spans[i];
     if (isLogSpan(span)) {

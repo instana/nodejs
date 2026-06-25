@@ -1,0 +1,11 @@
+{
+  "name": "instana-collector-test-otlp",
+  "version": "1.0.0",
+  "private": true,
+  "main": "app.js",
+  "dependencies": {
+   "@instana/collector": "{{collectorVersion}}",
+    "@instana/core": "{{coreVersion}}",
+    "@instana/shared-metrics": "{{sharedMetricsVersion}}"
+  }
+}
