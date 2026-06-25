@@ -498,7 +498,7 @@ module.exports = function (name, version, isLatest) {
 
       afterEach(() => Promise.all([serverControls.clearIpcMessages(), clientControls.clearIpcMessages()]));
 
-      it('should trace downstream calls', async () => {
+      it('should trace downstream calls (not ignore exit call alone)', async () => {
         await clientControls.sendRequest({ method: 'GET', path: '/downstream-call' });
 
         await retry(async () => {
