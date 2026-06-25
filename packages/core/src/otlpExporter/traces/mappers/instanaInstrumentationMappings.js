@@ -55,38 +55,19 @@ const OTLP = /** @type {any} */ (ctx.semConv);
 const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.HTTP]: {
     spanName: data => {
-      const method = (data.operation || data.method || '').toUpperCase();
+      const method = data.operation.toUpperCase();
       return `${method} ${data.path_tpl || data.path || '/'}`;
     },
     spanAttributes: [
-      {
-        otlp: OTLP.http.REQUEST_METHOD,
-        instana: ['operation', 'method'],
-        transform: values => {
-          const value = firstDefined(values);
-          return value ? toUpperCase(value) : value;
-        }
-      },
-      { otlp: OTLP.http.URL_FULL, instana: ['endpoints', 'url'] },
+      { otlp: OTLP.http.REQUEST_METHOD, instana: 'operation', transform: toUpperCase },
+      { otlp: OTLP.http.URL_FULL, instana: 'endpoints' },
       { otlp: OTLP.http.URL_PATH, instana: 'path' },
       { otlp: OTLP.http.URL_QUERY, instana: 'params' },
-      {
-        otlp: OTLP.http.SERVER_ADDRESS,
-        instana: ['connection', 'host'],
-        transform: values => {
-          const value = firstDefined(values);
-          return value ? extractHost(value) : undefined;
-        }
-      },
-      {
-        otlp: OTLP.http.SERVER_PORT,
-        instana: ['connection', 'host'],
-        transform: values => {
-          const value = firstDefined(values);
-          return value ? extractPort(value) : undefined;
-        }
-      },
+      { otlp: OTLP.http.SERVER_ADDRESS, instana: 'connection', transform: extractHost },
+      { otlp: OTLP.http.SERVER_PORT, instana: 'connection', transform: extractPort },
       { otlp: OTLP.http.RESPONSE_STATUS, instana: 'status' },
+      // TODO: Instana captures both request and response headers in header
+      // we need a mechanism internnaly to distingush the request and response headers
       { otlp: OTLP.http.REQUEST_HEADER, instana: 'header' },
       { otlp: OTLP.http.URL_TEMPLATE, instana: 'path_tpl' },
       { otlp: OTLP.http.ROUTE, instana: 'route' },
