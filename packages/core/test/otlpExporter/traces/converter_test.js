@@ -21,7 +21,7 @@ const { convert } = proxyquire('../../../src/otlpExporter/traces/converter', {
 });
 
 const otlp = require('../../../src/otlpExporter');
-const { extractSpanMetadata } = require('../../../src/otlpExporter/traces/transformers/spanMetadata');
+const { extractSpanMetadata } = require('../../../src/otlpExporter/traces/transformers/spanMetaData');
 const { extractSpanAttributes } = require('../../../src/otlpExporter/traces/transformers/spanAttributes');
 const mappers = require('../../../src/otlpExporter/traces/mappers');
 
