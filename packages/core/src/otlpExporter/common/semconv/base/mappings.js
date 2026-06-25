@@ -37,10 +37,7 @@ const MAPPINGS = {
     ROUTE: 'http.route',
     STATUS_TEXT: 'http.status_text',
     URL_TEMPLATE: 'http.url.template',
-    SERVER_ADDRESS: 'server.address',
-    SERVER_PORT: 'server.port',
     NETWORK_PROTOCOL: 'network.protocol.name',
-    ERROR_TYPE: 'error.type',
     REQUEST_HEADER: 'http.request.header',
     RESPONSE_HEADER: 'http.response.header'
   },
@@ -49,15 +46,12 @@ const MAPPINGS = {
     SYSTEM: 'messaging.system',
     OPERATION_TYPE: 'messaging.operation.type',
     OPERATION_NAME: 'messaging.operation.name',
-    SERVER_ADDRESS: 'server.address',
-    SERVER_PORT: 'server.port',
     CONSUMER_GROUP: 'messaging.consumer.group.name',
     MESSAGE_ID: 'messaging.message.id',
     MESSAGE_BODY_SIZE: 'messaging.message.body.size',
     DESTINATION_NAME: 'messaging.destination.name',
     DESTINATION_TEMPLATE: 'messaging.destination.template',
     DESTINATION_PARTITION_ID: 'messaging.destination.partition.id',
-    ERROR_TYPE: 'error.type',
     kafka: {
       OFFSET: 'messaging.kafka.message.offset',
       MESSAGE_KEY: 'messaging.kafka.message.key'
@@ -77,10 +71,7 @@ const MAPPINGS = {
     USER: 'db.user',
     COLLECTION: 'db.collection.name',
     TABLE: 'db.sql.table',
-    SERVER_ADDRESS: 'server.address',
-    SERVER_PORT: 'server.port',
-    CONNECTION: 'db.connection',
-    ERROR_TYPE: 'error.type'
+    CONNECTION: 'db.connection'
   },
 
   rpc: {
@@ -90,8 +81,7 @@ const MAPPINGS = {
     METHOD_ORIGINAL: 'rpc.method_original',
     SERVICE: 'rpc.service',
     GRPC_STATUS: 'rpc.grpc.status_code',
-    GRPC_ERROR: 'rpc.grpc.status_message',
-    ERROR_TYPE: 'error.type'
+    GRPC_ERROR: 'rpc.grpc.status_message'
   },
 
   graphql: {
@@ -109,7 +99,6 @@ const MAPPINGS = {
     REGION: 'cloud.region',
     PROVIDER: 'cloud.provider',
     ACCOUNT_ID: 'cloud.account.id',
-    ERROR_TYPE: 'error.type',
     gcp: {
       PROJECT_ID: 'gcp.project_id',
       STORAGE_BUCKET: 'gcp.storage.bucket',
@@ -145,6 +134,15 @@ const MAPPINGS = {
     MESSAGE: 'exception.message',
     STACKTRACE: 'exception.stacktrace',
     TYPE: 'exception.type'
+  },
+
+  server: {
+    ADDRESS: 'server.address',
+    PORT: 'server.port'
+  },
+
+  error: {
+    TYPE: 'error.type'
   }
 };
 

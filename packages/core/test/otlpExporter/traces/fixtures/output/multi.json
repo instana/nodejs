@@ -22,9 +22,9 @@
               "parentSpanId": "3a4b27aea7a7fdf0",
               "kind": 3,
               "startTimeUnixNano": "1781517126966000000",
+              "endTimeUnixNano": "1781517127237000000",
               "name": "GET /",
               "status": { "code": 0 },
-              "endTimeUnixNano": "1781517127237000000",
               "attributes": [
                 { "key": "http.method", "value": { "stringValue": "GET" } },
                 { "key": "http.url", "value": { "stringValue": "https://jsonplaceholder.typicode.com/todos/1" } },
@@ -36,16 +36,16 @@
               "spanId": "3a4b27aea7a7fdf0",
               "kind": 2,
               "startTimeUnixNano": "1781517126956000000",
+              "endTimeUnixNano": "1781517127240000000",
               "name": "GET /external-api",
               "status": { "code": 0 },
-              "endTimeUnixNano": "1781517127240000000",
               "attributes": [
                 { "key": "http.method", "value": { "stringValue": "GET" } },
                 { "key": "http.url", "value": { "stringValue": "/external-api" } },
-                { "key": "server.address", "value": { "stringValue": "localhost" } },
-                { "key": "server.port", "value": { "intValue": 3000 } },
                 { "key": "http.status_code", "value": { "intValue": 200 } },
-                { "key": "http.url.template", "value": { "stringValue": "/external-api" } }
+                { "key": "http.url.template", "value": { "stringValue": "/external-api" } },
+                { "key": "server.address", "value": { "stringValue": "localhost" } },
+                { "key": "server.port", "value": { "intValue": 3000 } }
               ]
             }
           ]

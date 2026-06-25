@@ -63,26 +63,25 @@ const instrumentationMappings = {
       { otlp: OTLP.http.URL_FULL, instana: 'endpoints' },
       { otlp: OTLP.http.URL_PATH, instana: 'path' },
       { otlp: OTLP.http.URL_QUERY, instana: 'params' },
-      { otlp: OTLP.http.SERVER_ADDRESS, instana: 'connection', transform: extractHost },
-      { otlp: OTLP.http.SERVER_PORT, instana: 'connection', transform: extractPort },
       { otlp: OTLP.http.RESPONSE_STATUS, instana: 'status' },
-      // TODO: Instana captures both request and response headers in header
-      // we need a mechanism internnaly to distingush the request and response headers
+      // TODO: Instana stores both request and response headers in the same `header` field.
+      // We need an internal mechanism to distinguish between request and response headers.
       { otlp: OTLP.http.REQUEST_HEADER, instana: 'header' },
       { otlp: OTLP.http.URL_TEMPLATE, instana: 'path_tpl' },
       { otlp: OTLP.http.ROUTE, instana: 'route' },
-      { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.server.ADDRESS, instana: 'connection', transform: extractHost },
+      { otlp: OTLP.server.PORT, instana: 'connection', transform: extractPort },
+      { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
 
   [INSTRUMENTATION_TYPES.KAFKA]: {
-    // In KafkaNode, we collect service directly
-    spanName: data => `${data.operation} ${data.service || data.endpoints}`,
+    spanName: data => `${data.operation} ${data.endpoints}`,
     spanAttributes: [
       { otlp: OTLP.messaging.SYSTEM, value: 'kafka' },
-      { otlp: OTLP.messaging.DESTINATION_NAME, instana: ['service', 'endpoints'], transform: firstDefined },
-      { otlp: OTLP.messaging.OPERATION_NAME, instana: ['access', 'operation'], transform: firstDefined },
-      { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'endpoints' },
+      { otlp: OTLP.messaging.OPERATION_NAME, instana: 'operation' },
+      { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
 
@@ -92,11 +91,11 @@ const instrumentationMappings = {
       { otlp: OTLP.messaging.SYSTEM, value: 'rabbitmq' },
       { otlp: OTLP.messaging.OPERATION_NAME, instana: 'sort' },
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: ['exchange', 'key', 'queue'] },
-      { otlp: OTLP.messaging.SERVER_ADDRESS, instana: 'address', transform: extractHost },
-      { otlp: OTLP.messaging.SERVER_PORT, instana: 'address', transform: extractPort },
       { otlp: OTLP.messaging.rabbitmq.ROUTING_KEY, instana: 'exchange' },
       { otlp: OTLP.messaging.rabbitmq.MESSAGE_ROUTING_KEY, instana: 'key' },
-      { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.server.ADDRESS, instana: 'address', transform: extractHost },
+      { otlp: OTLP.server.PORT, instana: 'address', transform: extractPort },
+      { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
 
@@ -106,9 +105,9 @@ const instrumentationMappings = {
       { otlp: OTLP.messaging.SYSTEM, value: 'nats' },
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'subject' },
       { otlp: OTLP.messaging.OPERATION_NAME, instana: 'sort' },
-      { otlp: OTLP.messaging.SERVER_ADDRESS, instana: 'address', transform: extractHost },
-      { otlp: OTLP.messaging.SERVER_PORT, instana: 'address', transform: extractPort },
-      { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.server.ADDRESS, instana: 'address', transform: extractHost },
+      { otlp: OTLP.server.PORT, instana: 'address', transform: extractPort },
+      { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
 
@@ -119,7 +118,7 @@ const instrumentationMappings = {
       { otlp: OTLP.messaging.OPERATION_NAME, instana: 'sort' },
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'queue' },
       { otlp: OTLP.messaging.MESSAGE_ID, instana: 'messageId' },
-      { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
 
@@ -132,7 +131,7 @@ const instrumentationMappings = {
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'queue' },
       { otlp: OTLP.messaging.MESSAGE_BODY_SIZE, instana: 'size' },
       { otlp: OTLP.messaging.MESSAGE_ID, instana: 'messageId' },
-      { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
 
@@ -142,7 +141,7 @@ const instrumentationMappings = {
       { otlp: OTLP.messaging.SYSTEM, value: 'aws.sns' },
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'topic' },
       { otlp: OTLP.messaging.OPERATION_NAME, value: 'send' },
-      { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
 
@@ -159,7 +158,7 @@ const instrumentationMappings = {
       },
       { otlp: OTLP.messaging.gcp.PROJECT_ID, instana: 'projid' },
       { otlp: OTLP.messaging.MESSAGE_ID, instana: 'messageId' },
-      { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
 
@@ -168,11 +167,11 @@ const instrumentationMappings = {
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'postgresql' },
       { otlp: OTLP.database.QUERY_TEXT, instana: 'stmt' },
-      { otlp: OTLP.database.SERVER_ADDRESS, instana: 'host' },
-      { otlp: OTLP.database.SERVER_PORT, instana: 'port' },
       { otlp: OTLP.database.USER, instana: 'user' },
       { otlp: OTLP.database.NAME, instana: 'db' },
-      { otlp: OTLP.database.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.server.ADDRESS, instana: 'host' },
+      { otlp: OTLP.server.PORT, instana: 'port' },
+      { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
 
@@ -181,11 +180,11 @@ const instrumentationMappings = {
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'mysql' },
       { otlp: OTLP.database.QUERY_TEXT, instana: 'stmt' },
-      { otlp: OTLP.database.SERVER_ADDRESS, instana: 'host' },
-      { otlp: OTLP.database.SERVER_PORT, instana: 'port' },
       { otlp: OTLP.database.USER, instana: 'user' },
       { otlp: OTLP.database.NAME, instana: 'db' },
-      { otlp: OTLP.database.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.server.ADDRESS, instana: 'host' },
+      { otlp: OTLP.server.PORT, instana: 'port' },
+      { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
 
@@ -194,11 +193,11 @@ const instrumentationMappings = {
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'mssql' },
       { otlp: OTLP.database.QUERY_TEXT, instana: 'stmt' },
-      { otlp: OTLP.database.SERVER_ADDRESS, instana: 'host' },
-      { otlp: OTLP.database.SERVER_PORT, instana: 'port' },
       { otlp: OTLP.database.USER, instana: 'user' },
       { otlp: OTLP.database.NAME, instana: 'db' },
-      { otlp: OTLP.database.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.server.ADDRESS, instana: 'host' },
+      { otlp: OTLP.server.PORT, instana: 'port' },
+      { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
 
@@ -207,11 +206,11 @@ const instrumentationMappings = {
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'db2' },
       { otlp: OTLP.database.QUERY_TEXT, instana: 'stmt' },
-      { otlp: OTLP.database.SERVER_ADDRESS, instana: 'host' },
-      { otlp: OTLP.database.SERVER_PORT, instana: 'port' },
       { otlp: OTLP.database.USER, instana: 'user' },
       { otlp: OTLP.database.NAME, instana: 'db' },
-      { otlp: OTLP.database.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.server.ADDRESS, instana: 'host' },
+      { otlp: OTLP.server.PORT, instana: 'port' },
+      { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
 
@@ -222,10 +221,10 @@ const instrumentationMappings = {
       { otlp: OTLP.database.NAMESPACE, instana: 'namespace' },
       { otlp: OTLP.database.COLLECTION, instana: 'collection' },
       { otlp: OTLP.database.OPERATION, instana: 'command', transform: toUpperCase },
-      { otlp: OTLP.database.SERVER_ADDRESS, instana: 'service', transform: extractHost },
-      { otlp: OTLP.database.SERVER_PORT, instana: 'service', transform: extractPort },
       { otlp: OTLP.database.QUERY_TEXT, instana: ['json', 'filter'], transform: firstDefined },
-      { otlp: OTLP.database.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.server.ADDRESS, instana: 'service', transform: extractHost },
+      { otlp: OTLP.server.PORT, instana: 'service', transform: extractPort },
+      { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
 
@@ -235,7 +234,7 @@ const instrumentationMappings = {
       { otlp: OTLP.database.SYSTEM, value: 'redis' },
       { otlp: OTLP.database.OPERATION, instana: 'operation' },
       { otlp: OTLP.database.CONNECTION, instana: 'connection' },
-      { otlp: OTLP.database.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
 
@@ -245,7 +244,7 @@ const instrumentationMappings = {
       { otlp: OTLP.database.SYSTEM, value: 'other_nosql' },
       { otlp: OTLP.database.NAME, instana: 'bucket' },
       { otlp: OTLP.database.QUERY_TEXT, instana: 'sql' },
-      { otlp: OTLP.database.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
 
@@ -257,7 +256,7 @@ const instrumentationMappings = {
       { otlp: OTLP.database.NAME, instana: 'cluster' },
       { otlp: OTLP.database.COLLECTION, instana: 'index' },
       { otlp: OTLP.database.QUERY_TEXT, instana: 'query' },
-      { otlp: OTLP.database.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
 
@@ -268,7 +267,7 @@ const instrumentationMappings = {
       { otlp: OTLP.database.OPERATION, instana: 'operation' },
       { otlp: OTLP.cloud.REGION, instana: 'region' },
       { otlp: OTLP.database.COLLECTION, instana: 'table' },
-      { otlp: OTLP.database.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
 
@@ -278,7 +277,7 @@ const instrumentationMappings = {
       { otlp: OTLP.database.SYSTEM, value: 'memcached' },
       { otlp: OTLP.database.CONNECTION, instana: 'connection' },
       { otlp: OTLP.database.OPERATION, instana: 'operation' },
-      { otlp: OTLP.database.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
   // Note: There is no official OpenTelemetry semantic convention for Prisma, and it is not covered in our RFD either.
@@ -290,7 +289,7 @@ const instrumentationMappings = {
       { otlp: OTLP.database.COLLECTION, instana: 'model' },
       { otlp: OTLP.database.OPERATION, instana: 'action' },
       { otlp: OTLP.database.CONNECTION, instana: 'url' },
-      { otlp: OTLP.database.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
 
@@ -325,7 +324,7 @@ const instrumentationMappings = {
       { otlp: OTLP.cloud.gcp.STORAGE_SOURCE_OBJECT, instana: 'sourceObject' },
       { otlp: OTLP.cloud.gcp.STORAGE_DESTINATION_BUCKET, instana: 'destinationBucket' },
       { otlp: OTLP.cloud.gcp.STORAGE_DESTINATION_OBJECT, instana: 'destinationObject' },
-      { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
 
@@ -335,7 +334,7 @@ const instrumentationMappings = {
       { otlp: OTLP.database.OPERATION, instana: 'op' },
       { otlp: OTLP.cloud.aws.S3_BUCKET, instana: 'bucket' },
       { otlp: OTLP.cloud.aws.S3_KEY, instana: 'key' },
-      { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
 
@@ -351,7 +350,7 @@ const instrumentationMappings = {
       { otlp: OTLP.cloud.aws.KINESIS_SHARD_ITERATOR_TYPE, instana: 'shardType' },
       { otlp: OTLP.cloud.aws.KINESIS_STARTING_SEQUENCE_NUMBER, instana: 'startSequenceNumber' },
       { otlp: OTLP.cloud.aws.KINESIS_SHARD, instana: 'shard' },
-      { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
 
@@ -363,7 +362,7 @@ const instrumentationMappings = {
       { otlp: OTLP.cloud.azure.STORAGE_ACCOUNT, instana: 'accountName' },
       { otlp: OTLP.cloud.azure.CONTAINER, instana: 'containerName' },
       { otlp: OTLP.cloud.azure.BLOB, instana: 'blobName' },
-      { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
 
@@ -372,7 +371,7 @@ const instrumentationMappings = {
     spanAttributes: [
       { otlp: OTLP.faas.NAME, instana: 'function' },
       { otlp: OTLP.faas.INVOCATION_TYPE, instana: 'type' },
-      { otlp: OTLP.http.ERROR_TYPE, instana: 'error' }
+      { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
 

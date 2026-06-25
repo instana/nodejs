@@ -50,7 +50,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
         data: {
           kafka: {
             operation: 'publish',
-            service: 'my-topic'
+            endpoints: 'my-topic'
           }
         }
       };
