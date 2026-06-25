@@ -85,6 +85,7 @@ let currentConfig;
  * @property {otlpExporterOptions} [otlp]
  * @property {string} [captureLogLevel]
  * @property {DbBindVariablesConfig} [dbBindVariables]
+ * @property {boolean} [captureBindVariables]
  */
 
 /**
@@ -210,7 +211,8 @@ let defaults = {
       // This option is internal and not exposed
       port: 4318,
       semConvVersion: '1.23'
-    }
+    },
+    captureBindVariables: false
   },
   preloadOpentelemetry: false,
   secrets: {
