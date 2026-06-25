@@ -41,7 +41,7 @@ function convert(spans) {
     try {
       const mapper = mappers.get(span);
       const otlpSpan = {
-        ...transformers.spanMetadata.extractSpanMetadata(span, mapper),
+        ...transformers.spanMetaData.extractSpanMetadata(span, mapper),
         attributes: transformers.spanAttributes.extractSpanAttributes(span, mapper)
       };
 
