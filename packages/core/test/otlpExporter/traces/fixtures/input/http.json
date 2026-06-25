@@ -61,6 +61,6 @@
     }
   ],
   "data": {
-    "http": { "method": "GET", "url": "https://jsonplaceholder.typicode.com/todos/1", "params": null, "status": 200 }
+    "http": { "operation": "GET", "endpoints": "https://jsonplaceholder.typicode.com/todos/1", "params": null, "status": 200 }
   }
 }

@@ -36,12 +36,13 @@ const MAPPINGS = {
   http: {
     ROUTE: 'http.route',
     STATUS_TEXT: 'http.status_text',
-    REQUEST_HEADER: 'http.request.header',
     URL_TEMPLATE: 'http.url.template',
     SERVER_ADDRESS: 'server.address',
     SERVER_PORT: 'server.port',
     NETWORK_PROTOCOL: 'network.protocol.name',
-    ERROR_TYPE: 'error.type'
+    ERROR_TYPE: 'error.type',
+    REQUEST_HEADER: 'http.request.header',
+    RESPONSE_HEADER: 'http.response.header'
   },
 
   messaging: {

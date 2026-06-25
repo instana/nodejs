@@ -9,10 +9,10 @@
   "ec": 0,
   "data": {
     "http": {
-      "method": "get",
+      "operation": "get",
       "path": "/api/users",
       "status": 200,
-      "url": "http://localhost:3000/api/users"
+      "endpoints": "http://localhost:3000/api/users"
     },
     "service": "user-service"
   }

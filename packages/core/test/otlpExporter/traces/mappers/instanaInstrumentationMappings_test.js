@@ -19,7 +19,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
         n: 'node.http.server',
         data: {
           http: {
-            method: 'GET',
+            operation: 'GET',
             path: '/api/users'
           }
         }
@@ -228,7 +228,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       const span = {
         data: {
           http: {
-            method: 'POST',
+            operation: 'POST',
             path: '/api/users',
             status: 201,
             host: 'example.com:8080'
@@ -260,7 +260,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
         n: 'node.http.server',
         data: {
           http: {
-            method: 'GET',
+            operation: 'GET',
             path: '/api/users',
             status: 200
           }
@@ -280,7 +280,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
         ec: 1,
         data: {
           http: {
-            method: 'GET',
+            operation: 'GET',
             path: '/api/users',
             status: 500,
             error: 'Internal Server Error'
@@ -301,7 +301,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
         n: 'node.http.client',
         data: {
           http: {
-            method: 'GET',
+            operation: 'GET',
             path: '/api/users',
             status: 404
           }
@@ -321,7 +321,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
         n: 'node.http.client',
         data: {
           http: {
-            method: 'POST',
+            operation: 'POST',
             path: '/api/users',
             status: 400
           }
@@ -341,7 +341,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
         n: 'node.http.client',
         data: {
           http: {
-            method: 'GET',
+            operation: 'GET',
             path: '/api/users',
             status: 499
           }
@@ -361,7 +361,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
         n: 'node.http.client',
         data: {
           http: {
-            method: 'GET',
+            operation: 'GET',
             path: '/api/users',
             status: 500
           }
@@ -381,7 +381,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
         n: 'node.http.client',
         data: {
           http: {
-            method: 'GET',
+            operation: 'GET',
             path: '/api/users',
             status: 301
           }

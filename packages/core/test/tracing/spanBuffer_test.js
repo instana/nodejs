@@ -737,7 +737,7 @@ describe('tracing/spanBuffer', () => {
             ec: 0,
             data: {
               http: {
-                method: 'GET',
+                operation: 'GET',
                 url: '/orders',
                 host: 'localhost',
                 status: 200
@@ -797,7 +797,7 @@ describe('tracing/spanBuffer', () => {
             ec: 0,
             data: {
               http: {
-                method: 'POST',
+                operation: 'POST',
                 url: 'https://api.example.com/users',
                 status: 201
               }
@@ -863,7 +863,7 @@ describe('tracing/spanBuffer', () => {
             ts: timestamp(Date.now()),
             d: 25,
             ec: 0,
-            data: { http: { method: 'GET', url: '/api/users', status: 200 } }
+            data: { http: { operation: 'GET', url: '/api/users', status: 200 } }
           };
 
           const span2 = {
@@ -906,7 +906,7 @@ describe('tracing/spanBuffer', () => {
             ec: 1,
             data: {
               http: {
-                method: 'GET',
+                operation: 'GET',
                 url: '/error',
                 status: 500,
                 error: 'Internal Server Error'
@@ -942,7 +942,7 @@ describe('tracing/spanBuffer', () => {
             ec: 0,
             data: {
               http: {
-                method: 'GET',
+                operation: 'GET',
                 url: '/test',
                 status: 200
               }
