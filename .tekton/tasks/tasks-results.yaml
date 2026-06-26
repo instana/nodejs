@@ -27,6 +27,13 @@ spec:
     - name: print-all-results
       image: public.ecr.aws/docker/library/node:$(params.node-version)
       imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "1000m"
+          memory: "4Gi"
+        limits:
+          cpu: "2000m"
+          memory: "8Gi"
       env:
         - name: PROPERTIES_FILE
           value: $(params.properties-file)
@@ -35,6 +42,10 @@ spec:
             secretKeyRef:
               name: $(params.continuous-delivery-context-secret)
               key: "SONAR_TOKEN"
+        - name: NODE_OPTIONS
+          value: "--max-old-space-size=6144"
+        - name: SONAR_SCANNER_OPTS
+          value: "-Xmx4g"
       script: |
         #!/bin/bash
 
