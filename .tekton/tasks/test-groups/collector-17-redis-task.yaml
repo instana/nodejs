@@ -118,7 +118,7 @@ spec:
       script: |
         #!/bin/bash
         AVAILABLE_SIDECARS="redis,redis-slave,redis-sentinel"
-        SIDECAR_COUNTS="redis=20,redis-slave=20,redis-sentinel=20,zookeeper=6,kafka=6,kafka-topics=6,postgres=3,elasticsearch=2,mongodb=1,couchbase=1,rabbitmq=1,nats=1,nats-streaming=1,nats-streaming-2=1,mysql=1,localstack=1,memcached=1,oracledb=1"
+        SIDECAR_COUNTS="redis=23,redis-slave=23,redis-sentinel=23,zookeeper=9,kafka=9,kafka-topics=9,postgres=3,elasticsearch=2,mongodb=1,couchbase=1,rabbitmq=1,nats=1,nats-streaming=1,nats-streaming-2=1,mysql=1,localstack=1,memcached=1,oracledb=1"
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         BASE_REVISION=$(git rev-parse origin/main)
@@ -189,7 +189,7 @@ spec:
           fi
         fi
         if [ "true" == "true" ]; then
-          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*.test.js" "39" "$ARTIFACTS_PATH" "$SIDECAR_COUNTS")
+          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*.test.js" "45" "$ARTIFACTS_PATH" "$SIDECAR_COUNTS")
           if [ -z "$CLAIMED_TESTS" ]; then
             echo "No tests to claim for this task"
             touch "collector-17-redis.succeeded"
@@ -199,6 +199,7 @@ spec:
           # Write mapping to shared file (printed by tasks-results)
           SHORT_NAMES=$(echo "$CLAIMED_TESTS" | tr ' ' '\n' | sed 's|.*/currencies/||; s|.*/misc/||; s|.*/unit/||; s|/test\.js$||' | tr '\n' ', ' | sed 's/,$//')
           echo "collector-17-redis: $SHORT_NAMES" >> "$ARTIFACTS_PATH/test-mapping.txt"
+          echo "### collector-17-redis running: $SHORT_NAMES ###"
         fi
         rm -f "collector-17-redis.succeeded" "collector-17-redis.failed"
         retry=1
@@ -207,15 +208,15 @@ spec:
           LAST_EXIT=0
           if [ "$(params.coverage)" == "true" ]; then
             if [ "true" == "true" ]; then
-              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="39" CI_TEST_SPLIT_CURRENT="17" npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-17-redis" || LAST_EXIT=$?
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="45" CI_TEST_SPLIT_CURRENT="17" npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-17-redis" || LAST_EXIT=$?
             else
-              CI_TEST_SPLIT="39" CI_TEST_SPLIT_CURRENT="17" npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-17-redis" || LAST_EXIT=$?
+              CI_TEST_SPLIT="45" CI_TEST_SPLIT_CURRENT="17" npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-17-redis" || LAST_EXIT=$?
             fi
           else
             if [ "true" == "true" ]; then
-              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="39" CI_TEST_SPLIT_CURRENT="17" npm run "test:ci:collector" || LAST_EXIT=$?
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="45" CI_TEST_SPLIT_CURRENT="17" npm run "test:ci:collector" || LAST_EXIT=$?
             else
-              CI_TEST_SPLIT="39" CI_TEST_SPLIT_CURRENT="17" npm run "test:ci:collector" || LAST_EXIT=$?
+              CI_TEST_SPLIT="45" CI_TEST_SPLIT_CURRENT="17" npm run "test:ci:collector" || LAST_EXIT=$?
             fi
           fi
           if [ $LAST_EXIT -eq 0 ]; then
