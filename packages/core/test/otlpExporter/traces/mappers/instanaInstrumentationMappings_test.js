@@ -44,19 +44,19 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       expect(result).to.equal('POST /api/users/:id');
     });
 
-    it('should generate Kafka span name', () => {
+    it('should generate Kafka span name (kafkajs/rdkafka — operation + endpoints)', () => {
       const span = {
         n: 'kafka',
         data: {
           kafka: {
-            operation: 'publish',
+            operation: 'send',
             endpoints: 'my-topic'
           }
         }
       };
 
       const result = spanName(span);
-      expect(result).to.equal('publish my-topic');
+      expect(result).to.equal('send my-topic');
     });
 
     it('should generate RabbitMQ span name', () => {
@@ -158,7 +158,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       expect(result).to.equal('s3.putObject');
     });
 
-    it('should generate Lambda invoke span name', () => {
+    it('should generate Lambda invoke span name from function name', () => {
       const span = {
         n: 'aws.lambda.invoke',
         data: {
@@ -170,6 +170,49 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
 
       const result = spanName(span);
       expect(result).to.equal('Invoke my-function');
+    });
+
+    it('should fallback to "Lambda Invoke" span name when function is absent', () => {
+      const span = {
+        n: 'aws.lambda.invoke',
+        data: {
+          'aws.lambda.invoke': {
+            type: 'Event'
+          }
+        }
+      };
+
+      const result = spanName(span);
+      expect(result).to.equal('Lambda Invoke');
+    });
+
+    it('should generate Lambda entry span name from functionName', () => {
+      const span = {
+        n: 'aws.lambda.entry',
+        data: {
+          lambda: {
+            functionName: 'my-handler',
+            trigger: 'aws:api.gateway'
+          }
+        }
+      };
+
+      const result = spanName(span);
+      expect(result).to.equal('my-handler');
+    });
+
+    it('should fallback to "aws.lambda.entry" span name when functionName is absent', () => {
+      const span = {
+        n: 'aws.lambda.entry',
+        data: {
+          lambda: {
+            trigger: 'aws:sqs'
+          }
+        }
+      };
+
+      const result = spanName(span);
+      expect(result).to.equal('aws.lambda.entry');
     });
 
     it('should generate GraphQL span name with operation name', () => {
@@ -224,6 +267,208 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
   });
 
   describe('spanAttributes', () => {
+    it('should map AWS Lambda invoke attributes (synchronous call)', () => {
+      const span = {
+        n: 'aws.lambda.invoke',
+        data: {
+          'aws.lambda.invoke': {
+            function: 'arn:aws:lambda:us-east-1:123456789012:function:target-function',
+            type: 'RequestResponse'
+          }
+        }
+      };
+
+      const result = spanAttributes(span);
+      const getAttr = key => result.find(a => a.key === key);
+
+      expect(getAttr('faas.name').value).to.deep.equal({
+        stringValue: 'arn:aws:lambda:us-east-1:123456789012:function:target-function'
+      });
+      expect(getAttr('faas.invocation_type').value).to.deep.equal({ stringValue: 'RequestResponse' });
+      expect(getAttr('cloud.provider').value).to.deep.equal({ stringValue: 'aws' });
+      expect(getAttr('cloud.platform').value).to.deep.equal({ stringValue: 'aws_lambda' });
+      expect(getAttr('error.type')).to.be.undefined;
+    });
+
+    it('should map AWS Lambda invoke attributes (async call with error)', () => {
+      const span = {
+        n: 'aws.lambda.invoke',
+        data: {
+          'aws.lambda.invoke': {
+            function: 'my-async-function',
+            type: 'Event',
+            error: 'Function not found: arn:aws:lambda:us-east-1:123456789012:function:my-async-function'
+          }
+        }
+      };
+
+      const result = spanAttributes(span);
+      const getAttr = key => result.find(a => a.key === key);
+
+      expect(getAttr('faas.name').value).to.deep.equal({ stringValue: 'my-async-function' });
+      expect(getAttr('faas.invocation_type').value).to.deep.equal({ stringValue: 'Event' });
+      expect(getAttr('error.type').value).to.deep.equal({
+        stringValue: 'Function not found: arn:aws:lambda:us-east-1:123456789012:function:my-async-function'
+      });
+    });
+
+    it('should map AWS Lambda invoke attributes with no InvocationType (DryRun omitted)', () => {
+      const span = {
+        n: 'aws.lambda.invoke',
+        data: {
+          'aws.lambda.invoke': {
+            function: 'simple-function'
+          }
+        }
+      };
+
+      const result = spanAttributes(span);
+      const getAttr = key => result.find(a => a.key === key);
+
+      expect(getAttr('faas.name').value).to.deep.equal({ stringValue: 'simple-function' });
+      expect(getAttr('faas.invocation_type')).to.be.undefined;
+      expect(getAttr('cloud.provider').value).to.deep.equal({ stringValue: 'aws' });
+      expect(getAttr('cloud.platform').value).to.deep.equal({ stringValue: 'aws_lambda' });
+    });
+
+    it('should map all AWS Lambda entry attributes (API Gateway / cold start)', () => {
+      const span = {
+        n: 'aws.lambda.entry',
+        data: {
+          lambda: {
+            arn: 'arn:aws:lambda:us-east-1:123456789012:function:my-function:42',
+            functionName: 'my-function',
+            functionVersion: '$LATEST',
+            runtime: 'nodejs',
+            reqId: 'abc-123-req-id',
+            coldStart: true,
+            trigger: 'aws:api.gateway'
+          }
+        }
+      };
+
+      const result = spanAttributes(span);
+
+      expect(result).to.be.an('array');
+
+      const getAttr = key => result.find(a => a.key === key);
+
+      expect(getAttr('faas.trigger').value).to.deep.equal({ stringValue: 'http' });
+      expect(getAttr('faas.name').value).to.deep.equal({ stringValue: 'my-function' });
+      expect(getAttr('faas.version').value).to.deep.equal({ stringValue: '$LATEST' });
+      expect(getAttr('cloud.provider').value).to.deep.equal({ stringValue: 'aws' });
+      expect(getAttr('cloud.platform').value).to.deep.equal({ stringValue: 'aws_lambda' });
+      expect(getAttr('cloud.region').value).to.deep.equal({ stringValue: 'us-east-1' });
+      expect(getAttr('cloud.account.id').value).to.deep.equal({ stringValue: '123456789012' });
+      expect(getAttr('cloud.resource_id').value).to.deep.equal({
+        stringValue: 'arn:aws:lambda:us-east-1:123456789012:function:my-function:42'
+      });
+      expect(getAttr('faas.invocation_id').value).to.deep.equal({ stringValue: 'abc-123-req-id' });
+      expect(getAttr('faas.coldstart').value).to.deep.equal({ boolValue: true });
+      expect(getAttr('process.runtime.name').value).to.deep.equal({ stringValue: 'nodejs' });
+      expect(getAttr('exception.message')).to.be.undefined;
+    });
+
+    it('should map all AWS Lambda entry attributes (Lambda invoke trigger / error)', () => {
+      const span = {
+        n: 'aws.lambda.entry',
+        data: {
+          lambda: {
+            arn: 'arn:aws:lambda:eu-west-1:987654321098:function:error-function:3',
+            functionName: 'error-function',
+            functionVersion: '3',
+            runtime: 'nodejs',
+            reqId: 'def-456-req-id',
+            trigger: 'aws:lambda.invoke',
+            error: 'Task timed out after 30.00 seconds'
+          }
+        }
+      };
+
+      const result = spanAttributes(span);
+
+      const getAttr = key => result.find(a => a.key === key);
+
+      expect(getAttr('faas.trigger').value).to.deep.equal({ stringValue: 'other' });
+      expect(getAttr('cloud.region').value).to.deep.equal({ stringValue: 'eu-west-1' });
+      expect(getAttr('cloud.account.id').value).to.deep.equal({ stringValue: '987654321098' });
+      expect(getAttr('faas.coldstart')).to.be.undefined;
+      expect(getAttr('exception.message').value).to.deep.equal({
+        stringValue: 'Task timed out after 30.00 seconds'
+      });
+    });
+
+    it('should map all Lambda trigger types to correct OTel faas.trigger values', () => {
+      const triggerMap = [
+        ['aws:api.gateway', 'http'],
+        ['aws:api.gateway.noproxy', 'http'],
+        ['aws:application.load.balancer', 'http'],
+        ['aws:lambda.function.url', 'http'],
+        ['aws:s3', 'datasource'],
+        ['aws:dynamodb', 'datasource'],
+        ['aws:kinesis', 'datasource'],
+        ['aws:kinesis.firehouse', 'datasource'],
+        ['aws:sqs', 'pubsub'],
+        ['aws:sns', 'pubsub'],
+        ['aws:cloudwatch.events', 'timer'],
+        ['aws:lambda.invoke', 'other']
+      ];
+
+      triggerMap.forEach(([instanaTrigger, expectedOtelTrigger]) => {
+        const span = {
+          n: 'aws.lambda.entry',
+          data: {
+            lambda: {
+              arn: 'arn:aws:lambda:us-east-1:123456789012:function:fn:1',
+              trigger: instanaTrigger
+            }
+          }
+        };
+
+        const result = spanAttributes(span);
+        const triggerAttr = result.find(a => a.key === 'faas.trigger');
+
+        expect(triggerAttr, `Missing faas.trigger for ${instanaTrigger}`).to.exist;
+        expect(triggerAttr.value.stringValue, `Wrong mapping for ${instanaTrigger}`).to.equal(expectedOtelTrigger);
+      });
+    });
+
+    it('should convert coldStart string "true" to boolean true', () => {
+      const span = {
+        n: 'aws.lambda.entry',
+        data: {
+          lambda: {
+            arn: 'arn:aws:lambda:us-east-1:123456789012:function:fn:1',
+            coldStart: 'true'
+          }
+        }
+      };
+
+      const result = spanAttributes(span);
+      const coldStartAttr = result.find(a => a.key === 'faas.coldstart');
+
+      expect(coldStartAttr).to.exist;
+      expect(coldStartAttr.value).to.deep.equal({ boolValue: true });
+    });
+
+    it('should convert coldStart string "false" to boolean false', () => {
+      const span = {
+        n: 'aws.lambda.entry',
+        data: {
+          lambda: {
+            arn: 'arn:aws:lambda:us-east-1:123456789012:function:fn:1',
+            coldStart: 'false'
+          }
+        }
+      };
+
+      const result = spanAttributes(span);
+      const coldStartAttr = result.find(a => a.key === 'faas.coldstart');
+
+      expect(coldStartAttr).to.exist;
+      expect(coldStartAttr.value).to.deep.equal({ boolValue: false });
+    });
+
     it('should extract HTTP attributes', () => {
       const span = {
         data: {

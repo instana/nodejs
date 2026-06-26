@@ -46,6 +46,7 @@ const MAPPINGS = {
     OPERATION_TYPE: 'messaging.operation.type',
     OPERATION_NAME: 'messaging.operation.name',
     CONSUMER_GROUP: 'messaging.consumer.group.name',
+    BATCH_MESSAGE_COUNT: 'messaging.batch.message_count',
     MESSAGE_ID: 'messaging.message.id',
     MESSAGE_BODY_SIZE: 'messaging.message.body.size',
     DESTINATION_NAME: 'messaging.destination.name',
@@ -74,11 +75,9 @@ const MAPPINGS = {
   },
 
   rpc: {
-    SYSTEM: 'rpc.system',
     SYSTEM_NAME: 'rpc.system.name',
     METHOD: 'rpc.method',
     METHOD_ORIGINAL: 'rpc.method_original',
-    SERVICE: 'rpc.service',
     GRPC_STATUS: 'rpc.grpc.status_code',
     GRPC_ERROR: 'rpc.grpc.status_message'
   },
@@ -97,7 +96,9 @@ const MAPPINGS = {
   cloud: {
     REGION: 'cloud.region',
     PROVIDER: 'cloud.provider',
+    PLATFORM: 'cloud.platform',
     ACCOUNT_ID: 'cloud.account.id',
+    RESOURCE_ID: 'cloud.resource_id',
     gcp: {
       PROJECT_ID: 'gcp.project_id',
       STORAGE_BUCKET: 'gcp.storage.bucket',
@@ -125,8 +126,15 @@ const MAPPINGS = {
 
   faas: {
     NAME: 'faas.name',
+    VERSION: 'faas.version',
+    INVOCATION_ID: 'faas.invocation_id',
     INVOCATION_TYPE: 'faas.invocation_type',
-    TRIGGER: 'faas.trigger'
+    TRIGGER: 'faas.trigger',
+    COLDSTART: 'faas.coldstart'
+  },
+
+  process: {
+    RUNTIME_NAME: 'process.runtime.name'
   },
 
   exception: {

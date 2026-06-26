@@ -35,7 +35,27 @@ exports.INSTRUMENTATION_TYPES = {
   S3: 's3',
   KINESIS: 'kinesis',
   AZSTORAGE: 'azstorage',
-  AWS_LAMBDA_INVOKE: 'aws.lambda.invoke'
+  AWS_LAMBDA_INVOKE: 'aws.lambda.invoke',
+  AWS_LAMBDA_ENTRY: 'lambda'
+};
+
+/**
+ * Maps Instana lambda.trigger values to OTel faas.trigger values.
+ * @type {Record<string, string>}
+ */
+exports.LAMBDA_TRIGGER_MAP = {
+  'aws:api.gateway': 'http',
+  'aws:api.gateway.noproxy': 'http',
+  'aws:application.load.balancer': 'http',
+  'aws:lambda.function.url': 'http',
+  'aws:s3': 'datasource',
+  'aws:dynamodb': 'datasource',
+  'aws:kinesis': 'datasource',
+  'aws:kinesis.firehouse': 'datasource',
+  'aws:sqs': 'pubsub',
+  'aws:sns': 'pubsub',
+  'aws:cloudwatch.events': 'timer',
+  'aws:lambda.invoke': 'other'
 };
 
 exports.OTLP_STATUS_CODES = {

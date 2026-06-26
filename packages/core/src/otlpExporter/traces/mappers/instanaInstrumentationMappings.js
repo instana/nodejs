@@ -7,7 +7,12 @@
 const { toUpperCase, firstDefined, formatOTLPValue, combineFields, extractHost, extractPort } = require('./util');
 
 const ctx = require('../../common/context');
-const { INSTRUMENTATION_TYPES, OTLP_STATUS_CODES, SPECIAL_SPAN_DATA_TYPES } = require('./constants');
+const {
+  INSTRUMENTATION_TYPES,
+  OTLP_STATUS_CODES,
+  SPECIAL_SPAN_DATA_TYPES,
+  LAMBDA_TRIGGER_MAP
+} = require('./constants');
 
 const OTLP = /** @type {any} */ (ctx.semConv);
 
@@ -33,6 +38,7 @@ const OTLP = /** @type {any} */ (ctx.semConv);
  * @typedef {Object} AttributeMapping
  * @property {string} otlp
  * @property {string | string[]} [instana]
+ * @property {string} [spanLevel]
  * @property {any} [value]
  * @property {TransformFunction} [transform]
  */
@@ -81,6 +87,10 @@ const instrumentationMappings = {
       { otlp: OTLP.messaging.SYSTEM, value: 'kafka' },
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'endpoints' },
       { otlp: OTLP.messaging.OPERATION_NAME, instana: 'operation' },
+      {
+        otlp: OTLP.messaging.OPERATION_TYPE,
+        instana: 'operation'
+      },
       { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
@@ -93,6 +103,7 @@ const instrumentationMappings = {
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: ['exchange', 'key', 'queue'] },
       { otlp: OTLP.messaging.rabbitmq.ROUTING_KEY, instana: 'exchange' },
       { otlp: OTLP.messaging.rabbitmq.MESSAGE_ROUTING_KEY, instana: 'key' },
+      { otlp: OTLP.messaging.MESSAGE_BODY_SIZE, instana: 'size' },
       { otlp: OTLP.server.ADDRESS, instana: 'address', transform: extractHost },
       { otlp: OTLP.server.PORT, instana: 'address', transform: extractPort },
       { otlp: OTLP.error.TYPE, instana: 'error' }
@@ -125,11 +136,12 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.SQS]: {
     spanName: data => `${data.type || data.sort || 'process'} ${data.queue || 'unknown'}`,
     spanAttributes: [
-      { otlp: OTLP.messaging.SYSTEM, value: OTLP.messaging.sqs?.SYSTEM || 'aws.sqs' },
+      { otlp: OTLP.messaging.SYSTEM, value: 'aws_sqs' },
       { otlp: OTLP.messaging.OPERATION_NAME, instana: 'type' },
       { otlp: OTLP.messaging.CONSUMER_GROUP, instana: 'group' },
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'queue' },
-      { otlp: OTLP.messaging.MESSAGE_BODY_SIZE, instana: 'size' },
+      // TBD sqs.size = number of messages in a batch send (SendMessageBatch), not body bytes
+      { otlp: OTLP.messaging.BATCH_MESSAGE_COUNT, instana: 'size' },
       { otlp: OTLP.messaging.MESSAGE_ID, instana: 'messageId' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
@@ -149,7 +161,7 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.GCPS]: {
     spanName: data => `${data.op || 'process'} ${data.top || data.sub || 'unknown'}`,
     spanAttributes: [
-      { otlp: OTLP.messaging.SYSTEM, value: OTLP.messaging.gcp?.SYSTEM || 'gcp.pubsub' },
+      { otlp: OTLP.messaging.SYSTEM, value: 'gcp_pubsub' },
       { otlp: OTLP.messaging.OPERATION_NAME, instana: 'op' },
       {
         otlp: OTLP.messaging.DESTINATION_NAME,
@@ -296,14 +308,48 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.RPC]: {
     spanName: data => data.call || 'rpc.call',
     spanAttributes: [
-      { otlp: OTLP.rpc.METHOD, instana: 'call' },
-      { otlp: OTLP.rpc.SYSTEM, instana: 'flavor' },
-      { otlp: OTLP.network.PEER_NAME, instana: 'host' },
-      { otlp: OTLP.network.PEER_PORT, instana: 'port' },
+      {
+        otlp: OTLP.rpc.METHOD,
+        instana: 'call',
+        transform: (value, spanData) => {
+          // For gRPC, check if the method is recognized (simple format without package prefix)
+          if (spanData?.flavor === 'grpc' && typeof value === 'string') {
+            // Recognized methods have format "ServiceName/MethodName" (no dots in service name)
+            // Unrecognized methods have format "package.name.ServiceName/MethodName"
+            const parts = value.split('/');
+            if (parts.length === 2 && parts[0].includes('.')) {
+              // Unrecognized method - has package prefix with dots
+              return '_OTHER';
+            }
+          }
+          return value;
+        }
+      },
+      {
+        otlp: OTLP.rpc.METHOD_ORIGINAL,
+        instana: 'call',
+        transform: (value, spanData) => {
+          // Only set method_original for unrecognized gRPC methods
+          if (spanData?.flavor === 'grpc' && typeof value === 'string') {
+            const parts = value.split('/');
+            if (parts.length === 2 && parts[0].includes('.')) {
+              // Unrecognized method - return original value
+              return value;
+            }
+          }
+          // For recognized methods or non-gRPC, don't set method_original
+          return undefined;
+        }
+      },
+      { otlp: OTLP.rpc.SYSTEM_NAME, instana: 'flavor' },
+      { otlp: OTLP.server.ADDRESS, instana: 'host' },
+      { otlp: OTLP.server.PORT, instana: 'port' },
       { otlp: OTLP.rpc.GRPC_ERROR, instana: 'error' }
     ]
   },
 
+  // Note: Graphql is not specified in RFD
+  // Will revisit if RFD is updated
   [INSTRUMENTATION_TYPES.GRAPHQL]: {
     spanName: data =>
       data.operationName ? `${data.operationType || 'query'} ${data.operationName}` : data.operationType || 'graphql',
@@ -313,6 +359,8 @@ const instrumentationMappings = {
     ]
   },
 
+  // Note: GCS is not specified in RFD
+  // Will revisit if RFD is updated
   [INSTRUMENTATION_TYPES.GCS]: {
     spanName: data => `gcs.${data.op || 'operation'}`,
     spanAttributes: [
@@ -331,7 +379,10 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.S3]: {
     spanName: data => `s3.${data.op || 'operation'}`,
     spanAttributes: [
-      { otlp: OTLP.database.OPERATION, instana: 'op' },
+      { otlp: OTLP.rpc.SYSTEM_NAME, value: 'aws-api' },
+      { otlp: OTLP.rpc.METHOD, instana: 'op', transform: value => (value ? `S3.${value}` : value) },
+      { otlp: OTLP.cloud.REGION, instana: 'region' },
+      { otlp: OTLP.cloud.PROVIDER, value: 'aws' },
       { otlp: OTLP.cloud.aws.S3_BUCKET, instana: 'bucket' },
       { otlp: OTLP.cloud.aws.S3_KEY, instana: 'key' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
@@ -341,8 +392,8 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.KINESIS]: {
     spanName: data => `kinesis.${data.op || 'operation'}`,
     spanAttributes: [
-      { otlp: OTLP.messaging.SYSTEM, value: 'aws.kinesis' },
-      { otlp: OTLP.database.OPERATION, instana: 'op' },
+      { otlp: OTLP.messaging.SYSTEM, value: 'aws_kinesis' },
+      { otlp: OTLP.messaging.OPERATION_NAME, instana: 'op' },
       { otlp: OTLP.cloud.aws.KINESIS_STREAM, instana: 'stream' },
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'stream' },
       { otlp: OTLP.messaging.DESTINATION_PARTITION_ID, instana: 'shard' },
@@ -354,6 +405,8 @@ const instrumentationMappings = {
     ]
   },
 
+  // Note: Azure storage is not specified in RFD
+  // Will revisit if RFD is updated
   [INSTRUMENTATION_TYPES.AZSTORAGE]: {
     spanName: data => `azure.storage.${data.op || 'operation'}`,
     spanAttributes: [
@@ -371,7 +424,54 @@ const instrumentationMappings = {
     spanAttributes: [
       { otlp: OTLP.faas.NAME, instana: 'function' },
       { otlp: OTLP.faas.INVOCATION_TYPE, instana: 'type' },
+      { otlp: OTLP.cloud.PROVIDER, value: 'aws' },
+      { otlp: OTLP.cloud.PLATFORM, value: 'aws_lambda' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
+    ]
+  },
+
+  [INSTRUMENTATION_TYPES.AWS_LAMBDA_ENTRY]: {
+    spanName: data => data.functionName || 'aws.lambda.entry',
+    spanAttributes: [
+      {
+        otlp: OTLP.faas.TRIGGER,
+        instana: 'trigger',
+        transform: trigger => LAMBDA_TRIGGER_MAP[trigger] || 'other'
+      },
+      { otlp: OTLP.faas.NAME, instana: 'functionName' },
+      { otlp: OTLP.faas.VERSION, instana: 'functionVersion' },
+      { otlp: OTLP.cloud.PROVIDER, value: 'aws' },
+      { otlp: OTLP.cloud.PLATFORM, value: 'aws_lambda' },
+      {
+        otlp: OTLP.cloud.REGION,
+        instana: 'arn',
+        transform: arn => {
+          // arn:aws:lambda:{region}:{account-id}:function:{name}:{version}
+          const parts = typeof arn === 'string' ? arn.split(':') : [];
+          return parts[3] || undefined;
+        }
+      },
+      {
+        otlp: OTLP.cloud.ACCOUNT_ID,
+        instana: 'arn',
+        transform: arn => {
+          const parts = typeof arn === 'string' ? arn.split(':') : [];
+          return parts[4] || undefined;
+        }
+      },
+      { otlp: OTLP.cloud.RESOURCE_ID, instana: 'arn' },
+      { otlp: OTLP.faas.INVOCATION_ID, instana: 'reqId' },
+      {
+        otlp: OTLP.faas.COLDSTART,
+        instana: 'coldStart',
+        transform: value => {
+          if (typeof value === 'boolean') return value;
+          if (typeof value === 'string') return value === 'true';
+          return undefined;
+        }
+      },
+      { otlp: OTLP.process.RUNTIME_NAME, instana: 'runtime' },
+      { otlp: OTLP.exception.MESSAGE, instana: 'error' }
     ]
   },
 

@@ -17,12 +17,6 @@ const MAPPINGS = {
     DESTINATION_NAME: 'messaging.destination.name',
     kafka: {
       PARTITION: 'messaging.kafka.destination.partition'
-    },
-    sqs: {
-      SYSTEM: 'aws_sqs'
-    },
-    gcp: {
-      SYSTEM: 'gcp_pubsub'
     }
   },
   database: {

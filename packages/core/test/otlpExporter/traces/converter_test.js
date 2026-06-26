@@ -138,6 +138,47 @@ function createAzureBlobSpan(overrides = {}) {
   });
 }
 
+function createAwsLambdaInvokeSpan(overrides = {}) {
+  const lambdaInvoke = {
+    function: 'my-function',
+    type: 'RequestResponse',
+    ...(overrides.data?.['aws.lambda.invoke'] || {})
+  };
+
+  return createSpan({
+    n: 'aws.lambda.invoke',
+    k: 2,
+    ...overrides,
+    data: {
+      'aws.lambda.invoke': lambdaInvoke,
+      ...(overrides.data || {})
+    }
+  });
+}
+
+function createAwsLambdaEntrySpan(overrides = {}) {
+  const lambda = {
+    arn: 'arn:aws:lambda:us-east-1:123456789012:function:my-function:42',
+    functionName: 'my-function',
+    functionVersion: '$LATEST',
+    runtime: 'nodejs',
+    reqId: 'abc-123-req-id',
+    coldStart: true,
+    trigger: 'aws:api.gateway',
+    ...(overrides.data?.lambda || {})
+  };
+
+  return createSpan({
+    n: 'aws.lambda.entry',
+    k: 1,
+    ...overrides,
+    data: {
+      lambda,
+      ...(overrides.data || {})
+    }
+  });
+}
+
 function createOtelSpan(overrides = {}) {
   return createSpan({
     n: 'otel',
@@ -479,10 +520,152 @@ describe('tracing/converters/otlp', () => {
         expectAttribute(otelAttributes, 'success', { boolValue: true });
       });
 
+      it('extracts AWS Lambda invoke attributes', () => {
+        const lambdaInvokeSpan = createAwsLambdaInvokeSpan();
+
+        const attributes = extractSpanAttributes(lambdaInvokeSpan, mappers.get(lambdaInvokeSpan));
+        expectAttribute(attributes, 'faas.name', { stringValue: 'my-function' });
+        expectAttribute(attributes, 'faas.invocation_type', { stringValue: 'RequestResponse' });
+        expectAttribute(attributes, 'cloud.provider', { stringValue: 'aws' });
+        expectAttribute(attributes, 'cloud.platform', { stringValue: 'aws_lambda' });
+      });
+
+      it('extracts AWS Lambda invoke attributes with error', () => {
+        const lambdaInvokeSpan = createAwsLambdaInvokeSpan({
+          data: {
+            'aws.lambda.invoke': {
+              function: 'my-async-function',
+              type: 'Event',
+              error: 'Function not found'
+            }
+          }
+        });
+
+        const attributes = extractSpanAttributes(lambdaInvokeSpan, mappers.get(lambdaInvokeSpan));
+        expectAttribute(attributes, 'faas.name', { stringValue: 'my-async-function' });
+        expectAttribute(attributes, 'faas.invocation_type', { stringValue: 'Event' });
+        expectAttribute(attributes, 'error.type', { stringValue: 'Function not found' });
+      });
+
+      it('extracts AWS Lambda entry attributes (API Gateway / cold start)', () => {
+        const lambdaEntrySpan = createAwsLambdaEntrySpan();
+
+        const attributes = extractSpanAttributes(lambdaEntrySpan, mappers.get(lambdaEntrySpan));
+        expectAttribute(attributes, 'faas.trigger', { stringValue: 'http' });
+        expectAttribute(attributes, 'faas.name', { stringValue: 'my-function' });
+        expectAttribute(attributes, 'faas.version', { stringValue: '$LATEST' });
+        expectAttribute(attributes, 'cloud.provider', { stringValue: 'aws' });
+        expectAttribute(attributes, 'cloud.platform', { stringValue: 'aws_lambda' });
+        expectAttribute(attributes, 'cloud.region', { stringValue: 'us-east-1' });
+        expectAttribute(attributes, 'cloud.account.id', { stringValue: '123456789012' });
+        expectAttribute(attributes, 'faas.invocation_id', { stringValue: 'abc-123-req-id' });
+        expectAttribute(attributes, 'faas.coldstart', { boolValue: true });
+        expectAttribute(attributes, 'process.runtime.name', { stringValue: 'nodejs' });
+      });
+
+      it('extracts AWS Lambda entry attributes (Lambda invoke trigger / error)', () => {
+        const lambdaEntrySpan = createAwsLambdaEntrySpan({
+          data: {
+            lambda: {
+              arn: 'arn:aws:lambda:eu-west-1:987654321098:function:error-function:3',
+              functionName: 'error-function',
+              functionVersion: '3',
+              runtime: 'nodejs',
+              reqId: 'def-456-req-id',
+              trigger: 'aws:lambda.invoke',
+              error: 'Task timed out after 30.00 seconds'
+            }
+          }
+        });
+
+        const attributes = extractSpanAttributes(lambdaEntrySpan, mappers.get(lambdaEntrySpan));
+        expectAttribute(attributes, 'faas.trigger', { stringValue: 'other' });
+        expectAttribute(attributes, 'cloud.region', { stringValue: 'eu-west-1' });
+        expectAttribute(attributes, 'cloud.account.id', { stringValue: '987654321098' });
+        expectAttribute(attributes, 'exception.message', { stringValue: 'Task timed out after 30.00 seconds' });
+      });
+
       it('returns empty array for spans without data', () => {
         expect(extractSpanAttributes({ t: '123', s: '456' }, mappers.get({}))).to.deep.equal([]);
         expect(extractSpanAttributes(null, mappers.get({}))).to.deep.equal([]);
       });
+    });
+  });
+
+  describe('aws lambda', () => {
+    it('converts aws.lambda.invoke span', () => {
+      const spans = [createAwsLambdaInvokeSpan({ t: 'trace-lambda', s: 'span-lambda-1', ts: 1710000000000, d: 50 })];
+      const result = convert(spans);
+
+      expect(result.resourceSpans).to.have.lengthOf(1);
+      const convertedSpans = getConvertedSpans(result);
+      expect(convertedSpans).to.have.lengthOf(1);
+
+      const lambdaInvokeSpan = convertedSpans[0];
+      expect(lambdaInvokeSpan.name).to.equal('Invoke my-function');
+      expect(lambdaInvokeSpan.kind).to.equal(3);
+      expectAttribute(lambdaInvokeSpan.attributes, 'faas.name', { stringValue: 'my-function' });
+      expectAttribute(lambdaInvokeSpan.attributes, 'faas.invocation_type', { stringValue: 'RequestResponse' });
+      expectAttribute(lambdaInvokeSpan.attributes, 'cloud.provider', { stringValue: 'aws' });
+      expectAttribute(lambdaInvokeSpan.attributes, 'cloud.platform', { stringValue: 'aws_lambda' });
+    });
+
+    it('converts aws.lambda.entry span (API Gateway / cold start)', () => {
+      const spans = [createAwsLambdaEntrySpan({ t: 'trace-lambda', s: 'span-lambda-2', ts: 1710000000000, d: 120 })];
+      const result = convert(spans);
+
+      const convertedSpans = getConvertedSpans(result);
+      expect(convertedSpans).to.have.lengthOf(1);
+
+      const lambdaEntrySpan = convertedSpans[0];
+      expect(lambdaEntrySpan.name).to.equal('my-function');
+      expect(lambdaEntrySpan.kind).to.equal(2);
+      expectAttribute(lambdaEntrySpan.attributes, 'faas.trigger', { stringValue: 'http' });
+      expectAttribute(lambdaEntrySpan.attributes, 'faas.name', { stringValue: 'my-function' });
+      expectAttribute(lambdaEntrySpan.attributes, 'faas.version', { stringValue: '$LATEST' });
+      expectAttribute(lambdaEntrySpan.attributes, 'cloud.provider', { stringValue: 'aws' });
+      expectAttribute(lambdaEntrySpan.attributes, 'cloud.platform', { stringValue: 'aws_lambda' });
+      expectAttribute(lambdaEntrySpan.attributes, 'cloud.region', { stringValue: 'us-east-1' });
+      expectAttribute(lambdaEntrySpan.attributes, 'cloud.account.id', { stringValue: '123456789012' });
+      expectAttribute(lambdaEntrySpan.attributes, 'faas.invocation_id', { stringValue: 'abc-123-req-id' });
+      expectAttribute(lambdaEntrySpan.attributes, 'faas.coldstart', { boolValue: true });
+      expectAttribute(lambdaEntrySpan.attributes, 'process.runtime.name', { stringValue: 'nodejs' });
+    });
+
+    it('converts aws.lambda.entry span (Lambda invoke trigger / error)', () => {
+      const spans = [
+        createAwsLambdaEntrySpan({
+          t: 'trace-lambda',
+          s: 'span-lambda-3',
+          ts: 1710000000000,
+          d: 30000,
+          ec: 1,
+          data: {
+            lambda: {
+              arn: 'arn:aws:lambda:eu-west-1:987654321098:function:error-function:3',
+              functionName: 'error-function',
+              functionVersion: '3',
+              runtime: 'nodejs',
+              reqId: 'def-456-req-id',
+              trigger: 'aws:lambda.invoke',
+              error: 'Task timed out after 30.00 seconds'
+            }
+          }
+        })
+      ];
+      const result = convert(spans);
+
+      const convertedSpans = getConvertedSpans(result);
+      expect(convertedSpans).to.have.lengthOf(1);
+
+      const lambdaEntrySpan = convertedSpans[0];
+      expect(lambdaEntrySpan.name).to.equal('error-function');
+      expect(lambdaEntrySpan.kind).to.equal(2);
+      expect(lambdaEntrySpan.status).to.deep.equal({ code: 2, message: 'Task timed out after 30.00 seconds' });
+      expectAttribute(lambdaEntrySpan.attributes, 'faas.trigger', { stringValue: 'other' });
+      expectAttribute(lambdaEntrySpan.attributes, 'cloud.region', { stringValue: 'eu-west-1' });
+      expectAttribute(lambdaEntrySpan.attributes, 'cloud.account.id', { stringValue: '987654321098' });
+      expectAttribute(lambdaEntrySpan.attributes, 'exception.message', { stringValue: 'Task timed out after 30.00 seconds' });
     });
   });
 });
