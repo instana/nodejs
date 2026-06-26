@@ -6,7 +6,7 @@
 'use strict';
 
 const tracingMetrics = require('./metrics');
-const { transform } = require('./backend_mappers');
+const instanaBackendMapper = require('./backend_mappers');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -184,9 +184,6 @@ exports.addSpan = function (span) {
   if (!isActive) {
     return;
   }
-
-  // Transform internal span data format into external (backend) readable format.
-  span = applySpanTransformation(span);
 
   if (span.t == null) {
     logger.warn(`Span of type ${span.n} has no trace ID. Not transmitting this span`);
@@ -452,10 +449,11 @@ function transmitSpans() {
   spans = [];
   batchingBuckets.clear();
 
+  const transformedSpans = applySpanTransformation(spansToSend);
   // We restore the content of the spans array if sending them downstream was not successful. We do not restore
   // batchingBuckets, though. This is deliberate. In the worst case, we might miss some batching opportunities, but
   // since sending spans downstream will take a few milliseconds, even that will be rare (and it is acceptable).
-  downstreamConnection.sendSpans(spansToSend, function sendSpans(/** @type {Error} */ error) {
+  downstreamConnection.sendSpans(transformedSpans, function sendSpans(/** @type {Error} */ error) {
     if (error) {
       logger.warn(`Failed to transmit spans, will retry in ${transmissionDelay} ms. ${error?.message} ${error?.stack}`);
       spans = spans.concat(spansToSend);
@@ -477,7 +475,7 @@ exports.getAndResetSpans = function getAndResetSpans() {
   const spansToSend = spans;
   spans = [];
   batchingBuckets.clear();
-  return spansToSend;
+  return applySpanTransformation(spansToSend);
 };
 
 exports.isEmpty = function isEmpty() {
@@ -501,10 +499,24 @@ function removeSpansIfNecessary() {
     spans = spans.slice(-maxBufferedSpans);
   }
 }
+
 /**
- * @param {import('../core').InstanaBaseSpan} span
- * @returns {import('../core').InstanaBaseSpan} span
+ * Transforms internal spans into the format required by the configured exporter.
+ * @param {import('../core').InstanaBaseSpan[]} spansToSend
+ * @returns {any}
  */
-function applySpanTransformation(span) {
-  return transform(span);
+function applySpanTransformation(spansToSend) {
+  return (
+    spansToSend
+      // Transform internal span data format into external (backend) readable format.
+      .map(span => instanaBackendMapper.transform(span))
+      .filter(span => {
+        if (span.t != null) {
+          return true;
+        }
+
+        logger.debug(`Span of type ${span.n} has no trace ID. Not transmitting this span.`);
+        return false;
+      })
+  );
 }
