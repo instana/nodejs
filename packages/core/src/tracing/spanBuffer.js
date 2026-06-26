@@ -7,6 +7,7 @@
 
 const tracingMetrics = require('./metrics');
 const instanaBackendMapper = require('./backend_mappers');
+const otlpExporter = require('../otlpExporter');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -506,38 +507,18 @@ function removeSpansIfNecessary() {
 
 /**
  * Transforms internal spans into the format required by the configured exporter.
+ * Depending on configuration, spans are transformed to either:
+ * - Instana backend format
+ * - OTLP format
+ *
  * @param {import('../core').InstanaBaseSpan[]} spansToSend
  * @returns {any}
  */
 function applySpanTransformation(spansToSend) {
-  return (
-    spansToSend
-      // Transform internal span data format into external (backend) readable format.
-      .map(span => instanaBackendMapper.transform(span))
-      .filter(span => {
-        if (span.t != null) {
-          return true;
-        }
-
-        logger.debug(`Span of type ${span.n} has no trace ID. Not transmitting this span.`);
-        return false;
-      })
-  );
-}
-
-/**
- * Builds the payload for span export.
- *
- * Depending on configuration, spans are transformed to either:
- * - Instana backend format
- * - OTLP format
- * @param {import("../core").InstanaBaseSpan[]} spansToSend
- * @returns {any}
- */
-function transformSpansForExport(spansToSend) {
   if (useOtlpExporter) {
     return otlpExporter.traces.transform(spansToSend);
   }
+
   return (
     spansToSend
       // Transform internal span data format into external (backend) readable format.
