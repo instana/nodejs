@@ -363,15 +363,7 @@ exports.sendMetrics = function sendMetrics(data, cb) {
     data,
     cb: (err, body) => {
       if (err) {
-        if (isOtlpExporterEnabled) {
-          logger.error('Error sending metrics:', err);
-        }
         cb(err, null);
-        return;
-      }
-
-      if (isOtlpExporterEnabled) {
-        cb(null, []);
         return;
       }
 
