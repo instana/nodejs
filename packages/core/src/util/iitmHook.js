@@ -4,8 +4,6 @@
 
 'use strict';
 
-const iitmHook = require('import-in-the-middle');
-
 /** @type {import('../core').GenericLogger} */
 let logger;
 
@@ -27,6 +25,8 @@ exports.activate = function activate() {
     if (applicableTransformers) {
       applicableTransformers.forEach(transformerFn => {
         if (typeof transformerFn === 'function') {
+          const iitmHook = require('import-in-the-middle');
+
           // @ts-ignore
           iitmHook([moduleName], (exports, name) => {
             logger.debug(`iitm-hooking enabled for module ${name}`);
