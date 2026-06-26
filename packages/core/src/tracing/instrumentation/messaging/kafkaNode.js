@@ -73,8 +73,8 @@ function instrumentedSend(ctx, originalSend, produceRequests, cb) {
     span.b = { s: produceRequests.length };
     span.stack = tracingUtil.getStackTrace(instrumentedSend);
     span.data.kafka = {
-      service: produceRequest.topic,
-      access: 'send'
+      endpoints: produceRequest.topic,
+      operation: 'send'
     };
 
     args.push(
@@ -124,8 +124,8 @@ function shimEmit(original) {
       });
       span.stack = [];
       span.data.kafka = {
-        access: 'consume',
-        service: message.topic
+        operation: 'consume',
+        endpoints: message.topic
       };
 
       try {
