@@ -425,7 +425,7 @@ describe('agent connection/export endpoints', function () {
 
       agentConnection.sendMetrics({ resourceMetrics: [] }, (err, body) => {
         expect(err).to.not.exist;
-        expect(body).to.deep.equal([]);
+        expect(body).to.deep.equal({ ignored: true });
         expect(requests).to.have.lengthOf(1);
         expect(requests[0].options).to.include({
           host: '127.0.0.1',
@@ -439,7 +439,7 @@ describe('agent connection/export endpoints', function () {
       });
     });
 
-    it('should log OTLP metrics errors and forward the error to the callback', done => {
+    it('should forward OTLP metrics errors to the callback', done => {
       initAgentConnection({
         tracing: {
           otlp: {
@@ -463,9 +463,7 @@ describe('agent connection/export endpoints', function () {
         expect(err).to.exist;
         expect(body).to.equal(null);
         expect(err.message).to.equal('Send data to agent via POST /v1/metrics. Request failed: socket hang up');
-        expect(logger.error).to.have.been.calledOnce;
-        expect(logger.error.firstCall.args[0]).to.equal('Error sending metrics:');
-        expect(logger.error.firstCall.args[1]).to.equal(err);
+        expect(logger.error).to.not.have.been.called;
         done();
       });
     });
@@ -515,7 +513,7 @@ describe('agent connection/export endpoints', function () {
         expect(err).to.exist;
         expect(body).to.equal(null);
         expect(err.message).to.equal('Failed to send data to agent via POST /v1/metrics. Got status code 500.');
-        expect(logger.error).to.have.been.calledOnce;
+        expect(logger.error).to.not.have.been.called;
         done();
       });
     });
