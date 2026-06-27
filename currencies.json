@@ -545,7 +545,7 @@
     "core": false,
     "versions": [
       {
-        "v": "15.0.5",
+        "v": "15.0.6",
         "esmOnly": true,
         "node": ">=22"
       },
