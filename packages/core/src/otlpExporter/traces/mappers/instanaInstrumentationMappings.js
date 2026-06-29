@@ -348,14 +348,15 @@ const instrumentationMappings = {
     ]
   },
 
-  // Note: Graphql is not specified in RFD
-  // Will revisit if RFD is updated
+  // Note: span attributes follow the OTel GraphQL semantic conventions:
+  // https://opentelemetry.io/docs/specs/semconv/graphql/graphql-spans/
   [INSTRUMENTATION_TYPES.GRAPHQL]: {
     spanName: data =>
       data.operationName ? `${data.operationType || 'query'} ${data.operationName}` : data.operationType || 'graphql',
     spanAttributes: [
+      { otlp: OTLP.graphql.OPERATION_TYPE, instana: 'operationType' },
       { otlp: OTLP.graphql.OPERATION_NAME, instana: 'operationName' },
-      { otlp: OTLP.graphql.OPERATION_TYPE, instana: 'operationType' }
+      { otlp: OTLP.error.TYPE, instana: 'errors' }
     ]
   },
 

@@ -215,9 +215,10 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       expect(result).to.equal('aws.lambda.entry');
     });
 
-    it('should generate GraphQL span name with operation name', () => {
+    it('should generate graphql.server span name with operation type and name', () => {
       const span = {
-        n: 'graphql',
+        n: 'graphql.server',
+        k: 1,
         data: {
           graphql: {
             operationType: 'query',
@@ -230,9 +231,10 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       expect(result).to.equal('query GetUser');
     });
 
-    it('should generate GraphQL span name without operation name', () => {
+    it('should generate graphql.server span name with only operation type (no name)', () => {
       const span = {
-        n: 'graphql',
+        n: 'graphql.server',
+        k: 1,
         data: {
           graphql: {
             operationType: 'mutation'
@@ -242,6 +244,35 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
 
       const result = spanName(span);
       expect(result).to.equal('mutation');
+    });
+
+    it('should generate graphql.client span name for subscription-update', () => {
+      const span = {
+        n: 'graphql.client',
+        k: 2,
+        data: {
+          graphql: {
+            operationType: 'subscription-update',
+            operationName: 'OnCommentAdded'
+          }
+        }
+      };
+
+      const result = spanName(span);
+      expect(result).to.equal('subscription-update OnCommentAdded');
+    });
+
+    it('should fallback to "graphql" when operationType is absent', () => {
+      const span = {
+        n: 'graphql.server',
+        k: 1,
+        data: {
+          graphql: {}
+        }
+      };
+
+      const result = spanName(span);
+      expect(result).to.equal('graphql');
     });
 
     it('should fallback to span.n when no handler exists', () => {
@@ -496,6 +527,94 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
         key: 'http.status_code',
         value: { intValue: 201 }
       });
+    });
+
+    it('should map graphql.server span attributes (query with operation name)', () => {
+      const span = {
+        n: 'graphql.server',
+        k: 1,
+        data: {
+          graphql: {
+            operationType: 'query',
+            operationName: 'GetUser',
+            document: 'query GetUser { user { id name } }'
+          }
+        }
+      };
+
+      const result = spanAttributes(span);
+      const getAttr = key => result.find(a => a.key === key);
+
+      expect(getAttr('graphql.operation.type').value).to.deep.equal({ stringValue: 'query' });
+      expect(getAttr('graphql.operation.name').value).to.deep.equal({ stringValue: 'GetUser' });
+      expect(getAttr('error.type')).to.be.undefined;
+    });
+
+    it('should map graphql.server span attributes with errors', () => {
+      const span = {
+        n: 'graphql.server',
+        k: 1,
+        ec: 1,
+        data: {
+          graphql: {
+            operationType: 'query',
+            operationName: 'GetUser',
+            errors: 'Cannot query field "bogus" on type "User"'
+          }
+        }
+      };
+
+      const result = spanAttributes(span);
+      const getAttr = key => result.find(a => a.key === key);
+
+      expect(getAttr('graphql.operation.type').value).to.deep.equal({ stringValue: 'query' });
+      expect(getAttr('graphql.operation.name').value).to.deep.equal({ stringValue: 'GetUser' });
+      expect(getAttr('error.type').value).to.deep.equal({
+        stringValue: 'Cannot query field "bogus" on type "User"'
+      });
+      expect(getAttr('graphql.document')).to.be.undefined;
+    });
+
+    it('should map graphql.server span attributes for mutation', () => {
+      const span = {
+        n: 'graphql.server',
+        k: 1,
+        data: {
+          graphql: {
+            operationType: 'mutation',
+            operationName: 'CreateUser'
+          }
+        }
+      };
+
+      const result = spanAttributes(span);
+      const getAttr = key => result.find(a => a.key === key);
+
+      expect(getAttr('graphql.operation.type').value).to.deep.equal({ stringValue: 'mutation' });
+      expect(getAttr('graphql.operation.name').value).to.deep.equal({ stringValue: 'CreateUser' });
+      expect(getAttr('graphql.document')).to.be.undefined;
+      expect(getAttr('error.type')).to.be.undefined;
+    });
+
+    it('should map graphql.client span attributes for subscription-update', () => {
+      const span = {
+        n: 'graphql.client',
+        k: 2,
+        data: {
+          graphql: {
+            operationType: 'subscription-update',
+            operationName: 'OnCommentAdded'
+          }
+        }
+      };
+
+      const result = spanAttributes(span);
+      const getAttr = key => result.find(a => a.key === key);
+
+      expect(getAttr('graphql.operation.type').value).to.deep.equal({ stringValue: 'subscription-update' });
+      expect(getAttr('graphql.operation.name').value).to.deep.equal({ stringValue: 'OnCommentAdded' });
+      expect(getAttr('graphql.document')).to.be.undefined;
+      expect(getAttr('error.type')).to.be.undefined;
     });
   });
 
