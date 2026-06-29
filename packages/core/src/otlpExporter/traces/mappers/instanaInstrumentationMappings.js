@@ -113,9 +113,9 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.NATS]: {
-    spanName: data => `${data.sort || 'process'} ${data.subject || 'unknown'}`,
+    spanName: data => `${data.sort } ${data.subject '}`,
     spanAttributes: [
-      { otlp: OTLP.messaging.SYSTEM, value: 'nats' },
+      { otlp: OTLP.messaging.SYSTEM, value: INSTRUMENTATION_TYPES.NATS },
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'subject' },
       { otlp: OTLP.messaging.OPERATION_NAME, instana: 'sort' },
       { otlp: OTLP.server.ADDRESS, instana: 'address', transform: extractHost },
@@ -125,9 +125,9 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.BULL]: {
-    spanName: data => `${data.sort || 'process'} ${data.queue || 'unknown'}`,
+    spanName: data => `${data.sort} ${data.queue}`,
     spanAttributes: [
-      { otlp: OTLP.messaging.SYSTEM, value: 'bull' },
+      { otlp: OTLP.messaging.SYSTEM, value: INSTRUMENTATION_TYPES.BULL },
       { otlp: OTLP.messaging.OPERATION_NAME, instana: 'sort' },
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'queue' },
       { otlp: OTLP.messaging.MESSAGE_ID, instana: 'messageId' },
@@ -136,7 +136,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.SQS]: {
-    spanName: data => `${data.type || data.sort || 'process'} ${data.queue || 'unknown'}`,
+    spanName: data => `${data.sort} ${data.queue}`,
     spanAttributes: [
       { otlp: OTLP.messaging.SYSTEM, value: 'aws_sqs' },
       { otlp: OTLP.messaging.OPERATION_NAME, instana: 'type' },
@@ -149,16 +149,16 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.SNS]: {
-    spanName: data => `publish ${data.topic || data.subject || 'unknown'}`,
+    spanName: data => `publish ${data.topic }`,
     spanAttributes: [
       { otlp: OTLP.messaging.SYSTEM, value: 'aws.sns' },
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'topic' },
+     // We don't have the actual operation name. Using "send" based on the RFD.
       { otlp: OTLP.messaging.OPERATION_NAME, value: 'send' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
 
-  // Entry and Exit
   [INSTRUMENTATION_TYPES.GCPS]: {
     spanName: data => `${data.op || 'process'} ${data.top || data.sub || 'unknown'}`,
     spanAttributes: [
@@ -220,7 +220,7 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.DB2]: {
     spanName: data => data.stmt?.split(/\s+/)[0]?.toUpperCase() || 'DB2',
     spanAttributes: [
-      { otlp: OTLP.database.SYSTEM, value: 'db2' },
+      { otlp: OTLP.database.SYSTEM, value: INSTRUMENTATION_TYPES.DB2 },
       { otlp: OTLP.database.QUERY_TEXT, instana: 'stmt' },
       { otlp: OTLP.database.STATEMENT, instana: 'stmt' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
@@ -246,7 +246,7 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.REDIS]: {
     spanName: data => `redis.${data.operation || 'command'}`,
     spanAttributes: [
-      { otlp: OTLP.database.SYSTEM, value: 'redis' },
+      { otlp: OTLP.database.SYSTEM, value: INSTRUMENTATION_TYPES.REDIS},
       { otlp: OTLP.database.OPERATION, instana: 'operation' },
       { otlp: OTLP.database.CONNECTION_STRING, instana: 'connection' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
@@ -268,7 +268,7 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.ELASTICSEARCH]: {
     spanName: data => `elasticsearch.${data.action || 'request'}`,
     spanAttributes: [
-      { otlp: OTLP.database.SYSTEM, value: 'elasticsearch' },
+      { otlp: OTLP.database.SYSTEM, value: INSTRUMENTATION_TYPES.ELASTICSEARCH},
       { otlp: OTLP.database.OPERATION, instana: 'action' },
       { otlp: OTLP.database.NAME, instana: 'cluster' },
       { otlp: OTLP.database.COLLECTION, instana: 'index' },
@@ -281,7 +281,7 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.DYNAMODB]: {
     spanName: data => `dynamodb.${data.operation || 'request'}`,
     spanAttributes: [
-      { otlp: OTLP.database.SYSTEM, value: 'dynamodb' },
+      { otlp: OTLP.database.SYSTEM, value: INSTRUMENTATION_TYPES.DYNAMODB},
       { otlp: OTLP.database.OPERATION, instana: 'operation' },
       { otlp: OTLP.cloud.REGION, instana: 'region' },
       { otlp: OTLP.database.AWS_DYNAMODB_TABLE_NAMES, instana: 'table' },
@@ -303,7 +303,7 @@ const instrumentationMappings = {
   // Note: There is no official OpenTelemetry semantic convention for Prisma, and it is not covered in our RFD either.
   // We can therefore adopt a generic database convention, using the Prisma provider as the database system identifier.
   [INSTRUMENTATION_TYPES.PRISMA]: {
-    spanName: data => `prisma.${data.action || 'query'}`,
+    spanName: data => `prisma.${data.action`,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, instana: 'provider' },
       { otlp: OTLP.database.COLLECTION, instana: 'model' },
