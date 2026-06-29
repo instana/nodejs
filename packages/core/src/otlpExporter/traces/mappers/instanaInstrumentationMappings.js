@@ -84,7 +84,7 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.KAFKA]: {
     spanName: data => `${data.operation} ${data.endpoints}`,
     spanAttributes: [
-      { otlp: OTLP.messaging.SYSTEM, value: 'kafka' },
+      { otlp: OTLP.messaging.SYSTEM, value: INSTRUMENTATION_TYPES.KAFKA},
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'endpoints' },
       { otlp: OTLP.messaging.OPERATION_NAME, instana: 'operation' },
       {
@@ -96,12 +96,12 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.RABBITMQ]: {
-    spanName: data => `${data.sort || 'process'} ${data.exchange || data.key || data.queue || 'unknown'}`,
+    spanName: data => `${data.sort} ${data.exchange} || data.key}`
     spanAttributes: [
-      { otlp: OTLP.messaging.SYSTEM, value: 'rabbitmq' },
+      { otlp: OTLP.messaging.SYSTEM, value: INSTRUMENTATION_TYPES.RABBITMQ },
       { otlp: OTLP.messaging.OPERATION_NAME, instana: 'sort' },
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: ['exchange', 'key', 'queue'] },
-      { otlp: OTLP.messaging.rabbitmq.ROUTING_KEY, instana: 'exchange' },
+      { otlp: OTLP.messaging.rabbitmq.ROUTING_KEY, instana: 'key' },
       { otlp: OTLP.messaging.rabbitmq.MESSAGE_ROUTING_KEY, instana: 'key' },
       { otlp: OTLP.messaging.MESSAGE_BODY_SIZE, instana: 'size' },
       { otlp: OTLP.server.ADDRESS, instana: 'address', transform: extractHost },
