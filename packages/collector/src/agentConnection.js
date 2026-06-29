@@ -372,6 +372,11 @@ exports.sendMetrics = function sendMetrics(data, cb) {
         // Older sensor versions will not respond with a JSON
         // structure. Support a smooth update path.
         body = JSON.parse(body);
+        // Ensure body is always an array for requestHandler.handleRequests()
+        // OTLP endpoints return objects/empty strings (acknowledgments), not request arrays
+        if (!Array.isArray(body)) {
+          body = [];
+        }
       } catch (e) {
         body = [];
       }
