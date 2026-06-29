@@ -421,11 +421,11 @@ describe('agent connection/export endpoints', function () {
           }
         }
       });
-      responseQueue.push({ statusCode: 200, body: '{"ignored":true}' });
+      responseQueue.push({ statusCode: 200, body: '[]' });
 
       agentConnection.sendMetrics({ resourceMetrics: [] }, (err, body) => {
         expect(err).to.not.exist;
-        expect(body).to.deep.equal({ ignored: true });
+        expect(body).to.deep.equal([]);
         expect(requests).to.have.lengthOf(1);
         expect(requests[0].options).to.include({
           host: '127.0.0.1',
