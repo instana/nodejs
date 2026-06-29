@@ -373,7 +373,9 @@ exports.sendMetrics = function sendMetrics(data, cb) {
         // structure. Support a smooth update path.
         body = JSON.parse(body);
         // Ensure body is always an array for requestHandler.handleRequests()
-        // OTLP endpoints return objects/empty strings (acknowledgments), not request arrays
+        // - Instana agent endpoint returns arrays []
+        // - OTLP endpoints return acknowledgments (empty object {}), not request arrays
+        // Convert non-array responses to empty array to prevent error in requestHandler
         if (!Array.isArray(body)) {
           body = [];
         }
