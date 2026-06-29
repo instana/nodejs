@@ -6,14 +6,12 @@
 
 const { getLookupConfig } = require('./semconv');
 
-const DEFAULT_SEMCONV_VERSION = '1.23';
-
 class OtlpConfigContext {
   constructor() {
     /** @type {Record<string, any> | null} */
     this._config = null;
-    /** @type {string} */
-    this._semConvVersion = DEFAULT_SEMCONV_VERSION;
+    /** @type {string | null} */
+    this._semConvVersion = null;
     /** @type {any} */
     this._compiledSemConv = null;
     /** @type {string | null} */
@@ -29,7 +27,7 @@ class OtlpConfigContext {
    */
   init(config = {}) {
     this._config = config;
-    this._semConvVersion = DEFAULT_SEMCONV_VERSION;
+    this._semConvVersion = config.tracing.otlp.semConvVersion || this._semConvVersion;
     this._compiledSemConv = getLookupConfig(this._semConvVersion);
     this._pid = String(process.pid);
     this._serviceName = config.serviceName || null;

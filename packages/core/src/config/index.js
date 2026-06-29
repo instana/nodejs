@@ -90,6 +90,7 @@ let currentConfig;
  * @typedef {Object} otlpExporterOptions
  * @property {boolean} [enabled]
  * @property {number} [port]
+ * @property {string} [semConvVersion]
  */
 
 /**
@@ -172,7 +173,8 @@ let defaults = {
       enabled: false,
       // Currently, we only have http protocol support and default to 4318
       // This option is internal and not exposed
-      port: 4318
+      port: 4318,
+      semConvVersion: '1.23'
     }
   },
   preloadOpentelemetry: false,

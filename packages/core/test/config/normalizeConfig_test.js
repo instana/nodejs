@@ -1535,7 +1535,8 @@ describe('config.normalizeConfig', () => {
         const config = coreConfig.normalize({});
         expect(config.tracing.otlp).to.deep.equal({
           enabled: false,
-          port: 4318
+          port: 4318,
+          semConvVersion: '1.23'
         });
       });
 
@@ -1552,7 +1553,8 @@ describe('config.normalizeConfig', () => {
         });
         expect(config.tracing.otlp).to.deep.equal({
           enabled: true,
-          port: 4318
+          port: 4318,
+          semConvVersion: '1.23'
         });
       });
 
@@ -1568,7 +1570,8 @@ describe('config.normalizeConfig', () => {
         });
         expect(config.tracing.otlp).to.deep.equal({
           enabled: false,
-          port: 4318
+          port: 4318,
+          semConvVersion: '1.23'
         });
       });
 
@@ -1584,7 +1587,8 @@ describe('config.normalizeConfig', () => {
         });
         expect(config.tracing.otlp).to.deep.equal({
           enabled: true,
-          port: 4318
+          port: 4318,
+          semConvVersion: '1.23'
         });
       });
 
@@ -1600,7 +1604,8 @@ describe('config.normalizeConfig', () => {
         });
         expect(config.tracing.otlp).to.deep.equal({
           enabled: false,
-          port: 4318
+          port: 4318,
+          semConvVersion: '1.23'
         });
       });
 
@@ -1616,7 +1621,8 @@ describe('config.normalizeConfig', () => {
         });
         expect(config.tracing.otlp).to.deep.equal({
           enabled: true,
-          port: 4318
+          port: 4318,
+          semConvVersion: '1.23'
         });
       });
 
@@ -1632,7 +1638,8 @@ describe('config.normalizeConfig', () => {
         });
         expect(config.tracing.otlp).to.deep.equal({
           enabled: false,
-          port: 4318
+          port: 4318,
+          semConvVersion: '1.23'
         });
       });
 
@@ -1649,7 +1656,8 @@ describe('config.normalizeConfig', () => {
         });
         expect(config.tracing.otlp).to.deep.equal({
           enabled: true,
-          port: 4318
+          port: 4318,
+          semConvVersion: '1.23'
         });
       });
 
@@ -1666,7 +1674,8 @@ describe('config.normalizeConfig', () => {
         });
         expect(config.tracing.otlp).to.deep.equal({
           enabled: false,
-          port: 4318
+          port: 4318,
+          semConvVersion: '1.23'
         });
       });
 
@@ -1675,7 +1684,8 @@ describe('config.normalizeConfig', () => {
         const config = coreConfig.normalize();
         expect(config.tracing.otlp).to.deep.equal({
           enabled: true,
-          port: 4318
+          port: 4318,
+          semConvVersion: '1.23'
         });
       });
 
@@ -1684,7 +1694,8 @@ describe('config.normalizeConfig', () => {
         const config = coreConfig.normalize();
         expect(config.tracing.otlp).to.deep.equal({
           enabled: false,
-          port: 4318
+          port: 4318,
+          semConvVersion: '1.23'
         });
       });
 
@@ -1701,7 +1712,8 @@ describe('config.normalizeConfig', () => {
         });
         expect(config.tracing.otlp).to.deep.equal({
           enabled: true,
-          port: 4318
+          port: 4318,
+          semConvVersion: '1.23'
         });
       });
 
@@ -1718,7 +1730,8 @@ describe('config.normalizeConfig', () => {
         });
         expect(config.tracing.otlp).to.deep.equal({
           enabled: false,
-          port: 4318
+          port: 4318,
+          semConvVersion: '1.23'
         });
       });
 
@@ -1732,7 +1745,8 @@ describe('config.normalizeConfig', () => {
         });
         expect(config.tracing.otlp).to.deep.equal({
           enabled: false,
-          port: 4318
+          port: 4318,
+          semConvVersion: '1.23'
         });
       });
 
@@ -1746,7 +1760,8 @@ describe('config.normalizeConfig', () => {
         });
         expect(config.tracing.otlp).to.deep.equal({
           enabled: false,
-          port: 4318
+          port: 4318,
+          semConvVersion: '1.23'
         });
       });
 
@@ -1762,7 +1777,8 @@ describe('config.normalizeConfig', () => {
         });
         expect(config.tracing.otlp).to.deep.equal({
           enabled: false,
-          port: 4318
+          port: 4318,
+          semConvVersion: '1.23'
         });
       });
 
@@ -1778,7 +1794,8 @@ describe('config.normalizeConfig', () => {
         });
         expect(config.tracing.otlp).to.deep.equal({
           enabled: false,
-          port: 4318
+          port: 4318,
+          semConvVersion: '1.23'
         });
       });
 
@@ -1794,7 +1811,8 @@ describe('config.normalizeConfig', () => {
         });
         expect(config.tracing.otlp).to.deep.equal({
           enabled: false,
-          port: 4318
+          port: 4318,
+          semConvVersion: '1.23'
         });
       });
     });
@@ -2397,7 +2415,8 @@ describe('config.normalizeConfig', () => {
 
     expect(config.tracing.otlp).to.deep.equal({
       enabled: false,
-      port: 4318
+      port: 4318,
+      semConvVersion: '1.23'
     });
     expect(config.preloadOpentelemetry).to.equal(false);
 

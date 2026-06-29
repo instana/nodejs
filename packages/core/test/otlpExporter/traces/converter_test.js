@@ -180,7 +180,13 @@ describe('tracing/converters/otlp', () => {
   before(() => {
     otlp.init({
       serviceName: 'otel-exporter-test',
-      logger: console
+      logger: console,
+      tracing: {
+        otlp: {
+          enabled: true,
+          semConvVersion: '1.23'
+        }
+      }
     });
 
     hostnameStub = sinon.stub(os, 'hostname').returns('test.local.server');
