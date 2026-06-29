@@ -142,7 +142,6 @@ const instrumentationMappings = {
       { otlp: OTLP.messaging.OPERATION_NAME, instana: 'type' },
       { otlp: OTLP.messaging.CONSUMER_GROUP, instana: 'group' },
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'queue' },
-      // TBD sqs.size = number of messages in a batch send (SendMessageBatch), not body bytes
       { otlp: OTLP.messaging.BATCH_MESSAGE_COUNT, instana: 'size' },
       { otlp: OTLP.messaging.MESSAGE_ID, instana: 'messageId' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
@@ -224,10 +223,6 @@ const instrumentationMappings = {
       { otlp: OTLP.database.SYSTEM, value: 'db2' },
       { otlp: OTLP.database.QUERY_TEXT, instana: 'stmt' },
       { otlp: OTLP.database.STATEMENT, instana: 'stmt' },
-      { otlp: OTLP.database.USER, instana: 'user' },
-      { otlp: OTLP.database.NAME, instana: 'db' },
-      { otlp: OTLP.server.ADDRESS, instana: 'host' },
-      { otlp: OTLP.server.PORT, instana: 'port' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
@@ -237,6 +232,7 @@ const instrumentationMappings = {
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'mongodb' },
       { otlp: OTLP.database.NAMESPACE, instana: 'namespace' },
+      { otlp: OTLP.database.MONGO_DB_COLLECTION, instana: 'collection' },
       { otlp: OTLP.database.COLLECTION, instana: 'collection' },
       { otlp: OTLP.database.OPERATION, instana: 'command', transform: toUpperCase },
       { otlp: OTLP.database.QUERY_TEXT, instana: ['json', 'filter'], transform: firstDefined },
@@ -260,7 +256,8 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.COUCHBASE]: {
     spanName: data => `couchbase.${data.bucket || 'operation'}`,
     spanAttributes: [
-      { otlp: OTLP.database.SYSTEM, value: 'other_nosql' },
+      { otlp: OTLP.database.SYSTEM, value: 'couchdb' },
+      { otlp: OTLP.database.NAMESPACE, instana: 'bucket' },
       { otlp: OTLP.database.NAME, instana: 'bucket' },
       { otlp: OTLP.database.QUERY_TEXT, instana: 'sql' },
       { otlp: OTLP.database.STATEMENT, instana: 'sql' },
@@ -287,7 +284,7 @@ const instrumentationMappings = {
       { otlp: OTLP.database.SYSTEM, value: 'dynamodb' },
       { otlp: OTLP.database.OPERATION, instana: 'operation' },
       { otlp: OTLP.cloud.REGION, instana: 'region' },
-      { otlp: OTLP.database.COLLECTION, instana: 'table' },
+      { otlp: OTLP.database.AWS_DYNAMODB_TABLE_NAMES, instana: 'table' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
@@ -298,6 +295,8 @@ const instrumentationMappings = {
       { otlp: OTLP.database.SYSTEM, value: 'memcached' },
       { otlp: OTLP.database.CONNECTION_STRING, instana: 'connection' },
       { otlp: OTLP.database.OPERATION, instana: 'operation' },
+      { otlp: OTLP.server.ADDRESS, instana: 'connection', transform: extractHost },
+      { otlp: OTLP.server.PORT, instana: 'connection', transform: extractPort },
       { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
@@ -310,6 +309,8 @@ const instrumentationMappings = {
       { otlp: OTLP.database.COLLECTION, instana: 'model' },
       { otlp: OTLP.database.OPERATION, instana: 'action' },
       { otlp: OTLP.database.CONNECTION_STRING, instana: 'url' },
+      { otlp: OTLP.server.ADDRESS, instana: 'url', transform: extractHost },
+      { otlp: OTLP.server.PORT, instana: 'url', transform: extractPort },
       { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },

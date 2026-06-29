@@ -22,6 +22,8 @@ const MAPPINGS = {
     }
   },
   database: {
+    NAMESPACE: 'db.namespace',
+    OPERATION: 'db.operation.name',
     PEER_NAME: 'server.address',
     PEER_PORT: 'server.port',
     QUERY_TEXT: 'db.query.text',

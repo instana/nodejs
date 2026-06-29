@@ -62,12 +62,10 @@ const MAPPINGS = {
   },
 
   database: {
-    OPERATION: 'db.operation.name',
-    NAMESPACE: 'db.namespace',
-    NAME: 'db.name',
     USER: 'db.user',
     COLLECTION: 'db.collection.name',
-    TABLE: 'db.sql.table'
+    TABLE: 'db.sql.table',
+    AWS_DYNAMODB_TABLE_NAMES: 'aws.dynamodb.table_names'
   },
 
   rpc: {

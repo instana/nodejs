@@ -333,7 +333,7 @@ describe('tracing/converters/otlp', () => {
       expect(azureBlobSpan.name).to.equal('azure.storage.put');
       expect(azureBlobSpan.kind).to.equal(3);
       expectAttribute(azureBlobSpan.attributes, 'cloud.provider', { stringValue: 'azure' });
-      expectAttribute(azureBlobSpan.attributes, 'db.operation.name', { stringValue: 'put' });
+      expectAttribute(azureBlobSpan.attributes, 'db.operation', { stringValue: 'put' });
       expect(azureBlobSpan.attributes.some(attribute => attribute.value.stringValue === 'storage-account')).to.be.true;
       expect(azureBlobSpan.attributes.some(attribute => attribute.value.stringValue === 'uploads')).to.be.true;
       expect(azureBlobSpan.attributes.some(attribute => attribute.value.stringValue === 'invoice.pdf')).to.be.true;
@@ -498,8 +498,8 @@ describe('tracing/converters/otlp', () => {
 
         const mongoAttributes = extractSpanAttributes(mongoSpan, mappers.get(mongoSpan));
         expectAttribute(mongoAttributes, 'db.system', { stringValue: 'mongodb' });
-        expectAttribute(mongoAttributes, 'db.operation.name', { stringValue: 'FIND' });
-        expectAttribute(mongoAttributes, 'db.collection.name', { stringValue: 'accounts' });
+        expectAttribute(mongoAttributes, 'db.operation', { stringValue: 'FIND' });
+        expectAttribute(mongoAttributes, 'db.mongodb.collection', { stringValue: 'accounts' });
         expectAttribute(mongoAttributes, 'server.address', { stringValue: 'mongo.example.test' });
         expectAttribute(mongoAttributes, 'server.port', { intValue: 27017 });
 
