@@ -43,8 +43,6 @@ const MAPPINGS = {
 
   messaging: {
     SYSTEM: 'messaging.system',
-    OPERATION_TYPE: 'messaging.operation.type',
-    OPERATION_NAME: 'messaging.operation.name',
     CONSUMER_GROUP: 'messaging.consumer.group.name',
     BATCH_MESSAGE_COUNT: 'messaging.batch.message_count',
     MESSAGE_ID: 'messaging.message.id',
@@ -58,7 +56,7 @@ const MAPPINGS = {
     },
     rabbitmq: {
       ROUTING_KEY: 'messaging.rabbitmq.destination.routing_key',
-      MESSAGE_ROUTING_KEY: 'messaging.rabbitmq.message.routing_key'
+      MESSAGE_ROUTING_KEY: 'messaging.rabbitmq.destination.routing_key'
     },
     gcp: { PROJECT_ID: 'gcp.project_id' }
   },
@@ -66,12 +64,10 @@ const MAPPINGS = {
   database: {
     OPERATION: 'db.operation.name',
     NAMESPACE: 'db.namespace',
-    QUERY_TEXT: 'db.query.text',
     NAME: 'db.name',
     USER: 'db.user',
     COLLECTION: 'db.collection.name',
-    TABLE: 'db.sql.table',
-    CONNECTION: 'db.connection'
+    TABLE: 'db.sql.table'
   },
 
   rpc: {

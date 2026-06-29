@@ -84,8 +84,9 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.KAFKA]: {
     spanName: data => `${data.operation} ${data.endpoints}`,
     spanAttributes: [
-      { otlp: OTLP.messaging.SYSTEM, value: INSTRUMENTATION_TYPES.KAFKA},
+      { otlp: OTLP.messaging.SYSTEM, value: INSTRUMENTATION_TYPES.KAFKA },
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'endpoints' },
+      { otlp: OTLP.messaging.OPERATION, instana: 'operation' },
       { otlp: OTLP.messaging.OPERATION_NAME, instana: 'operation' },
       {
         otlp: OTLP.messaging.OPERATION_TYPE,
@@ -96,9 +97,10 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.RABBITMQ]: {
-    spanName: data => `${data.sort} ${data.exchange} || data.key}`
+    spanName: data => `${data.sort} ${data.exchange}`,
     spanAttributes: [
       { otlp: OTLP.messaging.SYSTEM, value: INSTRUMENTATION_TYPES.RABBITMQ },
+      { otlp: OTLP.messaging.OPERATION, instana: 'sort' },
       { otlp: OTLP.messaging.OPERATION_NAME, instana: 'sort' },
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: ['exchange', 'key', 'queue'] },
       { otlp: OTLP.messaging.rabbitmq.ROUTING_KEY, instana: 'key' },
@@ -179,6 +181,7 @@ const instrumentationMappings = {
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'postgresql' },
       { otlp: OTLP.database.QUERY_TEXT, instana: 'stmt' },
+      { otlp: OTLP.database.STATEMENT, instana: 'stmt' },
       { otlp: OTLP.database.USER, instana: 'user' },
       { otlp: OTLP.database.NAME, instana: 'db' },
       { otlp: OTLP.server.ADDRESS, instana: 'host' },
@@ -192,6 +195,7 @@ const instrumentationMappings = {
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'mysql' },
       { otlp: OTLP.database.QUERY_TEXT, instana: 'stmt' },
+      { otlp: OTLP.database.STATEMENT, instana: 'stmt' },
       { otlp: OTLP.database.USER, instana: 'user' },
       { otlp: OTLP.database.NAME, instana: 'db' },
       { otlp: OTLP.server.ADDRESS, instana: 'host' },
@@ -205,6 +209,7 @@ const instrumentationMappings = {
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'mssql' },
       { otlp: OTLP.database.QUERY_TEXT, instana: 'stmt' },
+      { otlp: OTLP.database.STATEMENT, instana: 'stmt' },
       { otlp: OTLP.database.USER, instana: 'user' },
       { otlp: OTLP.database.NAME, instana: 'db' },
       { otlp: OTLP.server.ADDRESS, instana: 'host' },
@@ -218,6 +223,7 @@ const instrumentationMappings = {
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'db2' },
       { otlp: OTLP.database.QUERY_TEXT, instana: 'stmt' },
+      { otlp: OTLP.database.STATEMENT, instana: 'stmt' },
       { otlp: OTLP.database.USER, instana: 'user' },
       { otlp: OTLP.database.NAME, instana: 'db' },
       { otlp: OTLP.server.ADDRESS, instana: 'host' },
@@ -234,6 +240,7 @@ const instrumentationMappings = {
       { otlp: OTLP.database.COLLECTION, instana: 'collection' },
       { otlp: OTLP.database.OPERATION, instana: 'command', transform: toUpperCase },
       { otlp: OTLP.database.QUERY_TEXT, instana: ['json', 'filter'], transform: firstDefined },
+      { otlp: OTLP.database.STATEMENT, instana: ['json', 'filter'], transform: firstDefined },
       { otlp: OTLP.server.ADDRESS, instana: 'service', transform: extractHost },
       { otlp: OTLP.server.PORT, instana: 'service', transform: extractPort },
       { otlp: OTLP.error.TYPE, instana: 'error' }
@@ -245,7 +252,7 @@ const instrumentationMappings = {
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'redis' },
       { otlp: OTLP.database.OPERATION, instana: 'operation' },
-      { otlp: OTLP.database.CONNECTION, instana: 'connection' },
+      { otlp: OTLP.database.CONNECTION_STRING, instana: 'connection' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
@@ -256,6 +263,7 @@ const instrumentationMappings = {
       { otlp: OTLP.database.SYSTEM, value: 'other_nosql' },
       { otlp: OTLP.database.NAME, instana: 'bucket' },
       { otlp: OTLP.database.QUERY_TEXT, instana: 'sql' },
+      { otlp: OTLP.database.STATEMENT, instana: 'sql' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
@@ -268,6 +276,7 @@ const instrumentationMappings = {
       { otlp: OTLP.database.NAME, instana: 'cluster' },
       { otlp: OTLP.database.COLLECTION, instana: 'index' },
       { otlp: OTLP.database.QUERY_TEXT, instana: 'query' },
+      { otlp: OTLP.database.STATEMENT, instana: 'query' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
@@ -287,7 +296,7 @@ const instrumentationMappings = {
     spanName: data => `memcached.${data.operation || 'command'}`,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'memcached' },
-      { otlp: OTLP.database.CONNECTION, instana: 'connection' },
+      { otlp: OTLP.database.CONNECTION_STRING, instana: 'connection' },
       { otlp: OTLP.database.OPERATION, instana: 'operation' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
@@ -300,7 +309,7 @@ const instrumentationMappings = {
       { otlp: OTLP.database.SYSTEM, instana: 'provider' },
       { otlp: OTLP.database.COLLECTION, instana: 'model' },
       { otlp: OTLP.database.OPERATION, instana: 'action' },
-      { otlp: OTLP.database.CONNECTION, instana: 'url' },
+      { otlp: OTLP.database.CONNECTION_STRING, instana: 'url' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },

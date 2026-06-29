@@ -313,7 +313,7 @@ describe('tracing/converters/otlp', () => {
       expect(pgSpan.kind).to.equal(3);
       expect(pgSpan.parentSpanId).to.equal('0000000000span-1');
       expectAttribute(pgSpan.attributes, 'db.system', { stringValue: 'postgresql' });
-      expectAttribute(pgSpan.attributes, 'db.query.text', { stringValue: 'SELECT * FROM users WHERE id = $1' });
+      expectAttribute(pgSpan.attributes, 'db.statement', { stringValue: 'SELECT * FROM users WHERE id = $1' });
       expectAttribute(pgSpan.attributes, 'db.user', { stringValue: 'instana' });
       expectAttribute(pgSpan.attributes, 'db.name', { stringValue: 'users' });
 
@@ -322,7 +322,7 @@ describe('tracing/converters/otlp', () => {
       expect(kafkaSpan.kind).to.equal(3);
       expectAttribute(kafkaSpan.attributes, 'messaging.system', { stringValue: 'kafka' });
       expectAttribute(kafkaSpan.attributes, 'messaging.destination', { stringValue: 'orders' });
-      expectAttribute(kafkaSpan.attributes, 'messaging.operation.name', { stringValue: 'send' });
+      expectAttribute(kafkaSpan.attributes, 'messaging.operation', { stringValue: 'send' });
 
       const internalSpan = convertedSpans[3];
       expect(internalSpan.name).to.equal('custom.internal');
@@ -504,8 +504,9 @@ describe('tracing/converters/otlp', () => {
         expectAttribute(mongoAttributes, 'server.port', { intValue: 27017 });
 
         const rabbitmqAttributes = extractSpanAttributes(rabbitmqSpan, mappers.get(rabbitmqSpan));
+
         expectAttribute(rabbitmqAttributes, 'messaging.system', { stringValue: 'rabbitmq' });
-        expectAttribute(rabbitmqAttributes, 'messaging.operation.name', { stringValue: 'publish' });
+        expectAttribute(rabbitmqAttributes, 'messaging.operation', { stringValue: 'publish' });
         expectAttribute(rabbitmqAttributes, 'messaging.destination', { stringValue: 'orders.orders.created' });
         expectAttribute(rabbitmqAttributes, 'server.address', { stringValue: 'mq.example.test' });
         expectAttribute(rabbitmqAttributes, 'server.port', { intValue: 5672 });
@@ -665,7 +666,9 @@ describe('tracing/converters/otlp', () => {
       expectAttribute(lambdaEntrySpan.attributes, 'faas.trigger', { stringValue: 'other' });
       expectAttribute(lambdaEntrySpan.attributes, 'cloud.region', { stringValue: 'eu-west-1' });
       expectAttribute(lambdaEntrySpan.attributes, 'cloud.account.id', { stringValue: '987654321098' });
-      expectAttribute(lambdaEntrySpan.attributes, 'exception.message', { stringValue: 'Task timed out after 30.00 seconds' });
+      expectAttribute(lambdaEntrySpan.attributes, 'exception.message', {
+        stringValue: 'Task timed out after 30.00 seconds'
+      });
     });
   });
 });

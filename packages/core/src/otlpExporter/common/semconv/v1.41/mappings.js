@@ -15,14 +15,17 @@ const MAPPINGS = {
   },
   messaging: {
     DESTINATION_NAME: 'messaging.destination.name',
+    OPERATION_TYPE: 'messaging.operation.type',
+    OPERATION_NAME: 'messaging.operation.name',
     kafka: {
       PARTITION: 'messaging.kafka.destination.partition'
     }
   },
   database: {
-    SYSTEM: 'db.system.name',
     PEER_NAME: 'server.address',
-    PEER_PORT: 'server.port'
+    PEER_PORT: 'server.port',
+    QUERY_TEXT: 'db.query.text',
+    SYSTEM: 'db.system.name'
   },
   network: {
     PEER_NAME: 'server.address',

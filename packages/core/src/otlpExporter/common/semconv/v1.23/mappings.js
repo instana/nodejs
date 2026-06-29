@@ -16,15 +16,18 @@ const MAPPINGS = {
 
   messaging: {
     DESTINATION_NAME: 'messaging.destination',
+    OPERATION: 'messaging.operation',
     kafka: {
       PARTITION: 'messaging.kafka.partition'
     }
   },
 
   database: {
-    SYSTEM: 'db.system',
+    CONNECTION_STRING: 'db.connection_string',
     PEER_NAME: 'net.peer.name',
-    PEER_PORT: 'net.peer.port'
+    PEER_PORT: 'net.peer.port',
+    STATEMENT: 'db.statement',
+    SYSTEM: 'db.system'
   },
 
   network: {
