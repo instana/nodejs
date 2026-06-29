@@ -65,6 +65,103 @@ module.exports = function (name, version, isLatest) {
         )
       ));
 
+  it('must not capture bind variables by default', () =>
+    controls
+      .sendRequest({
+        method: 'GET',
+        path: '/bind-variables-test'
+      })
+      .then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables-test');
+            const pgSpans = getSpansByName(spans, 'postgres');
+            pgSpans.forEach(span => {
+              expect(span.data.pg.binds).to.not.exist;
+            });
+          })
+        )
+      ));
+
+  describe('with INSTANA_TRACING_BIND_VARIABLES=true', () => {
+    before(async () => {
+      await controls.stop();
+      controls.env.INSTANA_TRACING_BIND_VARIABLES = 'true';
+      await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+    });
+
+    after(async () => {
+      await controls.stop();
+      delete controls.env.INSTANA_TRACING_BIND_VARIABLES;
+      await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+    });
+
+    it('must capture raw bind variables (string query + array params)', () =>
+      controls
+        .sendRequest({
+          method: 'GET',
+          path: '/bind-variables-test'
+        })
+        .then(() =>
+          retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyHttpEntry(spans, '/bind-variables-test');
+
+              // string query with positional array params
+              const selectQuery = getSpansByName(spans, 'postgres').find(
+                span => span.data.pg.stmt === 'SELECT * FROM users WHERE name = $1 AND email = $2'
+              );
+              expect(selectQuery).to.exist;
+              expect(selectQuery.data.pg.binds).to.be.an('array');
+              expect(selectQuery.data.pg.binds).to.have.lengthOf(2);
+              expect(selectQuery.data.pg.binds[0]).to.equal('testuser');
+              expect(selectQuery.data.pg.binds[1]).to.equal('test@example.com');
+
+              // config object with values property
+              const insertQuery = getSpansByName(spans, 'postgres').find(
+                span => span.data.pg.stmt === 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *'
+              );
+              expect(insertQuery).to.exist;
+              expect(insertQuery.data.pg.binds).to.be.an('array');
+              expect(insertQuery.data.pg.binds).to.have.lengthOf(2);
+              expect(insertQuery.data.pg.binds[0]).to.equal('bindtest');
+              expect(insertQuery.data.pg.binds[1]).to.equal('bindtest@example.com');
+            })
+          )
+        ));
+
+    it('must capture raw bind variables when calling stored procedures', () =>
+      controls
+        .sendRequest({
+          method: 'GET',
+          path: '/stored-procedure-test'
+        })
+        .then(() =>
+          retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyHttpEntry(spans, '/stored-procedure-test');
+
+              const insertQuery = getSpansByName(spans, 'postgres').find(
+                span => span.data.pg.stmt && span.data.pg.stmt.includes('INSERT INTO users(name, email) VALUES($1, $2)')
+              );
+              expect(insertQuery).to.exist;
+              expect(insertQuery.data.pg.binds).to.be.an('array');
+              expect(insertQuery.data.pg.binds).to.have.lengthOf(2);
+              expect(insertQuery.data.pg.binds[0]).to.equal('proceduretest');
+              expect(insertQuery.data.pg.binds[1]).to.equal('procedure@example.com');
+
+              const procedureCall = getSpansByName(spans, 'postgres').find(
+                span => span.data.pg.stmt === 'SELECT * FROM get_user_by_name($1)'
+              );
+              expect(procedureCall).to.exist;
+              expect(procedureCall.data.pg.binds).to.be.an('array');
+              expect(procedureCall.data.pg.binds).to.have.lengthOf(1);
+              expect(procedureCall.data.pg.binds[0]).to.equal('proceduretest');
+            })
+          )
+        ));
+  });
+
   it('must trace pooled select now', () =>
     controls
       .sendRequest({

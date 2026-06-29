@@ -49,6 +49,22 @@ pool.query(createTableQuery, err => {
   }
 });
 
+// Create a stored procedure for testing
+const createProcedureQuery = `
+  CREATE OR REPLACE FUNCTION get_user_by_name(user_name VARCHAR)
+  RETURNS TABLE(id INT, name VARCHAR, email VARCHAR) AS $$
+  BEGIN
+    RETURN QUERY SELECT users.id, users.name, users.email FROM users WHERE users.name = user_name;
+  END;
+  $$ LANGUAGE plpgsql;
+`;
+
+pool.query(createProcedureQuery, err => {
+  if (err) {
+    log('Failed to create stored procedure', err);
+  }
+});
+
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
 }
@@ -103,6 +119,32 @@ app.get('/select-now-no-pool-promise', (req, res) => {
 app.get('/parameterized-query', async (req, res) => {
   await client.query('SELECT * FROM users WHERE name = $1', ['parapeter']);
   res.json({});
+});
+
+app.get('/bind-variables-test', async (req, res) => {
+  // Test with string query and positional array parameters
+  await client.query('SELECT * FROM users WHERE name = $1 AND email = $2', ['testuser', 'test@example.com']);
+
+  // Test with config object containing values
+  await pool.query({
+    text: 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *',
+    values: ['bindtest', 'bindtest@example.com']
+  });
+
+  res.json({ success: true });
+});
+
+app.get('/stored-procedure-test', async (req, res) => {
+  // First insert a test user
+  await client.query('INSERT INTO users(name, email) VALUES($1, $2) ON CONFLICT DO NOTHING', [
+    'proceduretest',
+    'procedure@example.com'
+  ]);
+
+  // Call stored procedure with bind variable
+  const result = await client.query('SELECT * FROM get_user_by_name($1)', ['proceduretest']);
+
+  res.json({ success: true, rows: result.rows });
 });
 
 app.get('/pool-string-insert', (req, res) => {

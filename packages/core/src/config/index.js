@@ -73,6 +73,7 @@ let currentConfig;
  * @property {boolean} [ignoreEndpointsDisableSuppression]
  * @property {boolean} [disableEOLEvents]
  * @property {globalStackTraceConfig} [global]
+ * @property {boolean} [captureBindVariables]
  */
 
 /**
@@ -160,7 +161,8 @@ let defaults = {
     },
     ignoreEndpoints: {},
     ignoreEndpointsDisableSuppression: false,
-    disableEOLEvents: false
+    disableEOLEvents: false,
+    captureBindVariables: false
   },
   preloadOpentelemetry: false,
   secrets: {
@@ -341,6 +343,7 @@ function normalizeTracingConfig({ userConfig = {}, defaultConfig = {}, finalConf
   normalizeIgnoreEndpoints({ userConfig, defaultConfig, finalConfig });
   normalizeIgnoreEndpointsDisableSuppression({ userConfig, defaultConfig, finalConfig });
   normalizeDisableEOLEvents({ userConfig, defaultConfig, finalConfig });
+  normalizeCaptureBindVariables({ userConfig, defaultConfig, finalConfig });
 }
 
 /**
@@ -1071,6 +1074,29 @@ function normalizeDisableEOLEvents({ userConfig = {}, defaultConfig = {}, finalC
     source,
     value,
     envVarName: 'INSTANA_TRACING_DISABLE_EOL_EVENTS'
+  });
+}
+
+/**
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
+ */
+function normalizeCaptureBindVariables({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
+  const { value, source } = util.resolve(
+    {
+      envValue: 'INSTANA_TRACING_BIND_VARIABLES',
+      inCodeValue: userConfig.tracing.captureBindVariables,
+      defaultValue: defaultConfig.tracing.captureBindVariables
+    },
+    [validate.booleanValidator]
+  );
+
+  configStore.set('config.tracing.captureBindVariables', { source });
+  finalConfig.tracing.captureBindVariables = value;
+  util.log({
+    configPath: 'config.tracing.captureBindVariables',
+    source,
+    value,
+    envVarName: 'INSTANA_TRACING_BIND_VARIABLES'
   });
 }
 
