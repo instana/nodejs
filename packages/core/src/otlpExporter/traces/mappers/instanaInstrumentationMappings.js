@@ -390,10 +390,6 @@ const instrumentationMappings = {
       { otlp: OTLP.cloud.aws.KINESIS_STREAM, instana: 'stream' },
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'stream' },
       { otlp: OTLP.messaging.DESTINATION_PARTITION_ID, instana: 'shard' },
-      { otlp: OTLP.cloud.aws.KINESIS_EXPLICIT_HASH_KEY, instana: 'record' },
-      { otlp: OTLP.cloud.aws.KINESIS_SHARD_ITERATOR_TYPE, instana: 'shardType' },
-      { otlp: OTLP.cloud.aws.KINESIS_STARTING_SEQUENCE_NUMBER, instana: 'startSequenceNumber' },
-      { otlp: OTLP.cloud.aws.KINESIS_SHARD, instana: 'shard' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
@@ -412,8 +408,9 @@ const instrumentationMappings = {
     ]
   },
 
+  // TBD: maybe not required as we already hanlde lambda entry
   [INSTRUMENTATION_TYPES.AWS_LAMBDA_INVOKE]: {
-    spanName: data => (data.function ? `Invoke ${data.function}` : 'Lambda Invoke'),
+    spanName: data => data.function,
     spanAttributes: [
       { otlp: OTLP.faas.NAME, instana: 'function' },
       { otlp: OTLP.faas.INVOCATION_TYPE, instana: 'type' },
@@ -424,7 +421,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.AWS_LAMBDA_ENTRY]: {
-    spanName: data => data.functionName || 'aws.lambda.entry',
+    spanName: data => data.functionName,
     spanAttributes: [
       {
         otlp: OTLP.faas.TRIGGER,

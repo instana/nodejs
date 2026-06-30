@@ -35,7 +35,7 @@ exports.INSTRUMENTATION_TYPES = {
   S3: 's3',
   KINESIS: 'kinesis',
   AZSTORAGE: 'azstorage',
-  AWS_LAMBDA_INVOKE: 'aws.lambda.invoke',
+  AWS_LAMBDA_INVOKE: 'lambda',
   AWS_LAMBDA_ENTRY: 'lambda'
 };
 

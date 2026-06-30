@@ -6,6 +6,17 @@
 
 // v1.41 semantic conventions - overrides to base
 const MAPPINGS = {
+  aws: {
+    KINESIS_STREAM: 'aws.kinesis.stream_name'
+  },
+  database: {
+    NAMESPACE: 'db.namespace',
+    OPERATION: 'db.operation.name',
+    PEER_NAME: 'server.address',
+    PEER_PORT: 'server.port',
+    QUERY_TEXT: 'db.query.text',
+    SYSTEM: 'db.system.name'
+  },
   http: {
     REQUEST_METHOD: 'http.request.method',
     RESPONSE_STATUS: 'http.response.status_code',
@@ -20,14 +31,6 @@ const MAPPINGS = {
     kafka: {
       PARTITION: 'messaging.kafka.destination.partition'
     }
-  },
-  database: {
-    NAMESPACE: 'db.namespace',
-    OPERATION: 'db.operation.name',
-    PEER_NAME: 'server.address',
-    PEER_PORT: 'server.port',
-    QUERY_TEXT: 'db.query.text',
-    SYSTEM: 'db.system.name'
   },
   network: {
     PEER_NAME: 'server.address',

@@ -138,24 +138,6 @@ function createAzureBlobSpan(overrides = {}) {
   });
 }
 
-function createAwsLambdaInvokeSpan(overrides = {}) {
-  const lambdaInvoke = {
-    function: 'my-function',
-    type: 'RequestResponse',
-    ...(overrides.data?.['aws.lambda.invoke'] || {})
-  };
-
-  return createSpan({
-    n: 'aws.lambda.invoke',
-    k: 2,
-    ...overrides,
-    data: {
-      'aws.lambda.invoke': lambdaInvoke,
-      ...(overrides.data || {})
-    }
-  });
-}
-
 function createAwsLambdaEntrySpan(overrides = {}) {
   const lambda = {
     arn: 'arn:aws:lambda:us-east-1:123456789012:function:my-function:42',
@@ -521,33 +503,6 @@ describe('tracing/converters/otlp', () => {
         expectAttribute(otelAttributes, 'success', { boolValue: true });
       });
 
-      it('extracts AWS Lambda invoke attributes', () => {
-        const lambdaInvokeSpan = createAwsLambdaInvokeSpan();
-
-        const attributes = extractSpanAttributes(lambdaInvokeSpan, mappers.get(lambdaInvokeSpan));
-        expectAttribute(attributes, 'faas.name', { stringValue: 'my-function' });
-        expectAttribute(attributes, 'faas.invocation_type', { stringValue: 'RequestResponse' });
-        expectAttribute(attributes, 'cloud.provider', { stringValue: 'aws' });
-        expectAttribute(attributes, 'cloud.platform', { stringValue: 'aws_lambda' });
-      });
-
-      it('extracts AWS Lambda invoke attributes with error', () => {
-        const lambdaInvokeSpan = createAwsLambdaInvokeSpan({
-          data: {
-            'aws.lambda.invoke': {
-              function: 'my-async-function',
-              type: 'Event',
-              error: 'Function not found'
-            }
-          }
-        });
-
-        const attributes = extractSpanAttributes(lambdaInvokeSpan, mappers.get(lambdaInvokeSpan));
-        expectAttribute(attributes, 'faas.name', { stringValue: 'my-async-function' });
-        expectAttribute(attributes, 'faas.invocation_type', { stringValue: 'Event' });
-        expectAttribute(attributes, 'error.type', { stringValue: 'Function not found' });
-      });
-
       it('extracts AWS Lambda entry attributes (API Gateway / cold start)', () => {
         const lambdaEntrySpan = createAwsLambdaEntrySpan();
 
@@ -594,23 +549,6 @@ describe('tracing/converters/otlp', () => {
   });
 
   describe('aws lambda', () => {
-    it('converts aws.lambda.invoke span', () => {
-      const spans = [createAwsLambdaInvokeSpan({ t: 'trace-lambda', s: 'span-lambda-1', ts: 1710000000000, d: 50 })];
-      const result = convert(spans);
-
-      expect(result.resourceSpans).to.have.lengthOf(1);
-      const convertedSpans = getConvertedSpans(result);
-      expect(convertedSpans).to.have.lengthOf(1);
-
-      const lambdaInvokeSpan = convertedSpans[0];
-      expect(lambdaInvokeSpan.name).to.equal('Invoke my-function');
-      expect(lambdaInvokeSpan.kind).to.equal(3);
-      expectAttribute(lambdaInvokeSpan.attributes, 'faas.name', { stringValue: 'my-function' });
-      expectAttribute(lambdaInvokeSpan.attributes, 'faas.invocation_type', { stringValue: 'RequestResponse' });
-      expectAttribute(lambdaInvokeSpan.attributes, 'cloud.provider', { stringValue: 'aws' });
-      expectAttribute(lambdaInvokeSpan.attributes, 'cloud.platform', { stringValue: 'aws_lambda' });
-    });
-
     it('converts aws.lambda.entry span (API Gateway / cold start)', () => {
       const spans = [createAwsLambdaEntrySpan({ t: 'trace-lambda', s: 'span-lambda-2', ts: 1710000000000, d: 120 })];
       const result = convert(spans);

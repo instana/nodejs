@@ -103,12 +103,7 @@ const MAPPINGS = {
     },
     aws: {
       S3_BUCKET: 'aws.s3.bucket',
-      S3_KEY: 'aws.s3.key',
-      KINESIS_STREAM: 'aws.kinesis.stream_name',
-      KINESIS_SHARD: 'aws.kinesis.shard_id',
-      KINESIS_SHARD_ITERATOR_TYPE: 'aws.kinesis.shard_iterator_type',
-      KINESIS_STARTING_SEQUENCE_NUMBER: 'aws.kinesis.starting_sequence_number',
-      KINESIS_EXPLICIT_HASH_KEY: 'aws.kinesis.explicit_hash_key'
+      S3_KEY: 'aws.s3.key'
     },
     azure: {
       STORAGE_ACCOUNT: 'az.storage.account.name',
