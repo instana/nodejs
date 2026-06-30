@@ -226,7 +226,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.MONGO]: {
-    spanName: data => `mongo.${data.command}`,
+    spanName: data => data.command,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'mongodb' },
       { otlp: OTLP.database.NAMESPACE, instana: 'namespace' },
@@ -242,7 +242,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.REDIS]: {
-    spanName: data => `redis.${data.operation}`,
+    spanName: data => data.operation,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: INSTRUMENTATION_TYPES.REDIS },
       { otlp: OTLP.database.OPERATION, instana: 'operation' },
@@ -252,7 +252,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.COUCHBASE]: {
-    spanName: data => `couchbase.${data.bucket}`,
+    spanName: data => data.bucket,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'couchdb' },
       { otlp: OTLP.database.NAMESPACE, instana: 'bucket' },
@@ -264,7 +264,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.ELASTICSEARCH]: {
-    spanName: data => `elasticsearch.${data.action}`,
+    spanName: data => data.action,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: INSTRUMENTATION_TYPES.ELASTICSEARCH },
       { otlp: OTLP.database.OPERATION, instana: 'action' },
@@ -277,7 +277,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.DYNAMODB]: {
-    spanName: data => `dynamodb.${data.operation}`,
+    spanName: data => data.operation,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: INSTRUMENTATION_TYPES.DYNAMODB },
       { otlp: OTLP.database.OPERATION, instana: 'operation' },
@@ -288,7 +288,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.MEMCACHED]: {
-    spanName: data => `memcached.${data.operation}`,
+    spanName: data => data.operation,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'memcached' },
       { otlp: OTLP.database.CONNECTION_STRING, instana: 'connection' },
@@ -301,7 +301,7 @@ const instrumentationMappings = {
   // Note: There is no official OpenTelemetry semantic convention for Prisma, and it is not covered in our RFD either.
   // We can therefore adopt a generic database convention, using the Prisma provider as the database system identifier.
   [INSTRUMENTATION_TYPES.PRISMA]: {
-    spanName: data => `prisma.${data.action}`,
+    spanName: data => data.action,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, instana: 'provider' },
       { otlp: OTLP.database.COLLECTION, instana: 'model' },

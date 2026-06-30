@@ -113,7 +113,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       };
 
       const result = spanName(span);
-      expect(result).to.equal('mongo.find');
+      expect(result).to.equal('find');
     });
 
     it('should generate Redis span name', () => {
@@ -127,7 +127,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       };
 
       const result = spanName(span);
-      expect(result).to.equal('redis.get');
+      expect(result).to.equal('get');
     });
 
     it('should generate DynamoDB span name', () => {
@@ -141,7 +141,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       };
 
       const result = spanName(span);
-      expect(result).to.equal('dynamodb.GetItem');
+      expect(result).to.equal('GetItem');
     });
 
     it('should generate S3 span name', () => {
