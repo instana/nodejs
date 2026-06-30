@@ -323,7 +323,8 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
         ['aws:sqs', 'pubsub'],
         ['aws:sns', 'pubsub'],
         ['aws:cloudwatch.events', 'timer'],
-        ['aws:lambda.invoke', 'other']
+        ['aws:lambda.invoke', 'other'],
+        ['aws:cloudwatch.logs', 'other']
       ];
 
       triggerMap.forEach(([instanaTrigger, expectedOtelTrigger]) => {

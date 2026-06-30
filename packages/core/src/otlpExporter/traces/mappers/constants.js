@@ -35,7 +35,7 @@ exports.INSTRUMENTATION_TYPES = {
   S3: 's3',
   KINESIS: 'kinesis',
   AZSTORAGE: 'azstorage',
-  AWS_LAMBDA_INVOKE: 'lambda',
+  AWS_LAMBDA_INVOKE: 'aws.lambda.invoke',
   AWS_LAMBDA_ENTRY: 'lambda'
 };
 
@@ -55,7 +55,8 @@ exports.LAMBDA_TRIGGER_MAP = {
   'aws:sqs': 'pubsub',
   'aws:sns': 'pubsub',
   'aws:cloudwatch.events': 'timer',
-  'aws:lambda.invoke': 'other'
+  'aws:lambda.invoke': 'other',
+  'aws:cloudwatch.logs': 'other'
 };
 
 exports.OTLP_STATUS_CODES = {
