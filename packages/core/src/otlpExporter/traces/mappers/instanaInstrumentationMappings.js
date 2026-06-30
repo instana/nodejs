@@ -146,7 +146,9 @@ const instrumentationMappings = {
     spanName: data => `${data.sort} ${data.queue}`,
     spanAttributes: [
       { otlp: OTLP.messaging.SYSTEM, value: 'aws_sqs' },
+      { otlp: OTLP.faas.TRIGGER, value: 'pubsub' },
       { otlp: OTLP.messaging.OPERATION_NAME, instana: 'type' },
+      { otlp: OTLP.messaging.OPERATION_TYPE, value: 'process' },
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'queue' },
       { otlp: OTLP.messaging.BATCH_MESSAGE_COUNT, instana: 'size' },
       { otlp: OTLP.messaging.MESSAGE_ID, instana: 'messageId' },
@@ -255,6 +257,8 @@ const instrumentationMappings = {
       { otlp: OTLP.database.SYSTEM, value: INSTRUMENTATION_TYPES.REDIS },
       { otlp: OTLP.database.OPERATION, instana: 'operation' },
       { otlp: OTLP.database.CONNECTION_STRING, instana: 'connection' },
+      { otlp: OTLP.server.ADDRESS, instana: 'connection', transform: extractHost },
+      { otlp: OTLP.server.PORT, instana: 'connection', transform: extractPort },
       { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
@@ -280,6 +284,9 @@ const instrumentationMappings = {
       { otlp: OTLP.database.COLLECTION, instana: 'index' },
       { otlp: OTLP.database.QUERY_TEXT, instana: 'query' },
       { otlp: OTLP.database.STATEMENT, instana: 'query' },
+      { otlp: OTLP.database.CONNECTION_STRING, instana: 'hostname' },
+      { otlp: OTLP.server.ADDRESS, instana: 'hostname', transform: extractHost },
+      { otlp: OTLP.server.PORT, instana: 'hostname', transform: extractPort },
       { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
