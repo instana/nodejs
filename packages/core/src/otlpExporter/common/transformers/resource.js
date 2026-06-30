@@ -161,11 +161,6 @@ function extractResourceAttributes(rawPayload) {
       otlp: OTLP.resource.HOST_NAME,
       transform: resourceMapper.hostName,
       valueType: 'string'
-    },
-    {
-      otlp: OTLP.resource.HOST_ID,
-      transform: resourceMapper.hostId,
-      valueType: 'string'
     }
   ];
 

@@ -253,7 +253,6 @@ describe('tracing/converters/otlp', () => {
       expectAttribute(resourceAttributes, 'telemetry.sdk.version', { stringValue: '6.0.0' });
       expectAttribute(resourceAttributes, 'process.pid', { intValue: 321 });
       expectAttribute(resourceAttributes, 'host.name', { stringValue: 'test.local.server' });
-      expectAttribute(resourceAttributes, 'host.id', { stringValue: 'host-id-1' });
 
       const convertedSpans = getConvertedSpans(result);
       expect(convertedSpans).to.have.lengthOf(6);
