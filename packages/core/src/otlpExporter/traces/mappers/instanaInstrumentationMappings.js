@@ -4,7 +4,16 @@
 
 'use strict';
 
-const { toUpperCase, firstDefined, formatOTLPValue, combineFields, extractHost, extractPort } = require('./util');
+const {
+  toUpperCase,
+  firstDefined,
+  formatOTLPValue,
+  combineFields,
+  extractHost,
+  extractPort,
+  getRPCMethod,
+  getRPCMethodOriginal
+} = require('./util');
 
 const ctx = require('../../common/context');
 const {
@@ -314,40 +323,17 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.RPC]: {
-    spanName: data => data.call || 'rpc.call',
+    spanName: data => data.call,
     spanAttributes: [
       {
         otlp: OTLP.rpc.METHOD,
         instana: 'call',
-        transform: (value, spanData) => {
-          // For gRPC, check if the method is recognized (simple format without package prefix)
-          if (spanData?.flavor === 'grpc' && typeof value === 'string') {
-            // Recognized methods have format "ServiceName/MethodName" (no dots in service name)
-            // Unrecognized methods have format "package.name.ServiceName/MethodName"
-            const parts = value.split('/');
-            if (parts.length === 2 && parts[0].includes('.')) {
-              // Unrecognized method - has package prefix with dots
-              return '_OTHER';
-            }
-          }
-          return value;
-        }
+        transform: (value, spanData) => getRPCMethod(value, spanData)
       },
       {
         otlp: OTLP.rpc.METHOD_ORIGINAL,
         instana: 'call',
-        transform: (value, spanData) => {
-          // Only set method_original for unrecognized gRPC methods
-          if (spanData?.flavor === 'grpc' && typeof value === 'string') {
-            const parts = value.split('/');
-            if (parts.length === 2 && parts[0].includes('.')) {
-              // Unrecognized method - return original value
-              return value;
-            }
-          }
-          // For recognized methods or non-gRPC, don't set method_original
-          return undefined;
-        }
+        transform: (value, spanData) => getRPCMethodOriginal(value, spanData)
       },
       { otlp: OTLP.rpc.SYSTEM_NAME, instana: 'flavor' },
       { otlp: OTLP.server.ADDRESS, instana: 'host' },

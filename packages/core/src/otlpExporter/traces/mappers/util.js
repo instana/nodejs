@@ -97,6 +97,42 @@ const extractHost = connection => parseConnection(connection).host;
  */
 const extractPort = connection => parseConnection(connection).port;
 
+/**
+ * @param {string } value
+ * @param { Record<string, any> } data
+ * @returns {string}
+ */
+const getRPCMethod = (value, data) => {
+  if (data?.flavor === 'grpc' && typeof value === 'string') {
+    // Recognized methods have format "ServiceName/MethodName" (no dots in service name)
+    // Unrecognized methods have format "package.name.ServiceName/MethodName"
+    const parts = value.split('/');
+    if (parts.length === 2 && parts[0].includes('.')) {
+      // Unrecognized method - has package prefix with dots
+      return '_OTHER';
+    }
+  }
+  return value;
+};
+
+/**
+ * @param {string} value
+ * @param { Record<string, any> } data
+ * @returns {string | undefined}
+ */
+const getRPCMethodOriginal = (value, data) => {
+  // Only set method_original for unrecognized gRPC methods
+  if (data?.flavor === 'grpc' && typeof value === 'string') {
+    const parts = value.split('/');
+    if (parts.length === 2 && parts[0].includes('.')) {
+      // Unrecognized method - return original value
+      return value;
+    }
+  }
+  // For recognized methods or non-gRPC, don't set method_original
+  return undefined;
+};
+
 module.exports = {
   toUpperCase,
   firstDefined,
@@ -104,5 +140,7 @@ module.exports = {
   combineFields,
   formatOTLPValue,
   extractHost,
-  extractPort
+  extractPort,
+  getRPCMethod,
+  getRPCMethodOriginal
 };
