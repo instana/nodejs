@@ -240,7 +240,7 @@ const instrumentationMappings = {
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'mongodb' },
       { otlp: OTLP.database.NAMESPACE, instana: 'namespace' },
-      { otlp: OTLP.database.MONGO_DB_COLLECTION, instana: 'collection' },
+      { otlp: OTLP.database.mongodb.COLLECTION_NAME, instana: 'collection' },
       { otlp: OTLP.database.COLLECTION_NAME, instana: 'collection' },
       { otlp: OTLP.database.OPERATION, instana: 'command', transform: toUpperCase },
       { otlp: OTLP.database.QUERY_TEXT, instana: ['json', 'filter'], transform: firstDefined },

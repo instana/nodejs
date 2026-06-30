@@ -63,7 +63,10 @@ const MAPPINGS = {
     USER: 'db.user',
     COLLECTION_NAME: 'db.collection.name',
     TABLE: 'db.sql.table',
-    AWS_DYNAMODB_TABLE_NAMES: 'aws.dynamodb.table_names'
+    AWS_DYNAMODB_TABLE_NAMES: 'aws.dynamodb.table_names',
+    mongodb: {
+      COLLECTION: 'db.mongodb.collection'
+    }
   },
 
   rpc: {
