@@ -12,7 +12,10 @@ const {
   extractHost,
   extractPort,
   getRPCMethod,
-  getRPCMethodOriginal
+  getRPCMethodOriginal,
+  toBoolean,
+  getRegionFromArn,
+  getAccountIdFromArn
 } = require('./util');
 
 const ctx = require('../../common/context');
@@ -240,7 +243,7 @@ const instrumentationMappings = {
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'mongodb' },
       { otlp: OTLP.database.NAMESPACE, instana: 'namespace' },
-      { otlp: OTLP.database.mongodb.COLLECTION_NAME, instana: 'collection' },
+      { otlp: OTLP.database.mongodb.COLLECTION, instana: 'collection' },
       { otlp: OTLP.database.COLLECTION_NAME, instana: 'collection' },
       { otlp: OTLP.database.OPERATION, instana: 'command', transform: toUpperCase },
       { otlp: OTLP.database.QUERY_TEXT, instana: ['json', 'filter'], transform: firstDefined },
@@ -436,30 +439,19 @@ const instrumentationMappings = {
       {
         otlp: OTLP.cloud.REGION,
         instana: 'arn',
-        transform: arn => {
-          // arn:aws:lambda:{region}:{account-id}:function:{name}:{version}
-          const parts = typeof arn === 'string' ? arn.split(':') : [];
-          return parts[3] || undefined;
-        }
+        transform: arn => getRegionFromArn(arn)
       },
       {
         otlp: OTLP.cloud.ACCOUNT_ID,
         instana: 'arn',
-        transform: arn => {
-          const parts = typeof arn === 'string' ? arn.split(':') : [];
-          return parts[4] || undefined;
-        }
+        transform: arn => getAccountIdFromArn(arn)
       },
       { otlp: OTLP.cloud.RESOURCE_ID, instana: 'arn' },
       { otlp: OTLP.faas.INVOCATION_ID, instana: 'reqId' },
       {
         otlp: OTLP.faas.COLDSTART,
         instana: 'coldStart',
-        transform: value => {
-          if (typeof value === 'boolean') return value;
-          if (typeof value === 'string') return value === 'true';
-          return undefined;
-        }
+        transform: value => toBoolean(value)
       },
       { otlp: OTLP.process.RUNTIME_NAME, instana: 'runtime' },
       { otlp: OTLP.exception.MESSAGE, instana: 'error' }

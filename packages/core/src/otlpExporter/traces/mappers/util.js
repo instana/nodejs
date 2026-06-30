@@ -133,6 +133,42 @@ const getRPCMethodOriginal = (value, data) => {
   return undefined;
 };
 
+/**
+ * @param {string | boolean} value
+ * @returns {boolean | undefined}
+ */
+const toBoolean = value => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') return value === 'true';
+  return undefined;
+};
+
+/**
+ * @param {string } arn
+ * @param {number } index
+ * @returns {string | undefined}
+ */
+const getArnPart = (arn, index) => {
+  // arn:aws:lambda:{region}:{account-id}:function:{name}:{version}
+  if (typeof arn !== 'string') {
+    return undefined;
+  }
+
+  return arn.split(':')[index] || undefined;
+};
+
+/**
+ * @param {string } arn
+ * @returns {string | undefined}
+ */
+const getRegionFromArn = arn => getArnPart(arn, 3);
+
+/**
+ * @param {string } arn
+ * @returns {string | undefined}
+ */
+const getAccountIdFromArn = arn => getArnPart(arn, 4);
+
 module.exports = {
   toUpperCase,
   firstDefined,
@@ -142,5 +178,8 @@ module.exports = {
   extractHost,
   extractPort,
   getRPCMethod,
-  getRPCMethodOriginal
+  getRPCMethodOriginal,
+  toBoolean,
+  getRegionFromArn,
+  getAccountIdFromArn
 };
