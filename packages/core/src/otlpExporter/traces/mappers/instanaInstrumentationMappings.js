@@ -38,7 +38,6 @@ const OTLP = /** @type {any} */ (ctx.semConv);
  * @typedef {Object} AttributeMapping
  * @property {string} otlp
  * @property {string | string[]} [instana]
- * @property {string} [spanLevel]
  * @property {any} [value]
  * @property {TransformFunction} [transform]
  */
@@ -104,7 +103,6 @@ const instrumentationMappings = {
       { otlp: OTLP.messaging.OPERATION_NAME, instana: 'sort' },
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: ['exchange', 'key', 'queue'] },
       { otlp: OTLP.messaging.rabbitmq.ROUTING_KEY, instana: 'key' },
-      { otlp: OTLP.messaging.rabbitmq.MESSAGE_ROUTING_KEY, instana: 'key' },
       { otlp: OTLP.messaging.MESSAGE_BODY_SIZE, instana: 'size' },
       { otlp: OTLP.server.ADDRESS, instana: 'address', transform: extractHost },
       { otlp: OTLP.server.PORT, instana: 'address', transform: extractPort },
@@ -176,7 +174,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.PG]: {
-    spanName: data => data.stmt?.split(/\s+/)[0]?.toUpperCase() || 'POSTGRESQL',
+    spanName: data => data.stmt,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'postgresql' },
       { otlp: OTLP.database.QUERY_TEXT, instana: 'stmt' },
@@ -190,7 +188,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.MYSQL]: {
-    spanName: data => data.stmt?.split(/\s+/)[0]?.toUpperCase() || 'MYSQL',
+    spanName: data => data.stmt,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'mysql' },
       { otlp: OTLP.database.QUERY_TEXT, instana: 'stmt' },
@@ -204,7 +202,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.MSSQL]: {
-    spanName: data => data.stmt?.split(/\s+/)[0]?.toUpperCase() || 'MSSQL',
+    spanName: data => data.stmt,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'mssql' },
       { otlp: OTLP.database.QUERY_TEXT, instana: 'stmt' },
@@ -218,7 +216,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.DB2]: {
-    spanName: data => data.stmt?.split(/\s+/)[0]?.toUpperCase() || 'DB2',
+    spanName: data => data.stmt,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: INSTRUMENTATION_TYPES.DB2 },
       { otlp: OTLP.database.QUERY_TEXT, instana: 'stmt' },
@@ -244,7 +242,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.REDIS]: {
-    spanName: data => `redis.${data.operation || 'command'}`,
+    spanName: data => `redis.${data.operation}`,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: INSTRUMENTATION_TYPES.REDIS },
       { otlp: OTLP.database.OPERATION, instana: 'operation' },
@@ -254,7 +252,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.COUCHBASE]: {
-    spanName: data => `couchbase.${data.bucket || 'operation'}`,
+    spanName: data => `couchbase.${data.bucket}`,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'couchdb' },
       { otlp: OTLP.database.NAMESPACE, instana: 'bucket' },
@@ -266,7 +264,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.ELASTICSEARCH]: {
-    spanName: data => `elasticsearch.${data.action || 'request'}`,
+    spanName: data => `elasticsearch.${data.action}`,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: INSTRUMENTATION_TYPES.ELASTICSEARCH },
       { otlp: OTLP.database.OPERATION, instana: 'action' },
@@ -279,7 +277,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.DYNAMODB]: {
-    spanName: data => `dynamodb.${data.operation || 'request'}`,
+    spanName: data => `dynamodb.${data.operation}`,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: INSTRUMENTATION_TYPES.DYNAMODB },
       { otlp: OTLP.database.OPERATION, instana: 'operation' },
@@ -290,7 +288,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.MEMCACHED]: {
-    spanName: data => `memcached.${data.operation || 'command'}`,
+    spanName: data => `memcached.${data.operation}`,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'memcached' },
       { otlp: OTLP.database.CONNECTION_STRING, instana: 'connection' },

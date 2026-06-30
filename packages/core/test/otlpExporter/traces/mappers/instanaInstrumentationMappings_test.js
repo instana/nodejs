@@ -85,7 +85,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       };
 
       const result = spanName(span);
-      expect(result).to.equal('SELECT');
+      expect(result).to.equal('SELECT * FROM users WHERE id = $1');
     });
 
     it('should generate MySQL span name from statement', () => {
@@ -99,7 +99,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       };
 
       const result = spanName(span);
-      expect(result).to.equal('INSERT');
+      expect(result).to.equal('INSERT INTO users (name, email) VALUES (?, ?)');
     });
 
     it('should generate MongoDB span name', () => {

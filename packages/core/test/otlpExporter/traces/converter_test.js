@@ -309,7 +309,7 @@ describe('tracing/converters/otlp', () => {
       expectAttribute(httpSpan.attributes, 'server.port', { intValue: 443 });
 
       const pgSpan = convertedSpans[1];
-      expect(pgSpan.name).to.equal('SELECT');
+      expect(pgSpan.name).to.equal('SELECT * FROM users WHERE id = $1');
       expect(pgSpan.kind).to.equal(3);
       expect(pgSpan.parentSpanId).to.equal('0000000000span-1');
       expectAttribute(pgSpan.attributes, 'db.system', { stringValue: 'postgresql' });

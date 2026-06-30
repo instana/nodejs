@@ -55,8 +55,7 @@ const MAPPINGS = {
       MESSAGE_KEY: 'messaging.kafka.message.key'
     },
     rabbitmq: {
-      ROUTING_KEY: 'messaging.rabbitmq.destination.routing_key',
-      MESSAGE_ROUTING_KEY: 'messaging.rabbitmq.destination.routing_key'
+      ROUTING_KEY: 'messaging.rabbitmq.destination.routing_key'
     },
     gcp: { PROJECT_ID: 'gcp.project_id' }
   },
