@@ -56,19 +56,17 @@ const MAPPINGS = {
     },
     rabbitmq: {
       ROUTING_KEY: 'messaging.rabbitmq.destination.routing_key'
-    },
-    gcp: { PROJECT_ID: 'gcp.project_id' }
+    }
   },
 
   database: {
     USER: 'db.user',
-    COLLECTION: 'db.collection.name',
+    COLLECTION_NAME: 'db.collection.name',
     TABLE: 'db.sql.table',
     AWS_DYNAMODB_TABLE_NAMES: 'aws.dynamodb.table_names'
   },
 
   rpc: {
-    SYSTEM_NAME: 'rpc.system.name',
     METHOD: 'rpc.method',
     METHOD_ORIGINAL: 'rpc.method_original',
     GRPC_STATUS: 'rpc.grpc.status_code',
@@ -93,22 +91,11 @@ const MAPPINGS = {
     ACCOUNT_ID: 'cloud.account.id',
     RESOURCE_ID: 'cloud.resource_id',
     gcp: {
-      PROJECT_ID: 'gcp.project_id',
-      STORAGE_BUCKET: 'gcp.storage.bucket',
-      STORAGE_OBJECT: 'gcp.storage.object',
-      STORAGE_SOURCE_BUCKET: 'gcp.storage.source.bucket',
-      STORAGE_DESTINATION_BUCKET: 'gcp.storage.destination.bucket',
-      STORAGE_SOURCE_OBJECT: 'gcp.storage.source.object',
-      STORAGE_DESTINATION_OBJECT: 'gcp.storage.destination.object'
+      PROJECT_ID: 'gcp.project_id'
     },
     aws: {
       S3_BUCKET: 'aws.s3.bucket',
       S3_KEY: 'aws.s3.key'
-    },
-    azure: {
-      STORAGE_ACCOUNT: 'az.storage.account.name',
-      CONTAINER: 'az.storage.container.name',
-      BLOB: 'az.storage.blob.name'
     }
   },
 

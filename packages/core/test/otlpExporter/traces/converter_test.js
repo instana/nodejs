@@ -311,15 +311,6 @@ describe('tracing/converters/otlp', () => {
       expect(internalSpan.kind).to.equal(1);
       expect(internalSpan.attributes).to.deep.equal([]);
 
-      const azureBlobSpan = convertedSpans[4];
-      expect(azureBlobSpan.name).to.equal('azure.storage.put');
-      expect(azureBlobSpan.kind).to.equal(3);
-      expectAttribute(azureBlobSpan.attributes, 'cloud.provider', { stringValue: 'azure' });
-      expectAttribute(azureBlobSpan.attributes, 'db.operation', { stringValue: 'put' });
-      expect(azureBlobSpan.attributes.some(attribute => attribute.value.stringValue === 'storage-account')).to.be.true;
-      expect(azureBlobSpan.attributes.some(attribute => attribute.value.stringValue === 'uploads')).to.be.true;
-      expect(azureBlobSpan.attributes.some(attribute => attribute.value.stringValue === 'invoice.pdf')).to.be.true;
-
       const otelSpan = convertedSpans[5];
       expect(otelSpan.name).to.equal('otel');
       expect(otelSpan.kind).to.equal(3);
@@ -495,7 +486,7 @@ describe('tracing/converters/otlp', () => {
 
         const azureBlobAttributes = extractSpanAttributes(azureBlobSpan, mappers.get(azureBlobSpan));
         expectAttribute(azureBlobAttributes, 'cloud.provider', { stringValue: 'azure' });
-        expect(azureBlobAttributes.some(attribute => attribute.value.stringValue === 'invoice.pdf')).to.be.true;
+        expect(azureBlobAttributes.some(attribute => attribute.value.stringValue === 'put')).to.be.true;
 
         const otelAttributes = extractSpanAttributes(otelSpan, mappers.get(otelSpan));
         expectAttribute(otelAttributes, 'operation', { stringValue: 'publish' });

@@ -177,7 +177,7 @@ const instrumentationMappings = {
         instana: ['top', 'sub'],
         transform: firstDefined
       },
-      { otlp: OTLP.messaging.gcp.PROJECT_ID, instana: 'projid' },
+      { otlp: OTLP.cloud.gcp.PROJECT_ID, instana: 'projid' },
       { otlp: OTLP.messaging.MESSAGE_ID, instana: 'messageId' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
@@ -241,7 +241,7 @@ const instrumentationMappings = {
       { otlp: OTLP.database.SYSTEM, value: 'mongodb' },
       { otlp: OTLP.database.NAMESPACE, instana: 'namespace' },
       { otlp: OTLP.database.MONGO_DB_COLLECTION, instana: 'collection' },
-      { otlp: OTLP.database.COLLECTION, instana: 'collection' },
+      { otlp: OTLP.database.COLLECTION_NAME, instana: 'collection' },
       { otlp: OTLP.database.OPERATION, instana: 'command', transform: toUpperCase },
       { otlp: OTLP.database.QUERY_TEXT, instana: ['json', 'filter'], transform: firstDefined },
       { otlp: OTLP.database.STATEMENT, instana: ['json', 'filter'], transform: firstDefined },
@@ -281,7 +281,7 @@ const instrumentationMappings = {
       { otlp: OTLP.database.SYSTEM, value: INSTRUMENTATION_TYPES.ELASTICSEARCH },
       { otlp: OTLP.database.OPERATION, instana: 'action' },
       { otlp: OTLP.database.NAME, instana: 'cluster' },
-      { otlp: OTLP.database.COLLECTION, instana: 'index' },
+      { otlp: OTLP.database.COLLECTION_NAME, instana: 'index' },
       { otlp: OTLP.database.QUERY_TEXT, instana: 'query' },
       { otlp: OTLP.database.STATEMENT, instana: 'query' },
       { otlp: OTLP.database.CONNECTION_STRING, instana: 'hostname' },
@@ -319,7 +319,7 @@ const instrumentationMappings = {
     spanName: data => data.action,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, instana: 'provider' },
-      { otlp: OTLP.database.COLLECTION, instana: 'model' },
+      { otlp: OTLP.database.COLLECTION_NAME, instana: 'model' },
       { otlp: OTLP.database.OPERATION, instana: 'action' },
       { otlp: OTLP.database.CONNECTION_STRING, instana: 'url' },
       { otlp: OTLP.server.ADDRESS, instana: 'url', transform: extractHost },
@@ -359,19 +359,16 @@ const instrumentationMappings = {
     ]
   },
 
-  // Note: GCS is not specified in RFD
-  // Will revisit if RFD is updated
+  // Note: Google Cloud Storage (GCS) is not included in the official OpenTelemetry semantic conventions
+  // specification. This mapping uses standard cloud.* and database.* attributes to represent GCS operations.
   [INSTRUMENTATION_TYPES.GCS]: {
     spanName: data => `gcs.${data.op}`,
     spanAttributes: [
+      { otlp: OTLP.cloud.PROVIDER, value: 'gcp' },
       { otlp: OTLP.database.OPERATION, instana: 'op' },
-      { otlp: OTLP.cloud.gcp.STORAGE_BUCKET, instana: 'bucket' },
-      { otlp: OTLP.cloud.gcp.STORAGE_OBJECT, instana: 'object' },
       { otlp: OTLP.cloud.gcp.PROJECT_ID, instana: 'projectId' },
-      { otlp: OTLP.cloud.gcp.STORAGE_SOURCE_BUCKET, instana: 'sourceBucket' },
-      { otlp: OTLP.cloud.gcp.STORAGE_SOURCE_OBJECT, instana: 'sourceObject' },
-      { otlp: OTLP.cloud.gcp.STORAGE_DESTINATION_BUCKET, instana: 'destinationBucket' },
-      { otlp: OTLP.cloud.gcp.STORAGE_DESTINATION_OBJECT, instana: 'destinationObject' },
+      { otlp: OTLP.database.NAMESPACE, instana: 'bucket' },
+      { otlp: OTLP.database.COLLECTION_NAME, instana: 'object' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
@@ -401,16 +398,13 @@ const instrumentationMappings = {
     ]
   },
 
-  // Note: Azure storage is not specified in RFD
-  // Will revisit if RFD is updated
+  // Note: Azure Storage is not included in the official OpenTelemetry semantic conventions
+  // specification. This mapping uses standard cloud.* and database.* attributes to represent azure operations.
   [INSTRUMENTATION_TYPES.AZSTORAGE]: {
     spanName: data => `azure.storage.${data.op}`,
     spanAttributes: [
       { otlp: OTLP.cloud.PROVIDER, value: 'azure' },
       { otlp: OTLP.database.OPERATION, instana: 'op' },
-      { otlp: OTLP.cloud.azure.STORAGE_ACCOUNT, instana: 'accountName' },
-      { otlp: OTLP.cloud.azure.CONTAINER, instana: 'containerName' },
-      { otlp: OTLP.cloud.azure.BLOB, instana: 'blobName' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },

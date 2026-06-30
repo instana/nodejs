@@ -35,6 +35,9 @@ const MAPPINGS = {
   network: {
     PEER_NAME: 'server.address',
     PEER_PORT: 'server.port'
+  },
+  rpc: {
+    SYSTEM_NAME: 'rpc.system.name'
   }
 };
 
