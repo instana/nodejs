@@ -110,7 +110,7 @@ const instrumentationMappings = {
       { otlp: OTLP.messaging.SYSTEM, value: INSTRUMENTATION_TYPES.RABBITMQ },
       { otlp: OTLP.messaging.OPERATION, instana: 'sort' },
       { otlp: OTLP.messaging.OPERATION_NAME, instana: 'sort' },
-      { otlp: OTLP.messaging.DESTINATION_NAME, instana: ['exchange', 'key', 'queue'] },
+      { otlp: OTLP.messaging.DESTINATION_NAME, instana: ['exchange', 'key'] },
       { otlp: OTLP.messaging.rabbitmq.ROUTING_KEY, instana: 'key' },
       { otlp: OTLP.messaging.MESSAGE_BODY_SIZE, instana: 'size' },
       { otlp: OTLP.server.ADDRESS, instana: 'address', transform: extractHost },
@@ -147,7 +147,6 @@ const instrumentationMappings = {
     spanAttributes: [
       { otlp: OTLP.messaging.SYSTEM, value: 'aws_sqs' },
       { otlp: OTLP.messaging.OPERATION_NAME, instana: 'type' },
-      { otlp: OTLP.messaging.CONSUMER_GROUP, instana: 'group' },
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'queue' },
       { otlp: OTLP.messaging.BATCH_MESSAGE_COUNT, instana: 'size' },
       { otlp: OTLP.messaging.MESSAGE_ID, instana: 'messageId' },
@@ -167,7 +166,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.GCPS]: {
-    spanName: data => `${data.op || 'process'} ${data.top || data.sub || 'unknown'}`,
+    spanName: data => `${data.op}`,
     spanAttributes: [
       { otlp: OTLP.messaging.SYSTEM, value: 'gcp_pubsub' },
       { otlp: OTLP.messaging.OPERATION_NAME, instana: 'op' },
@@ -345,8 +344,7 @@ const instrumentationMappings = {
   // Note: span attributes follow the OTel GraphQL semantic conventions:
   // https://opentelemetry.io/docs/specs/semconv/graphql/graphql-spans/
   [INSTRUMENTATION_TYPES.GRAPHQL]: {
-    spanName: data =>
-      data.operationName ? `${data.operationType || 'query'} ${data.operationName}` : data.operationType || 'graphql',
+    spanName: data => `${data.operationType}`,
     spanAttributes: [
       { otlp: OTLP.graphql.OPERATION_TYPE, instana: 'operationType' },
       { otlp: OTLP.graphql.OPERATION_NAME, instana: 'operationName' },
@@ -357,7 +355,7 @@ const instrumentationMappings = {
   // Note: GCS is not specified in RFD
   // Will revisit if RFD is updated
   [INSTRUMENTATION_TYPES.GCS]: {
-    spanName: data => `gcs.${data.op || 'operation'}`,
+    spanName: data => `gcs.${data.op}`,
     spanAttributes: [
       { otlp: OTLP.database.OPERATION, instana: 'op' },
       { otlp: OTLP.cloud.gcp.STORAGE_BUCKET, instana: 'bucket' },
@@ -372,7 +370,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.S3]: {
-    spanName: data => `s3.${data.op || 'operation'}`,
+    spanName: data => `s3.${data.op}`,
     spanAttributes: [
       { otlp: OTLP.rpc.SYSTEM_NAME, value: 'aws-api' },
       { otlp: OTLP.rpc.METHOD, instana: 'op', transform: value => (value ? `S3.${value}` : value) },
@@ -385,7 +383,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.KINESIS]: {
-    spanName: data => `kinesis.${data.op || 'operation'}`,
+    spanName: data => `kinesis.${data.op}`,
     spanAttributes: [
       { otlp: OTLP.messaging.SYSTEM, value: 'aws_kinesis' },
       { otlp: OTLP.messaging.OPERATION_NAME, instana: 'op' },
@@ -403,7 +401,7 @@ const instrumentationMappings = {
   // Note: Azure storage is not specified in RFD
   // Will revisit if RFD is updated
   [INSTRUMENTATION_TYPES.AZSTORAGE]: {
-    spanName: data => `azure.storage.${data.op || 'operation'}`,
+    spanName: data => `azure.storage.${data.op}`,
     spanAttributes: [
       { otlp: OTLP.cloud.PROVIDER, value: 'azure' },
       { otlp: OTLP.database.OPERATION, instana: 'op' },

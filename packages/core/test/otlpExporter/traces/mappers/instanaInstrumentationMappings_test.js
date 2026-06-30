@@ -228,7 +228,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       };
 
       const result = spanName(span);
-      expect(result).to.equal('query GetUser');
+      expect(result).to.equal('query');
     });
 
     it('should generate graphql.server span name with only operation type (no name)', () => {
@@ -259,20 +259,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       };
 
       const result = spanName(span);
-      expect(result).to.equal('subscription-update OnCommentAdded');
-    });
-
-    it('should fallback to "graphql" when operationType is absent', () => {
-      const span = {
-        n: 'graphql.server',
-        k: 1,
-        data: {
-          graphql: {}
-        }
-      };
-
-      const result = spanName(span);
-      expect(result).to.equal('graphql');
+      expect(result).to.equal('subscription-update');
     });
 
     it('should fallback to span.n when no handler exists', () => {
