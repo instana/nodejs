@@ -30,9 +30,6 @@ spec:
       resources:
         requests:
           cpu: "1000m"
-          memory: "4Gi"
-        limits:
-          cpu: "2000m"
           memory: "8Gi"
       env:
         - name: PROPERTIES_FILE
