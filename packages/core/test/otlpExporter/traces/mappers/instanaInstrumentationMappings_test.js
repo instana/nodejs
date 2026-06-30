@@ -319,7 +319,6 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
         ['aws:s3', 'datasource'],
         ['aws:dynamodb', 'datasource'],
         ['aws:kinesis', 'datasource'],
-        ['aws:kinesis.firehouse', 'datasource'],
         ['aws:sqs', 'pubsub'],
         ['aws:sns', 'pubsub'],
         ['aws:cloudwatch.events', 'timer'],
