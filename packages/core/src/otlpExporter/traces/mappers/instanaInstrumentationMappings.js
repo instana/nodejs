@@ -97,7 +97,6 @@ const instrumentationMappings = {
     spanAttributes: [
       { otlp: OTLP.messaging.SYSTEM, value: INSTRUMENTATION_TYPES.KAFKA },
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'endpoints' },
-      { otlp: OTLP.messaging.OPERATION, instana: 'operation' },
       { otlp: OTLP.messaging.OPERATION_NAME, instana: 'operation' },
       {
         otlp: OTLP.messaging.OPERATION_TYPE,

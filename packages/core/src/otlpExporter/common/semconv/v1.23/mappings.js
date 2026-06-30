@@ -16,7 +16,7 @@ const MAPPINGS = {
 
   messaging: {
     DESTINATION_NAME: 'messaging.destination',
-    OPERATION: 'messaging.operation',
+    OPERATION_NAME: 'messaging.operation',
     kafka: {
       PARTITION: 'messaging.kafka.partition'
     }
