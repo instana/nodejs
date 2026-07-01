@@ -29,7 +29,7 @@ const MAPPINGS = {
     OPERATION: 'db.operation',
     PEER_NAME: 'net.peer.name',
     PEER_PORT: 'net.peer.port',
-    STATEMENT: 'db.statement',
+    QUERY_STATEMENT: 'db.statement',
     SYSTEM: 'db.system'
   },
 

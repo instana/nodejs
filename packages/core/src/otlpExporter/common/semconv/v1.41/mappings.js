@@ -14,7 +14,7 @@ const MAPPINGS = {
     OPERATION: 'db.operation.name',
     PEER_NAME: 'server.address',
     PEER_PORT: 'server.port',
-    QUERY_TEXT: 'db.query.text',
+    QUERY_STATEMENT: 'db.query.text',
     SYSTEM: 'db.system.name'
   },
   http: {
