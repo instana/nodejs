@@ -43,7 +43,6 @@ const MAPPINGS = {
 
   messaging: {
     SYSTEM: 'messaging.system',
-    CONSUMER_GROUP: 'messaging.consumer.group.name',
     BATCH_MESSAGE_COUNT: 'messaging.batch.message_count',
     MESSAGE_ID: 'messaging.message.id',
     MESSAGE_BODY_SIZE: 'messaging.message.body.size',
@@ -51,7 +50,7 @@ const MAPPINGS = {
     DESTINATION_TEMPLATE: 'messaging.destination.template',
     DESTINATION_PARTITION_ID: 'messaging.destination.partition.id',
     kafka: {
-      OFFSET: 'messaging.kafka.message.offset',
+
       MESSAGE_KEY: 'messaging.kafka.message.key'
     },
     rabbitmq: {
@@ -60,13 +59,9 @@ const MAPPINGS = {
   },
 
   database: {
-    USER: 'db.user',
     COLLECTION_NAME: 'db.collection.name',
     TABLE: 'db.sql.table',
-    AWS_DYNAMODB_TABLE_NAMES: 'aws.dynamodb.table_names',
-    mongodb: {
-      COLLECTION: 'db.mongodb.collection'
-    }
+    AWS_DYNAMODB_TABLE_NAMES: 'aws.dynamodb.table_names'
   },
 
   rpc: {

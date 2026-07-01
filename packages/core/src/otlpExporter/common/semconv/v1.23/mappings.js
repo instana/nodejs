@@ -18,19 +18,24 @@ const MAPPINGS = {
     DESTINATION_NAME: 'messaging.destination',
     OPERATION_NAME: 'messaging.operation',
     kafka: {
-      PARTITION: 'messaging.kafka.partition'
+      PARTITION: 'messaging.kafka.partition',
+      CONSUMER_GROUP: 'messaging.kafka.consumer.group',
+      OFFSET: 'messaging.kafka.message.offset'
     }
   },
 
   database: {
     CONNECTION_STRING: 'db.connection_string',
-    MONGO_DB_COLLECTION: 'db.mongodb.collection',
-    NAME: 'db.name',
+    NAMESPACE: 'db.name',
     OPERATION_NAME: 'db.operation',
     PEER_NAME: 'net.peer.name',
     PEER_PORT: 'net.peer.port',
-    QUERY_STATEMENT: 'db.statement',
-    SYSTEM: 'db.system'
+    QUERY_TEXT: 'db.statement',
+    SYSTEM_NAME: 'db.system',
+    USER: 'db.user',
+    mongodb: {
+      COLLECTION: 'db.mongodb.collection'
+    }
   },
 
   network: {

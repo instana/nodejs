@@ -98,10 +98,6 @@ const instrumentationMappings = {
       { otlp: OTLP.messaging.SYSTEM, value: INSTRUMENTATION_TYPES.KAFKA },
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'endpoints' },
       { otlp: OTLP.messaging.OPERATION_NAME, instana: 'operation' },
-      {
-        otlp: OTLP.messaging.OPERATION_TYPE,
-        instana: 'operation'
-      },
       { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
@@ -185,10 +181,10 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.PG]: {
     spanName: data => data.stmt,
     spanAttributes: [
-      { otlp: OTLP.database.SYSTEM, value: 'postgresql' },
-      { otlp: OTLP.database.QUERY_STATEMENT, instana: 'stmt' },
+      { otlp: OTLP.database.SYSTEM_NAME, value: 'postgresql' },
+      { otlp: OTLP.database.QUERY_TEXT, instana: 'stmt' },
       { otlp: OTLP.database.USER, instana: 'user' },
-      { otlp: OTLP.database.NAME, instana: 'db' },
+      { otlp: OTLP.database.NAMESPACE, instana: 'db' },
       { otlp: OTLP.server.ADDRESS, instana: 'host' },
       { otlp: OTLP.server.PORT, instana: 'port' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
@@ -198,10 +194,10 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.MYSQL]: {
     spanName: data => data.stmt,
     spanAttributes: [
-      { otlp: OTLP.database.SYSTEM, value: INSTRUMENTATION_TYPES.MYSQL },
-      { otlp: OTLP.database.QUERY_STATEMENT, instana: 'stmt' },
+      { otlp: OTLP.database.SYSTEM_NAME, value: INSTRUMENTATION_TYPES.MYSQL },
+      { otlp: OTLP.database.QUERY_TEXT, instana: 'stmt' },
       { otlp: OTLP.database.USER, instana: 'user' },
-      { otlp: OTLP.database.NAME, instana: 'db' },
+      { otlp: OTLP.database.NAMESPACE, instana: 'db' },
       { otlp: OTLP.server.ADDRESS, instana: 'host' },
       { otlp: OTLP.server.PORT, instana: 'port' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
@@ -211,10 +207,10 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.MSSQL]: {
     spanName: data => data.stmt,
     spanAttributes: [
-      { otlp: OTLP.database.SYSTEM, value: INSTRUMENTATION_TYPES.MSSQL },
-      { otlp: OTLP.database.QUERY_STATEMENT, instana: 'stmt' },
+      { otlp: OTLP.database.SYSTEM_NAME, value: INSTRUMENTATION_TYPES.MSSQL },
+      { otlp: OTLP.database.QUERY_TEXT, instana: 'stmt' },
       { otlp: OTLP.database.USER, instana: 'user' },
-      { otlp: OTLP.database.NAME, instana: 'db' },
+      { otlp: OTLP.database.NAMESPACE, instana: 'db' },
       { otlp: OTLP.server.ADDRESS, instana: 'host' },
       { otlp: OTLP.server.PORT, instana: 'port' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
@@ -224,8 +220,8 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.DB2]: {
     spanName: data => data.stmt,
     spanAttributes: [
-      { otlp: OTLP.database.SYSTEM, value: 'ibm.db2' },
-      { otlp: OTLP.database.QUERY_STATEMENT, instana: 'stmt' },
+      { otlp: OTLP.database.SYSTEM_NAME, value: 'ibm.db2' },
+      { otlp: OTLP.database.QUERY_TEXT, instana: 'stmt' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
@@ -233,12 +229,11 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.MONGO]: {
     spanName: data => data.command,
     spanAttributes: [
-      { otlp: OTLP.database.SYSTEM, value: 'mongodb' },
+      { otlp: OTLP.database.SYSTEM_NAME, value: 'mongodb' },
       { otlp: OTLP.database.NAMESPACE, instana: 'namespace' },
       { otlp: OTLP.database.mongodb.COLLECTION, instana: 'collection' },
-      { otlp: OTLP.database.COLLECTION_NAME, instana: 'collection' },
       { otlp: OTLP.database.OPERATION_NAME, instana: 'command', transform: toUpperCase },
-      { otlp: OTLP.database.QUERY_STATEMENT, instana: ['json', 'filter'], transform: firstDefined },
+      { otlp: OTLP.database.QUERY_TEXT, instana: ['json', 'filter'], transform: firstDefined },
       { otlp: OTLP.server.ADDRESS, instana: 'service', transform: extractHost },
       { otlp: OTLP.server.PORT, instana: 'service', transform: extractPort },
       { otlp: OTLP.error.TYPE, instana: 'error' }
@@ -248,7 +243,7 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.REDIS]: {
     spanName: data => data.operation,
     spanAttributes: [
-      { otlp: OTLP.database.SYSTEM, value: INSTRUMENTATION_TYPES.REDIS },
+      { otlp: OTLP.database.SYSTEM_NAME, value: INSTRUMENTATION_TYPES.REDIS },
       { otlp: OTLP.database.OPERATION_NAME, instana: 'operation' },
       { otlp: OTLP.database.CONNECTION_STRING, instana: 'connection' },
       { otlp: OTLP.server.ADDRESS, instana: 'connection', transform: extractHost },
@@ -260,10 +255,9 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.COUCHBASE]: {
     spanName: data => data.bucket,
     spanAttributes: [
-      { otlp: OTLP.database.SYSTEM, value: [INSTRUMENTATION_TYPES.COUCHBASE] },
+      { otlp: OTLP.database.SYSTEM_NAME, value: [INSTRUMENTATION_TYPES.COUCHBASE] },
       { otlp: OTLP.database.NAMESPACE, instana: 'bucket' },
-      { otlp: OTLP.database.NAME, instana: 'bucket' },
-      { otlp: OTLP.database.QUERY_STATEMENT, instana: 'sql' },
+      { otlp: OTLP.database.QUERY_TEXT, instana: 'sql' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
@@ -271,11 +265,11 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.ELASTICSEARCH]: {
     spanName: data => data.action,
     spanAttributes: [
-      { otlp: OTLP.database.SYSTEM, value: INSTRUMENTATION_TYPES.ELASTICSEARCH },
+      { otlp: OTLP.database.SYSTEM_NAME, value: INSTRUMENTATION_TYPES.ELASTICSEARCH },
       { otlp: OTLP.database.OPERATION_NAME, instana: 'action' },
-      { otlp: OTLP.database.NAME, instana: 'cluster' },
+      { otlp: OTLP.database.NAMESPACE, instana: 'cluster' },
       { otlp: OTLP.database.COLLECTION_NAME, instana: 'index' },
-      { otlp: OTLP.database.QUERY_STATEMENT, instana: 'query' },
+      { otlp: OTLP.database.QUERY_TEXT, instana: 'query' },
       { otlp: OTLP.database.CONNECTION_STRING, instana: 'hostname' },
       { otlp: OTLP.server.ADDRESS, instana: 'hostname', transform: extractHost },
       { otlp: OTLP.server.PORT, instana: 'hostname', transform: extractPort },
@@ -286,7 +280,7 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.DYNAMODB]: {
     spanName: data => data.operation,
     spanAttributes: [
-      { otlp: OTLP.database.SYSTEM, value: 'aws.dynamodb' },
+      { otlp: OTLP.database.SYSTEM_NAME, value: 'aws.dynamodb' },
       { otlp: OTLP.database.OPERATION_NAME, instana: 'operation' },
       { otlp: OTLP.cloud.REGION, instana: 'region' },
       { otlp: OTLP.database.AWS_DYNAMODB_TABLE_NAMES, instana: 'table' },
@@ -297,7 +291,7 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.MEMCACHED]: {
     spanName: data => data.operation,
     spanAttributes: [
-      { otlp: OTLP.database.SYSTEM, value: INSTRUMENTATION_TYPES.MEMCACHED },
+      { otlp: OTLP.database.SYSTEM_NAME, value: INSTRUMENTATION_TYPES.MEMCACHED },
       { otlp: OTLP.database.CONNECTION_STRING, instana: 'connection' },
       { otlp: OTLP.database.OPERATION_NAME, instana: 'operation' },
       { otlp: OTLP.server.ADDRESS, instana: 'connection', transform: extractHost },
@@ -310,7 +304,7 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.PRISMA]: {
     spanName: data => data.action,
     spanAttributes: [
-      { otlp: OTLP.database.SYSTEM, instana: 'provider' },
+      { otlp: OTLP.database.SYSTEM_NAME, instana: 'provider' },
       { otlp: OTLP.database.COLLECTION_NAME, instana: 'model' },
       { otlp: OTLP.database.OPERATION_NAME, instana: 'action' },
       { otlp: OTLP.database.CONNECTION_STRING, instana: 'url' },
