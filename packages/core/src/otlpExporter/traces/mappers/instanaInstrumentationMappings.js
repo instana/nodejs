@@ -281,6 +281,7 @@ const instrumentationMappings = {
     spanName: data => data.operation,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM_NAME, value: 'aws.dynamodb' },
+      { otlp: OTLP.rpc.SYSTEM_NAME, value: 'aws-api' },
       { otlp: OTLP.database.OPERATION_NAME, instana: 'operation' },
       { otlp: OTLP.cloud.REGION, instana: 'region' },
       { otlp: OTLP.database.AWS_DYNAMODB_TABLE_NAMES, instana: 'table' },
@@ -363,7 +364,7 @@ const instrumentationMappings = {
     spanName: data => `s3.${data.op}`,
     spanAttributes: [
       { otlp: OTLP.rpc.SYSTEM_NAME, value: 'aws-api' },
-      { otlp: OTLP.rpc.METHOD, instana: 'op', transform: value => (value ? `S3.${value}` : value) },
+      { otlp: OTLP.rpc.METHOD, instana: 'op' },
       { otlp: OTLP.cloud.REGION, instana: 'region' },
       { otlp: OTLP.cloud.PROVIDER, value: 'aws' },
       { otlp: OTLP.cloud.aws.S3_BUCKET, instana: 'bucket' },
