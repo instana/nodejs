@@ -147,9 +147,7 @@ const instrumentationMappings = {
     spanName: data => `${data.sort} ${data.queue}`,
     spanAttributes: [
       { otlp: OTLP.messaging.SYSTEM, value: 'aws_sqs' },
-      { otlp: OTLP.faas.TRIGGER, value: 'pubsub' },
       { otlp: OTLP.messaging.OPERATION_NAME, instana: 'type' },
-      { otlp: OTLP.messaging.OPERATION_TYPE, value: 'process' },
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: 'queue' },
       { otlp: OTLP.messaging.BATCH_MESSAGE_COUNT, instana: 'size' },
       { otlp: OTLP.messaging.MESSAGE_ID, instana: 'messageId' },
@@ -200,7 +198,7 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.MYSQL]: {
     spanName: data => data.stmt,
     spanAttributes: [
-      { otlp: OTLP.database.SYSTEM, value: 'mysql' },
+      { otlp: OTLP.database.SYSTEM, value: INSTRUMENTATION_TYPES.MYSQL },
       { otlp: OTLP.database.QUERY_STATEMENT, instana: 'stmt' },
       { otlp: OTLP.database.USER, instana: 'user' },
       { otlp: OTLP.database.NAME, instana: 'db' },
@@ -213,7 +211,7 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.MSSQL]: {
     spanName: data => data.stmt,
     spanAttributes: [
-      { otlp: OTLP.database.SYSTEM, value: 'mssql' },
+      { otlp: OTLP.database.SYSTEM, value: INSTRUMENTATION_TYPES.MSSQL },
       { otlp: OTLP.database.QUERY_STATEMENT, instana: 'stmt' },
       { otlp: OTLP.database.USER, instana: 'user' },
       { otlp: OTLP.database.NAME, instana: 'db' },
@@ -262,7 +260,7 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.COUCHBASE]: {
     spanName: data => data.bucket,
     spanAttributes: [
-      { otlp: OTLP.database.SYSTEM, value: 'couchbase' },
+      { otlp: OTLP.database.SYSTEM, value: [INSTRUMENTATION_TYPES.COUCHBASE] },
       { otlp: OTLP.database.NAMESPACE, instana: 'bucket' },
       { otlp: OTLP.database.NAME, instana: 'bucket' },
       { otlp: OTLP.database.QUERY_STATEMENT, instana: 'sql' },
@@ -299,7 +297,7 @@ const instrumentationMappings = {
   [INSTRUMENTATION_TYPES.MEMCACHED]: {
     spanName: data => data.operation,
     spanAttributes: [
-      { otlp: OTLP.database.SYSTEM, value: 'memcached' },
+      { otlp: OTLP.database.SYSTEM, value: INSTRUMENTATION_TYPES.MEMCACHED },
       { otlp: OTLP.database.CONNECTION_STRING, instana: 'connection' },
       { otlp: OTLP.database.OPERATION_NAME, instana: 'operation' },
       { otlp: OTLP.server.ADDRESS, instana: 'connection', transform: extractHost },
