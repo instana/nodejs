@@ -26,7 +26,7 @@ const MAPPINGS = {
     CONNECTION_STRING: 'db.connection_string',
     MONGO_DB_COLLECTION: 'db.mongodb.collection',
     NAME: 'db.name',
-    OPERATION: 'db.operation',
+    OPERATION_NAME: 'db.operation',
     PEER_NAME: 'net.peer.name',
     PEER_PORT: 'net.peer.port',
     QUERY_STATEMENT: 'db.statement',

@@ -110,7 +110,6 @@ const instrumentationMappings = {
     spanName: data => `${data.sort} ${data.exchange}`,
     spanAttributes: [
       { otlp: OTLP.messaging.SYSTEM, value: INSTRUMENTATION_TYPES.RABBITMQ },
-      { otlp: OTLP.messaging.OPERATION, instana: 'sort' },
       { otlp: OTLP.messaging.OPERATION_NAME, instana: 'sort' },
       { otlp: OTLP.messaging.DESTINATION_NAME, instana: ['exchange', 'key'] },
       { otlp: OTLP.messaging.rabbitmq.ROUTING_KEY, instana: 'key' },
@@ -240,7 +239,7 @@ const instrumentationMappings = {
       { otlp: OTLP.database.NAMESPACE, instana: 'namespace' },
       { otlp: OTLP.database.mongodb.COLLECTION, instana: 'collection' },
       { otlp: OTLP.database.COLLECTION_NAME, instana: 'collection' },
-      { otlp: OTLP.database.OPERATION, instana: 'command', transform: toUpperCase },
+      { otlp: OTLP.database.OPERATION_NAME, instana: 'command', transform: toUpperCase },
       { otlp: OTLP.database.QUERY_STATEMENT, instana: ['json', 'filter'], transform: firstDefined },
       { otlp: OTLP.server.ADDRESS, instana: 'service', transform: extractHost },
       { otlp: OTLP.server.PORT, instana: 'service', transform: extractPort },
@@ -252,7 +251,7 @@ const instrumentationMappings = {
     spanName: data => data.operation,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: INSTRUMENTATION_TYPES.REDIS },
-      { otlp: OTLP.database.OPERATION, instana: 'operation' },
+      { otlp: OTLP.database.OPERATION_NAME, instana: 'operation' },
       { otlp: OTLP.database.CONNECTION_STRING, instana: 'connection' },
       { otlp: OTLP.server.ADDRESS, instana: 'connection', transform: extractHost },
       { otlp: OTLP.server.PORT, instana: 'connection', transform: extractPort },
@@ -275,7 +274,7 @@ const instrumentationMappings = {
     spanName: data => data.action,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: INSTRUMENTATION_TYPES.ELASTICSEARCH },
-      { otlp: OTLP.database.OPERATION, instana: 'action' },
+      { otlp: OTLP.database.OPERATION_NAME, instana: 'action' },
       { otlp: OTLP.database.NAME, instana: 'cluster' },
       { otlp: OTLP.database.COLLECTION_NAME, instana: 'index' },
       { otlp: OTLP.database.QUERY_STATEMENT, instana: 'query' },
@@ -290,7 +289,7 @@ const instrumentationMappings = {
     spanName: data => data.operation,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'aws.dynamodb' },
-      { otlp: OTLP.database.OPERATION, instana: 'operation' },
+      { otlp: OTLP.database.OPERATION_NAME, instana: 'operation' },
       { otlp: OTLP.cloud.REGION, instana: 'region' },
       { otlp: OTLP.database.AWS_DYNAMODB_TABLE_NAMES, instana: 'table' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
@@ -302,7 +301,7 @@ const instrumentationMappings = {
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, value: 'memcached' },
       { otlp: OTLP.database.CONNECTION_STRING, instana: 'connection' },
-      { otlp: OTLP.database.OPERATION, instana: 'operation' },
+      { otlp: OTLP.database.OPERATION_NAME, instana: 'operation' },
       { otlp: OTLP.server.ADDRESS, instana: 'connection', transform: extractHost },
       { otlp: OTLP.server.PORT, instana: 'connection', transform: extractPort },
       { otlp: OTLP.error.TYPE, instana: 'error' }
@@ -315,7 +314,7 @@ const instrumentationMappings = {
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM, instana: 'provider' },
       { otlp: OTLP.database.COLLECTION_NAME, instana: 'model' },
-      { otlp: OTLP.database.OPERATION, instana: 'action' },
+      { otlp: OTLP.database.OPERATION_NAME, instana: 'action' },
       { otlp: OTLP.database.CONNECTION_STRING, instana: 'url' },
       { otlp: OTLP.server.ADDRESS, instana: 'url', transform: extractHost },
       { otlp: OTLP.server.PORT, instana: 'url', transform: extractPort },
@@ -360,7 +359,7 @@ const instrumentationMappings = {
     spanName: data => `gcs.${data.op}`,
     spanAttributes: [
       { otlp: OTLP.cloud.PROVIDER, value: 'gcp' },
-      { otlp: OTLP.database.OPERATION, instana: 'op' },
+      { otlp: OTLP.database.OPERATION_NAME, instana: 'op' },
       { otlp: OTLP.cloud.gcp.PROJECT_ID, instana: 'projectId' },
       { otlp: OTLP.database.NAMESPACE, instana: 'bucket' },
       { otlp: OTLP.database.COLLECTION_NAME, instana: 'object' },
@@ -399,7 +398,7 @@ const instrumentationMappings = {
     spanName: data => `azure.storage.${data.op}`,
     spanAttributes: [
       { otlp: OTLP.cloud.PROVIDER, value: 'azure' },
-      { otlp: OTLP.database.OPERATION, instana: 'op' },
+      { otlp: OTLP.database.OPERATION_NAME, instana: 'op' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },
