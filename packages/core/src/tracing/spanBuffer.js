@@ -7,6 +7,7 @@
 
 const tracingMetrics = require('./metrics');
 const instanaBackendMapper = require('./backend_mappers');
+const otlpExporter = require('../otlpExporter');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -35,6 +36,8 @@ let preActivationCleanupIntervalHandle;
 let isFaaS;
 /** @type {boolean} */
 let transmitImmediate;
+/** @type {boolean} */
+let useOtlpExporter = false;
 
 /** @type {Array.<import('../core').InstanaBaseSpan>} */
 let spans = [];
@@ -92,6 +95,7 @@ exports.init = function init(config, _downstreamConnection) {
   batchingEnabled = config.tracing.spanBatchingEnabled;
   isFaaS = false;
   transmitImmediate = false;
+  useOtlpExporter = config.tracing.otlp.enabled;
 
   if (config.tracing.activateImmediately) {
     preActivationCleanupIntervalHandle = setInterval(() => {
@@ -120,6 +124,7 @@ exports.activate = function activate(_config) {
   }
 
   batchingEnabled = _config.tracing.spanBatchingEnabled;
+  useOtlpExporter = _config.tracing.otlp?.enabled;
 
   isActive = true;
   if (activatedAt == null) {
@@ -502,10 +507,18 @@ function removeSpansIfNecessary() {
 
 /**
  * Transforms internal spans into the format required by the configured exporter.
+ * Depending on configuration, spans are transformed to either:
+ * - Instana backend format
+ * - OTLP format
+ *
  * @param {import('../core').InstanaBaseSpan[]} spansToSend
  * @returns {any}
  */
 function applySpanTransformation(spansToSend) {
+  if (useOtlpExporter) {
+    return otlpExporter.traces.transform(spansToSend);
+  }
+
   return (
     spansToSend
       // Transform internal span data format into external (backend) readable format.

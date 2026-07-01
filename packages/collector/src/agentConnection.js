@@ -17,6 +17,9 @@ const cmdline = require('./cmdline');
 let logger;
 /** @type {{ pid: number }} */
 let pidStore;
+/** @type {import('@instana/core/src/config').InstanaConfig} */
+let config;
+let isOtlpExporterEnabled = false;
 
 // How many extra characters are to be reserved for the inode and
 // file descriptor fields in the collector announce cycle.
@@ -31,19 +34,35 @@ let maxContentErrorHasBeenLogged = false;
 const http = uninstrumentedHttp.http;
 let isConnected = false;
 
+/**
+ * @type {number | undefined}
+ */
+let otlpPort;
+
 /** @type {string | null} */
 let cpuSetFileContent = null;
 
 /**
- * @param {import('@instana/core/src/config').InstanaConfig} config
+ * @param {import('@instana/core/src/config').InstanaConfig} _config
  * @param {any} _pidStore
  */
-exports.init = function init(config, _pidStore) {
+exports.init = function init(_config, _pidStore) {
+  config = _config;
   logger = config.logger;
   pidStore = _pidStore;
 
   cmdline.init(config);
   cpuSetFileContent = getCpuSetFileContent();
+  isOtlpExporterEnabled = config.tracing.otlp.enabled;
+  otlpPort = config.tracing.otlp.port;
+};
+
+/**
+ * @param {import('@instana/core/src/config').InstanaConfig} _config
+ */
+exports.activate = function activate(_config) {
+  config = _config;
+  isOtlpExporterEnabled = config.tracing.otlp.enabled;
 };
 
 exports.AgentEventSeverity = {
@@ -86,6 +105,37 @@ exports.AgentEventSeverity = {
  * @property {string} [cpuSetFileContent]
  */
 
+/** @type {Record<string, { otlpPath: string, instanaPath: () => string }>} */
+const EXPORT_ENDPOINTS = {
+  traces: {
+    otlpPath: '/v1/traces',
+    instanaPath: () => `/com.instana.plugin.nodejs/traces.${pidStore.pid}`
+  },
+  metrics: {
+    otlpPath: '/v1/metrics',
+    instanaPath: () => `/com.instana.plugin.nodejs.${pidStore.pid}`
+  }
+};
+
+/**
+ * @param {string} type
+ * @returns { {path: string, port: number} }
+ */
+function resolveExportEndpoint(type) {
+  const endpoint = EXPORT_ENDPOINTS[type];
+
+  if (isOtlpExporterEnabled) {
+    return {
+      path: endpoint.otlpPath,
+      port: otlpPort
+    };
+  }
+
+  return {
+    path: endpoint.instanaPath(),
+    port: agentOpts.port
+  };
+}
 /**
  * @param {(err: Error, rawResponse?: string) => void} callback
  */
@@ -307,15 +357,28 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
 exports.sendMetrics = function sendMetrics(data, cb) {
   cb = util.atMostOnce('callback for sendMetrics', cb);
 
-  sendData(`/com.instana.plugin.nodejs.${pidStore.pid}`, data, (err, body) => {
-    if (err) {
-      cb(err, null);
-    } else {
+  const exportTarget = resolveExportEndpoint('metrics');
+  sendData({
+    ...exportTarget,
+    data,
+    cb: (err, body) => {
+      if (err) {
+        cb(err, null);
+        return;
+      }
+
       try {
         // 2016-09-11
-        // Older sensor versions will not repond with a JSON
+        // Older sensor versions will not respond with a JSON
         // structure. Support a smooth update path.
         body = JSON.parse(body);
+        // Ensure body is always an array for requestHandler.handleRequests()
+        // - Instana agent endpoint returns arrays []
+        // - OTLP endpoints return acknowledgments (empty object {}), not request arrays
+        // Convert non-array responses to empty array to prevent error in requestHandler
+        if (!Array.isArray(body)) {
+          body = [];
+        }
       } catch (e) {
         body = [];
       }
@@ -327,24 +390,33 @@ exports.sendMetrics = function sendMetrics(data, cb) {
 
 /**
  *
- * @param {Array.<InstanaBaseSpan>} spans
+ * @param {Array.<InstanaBaseSpan>|Object} spans
  * @param {(...args: *) => *} cb
  */
 exports.sendSpans = function sendSpans(spans, cb) {
   const callback = util.atMostOnce('callback for sendSpans', err => {
     if (err && !maxContentErrorHasBeenLogged && err instanceof PayloadTooLargeError) {
-      logLargeSpans(spans);
+      if (Array.isArray(spans)) {
+        logLargeSpans(spans);
+      }
     } else if (err) {
-      const spanInfo = getSpanLengthInfo(spans);
-      logger.debug(`Failed to send: ${JSON.stringify(spanInfo)}`);
-    } else {
+      if (Array.isArray(spans)) {
+        const spanInfo = getSpanLengthInfo(spans);
+        logger.debug(`Failed to send: ${JSON.stringify(spanInfo)}`);
+      }
+    } else if (Array.isArray(spans)) {
       const spanInfo = getSpanLengthInfo(spans);
       logger.debug(`Successfully sent: ${JSON.stringify(spanInfo)}`);
     }
     cb(err);
   });
-
-  sendData(`/com.instana.plugin.nodejs/traces.${pidStore.pid}`, spans, callback, true);
+  const exportTarget = resolveExportEndpoint('traces');
+  sendData({
+    ...exportTarget,
+    data: spans,
+    cb: callback,
+    ignore404: true
+  });
 };
 
 /**
@@ -364,7 +436,12 @@ exports.sendProfiles = function sendProfiles(profiles, cb) {
     cb(err);
   });
 
-  sendData(`/com.instana.plugin.nodejs/profiles.${pidStore.pid}`, profiles, callback);
+  sendData({
+    path: `/com.instana.plugin.nodejs/profiles.${pidStore.pid}`,
+    port: agentOpts.port,
+    data: profiles,
+    cb: callback
+  });
 };
 
 /**
@@ -375,8 +452,12 @@ exports.sendEvent = function sendEvent(eventData, cb) {
   const callback = util.atMostOnce('callback for sendEvent', (err, responseBody) => {
     cb(err, responseBody);
   });
-
-  sendData('/com.instana.plugin.generic.event', eventData, callback);
+  sendData({
+    path: '/com.instana.plugin.generic.event',
+    port: agentOpts.port,
+    data: eventData,
+    cb: callback
+  });
 };
 
 /**
@@ -398,7 +479,12 @@ exports.sendAgentMonitoringEvent = function sendAgentMonitoringEvent(code, categ
     cb(err, responseBody);
   });
 
-  sendData('/com.instana.plugin.generic.agent-monitoring-event', event, callback);
+  sendData({
+    path: '/com.instana.plugin.generic.agent-monitoring-event',
+    port: agentOpts.port,
+    data: event,
+    cb: callback
+  });
 };
 
 /**
@@ -409,11 +495,12 @@ exports.sendAgentMonitoringEvent = function sendAgentMonitoringEvent(code, categ
 exports.sendAgentResponseToAgent = function sendAgentResponseToAgent(messageId, response, cb) {
   cb = util.atMostOnce('callback for sendAgentResponseToAgent', cb);
 
-  sendData(
-    `/com.instana.plugin.nodejs/response.${pidStore.pid}?messageId=${encodeURIComponent(messageId)}`,
-    response,
+  sendData({
+    path: `/com.instana.plugin.nodejs/response.${pidStore.pid}?messageId=${encodeURIComponent(messageId)}`,
+    port: agentOpts.port,
+    data: response,
     cb
-  );
+  });
 };
 
 /**
@@ -425,17 +512,24 @@ exports.sendTracingMetricsToAgent = function sendTracingMetricsToAgent(tracingMe
     cb(err);
   });
 
-  sendData('/tracermetrics', tracingMetrics, callback);
+  sendData({
+    path: '/tracermetrics',
+    port: agentOpts.port,
+    data: tracingMetrics,
+    cb: callback
+  });
 };
 
 /**
- * @param {string} path
- * @param {*} data
- * @param {(...args: *) => *} cb
- * @param {boolean} [ignore404]
- * @returns
+ * @param {Object} params
+ * @param {string} params.path
+ * @param {*} params.data
+ * @param {(...args: *) => *} params.cb
+ * @param {boolean} [params.ignore404]
+ * @param {number} params.port
+ * @returns {*}
  */
-function sendData(path, data, cb, ignore404 = false) {
+function sendData({ path, data, cb, ignore404 = false, port }) {
   cb = util.atMostOnce(`callback for sendData: ${path}`, cb);
 
   const payloadAsString = JSON.stringify(data, circularReferenceRemover());
@@ -451,11 +545,10 @@ function sendData(path, data, cb, ignore404 = false) {
     const error = new PayloadTooLargeError(`Request payload is too large. Will not send data to agent. (POST ${path})`);
     return setImmediate(cb.bind(null, error));
   }
-
   const req = http.request(
     {
       host: agentOpts.host,
-      port: agentOpts.port,
+      port,
       path,
       method: 'POST',
       agent: http.agent,

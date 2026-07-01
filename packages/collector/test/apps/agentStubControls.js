@@ -68,6 +68,10 @@ class AgentStubControls {
       env.STACK_TRACE_CONFIG = JSON.stringify(opts.stackTraceConfig);
     }
 
+    if (opts.otlpExporter) {
+      env.OTLP_EXPORTER = JSON.stringify(opts.otlpExporter);
+    }
+
     this.agentStub = spawn('node', [path.join(__dirname, 'agentStub.js')], {
       stdio: config.getAppStdio(),
       env

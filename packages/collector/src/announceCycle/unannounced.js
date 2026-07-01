@@ -45,6 +45,7 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @typedef {Object} TracingConfig
  * @property {Array.<string>} [extra-http-headers]
  * @property {KafkaTracingConfig} [kafka]
+ * @property {OtlpConfig} [otlp]
  * @property {import('@instana/core/src/config/types').IgnoreEndpoints} [ignore-endpoints]
  * @property {boolean} [span-batching-enabled]
  * @property {import('@instana/core/src/config/types').Disable} [disable]
@@ -60,6 +61,12 @@ const maxRetryDelay = 60 * 1000; // one minute
 /**
  * @typedef {Object} KafkaTracingConfig
  * @property {boolean} [trace-correlation]
+ */
+
+/**
+ * @typedef {Object} OtlpConfig
+ * @property {boolean} [enabled]
+ * @property {number} [port]
  */
 
 /**
@@ -128,6 +135,7 @@ function applyAgentConfiguration(agentResponse) {
   applySecretsConfiguration(agentResponse);
   applyExtraHttpHeaderConfiguration(agentResponse);
   applyKafkaTracingConfiguration(agentResponse);
+  applyOtlpExporterConfiguration(agentResponse);
   applySpanBatchingConfiguration(agentResponse);
   applyIgnoreEndpointsConfiguration(agentResponse);
   applyStackTraceConfiguration(agentResponse);
@@ -206,6 +214,23 @@ function applyKafkaTracingConfiguration(agentResponse) {
   }
   // There is no fallback because there is are no legacy agent response attributes for the Kafka tracing config, those
   // were only introduced with the Node.js discovery version 1.2.18.
+}
+
+/**
+ * @param {AgentAnnounceResponse} agentResponse
+ */
+function applyOtlpExporterConfiguration(agentResponse) {
+  if (agentResponse.tracing && agentResponse.tracing.otlp) {
+    const otlpConfigFromAgent = /** @type {Record<string, any>} */ (agentResponse.tracing.otlp);
+    ensureNestedObjectExists(agentOpts.config, ['tracing', 'otlp']);
+
+    Object.keys(otlpConfigFromAgent).forEach(key => {
+      const value = otlpConfigFromAgent[key];
+      if (value != null) {
+        /** @type {Record<string, any>} */ (agentOpts.config.tracing.otlp)[key] = value;
+      }
+    });
+  }
 }
 
 /**

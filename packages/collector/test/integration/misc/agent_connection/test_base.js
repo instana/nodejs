@@ -62,7 +62,7 @@ module.exports = function () {
   const agentOpts = require('@_local/collector/src/agent/opts');
   const originalPort = agentOpts.port;
 
-  const config = { logger: testUtils.createFakeLogger() };
+  const config = { logger: testUtils.createFakeLogger(), tracing: { otlp: { enabled: false } } };
   const pidStore = require('@_local/collector/src/pidStore');
   let agentConnection;
 

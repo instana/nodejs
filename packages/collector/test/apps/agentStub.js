@@ -46,6 +46,7 @@ const kafkaTraceCorrelation = process.env.KAFKA_TRACE_CORRELATION
 const ignoreEndpoints = process.env.IGNORE_ENDPOINTS && JSON.parse(process.env.IGNORE_ENDPOINTS);
 const disable = process.env.AGENT_DISABLE_TRACING && JSON.parse(process.env.AGENT_DISABLE_TRACING);
 const stackTraceConfig = process.env.STACK_TRACE_CONFIG && JSON.parse(process.env.STACK_TRACE_CONFIG);
+const otlpExporter = process.env.OTLP_EXPORTER && JSON.parse(process.env.OTLP_EXPORTER);
 
 const uuids = {};
 const agentLogs = [];
@@ -124,7 +125,8 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
     enableSpanBatching ||
     ignoreEndpoints ||
     disable ||
-    stackTraceConfig
+    stackTraceConfig ||
+    otlpExporter
   ) {
     response.tracing = {};
 
@@ -151,6 +153,9 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
     if (stackTraceConfig) {
       response.tracing.global = response.tracing.global || {};
       deepMerge(response.tracing.global, stackTraceConfig);
+    }
+    if (otlpExporter) {
+      response.tracing.otlp = otlpExporter;
     }
   }
 
@@ -406,6 +411,29 @@ app
     logger.error('Agent stub failed to start on port %s: %s', port, err.message);
     process.exit(1);
   });
+
+app.post('/v1/traces', function handleOtlpTraces(req, res) {
+  if (rejectTraces) {
+    return res.sendStatus(400);
+  }
+  if (!dropAllData) {
+    receivedData.traces.push({
+      time: Date.now(),
+      data: req.body
+    });
+  }
+  res.send('OK');
+});
+
+app.post('/v1/metrics', function handleOtlpMetrics(req, res) {
+  if (!dropAllData) {
+    receivedData.metrics.push({
+      time: Date.now(),
+      data: req.body
+    });
+  }
+  res.send('OK');
+});
 
 function aggregateMetrics(entityId, snapshotUpdate) {
   if (!receivedData.aggregatedMetrics[entityId]) {

@@ -1,0 +1,53 @@
+{
+  "activeResources": {
+    "count": 3
+  },
+  "dependencies": {
+    "abc": "1.3.8"
+  },
+  "directDependencies": {
+    "dependencies": {
+      "xyz": "5.0.0"
+    },
+    "otel-exporter-test": "1.0.0"
+  },
+  "description": "Sample app for testing OpenTelemetry exporter with Instana (HTTP, PostgreSQL, Kafka)",
+  "heapSpaces": {
+    "new_space": {
+      "available": 6153600,
+      "used": 10622592,
+      "physical": 27901952
+    },
+    "old_space": {
+      "current": 16859136,
+      "available": 522192,
+      "used": 16309064,
+      "physical": 17039360
+    },
+    "code_space": {
+      "current": 1572864,
+      "available": 345536,
+      "used": 1227136,
+      "physical": 1572864
+    },
+    "trusted_space": {
+      "available": 370768,
+      "used": 2659888
+    }
+  },
+  "keywords": ["opentelemetry", "instana", "tracing"],
+  "libuv": {
+    "max": 496,
+    "num": 241,
+    "sum": 1003
+  },
+  "memory": {
+    "rss": 116752384,
+    "heapTotal": 58900480,
+    "heapUsed": 34640048,
+    "external": 4548842,
+    "arrayBuffers": 1731836
+  },
+  "name": "otel-exporter-test",
+  "version": "1.0.0"
+}

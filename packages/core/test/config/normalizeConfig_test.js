@@ -45,6 +45,7 @@ describe('config.normalizeConfig', () => {
     delete process.env.INSTANA_IGNORE_ENDPOINTS;
     delete process.env.INSTANA_IGNORE_ENDPOINTS_PATH;
     delete process.env.INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION;
+    delete process.env.INSTANA_TRACING_OTLP_ENABLED;
   }
 
   describe('default configuration', () => {
@@ -1529,6 +1530,293 @@ describe('config.normalizeConfig', () => {
       });
     });
 
+    describe('OTLP exporter configuration', () => {
+      it('should use default OTLP configuration when neither env nor config is set', () => {
+        const config = coreConfig.normalize({});
+        expect(config.tracing.otlp).to.deep.equal({
+          enabled: false,
+          port: 4318,
+          semConvVersion: '1.23'
+        });
+      });
+
+      it('should enable OTLP exporter via config', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              otlp: {
+                enabled: true,
+                port: 7908
+              }
+            }
+          }
+        });
+        expect(config.tracing.otlp).to.deep.equal({
+          enabled: true,
+          port: 4318,
+          semConvVersion: '1.23'
+        });
+      });
+
+      it('should disable OTLP exporter via config', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              otlp: {
+                enabled: false
+              }
+            }
+          }
+        });
+        expect(config.tracing.otlp).to.deep.equal({
+          enabled: false,
+          port: 4318,
+          semConvVersion: '1.23'
+        });
+      });
+
+      it('should normalize string true from config', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              otlp: {
+                enabled: 'true'
+              }
+            }
+          }
+        });
+        expect(config.tracing.otlp).to.deep.equal({
+          enabled: true,
+          port: 4318,
+          semConvVersion: '1.23'
+        });
+      });
+
+      it('should normalize string false from config', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              otlp: {
+                enabled: 'false'
+              }
+            }
+          }
+        });
+        expect(config.tracing.otlp).to.deep.equal({
+          enabled: false,
+          port: 4318,
+          semConvVersion: '1.23'
+        });
+      });
+
+      it('should normalize numeric string 1 from config', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              otlp: {
+                enabled: '1'
+              }
+            }
+          }
+        });
+        expect(config.tracing.otlp).to.deep.equal({
+          enabled: true,
+          port: 4318,
+          semConvVersion: '1.23'
+        });
+      });
+
+      it('should normalize numeric string 0 from config', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              otlp: {
+                enabled: '0'
+              }
+            }
+          }
+        });
+        expect(config.tracing.otlp).to.deep.equal({
+          enabled: false,
+          port: 4318,
+          semConvVersion: '1.23'
+        });
+      });
+
+      it('should give precedence to INSTANA_TRACING_OTLP_ENABLED env var set to true over config set to false', () => {
+        process.env.INSTANA_TRACING_OTLP_ENABLED = 'true';
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              otlp: {
+                enabled: false
+              }
+            }
+          }
+        });
+        expect(config.tracing.otlp).to.deep.equal({
+          enabled: true,
+          port: 4318,
+          semConvVersion: '1.23'
+        });
+      });
+
+      it('should give precedence to INSTANA_TRACING_OTLP_ENABLED env var set to false over config set to true', () => {
+        process.env.INSTANA_TRACING_OTLP_ENABLED = 'false';
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              otlp: {
+                enabled: true
+              }
+            }
+          }
+        });
+        expect(config.tracing.otlp).to.deep.equal({
+          enabled: false,
+          port: 4318,
+          semConvVersion: '1.23'
+        });
+      });
+
+      it('should normalize string 1 from env var', () => {
+        process.env.INSTANA_TRACING_OTLP_ENABLED = '1';
+        const config = coreConfig.normalize();
+        expect(config.tracing.otlp).to.deep.equal({
+          enabled: true,
+          port: 4318,
+          semConvVersion: '1.23'
+        });
+      });
+
+      it('should normalize string 0 from env var', () => {
+        process.env.INSTANA_TRACING_OTLP_ENABLED = '0';
+        const config = coreConfig.normalize();
+        expect(config.tracing.otlp).to.deep.equal({
+          enabled: false,
+          port: 4318,
+          semConvVersion: '1.23'
+        });
+      });
+
+      it('should fall back to config when INSTANA_TRACING_OTLP_ENABLED is invalid', () => {
+        process.env.INSTANA_TRACING_OTLP_ENABLED = 'invalid';
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              otlp: {
+                enabled: true
+              }
+            }
+          }
+        });
+        expect(config.tracing.otlp).to.deep.equal({
+          enabled: true,
+          port: 4318,
+          semConvVersion: '1.23'
+        });
+      });
+
+      it('should fall back to default when both env and config are invalid', () => {
+        process.env.INSTANA_TRACING_OTLP_ENABLED = 'invalid';
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              otlp: {
+                enabled: 'invalid'
+              }
+            }
+          }
+        });
+        expect(config.tracing.otlp).to.deep.equal({
+          enabled: false,
+          port: 4318,
+          semConvVersion: '1.23'
+        });
+      });
+
+      it('should use default when config tracing.otlp is undefined', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              otlp: undefined
+            }
+          }
+        });
+        expect(config.tracing.otlp).to.deep.equal({
+          enabled: false,
+          port: 4318,
+          semConvVersion: '1.23'
+        });
+      });
+
+      it('should use default when config tracing.otlp is null', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              otlp: null
+            }
+          }
+        });
+        expect(config.tracing.otlp).to.deep.equal({
+          enabled: false,
+          port: 4318,
+          semConvVersion: '1.23'
+        });
+      });
+
+      it('should use default when config tracing.otlp.enabled is undefined', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              otlp: {
+                enabled: undefined
+              }
+            }
+          }
+        });
+        expect(config.tracing.otlp).to.deep.equal({
+          enabled: false,
+          port: 4318,
+          semConvVersion: '1.23'
+        });
+      });
+
+      it('should use default when config tracing.otlp.enabled is null', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              otlp: {
+                enabled: null
+              }
+            }
+          }
+        });
+        expect(config.tracing.otlp).to.deep.equal({
+          enabled: false,
+          port: 4318,
+          semConvVersion: '1.23'
+        });
+      });
+
+      it('should ignore unsupported object values for config tracing.otlp.enabled', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              otlp: {
+                enabled: {}
+              }
+            }
+          }
+        });
+        expect(config.tracing.otlp).to.deep.equal({
+          enabled: false,
+          port: 4318,
+          semConvVersion: '1.23'
+        });
+      });
+    });
+
     describe('preloadOpentelemetry', () => {
       it('preloadOpentelemetry should default to false', () => {
         const config = coreConfig.normalize({});
@@ -2125,6 +2413,11 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.useOpentelemetry).to.equal(true);
     expect(config.tracing.allowRootExitSpan).to.equal(false);
 
+    expect(config.tracing.otlp).to.deep.equal({
+      enabled: false,
+      port: 4318,
+      semConvVersion: '1.23'
+    });
     expect(config.preloadOpentelemetry).to.equal(false);
 
     expect(config.secrets).to.be.an('object');
