@@ -284,7 +284,7 @@ const instrumentationMappings = {
       { otlp: OTLP.rpc.SYSTEM_NAME, value: 'aws-api' },
       { otlp: OTLP.database.OPERATION_NAME, instana: 'operation' },
       { otlp: OTLP.cloud.REGION, instana: 'region' },
-      { otlp: OTLP.database.AWS_DYNAMODB_TABLE_NAMES, instana: 'table' },
+      { otlp: OTLP.database.dynamodb.COLLECTION_NAME, instana: 'table' },
       { otlp: OTLP.error.TYPE, instana: 'error' }
     ]
   },

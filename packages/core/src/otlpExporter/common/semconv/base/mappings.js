@@ -36,7 +36,6 @@ const MAPPINGS = {
     ROUTE: 'http.route',
     STATUS_TEXT: 'http.status_text',
     URL_TEMPLATE: 'http.url.template',
-    NETWORK_PROTOCOL: 'network.protocol.name',
     REQUEST_HEADER: 'http.request.header',
     RESPONSE_HEADER: 'http.response.header'
   },
@@ -46,11 +45,8 @@ const MAPPINGS = {
     BATCH_MESSAGE_COUNT: 'messaging.batch.message_count',
     MESSAGE_ID: 'messaging.message.id',
     MESSAGE_BODY_SIZE: 'messaging.message.body.size',
-    DESTINATION_NAME: 'messaging.destination.name',
-    DESTINATION_TEMPLATE: 'messaging.destination.template',
     DESTINATION_PARTITION_ID: 'messaging.destination.partition.id',
     kafka: {
-
       MESSAGE_KEY: 'messaging.kafka.message.key'
     },
     rabbitmq: {
@@ -60,8 +56,9 @@ const MAPPINGS = {
 
   database: {
     COLLECTION_NAME: 'db.collection.name',
-    TABLE: 'db.sql.table',
-    AWS_DYNAMODB_TABLE_NAMES: 'aws.dynamodb.table_names'
+    dynamodb: {
+      COLLECTION_NAME: 'aws.dynamodb.table_names'
+    }
   },
 
   rpc: {
