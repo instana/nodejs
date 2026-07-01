@@ -179,7 +179,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.PG]: {
-    spanName: data => data.stmt,
+    spanName: data => `pg.${data.stmt?.split(/\s+/)[0]?.toUpperCase()}`,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM_NAME, value: 'postgresql' },
       { otlp: OTLP.database.QUERY_TEXT, instana: 'stmt' },
@@ -192,7 +192,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.MYSQL]: {
-    spanName: data => data.stmt,
+    spanName: data => `mysql.${data.stmt?.split(/\s+/)[0]?.toUpperCase()}`,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM_NAME, value: INSTRUMENTATION_TYPES.MYSQL },
       { otlp: OTLP.database.QUERY_TEXT, instana: 'stmt' },
@@ -205,7 +205,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.MSSQL]: {
-    spanName: data => data.stmt,
+    spanName: data => `mssql.${data.stmt?.split(/\s+/)[0]?.toUpperCase()}`,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM_NAME, value: INSTRUMENTATION_TYPES.MSSQL },
       { otlp: OTLP.database.QUERY_TEXT, instana: 'stmt' },
@@ -218,7 +218,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.DB2]: {
-    spanName: data => data.stmt,
+    spanName: data => `db2.${data.stmt?.split(/\s+/)[0]?.toUpperCase()}`,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM_NAME, value: 'ibm.db2' },
       { otlp: OTLP.database.QUERY_TEXT, instana: 'stmt' },
@@ -227,7 +227,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.MONGO]: {
-    spanName: data => data.command,
+    spanName: data => `mongodb.${data.command}`,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM_NAME, value: 'mongodb' },
       { otlp: OTLP.database.NAMESPACE, instana: 'namespace' },
@@ -241,7 +241,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.REDIS]: {
-    spanName: data => data.operation,
+    spanName: data => `redis.${data.operation}`,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM_NAME, value: INSTRUMENTATION_TYPES.REDIS },
       { otlp: OTLP.database.OPERATION_NAME, instana: 'operation' },
@@ -253,7 +253,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.COUCHBASE]: {
-    spanName: data => data.bucket,
+    spanName: data => `couchbase.${data.stmt?.split(/\s+/)[0]?.toUpperCase()}`,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM_NAME, value: [INSTRUMENTATION_TYPES.COUCHBASE] },
       { otlp: OTLP.database.NAMESPACE, instana: 'bucket' },
@@ -263,7 +263,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.ELASTICSEARCH]: {
-    spanName: data => data.action,
+    spanName: data => `elasticsearch.${data.action}`,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM_NAME, value: INSTRUMENTATION_TYPES.ELASTICSEARCH },
       { otlp: OTLP.database.OPERATION_NAME, instana: 'action' },
@@ -278,7 +278,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.DYNAMODB]: {
-    spanName: data => data.operation,
+    spanName: data => `dynamodb.${data.operation}`,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM_NAME, value: 'aws.dynamodb' },
       { otlp: OTLP.rpc.SYSTEM_NAME, value: 'aws-api' },
@@ -290,7 +290,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.MEMCACHED]: {
-    spanName: data => data.operation,
+    spanName: data => `memcached.${data.operation}`,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM_NAME, value: INSTRUMENTATION_TYPES.MEMCACHED },
       { otlp: OTLP.database.CONNECTION_STRING, instana: 'connection' },
@@ -303,7 +303,7 @@ const instrumentationMappings = {
   // Note: There is no official OpenTelemetry semantic convention for Prisma, and it is not covered in our RFD either.
   // We can therefore adopt a generic database convention, using the Prisma provider as the database system identifier.
   [INSTRUMENTATION_TYPES.PRISMA]: {
-    spanName: data => data.action,
+    spanName: data => `prisma.${data.action}`,
     spanAttributes: [
       { otlp: OTLP.database.SYSTEM_NAME, instana: 'provider' },
       { otlp: OTLP.database.COLLECTION_NAME, instana: 'model' },

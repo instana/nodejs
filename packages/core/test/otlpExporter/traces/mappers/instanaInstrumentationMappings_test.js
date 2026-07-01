@@ -85,7 +85,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       };
 
       const result = spanName(span);
-      expect(result).to.equal('SELECT * FROM users WHERE id = $1');
+      expect(result).to.equal('pg.SELECT');
     });
 
     it('should generate MySQL span name from statement', () => {
@@ -99,7 +99,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       };
 
       const result = spanName(span);
-      expect(result).to.equal('INSERT INTO users (name, email) VALUES (?, ?)');
+      expect(result).to.equal('mysql.INSERT');
     });
 
     it('should generate MongoDB span name', () => {
@@ -113,7 +113,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       };
 
       const result = spanName(span);
-      expect(result).to.equal('find');
+      expect(result).to.equal('mongodb.find');
     });
 
     it('should generate Redis span name', () => {
@@ -127,7 +127,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       };
 
       const result = spanName(span);
-      expect(result).to.equal('get');
+      expect(result).to.equal('redis.get');
     });
 
     it('should generate DynamoDB span name', () => {
@@ -141,7 +141,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       };
 
       const result = spanName(span);
-      expect(result).to.equal('GetItem');
+      expect(result).to.equal('dynamodb.GetItem');
     });
 
     it('should generate S3 span name', () => {
@@ -155,7 +155,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       };
 
       const result = spanName(span);
-      expect(result).to.equal('s3.putObject');
+      expect(result).to.equal('S3.putObject');
     });
 
     it('should generate Lambda entry span name from functionName', () => {
