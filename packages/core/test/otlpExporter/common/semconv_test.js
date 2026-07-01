@@ -270,8 +270,8 @@ describe('otlpExporter/common/semconv', () => {
             expect(config123.database).to.be.an('object');
             expect(config141.database).to.be.an('object');
 
-            expect(config123.database).to.have.property('SYSTEM');
-            expect(config141.database).to.have.property('SYSTEM');
+            expect(config123.database).to.have.property('SYSTEM_NAME');
+            expect(config141.database).to.have.property('SYSTEM_NAME');
           });
 
           it('should have messaging semantic conventions in both versions', () => {

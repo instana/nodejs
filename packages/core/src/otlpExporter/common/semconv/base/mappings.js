@@ -36,49 +36,34 @@ const MAPPINGS = {
     ROUTE: 'http.route',
     STATUS_TEXT: 'http.status_text',
     URL_TEMPLATE: 'http.url.template',
-    NETWORK_PROTOCOL: 'network.protocol.name',
     REQUEST_HEADER: 'http.request.header',
     RESPONSE_HEADER: 'http.response.header'
   },
 
   messaging: {
     SYSTEM: 'messaging.system',
-    OPERATION_TYPE: 'messaging.operation.type',
-    OPERATION_NAME: 'messaging.operation.name',
-    CONSUMER_GROUP: 'messaging.consumer.group.name',
+    BATCH_MESSAGE_COUNT: 'messaging.batch.message_count',
     MESSAGE_ID: 'messaging.message.id',
     MESSAGE_BODY_SIZE: 'messaging.message.body.size',
-    DESTINATION_NAME: 'messaging.destination.name',
-    DESTINATION_TEMPLATE: 'messaging.destination.template',
     DESTINATION_PARTITION_ID: 'messaging.destination.partition.id',
     kafka: {
-      OFFSET: 'messaging.kafka.message.offset',
       MESSAGE_KEY: 'messaging.kafka.message.key'
     },
     rabbitmq: {
-      ROUTING_KEY: 'messaging.rabbitmq.destination.routing_key',
-      MESSAGE_ROUTING_KEY: 'messaging.rabbitmq.message.routing_key'
-    },
-    gcp: { PROJECT_ID: 'gcp.project_id' }
+      ROUTING_KEY: 'messaging.rabbitmq.destination.routing_key'
+    }
   },
 
   database: {
-    OPERATION: 'db.operation.name',
-    NAMESPACE: 'db.namespace',
-    QUERY_TEXT: 'db.query.text',
-    NAME: 'db.name',
-    USER: 'db.user',
-    COLLECTION: 'db.collection.name',
-    TABLE: 'db.sql.table',
-    CONNECTION: 'db.connection'
+    COLLECTION_NAME: 'db.collection.name',
+    dynamodb: {
+      COLLECTION_NAME: 'aws.dynamodb.table_names'
+    }
   },
 
   rpc: {
-    SYSTEM: 'rpc.system',
-    SYSTEM_NAME: 'rpc.system.name',
     METHOD: 'rpc.method',
     METHOD_ORIGINAL: 'rpc.method_original',
-    SERVICE: 'rpc.service',
     GRPC_STATUS: 'rpc.grpc.status_code',
     GRPC_ERROR: 'rpc.grpc.status_message'
   },
@@ -97,36 +82,29 @@ const MAPPINGS = {
   cloud: {
     REGION: 'cloud.region',
     PROVIDER: 'cloud.provider',
+    PLATFORM: 'cloud.platform',
     ACCOUNT_ID: 'cloud.account.id',
+    RESOURCE_ID: 'cloud.resource_id',
     gcp: {
-      PROJECT_ID: 'gcp.project_id',
-      STORAGE_BUCKET: 'gcp.storage.bucket',
-      STORAGE_OBJECT: 'gcp.storage.object',
-      STORAGE_SOURCE_BUCKET: 'gcp.storage.source.bucket',
-      STORAGE_DESTINATION_BUCKET: 'gcp.storage.destination.bucket',
-      STORAGE_SOURCE_OBJECT: 'gcp.storage.source.object',
-      STORAGE_DESTINATION_OBJECT: 'gcp.storage.destination.object'
+      PROJECT_ID: 'gcp.project_id'
     },
     aws: {
       S3_BUCKET: 'aws.s3.bucket',
-      S3_KEY: 'aws.s3.key',
-      KINESIS_STREAM: 'aws.kinesis.stream_name',
-      KINESIS_SHARD: 'aws.kinesis.shard_id',
-      KINESIS_SHARD_ITERATOR_TYPE: 'aws.kinesis.shard_iterator_type',
-      KINESIS_STARTING_SEQUENCE_NUMBER: 'aws.kinesis.starting_sequence_number',
-      KINESIS_EXPLICIT_HASH_KEY: 'aws.kinesis.explicit_hash_key'
-    },
-    azure: {
-      STORAGE_ACCOUNT: 'az.storage.account.name',
-      CONTAINER: 'az.storage.container.name',
-      BLOB: 'az.storage.blob.name'
+      S3_KEY: 'aws.s3.key'
     }
   },
 
   faas: {
     NAME: 'faas.name',
+    VERSION: 'faas.version',
+    INVOCATION_ID: 'faas.invocation_id',
     INVOCATION_TYPE: 'faas.invocation_type',
-    TRIGGER: 'faas.trigger'
+    TRIGGER: 'faas.trigger',
+    COLDSTART: 'faas.coldstart'
+  },
+
+  process: {
+    RUNTIME_NAME: 'process.runtime.name'
   },
 
   exception: {

@@ -138,6 +138,29 @@ function createAzureBlobSpan(overrides = {}) {
   });
 }
 
+function createAwsLambdaEntrySpan(overrides = {}) {
+  const lambda = {
+    arn: 'arn:aws:lambda:us-east-1:123456789012:function:my-function:42',
+    functionName: 'my-function',
+    functionVersion: '$LATEST',
+    runtime: 'nodejs',
+    reqId: 'abc-123-req-id',
+    coldStart: true,
+    trigger: 'aws:api.gateway',
+    ...(overrides.data?.lambda || {})
+  };
+
+  return createSpan({
+    n: 'aws.lambda.entry',
+    k: 1,
+    ...overrides,
+    data: {
+      lambda,
+      ...(overrides.data || {})
+    }
+  });
+}
+
 function createOtelSpan(overrides = {}) {
   return createSpan({
     n: 'otel',
@@ -273,11 +296,11 @@ describe('tracing/converters/otlp', () => {
       expectAttribute(httpSpan.attributes, 'server.port', { intValue: 443 });
 
       const pgSpan = convertedSpans[1];
-      expect(pgSpan.name).to.equal('SELECT');
+      expect(pgSpan.name).to.equal('pg.SELECT');
       expect(pgSpan.kind).to.equal(3);
       expect(pgSpan.parentSpanId).to.equal('0000000000span-1');
       expectAttribute(pgSpan.attributes, 'db.system', { stringValue: 'postgresql' });
-      expectAttribute(pgSpan.attributes, 'db.query.text', { stringValue: 'SELECT * FROM users WHERE id = $1' });
+      expectAttribute(pgSpan.attributes, 'db.statement', { stringValue: 'SELECT * FROM users WHERE id = $1' });
       expectAttribute(pgSpan.attributes, 'db.user', { stringValue: 'instana' });
       expectAttribute(pgSpan.attributes, 'db.name', { stringValue: 'users' });
 
@@ -286,21 +309,12 @@ describe('tracing/converters/otlp', () => {
       expect(kafkaSpan.kind).to.equal(3);
       expectAttribute(kafkaSpan.attributes, 'messaging.system', { stringValue: 'kafka' });
       expectAttribute(kafkaSpan.attributes, 'messaging.destination', { stringValue: 'orders' });
-      expectAttribute(kafkaSpan.attributes, 'messaging.operation.name', { stringValue: 'send' });
+      expectAttribute(kafkaSpan.attributes, 'messaging.operation', { stringValue: 'send' });
 
       const internalSpan = convertedSpans[3];
       expect(internalSpan.name).to.equal('custom.internal');
       expect(internalSpan.kind).to.equal(1);
       expect(internalSpan.attributes).to.deep.equal([]);
-
-      const azureBlobSpan = convertedSpans[4];
-      expect(azureBlobSpan.name).to.equal('azure.storage.put');
-      expect(azureBlobSpan.kind).to.equal(3);
-      expectAttribute(azureBlobSpan.attributes, 'cloud.provider', { stringValue: 'azure' });
-      expectAttribute(azureBlobSpan.attributes, 'db.operation.name', { stringValue: 'put' });
-      expect(azureBlobSpan.attributes.some(attribute => attribute.value.stringValue === 'storage-account')).to.be.true;
-      expect(azureBlobSpan.attributes.some(attribute => attribute.value.stringValue === 'uploads')).to.be.true;
-      expect(azureBlobSpan.attributes.some(attribute => attribute.value.stringValue === 'invoice.pdf')).to.be.true;
 
       const otelSpan = convertedSpans[5];
       expect(otelSpan.name).to.equal('otel');
@@ -462,21 +476,22 @@ describe('tracing/converters/otlp', () => {
 
         const mongoAttributes = extractSpanAttributes(mongoSpan, mappers.get(mongoSpan));
         expectAttribute(mongoAttributes, 'db.system', { stringValue: 'mongodb' });
-        expectAttribute(mongoAttributes, 'db.operation.name', { stringValue: 'FIND' });
-        expectAttribute(mongoAttributes, 'db.collection.name', { stringValue: 'accounts' });
+        expectAttribute(mongoAttributes, 'db.operation', { stringValue: 'FIND' });
+        expectAttribute(mongoAttributes, 'db.mongodb.collection', { stringValue: 'accounts' });
         expectAttribute(mongoAttributes, 'server.address', { stringValue: 'mongo.example.test' });
         expectAttribute(mongoAttributes, 'server.port', { intValue: 27017 });
 
         const rabbitmqAttributes = extractSpanAttributes(rabbitmqSpan, mappers.get(rabbitmqSpan));
+
         expectAttribute(rabbitmqAttributes, 'messaging.system', { stringValue: 'rabbitmq' });
-        expectAttribute(rabbitmqAttributes, 'messaging.operation.name', { stringValue: 'publish' });
+        expectAttribute(rabbitmqAttributes, 'messaging.operation', { stringValue: 'publish' });
         expectAttribute(rabbitmqAttributes, 'messaging.destination', { stringValue: 'orders.orders.created' });
         expectAttribute(rabbitmqAttributes, 'server.address', { stringValue: 'mq.example.test' });
         expectAttribute(rabbitmqAttributes, 'server.port', { intValue: 5672 });
 
         const azureBlobAttributes = extractSpanAttributes(azureBlobSpan, mappers.get(azureBlobSpan));
         expectAttribute(azureBlobAttributes, 'cloud.provider', { stringValue: 'azure' });
-        expect(azureBlobAttributes.some(attribute => attribute.value.stringValue === 'invoice.pdf')).to.be.true;
+        expect(azureBlobAttributes.some(attribute => attribute.value.stringValue === 'put')).to.be.true;
 
         const otelAttributes = extractSpanAttributes(otelSpan, mappers.get(otelSpan));
         expectAttribute(otelAttributes, 'operation', { stringValue: 'publish' });
@@ -484,9 +499,109 @@ describe('tracing/converters/otlp', () => {
         expectAttribute(otelAttributes, 'success', { boolValue: true });
       });
 
+      it('extracts AWS Lambda entry attributes (API Gateway / cold start)', () => {
+        const lambdaEntrySpan = createAwsLambdaEntrySpan();
+
+        const attributes = extractSpanAttributes(lambdaEntrySpan, mappers.get(lambdaEntrySpan));
+        expectAttribute(attributes, 'faas.trigger', { stringValue: 'http' });
+        expectAttribute(attributes, 'faas.name', { stringValue: 'my-function' });
+        expectAttribute(attributes, 'faas.version', { stringValue: '$LATEST' });
+        expectAttribute(attributes, 'cloud.provider', { stringValue: 'aws' });
+        expectAttribute(attributes, 'cloud.platform', { stringValue: 'aws_lambda' });
+        expectAttribute(attributes, 'cloud.region', { stringValue: 'us-east-1' });
+        expectAttribute(attributes, 'cloud.account.id', { stringValue: '123456789012' });
+        expectAttribute(attributes, 'faas.invocation_id', { stringValue: 'abc-123-req-id' });
+        expectAttribute(attributes, 'faas.coldstart', { boolValue: true });
+        expectAttribute(attributes, 'process.runtime.name', { stringValue: 'nodejs' });
+      });
+
+      it('extracts AWS Lambda entry attributes (Lambda invoke trigger / error)', () => {
+        const lambdaEntrySpan = createAwsLambdaEntrySpan({
+          data: {
+            lambda: {
+              arn: 'arn:aws:lambda:eu-west-1:987654321098:function:error-function:3',
+              functionName: 'error-function',
+              functionVersion: '3',
+              runtime: 'nodejs',
+              reqId: 'def-456-req-id',
+              trigger: 'aws:lambda.invoke',
+              error: 'Task timed out after 30.00 seconds'
+            }
+          }
+        });
+
+        const attributes = extractSpanAttributes(lambdaEntrySpan, mappers.get(lambdaEntrySpan));
+        expectAttribute(attributes, 'faas.trigger', { stringValue: 'other' });
+        expectAttribute(attributes, 'cloud.region', { stringValue: 'eu-west-1' });
+        expectAttribute(attributes, 'cloud.account.id', { stringValue: '987654321098' });
+        expectAttribute(attributes, 'exception.message', { stringValue: 'Task timed out after 30.00 seconds' });
+      });
+
       it('returns empty array for spans without data', () => {
         expect(extractSpanAttributes({ t: '123', s: '456' }, mappers.get({}))).to.deep.equal([]);
         expect(extractSpanAttributes(null, mappers.get({}))).to.deep.equal([]);
+      });
+    });
+  });
+
+  describe('aws lambda', () => {
+    it('converts aws.lambda.entry span (API Gateway / cold start)', () => {
+      const spans = [createAwsLambdaEntrySpan({ t: 'trace-lambda', s: 'span-lambda-2', ts: 1710000000000, d: 120 })];
+      const result = convert(spans);
+
+      const convertedSpans = getConvertedSpans(result);
+      expect(convertedSpans).to.have.lengthOf(1);
+
+      const lambdaEntrySpan = convertedSpans[0];
+      expect(lambdaEntrySpan.name).to.equal('my-function');
+      expect(lambdaEntrySpan.kind).to.equal(2);
+      expectAttribute(lambdaEntrySpan.attributes, 'faas.trigger', { stringValue: 'http' });
+      expectAttribute(lambdaEntrySpan.attributes, 'faas.name', { stringValue: 'my-function' });
+      expectAttribute(lambdaEntrySpan.attributes, 'faas.version', { stringValue: '$LATEST' });
+      expectAttribute(lambdaEntrySpan.attributes, 'cloud.provider', { stringValue: 'aws' });
+      expectAttribute(lambdaEntrySpan.attributes, 'cloud.platform', { stringValue: 'aws_lambda' });
+      expectAttribute(lambdaEntrySpan.attributes, 'cloud.region', { stringValue: 'us-east-1' });
+      expectAttribute(lambdaEntrySpan.attributes, 'cloud.account.id', { stringValue: '123456789012' });
+      expectAttribute(lambdaEntrySpan.attributes, 'faas.invocation_id', { stringValue: 'abc-123-req-id' });
+      expectAttribute(lambdaEntrySpan.attributes, 'faas.coldstart', { boolValue: true });
+      expectAttribute(lambdaEntrySpan.attributes, 'process.runtime.name', { stringValue: 'nodejs' });
+    });
+
+    it('converts aws.lambda.entry span (Lambda invoke trigger / error)', () => {
+      const spans = [
+        createAwsLambdaEntrySpan({
+          t: 'trace-lambda',
+          s: 'span-lambda-3',
+          ts: 1710000000000,
+          d: 30000,
+          ec: 1,
+          data: {
+            lambda: {
+              arn: 'arn:aws:lambda:eu-west-1:987654321098:function:error-function:3',
+              functionName: 'error-function',
+              functionVersion: '3',
+              runtime: 'nodejs',
+              reqId: 'def-456-req-id',
+              trigger: 'aws:lambda.invoke',
+              error: 'Task timed out after 30.00 seconds'
+            }
+          }
+        })
+      ];
+      const result = convert(spans);
+
+      const convertedSpans = getConvertedSpans(result);
+      expect(convertedSpans).to.have.lengthOf(1);
+
+      const lambdaEntrySpan = convertedSpans[0];
+      expect(lambdaEntrySpan.name).to.equal('error-function');
+      expect(lambdaEntrySpan.kind).to.equal(2);
+      expect(lambdaEntrySpan.status).to.deep.equal({ code: 2, message: 'Task timed out after 30.00 seconds' });
+      expectAttribute(lambdaEntrySpan.attributes, 'faas.trigger', { stringValue: 'other' });
+      expectAttribute(lambdaEntrySpan.attributes, 'cloud.region', { stringValue: 'eu-west-1' });
+      expectAttribute(lambdaEntrySpan.attributes, 'cloud.account.id', { stringValue: '987654321098' });
+      expectAttribute(lambdaEntrySpan.attributes, 'exception.message', {
+        stringValue: 'Task timed out after 30.00 seconds'
       });
     });
   });

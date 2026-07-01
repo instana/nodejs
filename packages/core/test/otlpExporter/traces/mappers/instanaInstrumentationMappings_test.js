@@ -44,19 +44,19 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       expect(result).to.equal('POST /api/users/:id');
     });
 
-    it('should generate Kafka span name', () => {
+    it('should generate Kafka span name (kafkajs/rdkafka — operation + endpoints)', () => {
       const span = {
         n: 'kafka',
         data: {
           kafka: {
-            operation: 'publish',
+            operation: 'send',
             endpoints: 'my-topic'
           }
         }
       };
 
       const result = spanName(span);
-      expect(result).to.equal('publish my-topic');
+      expect(result).to.equal('send my-topic');
     });
 
     it('should generate RabbitMQ span name', () => {
@@ -85,7 +85,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       };
 
       const result = spanName(span);
-      expect(result).to.equal('SELECT');
+      expect(result).to.equal('pg.SELECT');
     });
 
     it('should generate MySQL span name from statement', () => {
@@ -99,7 +99,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       };
 
       const result = spanName(span);
-      expect(result).to.equal('INSERT');
+      expect(result).to.equal('mysql.INSERT');
     });
 
     it('should generate MongoDB span name', () => {
@@ -113,7 +113,7 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       };
 
       const result = spanName(span);
-      expect(result).to.equal('mongo.find');
+      expect(result).to.equal('mongodb.find');
     });
 
     it('should generate Redis span name', () => {
@@ -155,26 +155,28 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       };
 
       const result = spanName(span);
-      expect(result).to.equal('s3.putObject');
+      expect(result).to.equal('S3.putObject');
     });
 
-    it('should generate Lambda invoke span name', () => {
+    it('should generate Lambda entry span name from functionName', () => {
       const span = {
-        n: 'aws.lambda.invoke',
+        n: 'aws.lambda.entry',
         data: {
-          'aws.lambda.invoke': {
-            function: 'my-function'
+          lambda: {
+            functionName: 'my-handler',
+            trigger: 'aws:api.gateway'
           }
         }
       };
 
       const result = spanName(span);
-      expect(result).to.equal('Invoke my-function');
+      expect(result).to.equal('my-handler');
     });
 
-    it('should generate GraphQL span name with operation name', () => {
+    it('should generate graphql.server span name with operation type and name', () => {
       const span = {
-        n: 'graphql',
+        n: 'graphql.server',
+        k: 1,
         data: {
           graphql: {
             operationType: 'query',
@@ -184,12 +186,13 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       };
 
       const result = spanName(span);
-      expect(result).to.equal('query GetUser');
+      expect(result).to.equal('query');
     });
 
-    it('should generate GraphQL span name without operation name', () => {
+    it('should generate graphql.server span name with only operation type (no name)', () => {
       const span = {
-        n: 'graphql',
+        n: 'graphql.server',
+        k: 1,
         data: {
           graphql: {
             operationType: 'mutation'
@@ -199,6 +202,22 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
 
       const result = spanName(span);
       expect(result).to.equal('mutation');
+    });
+
+    it('should generate graphql.client span name for subscription-update', () => {
+      const span = {
+        n: 'graphql.client',
+        k: 2,
+        data: {
+          graphql: {
+            operationType: 'subscription-update',
+            operationName: 'OnCommentAdded'
+          }
+        }
+      };
+
+      const result = spanName(span);
+      expect(result).to.equal('subscription-update');
     });
 
     it('should fallback to span.n when no handler exists', () => {
@@ -224,6 +243,144 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
   });
 
   describe('spanAttributes', () => {
+    it('should map all AWS Lambda entry attributes (API Gateway / cold start)', () => {
+      const span = {
+        n: 'aws.lambda.entry',
+        data: {
+          lambda: {
+            arn: 'arn:aws:lambda:us-east-1:123456789012:function:my-function:42',
+            functionName: 'my-function',
+            functionVersion: '$LATEST',
+            runtime: 'nodejs',
+            reqId: 'abc-123-req-id',
+            coldStart: true,
+            trigger: 'aws:api.gateway'
+          }
+        }
+      };
+
+      const result = spanAttributes(span);
+
+      expect(result).to.be.an('array');
+
+      const getAttr = key => result.find(a => a.key === key);
+
+      expect(getAttr('faas.trigger').value).to.deep.equal({ stringValue: 'http' });
+      expect(getAttr('faas.name').value).to.deep.equal({ stringValue: 'my-function' });
+      expect(getAttr('faas.version').value).to.deep.equal({ stringValue: '$LATEST' });
+      expect(getAttr('cloud.provider').value).to.deep.equal({ stringValue: 'aws' });
+      expect(getAttr('cloud.platform').value).to.deep.equal({ stringValue: 'aws_lambda' });
+      expect(getAttr('cloud.region').value).to.deep.equal({ stringValue: 'us-east-1' });
+      expect(getAttr('cloud.account.id').value).to.deep.equal({ stringValue: '123456789012' });
+      expect(getAttr('cloud.resource_id').value).to.deep.equal({
+        stringValue: 'arn:aws:lambda:us-east-1:123456789012:function:my-function:42'
+      });
+      expect(getAttr('faas.invocation_id').value).to.deep.equal({ stringValue: 'abc-123-req-id' });
+      expect(getAttr('faas.coldstart').value).to.deep.equal({ boolValue: true });
+      expect(getAttr('process.runtime.name').value).to.deep.equal({ stringValue: 'nodejs' });
+      expect(getAttr('exception.message')).to.be.undefined;
+    });
+
+    it('should map all AWS Lambda entry attributes (Lambda invoke trigger / error)', () => {
+      const span = {
+        n: 'aws.lambda.entry',
+        data: {
+          lambda: {
+            arn: 'arn:aws:lambda:eu-west-1:987654321098:function:error-function:3',
+            functionName: 'error-function',
+            functionVersion: '3',
+            runtime: 'nodejs',
+            reqId: 'def-456-req-id',
+            trigger: 'aws:lambda.invoke',
+            error: 'Task timed out after 30.00 seconds'
+          }
+        }
+      };
+
+      const result = spanAttributes(span);
+
+      const getAttr = key => result.find(a => a.key === key);
+
+      expect(getAttr('faas.trigger').value).to.deep.equal({ stringValue: 'other' });
+      expect(getAttr('cloud.region').value).to.deep.equal({ stringValue: 'eu-west-1' });
+      expect(getAttr('cloud.account.id').value).to.deep.equal({ stringValue: '987654321098' });
+      expect(getAttr('faas.coldstart')).to.be.undefined;
+      expect(getAttr('exception.message').value).to.deep.equal({
+        stringValue: 'Task timed out after 30.00 seconds'
+      });
+    });
+
+    it('should map all Lambda trigger types to correct OTel faas.trigger values', () => {
+      const triggerMap = [
+        ['aws:api.gateway', 'http'],
+        ['aws:api.gateway.noproxy', 'http'],
+        ['aws:application.load.balancer', 'http'],
+        ['aws:lambda.function.url', 'http'],
+        ['aws:s3', 'datasource'],
+        ['aws:dynamodb', 'datasource'],
+        ['aws:kinesis', 'datasource'],
+        ['aws:sqs', 'pubsub'],
+        ['aws:sns', 'pubsub'],
+        ['aws:cloudwatch.events', 'timer'],
+        ['aws:lambda.invoke', 'other'],
+        ['aws:cloudwatch.logs', 'other']
+      ];
+
+      triggerMap.forEach(([instanaTrigger, expectedOtelTrigger]) => {
+        const span = {
+          n: 'aws.lambda.entry',
+          data: {
+            lambda: {
+              arn: 'arn:aws:lambda:us-east-1:123456789012:function:fn:1',
+              trigger: instanaTrigger
+            }
+          }
+        };
+
+        const result = spanAttributes(span);
+        const triggerAttr = result.find(a => a.key === 'faas.trigger');
+
+        expect(triggerAttr, `Missing faas.trigger for ${instanaTrigger}`).to.exist;
+        expect(triggerAttr.value.stringValue, `Wrong mapping for ${instanaTrigger}`).to.equal(expectedOtelTrigger);
+      });
+    });
+
+    it('should convert coldStart string "true" to boolean true', () => {
+      const span = {
+        n: 'aws.lambda.entry',
+        data: {
+          lambda: {
+            arn: 'arn:aws:lambda:us-east-1:123456789012:function:fn:1',
+            coldStart: 'true'
+          }
+        }
+      };
+
+      const result = spanAttributes(span);
+      const coldStartAttr = result.find(a => a.key === 'faas.coldstart');
+
+      expect(coldStartAttr).to.exist;
+      expect(coldStartAttr.value).to.deep.equal({ boolValue: true });
+    });
+
+    it('should convert coldStart string "false" to boolean false', () => {
+      const span = {
+        n: 'aws.lambda.entry',
+        data: {
+          lambda: {
+            arn: 'arn:aws:lambda:us-east-1:123456789012:function:fn:1',
+            coldStart: 'false'
+          }
+        }
+      };
+
+      const result = spanAttributes(span);
+      const coldStartAttr = result.find(a => a.key === 'faas.coldstart');
+
+      expect(coldStartAttr).to.exist;
+      expect(coldStartAttr.value).to.deep.equal({ boolValue: false });
+    });
+
     it('should extract HTTP attributes', () => {
       const span = {
         data: {
@@ -251,6 +408,94 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
         key: 'http.status_code',
         value: { intValue: 201 }
       });
+    });
+
+    it('should map graphql.server span attributes (query with operation name)', () => {
+      const span = {
+        n: 'graphql.server',
+        k: 1,
+        data: {
+          graphql: {
+            operationType: 'query',
+            operationName: 'GetUser',
+            document: 'query GetUser { user { id name } }'
+          }
+        }
+      };
+
+      const result = spanAttributes(span);
+      const getAttr = key => result.find(a => a.key === key);
+
+      expect(getAttr('graphql.operation.type').value).to.deep.equal({ stringValue: 'query' });
+      expect(getAttr('graphql.operation.name').value).to.deep.equal({ stringValue: 'GetUser' });
+      expect(getAttr('error.type')).to.be.undefined;
+    });
+
+    it('should map graphql.server span attributes with errors', () => {
+      const span = {
+        n: 'graphql.server',
+        k: 1,
+        ec: 1,
+        data: {
+          graphql: {
+            operationType: 'query',
+            operationName: 'GetUser',
+            errors: 'Cannot query field "bogus" on type "User"'
+          }
+        }
+      };
+
+      const result = spanAttributes(span);
+      const getAttr = key => result.find(a => a.key === key);
+
+      expect(getAttr('graphql.operation.type').value).to.deep.equal({ stringValue: 'query' });
+      expect(getAttr('graphql.operation.name').value).to.deep.equal({ stringValue: 'GetUser' });
+      expect(getAttr('error.type').value).to.deep.equal({
+        stringValue: 'Cannot query field "bogus" on type "User"'
+      });
+      expect(getAttr('graphql.document')).to.be.undefined;
+    });
+
+    it('should map graphql.server span attributes for mutation', () => {
+      const span = {
+        n: 'graphql.server',
+        k: 1,
+        data: {
+          graphql: {
+            operationType: 'mutation',
+            operationName: 'CreateUser'
+          }
+        }
+      };
+
+      const result = spanAttributes(span);
+      const getAttr = key => result.find(a => a.key === key);
+
+      expect(getAttr('graphql.operation.type').value).to.deep.equal({ stringValue: 'mutation' });
+      expect(getAttr('graphql.operation.name').value).to.deep.equal({ stringValue: 'CreateUser' });
+      expect(getAttr('graphql.document')).to.be.undefined;
+      expect(getAttr('error.type')).to.be.undefined;
+    });
+
+    it('should map graphql.client span attributes for subscription-update', () => {
+      const span = {
+        n: 'graphql.client',
+        k: 2,
+        data: {
+          graphql: {
+            operationType: 'subscription-update',
+            operationName: 'OnCommentAdded'
+          }
+        }
+      };
+
+      const result = spanAttributes(span);
+      const getAttr = key => result.find(a => a.key === key);
+
+      expect(getAttr('graphql.operation.type').value).to.deep.equal({ stringValue: 'subscription-update' });
+      expect(getAttr('graphql.operation.name').value).to.deep.equal({ stringValue: 'OnCommentAdded' });
+      expect(getAttr('graphql.document')).to.be.undefined;
+      expect(getAttr('error.type')).to.be.undefined;
     });
   });
 
