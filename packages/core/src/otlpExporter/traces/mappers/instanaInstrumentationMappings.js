@@ -338,7 +338,7 @@ const instrumentationMappings = {
   // Note: span attributes follow the OTel GraphQL semantic conventions:
   // https://opentelemetry.io/docs/specs/semconv/graphql/graphql-spans/
   [INSTRUMENTATION_TYPES.GRAPHQL]: {
-    spanName: data => `${data.operationType}`,
+    spanName: data => data.operationType,
     spanAttributes: [
       { otlp: OTLP.graphql.OPERATION_TYPE, instana: 'operationType' },
       { otlp: OTLP.graphql.OPERATION_NAME, instana: 'operationName' },
@@ -361,7 +361,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.S3]: {
-    spanName: data => `s3.${data.op}`,
+    spanName: data => `S3.${data.op}`,
     spanAttributes: [
       { otlp: OTLP.rpc.SYSTEM_NAME, value: 'aws-api' },
       { otlp: OTLP.rpc.METHOD, instana: 'op' },
@@ -374,7 +374,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.KINESIS]: {
-    spanName: data => `kinesis.${data.op}`,
+    spanName: data => `Kinesis.${data.op}`,
     spanAttributes: [
       { otlp: OTLP.messaging.SYSTEM, value: 'aws_kinesis' },
       { otlp: OTLP.messaging.OPERATION_NAME, instana: 'op' },
