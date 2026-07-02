@@ -74,4 +74,52 @@ describe('util.deepMerge', () => {
     const merged = deepMerge({ nested: { value: { deep: 'Ohai!' } } }, { nested: { value: null } });
     expect(merged.nested.value.deep).to.equal('Ohai!');
   });
+
+  describe('prototype pollution prevention', () => {
+    afterEach(() => {
+      // Clean up any accidental pollution that might survive a test failure
+      delete Object.prototype.polluted;
+    });
+
+    it('ignores __proto__ key and does not pollute Object.prototype', () => {
+      const payload = JSON.parse('{"__proto__":{"polluted":"pwn"}}');
+      deepMerge({}, payload);
+      expect(Object.prototype.polluted).to.be.undefined;
+      expect({}.polluted).to.be.undefined;
+    });
+
+    it('ignores _proto_ key used via JSON parse trick and does not pollute Object.prototype', () => {
+      // JSON.parse turns the string key "__proto__" into the actual __proto__ accessor;
+      // some environments represent it differently – guard both spellings via the source object directly.
+      const source = Object.create(null);
+      source['__proto__'] = { polluted: 'pwn' };
+      deepMerge({}, source);
+      expect(Object.prototype.polluted).to.be.undefined;
+      expect({}.polluted).to.be.undefined;
+    });
+
+    it('ignores constructor key and does not pollute Object.prototype', () => {
+      const source = { constructor: { prototype: { polluted: 'pwn' } } };
+      deepMerge({}, source);
+      expect(Object.prototype.polluted).to.be.undefined;
+      expect({}.polluted).to.be.undefined;
+    });
+
+    it('ignores prototype key', () => {
+      const source = { prototype: { polluted: 'pwn' } };
+      const target = {};
+      deepMerge(target, source);
+      expect(Object.prototype.polluted).to.be.undefined;
+      expect(target.prototype).to.be.undefined;
+    });
+
+    it('still merges legitimate keys alongside unsafe keys', () => {
+      const payload = JSON.parse('{"__proto__":{"polluted":"pwn"},"safe":"value"}');
+      const target = { existing: 1 };
+      const merged = deepMerge(target, payload);
+      expect(merged.existing).to.equal(1);
+      expect(merged.safe).to.equal('value');
+      expect(Object.prototype.polluted).to.be.undefined;
+    });
+  });
 });
