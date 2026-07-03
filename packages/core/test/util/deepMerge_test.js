@@ -77,7 +77,6 @@ describe('util.deepMerge', () => {
 
   describe('prototype pollution prevention', () => {
     afterEach(() => {
-      // Clean up any accidental pollution that might survive a test failure
       delete Object.prototype.polluted;
     });
 
