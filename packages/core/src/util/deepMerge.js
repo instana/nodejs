@@ -16,6 +16,8 @@
  * target being null or undefined) source may be returned.
  */
 
+const UNSAFE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
 /**
  * @param {*} target
  * @param {*} source
@@ -28,6 +30,9 @@ module.exports = function deepMerge(target, source) {
   if (isObject(target) && isObject(source)) {
     for (let i = 0; i < Object.keys(source).length; i++) {
       const key = Object.keys(source)[i];
+      if (isUnsafeKey(key)) {
+        continue;
+      }
       if (source[key] == null && target[key] != null) {
         // nothing to do, keep target[key] in place instead of overwriting it with null/undefined
       } else if (target[key] == null || !isObject(source[key]) || !isObject(target[key])) {
@@ -48,4 +53,12 @@ module.exports = function deepMerge(target, source) {
  */
 function isObject(value) {
   return value && typeof value === 'object' && !Array.isArray(value);
+}
+
+/**
+ * Returns true for keys that could be used to pollute Object.prototype.
+ * @param {string} key
+ */
+function isUnsafeKey(key) {
+  return UNSAFE_KEYS.has(key);
 }
