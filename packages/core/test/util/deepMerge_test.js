@@ -92,7 +92,8 @@ describe('util.deepMerge', () => {
       // JSON.parse turns the string key "__proto__" into the actual __proto__ accessor;
       // some environments represent it differently – guard both spellings via the source object directly.
       const source = Object.create(null);
-      source['__proto__'] = { polluted: 'pwn' };
+      // eslint-disable-next-line no-proto
+      source.__proto__ = { polluted: 'pwn' };
       deepMerge({}, source);
       expect(Object.prototype.polluted).to.be.undefined;
       expect({}.polluted).to.be.undefined;
