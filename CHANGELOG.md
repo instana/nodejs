@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [6.2.2](https://github.com/instana/nodejs/compare/v6.2.1...v6.2.2) (2026-07-06)
+
+
+### Bug Fixes
+
+* bumped semver from 7.8.1 to 7.8.5 ([#2623](https://github.com/instana/nodejs/issues/2623)) ([126ad8a](https://github.com/instana/nodejs/commit/126ad8a0977f17e0199666a0cff23a10ab01f6e8))
+* **core:** fixed prototype pollution ([#2630](https://github.com/instana/nodejs/issues/2630)) ([a7261ea](https://github.com/instana/nodejs/commit/a7261eaaa000fae77f7edb70b9758b7706eda913))
+
+
+### Reverts
+
+* Revert "chore: make agent data port configurable independently from the agent connection port (#2559)" ([128175e](https://github.com/instana/nodejs/commit/128175e3c2a745db8cc4d027d5db69760cbe4bf0)), closes [#2559](https://github.com/instana/nodejs/issues/2559)
+
+
+
+
+
 ## [6.2.1](https://github.com/instana/nodejs/compare/v6.2.0...v6.2.1) (2026-06-19)
 
 
