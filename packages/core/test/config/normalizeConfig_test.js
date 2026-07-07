@@ -38,6 +38,7 @@ describe('config.normalizeConfig', () => {
     delete process.env.INSTANA_SPANBATCHING_ENABLED;
     delete process.env.INSTANA_DISABLE_SPANBATCHING;
     delete process.env.INSTANA_DISABLE_W3C_TRACE_CORRELATION;
+    delete process.env.INSTANA_TRACING_DISABLE_W3C_PROPAGATION;
     delete process.env.INSTANA_DISABLE_USE_OPENTELEMETRY;
     delete process.env.INSTANA_KAFKA_TRACE_CORRELATION;
     delete process.env.INSTANA_PACKAGE_JSON_PATH;
@@ -955,6 +956,30 @@ describe('config.normalizeConfig', () => {
         process.env.INSTANA_DISABLE_W3C_TRACE_CORRELATION = 'any-value';
         const config = coreConfig.normalize({ userConfig: { tracing: { disableW3cTraceCorrelation: false } } });
         expect(config.tracing.disableW3cTraceCorrelation).to.be.true;
+      });
+    });
+
+    describe('W3C propagation', () => {
+      it('should disable W3C propagation', () => {
+        const config = coreConfig.normalize({ userConfig: { tracing: { disableW3cPropagation: true } } });
+        expect(config.tracing.disableW3cPropagation).to.be.true;
+      });
+
+      it('should disable W3C propagation via INSTANA_TRACING_DISABLE_W3C_PROPAGATION', () => {
+        process.env.INSTANA_TRACING_DISABLE_W3C_PROPAGATION = 'true';
+        const config = coreConfig.normalize();
+        expect(config.tracing.disableW3cPropagation).to.be.true;
+      });
+
+      it('should use default (false) for disableW3cPropagation when neither env nor config is set', () => {
+        const config = coreConfig.normalize({});
+        expect(config.tracing.disableW3cPropagation).to.be.false;
+      });
+
+      it('should give precedence to INSTANA_TRACING_DISABLE_W3C_PROPAGATION env var over config', () => {
+        process.env.INSTANA_TRACING_DISABLE_W3C_PROPAGATION = 'true';
+        const config = coreConfig.normalize({ userConfig: { tracing: { disableW3cPropagation: false } } });
+        expect(config.tracing.disableW3cPropagation).to.be.true;
       });
     });
 
@@ -2409,6 +2434,7 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.stackTraceLength).to.equal(10);
     expect(config.tracing.spanBatchingEnabled).to.be.false;
     expect(config.tracing.disableW3cTraceCorrelation).to.be.false;
+    expect(config.tracing.disableW3cPropagation).to.be.false;
     expect(config.tracing.kafka.traceCorrelation).to.be.true;
     expect(config.tracing.useOpentelemetry).to.equal(true);
     expect(config.tracing.allowRootExitSpan).to.equal(false);

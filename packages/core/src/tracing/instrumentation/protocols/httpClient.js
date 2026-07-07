@@ -23,6 +23,7 @@ const URL = url.URL;
 let extraHttpHeadersToCapture;
 let logger;
 let isActive = false;
+let disableW3cPropagation;
 
 exports.init = function init(config) {
   logger = config.logger;
@@ -30,6 +31,7 @@ exports.init = function init(config) {
   instrument(coreHttpModule, false);
   instrument(coreHttpsModule, true);
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
+  disableW3cPropagation = config.tracing.disableW3cPropagation;
   hook.onModuleLoad('request', logDeprecatedWarning);
 };
 
@@ -414,6 +416,9 @@ function tryToAddTraceLevelAddHeaderToOpts(options, level, w3cTraceContext) {
 }
 
 function tryToAddW3cHeaderToOpts(options, w3cTraceContext) {
+  if (disableW3cPropagation) {
+    return;
+  }
   if (w3cTraceContext) {
     options.headers[constants.w3cTraceParent] = w3cTraceContext.renderTraceParent();
     if (w3cTraceContext.hasTraceState()) {
@@ -457,6 +462,9 @@ function setHeadersOnRequest(clientRequest, span, w3cTraceContext) {
 }
 
 function setW3cHeadersOnRequest(clientRequest, w3cTraceContext) {
+  if (disableW3cPropagation) {
+    return;
+  }
   if (w3cTraceContext) {
     clientRequest.setHeader(constants.w3cTraceParent, w3cTraceContext.renderTraceParent());
     if (w3cTraceContext.hasTraceState()) {

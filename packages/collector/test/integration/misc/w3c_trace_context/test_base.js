@@ -932,6 +932,48 @@ module.exports = function () {
               })
             ));
         });
+
+        describe('INSTANA_TRACING_DISABLE_W3C_PROPAGATION', () => {
+          let instanaAppControlsNoW3c;
+
+          before(async () => {
+            instanaAppControlsNoW3c = new ProcessControls({
+              dirname: __dirname,
+              useGlobalAgent: true,
+              http2,
+              env: {
+                APM_VENDOR: 'instana',
+                DOWNSTREAM_PORT: otherVendorAppPort,
+                APP_USES_HTTP2: http2,
+                INSTANA_TRACING_DISABLE_W3C_PROPAGATION: 'true'
+              }
+            });
+            await instanaAppControlsNoW3c.startAndWaitForAgentConnection();
+          });
+
+          after(async () => {
+            await instanaAppControlsNoW3c.stop();
+          });
+
+          it('should not propagate traceparent/tracestate headers downstream', () =>
+            startRequest({ app: instanaAppControlsNoW3c, depth: 1 }).then(response => {
+              response = response && response.body ? JSON.parse(response.body) : response;
+              expect(response.w3cTraceContext).to.be.an('object');
+              // The downstream "other vendor" service echoes back the headers it received at /end.
+              // With W3C propagation disabled, no traceparent or tracestate headers should arrive there.
+              expect(response.w3cTraceContext.receivedHeaders.traceparent).to.not.exist;
+              expect(response.w3cTraceContext.receivedHeaders.tracestate).to.not.exist;
+              return retryUntilSpansMatch(agentControls, spans => {
+                // Instana-own headers are still propagated — the trace must be intact.
+                const instanaHttpEntryRoot = verifyHttpRootEntry({
+                  spans,
+                  url: '/start',
+                  instanaAppControls: instanaAppControlsNoW3c
+                });
+                verifyHttpExit(spans, instanaHttpEntryRoot, '/end');
+              });
+            }));
+        });
       });
     }
   });
