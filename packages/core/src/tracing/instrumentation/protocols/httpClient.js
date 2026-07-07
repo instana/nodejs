@@ -242,13 +242,7 @@ function instrument(coreModule, forceHttps) {
         }
 
         span.d = Date.now() - span.ts;
-        if (res.statusCode >= 500) {
-          span.ec = 1;
-        } else if (httpExitConfig && tracingUtil.shouldMarkHttpClient4xxAsError(res.statusCode, httpExitConfig)) {
-          span.ec = 1;
-        } else {
-          span.ec = 0;
-        }
+        span.ec = span.ec = span.ec = tracingUtil.shouldMarkAsError(res.statusCode, httpExitConfig) ? 1 : 0;
 
         span.transmit();
 

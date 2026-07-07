@@ -398,22 +398,30 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
 };
 
 /**
- * Determines whether a 4xx HTTP response from a client (exit) span should be classified as an error,
- * based on the normalized `config.tracing.http.exit` configuration.
+ * 5xx status codes are always considered errors.
+ * 4xx status codes are  considered errors if `classifyAll4xxAsErrors` is
+ * set to true or the status code is listed in `classifyAsErrors`.
+ *
  * @param {number} statusCode
- * @param {{ classifyAll4xxAsErrors: boolean, classifyAsErrors: Array<number> }} httpExitConfig
+ * @param {{ classifyAll4xxAsErrors?: boolean, classifyAsErrors?: Array<number> }} httpExitConfig
  * @returns {boolean}
  */
-exports.shouldMarkHttpClient4xxAsError = function shouldMarkHttpClient4xxAsError(statusCode, httpExitConfig) {
+exports.shouldMarkAsError = function shouldMarkAsError(statusCode, httpExitConfig) {
+  if (statusCode >= 500) {
+    return true;
+  }
+
   if (statusCode < 400 || statusCode > 499) {
     return false;
   }
 
-  if (httpExitConfig.classifyAsErrors.length > 0) {
-    return httpExitConfig.classifyAsErrors.includes(statusCode);
+  const classifyAsErrors = httpExitConfig?.classifyAsErrors ?? [];
+
+  if (classifyAsErrors.length > 0) {
+    return classifyAsErrors.includes(statusCode);
   }
 
-  return httpExitConfig.classifyAll4xxAsErrors === true;
+  return httpExitConfig?.classifyAll4xxAsErrors === true;
 };
 
 /**

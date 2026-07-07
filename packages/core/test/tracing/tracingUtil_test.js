@@ -170,28 +170,28 @@ describe('tracing/tracingUtil', () => {
         expect(readTraceContextFromBuffer(
           Buffer.from(
             [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //
-             0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //
-             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff //
+              0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //
+              0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff //
             ])
-          )
+        )
         ).to.deep.equal({ t: '8000000000000000', s: 'ffffffffffffffff' });
         // prettier-ignore
         expect(readTraceContextFromBuffer(
           Buffer.from(
             [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //
-             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, //
-             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02 //
+              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, //
+              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02 //
             ])
-          )
+        )
         ).to.deep.equal({ t: '0000000000000001', s: '0000000000000002' });
         // prettier-ignore
         expect(readTraceContextFromBuffer(
           Buffer.from(
             [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //
-             0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, //
-             0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f //
+              0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, //
+              0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f //
             ])
-          )
+        )
         ).to.deep.equal({ t: '7fffffffffffffff', s: '0f0f0f0f0f0f0f0f' });
       });
 
@@ -200,28 +200,28 @@ describe('tracing/tracingUtil', () => {
         expect(readTraceContextFromBuffer(
           Buffer.from(
             [0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, //
-             0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //
-             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff //
+              0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //
+              0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff //
             ])
-          )
+        )
         ).to.deep.equal({ t: 'f0f0f0f0f0f0f0f0' + '8000000000000000', s: 'ffffffffffffffff' });
         // prettier-ignore
         expect(readTraceContextFromBuffer(
           Buffer.from(
             [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, //
-             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, //
-             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03 //
+              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, //
+              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03 //
             ])
-          )
+        )
         ).to.deep.equal({ t: '0000000000000001' + '0000000000000002', s: '0000000000000003' });
         // prettier-ignore
         expect(readTraceContextFromBuffer(
           Buffer.from(
             [0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, //
-             0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, //
-             0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f //
+              0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, //
+              0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f //
             ])
-          )
+        )
         ).to.deep.equal({ t: 'f0f0f0f0f0f0f0f0' + '7fffffffffffffff', s: '0f0f0f0f0f0f0f0f' });
       });
     });
@@ -294,8 +294,8 @@ describe('tracing/tracingUtil', () => {
         // prettier-ignore
         verifyBuffer2HexStrings2Buffer(
           [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, //
-           0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, //
-           0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x00, 0x01 //
+            0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, //
+            0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x00, 0x01 //
           ]
         );
       });
@@ -304,8 +304,8 @@ describe('tracing/tracingUtil', () => {
         // prettier-ignore
         verifyBuffer2HexStrings2Buffer(
           [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //
-           0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, //
-           0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x00, 0x01 //
+            0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, //
+            0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x00, 0x01 //
           ]
         );
       });
@@ -1337,22 +1337,26 @@ describe('tracing/tracingUtil', () => {
     });
   });
 
-  describe('shouldMarkHttpClient4xxAsError', () => {
-    const { shouldMarkHttpClient4xxAsError } = tracingUtil;
+  describe('shouldMarkAsError', () => {
+    const { shouldMarkAsError } = tracingUtil;
 
     describe('default config (classifyAll4xxAsErrors=false, classifyAsErrors=[])', () => {
       const defaultConfig = { classifyAll4xxAsErrors: false, classifyAsErrors: [] };
 
       it('should return false for 404', () => {
-        expect(shouldMarkHttpClient4xxAsError(404, defaultConfig)).to.equal(false);
+        expect(shouldMarkAsError(404, defaultConfig)).to.equal(false);
       });
 
       it('should return false for 401', () => {
-        expect(shouldMarkHttpClient4xxAsError(401, defaultConfig)).to.equal(false);
+        expect(shouldMarkAsError(401, defaultConfig)).to.equal(false);
       });
 
-      it('should return false for 500 (not a 4xx, helper scope is 4xx only)', () => {
-        expect(shouldMarkHttpClient4xxAsError(500, defaultConfig)).to.equal(false);
+      it('should return true for 500', () => {
+        expect(shouldMarkAsError(500, defaultConfig)).to.equal(true);
+      });
+
+      it('should return true for 503', () => {
+        expect(shouldMarkAsError(503, defaultConfig)).to.equal(true);
       });
     });
 
@@ -1360,19 +1364,23 @@ describe('tracing/tracingUtil', () => {
       const allConfig = { classifyAll4xxAsErrors: true, classifyAsErrors: [] };
 
       it('should return true for 400', () => {
-        expect(shouldMarkHttpClient4xxAsError(400, allConfig)).to.equal(true);
+        expect(shouldMarkAsError(400, allConfig)).to.equal(true);
       });
 
       it('should return true for 401', () => {
-        expect(shouldMarkHttpClient4xxAsError(401, allConfig)).to.equal(true);
+        expect(shouldMarkAsError(401, allConfig)).to.equal(true);
       });
 
       it('should return true for 404', () => {
-        expect(shouldMarkHttpClient4xxAsError(404, allConfig)).to.equal(true);
+        expect(shouldMarkAsError(404, allConfig)).to.equal(true);
       });
 
       it('should return true for 499', () => {
-        expect(shouldMarkHttpClient4xxAsError(499, allConfig)).to.equal(true);
+        expect(shouldMarkAsError(499, allConfig)).to.equal(true);
+      });
+
+      it('should return true for 500', () => {
+        expect(shouldMarkAsError(500, allConfig)).to.equal(true);
       });
     });
 
@@ -1380,35 +1388,39 @@ describe('tracing/tracingUtil', () => {
       const specificConfig = { classifyAll4xxAsErrors: true, classifyAsErrors: [401, 403] };
 
       it('should return true for 401 (in list)', () => {
-        expect(shouldMarkHttpClient4xxAsError(401, specificConfig)).to.equal(true);
+        expect(shouldMarkAsError(401, specificConfig)).to.equal(true);
       });
 
       it('should return true for 403 (in list)', () => {
-        expect(shouldMarkHttpClient4xxAsError(403, specificConfig)).to.equal(true);
+        expect(shouldMarkAsError(403, specificConfig)).to.equal(true);
       });
 
       it('should return false for 404 (not in list, even though classifyAll4xxAsErrors=true)', () => {
-        expect(shouldMarkHttpClient4xxAsError(404, specificConfig)).to.equal(false);
+        expect(shouldMarkAsError(404, specificConfig)).to.equal(false);
       });
 
       it('should return false for 400 (not in list, even though classifyAll4xxAsErrors=true)', () => {
-        expect(shouldMarkHttpClient4xxAsError(400, specificConfig)).to.equal(false);
+        expect(shouldMarkAsError(400, specificConfig)).to.equal(false);
+      });
+
+      it('should return true for 500', () => {
+        expect(shouldMarkAsError(500, specificConfig)).to.equal(true);
       });
     });
 
-    describe('non-4xx status codes always return false', () => {
-      const anyConfig = { classifyAll4xxAsErrors: true, classifyAsErrors: [200] };
+    describe('non-error status codes', () => {
+      const anyConfig = { classifyAll4xxAsErrors: true, classifyAsErrors: [401] };
 
       it('should return false for 200', () => {
-        expect(shouldMarkHttpClient4xxAsError(200, anyConfig)).to.equal(false);
+        expect(shouldMarkAsError(200, anyConfig)).to.equal(false);
       });
 
       it('should return false for 302', () => {
-        expect(shouldMarkHttpClient4xxAsError(302, anyConfig)).to.equal(false);
+        expect(shouldMarkAsError(302, anyConfig)).to.equal(false);
       });
 
-      it('should return false for 500', () => {
-        expect(shouldMarkHttpClient4xxAsError(500, anyConfig)).to.equal(false);
+      it('should return false for 399', () => {
+        expect(shouldMarkAsError(399, anyConfig)).to.equal(false);
       });
     });
   });

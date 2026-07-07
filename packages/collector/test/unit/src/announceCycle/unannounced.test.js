@@ -1189,6 +1189,86 @@ describe('unannounced state', () => {
           }
         });
       });
+
+      it('should ignore invalid classify-as-errors values', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            http: {
+              exit: {
+                'classify-as-errors': ['abc', 200, 401, 500]
+              }
+            }
+          }
+        });
+
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                http: {
+                  exit: {
+                    classifyAsErrors: [401]
+                  }
+                }
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should preserve existing HTTP exit configuration when only classify-all-4xx-as-errors is provided', done => {
+        agentOptsStub.config = {
+          tracing: {
+            http: {
+              exit: {
+                classifyAsErrors: [401]
+              }
+            }
+          }
+        };
+
+        prepareAnnounceResponse({
+          tracing: {
+            http: {
+              exit: {
+                'classify-all-4xx-as-errors': true
+              }
+            }
+          }
+        });
+
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                http: {
+                  exit: {
+                    classifyAll4xxAsErrors: true,
+                    classifyAsErrors: [401]
+                  }
+                }
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should ignore HTTP exit configuration when exit is missing', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            http: {}
+          }
+        });
+
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({});
+            done();
+          }
+        });
+      });
     });
 
     describe('OTLP exporter configuration', () => {

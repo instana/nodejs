@@ -600,17 +600,8 @@ function normalizeTracingHttp({ userConfig = {}, defaultConfig = {}, finalConfig
   const userHttp = userConfig.tracing.http;
   finalConfig.tracing.http = {};
 
-  normalizeExtraHttpHeadersToCapture({
-    userHttp,
-    defaultConfig,
-    finalConfig
-  });
-
-  normalizeHttpExitConfig({
-    userHttp,
-    defaultConfig,
-    finalConfig
-  });
+  normalizeExtraHttpHeadersToCapture({ userHttp, defaultConfig, finalConfig });
+  normalizeHttpExitConfig({ userHttp, defaultConfig, finalConfig });
 }
 
 /**
@@ -623,6 +614,7 @@ function normalizeTracingHttp({ userConfig = {}, defaultConfig = {}, finalConfig
 function normalizeExtraHttpHeadersToCapture({ userHttp, defaultConfig, finalConfig }) {
   const userHeaders = userHttp?.extraHttpHeadersToCapture;
 
+  // 1. Check environment variable
   if (process.env.INSTANA_EXTRA_HTTP_HEADERS) {
     const fromEnvVar = parseHeadersEnvVar(process.env.INSTANA_EXTRA_HTTP_HEADERS);
     finalConfig.tracing.http.extraHttpHeadersToCapture = fromEnvVar;
@@ -673,17 +665,8 @@ function normalizeExtraHttpHeadersToCapture({ userHttp, defaultConfig, finalConf
 function normalizeHttpExitConfig({ userHttp, defaultConfig, finalConfig }) {
   finalConfig.tracing.http.exit = {};
 
-  normalizeClassifyAll4xxAsErrors({
-    userHttp,
-    defaultConfig,
-    finalConfig
-  });
-
-  normalizeClassifyAsErrors({
-    userHttp,
-    defaultConfig,
-    finalConfig
-  });
+  normalizeClassifyAll4xxAsErrors({ userHttp, defaultConfig, finalConfig });
+  normalizeClassifyAsErrors({ userHttp, defaultConfig, finalConfig });
 }
 
 /**
@@ -729,7 +712,7 @@ function normalizeClassifyAsErrors({ userHttp, defaultConfig, finalConfig }) {
       inCodeValue: userHttp?.exit?.classifyAsErrors,
       defaultValue: defaultConfig.tracing.http.exit.classifyAsErrors
     },
-    [validate.httpExitStatusCodeListValidator]
+    [validate.httpExitErrorCodeValidator]
   );
 
   finalConfig.tracing.http.exit.classifyAsErrors = value;
