@@ -140,7 +140,6 @@ function instrumentClientHttp2Session(clientHttp2Session) {
       stream.on('end', () => {
         span.d = Date.now() - span.ts;
         span.ec = span.ec = tracingUtil.shouldMarkAsError(status, httpExitConfig) ? 1 : 0;
-
         span.data.http.status = status;
         if (capturedHeaders) {
           span.data.http.header = capturedHeaders;

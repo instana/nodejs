@@ -174,8 +174,7 @@ function instrument() {
       fetchPromise
         .then(response => {
           span.data.http.status = response.status;
-          span.ec = tracingUtil.shouldMarkAsError(response.status, httpExitConfig);
-
+          span.ec = tracingUtil.shouldMarkAsError(response.status, httpExitConfig) ? 1 : 0;
           capturedHeaders = mergeExtraHeadersFromFetchHeaders(
             capturedHeaders,
             response.headers,
