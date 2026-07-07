@@ -19,6 +19,7 @@ const { sanitizeUrl, splitAndFilter } = require('../../../util/url');
 
 let extraHttpHeadersToCapture;
 let isActive = false;
+let disableW3cPropagation;
 
 const originS = 'Symbol(origin)';
 const sentHeadersS = 'Symbol(sent-headers)';
@@ -29,6 +30,7 @@ const HTTP2_HEADER_STATUS = http2.constants.HTTP2_HEADER_STATUS;
 exports.init = function init(config) {
   instrument(http2);
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
+  disableW3cPropagation = config.tracing.disableW3cPropagation;
 };
 
 exports.updateConfig = config => {
@@ -170,6 +172,9 @@ function addHeaders(headers, span, w3cTraceContext) {
 }
 
 function addW3cHeaders(headers, w3cTraceContext) {
+  if (disableW3cPropagation) {
+    return;
+  }
   if (w3cTraceContext) {
     headers[constants.w3cTraceParent] = w3cTraceContext.renderTraceParent();
     if (w3cTraceContext.hasTraceState()) {

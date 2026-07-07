@@ -67,6 +67,7 @@ let currentConfig;
  * @property {import('../config/types').Disable} [disable]
  * @property {boolean} [spanBatchingEnabled]
  * @property {boolean} [disableW3cTraceCorrelation]
+ * @property {boolean} [disableW3cPropagation]
  * @property {KafkaTracingOptions} [kafka]
  * @property {boolean} [allowRootExitSpan]
  * @property {import('../config/types').IgnoreEndpoints} [ignoreEndpoints]
@@ -163,6 +164,7 @@ let defaults = {
     disable: {},
     spanBatchingEnabled: false,
     disableW3cTraceCorrelation: false,
+    disableW3cPropagation: false,
     kafka: {
       traceCorrelation: true
     },
@@ -351,6 +353,7 @@ function normalizeTracingConfig({ userConfig = {}, defaultConfig = {}, finalConf
   normalizeTracingStackTrace({ userConfig, defaultConfig, finalConfig });
   normalizeSpanBatchingEnabled({ userConfig, defaultConfig, finalConfig });
   normalizeDisableW3cTraceCorrelation({ userConfig, defaultConfig, finalConfig });
+  normalizeDisableW3cPropagation({ userConfig, defaultConfig, finalConfig });
   normalizeTracingKafka({ userConfig, defaultConfig, finalConfig });
   normalizeAllowRootExitSpan({ userConfig, defaultConfig, finalConfig });
   normalizeIgnoreEndpoints({ userConfig, defaultConfig, finalConfig });
@@ -803,6 +806,29 @@ function normalizeSpanBatchingEnabled({ userConfig = {}, defaultConfig = {}, fin
     source,
     value,
     envVarName: 'INSTANA_SPANBATCHING_ENABLED'
+  });
+}
+
+/**
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
+ */
+function normalizeDisableW3cPropagation({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
+  const { value, source } = util.resolve(
+    {
+      envValue: 'INSTANA_TRACING_DISABLE_W3C_PROPAGATION',
+      inCodeValue: userConfig.tracing.disableW3cPropagation,
+      defaultValue: defaultConfig.tracing.disableW3cPropagation
+    },
+    [validate.validateTruthyBoolean]
+  );
+
+  configStore.set('config.tracing.disableW3cPropagation', { source });
+  finalConfig.tracing.disableW3cPropagation = value;
+  util.log({
+    configPath: 'config.tracing.disableW3cPropagation',
+    source,
+    value,
+    envVarName: 'INSTANA_TRACING_DISABLE_W3C_PROPAGATION'
   });
 }
 

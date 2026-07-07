@@ -60,7 +60,7 @@ function preInitInstrumentations() {
 function initInstrumentations(cls) {
   Object.values(instrumentations).forEach(instr => {
     const instrumentation = getInstrumentation(instr);
-    instrumentation.init?.({ cls, api: api });
+    instrumentation.init?.({ cls, api });
   });
 }
 
