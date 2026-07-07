@@ -19,6 +19,7 @@ const { sanitizeUrl, splitAndFilter } = require('../../../util/url');
 
 const originalFetch = global.fetch;
 
+let httpExitConfig;
 let extraHttpHeadersToCapture;
 let isActive = false;
 let disableW3cPropagation;
@@ -49,10 +50,12 @@ exports.init = function init(config) {
   instrument();
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
   disableW3cPropagation = config.tracing.disableW3cPropagation;
+  httpExitConfig = config.tracing.http.exit;
 };
 
 exports.updateConfig = function updateConfig(config) {
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
+  httpExitConfig = config.tracing.http.exit;
 };
 
 exports.activate = function activate(_config) {
@@ -62,6 +65,7 @@ exports.activate = function activate(_config) {
   }
 
   extraHttpHeadersToCapture = _config.tracing.http.extraHttpHeadersToCapture;
+  httpExitConfig = _config.tracing.http.exit;
 
   isActive = true;
 };
@@ -170,7 +174,14 @@ function instrument() {
       fetchPromise
         .then(response => {
           span.data.http.status = response.status;
-          span.ec = response.status >= 500 ? 1 : 0;
+
+          if (response.status >= 500) {
+            span.ec = 1;
+          } else if (httpExitConfig && tracingUtil.shouldMarkHttpClient4xxAsError(response.status, httpExitConfig)) {
+            span.ec = 1;
+          } else {
+            span.ec = 0;
+          }
           capturedHeaders = mergeExtraHeadersFromFetchHeaders(
             capturedHeaders,
             response.headers,

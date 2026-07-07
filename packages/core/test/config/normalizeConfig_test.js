@@ -47,6 +47,8 @@ describe('config.normalizeConfig', () => {
     delete process.env.INSTANA_IGNORE_ENDPOINTS_PATH;
     delete process.env.INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION;
     delete process.env.INSTANA_TRACING_OTLP_ENABLED;
+    delete process.env.INSTANA_TRACING_HTTP_EXIT_CLASSIFY_ALL_4XX_AS_ERRORS;
+    delete process.env.INSTANA_TRACING_HTTP_EXIT_CLASSIFY_AS_ERRORS;
   }
 
   describe('default configuration', () => {
@@ -400,6 +402,177 @@ describe('config.normalizeConfig', () => {
         process.env.INSTANA_EXTRA_HTTP_HEADERS = ' \n \t ';
         const config = coreConfig.normalize();
         expect(config.tracing.http.extraHttpHeadersToCapture).to.deep.equal([]);
+      });
+    });
+
+    describe('HTTP exit 4xx error classification configuration', () => {
+      describe('classifyAll4xxAsErrors', () => {
+        it('should default to false', () => {
+          const config = coreConfig.normalize();
+          expect(config.tracing.http.exit.classifyAll4xxAsErrors).to.equal(false);
+        });
+
+        it('should accept in-code configuration (true)', () => {
+          const config = coreConfig.normalize({
+            userConfig: {
+              tracing: {
+                http: {
+                  exit: {
+                    classifyAll4xxAsErrors: true
+                  }
+                }
+              }
+            }
+          });
+          expect(config.tracing.http.exit.classifyAll4xxAsErrors).to.equal(true);
+        });
+
+        it('should accept in-code configuration (false)', () => {
+          const config = coreConfig.normalize({
+            userConfig: {
+              tracing: {
+                http: {
+                  exit: {
+                    classifyAll4xxAsErrors: false
+                  }
+                }
+              }
+            }
+          });
+          expect(config.tracing.http.exit.classifyAll4xxAsErrors).to.equal(false);
+        });
+
+        it('should accept env var "true"', () => {
+          process.env.INSTANA_TRACING_HTTP_EXIT_CLASSIFY_ALL_4XX_AS_ERRORS = 'true';
+          const config = coreConfig.normalize();
+          expect(config.tracing.http.exit.classifyAll4xxAsErrors).to.equal(true);
+        });
+
+        it('should accept env var "false"', () => {
+          process.env.INSTANA_TRACING_HTTP_EXIT_CLASSIFY_ALL_4XX_AS_ERRORS = 'false';
+          const config = coreConfig.normalize();
+          expect(config.tracing.http.exit.classifyAll4xxAsErrors).to.equal(false);
+        });
+
+        it('should fall back to default when env var is invalid', () => {
+          process.env.INSTANA_TRACING_HTTP_EXIT_CLASSIFY_ALL_4XX_AS_ERRORS = 'not-a-boolean';
+          const config = coreConfig.normalize();
+          expect(config.tracing.http.exit.classifyAll4xxAsErrors).to.equal(false);
+        });
+
+        it('should give env var precedence over in-code configuration', () => {
+          process.env.INSTANA_TRACING_HTTP_EXIT_CLASSIFY_ALL_4XX_AS_ERRORS = 'true';
+          const config = coreConfig.normalize({
+            userConfig: {
+              tracing: {
+                http: {
+                  exit: {
+                    classifyAll4xxAsErrors: false
+                  }
+                }
+              }
+            }
+          });
+          expect(config.tracing.http.exit.classifyAll4xxAsErrors).to.equal(true);
+        });
+      });
+
+      describe('classifyAsErrors', () => {
+        it('should default to an empty array', () => {
+          const config = coreConfig.normalize();
+          expect(config.tracing.http.exit.classifyAsErrors).to.deep.equal([]);
+        });
+
+        it('should accept an in-code array of 4xx status codes', () => {
+          const config = coreConfig.normalize({
+            userConfig: {
+              tracing: {
+                http: {
+                  exit: {
+                    classifyAsErrors: [401, 403]
+                  }
+                }
+              }
+            }
+          });
+          expect(config.tracing.http.exit.classifyAsErrors).to.deep.equal([401, 403]);
+        });
+
+        it('should parse status codes from env var (401,403)', () => {
+          process.env.INSTANA_TRACING_HTTP_EXIT_CLASSIFY_AS_ERRORS = '401,403';
+          const config = coreConfig.normalize();
+          expect(config.tracing.http.exit.classifyAsErrors).to.deep.equal([401, 403]);
+        });
+
+        it('should handle whitespace around tokens in env var (401, 403)', () => {
+          process.env.INSTANA_TRACING_HTTP_EXIT_CLASSIFY_AS_ERRORS = '401, 403';
+          const config = coreConfig.normalize();
+          expect(config.tracing.http.exit.classifyAsErrors).to.deep.equal([401, 403]);
+        });
+
+        it('should silently ignore invalid non-integer tokens (401,abc,403)', () => {
+          process.env.INSTANA_TRACING_HTTP_EXIT_CLASSIFY_AS_ERRORS = '401,abc,403';
+          const config = coreConfig.normalize();
+          expect(config.tracing.http.exit.classifyAsErrors).to.deep.equal([401, 403]);
+        });
+
+        it('should silently ignore values outside the 400–499 range (399,500,600)', () => {
+          process.env.INSTANA_TRACING_HTTP_EXIT_CLASSIFY_AS_ERRORS = '399,401,500,600';
+          const config = coreConfig.normalize();
+          expect(config.tracing.http.exit.classifyAsErrors).to.deep.equal([401]);
+        });
+
+        it('should resolve to empty array for an empty env var string', () => {
+          process.env.INSTANA_TRACING_HTTP_EXIT_CLASSIFY_AS_ERRORS = '';
+          const config = coreConfig.normalize();
+          expect(config.tracing.http.exit.classifyAsErrors).to.deep.equal([]);
+        });
+
+        it('should preserve duplicate values from in-code configuration', () => {
+          const config = coreConfig.normalize({
+            userConfig: {
+              tracing: {
+                http: {
+                  exit: {
+                    classifyAsErrors: [401, 401, 403]
+                  }
+                }
+              }
+            }
+          });
+          expect(config.tracing.http.exit.classifyAsErrors).to.deep.equal([401, 401, 403]);
+        });
+
+        it('should give env var precedence over in-code configuration', () => {
+          process.env.INSTANA_TRACING_HTTP_EXIT_CLASSIFY_AS_ERRORS = '403';
+          const config = coreConfig.normalize({
+            userConfig: {
+              tracing: {
+                http: {
+                  exit: {
+                    classifyAsErrors: [401]
+                  }
+                }
+              }
+            }
+          });
+          expect(config.tracing.http.exit.classifyAsErrors).to.deep.equal([403]);
+        });
+
+        it('should fall back to in-code configuration when env var is not set', () => {
+          const config = coreConfig.normalize({
+            userConfig: {
+              tracing: {
+                http: {
+                  exit: {
+                    classifyAsErrors: [422, 429]
+                  }
+                }
+              }
+            }
+          });
+          expect(config.tracing.http.exit.classifyAsErrors).to.deep.equal([422, 429]);
+        });
       });
     });
 
@@ -2430,6 +2603,9 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.http.extraHttpHeadersToCapture).to.be.an('array');
     expect(config.tracing.http.extraHttpHeadersToCapture).to.be.empty;
     expect(config.tracing.http.extraHttpHeadersToCapture).to.be.empty;
+    expect(config.tracing.http.exit).to.be.an('object');
+    expect(config.tracing.http.exit.classifyAll4xxAsErrors).to.equal(false);
+    expect(config.tracing.http.exit.classifyAsErrors).to.deep.equal([]);
     expect(config.tracing.stackTrace).to.equal('all');
     expect(config.tracing.stackTraceLength).to.equal(10);
     expect(config.tracing.spanBatchingEnabled).to.be.false;

@@ -1336,4 +1336,80 @@ describe('tracing/tracingUtil', () => {
       expect(ids.size).to.equal(1000);
     });
   });
+
+  describe('shouldMarkHttpClient4xxAsError', () => {
+    const { shouldMarkHttpClient4xxAsError } = tracingUtil;
+
+    describe('default config (classifyAll4xxAsErrors=false, classifyAsErrors=[])', () => {
+      const defaultConfig = { classifyAll4xxAsErrors: false, classifyAsErrors: [] };
+
+      it('should return false for 404', () => {
+        expect(shouldMarkHttpClient4xxAsError(404, defaultConfig)).to.equal(false);
+      });
+
+      it('should return false for 401', () => {
+        expect(shouldMarkHttpClient4xxAsError(401, defaultConfig)).to.equal(false);
+      });
+
+      it('should return false for 500 (not a 4xx, helper scope is 4xx only)', () => {
+        expect(shouldMarkHttpClient4xxAsError(500, defaultConfig)).to.equal(false);
+      });
+    });
+
+    describe('classifyAll4xxAsErrors=true, classifyAsErrors=[]', () => {
+      const allConfig = { classifyAll4xxAsErrors: true, classifyAsErrors: [] };
+
+      it('should return true for 400', () => {
+        expect(shouldMarkHttpClient4xxAsError(400, allConfig)).to.equal(true);
+      });
+
+      it('should return true for 401', () => {
+        expect(shouldMarkHttpClient4xxAsError(401, allConfig)).to.equal(true);
+      });
+
+      it('should return true for 404', () => {
+        expect(shouldMarkHttpClient4xxAsError(404, allConfig)).to.equal(true);
+      });
+
+      it('should return true for 499', () => {
+        expect(shouldMarkHttpClient4xxAsError(499, allConfig)).to.equal(true);
+      });
+    });
+
+    describe('classifyAsErrors=[401,403] takes precedence over classifyAll4xxAsErrors', () => {
+      const specificConfig = { classifyAll4xxAsErrors: true, classifyAsErrors: [401, 403] };
+
+      it('should return true for 401 (in list)', () => {
+        expect(shouldMarkHttpClient4xxAsError(401, specificConfig)).to.equal(true);
+      });
+
+      it('should return true for 403 (in list)', () => {
+        expect(shouldMarkHttpClient4xxAsError(403, specificConfig)).to.equal(true);
+      });
+
+      it('should return false for 404 (not in list, even though classifyAll4xxAsErrors=true)', () => {
+        expect(shouldMarkHttpClient4xxAsError(404, specificConfig)).to.equal(false);
+      });
+
+      it('should return false for 400 (not in list, even though classifyAll4xxAsErrors=true)', () => {
+        expect(shouldMarkHttpClient4xxAsError(400, specificConfig)).to.equal(false);
+      });
+    });
+
+    describe('non-4xx status codes always return false', () => {
+      const anyConfig = { classifyAll4xxAsErrors: true, classifyAsErrors: [200] };
+
+      it('should return false for 200', () => {
+        expect(shouldMarkHttpClient4xxAsError(200, anyConfig)).to.equal(false);
+      });
+
+      it('should return false for 302', () => {
+        expect(shouldMarkHttpClient4xxAsError(302, anyConfig)).to.equal(false);
+      });
+
+      it('should return false for 500', () => {
+        expect(shouldMarkHttpClient4xxAsError(500, anyConfig)).to.equal(false);
+      });
+    });
+  });
 });

@@ -79,6 +79,13 @@ let currentConfig;
 /**
  * @typedef {Object} HTTPTracingOptions
  * @property {Array<string>} [extraHttpHeadersToCapture]
+ * @property {HTTPExitTracingOptions} [exit]
+ */
+
+/**
+ * @typedef {Object} HTTPExitTracingOptions
+ * @property {boolean} [classifyAll4xxAsErrors]
+ * @property {Array<number>} [classifyAsErrors]
  */
 
 /**
@@ -156,7 +163,11 @@ let defaults = {
     transmissionDelay: 1000,
     initialTransmissionDelay: 1000,
     http: {
-      extraHttpHeadersToCapture: []
+      extraHttpHeadersToCapture: [],
+      exit: {
+        classifyAll4xxAsErrors: false,
+        classifyAsErrors: []
+      }
     },
     stackTrace: DEFAULT_STACK_TRACE_MODE,
     stackTraceLength: DEFAULT_STACK_TRACE_LENGTH,
@@ -197,6 +208,7 @@ module.exports.init = _logger => {
   logger = _logger;
   normalizers.init({ logger });
   util.init(logger);
+  validate.init(logger);
 };
 
 /**
@@ -588,9 +600,29 @@ function normalizeTracingHttp({ userConfig = {}, defaultConfig = {}, finalConfig
   const userHttp = userConfig.tracing.http;
   finalConfig.tracing.http = {};
 
+  normalizeExtraHttpHeadersToCapture({
+    userHttp,
+    defaultConfig,
+    finalConfig
+  });
+
+  normalizeHttpExitConfig({
+    userHttp,
+    defaultConfig,
+    finalConfig
+  });
+}
+
+/**
+ * @param {{
+ *   userHttp: HTTPTracingOptions | undefined,
+ *   defaultConfig: InstanaConfig,
+ *   finalConfig: InstanaConfig
+ * }} options
+ */
+function normalizeExtraHttpHeadersToCapture({ userHttp, defaultConfig, finalConfig }) {
   const userHeaders = userHttp?.extraHttpHeadersToCapture;
 
-  // 1. Check environment variable
   if (process.env.INSTANA_EXTRA_HTTP_HEADERS) {
     const fromEnvVar = parseHeadersEnvVar(process.env.INSTANA_EXTRA_HTTP_HEADERS);
     finalConfig.tracing.http.extraHttpHeadersToCapture = fromEnvVar;
@@ -629,6 +661,87 @@ function normalizeTracingHttp({ userConfig = {}, defaultConfig = {}, finalConfig
   // 3. Use default configuration
   finalConfig.tracing.http.extraHttpHeadersToCapture = defaultConfig.tracing.http.extraHttpHeadersToCapture;
   configStore.set('config.tracing.http.extraHttpHeadersToCapture', { source: CONFIG_SOURCES.DEFAULT });
+}
+
+/**
+ * @param {{
+ *   userHttp: HTTPTracingOptions | undefined,
+ *   defaultConfig: InstanaConfig,
+ *   finalConfig: InstanaConfig
+ * }} options
+ */
+function normalizeHttpExitConfig({ userHttp, defaultConfig, finalConfig }) {
+  finalConfig.tracing.http.exit = {};
+
+  normalizeClassifyAll4xxAsErrors({
+    userHttp,
+    defaultConfig,
+    finalConfig
+  });
+
+  normalizeClassifyAsErrors({
+    userHttp,
+    defaultConfig,
+    finalConfig
+  });
+}
+
+/**
+ * @param {{
+ *   userHttp: HTTPTracingOptions | undefined,
+ *   defaultConfig: InstanaConfig,
+ *   finalConfig: InstanaConfig
+ * }} options
+ */
+function normalizeClassifyAll4xxAsErrors({ userHttp, defaultConfig, finalConfig }) {
+  const { value, source } = util.resolve(
+    {
+      envValue: 'INSTANA_TRACING_HTTP_EXIT_CLASSIFY_ALL_4XX_AS_ERRORS',
+      inCodeValue: userHttp?.exit?.classifyAll4xxAsErrors,
+      defaultValue: defaultConfig.tracing.http.exit.classifyAll4xxAsErrors
+    },
+    [validate.booleanValidator]
+  );
+
+  finalConfig.tracing.http.exit.classifyAll4xxAsErrors = value;
+
+  configStore.set('config.tracing.http.exit.classifyAll4xxAsErrors', { source });
+
+  util.log({
+    configPath: 'config.tracing.http.exit.classifyAll4xxAsErrors',
+    source,
+    value,
+    envVarName: 'INSTANA_TRACING_HTTP_EXIT_CLASSIFY_ALL_4XX_AS_ERRORS'
+  });
+}
+
+/**
+ * @param {{
+ *   userHttp: HTTPTracingOptions | undefined,
+ *   defaultConfig: InstanaConfig,
+ *   finalConfig: InstanaConfig
+ * }} options
+ */
+function normalizeClassifyAsErrors({ userHttp, defaultConfig, finalConfig }) {
+  const { value, source } = util.resolve(
+    {
+      envValue: 'INSTANA_TRACING_HTTP_EXIT_CLASSIFY_AS_ERRORS',
+      inCodeValue: userHttp?.exit?.classifyAsErrors,
+      defaultValue: defaultConfig.tracing.http.exit.classifyAsErrors
+    },
+    [validate.httpExitStatusCodeListValidator]
+  );
+
+  finalConfig.tracing.http.exit.classifyAsErrors = value;
+
+  configStore.set('config.tracing.http.exit.classifyAsErrors', { source });
+
+  util.log({
+    configPath: 'config.tracing.http.exit.classifyAsErrors',
+    source,
+    value,
+    envVarName: 'INSTANA_TRACING_HTTP_EXIT_CLASSIFY_AS_ERRORS'
+  });
 }
 /**
  * @param {string} envVarValue

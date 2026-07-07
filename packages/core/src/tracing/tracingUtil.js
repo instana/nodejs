@@ -398,6 +398,25 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
 };
 
 /**
+ * Determines whether a 4xx HTTP response from a client (exit) span should be classified as an error,
+ * based on the normalized `config.tracing.http.exit` configuration.
+ * @param {number} statusCode
+ * @param {{ classifyAll4xxAsErrors: boolean, classifyAsErrors: Array<number> }} httpExitConfig
+ * @returns {boolean}
+ */
+exports.shouldMarkHttpClient4xxAsError = function shouldMarkHttpClient4xxAsError(statusCode, httpExitConfig) {
+  if (statusCode < 400 || statusCode > 499) {
+    return false;
+  }
+
+  if (httpExitConfig.classifyAsErrors.length > 0) {
+    return httpExitConfig.classifyAsErrors.includes(statusCode);
+  }
+
+  return httpExitConfig.classifyAll4xxAsErrors === true;
+};
+
+/**
  * Handles and logs a trace message when the instrumented function returns an unexpected value(not a promise)
  *
  * @param {*} returnValue - The return value from the instrumented function

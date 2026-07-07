@@ -17,6 +17,7 @@ const readSymbolProperty = require('../../../util/readSymbolProperty');
 const tracingUtil = require('../../tracingUtil');
 const { sanitizeUrl, splitAndFilter } = require('../../../util/url');
 
+let httpExitConfig;
 let extraHttpHeadersToCapture;
 let isActive = false;
 let disableW3cPropagation;
@@ -31,14 +32,17 @@ exports.init = function init(config) {
   instrument(http2);
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
   disableW3cPropagation = config.tracing.disableW3cPropagation;
+  httpExitConfig = config.tracing.http.exit;
 };
 
 exports.updateConfig = config => {
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
+  httpExitConfig = config.tracing.http.exit;
 };
 
 exports.activate = function activate(_config) {
   extraHttpHeadersToCapture = _config.tracing.http.extraHttpHeadersToCapture;
+  httpExitConfig = _config.tracing.http.exit;
 
   isActive = true;
 };
@@ -135,7 +139,14 @@ function instrumentClientHttp2Session(clientHttp2Session) {
 
       stream.on('end', () => {
         span.d = Date.now() - span.ts;
-        span.ec = status >= 500 ? 1 : 0;
+        if (status >= 500) {
+          span.ec = 1;
+        } else if (httpExitConfig && tracingUtil.shouldMarkHttpClient4xxAsError(status, httpExitConfig)) {
+          span.ec = 1;
+        } else {
+          span.ec = 0;
+        }
+
         span.data.http.status = status;
         if (capturedHeaders) {
           span.data.http.header = capturedHeaders;

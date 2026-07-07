@@ -48,6 +48,19 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @property {boolean} [span-batching-enabled]
  * @property {import('@instana/core/src/config/types').Disable} [disable]
  * @property {StackTraceConfig} [global]
+ * @property {HTTPTracingConfig} [http]
+ */
+
+/**
+ * @typedef {Object} HTTPExitConfig
+ * @property {boolean} [classify-all-4xx-as-errors]
+ * @property {Array<number>} [classify-as-errors]
+ */
+
+/**
+ * @typedef {Object} HTTPTracingConfig
+ *  @property {Array.<string>} [extra-http-headers]
+ * @property {HTTPExitConfig} [exit]
  */
 
 /**
@@ -132,6 +145,7 @@ function tryToAnnounce(ctx, retryDelay = initialRetryDelay) {
 function applyAgentConfiguration(agentResponse) {
   applySecretsConfiguration(agentResponse);
   applyExtraHttpHeaderConfiguration(agentResponse);
+  applyHttpExitConfiguration(agentResponse);
   applyKafkaTracingConfiguration(agentResponse);
   applyOtlpExporterConfiguration(agentResponse);
   applySpanBatchingConfiguration(agentResponse);
@@ -333,6 +347,27 @@ function applyDisableConfiguration(agentResponse) {
     tracing: { disable: disablingConfig }
   }).value;
 }
+
+/**
+ * @param {AgentAnnounceResponse} agentResponse
+ */
+function applyHttpExitConfiguration(agentResponse) {
+  const exitConfig = agentResponse?.tracing?.http?.exit;
+  if (!exitConfig) {
+    return;
+  }
+
+  ensureNestedObjectExists(agentOpts.config, ['tracing', 'http', 'exit']);
+
+  if (typeof exitConfig['classify-all-4xx-as-errors'] === 'boolean') {
+    agentOpts.config.tracing.http.exit.classifyAll4xxAsErrors = exitConfig['classify-all-4xx-as-errors'];
+  }
+
+  if (Array.isArray(exitConfig['classify-as-errors'])) {
+    agentOpts.config.tracing.http.exit.classifyAsErrors = exitConfig['classify-as-errors'];
+  }
+}
+
 module.exports = {
   init,
 

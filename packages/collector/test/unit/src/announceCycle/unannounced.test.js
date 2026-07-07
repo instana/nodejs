@@ -1062,6 +1062,135 @@ describe('unannounced state', () => {
       });
     });
 
+    describe('HTTP exit configuration', () => {
+      it('should apply classify-all-4xx-as-errors configuration', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            http: {
+              exit: {
+                'classify-all-4xx-as-errors': true
+              }
+            }
+          }
+        });
+
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                http: {
+                  exit: {
+                    classifyAll4xxAsErrors: true
+                  }
+                }
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should apply classify-as-errors configuration', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            http: {
+              exit: {
+                'classify-as-errors': [401, 403]
+              }
+            }
+          }
+        });
+
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                http: {
+                  exit: {
+                    classifyAsErrors: [401, 403]
+                  }
+                }
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should apply both HTTP exit configuration options', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            http: {
+              exit: {
+                'classify-all-4xx-as-errors': true,
+                'classify-as-errors': [401, 403]
+              }
+            }
+          }
+        });
+
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                http: {
+                  exit: {
+                    classifyAll4xxAsErrors: true,
+                    classifyAsErrors: [401, 403]
+                  }
+                }
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should preserve extra HTTP header configuration when applying HTTP exit configuration', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            'extra-http-headers': ['X-Test'],
+            http: {
+              exit: {
+                'classify-all-4xx-as-errors': true,
+                'classify-as-errors': [401, 403]
+              }
+            }
+          }
+        });
+
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                http: {
+                  extraHttpHeadersToCapture: ['x-test'],
+                  exit: {
+                    classifyAll4xxAsErrors: true,
+                    classifyAsErrors: [401, 403]
+                  }
+                }
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should not apply HTTP exit configuration when tracing.http is missing', done => {
+        prepareAnnounceResponse({
+          tracing: {}
+        });
+
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({});
+            done();
+          }
+        });
+      });
+    });
+
     describe('OTLP exporter configuration', () => {
       it('should apply OTLP exporter configuration when enabled is true', done => {
         prepareAnnounceResponse({
