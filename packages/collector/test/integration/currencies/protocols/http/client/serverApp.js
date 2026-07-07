@@ -60,6 +60,11 @@ app.get('/timeout', (req, res) => {
   }, 10000);
 });
 
+app.all('/fetch-with-status', (req, res) => {
+  const status = parseInt(req.query.status, 10) || 200;
+  res.status(status).json({ status });
+});
+
 app.put('/continue', (req, res) => {
   // Node http server will automatically send 100 Continue when it receives a request with an "Expect: 100-continue"
   // header present, unless we override the 'checkContinue' listener. For our test case, the default behaviour is just

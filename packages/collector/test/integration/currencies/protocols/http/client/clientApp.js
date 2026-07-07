@@ -281,6 +281,22 @@ if (process.env.APP_USES_HTTPS === 'true') {
   });
 }
 
+app.get('/fetch-with-status', (req, res) => {
+  const status = req.query.status || '200';
+  const options = {
+    hostname: 'localhost',
+    port: process.env.SERVER_PORT,
+    method: 'GET',
+    path: `/fetch-with-status?status=${status}`
+  };
+  const req_ = httpModule.request(options, response => {
+    response.resume();
+    response.on('end', () => res.status(response.statusCode).send());
+  });
+  req_.on('error', err => res.status(503).send(err.message));
+  req_.end();
+});
+
 app.get('/matrix-params/:params', (req, res) => {
   res.sendStatus(200);
 });

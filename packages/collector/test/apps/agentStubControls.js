@@ -71,6 +71,9 @@ class AgentStubControls {
     if (opts.otlpExporter) {
       env.OTLP_EXPORTER = JSON.stringify(opts.otlpExporter);
     }
+    if (opts.httpExitConfig) {
+      env.HTTP_EXIT_CONFIG = JSON.stringify(opts.httpExitConfig);
+    }
 
     this.agentStub = spawn('node', [path.join(__dirname, 'agentStub.js')], {
       stdio: config.getAppStdio(),

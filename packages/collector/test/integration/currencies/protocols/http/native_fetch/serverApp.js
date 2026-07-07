@@ -52,6 +52,11 @@ app.all('/fetch', (req, res) => {
   }
 });
 
+app.all('/fetch-with-status', (req, res) => {
+  const status = parseInt(req.query.status, 10) || 200;
+  res.status(status).json({ status });
+});
+
 app.listen(port, () => {
   log(`Listening on port ${port}.`);
 });
