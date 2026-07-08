@@ -7,7 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 const { expect } = require('chai');
-const { normalizeConfig, fromEnv, fromYaml } = require('../../../src/config/configNormalizers/ignoreEndpoints');
+const { normalizeConfig, fromEnv, fromYaml } = require('../../../src/config/normalizers/ignoreEndpoints');
 
 describe('util.ignoreEndpoints', function () {
   describe('normalizeConfig', function () {

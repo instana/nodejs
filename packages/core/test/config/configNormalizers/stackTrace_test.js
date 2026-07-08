@@ -7,7 +7,7 @@
 const { describe, it, beforeEach } = require('mocha');
 const { expect } = require('chai');
 
-const stackTraceNormalizer = require('../../../src/config/configNormalizers/stackTrace');
+const stackTraceNormalizer = require('../../../src/config/normalizers/stackTrace');
 const { MAX_STACK_TRACE_LENGTH } = require('../../../src/util/constants');
 
 function resetEnv() {
@@ -15,7 +15,7 @@ function resetEnv() {
   delete process.env.INSTANA_STACK_TRACE_LENGTH;
 }
 
-describe('config.configNormalizers.stackTrace', () => {
+describe('config.normalizers.stackTrace', () => {
   beforeEach(() => {
     resetEnv();
   });

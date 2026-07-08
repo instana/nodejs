@@ -273,7 +273,7 @@ function applyIgnoreEndpointsConfiguration(agentResponse) {
 
   ensureNestedObjectExists(agentOpts.config, ['tracing', 'ignoreEndpoints']);
   agentOpts.config.tracing.ignoreEndpoints =
-    coreConfig.configNormalizers.ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
+    coreConfig.normalizers.ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
 }
 
 /**
@@ -290,7 +290,7 @@ function applyStackTraceConfiguration(agentResponse) {
   if (globalConfig['stack-trace'] !== undefined) {
     const stackTraceModeValidation = coreConfig.validate.validateStackTraceMode(globalConfig['stack-trace']);
     if (stackTraceModeValidation.isValid) {
-      const normalizedStackTrace = coreConfig.configNormalizers.stackTrace.normalizeStackTraceModeFromAgent(
+      const normalizedStackTrace = coreConfig.normalizers.stackTrace.normalizeStackTraceModeFromAgent(
         globalConfig['stack-trace']
       );
       if (normalizedStackTrace != null) {
@@ -304,7 +304,7 @@ function applyStackTraceConfiguration(agentResponse) {
   if (globalConfig['stack-trace-length'] !== undefined) {
     const stackTraceLengthValidation = coreConfig.validate.validateStackTraceLength(globalConfig['stack-trace-length']);
     if (stackTraceLengthValidation.isValid) {
-      const normalizedStackTraceLength = coreConfig.configNormalizers.stackTrace.normalizeStackTraceLengthFromAgent(
+      const normalizedStackTraceLength = coreConfig.normalizers.stackTrace.normalizeStackTraceLengthFromAgent(
         globalConfig['stack-trace-length']
       );
       if (normalizedStackTraceLength != null) {
@@ -329,7 +329,7 @@ function applyDisableConfiguration(agentResponse) {
   if (!disablingConfig) return;
 
   ensureNestedObjectExists(agentOpts.config, ['tracing', 'disable']);
-  agentOpts.config.tracing.disable = coreConfig.configNormalizers.disable.normalizeExternalConfig({
+  agentOpts.config.tracing.disable = coreConfig.normalizers.disable.normalizeExternalConfig({
     tracing: { disable: disablingConfig }
   }).value;
 }
