@@ -10,11 +10,13 @@ const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumenta
 const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-http');
 const { OTLPMetricExporter } = require('@opentelemetry/exporter-metrics-otlp-http');
 const { PeriodicExportingMetricReader } = require('@opentelemetry/sdk-metrics');
+const { BatchSpanProcessor } = require('@opentelemetry/sdk-trace-node');
 const { KafkaJsInstrumentation } = require('@opentelemetry/instrumentation-kafkajs');
 const { HostMetrics } = require('@opentelemetry/host-metrics');
 const { instanaAgentDetector } = require('@opentelemetry/resource-detector-instana');
 const { processDetector, envDetector } = require('@opentelemetry/resources');
 const { InstanaPropagator } = require('@opentelemetry/propagator-instana');
+const { BaggageSpanProcessor } = require('@opentelemetry/baggage-span-processor');
 
 const instanaAgentHost = 'http://127.0.0.1:4318';
 
@@ -25,13 +27,18 @@ const instanaReader = new PeriodicExportingMetricReader({
   })
 });
 
+const traceExporter = new OTLPTraceExporter({
+  url: `${instanaAgentHost}/v1/traces`
+});
+
 const sdk = new opentelemetry.NodeSDK({
   resourceDetectors: [envDetector, processDetector, instanaAgentDetector],
-  traceExporter: new OTLPTraceExporter({
-    url: `${instanaAgentHost}/v1/traces`
-  }),
   propagator: new InstanaPropagator(),
   metricReader: instanaReader,
+  spanProcessors: [
+    new BatchSpanProcessor(traceExporter),
+    new BaggageSpanProcessor(key => key === 'userId')
+  ],
   instrumentations: [
     getNodeAutoInstrumentations({
       '@opentelemetry/instrumentation-fs': { enabled: false }
