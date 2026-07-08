@@ -9,10 +9,8 @@ const {
   secrets,
   tracing,
   util: { ensureNestedObjectExists },
-  coreConfig: { configNormalizers, configValidators }
+  coreConfig
 } = require('@instana/core');
-
-const { validateStackTraceMode, validateStackTraceLength } = configValidators.stackTraceValidation;
 
 const { constants: tracingConstants } = tracing;
 
@@ -274,7 +272,8 @@ function applyIgnoreEndpointsConfiguration(agentResponse) {
   if (!ignoreEndpointsConfig) return;
 
   ensureNestedObjectExists(agentOpts.config, ['tracing', 'ignoreEndpoints']);
-  agentOpts.config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
+  agentOpts.config.tracing.ignoreEndpoints =
+    coreConfig.configNormalizers.ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
 }
 
 /**
@@ -289,9 +288,9 @@ function applyStackTraceConfiguration(agentResponse) {
   ensureNestedObjectExists(agentOpts.config, ['tracing', 'global']);
 
   if (globalConfig['stack-trace'] !== undefined) {
-    const stackTraceModeValidation = validateStackTraceMode(globalConfig['stack-trace']);
+    const stackTraceModeValidation = coreConfig.validate.validateStackTraceMode(globalConfig['stack-trace']);
     if (stackTraceModeValidation.isValid) {
-      const normalizedStackTrace = configNormalizers.stackTrace.normalizeStackTraceModeFromAgent(
+      const normalizedStackTrace = coreConfig.configNormalizers.stackTrace.normalizeStackTraceModeFromAgent(
         globalConfig['stack-trace']
       );
       if (normalizedStackTrace != null) {
@@ -303,9 +302,9 @@ function applyStackTraceConfiguration(agentResponse) {
   }
 
   if (globalConfig['stack-trace-length'] !== undefined) {
-    const stackTraceLengthValidation = validateStackTraceLength(globalConfig['stack-trace-length']);
+    const stackTraceLengthValidation = coreConfig.validate.validateStackTraceLength(globalConfig['stack-trace-length']);
     if (stackTraceLengthValidation.isValid) {
-      const normalizedStackTraceLength = configNormalizers.stackTrace.normalizeStackTraceLengthFromAgent(
+      const normalizedStackTraceLength = coreConfig.configNormalizers.stackTrace.normalizeStackTraceLengthFromAgent(
         globalConfig['stack-trace-length']
       );
       if (normalizedStackTraceLength != null) {
@@ -330,7 +329,7 @@ function applyDisableConfiguration(agentResponse) {
   if (!disablingConfig) return;
 
   ensureNestedObjectExists(agentOpts.config, ['tracing', 'disable']);
-  agentOpts.config.tracing.disable = configNormalizers.disable.normalizeExternalConfig({
+  agentOpts.config.tracing.disable = coreConfig.configNormalizers.disable.normalizeExternalConfig({
     tracing: { disable: disablingConfig }
   }).value;
 }

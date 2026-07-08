@@ -6,12 +6,11 @@
 'use strict';
 
 const configNormalizers = require('./configNormalizers');
-const configValidators = require('./configValidators');
 const deepMerge = require('../util/deepMerge');
 const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE, CONFIG_SOURCES } = require('../util/constants');
-const { validateStackTraceMode, validateStackTraceLength } = require('./configValidators/stackTraceValidation');
 const util = require('./util');
 const validate = require('./validator');
+const { validateStackTraceMode, validateStackTraceLength } = validate;
 
 // @typedef {{ [x: string]: any }} configMeta
 /** @type {configMeta} */
@@ -189,7 +188,7 @@ let defaults = {
 const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-ignore-case', 'contains', 'regex', 'none'];
 
 module.exports.configNormalizers = configNormalizers;
-module.exports.configValidators = configValidators;
+module.exports.validate = validate;
 
 /**
  * @param {import('../core').GenericLogger} [_logger]
