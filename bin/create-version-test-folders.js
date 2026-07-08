@@ -500,7 +500,7 @@ function main() {
     });
   });
 
-  // Pass 2: Non-currency test directories (test_base.js + package.json.template)
+  // Pass 2: Non-currency test directories (test_base.js without currency config)
   const nonCurrencyDirs = findNonCurrencyTestDirs(collectorTestDir, processedDirs);
 
   nonCurrencyDirs.forEach(testDir => {
@@ -515,27 +515,47 @@ function main() {
       fs.mkdirSync(versionDir, { recursive: true });
     }
 
-    createTgzSymlinks(versionDir);
+    const modesPath = path.join(testDir, 'modes.json');
+    let modes = [null];
+    if (fs.existsSync(modesPath)) {
+      try {
+        modes = JSON.parse(fs.readFileSync(modesPath, 'utf8'));
+      } catch (err) {
+        console.error(`Failed to parse ${modesPath}:`, err);
+      }
+    }
 
-    const testContent = generateTestWrapper({
-      suiteName: dirName,
-      displayVersion: version,
-      rawVersion: version,
-      isLatest: true,
-      esmOnly: false,
-      mode: null,
-      sourceDepth: 1,
-      verifyDependency: false
-    });
-    fs.writeFileSync(path.join(versionDir, 'default.test.js'), testContent);
+    const hasModes = modes.length > 1 || (modes.length === 1 && modes[0] !== null);
 
-    generatePackageJson({
-      testDir,
-      versionDir,
-      pkgName: `${dirName}-v1`,
-      currencyName: null,
-      currencyVersion: null,
-      isOptional: false
+    modes.forEach(mode => {
+      const targetDir = hasModes ? path.join(versionDir, mode) : versionDir;
+      if (hasModes && !fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true });
+      }
+
+      createTgzSymlinks(targetDir);
+
+      const testContent = generateTestWrapper({
+        suiteName: dirName,
+        displayVersion: version,
+        rawVersion: version,
+        isLatest: true,
+        esmOnly: false,
+        mode,
+        sourceDepth: hasModes ? 2 : 1,
+        verifyDependency: false
+      });
+      const fileName = mode ? `${mode}.test.js` : 'default.test.js';
+      fs.writeFileSync(path.join(targetDir, fileName), testContent);
+
+      generatePackageJson({
+        testDir,
+        versionDir: targetDir,
+        pkgName: `${dirName}-v1`,
+        currencyName: null,
+        currencyVersion: null,
+        isOptional: false
+      });
     });
   });
 }
