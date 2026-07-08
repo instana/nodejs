@@ -359,12 +359,12 @@ function applyHttpExitConfiguration(agentResponse) {
 
   ensureNestedObjectExists(agentOpts.config, ['tracing', 'http', 'exit']);
 
-  const classifyAll4xxAsErrors = validate.booleanValidator(exitConfig['classify-all-4xx-as-errors']);
+  const classifyAll4xxAsErrors = coreConfig.validate.booleanValidator(exitConfig['classify-all-4xx-as-errors']);
   if (classifyAll4xxAsErrors !== undefined) {
     agentOpts.config.tracing.http.exit.classifyAll4xxAsErrors = classifyAll4xxAsErrors;
   }
 
-  const classifyAsErrors = validate.httpExitErrorCodeValidator(exitConfig['classify-as-errors']);
+  const classifyAsErrors = coreConfig.validate.httpExitErrorCodeValidator(exitConfig['classify-as-errors']);
   if (classifyAsErrors !== undefined) {
     agentOpts.config.tracing.http.exit.classifyAsErrors = classifyAsErrors;
   }
