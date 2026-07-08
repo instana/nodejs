@@ -1038,9 +1038,7 @@ module.exports = function (name, version, isLatest) {
 
           return retry(() =>
             globalAgent.instance.getSpans().then(spans => {
-              const exitSpans = spans.filter(
-                span => span.n === 'node.http.client' && span.k === constants.EXIT
-              );
+              const exitSpans = spans.filter(span => span.n === 'node.http.client' && span.k === constants.EXIT);
               expect(exitSpans).to.have.lengthOf(2);
 
               const exitToRequestOnlyOpts = exitSpans.find(s => s.data.http.url.includes('/request-only-opts'));
@@ -1309,8 +1307,9 @@ module.exports = function (name, version, isLatest) {
   }
 
   function serverUrl(appUsesHttps, urlShouldContainRedactedCredentials, path_, serverControls) {
-    return `http${appUsesHttps ? 's' : ''}://${urlShouldContainRedactedCredentials ? '<redacted>:<redacted>@' : ''
-      }${`localhost:${serverControls.getPort()}`}${path_}`;
+    return `http${appUsesHttps ? 's' : ''}://${
+      urlShouldContainRedactedCredentials ? '<redacted>:<redacted>@' : ''
+    }${`localhost:${serverControls.getPort()}`}${path_}`;
   }
 
   function checkQuery(span, withQuery) {
