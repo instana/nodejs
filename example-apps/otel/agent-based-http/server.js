@@ -10,6 +10,7 @@
 
 require('./tracing');
 
+const { propagation, context, trace } = require('@opentelemetry/api');
 const { Kafka } = require('kafkajs');
 const express = require('express');
 const port = process.env.PORT || '6215';
@@ -32,17 +33,31 @@ const producer = kafka.producer();
   await producer.connect();
 })();
 
-app.post('/kafka-msg', async (_req, res) => {
-  await producer.send({
-    topic: kafkaTopic,
-    messages: [{ value: 'my-value' }]
+function withUserId(userId, fn) {
+  const baggage = propagation.createBaggage({ userId: { value: userId } });
+  // Also set userId on the currently active (entry) span directly,
+  // because BaggageSpanProcessor only runs on span *start* – the entry span
+  // is already open at this point so it won't pick up the baggage automatically.
+  trace.getActiveSpan()?.setAttribute('userId', userId);
+  return context.with(propagation.setBaggage(context.active(), baggage), fn);
+}
+
+app.post('/kafka-msg', async (req, res) => {
+  await withUserId('12345', async () => {
+    await producer.send({
+      topic: kafkaTopic,
+      messages: [{ value: 'my-value' }]
+    });
   });
 
   res.status(200).send({ success: true });
 });
 
-app.get('/http', async (_req, res) => {
-  await fetch('https://www.instana.com');
+app.get('/http', async (req, res) => {
+  await withUserId('12345', async () => {
+    await fetch('https://www.instana.com');
+  });
+
   res.status(200).send({ success: true });
 });
 
