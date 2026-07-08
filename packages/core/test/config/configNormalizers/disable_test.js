@@ -7,7 +7,7 @@
 const { describe, it, beforeEach, afterEach } = require('mocha');
 const { expect } = require('chai');
 
-const { normalize, normalizeExternalConfig } = require('../../../src/config/configNormalizers/disable');
+const { normalize, normalizeExternalConfig } = require('../../../src/config/normalizers/disable');
 const { CONFIG_SOURCES } = require('../../../src/util/constants');
 
 function resetEnv() {
@@ -16,7 +16,7 @@ function resetEnv() {
   delete process.env.INSTANA_TRACING_DISABLE_GROUPS;
 }
 
-describe('util.configNormalizers.disable', () => {
+describe('util.normalizers.disable', () => {
   beforeEach(() => {
     resetEnv();
   });

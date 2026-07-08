@@ -638,7 +638,7 @@ describe('config.normalizeConfig', () => {
       });
 
       it('should use default when INSTANA_STACK_TRACE passes validation but normalizer returns null', () => {
-        const stackTraceNormalizers = require('../../src/config/configNormalizers/stackTrace');
+        const stackTraceNormalizers = require('../../src/config/normalizers/stackTrace');
         const original = stackTraceNormalizers.normalizeStackTraceModeFromEnv;
         stackTraceNormalizers.normalizeStackTraceModeFromEnv = () => null;
 
@@ -650,7 +650,7 @@ describe('config.normalizeConfig', () => {
       });
 
       it('should use default when config stackTrace passes validation but normalizer returns null', () => {
-        const stackTraceNormalizers = require('../../src/config/configNormalizers/stackTrace');
+        const stackTraceNormalizers = require('../../src/config/normalizers/stackTrace');
         const original = stackTraceNormalizers.normalizeStackTraceMode;
         stackTraceNormalizers.normalizeStackTraceMode = () => null;
 
@@ -661,7 +661,7 @@ describe('config.normalizeConfig', () => {
       });
 
       it('should use default when INSTANA_STACK_TRACE_LENGTH passes validation but normalizer returns null', () => {
-        const stackTraceNormalizers = require('../../src/config/configNormalizers/stackTrace');
+        const stackTraceNormalizers = require('../../src/config/normalizers/stackTrace');
         const original = stackTraceNormalizers.normalizeStackTraceLengthFromEnv;
         stackTraceNormalizers.normalizeStackTraceLengthFromEnv = () => null;
 
@@ -673,7 +673,7 @@ describe('config.normalizeConfig', () => {
       });
 
       it('should use default when config stackTraceLength passes validation but normalizer returns null', () => {
-        const stackTraceNormalizers = require('../../src/config/configNormalizers/stackTrace');
+        const stackTraceNormalizers = require('../../src/config/normalizers/stackTrace');
         const original = stackTraceNormalizers.normalizeStackTraceLength;
         stackTraceNormalizers.normalizeStackTraceLength = () => null;
 

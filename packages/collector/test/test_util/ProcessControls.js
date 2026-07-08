@@ -169,7 +169,7 @@ class ProcessControls {
 
     // Only set INSTANA_TRACING_DISABLE when tracing is actually disabled to avoid
     // overriding other disable environment variables (INSTANA_TRACING_DISABLE_INSTRUMENTATIONS, etc.)
-    // See packages/core/src/config/configNormalizers/disable.js for precedence rules
+    // See packages/core/src/config/normalizers/disable.js for precedence rules
     if (!this.tracingEnabled) {
       this.env.INSTANA_TRACING_DISABLE = 'true';
     }

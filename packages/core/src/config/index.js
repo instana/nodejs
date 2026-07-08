@@ -5,7 +5,7 @@
 
 'use strict';
 
-const configNormalizers = require('./configNormalizers');
+const normalizers = require('./normalizers');
 const deepMerge = require('../util/deepMerge');
 const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE, CONFIG_SOURCES } = require('../util/constants');
 const util = require('./util');
@@ -187,7 +187,7 @@ let defaults = {
 
 const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-ignore-case', 'contains', 'regex', 'none'];
 
-module.exports.configNormalizers = configNormalizers;
+module.exports.normalizers = normalizers;
 module.exports.validate = validate;
 
 /**
@@ -195,7 +195,7 @@ module.exports.validate = validate;
  */
 module.exports.init = _logger => {
   logger = _logger;
-  configNormalizers.init({ logger });
+  normalizers.init({ logger });
   util.init(logger);
 };
 
@@ -663,7 +663,7 @@ function normalizeTracingStackTrace({ userConfig = {}, defaultConfig = {}, final
     const result = validateStackTraceMode(envStackTrace);
 
     if (result.isValid) {
-      const normalized = configNormalizers.stackTrace.normalizeStackTraceModeFromEnv(envStackTrace);
+      const normalized = normalizers.stackTrace.normalizeStackTraceModeFromEnv(envStackTrace);
       if (normalized !== null) {
         finalConfig.tracing.stackTrace = normalized;
         configStore.set('config.tracing.stackTrace', { source: CONFIG_SOURCES.ENV });
@@ -681,7 +681,7 @@ function normalizeTracingStackTrace({ userConfig = {}, defaultConfig = {}, final
     const result = validateStackTraceMode(userGlobal.stackTrace);
 
     if (result.isValid) {
-      const normalized = configNormalizers.stackTrace.normalizeStackTraceMode(userConfig);
+      const normalized = normalizers.stackTrace.normalizeStackTraceMode(userConfig);
       if (normalized !== null) {
         finalConfig.tracing.stackTrace = normalized;
         configStore.set('config.tracing.stackTrace', { source: CONFIG_SOURCES.INCODE });
@@ -707,7 +707,7 @@ function normalizeTracingStackTrace({ userConfig = {}, defaultConfig = {}, final
     const result = validateStackTraceLength(envStackTraceLength);
 
     if (result.isValid) {
-      const normalized = configNormalizers.stackTrace.normalizeStackTraceLengthFromEnv(envStackTraceLength);
+      const normalized = normalizers.stackTrace.normalizeStackTraceLengthFromEnv(envStackTraceLength);
       if (normalized !== null) {
         finalConfig.tracing.stackTraceLength = normalized;
         configStore.set('config.tracing.stackTraceLength', { source: CONFIG_SOURCES.ENV });
@@ -733,7 +733,7 @@ function normalizeTracingStackTrace({ userConfig = {}, defaultConfig = {}, final
     const result = validateStackTraceLength(stackTraceConfigValue);
 
     if (result.isValid) {
-      const normalized = configNormalizers.stackTrace.normalizeStackTraceLength(userConfig);
+      const normalized = normalizers.stackTrace.normalizeStackTraceLength(userConfig);
       if (normalized !== null) {
         finalConfig.tracing.stackTraceLength = normalized;
         configStore.set('config.tracing.stackTraceLength', { source: CONFIG_SOURCES.INCODE });
@@ -760,7 +760,7 @@ function normalizeTracingStackTrace({ userConfig = {}, defaultConfig = {}, final
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
 function normalizeDisableTracing({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
-  const disableRes = configNormalizers.disable.normalize(userConfig);
+  const disableRes = normalizers.disable.normalize(userConfig);
   const disableConfig = disableRes?.value;
 
   // If tracing is globally disabled (via `disable: true` or INSTANA_TRACING_DISABLE=true ),
@@ -1027,7 +1027,7 @@ function normalizeIgnoreEndpoints({ userConfig = {}, defaultConfig = {}, finalCo
   // Introduced in Phase 2 for advanced filtering based on both methods and endpoints.
   // Also supports basic filtering for endpoints.
   if (process.env.INSTANA_IGNORE_ENDPOINTS_PATH) {
-    finalConfig.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.fromYaml(
+    finalConfig.tracing.ignoreEndpoints = normalizers.ignoreEndpoints.fromYaml(
       process.env.INSTANA_IGNORE_ENDPOINTS_PATH
     );
     logger.debug('[config] env:INSTANA_IGNORE_ENDPOINTS_PATH');
@@ -1039,9 +1039,7 @@ function normalizeIgnoreEndpoints({ userConfig = {}, defaultConfig = {}, finalCo
   // Introduced in Phase 1 for basic filtering based only on operations (e.g., `redis.get`, `kafka.consume`).
   // Provides a simple way to configure ignored operations via environment variables.
   if (process.env.INSTANA_IGNORE_ENDPOINTS) {
-    finalConfig.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.fromEnv(
-      process.env.INSTANA_IGNORE_ENDPOINTS
-    );
+    finalConfig.tracing.ignoreEndpoints = normalizers.ignoreEndpoints.fromEnv(process.env.INSTANA_IGNORE_ENDPOINTS);
     logger.debug('[config] env:INSTANA_IGNORE_ENDPOINTS');
     configStore.set('config.tracing.ignoreEndpoints', { source: CONFIG_SOURCES.ENV });
     return;
@@ -1059,7 +1057,7 @@ function normalizeIgnoreEndpoints({ userConfig = {}, defaultConfig = {}, finalCo
     return;
   }
   if (userIgnoreEndpoints && Object.keys(userIgnoreEndpoints).length) {
-    finalConfig.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(userIgnoreEndpoints);
+    finalConfig.tracing.ignoreEndpoints = normalizers.ignoreEndpoints.normalizeConfig(userIgnoreEndpoints);
     logger.debug('[config] incode:config.tracing.ignoreEndpoints');
     configStore.set('config.tracing.ignoreEndpoints', { source: CONFIG_SOURCES.INCODE });
     return;
