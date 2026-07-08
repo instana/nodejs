@@ -172,4 +172,250 @@ describe('config.validator', () => {
       expect(validator.validateTruthyBoolean(NaN)).to.be.undefined;
     });
   });
+
+  describe('config.validator.validator', () => {
+    describe('validateStackTraceMode', () => {
+      it('should validator "all" as valid', () => {
+        const result = validator.validateStackTraceMode('all');
+        expect(result.isValid).to.be.true;
+        expect(result.error).to.be.null;
+      });
+
+      it('should validator "error" as valid', () => {
+        const result = validator.validateStackTraceMode('error');
+        expect(result.isValid).to.be.true;
+        expect(result.error).to.be.null;
+      });
+
+      it('should validator "none" as valid', () => {
+        const result = validator.validateStackTraceMode('none');
+        expect(result.isValid).to.be.true;
+        expect(result.error).to.be.null;
+      });
+
+      it('should validator uppercase "ALL" as valid', () => {
+        const result = validator.validateStackTraceMode('ALL');
+        expect(result.isValid).to.be.true;
+        expect(result.error).to.be.null;
+      });
+
+      it('should validator mixed case "ErRoR" as valid', () => {
+        const result = validator.validateStackTraceMode('ErRoR');
+        expect(result.isValid).to.be.true;
+        expect(result.error).to.be.null;
+      });
+
+      it('should validator mixed case "NoNe" as valid', () => {
+        const result = validator.validateStackTraceMode('NoNe');
+        expect(result.isValid).to.be.true;
+        expect(result.error).to.be.null;
+      });
+
+      it('should reject null value', () => {
+        const result = validator.validateStackTraceMode(null);
+        expect(result.isValid).to.be.false;
+        expect(result.error).to.include('cannot be null');
+      });
+
+      it('should reject invalid string value', () => {
+        const result = validator.validateStackTraceMode('invalid');
+        expect(result.isValid).to.be.false;
+        expect(result.error).to.include('Invalid value: "invalid"');
+      });
+
+      it('should reject number type', () => {
+        const result = validator.validateStackTraceMode(123);
+        expect(result.isValid).to.be.false;
+        expect(result.error).to.include('non-supported type number');
+      });
+
+      it('should reject boolean type', () => {
+        const result = validator.validateStackTraceMode(true);
+        expect(result.isValid).to.be.false;
+        expect(result.error).to.include('non-supported type boolean');
+      });
+
+      it('should reject object type', () => {
+        const result = validator.validateStackTraceMode({});
+        expect(result.isValid).to.be.false;
+        expect(result.error).to.include('non-supported type object');
+      });
+
+      it('should reject array type', () => {
+        const result = validator.validateStackTraceMode(['error']);
+        expect(result.isValid).to.be.false;
+        expect(result.error).to.include('non-supported type object');
+      });
+
+      it('should reject undefined value', () => {
+        const result = validator.validateStackTraceMode(undefined);
+        expect(result.isValid).to.be.false;
+        expect(result.error).to.include('non-supported type undefined');
+      });
+
+      it('should reject empty string', () => {
+        const result = validator.validateStackTraceMode('');
+        expect(result.isValid).to.be.false;
+        expect(result.error).to.include('Invalid value: ""');
+      });
+
+      it('should reject string with only whitespace', () => {
+        const result = validator.validateStackTraceMode('   ');
+        expect(result.isValid).to.be.false;
+        expect(result.error).to.include('Invalid value');
+      });
+    });
+
+    describe('validateStackTraceLength', () => {
+      it('should validator positive number', () => {
+        const result = validator.validateStackTraceLength(10);
+        expect(result.isValid).to.be.true;
+        expect(result.error).to.be.null;
+      });
+
+      it('should validator zero', () => {
+        const result = validator.validateStackTraceLength(0);
+        expect(result.isValid).to.be.true;
+        expect(result.error).to.be.null;
+      });
+
+      it('should validator negative number', () => {
+        const result = validator.validateStackTraceLength(-10);
+        expect(result.isValid).to.be.true;
+        expect(result.error).to.be.null;
+      });
+
+      it('should validator large number', () => {
+        const result = validator.validateStackTraceLength(1000);
+        expect(result.isValid).to.be.true;
+        expect(result.error).to.be.null;
+      });
+
+      it('should validator decimal number', () => {
+        const result = validator.validateStackTraceLength(15.7);
+        expect(result.isValid).to.be.true;
+        expect(result.error).to.be.null;
+      });
+
+      it('should validator numeric string', () => {
+        const result = validator.validateStackTraceLength('20');
+        expect(result.isValid).to.be.true;
+        expect(result.error).to.be.null;
+      });
+
+      it('should validator negative numeric string', () => {
+        const result = validator.validateStackTraceLength('-15');
+        expect(result.isValid).to.be.true;
+        expect(result.error).to.be.null;
+      });
+
+      it('should validator decimal numeric string', () => {
+        const result = validator.validateStackTraceLength('12.5');
+        expect(result.isValid).to.be.true;
+        expect(result.error).to.be.null;
+      });
+
+      it('should validator numeric string with leading zeros', () => {
+        const result = validator.validateStackTraceLength('007');
+        expect(result.isValid).to.be.true;
+        expect(result.error).to.be.null;
+      });
+
+      it('should validator numeric string with whitespace', () => {
+        const result = validator.validateStackTraceLength('  25  ');
+        expect(result.isValid).to.be.true;
+        expect(result.error).to.be.null;
+      });
+
+      it('should validator numeric string with plus sign', () => {
+        const result = validator.validateStackTraceLength('+30');
+        expect(result.isValid).to.be.true;
+        expect(result.error).to.be.null;
+      });
+
+      it('should reject null value', () => {
+        const result = validator.validateStackTraceLength(null);
+        expect(result.isValid).to.be.false;
+        expect(result.error).to.equal('The value cannot be null');
+      });
+
+      it('should reject undefined value', () => {
+        const result = validator.validateStackTraceLength(undefined);
+        expect(result.isValid).to.be.false;
+        expect(result.error).to.equal('The value cannot be null');
+      });
+
+      it('should reject non-numeric string', () => {
+        const result = validator.validateStackTraceLength('invalid');
+        expect(result.isValid).to.be.false;
+        expect(result.error).to.include('cannot be parsed to a numerical value');
+      });
+
+      it('should reject empty string', () => {
+        const result = validator.validateStackTraceLength('');
+        expect(result.isValid).to.be.false;
+        expect(result.error).to.include('cannot be parsed to a numerical value');
+      });
+
+      it('should reject boolean type', () => {
+        const result = validator.validateStackTraceLength(true);
+        expect(result.isValid).to.be.false;
+        expect(result.error).to.include('non-supported type boolean');
+      });
+
+      it('should reject object type', () => {
+        const result = validator.validateStackTraceLength({});
+        expect(result.isValid).to.be.false;
+        expect(result.error).to.include('non-supported type object');
+      });
+
+      it('should reject array type', () => {
+        const result = validator.validateStackTraceLength([10]);
+        expect(result.isValid).to.be.false;
+        expect(result.error).to.include('non-supported type object');
+      });
+
+      it('should reject Infinity', () => {
+        const result = validator.validateStackTraceLength(Infinity);
+        expect(result.isValid).to.be.false;
+        expect(result.error).to.include('Invalid value: Infinity');
+      });
+
+      it('should reject -Infinity', () => {
+        const result = validator.validateStackTraceLength(-Infinity);
+        expect(result.isValid).to.be.false;
+        expect(result.error).to.include('Invalid value: -Infinity');
+      });
+
+      it('should reject NaN', () => {
+        const result = validator.validateStackTraceLength(NaN);
+        expect(result.isValid).to.be.false;
+        expect(result.error).to.include('Invalid value: NaN');
+      });
+
+      it('should reject string "Infinity"', () => {
+        const result = validator.validateStackTraceLength('Infinity');
+        expect(result.isValid).to.be.false;
+        expect(result.error).to.include('cannot be parsed');
+      });
+
+      it('should reject string "NaN"', () => {
+        const result = validator.validateStackTraceLength('NaN');
+        expect(result.isValid).to.be.false;
+        expect(result.error).to.include('cannot be parsed to a numerical value');
+      });
+
+      it('should reject function type', () => {
+        const result = validator.validateStackTraceLength(() => 10);
+        expect(result.isValid).to.be.false;
+        expect(result.error).to.include('non-supported type function');
+      });
+
+      it('should reject symbol type', () => {
+        const result = validator.validateStackTraceLength(Symbol('test'));
+        expect(result.isValid).to.be.false;
+        expect(result.error).to.include('non-supported type symbol');
+      });
+    });
+  });
 });

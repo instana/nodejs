@@ -9,10 +9,10 @@ const {
   secrets,
   tracing,
   util: { ensureNestedObjectExists },
-  coreConfig: { configNormalizers, configValidators }
+  coreConfig: { configNormalizers, validate: configValidators }
 } = require('@instana/core');
 
-const { validateStackTraceMode, validateStackTraceLength } = configValidators.stackTraceValidation;
+const { validateStackTraceMode, validateStackTraceLength } = configValidators;
 
 const { constants: tracingConstants } = tracing;
 
