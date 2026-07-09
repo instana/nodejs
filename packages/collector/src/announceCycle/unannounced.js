@@ -316,7 +316,9 @@ function applyStackTraceConfiguration(agentResponse) {
   }
 
   if (globalConfig['stack-trace-length'] !== undefined) {
-    const stackTraceLengthValidation = coreConfig.validator.validateStackTraceLength(globalConfig['stack-trace-length']);
+    const stackTraceLengthValidation = coreConfig.validator.validateStackTraceLength(
+      globalConfig['stack-trace-length']
+    );
     if (stackTraceLengthValidation.isValid) {
       const normalizedStackTraceLength = coreConfig.normalizers.stackTrace.normalizeStackTraceLengthFromAgent(
         globalConfig['stack-trace-length']
