@@ -579,54 +579,6 @@ module.exports = function (name, version, isLatest) {
   });
 
   describe('HTTP client exit span error classification', function () {
-    describe('default behaviour — 400 is not an error', function () {
-      let serverControls;
-      let clientControls;
-
-      before(async () => {
-        serverControls = new ProcessControls({
-          dirname: __dirname,
-          appName: 'serverApp',
-          useGlobalAgent: true,
-          appUsesHttps: false
-        });
-        clientControls = new ProcessControls({
-          dirname: __dirname,
-          appName: 'clientApp',
-          useGlobalAgent: true,
-          appUsesHttps: false,
-          env: {
-            ...commonEnv,
-            SERVER_PORT: serverControls.getPort()
-          }
-        });
-        await serverControls.startAndWaitForAgentConnection();
-        await clientControls.startAndWaitForAgentConnection();
-      });
-
-      after(() => Promise.all([serverControls.stop(), clientControls.stop()]));
-
-      beforeEach(() => globalAgent.instance.clearReceivedTraceData());
-
-      afterEach(() => Promise.all([serverControls.clearIpcMessages(), clientControls.clearIpcMessages()]));
-
-      it('400 response should not set ec (ec = 0)', async () => {
-        await clientControls.sendRequest({ path: '/fetch-with-status?status=400', simple: false });
-        await retry(async () => {
-          const spans = await globalAgent.instance.getSpans();
-          verifyHttpExitEc({ spans, expectedEc: 0, expectedStatus: 400 });
-        });
-      });
-
-      it('500 response should set ec = 1', async () => {
-        await clientControls.sendRequest({ path: '/fetch-with-status?status=500', simple: false });
-        await retry(async () => {
-          const spans = await globalAgent.instance.getSpans();
-          verifyHttpExitEc({ spans, expectedEc: 1, expectedStatus: 500 });
-        });
-      });
-    });
-
     describe('classifyAll4xxAsErrors: true — all 4xx are errors', function () {
       let serverControls;
       let clientControls;
@@ -850,6 +802,54 @@ module.exports = function (name, version, isLatest) {
           const spans = await customAgentControls.getSpans();
           verifyHttpExitEc({ spans, expectedEc: 0, expectedStatus: 404 });
         });
+      });
+    });
+  });
+
+  describe('default behaviour', function () {
+    let serverControls;
+    let clientControls;
+
+    before(async () => {
+      serverControls = new ProcessControls({
+        dirname: __dirname,
+        appName: 'serverApp',
+        useGlobalAgent: true,
+        appUsesHttps: false
+      });
+      clientControls = new ProcessControls({
+        dirname: __dirname,
+        appName: 'clientApp',
+        useGlobalAgent: true,
+        appUsesHttps: false,
+        env: {
+          ...commonEnv,
+          SERVER_PORT: serverControls.getPort()
+        }
+      });
+      await serverControls.startAndWaitForAgentConnection();
+      await clientControls.startAndWaitForAgentConnection();
+    });
+
+    after(() => Promise.all([serverControls.stop(), clientControls.stop()]));
+
+    beforeEach(() => globalAgent.instance.clearReceivedTraceData());
+
+    afterEach(() => Promise.all([serverControls.clearIpcMessages(), clientControls.clearIpcMessages()]));
+
+    it('400 response should not set ec (ec = 0)', async () => {
+      await clientControls.sendRequest({ path: '/fetch-with-status?status=400', simple: false });
+      await retry(async () => {
+        const spans = await globalAgent.instance.getSpans();
+        verifyHttpExitEc({ spans, expectedEc: 0, expectedStatus: 400 });
+      });
+    });
+
+    it('500 response should set ec = 1', async () => {
+      await clientControls.sendRequest({ path: '/fetch-with-status?status=500', simple: false });
+      await retry(async () => {
+        const spans = await globalAgent.instance.getSpans();
+        verifyHttpExitEc({ spans, expectedEc: 1, expectedStatus: 500 });
       });
     });
   });

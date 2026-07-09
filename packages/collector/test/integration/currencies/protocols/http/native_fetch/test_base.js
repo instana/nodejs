@@ -612,58 +612,6 @@ module.exports = function (name, version, isLatest) {
   });
 
   describe('HTTP client exit span error classification', () => {
-    describe('default behavior — 400 is not an error', () => {
-      let httpExitServerControls;
-      let httpExitClientControls;
-
-      before(async () => {
-        httpExitServerControls = new ProcessControls({
-          dirname: __dirname,
-          appName: 'serverApp',
-          useGlobalAgent: true
-        });
-        httpExitClientControls = new ProcessControls({
-          dirname: __dirname,
-          appName: 'clientApp',
-          useGlobalAgent: true,
-          env: {
-            ...commonEnv,
-            SERVER_PORT: httpExitServerControls.port
-          }
-        });
-        await httpExitServerControls.startAndWaitForAgentConnection();
-        await httpExitClientControls.startAndWaitForAgentConnection();
-      });
-
-      after(async () => {
-        await httpExitClientControls.stop();
-        await httpExitServerControls.stop();
-      });
-
-      beforeEach(() => globalAgent.instance.clearReceivedTraceData());
-
-      afterEach(async () => {
-        await httpExitServerControls.clearIpcMessages();
-        await httpExitClientControls.clearIpcMessages();
-      });
-
-      it('400 response should not set ec (ec = 0)', async () => {
-        await httpExitClientControls.sendRequest({ path: '/fetch-with-status?status=400', simple: false });
-        await retry(async () => {
-          const spans = await globalAgent.instance.getSpans();
-          verifyHttpExitEc({ spans, expectedEc: 0, expectedStatus: 400 });
-        });
-      });
-
-      it('500 response should set ec = 1', async () => {
-        await httpExitClientControls.sendRequest({ path: '/fetch-with-status?status=500', simple: false });
-        await retry(async () => {
-          const spans = await globalAgent.instance.getSpans();
-          verifyHttpExitEc({ spans, expectedEc: 1, expectedStatus: 500 });
-        });
-      });
-    });
-
     describe('classifyAll4xxAsErrors: true — all 4xx are errors', () => {
       let httpExitServerControls;
       let httpExitClientControls;
@@ -940,6 +888,22 @@ module.exports = function (name, version, isLatest) {
       'x-my-exit-request-object-request-multi-header':
         'x-my-exit-request-object-request-multi-header-value-1,x-my-exit-request-object-request-multi-header-value-2',
       'x-exit-not-captured-header': 'whatever'
+    });
+  });
+
+  it('400 response should not set ec (ec = 0)', async () => {
+    await clientControls.sendRequest({ path: '/fetch-with-status?status=400', simple: false });
+    await retry(async () => {
+      const spans = await globalAgent.instance.getSpans();
+      verifyHttpExitEc({ spans, expectedEc: 0, expectedStatus: 400 });
+    });
+  });
+
+  it('500 response should set ec = 1', async () => {
+    await clientControls.sendRequest({ path: '/fetch-with-status?status=500', simple: false });
+    await retry(async () => {
+      const spans = await globalAgent.instance.getSpans();
+      verifyHttpExitEc({ spans, expectedEc: 1, expectedStatus: 500 });
     });
   });
 
