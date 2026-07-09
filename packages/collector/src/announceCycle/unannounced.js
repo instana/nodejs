@@ -302,7 +302,7 @@ function applyStackTraceConfiguration(agentResponse) {
   ensureNestedObjectExists(agentOpts.config, ['tracing', 'global']);
 
   if (globalConfig['stack-trace'] !== undefined) {
-    const stackTraceModeValidation = coreConfig.validator.validateStackTraceMode(globalConfig['stack-trace']);
+    const stackTraceModeValidation = coreConfig.validators.validateStackTraceMode(globalConfig['stack-trace']);
     if (stackTraceModeValidation.isValid) {
       const normalizedStackTrace = coreConfig.normalizers.stackTrace.normalizeStackTraceModeFromAgent(
         globalConfig['stack-trace']
@@ -316,7 +316,7 @@ function applyStackTraceConfiguration(agentResponse) {
   }
 
   if (globalConfig['stack-trace-length'] !== undefined) {
-    const stackTraceLengthValidation = coreConfig.validator.validateStackTraceLength(
+    const stackTraceLengthValidation = coreConfig.validators.validateStackTraceLength(
       globalConfig['stack-trace-length']
     );
     if (stackTraceLengthValidation.isValid) {
@@ -361,12 +361,12 @@ function applyHttpExitConfiguration(agentResponse) {
 
   ensureNestedObjectExists(agentOpts.config, ['tracing', 'http', 'exit']);
 
-  const classifyAll4xxAsErrors = coreConfig.validator.booleanValidator(exitConfig['classify-all-4xx-as-errors']);
+  const classifyAll4xxAsErrors = coreConfig.validators.booleanValidator(exitConfig['classify-all-4xx-as-errors']);
   if (classifyAll4xxAsErrors !== undefined) {
     agentOpts.config.tracing.http.exit.classifyAll4xxAsErrors = classifyAll4xxAsErrors;
   }
 
-  const classifyAsErrors = coreConfig.validator.httpExitErrorCodeValidator(exitConfig['classify-as-errors']);
+  const classifyAsErrors = coreConfig.validators.httpExitErrorCodeValidator(exitConfig['classify-as-errors']);
   if (classifyAsErrors !== undefined) {
     agentOpts.config.tracing.http.exit.classifyAsErrors = classifyAsErrors;
   }
