@@ -9,8 +9,8 @@ const normalizers = require('./normalizers');
 const deepMerge = require('../util/deepMerge');
 const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE, CONFIG_SOURCES } = require('../util/constants');
 const util = require('./util');
-const validator = require('./validator');
-const { validateStackTraceMode, validateStackTraceLength } = validator;
+const validators = require('./validator');
+const { validateStackTraceMode, validateStackTraceLength } = validators;
 
 // @typedef {{ [x: string]: any }} configMeta
 /** @type {configMeta} */
@@ -199,7 +199,7 @@ let defaults = {
 const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-ignore-case', 'contains', 'regex', 'none'];
 
 module.exports.normalizers = normalizers;
-module.exports.validator = validator;
+module.exports.validators = validators;
 
 /**
  * @param {import('../core').GenericLogger} [_logger]
@@ -208,7 +208,7 @@ module.exports.init = _logger => {
   logger = _logger;
   normalizers.init({ logger });
   util.init(logger);
-  validator.init(logger);
+  validators.init(logger);
 };
 
 /**
@@ -260,7 +260,7 @@ function normalizeServiceName({ userConfig = {}, defaultConfig = {}, finalConfig
       inCodeValue: userConfig.serviceName,
       defaultValue: defaultConfig.serviceName
     },
-    [validator.stringValidator]
+    [validators.stringValidator]
   );
 
   configStore.set('config.serviceName', { source });
@@ -278,7 +278,7 @@ function normalizePackageJsonPath({ userConfig = {}, defaultConfig = {}, finalCo
       inCodeValue: userConfig.packageJsonPath,
       defaultValue: defaultConfig.packageJsonPath
     },
-    [validator.stringValidator]
+    [validators.stringValidator]
   );
 
   configStore.set('config.packageJsonPath', { source });
@@ -305,7 +305,7 @@ function normalizeMetricsConfig({ userConfig = {}, defaultConfig = {}, finalConf
       inCodeValue: userMetrics?.transmissionDelay,
       defaultValue: defaultConfig.metrics.transmissionDelay
     },
-    [validator.numberValidator]
+    [validators.numberValidator]
   );
 
   finalConfig.metrics.transmissionDelay = transmissionDelay;
@@ -332,7 +332,7 @@ function normalizeMetricsConfig({ userConfig = {}, defaultConfig = {}, finalConf
       inCodeValue: userMetrics?.timeBetweenHealthcheckCalls,
       defaultValue: defaultConfig.metrics.timeBetweenHealthcheckCalls
     },
-    [validator.numberValidator]
+    [validators.numberValidator]
   );
 
   finalConfig.metrics.timeBetweenHealthcheckCalls = healthcheckInterval;
@@ -390,7 +390,7 @@ function normalizeTracingEnabled({ userConfig = {}, defaultConfig = {}, finalCon
       inCodeValue: userConfig.tracing.enabled,
       defaultValue: defaultConfig.tracing.enabled
     },
-    [validator.booleanValidator]
+    [validators.booleanValidator]
   );
 
   // The env var is TRACING_DISABLE, so we need to invert it when it comes from env
@@ -417,7 +417,7 @@ function normalizeAllowRootExitSpan({ userConfig = {}, defaultConfig = {}, final
       inCodeValue: userConfig.tracing.allowRootExitSpan,
       defaultValue: defaultConfig.tracing.allowRootExitSpan
     },
-    [validator.booleanValidator]
+    [validators.booleanValidator]
   );
 
   configStore.set('config.tracing.allowRootExitSpan', { source });
@@ -440,7 +440,7 @@ function normalizeUseOpentelemetry({ userConfig = {}, defaultConfig = {}, finalC
       inCodeValue: userConfig.tracing.useOpentelemetry,
       defaultValue: defaultConfig.tracing.useOpentelemetry
     },
-    [validator.booleanValidator]
+    [validators.booleanValidator]
   );
 
   // The env var is DISABLE_USE_OPENTELEMETRY, so we need to invert it when it comes from env
@@ -472,7 +472,7 @@ function normalizeAutomaticTracingEnabled({ userConfig = {}, defaultConfig = {},
       inCodeValue: userConfig.tracing.automaticTracingEnabled,
       defaultValue: defaultConfig.tracing.automaticTracingEnabled
     },
-    [validator.booleanValidator]
+    [validators.booleanValidator]
   );
 
   // The env var is DISABLE_AUTO_INSTR, so we need to invert it when it comes from env
@@ -504,7 +504,7 @@ function normalizeActivateImmediately({ userConfig = {}, defaultConfig = {}, fin
       inCodeValue: userConfig.tracing.activateImmediately,
       defaultValue: defaultConfig.tracing.activateImmediately
     },
-    [validator.booleanValidator]
+    [validators.booleanValidator]
   );
 
   configStore.set('config.tracing.activateImmediately', { source });
@@ -540,7 +540,7 @@ function normalizeTracingTransmission({ userConfig = {}, defaultConfig = {}, fin
       inCodeValue: userConfig.tracing.transmissionDelay,
       defaultValue: defaultConfig.tracing.transmissionDelay
     },
-    [validator.numberValidator]
+    [validators.numberValidator]
   );
 
   configStore.set('config.tracing.transmissionDelay', { source: tracingTransmissionDelaySource });
@@ -558,7 +558,7 @@ function normalizeTracingTransmission({ userConfig = {}, defaultConfig = {}, fin
       inCodeValue: userConfig.tracing.forceTransmissionStartingAt,
       defaultValue: defaultConfig.tracing.forceTransmissionStartingAt
     },
-    [validator.numberValidator]
+    [validators.numberValidator]
   );
 
   configStore.set('config.tracing.forceTransmissionStartingAt', { source: forceTransmissionStartingAtSource });
@@ -576,7 +576,7 @@ function normalizeTracingTransmission({ userConfig = {}, defaultConfig = {}, fin
       inCodeValue: userConfig.tracing.initialTransmissionDelay,
       defaultValue: defaultConfig.tracing.initialTransmissionDelay
     },
-    [validator.numberValidator]
+    [validators.numberValidator]
   );
 
   configStore.set('config.tracing.initialTransmissionDelay', { source: initialTransmissionDelaySource });
@@ -683,7 +683,7 @@ function normalizeClassifyAll4xxAsErrors({ userHttp, defaultConfig, finalConfig 
       inCodeValue: userHttp?.exit?.classifyAll4xxAsErrors,
       defaultValue: defaultConfig.tracing.http.exit.classifyAll4xxAsErrors
     },
-    [validator.booleanValidator]
+    [validators.booleanValidator]
   );
 
   finalConfig.tracing.http.exit.classifyAll4xxAsErrors = value;
@@ -712,7 +712,7 @@ function normalizeClassifyAsErrors({ userHttp, defaultConfig, finalConfig }) {
       inCodeValue: userHttp?.exit?.classifyAsErrors,
       defaultValue: defaultConfig.tracing.http.exit.classifyAsErrors
     },
-    [validator.httpExitErrorCodeValidator]
+    [validators.httpExitErrorCodeValidator]
   );
 
   finalConfig.tracing.http.exit.classifyAsErrors = value;
@@ -891,7 +891,7 @@ function normalizeSpanBatchingEnabled({ userConfig = {}, defaultConfig = {}, fin
       inCodeValue: userConfig.tracing.spanBatchingEnabled,
       defaultValue: defaultConfig.tracing.spanBatchingEnabled
     },
-    [validator.booleanValidator]
+    [validators.booleanValidator]
   );
 
   configStore.set('config.tracing.spanBatchingEnabled', { source });
@@ -914,7 +914,7 @@ function normalizeDisableW3cPropagation({ userConfig = {}, defaultConfig = {}, f
       inCodeValue: userConfig.tracing.disableW3cPropagation,
       defaultValue: defaultConfig.tracing.disableW3cPropagation
     },
-    [validator.validateTruthyBoolean]
+    [validators.validateTruthyBoolean]
   );
 
   configStore.set('config.tracing.disableW3cPropagation', { source });
@@ -937,7 +937,7 @@ function normalizeDisableW3cTraceCorrelation({ userConfig = {}, defaultConfig = 
       inCodeValue: userConfig.tracing.disableW3cTraceCorrelation,
       defaultValue: defaultConfig.tracing.disableW3cTraceCorrelation
     },
-    [validator.validateTruthyBoolean]
+    [validators.validateTruthyBoolean]
   );
 
   configStore.set('config.tracing.disableW3cTraceCorrelation', { source });
@@ -964,7 +964,7 @@ function normalizeTracingKafka({ userConfig = {}, defaultConfig = {}, finalConfi
       inCodeValue: userKafka.traceCorrelation,
       defaultValue: defaultConfig.tracing.kafka.traceCorrelation
     },
-    [validator.booleanValidator]
+    [validators.booleanValidator]
   );
 
   configStore.set('config.tracing.kafka.traceCorrelation', { source });
@@ -1173,7 +1173,7 @@ function normalizeIgnoreEndpointsDisableSuppression({ userConfig = {}, defaultCo
       inCodeValue: userConfig.tracing.ignoreEndpointsDisableSuppression,
       defaultValue: defaultConfig.tracing.ignoreEndpointsDisableSuppression
     },
-    [validator.booleanValidator]
+    [validators.booleanValidator]
   );
 
   configStore.set('config.tracing.ignoreEndpointsDisableSuppression', { source });
@@ -1196,7 +1196,7 @@ function normalizeDisableEOLEvents({ userConfig = {}, defaultConfig = {}, finalC
       inCodeValue: userConfig.tracing.disableEOLEvents,
       defaultValue: defaultConfig.tracing.disableEOLEvents
     },
-    [validator.booleanValidator]
+    [validators.booleanValidator]
   );
 
   configStore.set('config.tracing.disableEOLEvents', { source });
@@ -1218,7 +1218,7 @@ function normalizePreloadOpentelemetry({ userConfig = {}, defaultConfig = {}, fi
       inCodeValue: userConfig.preloadOpentelemetry,
       defaultValue: defaultConfig.preloadOpentelemetry
     },
-    [validator.booleanValidator]
+    [validators.booleanValidator]
   );
 
   finalConfig.preloadOpentelemetry = value;
@@ -1244,7 +1244,7 @@ function normalizeOtlpExporter({ userConfig = {}, defaultConfig = {}, finalConfi
       inCodeValue: userOtlp.enabled,
       defaultValue: defaultConfig.tracing?.otlp?.enabled
     },
-    [validator.booleanValidator]
+    [validators.booleanValidator]
   );
 
   configStore.set('config.tracing.otlp.enabled', { source });
