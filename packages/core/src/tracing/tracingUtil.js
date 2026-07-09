@@ -24,6 +24,11 @@ let stackTraceLength;
  */
 // eslint-disable-next-line no-unused-vars
 let stackTraceMode;
+
+/**
+ * @type {import("../config").HTTPExitTracingOptions | undefined}
+ */
+let httpExitConfig;
 /**
  * @param {import('../config').InstanaConfig} config
  */
@@ -31,6 +36,7 @@ exports.init = function (config) {
   logger = config.logger;
   stackTraceLength = config?.tracing?.stackTraceLength;
   stackTraceMode = config?.tracing?.stackTrace;
+  httpExitConfig = config.tracing.http.exit;
 };
 
 /**
@@ -39,6 +45,7 @@ exports.init = function (config) {
 exports.activate = function activate(_config) {
   stackTraceLength = _config.tracing.stackTraceLength;
   stackTraceMode = _config.tracing.stackTrace;
+  httpExitConfig = _config.tracing.http.exit;
 };
 
 /**
@@ -403,10 +410,9 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
  * set to true or the status code is listed in `classifyAsErrors`.
  *
  * @param {number} statusCode
- * @param {{ classifyAll4xxAsErrors?: boolean, classifyAsErrors?: Array<number> }} httpExitConfig
  * @returns {boolean}
  */
-exports.shouldMarkAsError = function shouldMarkAsError(statusCode, httpExitConfig) {
+exports.shouldMarkAsError = function shouldMarkAsError(statusCode) {
   if (statusCode >= 500) {
     return true;
   }

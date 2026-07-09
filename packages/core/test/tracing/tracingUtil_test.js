@@ -434,7 +434,13 @@ describe('tracing/tracingUtil', () => {
       tracingUtil.init({
         logger: createFakeLogger(),
         tracing: {
-          stackTraceLength: 10
+          stackTraceLength: 10,
+          http: {
+            exit: {
+              classifyAll4xxAsErrors: false,
+              classifyAsErrors: []
+            }
+          }
         }
       });
     });
@@ -908,7 +914,13 @@ describe('tracing/tracingUtil', () => {
             logger: createFakeLogger(),
             tracing: {
               stackTraceLength: 10,
-              stackTrace: 'none'
+              stackTrace: 'none',
+              http: {
+                exit: {
+                  classifyAll4xxAsErrors: false,
+                  classifyAsErrors: []
+                }
+              }
             }
           });
         });
@@ -948,7 +960,13 @@ describe('tracing/tracingUtil', () => {
             logger: createFakeLogger(),
             tracing: {
               stackTraceLength: 10,
-              stackTrace: 'error'
+              stackTrace: 'error',
+              http: {
+                exit: {
+                  classifyAll4xxAsErrors: false,
+                  classifyAsErrors: []
+                }
+              }
             }
           });
         });
@@ -1005,7 +1023,13 @@ describe('tracing/tracingUtil', () => {
             logger: createFakeLogger(),
             tracing: {
               stackTraceLength: 10,
-              stackTrace: 'all'
+              stackTrace: 'all',
+              http: {
+                exit: {
+                  classifyAll4xxAsErrors: false,
+                  classifyAsErrors: []
+                }
+              }
             }
           });
         });
@@ -1207,7 +1231,13 @@ describe('tracing/tracingUtil', () => {
           logger: createFakeLogger(),
           tracing: {
             stackTraceLength: 10,
-            stackTrace: 'all'
+            stackTrace: 'all',
+            http: {
+              exit: {
+                classifyAll4xxAsErrors: false,
+                classifyAsErrors: []
+              }
+            }
           }
         });
       });
@@ -1257,7 +1287,13 @@ describe('tracing/tracingUtil', () => {
           logger: createFakeLogger(),
           tracing: {
             stackTraceLength: 10,
-            stackTrace: 'none'
+            stackTrace: 'none',
+            http: {
+              exit: {
+                classifyAll4xxAsErrors: false,
+                classifyAsErrors: []
+              }
+            }
           }
         });
       });
@@ -1297,7 +1333,13 @@ describe('tracing/tracingUtil', () => {
           logger: createFakeLogger(),
           tracing: {
             stackTraceLength: 10,
-            stackTrace: 'error'
+            stackTrace: 'error',
+            http: {
+              exit: {
+                classifyAll4xxAsErrors: false,
+                classifyAsErrors: []
+              }
+            }
           }
         });
       });
@@ -1361,66 +1403,104 @@ describe('tracing/tracingUtil', () => {
     });
 
     describe('classifyAll4xxAsErrors=true, classifyAsErrors=[]', () => {
-      const allConfig = { classifyAll4xxAsErrors: true, classifyAsErrors: [] };
-
+      before(() => {
+        tracingUtil.init({
+          logger: createFakeLogger(),
+          tracing: {
+            stackTraceLength: 10,
+            http: {
+              exit: {
+                classifyAll4xxAsErrors: true,
+                classifyAsErrors: []
+              }
+            }
+          }
+        });
+      });
       it('should return true for 400', () => {
-        expect(shouldMarkAsError(400, allConfig)).to.equal(true);
+        expect(shouldMarkAsError(400)).to.equal(true);
       });
 
       it('should return true for 401', () => {
-        expect(shouldMarkAsError(401, allConfig)).to.equal(true);
+        expect(shouldMarkAsError(401)).to.equal(true);
       });
 
       it('should return true for 404', () => {
-        expect(shouldMarkAsError(404, allConfig)).to.equal(true);
+        expect(shouldMarkAsError(404)).to.equal(true);
       });
 
       it('should return true for 499', () => {
-        expect(shouldMarkAsError(499, allConfig)).to.equal(true);
+        expect(shouldMarkAsError(499)).to.equal(true);
       });
 
       it('should return true for 500', () => {
-        expect(shouldMarkAsError(500, allConfig)).to.equal(true);
+        expect(shouldMarkAsError(500)).to.equal(true);
       });
     });
 
     describe('classifyAsErrors=[401,403] takes precedence over classifyAll4xxAsErrors', () => {
-      const specificConfig = { classifyAll4xxAsErrors: true, classifyAsErrors: [401, 403] };
+      before(() => {
+        tracingUtil.init({
+          logger: createFakeLogger(),
+          tracing: {
+            stackTraceLength: 10,
+            http: {
+              exit: {
+                classifyAll4xxAsErrors: true,
+                classifyAsErrors: [401, 403]
+              }
+            }
+          }
+        });
+      });
 
       it('should return true for 401 (in list)', () => {
-        expect(shouldMarkAsError(401, specificConfig)).to.equal(true);
+        expect(shouldMarkAsError(401)).to.equal(true);
       });
 
       it('should return true for 403 (in list)', () => {
-        expect(shouldMarkAsError(403, specificConfig)).to.equal(true);
+        expect(shouldMarkAsError(403)).to.equal(true);
       });
 
       it('should return false for 404 (not in list, even though classifyAll4xxAsErrors=true)', () => {
-        expect(shouldMarkAsError(404, specificConfig)).to.equal(false);
+        expect(shouldMarkAsError(404)).to.equal(false);
       });
 
       it('should return false for 400 (not in list, even though classifyAll4xxAsErrors=true)', () => {
-        expect(shouldMarkAsError(400, specificConfig)).to.equal(false);
+        expect(shouldMarkAsError(400)).to.equal(false);
       });
 
       it('should return true for 500', () => {
-        expect(shouldMarkAsError(500, specificConfig)).to.equal(true);
+        expect(shouldMarkAsError(500)).to.equal(true);
       });
     });
 
     describe('non-error status codes', () => {
-      const anyConfig = { classifyAll4xxAsErrors: true, classifyAsErrors: [401] };
+      before(() => {
+        tracingUtil.init({
+          logger: createFakeLogger(),
+          tracing: {
+            stackTraceLength: 10,
+            http: {
+              exit: {
+                classifyAll4xxAsErrors: false,
+                classifyAsErrors: []
+              }
+            }
+          }
+        });
+      });
 
       it('should return false for 200', () => {
-        expect(shouldMarkAsError(200, anyConfig)).to.equal(false);
+        expect(shouldMarkAsError(200)).to.equal(false);
       });
 
       it('should return false for 302', () => {
-        expect(shouldMarkAsError(302, anyConfig)).to.equal(false);
+        expect(shouldMarkAsError(302)).to.equal(false);
       });
 
       it('should return false for 399', () => {
-        expect(shouldMarkAsError(399, anyConfig)).to.equal(false);
+        expect(shouldMarkAsError(399)).to.equal(false);
       });
     });
   });

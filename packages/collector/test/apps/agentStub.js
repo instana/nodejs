@@ -47,7 +47,7 @@ const ignoreEndpoints = process.env.IGNORE_ENDPOINTS && JSON.parse(process.env.I
 const disable = process.env.AGENT_DISABLE_TRACING && JSON.parse(process.env.AGENT_DISABLE_TRACING);
 const stackTraceConfig = process.env.STACK_TRACE_CONFIG && JSON.parse(process.env.STACK_TRACE_CONFIG);
 const otlpExporter = process.env.OTLP_EXPORTER && JSON.parse(process.env.OTLP_EXPORTER);
-const httpExitConfig = process.env.HTTP_EXIT_CONFIG && JSON.parse(process.env.HTTP_EXIT_CONFIG);
+const httpExitConfig = process.env.AGENT_STUB_HTTP_EXIT_CONFIG && JSON.parse(process.env.AGENT_STUB_HTTP_EXIT_CONFIG);
 
 const uuids = {};
 const agentLogs = [];

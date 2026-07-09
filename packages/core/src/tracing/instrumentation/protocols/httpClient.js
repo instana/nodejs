@@ -21,7 +21,6 @@ const hook = require('../../../util/hook');
 
 const URL = url.URL;
 let extraHttpHeadersToCapture;
-let httpExitConfig;
 let logger;
 let isActive = false;
 let disableW3cPropagation;
@@ -33,7 +32,6 @@ exports.init = function init(config) {
   instrument(coreHttpsModule, true);
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
   disableW3cPropagation = config.tracing.disableW3cPropagation;
-  httpExitConfig = config.tracing.http.exit;
   hook.onModuleLoad('request', logDeprecatedWarning);
 };
 
@@ -45,12 +43,10 @@ function logDeprecatedWarning() {
 }
 exports.updateConfig = function updateConfig(config) {
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
-  httpExitConfig = config.tracing.http.exit;
 };
 
 exports.activate = function activate(_config) {
   extraHttpHeadersToCapture = _config.tracing.http.extraHttpHeadersToCapture;
-  httpExitConfig = _config.tracing.http.exit;
 
   isActive = true;
 };
@@ -242,7 +238,7 @@ function instrument(coreModule, forceHttps) {
         }
 
         span.d = Date.now() - span.ts;
-        span.ec = span.ec = span.ec = tracingUtil.shouldMarkAsError(res.statusCode, httpExitConfig) ? 1 : 0;
+        span.ec = tracingUtil.shouldMarkAsError(res.statusCode) ? 1 : 0;
 
         span.transmit();
 
