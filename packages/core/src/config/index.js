@@ -9,8 +9,8 @@ const normalizers = require('./normalizers');
 const deepMerge = require('../util/deepMerge');
 const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE, CONFIG_SOURCES } = require('../util/constants');
 const util = require('./util');
-const validate = require('./validator');
-const { validateStackTraceMode, validateStackTraceLength } = validate;
+const validators = require('./validator');
+const { validateStackTraceMode, validateStackTraceLength } = validators;
 
 // @typedef {{ [x: string]: any }} configMeta
 /** @type {configMeta} */
@@ -79,6 +79,13 @@ let currentConfig;
 /**
  * @typedef {Object} HTTPTracingOptions
  * @property {Array<string>} [extraHttpHeadersToCapture]
+ * @property {HTTPExitTracingOptions} [exit]
+ */
+
+/**
+ * @typedef {Object} HTTPExitTracingOptions
+ * @property {boolean} [classifyAll4xxAsErrors]
+ * @property {Array<number>} [classifyAsErrors]
  */
 
 /**
@@ -156,7 +163,11 @@ let defaults = {
     transmissionDelay: 1000,
     initialTransmissionDelay: 1000,
     http: {
-      extraHttpHeadersToCapture: []
+      extraHttpHeadersToCapture: [],
+      exit: {
+        classifyAll4xxAsErrors: false,
+        classifyAsErrors: []
+      }
     },
     stackTrace: DEFAULT_STACK_TRACE_MODE,
     stackTraceLength: DEFAULT_STACK_TRACE_LENGTH,
@@ -188,7 +199,7 @@ let defaults = {
 const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-ignore-case', 'contains', 'regex', 'none'];
 
 module.exports.normalizers = normalizers;
-module.exports.validate = validate;
+module.exports.validators = validators;
 
 /**
  * @param {import('../core').GenericLogger} [_logger]
@@ -197,6 +208,7 @@ module.exports.init = _logger => {
   logger = _logger;
   normalizers.init({ logger });
   util.init(logger);
+  validators.init(logger);
 };
 
 /**
@@ -248,7 +260,7 @@ function normalizeServiceName({ userConfig = {}, defaultConfig = {}, finalConfig
       inCodeValue: userConfig.serviceName,
       defaultValue: defaultConfig.serviceName
     },
-    [validate.stringValidator]
+    [validators.stringValidator]
   );
 
   configStore.set('config.serviceName', { source });
@@ -266,7 +278,7 @@ function normalizePackageJsonPath({ userConfig = {}, defaultConfig = {}, finalCo
       inCodeValue: userConfig.packageJsonPath,
       defaultValue: defaultConfig.packageJsonPath
     },
-    [validate.stringValidator]
+    [validators.stringValidator]
   );
 
   configStore.set('config.packageJsonPath', { source });
@@ -293,7 +305,7 @@ function normalizeMetricsConfig({ userConfig = {}, defaultConfig = {}, finalConf
       inCodeValue: userMetrics?.transmissionDelay,
       defaultValue: defaultConfig.metrics.transmissionDelay
     },
-    [validate.numberValidator]
+    [validators.numberValidator]
   );
 
   finalConfig.metrics.transmissionDelay = transmissionDelay;
@@ -320,7 +332,7 @@ function normalizeMetricsConfig({ userConfig = {}, defaultConfig = {}, finalConf
       inCodeValue: userMetrics?.timeBetweenHealthcheckCalls,
       defaultValue: defaultConfig.metrics.timeBetweenHealthcheckCalls
     },
-    [validate.numberValidator]
+    [validators.numberValidator]
   );
 
   finalConfig.metrics.timeBetweenHealthcheckCalls = healthcheckInterval;
@@ -378,7 +390,7 @@ function normalizeTracingEnabled({ userConfig = {}, defaultConfig = {}, finalCon
       inCodeValue: userConfig.tracing.enabled,
       defaultValue: defaultConfig.tracing.enabled
     },
-    [validate.booleanValidator]
+    [validators.booleanValidator]
   );
 
   // The env var is TRACING_DISABLE, so we need to invert it when it comes from env
@@ -405,7 +417,7 @@ function normalizeAllowRootExitSpan({ userConfig = {}, defaultConfig = {}, final
       inCodeValue: userConfig.tracing.allowRootExitSpan,
       defaultValue: defaultConfig.tracing.allowRootExitSpan
     },
-    [validate.booleanValidator]
+    [validators.booleanValidator]
   );
 
   configStore.set('config.tracing.allowRootExitSpan', { source });
@@ -428,7 +440,7 @@ function normalizeUseOpentelemetry({ userConfig = {}, defaultConfig = {}, finalC
       inCodeValue: userConfig.tracing.useOpentelemetry,
       defaultValue: defaultConfig.tracing.useOpentelemetry
     },
-    [validate.booleanValidator]
+    [validators.booleanValidator]
   );
 
   // The env var is DISABLE_USE_OPENTELEMETRY, so we need to invert it when it comes from env
@@ -460,7 +472,7 @@ function normalizeAutomaticTracingEnabled({ userConfig = {}, defaultConfig = {},
       inCodeValue: userConfig.tracing.automaticTracingEnabled,
       defaultValue: defaultConfig.tracing.automaticTracingEnabled
     },
-    [validate.booleanValidator]
+    [validators.booleanValidator]
   );
 
   // The env var is DISABLE_AUTO_INSTR, so we need to invert it when it comes from env
@@ -492,7 +504,7 @@ function normalizeActivateImmediately({ userConfig = {}, defaultConfig = {}, fin
       inCodeValue: userConfig.tracing.activateImmediately,
       defaultValue: defaultConfig.tracing.activateImmediately
     },
-    [validate.booleanValidator]
+    [validators.booleanValidator]
   );
 
   configStore.set('config.tracing.activateImmediately', { source });
@@ -528,7 +540,7 @@ function normalizeTracingTransmission({ userConfig = {}, defaultConfig = {}, fin
       inCodeValue: userConfig.tracing.transmissionDelay,
       defaultValue: defaultConfig.tracing.transmissionDelay
     },
-    [validate.numberValidator]
+    [validators.numberValidator]
   );
 
   configStore.set('config.tracing.transmissionDelay', { source: tracingTransmissionDelaySource });
@@ -546,7 +558,7 @@ function normalizeTracingTransmission({ userConfig = {}, defaultConfig = {}, fin
       inCodeValue: userConfig.tracing.forceTransmissionStartingAt,
       defaultValue: defaultConfig.tracing.forceTransmissionStartingAt
     },
-    [validate.numberValidator]
+    [validators.numberValidator]
   );
 
   configStore.set('config.tracing.forceTransmissionStartingAt', { source: forceTransmissionStartingAtSource });
@@ -564,7 +576,7 @@ function normalizeTracingTransmission({ userConfig = {}, defaultConfig = {}, fin
       inCodeValue: userConfig.tracing.initialTransmissionDelay,
       defaultValue: defaultConfig.tracing.initialTransmissionDelay
     },
-    [validate.numberValidator]
+    [validators.numberValidator]
   );
 
   configStore.set('config.tracing.initialTransmissionDelay', { source: initialTransmissionDelaySource });
@@ -588,6 +600,18 @@ function normalizeTracingHttp({ userConfig = {}, defaultConfig = {}, finalConfig
   const userHttp = userConfig.tracing.http;
   finalConfig.tracing.http = {};
 
+  normalizeExtraHttpHeadersToCapture({ userHttp, defaultConfig, finalConfig });
+  normalizeHttpExitConfig({ userHttp, defaultConfig, finalConfig });
+}
+
+/**
+ * @param {{
+ *   userHttp: HTTPTracingOptions | undefined,
+ *   defaultConfig: InstanaConfig,
+ *   finalConfig: InstanaConfig
+ * }} options
+ */
+function normalizeExtraHttpHeadersToCapture({ userHttp, defaultConfig, finalConfig }) {
   const userHeaders = userHttp?.extraHttpHeadersToCapture;
 
   // 1. Check environment variable
@@ -629,6 +653,78 @@ function normalizeTracingHttp({ userConfig = {}, defaultConfig = {}, finalConfig
   // 3. Use default configuration
   finalConfig.tracing.http.extraHttpHeadersToCapture = defaultConfig.tracing.http.extraHttpHeadersToCapture;
   configStore.set('config.tracing.http.extraHttpHeadersToCapture', { source: CONFIG_SOURCES.DEFAULT });
+}
+
+/**
+ * @param {{
+ *   userHttp: HTTPTracingOptions | undefined,
+ *   defaultConfig: InstanaConfig,
+ *   finalConfig: InstanaConfig
+ * }} options
+ */
+function normalizeHttpExitConfig({ userHttp, defaultConfig, finalConfig }) {
+  finalConfig.tracing.http.exit = {};
+
+  normalizeClassifyAll4xxAsErrors({ userHttp, defaultConfig, finalConfig });
+  normalizeClassifyAsErrors({ userHttp, defaultConfig, finalConfig });
+}
+
+/**
+ * @param {{
+ *   userHttp: HTTPTracingOptions | undefined,
+ *   defaultConfig: InstanaConfig,
+ *   finalConfig: InstanaConfig
+ * }} options
+ */
+function normalizeClassifyAll4xxAsErrors({ userHttp, defaultConfig, finalConfig }) {
+  const { value, source } = util.resolve(
+    {
+      envValue: 'INSTANA_TRACING_HTTP_EXIT_CLASSIFY_ALL_4XX_AS_ERRORS',
+      inCodeValue: userHttp?.exit?.classifyAll4xxAsErrors,
+      defaultValue: defaultConfig.tracing.http.exit.classifyAll4xxAsErrors
+    },
+    [validators.booleanValidator]
+  );
+
+  finalConfig.tracing.http.exit.classifyAll4xxAsErrors = value;
+
+  configStore.set('config.tracing.http.exit.classifyAll4xxAsErrors', { source });
+
+  util.log({
+    configPath: 'config.tracing.http.exit.classifyAll4xxAsErrors',
+    source,
+    value,
+    envVarName: 'INSTANA_TRACING_HTTP_EXIT_CLASSIFY_ALL_4XX_AS_ERRORS'
+  });
+}
+
+/**
+ * @param {{
+ *   userHttp: HTTPTracingOptions | undefined,
+ *   defaultConfig: InstanaConfig,
+ *   finalConfig: InstanaConfig
+ * }} options
+ */
+function normalizeClassifyAsErrors({ userHttp, defaultConfig, finalConfig }) {
+  const { value, source } = util.resolve(
+    {
+      envValue: 'INSTANA_TRACING_HTTP_EXIT_CLASSIFY_AS_ERRORS',
+      inCodeValue: userHttp?.exit?.classifyAsErrors,
+      defaultValue: defaultConfig.tracing.http.exit.classifyAsErrors
+    },
+    [validators.httpExitErrorCodeValidator]
+  );
+
+  finalConfig.tracing.http.exit.classifyAsErrors = value;
+
+  configStore.set('config.tracing.http.exit.classifyAsErrors', { source });
+
+  util.log({
+    configPath: 'config.tracing.http.exit.classifyAsErrors',
+    source,
+    value,
+    envVarName: 'INSTANA_TRACING_HTTP_EXIT_CLASSIFY_AS_ERRORS'
+  });
 }
 /**
  * @param {string} envVarValue
@@ -795,7 +891,7 @@ function normalizeSpanBatchingEnabled({ userConfig = {}, defaultConfig = {}, fin
       inCodeValue: userConfig.tracing.spanBatchingEnabled,
       defaultValue: defaultConfig.tracing.spanBatchingEnabled
     },
-    [validate.booleanValidator]
+    [validators.booleanValidator]
   );
 
   configStore.set('config.tracing.spanBatchingEnabled', { source });
@@ -818,7 +914,7 @@ function normalizeDisableW3cPropagation({ userConfig = {}, defaultConfig = {}, f
       inCodeValue: userConfig.tracing.disableW3cPropagation,
       defaultValue: defaultConfig.tracing.disableW3cPropagation
     },
-    [validate.validateTruthyBoolean]
+    [validators.validateTruthyBoolean]
   );
 
   configStore.set('config.tracing.disableW3cPropagation', { source });
@@ -841,7 +937,7 @@ function normalizeDisableW3cTraceCorrelation({ userConfig = {}, defaultConfig = 
       inCodeValue: userConfig.tracing.disableW3cTraceCorrelation,
       defaultValue: defaultConfig.tracing.disableW3cTraceCorrelation
     },
-    [validate.validateTruthyBoolean]
+    [validators.validateTruthyBoolean]
   );
 
   configStore.set('config.tracing.disableW3cTraceCorrelation', { source });
@@ -868,7 +964,7 @@ function normalizeTracingKafka({ userConfig = {}, defaultConfig = {}, finalConfi
       inCodeValue: userKafka.traceCorrelation,
       defaultValue: defaultConfig.tracing.kafka.traceCorrelation
     },
-    [validate.booleanValidator]
+    [validators.booleanValidator]
   );
 
   configStore.set('config.tracing.kafka.traceCorrelation', { source });
@@ -1077,7 +1173,7 @@ function normalizeIgnoreEndpointsDisableSuppression({ userConfig = {}, defaultCo
       inCodeValue: userConfig.tracing.ignoreEndpointsDisableSuppression,
       defaultValue: defaultConfig.tracing.ignoreEndpointsDisableSuppression
     },
-    [validate.booleanValidator]
+    [validators.booleanValidator]
   );
 
   configStore.set('config.tracing.ignoreEndpointsDisableSuppression', { source });
@@ -1100,7 +1196,7 @@ function normalizeDisableEOLEvents({ userConfig = {}, defaultConfig = {}, finalC
       inCodeValue: userConfig.tracing.disableEOLEvents,
       defaultValue: defaultConfig.tracing.disableEOLEvents
     },
-    [validate.booleanValidator]
+    [validators.booleanValidator]
   );
 
   configStore.set('config.tracing.disableEOLEvents', { source });
@@ -1122,7 +1218,7 @@ function normalizePreloadOpentelemetry({ userConfig = {}, defaultConfig = {}, fi
       inCodeValue: userConfig.preloadOpentelemetry,
       defaultValue: defaultConfig.preloadOpentelemetry
     },
-    [validate.booleanValidator]
+    [validators.booleanValidator]
   );
 
   finalConfig.preloadOpentelemetry = value;
@@ -1148,7 +1244,7 @@ function normalizeOtlpExporter({ userConfig = {}, defaultConfig = {}, finalConfi
       inCodeValue: userOtlp.enabled,
       defaultValue: defaultConfig.tracing?.otlp?.enabled
     },
-    [validate.booleanValidator]
+    [validators.booleanValidator]
   );
 
   configStore.set('config.tracing.otlp.enabled', { source });

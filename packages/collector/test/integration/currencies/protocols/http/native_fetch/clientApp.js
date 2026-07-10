@@ -85,6 +85,17 @@ app.get('/fetch', async (req, res) => {
   }
 });
 
+app.get('/fetch-with-status', async (req, res) => {
+  const status = req.query.status || '200';
+  let response;
+  try {
+    response = await fetch(`${baseUrl}/fetch-with-status?status=${status}`);
+    res.status(response.status).send();
+  } catch (e) {
+    res.status(503).send(e.message);
+  }
+});
+
 class CustomResource {
   constructor(url) {
     this.url = url;

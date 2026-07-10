@@ -6,6 +6,16 @@
 
 const { validStackTraceModes } = require('../util/constants');
 
+/** @type {import('../core').GenericLogger} */
+let logger;
+
+/**
+ * @param {import('../core').GenericLogger} [_logger]
+ */
+exports.init = _logger => {
+  logger = _logger;
+};
+
 /**
  * @param {any} value
  * @returns {number|undefined}
@@ -121,4 +131,30 @@ exports.validateStackTraceLength = function validateStackTraceLength(value) {
   }
 
   return { isValid: true, error: null };
+};
+
+/**
+ * @param {any} value
+ * @returns {Array<number>|undefined}
+ */
+exports.httpExitErrorCodeValidator = function httpExitErrorCodeValidator(value) {
+  if (typeof value === 'string') {
+    value = value.split(',');
+  }
+
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  return value.reduce((result, v) => {
+    const code = Number(v);
+
+    if (Number.isInteger(code) && code >= 400 && code <= 499) {
+      result.push(code);
+    } else {
+      logger?.debug(`Ignoring invalid HTTP exit status code "${v}". Expected an integer between 400 and 499.`);
+    }
+
+    return result;
+  }, []);
 };

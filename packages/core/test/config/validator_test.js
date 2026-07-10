@@ -418,4 +418,103 @@ describe('config.validator', () => {
       });
     });
   });
+
+  describe('httpExitErrorCodeValidator', () => {
+    it('should return an array for a valid comma-separated string', () => {
+      expect(validator.httpExitErrorCodeValidator('401,403')).to.deep.equal([401, 403]);
+    });
+
+    it('should return an array for a valid array input', () => {
+      expect(validator.httpExitErrorCodeValidator([401, 403])).to.deep.equal([401, 403]);
+    });
+
+    it('should trim whitespace around tokens', () => {
+      expect(validator.httpExitErrorCodeValidator('401, 403')).to.deep.equal([401, 403]);
+      expect(validator.httpExitErrorCodeValidator(' 401 , 403 ')).to.deep.equal([401, 403]);
+    });
+
+    it('should ignore non-integer tokens', () => {
+      expect(validator.httpExitErrorCodeValidator('401,abc,403')).to.deep.equal([401, 403]);
+      expect(validator.httpExitErrorCodeValidator([401, 'abc', 403])).to.deep.equal([401, 403]);
+    });
+
+    it('should ignore values below 400', () => {
+      expect(validator.httpExitErrorCodeValidator('399,401')).to.deep.equal([401]);
+      expect(validator.httpExitErrorCodeValidator([200, 301, 401])).to.deep.equal([401]);
+    });
+
+    it('should ignore values above 499', () => {
+      expect(validator.httpExitErrorCodeValidator('401,500,600')).to.deep.equal([401]);
+      expect(validator.httpExitErrorCodeValidator([401, 500, 503])).to.deep.equal([401]);
+    });
+
+    it('should return empty array when all values are out of range', () => {
+      expect(validator.httpExitErrorCodeValidator('200,301,500')).to.deep.equal([]);
+    });
+
+    it('should return empty array for an empty comma-separated string', () => {
+      expect(validator.httpExitErrorCodeValidator('')).to.deep.equal([]);
+    });
+
+    it('should return empty array for an empty array', () => {
+      expect(validator.httpExitErrorCodeValidator([])).to.deep.equal([]);
+    });
+
+    it('should return undefined for null', () => {
+      expect(validator.httpExitErrorCodeValidator(null)).to.be.undefined;
+    });
+
+    it('should return undefined for undefined', () => {
+      expect(validator.httpExitErrorCodeValidator(undefined)).to.be.undefined;
+    });
+
+    it('should return undefined for a number', () => {
+      expect(validator.httpExitErrorCodeValidator(401)).to.be.undefined;
+    });
+
+    it('should return undefined for a plain object', () => {
+      expect(validator.httpExitErrorCodeValidator({ code: 401 })).to.be.undefined;
+    });
+
+    it('should preserve all valid 4xx codes including boundary values', () => {
+      expect(validator.httpExitErrorCodeValidator('400,499')).to.deep.equal([400, 499]);
+    });
+
+    it('should preserve duplicate values', () => {
+      expect(validator.httpExitErrorCodeValidator('401,401,403')).to.deep.equal([401, 401, 403]);
+    });
+
+    it('should trim whitespace in array values', () => {
+      expect(validator.httpExitErrorCodeValidator([' 401 ', '403 '])).to.deep.equal([401, 403]);
+    });
+
+    it('should accept a mix of string and number values in an array', () => {
+      expect(validator.httpExitErrorCodeValidator(['401', 403])).to.deep.equal([401, 403]);
+    });
+
+    it('should ignore empty tokens in comma-separated strings', () => {
+      expect(validator.httpExitErrorCodeValidator('401,,403,')).to.deep.equal([401, 403]);
+    });
+
+    it('should ignore empty string values in arrays', () => {
+      expect(validator.httpExitErrorCodeValidator(['401', '', '403'])).to.deep.equal([401, 403]);
+    });
+
+    it('should ignore decimal values', () => {
+      expect(validator.httpExitErrorCodeValidator('401.5,403')).to.deep.equal([403]);
+      expect(validator.httpExitErrorCodeValidator([401.5, 403])).to.deep.equal([403]);
+    });
+
+    it('should ignore boolean and null values in arrays', () => {
+      expect(validator.httpExitErrorCodeValidator([401, true, null, false, 403])).to.deep.equal([401, 403]);
+    });
+
+    it('should return an empty array when all comma-separated values are invalid', () => {
+      expect(validator.httpExitErrorCodeValidator('abc,,500,399')).to.deep.equal([]);
+    });
+
+    it('should return an empty array when all array values are invalid', () => {
+      expect(validator.httpExitErrorCodeValidator(['abc', {}, [], 500, 399])).to.deep.equal([]);
+    });
+  });
 });

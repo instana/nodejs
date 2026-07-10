@@ -24,6 +24,11 @@ let stackTraceLength;
  */
 // eslint-disable-next-line no-unused-vars
 let stackTraceMode;
+
+/**
+ * @type {import("../config").HTTPExitTracingOptions | undefined}
+ */
+let httpExitConfig;
 /**
  * @param {import('../config').InstanaConfig} config
  */
@@ -31,6 +36,7 @@ exports.init = function (config) {
   logger = config.logger;
   stackTraceLength = config?.tracing?.stackTraceLength;
   stackTraceMode = config?.tracing?.stackTrace;
+  httpExitConfig = config.tracing.http.exit;
 };
 
 /**
@@ -39,6 +45,7 @@ exports.init = function (config) {
 exports.activate = function activate(_config) {
   stackTraceLength = _config.tracing.stackTraceLength;
   stackTraceMode = _config.tracing.stackTrace;
+  httpExitConfig = _config.tracing.http.exit;
 };
 
 /**
@@ -395,6 +402,32 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
   } catch (err) {
     logger.error('Failed to set error details on span:', err);
   }
+};
+
+/**
+ * 5xx status codes are always considered errors.
+ * 4xx status codes are  considered errors if `classifyAll4xxAsErrors` is
+ * set to true or the status code is listed in `classifyAsErrors`.
+ *
+ * @param {number} statusCode
+ * @returns {boolean}
+ */
+exports.shouldMarkAsError = function shouldMarkAsError(statusCode) {
+  if (statusCode >= 500) {
+    return true;
+  }
+
+  if (statusCode < 400 || statusCode > 499) {
+    return false;
+  }
+
+  const classifyAsErrors = httpExitConfig?.classifyAsErrors ?? [];
+
+  if (classifyAsErrors.length > 0) {
+    return classifyAsErrors.includes(statusCode);
+  }
+
+  return httpExitConfig?.classifyAll4xxAsErrors === true;
 };
 
 /**

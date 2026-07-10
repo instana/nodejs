@@ -5,6 +5,10 @@ export interface AgentConfig {
   tracing?: {
     http?: {
       extraHttpHeadersToCapture?: string[];
+      exit?: {
+        classifyAll4xxAsErrors?: boolean;
+        classifyAsErrors?: number[];
+      };
     };
     kafka?: {
       traceCorrelation?: boolean;

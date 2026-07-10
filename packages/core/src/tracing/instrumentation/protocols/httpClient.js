@@ -238,7 +238,7 @@ function instrument(coreModule, forceHttps) {
         }
 
         span.d = Date.now() - span.ts;
-        span.ec = res.statusCode >= 500 ? 1 : 0;
+        span.ec = tracingUtil.shouldMarkAsError(res.statusCode) ? 1 : 0;
 
         span.transmit();
 

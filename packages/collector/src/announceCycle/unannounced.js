@@ -48,6 +48,19 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @property {boolean} [span-batching-enabled]
  * @property {import('@instana/core/src/config/types').Disable} [disable]
  * @property {StackTraceConfig} [global]
+ * @property {HTTPTracingConfig} [http]
+ */
+
+/**
+ * @typedef {Object} HTTPExitConfig
+ * @property {boolean} [classify-all-4xx-as-errors]
+ * @property {Array<number>} [classify-as-errors]
+ */
+
+/**
+ * @typedef {Object} HTTPTracingConfig
+ *  @property {Array.<string>} [extra-http-headers]
+ * @property {HTTPExitConfig} [exit]
  */
 
 /**
@@ -132,6 +145,7 @@ function tryToAnnounce(ctx, retryDelay = initialRetryDelay) {
 function applyAgentConfiguration(agentResponse) {
   applySecretsConfiguration(agentResponse);
   applyExtraHttpHeaderConfiguration(agentResponse);
+  applyHttpExitConfiguration(agentResponse);
   applyKafkaTracingConfiguration(agentResponse);
   applyOtlpExporterConfiguration(agentResponse);
   applySpanBatchingConfiguration(agentResponse);
@@ -288,7 +302,7 @@ function applyStackTraceConfiguration(agentResponse) {
   ensureNestedObjectExists(agentOpts.config, ['tracing', 'global']);
 
   if (globalConfig['stack-trace'] !== undefined) {
-    const stackTraceModeValidation = coreConfig.validate.validateStackTraceMode(globalConfig['stack-trace']);
+    const stackTraceModeValidation = coreConfig.validators.validateStackTraceMode(globalConfig['stack-trace']);
     if (stackTraceModeValidation.isValid) {
       const normalizedStackTrace = coreConfig.normalizers.stackTrace.normalizeStackTraceModeFromAgent(
         globalConfig['stack-trace']
@@ -302,7 +316,9 @@ function applyStackTraceConfiguration(agentResponse) {
   }
 
   if (globalConfig['stack-trace-length'] !== undefined) {
-    const stackTraceLengthValidation = coreConfig.validate.validateStackTraceLength(globalConfig['stack-trace-length']);
+    const stackTraceLengthValidation = coreConfig.validators.validateStackTraceLength(
+      globalConfig['stack-trace-length']
+    );
     if (stackTraceLengthValidation.isValid) {
       const normalizedStackTraceLength = coreConfig.normalizers.stackTrace.normalizeStackTraceLengthFromAgent(
         globalConfig['stack-trace-length']
@@ -333,6 +349,29 @@ function applyDisableConfiguration(agentResponse) {
     tracing: { disable: disablingConfig }
   }).value;
 }
+
+/**
+ * @param {AgentAnnounceResponse} agentResponse
+ */
+function applyHttpExitConfiguration(agentResponse) {
+  const exitConfig = agentResponse?.tracing?.http?.exit;
+  if (!exitConfig) {
+    return;
+  }
+
+  ensureNestedObjectExists(agentOpts.config, ['tracing', 'http', 'exit']);
+
+  const classifyAll4xxAsErrors = coreConfig.validators.booleanValidator(exitConfig['classify-all-4xx-as-errors']);
+  if (classifyAll4xxAsErrors !== undefined) {
+    agentOpts.config.tracing.http.exit.classifyAll4xxAsErrors = classifyAll4xxAsErrors;
+  }
+
+  const classifyAsErrors = coreConfig.validators.httpExitErrorCodeValidator(exitConfig['classify-as-errors']);
+  if (classifyAsErrors !== undefined) {
+    agentOpts.config.tracing.http.exit.classifyAsErrors = classifyAsErrors;
+  }
+}
+
 module.exports = {
   init,
 
