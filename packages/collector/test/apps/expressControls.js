@@ -22,7 +22,7 @@ let appPort;
 // TODO: transform into class
 exports.start = function start(opts = {}, retryTime = null) {
   const env = Object.create(process.env);
-  env.AGENT_PORT = opts.useGlobalAgent ? agentControls.getPort() : opts.agentControls.getPort();
+  env.AGENT_STUB_PORT = opts.useGlobalAgent ? agentControls.getPort() : opts.agentControls.getPort();
   env.APP_PORT = portfinder();
   appPort = env.APP_PORT;
 
@@ -45,7 +45,7 @@ exports.start = function start(opts = {}, retryTime = null) {
   // eslint-disable-next-line no-console
   console.log(
     // eslint-disable-next-line max-len
-    `[ExpressControls:start] starting with port: ${appPort}  and agentPort: ${env.AGENT_PORT}`
+    `[ExpressControls:start] starting with port: ${appPort}  and agentPort: ${env.AGENT_STUB_PORT}`
   );
 
   expressApp = spawn('node', [path.join(__dirname, 'express.js')], {

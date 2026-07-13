@@ -26,7 +26,7 @@ if (process.env.INSTANA_DEBUG === 'true') {
 }
 
 // NOTE: we can leave the hardcoded port here as this file is not used in the test env!
-const port = process.env.AGENT_PORT || 42699;
+const port = process.env.AGENT_STUB_PORT || 42699;
 const uniqueAgentUuids = process.env.AGENT_STUB_AGENT_UNIQUE_UUIDS === 'true';
 const slowHostResponse = process.env.AGENT_STUB_SLOW_HOST_RESPONSE === 'true';
 const extraHeaders = process.env.AGENT_STUB_EXTRA_HEADERS ? process.env.AGENT_STUB_EXTRA_HEADERS.split(',') : [];

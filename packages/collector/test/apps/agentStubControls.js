@@ -21,7 +21,7 @@ class AgentStubControls {
 
   async startAgent(opts = {}) {
     const env = Object.create(process.env);
-    env.AGENT_PORT = this.agentPort;
+    env.AGENT_STUB_PORT = this.agentPort;
     env.AGENT_STUB_EXTRA_HEADERS = (opts.extraHeaders || []).join(',');
     env.AGENT_STUB_SECRETS_MATCHER = opts.secretsMatcher || 'contains-ignore-case';
     env.AGENT_STUB_SECRETS_LIST = (opts.secretsList || []).join(',');

@@ -64,7 +64,7 @@ class AppControls {
   async start(opts = {}) {
     let env = Object.create(process.env);
 
-    env.AGENT_PORT = agentControls.getPort();
+    env.AGENT_STUB_PORT = agentControls.getPort();
     env.APP_PORT = this.appPort;
     env.UPSTREAM_PORT = expressControls.getPort();
     env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;

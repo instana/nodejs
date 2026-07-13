@@ -15,7 +15,7 @@ process.on('SIGTERM', () => {
 // latency and response codes. This can be used a baselines for many tests, e.g.
 // to test distributed tracing.
 const instana = require('../..')({
-  agentPort: process.env.AGENT_PORT,
+  agentPort: process.env.AGENT_STUB_PORT,
   tracing: {
     metrics: {
       timeBetweenHealthcheckCalls: 1000

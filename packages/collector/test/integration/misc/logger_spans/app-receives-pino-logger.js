@@ -12,7 +12,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const agentPort = process.env.AGENT_PORT;
+const agentPort = process.env.AGENT_STUB_PORT;
 const createCustomLogSpans = process.env.CREATE_CUSTOM_LOG_SPANS === 'true';
 const extendedLoggerConfig = process.env.EXTENDED_LOGGER_CONFIG === 'true';
 const pinoExtendedFormat = require('@elastic/ecs-pino-format');
