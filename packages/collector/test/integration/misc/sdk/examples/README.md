@@ -20,7 +20,7 @@ The SDK will only actually create spans when `@instana/collector` has establishe
 
 If you are not interested in inspecting the reported data in Instana, you can start
 ```
-DROP_DATA=true node packages/collector/test/apps/agentStub
+AGENT_STUB_DROP_DATA=true node packages/collector/test/apps/agentStub
 ```
 
 in a separate shell. Otherwise, start an Instana agent locally. Be aware that the examples will create a lot of spans very quickly, though. (This can be controlled with the `DELAY` environment variable, see below.`)

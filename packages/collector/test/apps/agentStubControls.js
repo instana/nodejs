@@ -22,54 +22,52 @@ class AgentStubControls {
   async startAgent(opts = {}) {
     const env = Object.create(process.env);
     env.AGENT_PORT = this.agentPort;
-    env.EXTRA_HEADERS = (opts.extraHeaders || []).join(',');
-    env.SECRETS_MATCHER = opts.secretsMatcher || 'contains-ignore-case';
-    env.SECRETS_LIST = (opts.secretsList || []).join(',');
-    env.SECRETS_LIST = (opts.secretsList || []).join(',');
-    env.AGENT_UNIQUE_UUIDS = opts.uniqueAgentUuids === true;
+    env.AGENT_STUB_EXTRA_HEADERS = (opts.extraHeaders || []).join(',');
+    env.AGENT_STUB_SECRETS_MATCHER = opts.secretsMatcher || 'contains-ignore-case';
+    env.AGENT_STUB_SECRETS_LIST = (opts.secretsList || []).join(',');
+    env.AGENT_STUB_SECRETS_LIST = (opts.secretsList || []).join(',');
+    env.AGENT_STUB_AGENT_UNIQUE_UUIDS = opts.uniqueAgentUuids === true;
 
     if (opts.rejectTraces) {
-      env.REJECT_TRACES = 'true';
+      env.AGENT_STUB_REJECT_TRACES = 'true';
     }
     if (opts.doesntHandleProfiles) {
-      env.DOESNT_HANDLE_PROFILES = 'true';
+      env.AGENT_STUB_DOESNT_HANDLE_PROFILES = 'true';
     }
     if (typeof opts.tracingMetrics === 'boolean') {
-      env.TRACING_METRICS = opts.tracingMetrics.toString();
+      env.AGENT_STUB_TRACING_METRICS = opts.tracingMetrics.toString();
     }
 
     if (opts.slowMetricsReply) {
-      env.SLOW_METRICS_REPLY = opts.slowMetricsReply.toString();
+      env.AGENT_STUB_SLOW_METRICS_REPLY = opts.slowMetricsReply.toString();
     }
 
     if (opts.slowHostResponse) {
-      env.SLOW_HOST_RESPONSE = opts.slowHostResponse.toString();
+      env.AGENT_STUB_SLOW_HOST_RESPONSE = opts.slowHostResponse.toString();
     }
 
     if (opts.enableSpanBatching) {
-      env.ENABLE_SPANBATCHING = 'true';
+      env.AGENT_STUB_ENABLE_SPANBATCHING = 'true';
     }
     if (opts.kafkaConfig) {
       if (opts.kafkaConfig.traceCorrelation != null) {
-        env.KAFKA_TRACE_CORRELATION = opts.kafkaConfig.traceCorrelation.toString();
+        env.AGENT_STUB_KAFKA_TRACE_CORRELATION = opts.kafkaConfig.traceCorrelation.toString();
       }
     }
-    // This is not the INSTANA_IGNORE_ENDPOINTS env. We  use this "IGNORE_ENDPOINTS" env for the fake agent to
-    // serve the ignore endpoints config to our tracer.
     if (opts.ignoreEndpoints) {
-      env.IGNORE_ENDPOINTS = JSON.stringify(opts.ignoreEndpoints);
+      env.AGENT_STUB_IGNORE_ENDPOINTS = JSON.stringify(opts.ignoreEndpoints);
     }
 
     if (opts.disable) {
-      env.AGENT_DISABLE_TRACING = JSON.stringify(opts.disable);
+      env.AGENT_STUB_DISABLE_TRACING = JSON.stringify(opts.disable);
     }
 
     if (opts.stackTraceConfig) {
-      env.STACK_TRACE_CONFIG = JSON.stringify(opts.stackTraceConfig);
+      env.AGENT_STUB_STACK_TRACE_CONFIG = JSON.stringify(opts.stackTraceConfig);
     }
 
     if (opts.otlpExporter) {
-      env.OTLP_EXPORTER = JSON.stringify(opts.otlpExporter);
+      env.AGENT_STUB_OTLP_EXPORTER = JSON.stringify(opts.otlpExporter);
     }
     if (opts.httpExitConfig) {
       env.AGENT_STUB_HTTP_EXIT_CONFIG = JSON.stringify(opts.httpExitConfig);
