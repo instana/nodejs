@@ -113,7 +113,7 @@ jobs:
           git checkout -b "$BRANCH"
           echo "$NEW_VERSION" > .nvmrc
           git add .nvmrc
-          git commit -m "$COMMIT_MESSAGE"
+          git commit -s -m "$COMMIT_MESSAGE"
           git push -u origin "$BRANCH"
 
           gh pr create --title "$PR_TITLE" --body "$PR_BODY" --base main

@@ -151,7 +151,9 @@ currencies.forEach(originalCurrency => {
   } else if (!DRY_RUN) {
     try {
       execSync("git add 'currencies.json'", { cwd });
-      execSync(`git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`, { cwd });
+      execSync(`git commit -s -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`, {
+        cwd
+      });
     } catch (err) {
       console.error(`[ERROR] Commit failed: ${err.message}`);
     }

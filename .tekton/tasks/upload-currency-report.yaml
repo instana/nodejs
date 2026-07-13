@@ -48,7 +48,7 @@ spec:
           
           git add .
           
-          git commit -m "chore: updated node.js currency report"
+          git commit -s -m "chore: updated node.js currency report"
           git push origin main
         fi
 

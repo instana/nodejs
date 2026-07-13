@@ -352,10 +352,10 @@ exports.commitAndCreatePR = options => {
 
   if (!isDryRun) {
     execSync(`git add ${files}`, { cwd });
-    execSync(`git commit -m "build: bumped ${packageName} from ${currentVersion} to ${newVersion}"`, { cwd });
+    execSync(`git commit -s -m "build: bumped ${packageName} from ${currentVersion} to ${newVersion}"`, { cwd });
   } else {
     console.log(`[DRY RUN] git add ${files}`);
-    console.log(`[DRY RUN] git commit -m "build: bumped ${packageName} from ${currentVersion} to ${newVersion}"`);
+    console.log(`[DRY RUN] git commit -s -m "build: bumped ${packageName} from ${currentVersion} to ${newVersion}"`);
   }
 
   if (exports.hasCommits(branchName, cwd)) {
