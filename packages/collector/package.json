@@ -1,6 +1,6 @@
 {
   "name": "@instana/collector",
-  "version": "6.2.2",
+  "version": "6.3.0",
   "description": "The Instana Node.js metrics and trace data collector",
   "author": {
     "name": "Ben Ripkens",
@@ -70,13 +70,13 @@
     "url": "https://github.com/instana/nodejs/issues"
   },
   "dependencies": {
-    "@instana/core": "6.2.2",
-    "@instana/shared-metrics": "6.2.2",
+    "@instana/core": "6.3.0",
+    "@instana/shared-metrics": "6.3.0",
     "pino": "^9.13.0",
     "semver": "^7.8.5",
     "serialize-error": "^8.1.0"
   },
   "optionalDependencies": {
-    "@instana/autoprofile": "6.2.2"
+    "@instana/autoprofile": "6.3.0"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@instana/serverless-collector",
-  "version": "6.2.2",
+  "version": "6.3.0",
   "description": "The Instana Node.js trace data collector for serverless environments.",
   "author": {
     "name": "Joice Joy",
@@ -67,7 +67,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@instana/core": "6.2.2",
-    "@instana/serverless": "6.2.2"
+    "@instana/core": "6.3.0",
+    "@instana/serverless": "6.3.0"
   }
 }

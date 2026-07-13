@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.3.0](https://github.com/instana/nodejs/compare/v6.2.2...v6.3.0) (2026-07-13)
+
+
+### Features
+
+* added option to disable w3c header propagation ([9835435](https://github.com/instana/nodejs/commit/983543583275c30126dddb8e73bf92e8ae72cca7))
+* **http:** added configurable 4xx error classification for exit spans ([#2636](https://github.com/instana/nodejs/issues/2636)) ([79a3e93](https://github.com/instana/nodejs/commit/79a3e933103eef9aea10b16b738e1bb5e8699b3b))
+
+
+
+
+
 ## [6.2.2](https://github.com/instana/nodejs/compare/v6.2.1...v6.2.2) (2026-07-06)
 
 
