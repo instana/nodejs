@@ -50,7 +50,6 @@ function instrumentWinston3(createLogger) {
     shimLevelMethod(derivedLogger, 'emerg', true);
     shimLevelMethod(derivedLogger, 'alert', true);
     shimLevelMethod(derivedLogger, 'crit', true);
-    shimLevelMethod(derivedLogger, 'error', true);
     shimLevelMethod(derivedLogger, 'warning', false);
 
     shimLogMethod(derivedLogger);
