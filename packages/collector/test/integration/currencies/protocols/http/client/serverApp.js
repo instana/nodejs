@@ -65,6 +65,14 @@ app.all('/fetch-with-status', (req, res) => {
   res.status(status).json({ status });
 });
 
+app.get('/aws4-axios-target', (req, res) => {
+  res.status(200).json({
+    'x-instana-t': req.headers['x-instana-t'] || null,
+    'x-instana-s': req.headers['x-instana-s'] || null,
+    traceparent: req.headers.traceparent || null
+  });
+});
+
 app.put('/continue', (req, res) => {
   // Node http server will automatically send 100 Continue when it receives a request with an "Expect: 100-continue"
   // header present, unless we override the 'checkContinue' listener. For our test case, the default behaviour is just

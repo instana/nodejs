@@ -367,6 +367,68 @@ app.get('/request-shared-headers', (req, res) => {
   });
 });
 
+// Simulates an outgoing request signed by aws4-axios:
+//   - Authorization: AWS4-HMAC-SHA256 (SigV4-signed)
+//   - User-Agent: axios/1.18.1
+app.get('/aws4-axios-signed-request', (req, res) => {
+  httpModule
+    .request(
+      {
+        hostname: 'localhost',
+        port: process.env.SERVER_PORT,
+        method: 'GET',
+        path: '/aws4-axios-target',
+        ca: cert,
+        headers: {
+          Authorization: 'AWS4-HMAC-SHA256 Credential=AKID/20240101/us-east-1/execute-api/aws4_request',
+          'X-Amz-Date': '20240101T000000Z',
+          'User-Agent': 'axios/1.18.1'
+        }
+      },
+      downstreamRes => {
+        let body = '';
+        downstreamRes.on('data', chunk => {
+          body += chunk;
+        });
+        downstreamRes.on('end', () => {
+          res.status(200).json(JSON.parse(body));
+        });
+      }
+    )
+    .end();
+});
+
+// Simulates an outgoing request from the aws-sdk (v3):
+//   - Authorization: AWS4-HMAC-SHA256 (SigV4-signed)
+//   - User-Agent: aws-sdk-js/3.400.0 ... (identifies this as a real aws-sdk call)
+app.get('/aws-sdk-signed-request', (req, res) => {
+  httpModule
+    .request(
+      {
+        hostname: 'localhost',
+        port: process.env.SERVER_PORT,
+        method: 'GET',
+        path: '/aws4-axios-target',
+        ca: cert,
+        headers: {
+          Authorization: 'AWS4-HMAC-SHA256 Credential=AKID/20240101/us-east-1/execute-api/aws4_request',
+          'X-Amz-Date': '20240101T000000Z',
+          'User-Agent': 'aws-sdk-js/3.400.0 os/darwin lang/js md/nodejs/18.17.0 api/execute-api/3.400.0'
+        }
+      },
+      downstreamRes => {
+        let body = '';
+        downstreamRes.on('data', chunk => {
+          body += chunk;
+        });
+        downstreamRes.on('end', () => {
+          res.status(200).json(JSON.parse(body));
+        });
+      }
+    )
+    .end();
+});
+
 app.get('/without-port', (req, res) => {
   const options = {
     hostname: 'www.google.com',
