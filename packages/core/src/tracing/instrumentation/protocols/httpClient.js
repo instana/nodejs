@@ -495,7 +495,13 @@ function isItSafeToModifiyHeadersInOptions(options) {
       // instrumented Lambda function behind an API gateway and the user is using
       // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/APIGateway.html to invoke this Gateway/Lambda
       // combination, which _would_ benefit from tracing headers.)
-      return false;
+
+      // Exception: when the request comes from axios (e.g. via aws4-axios), the signing library re-signs
+      // the request fresh on every call, so adding trace headers is safe. The receiving end is also likely
+      // an instrumented service (e.g. a Lambda behind API Gateway) that benefits from receiving trace headers.
+      if (!isAxiosRequest(options.headers)) {
+        return false;
+      }
     }
   }
   return true;
@@ -503,8 +509,32 @@ function isItSafeToModifiyHeadersInOptions(options) {
 
 function isItSafeToModifiyHeadersForRequest(clientRequest) {
   const authHeader = clientRequest.getHeader('Authorization');
-  // see comment in isItSafeToModifiyHeadersInOptions
-  return !authHeader || authHeader.indexOf('AWS') !== 0;
+  if (!authHeader || authHeader.indexOf('AWS') !== 0) {
+    return true;
+  }
+  // See comment in isItSafeToModifiyHeadersInOptions. Allow header injection only for axios requests.
+  const userAgent = clientRequest.getHeader('User-Agent');
+  return isAxiosUserAgent(userAgent);
+}
+
+/**
+ * Returns true if the headers object contains a User-Agent indicating the request was made by axios
+ * (e.g. via the aws4-axios interceptor). Only the presence of "axios" in the User-Agent is checked;
+ * no version matching is performed.
+ * @param {Object} headers
+ * @returns {boolean}
+ */
+function isAxiosRequest(headers) {
+  const userAgent = headers['User-Agent'] || headers['user-agent'];
+  return isAxiosUserAgent(userAgent);
+}
+
+/**
+ * @param {string | string[] | undefined} userAgent
+ * @returns {boolean}
+ */
+function isAxiosUserAgent(userAgent) {
+  return evaluateHeaderValue(userAgent, header => header.toLowerCase().indexOf('axios') > -1);
 }
 
 function captureRequestHeaders(options, clientRequest, response) {
