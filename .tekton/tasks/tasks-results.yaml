@@ -35,10 +35,6 @@ spec:
             secretKeyRef:
               name: $(params.continuous-delivery-context-secret)
               key: "SONAR_TOKEN"
-        - name: NODE_OPTIONS
-          value: "--max-old-space-size=6144"
-        - name: SONAR_SCANNER_OPTS
-          value: "-Xmx4g"
       script: |
         #!/bin/bash
 
