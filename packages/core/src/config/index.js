@@ -365,6 +365,7 @@ function normalizeTracingConfig({ userConfig = {}, defaultConfig = {}, finalConf
   normalizeSpanBatchingEnabled({ userConfig, defaultConfig, finalConfig });
   normalizeDisableW3cTraceCorrelation({ userConfig, defaultConfig, finalConfig });
   normalizeDisableW3cPropagation({ userConfig, defaultConfig, finalConfig });
+  normalizeDisableW3c({ userConfig, defaultConfig, finalConfig });
   normalizeTracingKafka({ userConfig, defaultConfig, finalConfig });
   normalizeAllowRootExitSpan({ userConfig, defaultConfig, finalConfig });
   normalizeIgnoreEndpoints({ userConfig, defaultConfig, finalConfig });
@@ -924,6 +925,40 @@ function normalizeDisableW3cPropagation({ userConfig = {}, defaultConfig = {}, f
     source,
     value,
     envVarName: 'INSTANA_TRACING_DISABLE_W3C_PROPAGATION'
+  });
+}
+
+/**
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
+ */
+function normalizeDisableW3c({ finalConfig = {} } = {}) {
+  const { value, source } = util.resolve(
+    {
+      envValue: 'INSTANA_TRACING_DISABLE_W3C'
+    },
+    [validators.validateTruthyBoolean]
+  );
+
+  if (!value) {
+    return;
+  }
+
+  configStore.set('config.tracing.disableW3cPropagation', { source });
+  finalConfig.tracing.disableW3cPropagation = true;
+  util.log({
+    configPath: 'config.tracing.disableW3cPropagation',
+    source,
+    value: true,
+    envVarName: 'INSTANA_TRACING_DISABLE_W3C'
+  });
+
+  configStore.set('config.tracing.disableW3cTraceCorrelation', { source });
+  finalConfig.tracing.disableW3cTraceCorrelation = true;
+  util.log({
+    configPath: 'config.tracing.disableW3cTraceCorrelation',
+    source,
+    value: true,
+    envVarName: 'INSTANA_TRACING_DISABLE_W3C'
   });
 }
 

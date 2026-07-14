@@ -39,6 +39,7 @@ describe('config.normalizeConfig', () => {
     delete process.env.INSTANA_DISABLE_SPANBATCHING;
     delete process.env.INSTANA_DISABLE_W3C_TRACE_CORRELATION;
     delete process.env.INSTANA_TRACING_DISABLE_W3C_PROPAGATION;
+    delete process.env.INSTANA_TRACING_DISABLE_W3C;
     delete process.env.INSTANA_DISABLE_USE_OPENTELEMETRY;
     delete process.env.INSTANA_KAFKA_TRACE_CORRELATION;
     delete process.env.INSTANA_PACKAGE_JSON_PATH;
@@ -1141,6 +1142,13 @@ describe('config.normalizeConfig', () => {
       it('should disable W3C propagation via INSTANA_TRACING_DISABLE_W3C_PROPAGATION', () => {
         process.env.INSTANA_TRACING_DISABLE_W3C_PROPAGATION = 'true';
         const config = coreConfig.normalize();
+        expect(config.tracing.disableW3cPropagation).to.be.true;
+      });
+
+      it('should disable W3C trace correlation and propagation via INSTANA_TRACING_DISABLE_W3C', () => {
+        process.env.INSTANA_TRACING_DISABLE_W3C = 'true';
+        const config = coreConfig.normalize();
+        expect(config.tracing.disableW3cTraceCorrelation).to.be.true;
         expect(config.tracing.disableW3cPropagation).to.be.true;
       });
 

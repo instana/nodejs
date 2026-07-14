@@ -962,6 +962,51 @@ module.exports = function (name, version, isLatest, mode) {
           });
         }));
     });
+
+    describe('INSTANA_TRACING_DISABLE_W3C', () => {
+      let instanaAppControlsNoW3c;
+
+      before(async () => {
+        instanaAppControlsNoW3c = new ProcessControls({
+          dirname: __dirname,
+          useGlobalAgent: true,
+          http2: isHTTP2,
+          env: {
+            APM_VENDOR: 'instana',
+            DOWNSTREAM_PORT: otherVendorAppPort,
+            APP_USES_HTTP2: isHTTP2,
+            INSTANA_TRACING_DISABLE_W3C: 'true'
+          }
+        });
+        await instanaAppControlsNoW3c.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await instanaAppControlsNoW3c.stop();
+      });
+
+      it('should ignore incoming W3C headers and not propagate W3C headers downstream', () =>
+        startRequest({
+          app: instanaAppControlsNoW3c,
+          depth: 1,
+          withSpecHeaders: 'valid-sampled-no-random-trace-id'
+        }).then(response => {
+          response = response && response.body ? JSON.parse(response.body) : response;
+          expect(response.w3cTraceContext).to.be.an('object');
+          expect(response.w3cTraceContext.receivedHeaders.traceparent).to.not.exist;
+          expect(response.w3cTraceContext.receivedHeaders.tracestate).to.not.exist;
+          return retryUntilSpansMatch(agentControls, spans => {
+            const instanaHttpEntryRoot = verifyHttpRootEntry({
+              spans,
+              url: '/start',
+              instanaAppControls: instanaAppControlsNoW3c
+            });
+            expect(instanaHttpEntryRoot.t).to.not.equal(foreignTraceIdRightHalf);
+            expect(instanaHttpEntryRoot.p).to.not.equal(foreignParentId);
+            verifyHttpExit(spans, instanaHttpEntryRoot, '/end');
+          });
+        }));
+    });
   });
 };
 
