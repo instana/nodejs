@@ -934,7 +934,8 @@ function normalizeDisableW3cPropagation({ userConfig = {}, defaultConfig = {}, f
 function normalizeDisableW3c({ finalConfig = {} } = {}) {
   const { value, source } = util.resolve(
     {
-      envValue: 'INSTANA_TRACING_DISABLE_W3C'
+      envValue: 'INSTANA_TRACING_DISABLE_W3C',
+      defaultValue: undefined
     },
     [validators.validateTruthyBoolean]
   );
