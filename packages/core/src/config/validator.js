@@ -167,7 +167,7 @@ exports.logLevelValidator = function logLevelValidator(value) {
   if (value == null) {
     return undefined;
   }
-  const VALID_LOG_LEVEL_CAPTURE_VALUES = [LOG_LEVEL.INFO, LOG_LEVEL.WARN, LOG_LEVEL.ERROR, 'off'];
+  const VALID_LOG_LEVEL_CAPTURE_VALUES = [LOG_LEVEL.INFO, LOG_LEVEL.WARN, LOG_LEVEL.ERROR, LOG_LEVEL.OFF];
 
   if (typeof value !== 'string') {
     logger?.debug(

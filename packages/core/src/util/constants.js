@@ -31,7 +31,8 @@ exports.LOG_LEVEL = {
   INFO: 'info',
   WARN: 'warn',
   ERROR: 'error',
-  FATAL: 'fatal'
+  FATAL: 'fatal',
+  OFF: 'off'
 };
 
 exports.LOG_LEVEL_PRIORITY = {
