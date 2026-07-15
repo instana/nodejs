@@ -13,6 +13,7 @@ const util = require('util');
 
 const config = require('../config');
 const { isCI, createFakeLogger } = require('../test_util');
+const { LOG_LEVEL_PRIORITY, LOG_LEVEL } = require('../../src/util/constants');
 
 const {
   findCallback,
@@ -1501,6 +1502,146 @@ describe('tracing/tracingUtil', () => {
 
       it('should return false for 399', () => {
         expect(shouldMarkAsError(399)).to.equal(false);
+      });
+    });
+  });
+
+  describe('shouldCaptureLogSpan', () => {
+    const { shouldCaptureLogSpan } = tracingUtil;
+
+    describe('when logLevelCapture is OFF', () => {
+      before(() => {
+        tracingUtil.init({
+          logger: createFakeLogger(),
+          tracing: {
+            stackTraceLength: 10,
+            http: {
+              exit: {
+                classifyAll4xxAsErrors: false,
+                classifyAsErrors: []
+              }
+            },
+            logLevelCapture: 'off'
+          }
+        });
+      });
+
+      ['TRACE', 'DEBUG', 'INFO', 'WARN', 'error', 'fatal'].forEach(level => {
+        it(`should return false for ${level}`, () => {
+          expect(shouldCaptureLogSpan(level)).to.equal(false);
+        });
+      });
+    });
+
+    describe('when logLevelCapture is INFO', () => {
+      before(() => {
+        tracingUtil.init({
+          logger: createFakeLogger(),
+          tracing: {
+            stackTraceLength: 10,
+            http: {
+              exit: {
+                classifyAll4xxAsErrors: false,
+                classifyAsErrors: []
+              }
+            },
+            logLevelCapture: 'info'
+          }
+        });
+      });
+
+      it('should return false for TRACE', () => {
+        expect(shouldCaptureLogSpan('TRACE')).to.equal(false);
+      });
+
+      it('should return false for DEBUG', () => {
+        expect(shouldCaptureLogSpan('DEBUG')).to.equal(false);
+      });
+
+      it('should return true for INFO', () => {
+        expect(shouldCaptureLogSpan('INFO')).to.equal(true);
+      });
+
+      it('should return true for WARN', () => {
+        expect(shouldCaptureLogSpan('WARN')).to.equal(true);
+      });
+
+      it('should return true for error', () => {
+        expect(shouldCaptureLogSpan('error')).to.equal(true);
+      });
+
+      it('should return true for fatal', () => {
+        expect(shouldCaptureLogSpan('fatal')).to.equal(true);
+      });
+
+      it('should be case-insensitive', () => {
+        expect(shouldCaptureLogSpan('info')).to.equal(true);
+        expect(shouldCaptureLogSpan('Warn')).to.equal(true);
+        expect(shouldCaptureLogSpan('error')).to.equal(true);
+      });
+
+      it('should return false for an unknown log level', () => {
+        expect(shouldCaptureLogSpan('INVALID')).to.equal(false);
+      });
+    });
+
+    describe('when logLevelCapture is WARN(default)', () => {
+      before(() => {
+        tracingUtil.init({
+          logger: createFakeLogger(),
+          tracing: {
+            stackTraceLength: 10,
+            http: {
+              exit: {
+                classifyAll4xxAsErrors: false,
+                classifyAsErrors: []
+              }
+            },
+            logLevelCapture: 'warn'
+          }
+        });
+      });
+
+      it('should return false for TRACE', () => {
+        expect(shouldCaptureLogSpan('TRACE')).to.equal(false);
+      });
+
+      it('should return false for DEBUG', () => {
+        expect(shouldCaptureLogSpan('DEBUG')).to.equal(false);
+      });
+
+      it('should return false for INFO', () => {
+        expect(shouldCaptureLogSpan('INFO')).to.equal(false);
+      });
+
+      it('should return true for WARN', () => {
+        expect(shouldCaptureLogSpan('WARN')).to.equal(true);
+      });
+
+      it('should return true for error', () => {
+        expect(shouldCaptureLogSpan('error')).to.equal(true);
+      });
+
+      it('should return true for fatal', () => {
+        expect(shouldCaptureLogSpan('fatal')).to.equal(true);
+      });
+
+      it('should return false for numeric levels below WARN', () => {
+        expect(shouldCaptureLogSpan(LOG_LEVEL_PRIORITY[LOG_LEVEL.TRACE])).to.equal(false);
+        expect(shouldCaptureLogSpan(LOG_LEVEL_PRIORITY[LOG_LEVEL.DEBUG])).to.equal(false);
+        expect(shouldCaptureLogSpan(LOG_LEVEL_PRIORITY[LOG_LEVEL.INFO])).to.equal(false);
+      });
+
+      it('should return true for numeric WARN level', () => {
+        expect(shouldCaptureLogSpan(LOG_LEVEL_PRIORITY[LOG_LEVEL.WARN])).to.equal(true);
+      });
+
+      it('should return true for numeric error level', () => {
+        expect(shouldCaptureLogSpan(LOG_LEVEL_PRIORITY[LOG_LEVEL.ERROR])).to.equal(true);
+      });
+
+      it('should return true for numeric fatal level', () => {
+        expect(shouldCaptureLogSpan(LOG_LEVEL_PRIORITY[LOG_LEVEL.FATAL])).to.equal(true);
       });
     });
   });

@@ -10,7 +10,7 @@ const path = require('path');
 const StringDecoder = require('string_decoder').StringDecoder;
 
 const stackTrace = require('../util/stackTrace');
-const { STACK_TRACE_MODES } = require('../util/constants');
+const { STACK_TRACE_MODES, LOG_LEVEL_PRIORITY, DEFAULT_LOG_LEVEL } = require('../util/constants');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -29,6 +29,11 @@ let stackTraceMode;
  * @type {import("../config").HTTPExitTracingOptions | undefined}
  */
 let httpExitConfig;
+
+/**
+ * @type {string}
+ */
+let logLevelConfig = DEFAULT_LOG_LEVEL;
 /**
  * @param {import('../config').InstanaConfig} config
  */
@@ -37,6 +42,7 @@ exports.init = function (config) {
   stackTraceLength = config?.tracing?.stackTraceLength;
   stackTraceMode = config?.tracing?.stackTrace;
   httpExitConfig = config.tracing.http.exit;
+  logLevelConfig = config.tracing.logLevelCapture;
 };
 
 /**
@@ -46,6 +52,7 @@ exports.activate = function activate(_config) {
   stackTraceLength = _config.tracing.stackTraceLength;
   stackTraceMode = _config.tracing.stackTrace;
   httpExitConfig = _config.tracing.http.exit;
+  logLevelConfig = _config.tracing.logLevelCapture;
 };
 
 /**
@@ -446,4 +453,23 @@ exports.handleUnexpectedReturnValue = function handleUnexpectedReturnValue(retur
   );
 
   return true;
+};
+
+/**
+ * @param {string} level
+ * @returns {boolean}
+ */
+exports.shouldCaptureLogSpan = function shouldCaptureLogSpan(level) {
+  if (logLevelConfig === 'off') {
+    return false;
+  }
+  const minLevel = LOG_LEVEL_PRIORITY[logLevelConfig];
+
+  if (typeof level === 'number') {
+    return level >= minLevel;
+  }
+
+  const numericLevel = LOG_LEVEL_PRIORITY[level?.toLowerCase()];
+
+  return numericLevel !== undefined && numericLevel >= minLevel;
 };

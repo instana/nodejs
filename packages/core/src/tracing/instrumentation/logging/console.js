@@ -17,6 +17,7 @@ let isActive = false;
 exports.init = function init() {
   shimmer.wrap(console, 'warn', shimLog({ markAsError: false, level: 'warn' }));
   shimmer.wrap(console, 'error', shimLog({ markAsError: true, level: 'error' }));
+  shimmer.wrap(console, 'info', shimLog({ markAsError: false, level: 'info' }));
 };
 
 // ATTENTION: Do not use console.warn or console.error in this file, otherwise it could run into endless loop
@@ -35,6 +36,10 @@ function shimLog(options) {
       }
 
       if (cls.skipExitTracing({ isActive, skipAllowRootExitSpanPresence: true })) {
+        return originalLog.apply(this, arguments);
+      }
+
+      if (!tracingUtil.shouldCaptureLogSpan(options.level)) {
         return originalLog.apply(this, arguments);
       }
 
