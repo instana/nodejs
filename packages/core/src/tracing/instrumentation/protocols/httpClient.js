@@ -94,8 +94,7 @@ function isAwsSdkRequest(options) {
 
 /**
  * Checks whether an outgoing HTTP request should not be traced. This is intended to suppress the creation of HTTP exits
- * for which a higher level instrumentation exists, for example, HTTP requests made by AWS SQS that represent the queue
- * polling when we already created an SQS entry span for it.
+ * for which a higher level instrumentation exists.
  *
  * When using GCP storage library, the default way to upload a file is the resumable strategy.
  * This strategy uses google-auth-library -> gaxios -> http/https node core libs, which create http exit spans.
@@ -111,21 +110,9 @@ function isAwsSdkRequest(options) {
  * https://nodejs.org/dist/latest-v14.x/docs/api/http.html#http_http_request_options_callback
  * @return {boolean} true, if the HTTP request that is about to happen should _not_ create a span.
  */
-function shouldBeBypassed(parentSpan, options, awsSdkRequest) {
+function shouldBeBypassed(parentSpan, options) {
   const headers = options && options.headers;
   const userAgent = (headers && headers['User-Agent']) || (headers && headers['user-agent']);
-
-  const hostInfo = (headers && headers.Host) || (headers && headers.host);
-
-  // Same regex used by AWS SDK at /lib/services/sqs.js
-  const hostMatchesSQS = evaluateHeaderValue(hostInfo, header => header.match(/^sqs\.(?:.+?)\./) !== null);
-
-  // 'user-agent': 'aws-sdk-js/3.329.0 os/darwin/22.5.0 lang/js md/nodejs/18.14.2 api/sqs/3.329.0'
-  const agentMatchesSQS = evaluateHeaderValue(userAgent, header => header.toLowerCase().indexOf('api/sqs') > -1);
-
-  if (parentSpan && parentSpan.n === 'sqs' && awsSdkRequest && (hostMatchesSQS || agentMatchesSQS)) {
-    return true;
-  }
 
   const isGCPNodeJSHeader = evaluateHeaderValue(
     userAgent,
@@ -186,9 +173,12 @@ function instrument(coreModule, forceHttps) {
 
     const parentSpan = skipTracingResult.parentSpan;
 
-    const awsSdkRequest = isAwsSdkRequest(options);
+    // Note: There is no need to create http EXIT spans for AWS SDK created events
+    if (isAwsSdkRequest(options)) {
+      return originalRequest.apply(coreModule, arguments);
+    }
 
-    if (skipTracingResult.skip || shouldBeBypassed(skipTracingResult.parentSpan, options, awsSdkRequest)) {
+    if (skipTracingResult.skip || shouldBeBypassed(skipTracingResult.parentSpan, options)) {
       let traceLevelHeaderHasBeenAdded = false;
       if (skipTracingResult.suppressed) {
         traceLevelHeaderHasBeenAdded = tryToAddTraceLevelAddHeaderToOpts(options, '0', w3cTraceContext);
@@ -202,11 +192,6 @@ function instrument(coreModule, forceHttps) {
       }
 
       return clientRequest;
-    }
-
-    // Note: There is no need to create http EXIT spans for AWS SDK created events
-    if (awsSdkRequest) {
-      return originalRequest.apply(coreModule, arguments);
     }
 
     cls.ns.run(() => {
