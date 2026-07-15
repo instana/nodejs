@@ -80,6 +80,19 @@ function evaluateHeaderValue(headerValue, validator) {
 }
 
 /**
+ * @param {Object} options
+ * @returns {boolean}
+ */
+function isAWSdkHeader(options) {
+  const headers = options && options.headers;
+  const userAgent = (headers && headers['User-Agent']) || (headers && headers['user-agent']);
+  return evaluateHeaderValue(
+    userAgent,
+    header => header.toLowerCase().indexOf('aws-sdk-nodejs') > -1 || header.toLowerCase().indexOf('aws-sdk-js') > -1
+  );
+}
+
+/**
  * Checks whether an outgoing HTTP request should not be traced. This is intended to suppress the creation of HTTP exits
  * for which a higher level instrumentation exists, for example, HTTP requests made by AWS SQS that represent the queue
  * polling when we already created an SQS entry span for it.
@@ -98,21 +111,6 @@ function evaluateHeaderValue(headerValue, validator) {
  * https://nodejs.org/dist/latest-v14.x/docs/api/http.html#http_http_request_options_callback
  * @return {boolean} true, if the HTTP request that is about to happen should _not_ create a span.
  */
-/**
- * Returns true if the request options originate from the aws-sdk (v2 or v3), identified by the
- * User-Agent header. Used to skip Instana header injection for SigV4-signed requests.
- * @param {Object} options
- * @returns {boolean}
- */
-function isAWSdkHeader(options) {
-  const headers = options && options.headers;
-  const userAgent = (headers && headers['User-Agent']) || (headers && headers['user-agent']);
-  return evaluateHeaderValue(
-    userAgent,
-    header => header.toLowerCase().indexOf('aws-sdk-nodejs') > -1 || header.toLowerCase().indexOf('aws-sdk-js') > -1
-  );
-}
-
 function shouldBeBypassed(parentSpan, options, awsSdkRequest) {
   const headers = options && options.headers;
   const userAgent = (headers && headers['User-Agent']) || (headers && headers['user-agent']);
@@ -190,9 +188,6 @@ function instrument(coreModule, forceHttps) {
 
     const awsSdkRequest = isAWSdkHeader(options);
 
-    // aws-sdk requests that are being skipped/bypassed must be returned completely untouched —
-    // no suppression or W3C headers either, as nothing must disturb the signed request because
-    // adding headers would cause SignatureDoesNotMatch on retries.
     if (skipTracingResult.skip || shouldBeBypassed(skipTracingResult.parentSpan, options, awsSdkRequest)) {
       if (awsSdkRequest) {
         return originalRequest.apply(coreModule, arguments);
@@ -407,19 +402,14 @@ function tryToAddHeadersToOpts(options, span, w3cTraceContext, awsSdkRequest) {
   // (see setHeadersOnRequest).
 
   if (hasHeadersOption(options)) {
-    // This is a signed AWS API request (from the aws-sdk package, identified by its User-Agent).
-    // Adding our headers to this request would trigger a SignatureDoesNotMatch error in case the request
-    // will be retried:
-    // "SignatureDoesNotMatch: The request signature we calculated does not match the signature you provided.
-    // Check your key and signing method."
-    // See https://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html
-    //
-    // Additionally, adding our headers to this request would not have any benefit — the receiving end will
-    // be an AWS service like S3 and those are not instrumented. (There is a very small chance that the
-    // receiving end is an instrumented Lambda function behind an API gateway and the user is using
-    // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/APIGateway.html to invoke this
-    // Gateway/Lambda combination, which _would_ benefit from tracing headers.)
     if (awsSdkRequest) {
+      // This is a signed AWS API request (from the aws-sdk package, identified by its User-Agent).
+      // Adding our headers to this request would trigger a SignatureDoesNotMatch error in case the request
+      // will be retried:
+      // "SignatureDoesNotMatch: The request signature we calculated does not match the signature you provided.
+      // Check your key and signing method."
+      // See https://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html
+
       return true;
     }
     options.headers[constants.spanIdHeaderName] = span.s;
@@ -470,9 +460,6 @@ function removeInstanaHeadersFromOpts(options) {
 }
 
 function setHeadersOnRequest(clientRequest, span, w3cTraceContext, awsSdkRequest) {
-  // This is a signed AWS API request (from the aws-sdk package, identified by its User-Agent).
-  // Adding our headers to this request would trigger a SignatureDoesNotMatch error in case the request
-  // will be retried. See the comment in tryToAddHeadersToOpts for the full explanation.
   if (awsSdkRequest) {
     return;
   }
