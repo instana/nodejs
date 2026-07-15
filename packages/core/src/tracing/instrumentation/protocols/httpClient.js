@@ -198,15 +198,11 @@ function instrument(coreModule, forceHttps) {
 
     const parentSpan = skipTracingResult.parentSpan;
 
-    // aws-sdk requests (identified by User-Agent) must not have Instana headers injected —
-    // the request is already SigV4-signed and adding headers would cause SignatureDoesNotMatch on retries.
-    // A node.http.client span is still created for observability; only header injection is skipped.
     const awsSdkRequest = isAwsSdkRequest(options);
 
-    // CASE 1: skip due to tracing being inactive / reduced span / etc.
-    // CASE 2: shouldBeBypassed covers special cases like SQS polling from an SQS entry span.
-    // For aws-sdk requests in either case: return the original request completely untouched
-    // (no suppression headers, no W3C headers — nothing must disturb the signed request).
+    // aws-sdk requests that are being skipped/bypassed must be returned completely untouched —
+    // no suppression or W3C headers either, as nothing must disturb the signed request because
+    // adding headers would cause SignatureDoesNotMatch on retries.
     if (skipTracingResult.skip || shouldBeBypassed(skipTracingResult.parentSpan, options, awsSdkRequest)) {
       if (awsSdkRequest) {
         return originalRequest.apply(coreModule, arguments);
