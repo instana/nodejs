@@ -421,8 +421,18 @@ function tryToAddHeadersToOpts(options, span, w3cTraceContext, awsSdkRequest) {
   // (see setHeadersOnRequest).
 
   if (hasHeadersOption(options)) {
-    // Do not inject headers into aws-sdk requests: the request is SigV4-signed and adding headers
-    // would cause SignatureDoesNotMatch errors on retries.
+    // This is a signed AWS API request (from the aws-sdk package, identified by its User-Agent).
+    // Adding our headers to this request would trigger a SignatureDoesNotMatch error in case the request
+    // will be retried:
+    // "SignatureDoesNotMatch: The request signature we calculated does not match the signature you provided.
+    // Check your key and signing method."
+    // See https://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html
+    //
+    // Additionally, adding our headers to this request would not have any benefit — the receiving end will
+    // be an AWS service like S3 and those are not instrumented. (There is a very small chance that the
+    // receiving end is an instrumented Lambda function behind an API gateway and the user is using
+    // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/APIGateway.html to invoke this
+    // Gateway/Lambda combination, which _would_ benefit from tracing headers.)
     if (awsSdkRequest) {
       return true;
     }
@@ -474,7 +484,9 @@ function removeInstanaHeadersFromOpts(options) {
 }
 
 function setHeadersOnRequest(clientRequest, span, w3cTraceContext, awsSdkRequest) {
-  // Do not inject headers into aws-sdk requests — same reasoning as in tryToAddHeadersToOpts.
+  // This is a signed AWS API request (from the aws-sdk package, identified by its User-Agent).
+  // Adding our headers to this request would trigger a SignatureDoesNotMatch error in case the request
+  // will be retried. See the comment in tryToAddHeadersToOpts for the full explanation.
   if (awsSdkRequest) {
     return;
   }
