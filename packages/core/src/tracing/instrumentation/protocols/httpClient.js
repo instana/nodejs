@@ -270,7 +270,7 @@ function instrument(coreModule, forceHttps) {
 
       let instanaHeadersHaveBeenAdded = false;
       try {
-        instanaHeadersHaveBeenAdded = tryToAddHeadersToOpts(options, span, w3cTraceContext, awsSdkRequest);
+        instanaHeadersHaveBeenAdded = tryToAddHeadersToOpts(options, span, w3cTraceContext);
         clientRequest = originalRequest.apply(coreModule, originalArgs);
         removeInstanaHeadersFromOpts(options);
       } catch (e) {
@@ -288,7 +288,7 @@ function instrument(coreModule, forceHttps) {
 
       cls.ns.bindEmitter(clientRequest);
       if (!instanaHeadersHaveBeenAdded) {
-        instanaHeadersHaveBeenAdded = setHeadersOnRequest(clientRequest, span, w3cTraceContext, awsSdkRequest);
+        instanaHeadersHaveBeenAdded = setHeadersOnRequest(clientRequest, span, w3cTraceContext);
       }
 
       let isTimeout = false;
