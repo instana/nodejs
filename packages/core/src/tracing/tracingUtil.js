@@ -52,7 +52,6 @@ exports.activate = function activate(_config) {
   stackTraceLength = _config.tracing.stackTraceLength;
   stackTraceMode = _config.tracing.stackTrace;
   httpExitConfig = _config.tracing.http.exit;
-  logLevelConfig = _config.tracing.logLevelCapture;
 };
 
 /**
