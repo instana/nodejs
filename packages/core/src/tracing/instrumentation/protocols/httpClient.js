@@ -99,22 +99,14 @@ function evaluateHeaderValue(headerValue, validator) {
  * @return {boolean} true, if the HTTP request that is about to happen should _not_ create a span.
  */
 /**
- * Returns true if the User-Agent identifies the request as originating from the aws-sdk (v2 or v3).
- * Used both to bypass span creation and to skip Instana header injection for AWS SigV4-signed requests.
+ * Returns true if the request options originate from the aws-sdk (v2 or v3), identified by the
+ * User-Agent header. Used to skip Instana header injection for SigV4-signed requests.
  * @param {Object} options
  * @returns {boolean}
  */
-function isAwsSdkRequest(options) {
+function isAWSdkHeader(options) {
   const headers = options && options.headers;
   const userAgent = (headers && headers['User-Agent']) || (headers && headers['user-agent']);
-  return isAWSNodeJSHeader(userAgent);
-}
-
-/**
- * @param {string | string[] | undefined} userAgent
- * @returns {boolean}
- */
-function isAWSNodeJSHeader(userAgent) {
   return evaluateHeaderValue(
     userAgent,
     header => header.toLowerCase().indexOf('aws-sdk-nodejs') > -1 || header.toLowerCase().indexOf('aws-sdk-js') > -1
@@ -125,7 +117,7 @@ function shouldBeBypassed(parentSpan, options) {
   const headers = options && options.headers;
   const userAgent = (headers && headers['User-Agent']) || (headers && headers['user-agent']);
 
-  const awsSdkHeader = isAWSNodeJSHeader(userAgent);
+  const awsSdkHeader = isAWSdkHeader(options);
 
   const hostInfo = (headers && headers.Host) || (headers && headers.host);
 
@@ -198,7 +190,7 @@ function instrument(coreModule, forceHttps) {
 
     const parentSpan = skipTracingResult.parentSpan;
 
-    const awsSdkRequest = isAwsSdkRequest(options);
+    const awsSdkRequest = isAWSdkHeader(options);
 
     // aws-sdk requests that are being skipped/bypassed must be returned completely untouched —
     // no suppression or W3C headers either, as nothing must disturb the signed request because
