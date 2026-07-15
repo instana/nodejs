@@ -4,7 +4,7 @@
 
 'use strict';
 
-const { validStackTraceModes } = require('../util/constants');
+const { validStackTraceModes, LOG_LEVEL } = require('../util/constants');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -157,4 +157,37 @@ exports.httpExitErrorCodeValidator = function httpExitErrorCodeValidator(value) 
 
     return result;
   }, []);
+};
+
+/**
+ * @param {any} value
+ * @returns {string|undefined}
+ */
+exports.logLevelValidator = function logLevelValidator(value) {
+  if (value == null) {
+    return undefined;
+  }
+  const VALID_LOG_LEVEL_CAPTURE_VALUES = [LOG_LEVEL.INFO, LOG_LEVEL.WARN, LOG_LEVEL.ERROR, LOG_LEVEL.OFF];
+
+  if (typeof value !== 'string') {
+    logger?.debug(
+      `Ignoring invalid log level capture value "${value}". Expected one of: ${VALID_LOG_LEVEL_CAPTURE_VALUES.join(
+        ', '
+      )}.`
+    );
+    return undefined;
+  }
+
+  const normalized = value.toLowerCase();
+
+  if (!VALID_LOG_LEVEL_CAPTURE_VALUES.includes(normalized)) {
+    logger?.debug(
+      `Ignoring invalid log level capture value "${value}". Expected one of: ${VALID_LOG_LEVEL_CAPTURE_VALUES.join(
+        ', '
+      )}.`
+    );
+    return undefined;
+  }
+
+  return normalized;
 };

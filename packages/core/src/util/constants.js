@@ -24,3 +24,15 @@ exports.CONFIG_SOURCES = {
   AGENT: 3,
   DEFAULT: 4
 };
+
+exports.LOG_LEVEL = {
+  TRACE: 'trace',
+  DEBUG: 'debug',
+  INFO: 'info',
+  WARN: 'warn',
+  ERROR: 'error',
+  FATAL: 'fatal',
+  OFF: 'off'
+};
+
+exports.DEFAULT_LOG_LEVEL = exports.LOG_LEVEL.WARN;
