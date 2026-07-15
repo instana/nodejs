@@ -83,7 +83,7 @@ function evaluateHeaderValue(headerValue, validator) {
  * @param {Object} options
  * @returns {boolean}
  */
-function isAWSdkHeader(options) {
+function isAwsSdkRequest(options) {
   const headers = options && options.headers;
   const userAgent = (headers && headers['User-Agent']) || (headers && headers['user-agent']);
   return evaluateHeaderValue(
@@ -186,7 +186,7 @@ function instrument(coreModule, forceHttps) {
 
     const parentSpan = skipTracingResult.parentSpan;
 
-    const awsSdkRequest = isAWSdkHeader(options);
+    const awsSdkRequest = isAwsSdkRequest(options);
 
     if (skipTracingResult.skip || shouldBeBypassed(skipTracingResult.parentSpan, options, awsSdkRequest)) {
       let traceLevelHeaderHasBeenAdded = false;
@@ -204,7 +204,7 @@ function instrument(coreModule, forceHttps) {
       return clientRequest;
     }
 
-    // Note: The aws sdk instr will create its own span, so no need to create again an http client span
+    // "Note: There is no need to create http EXIT spans for AWS SDK created events"
     if (awsSdkRequest) {
       return originalRequest.apply(coreModule, arguments);
     }
