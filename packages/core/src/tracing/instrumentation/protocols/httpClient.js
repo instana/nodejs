@@ -204,7 +204,7 @@ function instrument(coreModule, forceHttps) {
       return clientRequest;
     }
 
-    // "Note: There is no need to create http EXIT spans for AWS SDK created events"
+    // Note: There is no need to create http EXIT spans for AWS SDK created events
     if (awsSdkRequest) {
       return originalRequest.apply(coreModule, arguments);
     }
