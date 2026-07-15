@@ -49,6 +49,7 @@ describe('config.normalizeConfig', () => {
     delete process.env.INSTANA_TRACING_OTLP_ENABLED;
     delete process.env.INSTANA_TRACING_HTTP_EXIT_CLASSIFY_ALL_4XX_AS_ERRORS;
     delete process.env.INSTANA_TRACING_HTTP_EXIT_CLASSIFY_AS_ERRORS;
+    delete process.env.INSTANA_LOG_LEVEL_CAPTURE;
   }
 
   describe('default configuration', () => {
@@ -641,7 +642,7 @@ describe('config.normalizeConfig', () => {
       });
 
       it('should normalize stack trace mode to lowercase from config', () => {
-        const config = coreConfig.normalize({ userConfig: { tracing: { global: { stackTrace: 'ERROR' } } } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { global: { stackTrace: 'error' } } } });
         expect(config.tracing.stackTrace).to.equal('error');
       });
 
@@ -2675,4 +2676,74 @@ describe('config.normalizeConfig', () => {
       }
     });
   }
+
+  describe('log level capture configuration (INSTANA_LOG_LEVEL_CAPTURE)', () => {
+    it('should default to warn when not set', () => {
+      const config = coreConfig.normalize();
+      expect(config.tracing.logLevelCapture).to.equal('warn');
+    });
+
+    it('should accept warn from env var', () => {
+      process.env.INSTANA_LOG_LEVEL_CAPTURE = 'warn';
+      const config = coreConfig.normalize();
+      expect(config.tracing.logLevelCapture).to.equal('warn');
+    });
+
+    it('should accept info from env var', () => {
+      process.env.INSTANA_LOG_LEVEL_CAPTURE = 'info';
+      const config = coreConfig.normalize();
+      expect(config.tracing.logLevelCapture).to.equal('info');
+    });
+
+    it('should accept error from env var', () => {
+      process.env.INSTANA_LOG_LEVEL_CAPTURE = 'error';
+      const config = coreConfig.normalize();
+      expect(config.tracing.logLevelCapture).to.equal('error');
+    });
+
+    it('should accept off from env var', () => {
+      process.env.INSTANA_LOG_LEVEL_CAPTURE = 'off';
+      const config = coreConfig.normalize();
+      expect(config.tracing.logLevelCapture).to.equal('off');
+    });
+
+    it('should normalize env var value to uppercase (lowercase "warn")', () => {
+      process.env.INSTANA_LOG_LEVEL_CAPTURE = 'warn';
+      const config = coreConfig.normalize();
+      expect(config.tracing.logLevelCapture).to.equal('warn');
+    });
+
+    it('should normalize env var value to uppercase (mixed case "Info")', () => {
+      process.env.INSTANA_LOG_LEVEL_CAPTURE = 'Info';
+      const config = coreConfig.normalize();
+      expect(config.tracing.logLevelCapture).to.equal('info');
+    });
+
+    it('should fall back to warn for an invalid env var value', () => {
+      process.env.INSTANA_LOG_LEVEL_CAPTURE = 'VERBOSE';
+      const config = coreConfig.normalize();
+      expect(config.tracing.logLevelCapture).to.equal('warn');
+    });
+
+    it('should accept info from in-code config', () => {
+      const config = coreConfig.normalize({ userConfig: { tracing: { logLevelCapture: 'info' } } });
+      expect(config.tracing.logLevelCapture).to.equal('info');
+    });
+
+    it('should accept off from in-code config', () => {
+      const config = coreConfig.normalize({ userConfig: { tracing: { logLevelCapture: 'off' } } });
+      expect(config.tracing.logLevelCapture).to.equal('off');
+    });
+
+    it('should fall back to warn for an invalid in-code config value', () => {
+      const config = coreConfig.normalize({ userConfig: { tracing: { logLevelCapture: 'INVALID' } } });
+      expect(config.tracing.logLevelCapture).to.equal('warn');
+    });
+
+    it('should give precedence to env var over in-code config', () => {
+      process.env.INSTANA_LOG_LEVEL_CAPTURE = 'error';
+      const config = coreConfig.normalize({ userConfig: { tracing: { logLevelCapture: 'info' } } });
+      expect(config.tracing.logLevelCapture).to.equal('error');
+    });
+  });
 });

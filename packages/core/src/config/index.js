@@ -7,7 +7,12 @@
 
 const normalizers = require('./normalizers');
 const deepMerge = require('../util/deepMerge');
-const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE, CONFIG_SOURCES } = require('../util/constants');
+const {
+  DEFAULT_STACK_TRACE_LENGTH,
+  DEFAULT_STACK_TRACE_MODE,
+  CONFIG_SOURCES,
+  DEFAULT_LOG_LEVEL
+} = require('../util/constants');
 const util = require('./util');
 const validators = require('./validator');
 const { validateStackTraceMode, validateStackTraceLength } = validators;
@@ -74,6 +79,7 @@ let currentConfig;
  * @property {boolean} [disableEOLEvents]
  * @property {globalStackTraceConfig} [global]
  * @property {otlpExporterOptions} [otlp]
+ * @property {string} [logLevelCapture]
  */
 
 /**
@@ -181,6 +187,7 @@ let defaults = {
     ignoreEndpoints: {},
     ignoreEndpointsDisableSuppression: false,
     disableEOLEvents: false,
+    logLevelCapture: DEFAULT_LOG_LEVEL,
     otlp: {
       enabled: false,
       // Currently, we only have http protocol support and default to 4318
@@ -371,6 +378,7 @@ function normalizeTracingConfig({ userConfig = {}, defaultConfig = {}, finalConf
   normalizeIgnoreEndpointsDisableSuppression({ userConfig, defaultConfig, finalConfig });
   normalizeDisableEOLEvents({ userConfig, defaultConfig, finalConfig });
   normalizeOtlpExporter({ userConfig, defaultConfig, finalConfig });
+  normalizeLogLevelCapture({ userConfig, defaultConfig, finalConfig });
 }
 
 /**
@@ -1206,6 +1214,31 @@ function normalizeDisableEOLEvents({ userConfig = {}, defaultConfig = {}, finalC
     source,
     value,
     envVarName: 'INSTANA_TRACING_DISABLE_EOL_EVENTS'
+  });
+}
+
+/**
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
+ */
+function normalizeLogLevelCapture({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
+  const { value, source } = util.resolve(
+    {
+      envValue: 'INSTANA_LOG_LEVEL_CAPTURE',
+      inCodeValue: userConfig.tracing?.logLevelCapture,
+      defaultValue: defaultConfig.tracing.logLevelCapture
+    },
+    [validators.logLevelValidator]
+  );
+
+  configStore.set('config.tracing.logLevelCapture', { source });
+
+  finalConfig.tracing.logLevelCapture = value;
+
+  util.log({
+    configPath: 'config.tracing.logLevelCapture',
+    source,
+    value,
+    envVarName: 'INSTANA_LOG_LEVEL_CAPTURE'
   });
 }
 

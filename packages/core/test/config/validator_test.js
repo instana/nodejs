@@ -517,4 +517,59 @@ describe('config.validator', () => {
       expect(validator.httpExitErrorCodeValidator(['abc', {}, [], 500, 399])).to.deep.equal([]);
     });
   });
+
+  describe('logLevelValidator', () => {
+    it('should return undefined for null', () => {
+      expect(validator.logLevelValidator(null)).to.be.undefined;
+    });
+
+    it('should return undefined for undefined', () => {
+      expect(validator.logLevelValidator(undefined)).to.be.undefined;
+    });
+
+    it('should accept "info"', () => {
+      expect(validator.logLevelValidator('info')).to.equal('info');
+    });
+
+    it('should accept "warn"', () => {
+      expect(validator.logLevelValidator('warn')).to.equal('warn');
+    });
+
+    it('should accept "error"', () => {
+      expect(validator.logLevelValidator('error')).to.equal('error');
+    });
+
+    it('should accept "off"', () => {
+      expect(validator.logLevelValidator('off')).to.equal('off');
+    });
+
+    it('should normalize mixed-case input to lowercase', () => {
+      expect(validator.logLevelValidator('INFO')).to.equal('info');
+      expect(validator.logLevelValidator('Warn')).to.equal('warn');
+      expect(validator.logLevelValidator('ERROR')).to.equal('error');
+      expect(validator.logLevelValidator('OFF')).to.equal('off');
+    });
+
+    it('should return undefined for an invalid string value', () => {
+      expect(validator.logLevelValidator('debug')).to.be.undefined;
+      expect(validator.logLevelValidator('verbose')).to.be.undefined;
+      expect(validator.logLevelValidator('trace')).to.be.undefined;
+      expect(validator.logLevelValidator('INVALID')).to.be.undefined;
+    });
+
+    it('should return undefined for a number', () => {
+      expect(validator.logLevelValidator(1)).to.be.undefined;
+      expect(validator.logLevelValidator(0)).to.be.undefined;
+    });
+
+    it('should return undefined for a boolean', () => {
+      expect(validator.logLevelValidator(true)).to.be.undefined;
+      expect(validator.logLevelValidator(false)).to.be.undefined;
+    });
+
+    it('should return undefined for an object', () => {
+      expect(validator.logLevelValidator({})).to.be.undefined;
+      expect(validator.logLevelValidator([])).to.be.undefined;
+    });
+  });
 });
