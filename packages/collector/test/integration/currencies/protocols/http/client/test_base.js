@@ -1418,50 +1418,55 @@ module.exports = function (name, version, isLatest) {
           )
         ));
 
-    if (!appUsesHttps) {
-      // Verifies that Instana trace headers are propagated through requests signed by aws4-axios.
-      // aws4-axios sets `Authorization: AWS4-HMAC-SHA256` + `User-Agent: axios/1.18.1`.
-      it('must propagate X-INSTANA and traceparent headers through an aws4-axios signed request', () =>
-        clientControls
-          .sendRequest({
-            method: 'GET',
-            path: '/aws4-axios-signed-request'
-          })
-          .then(body => {
-            expect(body['x-instana-t'], 'X-INSTANA-T must reach the downstream service').to.be.a('string');
-            expect(body['x-instana-s'], 'X-INSTANA-S must reach the downstream service').to.be.a('string');
-            expect(body.traceparent, 'traceparent must reach the downstream service').to.be.a('string');
+    it('must propagate X-INSTANA and traceparent headers through an external package signed request', () =>
+      clientControls
+        .sendRequest({
+          method: 'GET',
+          path: '/aws4-axios-signed-request'
+        })
+        .then(body => {
+          expect(body['x-instana-t'], 'X-INSTANA-T must reach the downstream service').to.be.a('string');
+          expect(body['x-instana-s'], 'X-INSTANA-S must reach the downstream service').to.be.a('string');
+          expect(body.traceparent, 'traceparent must reach the downstream service').to.be.a('string');
 
-            return retry(() =>
-              globalAgent.instance.getSpans().then(spans => {
-                const exitSpan = expectExactlyOneMatching(spans, [
-                  span => expect(span.n).to.equal('node.http.client'),
-                  span => expect(span.k).to.equal(constants.EXIT),
-                  span => expect(span.data.http.url).to.match(/\/aws4-axios-target/)
-                ]);
+          return retry(() =>
+            globalAgent.instance.getSpans().then(spans => {
+              const exitSpan = expectExactlyOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.client'),
+                span => expect(span.k).to.equal(constants.EXIT),
+                span => expect(span.data.http.url).to.match(/\/aws4-axios-target/)
+              ]);
 
-                expect(body['x-instana-t']).to.equal(exitSpan.t);
-                expect(body['x-instana-s']).to.equal(exitSpan.s);
-                expect(body.traceparent).to.include(exitSpan.t);
-              })
-            );
-          }));
+              expect(body['x-instana-t']).to.equal(exitSpan.t);
+              expect(body['x-instana-s']).to.equal(exitSpan.s);
+              expect(body.traceparent).to.include(exitSpan.t);
 
-      it('must NOT create http client EXIT span for an aws-sdk signed request', () =>
-        clientControls
-          .sendRequest({
-            method: 'GET',
-            path: '/aws-sdk-signed-request'
-          })
-          .then(() => {
-            return delay(500).then(() =>
-              globalAgent.instance.getSpans().then(spans => {
-                const exitSpans = spans.filter(span => span.n === 'node.http.client' && span.k === constants.EXIT);
-                expect(exitSpans, 'must not create a node.http.client exit span').to.have.length(0);
-              })
-            );
-          }));
-    }
+              // 1 x http server
+              // 1 x http client
+              // 1 x http server
+              expect(spans).to.have.lengthOf(3);
+            })
+          );
+        }));
+
+    it('must NOT create http client EXIT span for an aws-sdk signed request', () =>
+      clientControls
+        .sendRequest({
+          method: 'GET',
+          path: '/aws-sdk-signed-request'
+        })
+        .then(() => {
+          return delay(500).then(() =>
+            globalAgent.instance.getSpans().then(spans => {
+              const exitSpans = spans.filter(span => span.n === 'node.http.client' && span.k === constants.EXIT);
+              expect(exitSpans, 'must not create a node.http.client exit span').to.have.length(0);
+
+              // 1 x http server
+              // 1 x http server
+              expect(spans).to.have.lengthOf(2);
+            })
+          );
+        }));
   }
 
   function registerConnectionRefusalTest(appUsesHttps) {
