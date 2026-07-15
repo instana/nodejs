@@ -113,11 +113,9 @@ function isAWSdkHeader(options) {
   );
 }
 
-function shouldBeBypassed(parentSpan, options) {
+function shouldBeBypassed(parentSpan, options, awsSdkRequest) {
   const headers = options && options.headers;
   const userAgent = (headers && headers['User-Agent']) || (headers && headers['user-agent']);
-
-  const awsSdkHeader = isAWSdkHeader(options);
 
   const hostInfo = (headers && headers.Host) || (headers && headers.host);
 
@@ -127,7 +125,7 @@ function shouldBeBypassed(parentSpan, options) {
   // 'user-agent': 'aws-sdk-js/3.329.0 os/darwin/22.5.0 lang/js md/nodejs/18.14.2 api/sqs/3.329.0'
   const agentMatchesSQS = evaluateHeaderValue(userAgent, header => header.toLowerCase().indexOf('api/sqs') > -1);
 
-  if (parentSpan && parentSpan.n === 'sqs' && awsSdkHeader && (hostMatchesSQS || agentMatchesSQS)) {
+  if (parentSpan && parentSpan.n === 'sqs' && awsSdkRequest && (hostMatchesSQS || agentMatchesSQS)) {
     return true;
   }
 
