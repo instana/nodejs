@@ -84,8 +84,8 @@ function evaluateHeaderValue(headerValue, validator) {
  * @returns {boolean}
  */
 function isAwsSdkRequest(options) {
-  const headers = options && options.headers;
-  const userAgent = (headers && headers['User-Agent']) || (headers && headers['user-agent']);
+  const headers = options?.headers;
+  const userAgent = headers?.['User-Agent'] ?? headers?.['user-agent'];
   return evaluateHeaderValue(
     userAgent,
     header => header.toLowerCase().indexOf('aws-sdk-nodejs') > -1 || header.toLowerCase().indexOf('aws-sdk-js') > -1
@@ -120,9 +120,8 @@ function shouldBeBypassed(parentSpan, options) {
   );
 
   const hostMatchesGPC = options && options.host && options.host === 'storage.googleapis.com';
-  if (isGCPNodeJSHeader && hostMatchesGPC) return true;
 
-  return false;
+  return isGCPNodeJSHeader && hostMatchesGPC;
 }
 
 function instrument(coreModule, forceHttps) {
