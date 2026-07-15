@@ -189,10 +189,6 @@ function instrument(coreModule, forceHttps) {
     const awsSdkRequest = isAWSdkHeader(options);
 
     if (skipTracingResult.skip || shouldBeBypassed(skipTracingResult.parentSpan, options, awsSdkRequest)) {
-      if (awsSdkRequest) {
-        return originalRequest.apply(coreModule, arguments);
-      }
-
       let traceLevelHeaderHasBeenAdded = false;
       if (skipTracingResult.suppressed) {
         traceLevelHeaderHasBeenAdded = tryToAddTraceLevelAddHeaderToOpts(options, '0', w3cTraceContext);
@@ -206,6 +202,11 @@ function instrument(coreModule, forceHttps) {
       }
 
       return clientRequest;
+    }
+
+    // Note: The aws sdk instr will create its own span, so no need to create again an http client span
+    if (awsSdkRequest) {
+      return originalRequest.apply(coreModule, arguments);
     }
 
     cls.ns.run(() => {
@@ -382,7 +383,7 @@ function isUrlObject(argument) {
   return URL && argument instanceof url.URL;
 }
 
-function tryToAddHeadersToOpts(options, span, w3cTraceContext, awsSdkRequest) {
+function tryToAddHeadersToOpts(options, span, w3cTraceContext) {
   // Some HTTP spec background: If the request has a header Expect: 100-continue, the client will first send the
   // request headers, without the body. The client is then ought to wait for the server to send a first, preliminary
   // response with the status code 100 Continue (if all is well). Only then will the client send the actual request
@@ -402,16 +403,6 @@ function tryToAddHeadersToOpts(options, span, w3cTraceContext, awsSdkRequest) {
   // (see setHeadersOnRequest).
 
   if (hasHeadersOption(options)) {
-    if (awsSdkRequest) {
-      // This is a signed AWS API request (from the aws-sdk package, identified by its User-Agent).
-      // Adding our headers to this request would trigger a SignatureDoesNotMatch error in case the request
-      // will be retried:
-      // "SignatureDoesNotMatch: The request signature we calculated does not match the signature you provided.
-      // Check your key and signing method."
-      // See https://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html
-
-      return true;
-    }
     options.headers[constants.spanIdHeaderName] = span.s;
     options.headers[constants.traceIdHeaderName] = span.t;
     options.headers[constants.traceLevelHeaderName] = '1';
@@ -459,11 +450,7 @@ function removeInstanaHeadersFromOpts(options) {
   delete options.headers[constants.w3cTraceState];
 }
 
-function setHeadersOnRequest(clientRequest, span, w3cTraceContext, awsSdkRequest) {
-  if (awsSdkRequest) {
-    return;
-  }
-
+function setHeadersOnRequest(clientRequest, span, w3cTraceContext) {
   if (span.shouldSuppressDownstream) {
     // Suppress trace propagation to downstream services.
     clientRequest.setHeader(constants.traceLevelHeaderName, '0');
