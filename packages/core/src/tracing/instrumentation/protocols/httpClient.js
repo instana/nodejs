@@ -98,14 +98,34 @@ function evaluateHeaderValue(headerValue, validator) {
  * https://nodejs.org/dist/latest-v14.x/docs/api/http.html#http_http_request_options_callback
  * @return {boolean} true, if the HTTP request that is about to happen should _not_ create a span.
  */
+/**
+ * Returns true if the User-Agent identifies the request as originating from the aws-sdk (v2 or v3).
+ * Used both to bypass span creation and to skip Instana header injection for AWS SigV4-signed requests.
+ * @param {Object} options
+ * @returns {boolean}
+ */
+function isAwsSdkRequest(options) {
+  const headers = options && options.headers;
+  const userAgent = (headers && headers['User-Agent']) || (headers && headers['user-agent']);
+  return isAWSNodeJSHeader(userAgent);
+}
+
+/**
+ * @param {string | string[] | undefined} userAgent
+ * @returns {boolean}
+ */
+function isAWSNodeJSHeader(userAgent) {
+  return evaluateHeaderValue(
+    userAgent,
+    header => header.toLowerCase().indexOf('aws-sdk-nodejs') > -1 || header.toLowerCase().indexOf('aws-sdk-js') > -1
+  );
+}
+
 function shouldBeBypassed(parentSpan, options) {
   const headers = options && options.headers;
   const userAgent = (headers && headers['User-Agent']) || (headers && headers['user-agent']);
 
-  const isAWSNodeJSHeader = evaluateHeaderValue(
-    userAgent,
-    header => header.toLowerCase().indexOf('aws-sdk-nodejs') > -1 || header.toLowerCase().indexOf('aws-sdk-js') > -1
-  );
+  const awsSdkHeader = isAWSNodeJSHeader(userAgent);
 
   const hostInfo = (headers && headers.Host) || (headers && headers.host);
 
@@ -115,7 +135,7 @@ function shouldBeBypassed(parentSpan, options) {
   // 'user-agent': 'aws-sdk-js/3.329.0 os/darwin/22.5.0 lang/js md/nodejs/18.14.2 api/sqs/3.329.0'
   const agentMatchesSQS = evaluateHeaderValue(userAgent, header => header.toLowerCase().indexOf('api/sqs') > -1);
 
-  if (parentSpan && parentSpan.n === 'sqs' && isAWSNodeJSHeader && (hostMatchesSQS || agentMatchesSQS)) {
+  if (parentSpan && parentSpan.n === 'sqs' && awsSdkHeader && (hostMatchesSQS || agentMatchesSQS)) {
     return true;
   }
 
@@ -178,7 +198,20 @@ function instrument(coreModule, forceHttps) {
 
     const parentSpan = skipTracingResult.parentSpan;
 
-    if (skipTracingResult.skip || shouldBeBypassed(skipTracingResult.parentSpan, options)) {
+    // aws-sdk requests (identified by User-Agent) must not have Instana headers injected —
+    // the request is already SigV4-signed and adding headers would cause SignatureDoesNotMatch on retries.
+    // A node.http.client span is still created for observability; only header injection is skipped.
+    const awsSdkRequest = isAwsSdkRequest(options);
+
+    // CASE 1: skip due to tracing being inactive / reduced span / etc.
+    // CASE 2: shouldBeBypassed covers special cases like SQS polling from an SQS entry span.
+    // For aws-sdk requests in either case: return the original request completely untouched
+    // (no suppression headers, no W3C headers — nothing must disturb the signed request).
+    if (skipTracingResult.skip || shouldBeBypassed(skipTracingResult.parentSpan, options, awsSdkRequest)) {
+      if (awsSdkRequest) {
+        return originalRequest.apply(coreModule, arguments);
+      }
+
       let traceLevelHeaderHasBeenAdded = false;
       if (skipTracingResult.suppressed) {
         traceLevelHeaderHasBeenAdded = tryToAddTraceLevelAddHeaderToOpts(options, '0', w3cTraceContext);
@@ -255,7 +288,7 @@ function instrument(coreModule, forceHttps) {
 
       let instanaHeadersHaveBeenAdded = false;
       try {
-        instanaHeadersHaveBeenAdded = tryToAddHeadersToOpts(options, span, w3cTraceContext);
+        instanaHeadersHaveBeenAdded = tryToAddHeadersToOpts(options, span, w3cTraceContext, awsSdkRequest);
         clientRequest = originalRequest.apply(coreModule, originalArgs);
         removeInstanaHeadersFromOpts(options);
       } catch (e) {
@@ -273,7 +306,7 @@ function instrument(coreModule, forceHttps) {
 
       cls.ns.bindEmitter(clientRequest);
       if (!instanaHeadersHaveBeenAdded) {
-        instanaHeadersHaveBeenAdded = setHeadersOnRequest(clientRequest, span, w3cTraceContext);
+        instanaHeadersHaveBeenAdded = setHeadersOnRequest(clientRequest, span, w3cTraceContext, awsSdkRequest);
       }
 
       let isTimeout = false;
@@ -368,7 +401,7 @@ function isUrlObject(argument) {
   return URL && argument instanceof url.URL;
 }
 
-function tryToAddHeadersToOpts(options, span, w3cTraceContext) {
+function tryToAddHeadersToOpts(options, span, w3cTraceContext, awsSdkRequest) {
   // Some HTTP spec background: If the request has a header Expect: 100-continue, the client will first send the
   // request headers, without the body. The client is then ought to wait for the server to send a first, preliminary
   // response with the status code 100 Continue (if all is well). Only then will the client send the actual request
@@ -388,7 +421,9 @@ function tryToAddHeadersToOpts(options, span, w3cTraceContext) {
   // (see setHeadersOnRequest).
 
   if (hasHeadersOption(options)) {
-    if (!isItSafeToModifiyHeadersInOptions(options)) {
+    // Do not inject headers into aws-sdk requests: the request is SigV4-signed and adding headers
+    // would cause SignatureDoesNotMatch errors on retries.
+    if (awsSdkRequest) {
       return true;
     }
     options.headers[constants.spanIdHeaderName] = span.s;
@@ -403,11 +438,6 @@ function tryToAddHeadersToOpts(options, span, w3cTraceContext) {
 
 function tryToAddTraceLevelAddHeaderToOpts(options, level, w3cTraceContext) {
   if (hasHeadersOption(options)) {
-    if (!isItSafeToModifiyHeadersInOptions(options)) {
-      // Return true to convince the caller that headers have been added although we have in fact not added them. This
-      // will result in no headers being added. See isItSafeToModifiyHeadersInOptions for the motivation behind this.
-      return true;
-    }
     options.headers[constants.traceLevelHeaderName] = level;
     tryToAddW3cHeaderToOpts(options, w3cTraceContext);
     return true;
@@ -443,8 +473,9 @@ function removeInstanaHeadersFromOpts(options) {
   delete options.headers[constants.w3cTraceState];
 }
 
-function setHeadersOnRequest(clientRequest, span, w3cTraceContext) {
-  if (!isItSafeToModifiyHeadersForRequest(clientRequest)) {
+function setHeadersOnRequest(clientRequest, span, w3cTraceContext, awsSdkRequest) {
+  // Do not inject headers into aws-sdk requests — same reasoning as in tryToAddHeadersToOpts.
+  if (awsSdkRequest) {
     return;
   }
 
@@ -471,70 +502,6 @@ function setW3cHeadersOnRequest(clientRequest, w3cTraceContext) {
       clientRequest.setHeader(constants.w3cTraceState, w3cTraceContext.renderTraceState());
     }
   }
-}
-
-function isItSafeToModifiyHeadersInOptions(options) {
-  const keys = Object.keys(options.headers);
-  let key;
-  for (let i = 0; i < keys.length; i++) {
-    key = keys[i];
-    if (
-      'authorization' === key.toLowerCase() &&
-      typeof options.headers[key] === 'string' &&
-      options.headers[key].indexOf('AWS') === 0
-    ) {
-      // This is a signed AWS API request (probably from the aws-sdk package).
-      // Adding our headers too this request would trigger a SignatureDoesNotMatch error in case the request will be
-      // retried:
-      // "SignatureDoesNotMatch: The request signature we calculated does not match the signature you provided.
-      // Check your key and signing method."
-      // See https://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html
-      //
-      // Additionally, adding our headers to this request would not have any benefit - the receiving end will be an AWS
-      // service like S3 and those are not instrumented. (There is a very small chance that the receiving end is an
-      // instrumented Lambda function behind an API gateway and the user is using
-      // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/APIGateway.html to invoke this Gateway/Lambda
-      // combination, which _would_ benefit from tracing headers.)
-
-      // Exception: when the request comes from axios (e.g. via aws4-axios), the signing library re-signs
-      // the request fresh on every call, so adding trace headers is safe. The receiving end is also likely
-      // an instrumented service (e.g. a Lambda behind API Gateway) that benefits from receiving trace headers.
-      if (!isAxiosRequest(options.headers)) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
-function isItSafeToModifiyHeadersForRequest(clientRequest) {
-  const authHeader = clientRequest.getHeader('Authorization');
-  if (!authHeader || authHeader.indexOf('AWS') !== 0) {
-    return true;
-  }
-  // See comment in isItSafeToModifiyHeadersInOptions. Allow header injection only for axios requests.
-  const userAgent = clientRequest.getHeader('User-Agent');
-  return isAxiosUserAgent(userAgent);
-}
-
-/**
- * Returns true if the headers object contains a User-Agent indicating the request was made by axios
- * (e.g. via the aws4-axios interceptor). Only the presence of "axios" in the User-Agent is checked;
- * no version matching is performed.
- * @param {Object} headers
- * @returns {boolean}
- */
-function isAxiosRequest(headers) {
-  const userAgent = headers['User-Agent'] || headers['user-agent'];
-  return isAxiosUserAgent(userAgent);
-}
-
-/**
- * @param {string | string[] | undefined} userAgent
- * @returns {boolean}
- */
-function isAxiosUserAgent(userAgent) {
-  return evaluateHeaderValue(userAgent, header => header.toLowerCase().indexOf('axios') > -1);
 }
 
 function captureRequestHeaders(options, clientRequest, response) {
