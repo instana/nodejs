@@ -642,7 +642,7 @@ describe('config.normalizeConfig', () => {
       });
 
       it('should normalize stack trace mode to lowercase from config', () => {
-        const config = coreConfig.normalize({ userConfig: { tracing: { global: { stackTrace: 'error' } } } });
+        const config = coreConfig.normalize({ userConfig: { tracing: { global: { stackTrace: 'ERROR' } } } });
         expect(config.tracing.stackTrace).to.equal('error');
       });
 
