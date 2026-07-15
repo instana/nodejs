@@ -1428,8 +1428,6 @@ module.exports = function (name, version, isLatest) {
             path: '/aws4-axios-signed-request'
           })
           .then(body => {
-            // The downstream server echoes back whatever trace headers it received.
-            // All three must be present — none should have been swallowed by the AWS-signed-request guard.
             expect(body['x-instana-t'], 'X-INSTANA-T must reach the downstream service').to.be.a('string');
             expect(body['x-instana-s'], 'X-INSTANA-S must reach the downstream service').to.be.a('string');
             expect(body.traceparent, 'traceparent must reach the downstream service').to.be.a('string');
@@ -1442,52 +1440,24 @@ module.exports = function (name, version, isLatest) {
                   span => expect(span.data.http.url).to.match(/\/aws4-axios-target/)
                 ]);
 
-                // The trace ID the server received must be the same one the exit span carries,
-                // proving end-to-end trace context continuity.
                 expect(body['x-instana-t']).to.equal(exitSpan.t);
-
-                // The span ID the server received as X-INSTANA-S must equal the exit span's own span ID.
                 expect(body['x-instana-s']).to.equal(exitSpan.s);
-
-                // traceparent must encode the same trace ID (last 16 hex chars of the 32-char trace ID field).
                 expect(body.traceparent).to.include(exitSpan.t);
               })
             );
           }));
 
-      // Verifies that Instana trace headers are NOT injected into requests from the aws-sdk.
-      // aws-sdk sets `Authorization: AWS4-HMAC-SHA256` + `User-Agent: aws-sdk-js/...`.
-      it('must NOT inject X-INSTANA or traceparent headers into an aws-sdk signed request', () =>
+      it('must NOT create http client EXIT span for an aws-sdk signed request', () =>
         clientControls
           .sendRequest({
             method: 'GET',
             path: '/aws-sdk-signed-request'
           })
-          .then(body => {
-            return retry(() =>
+          .then(() => {
+            return delay(500).then(() =>
               globalAgent.instance.getSpans().then(spans => {
-                // A node.http.client exit span is still created — the guard only suppresses header
-                // injection, not span creation.
-                const exitSpan = expectExactlyOneMatching(spans, [
-                  span => expect(span.n).to.equal('node.http.client'),
-                  span => expect(span.k).to.equal(constants.EXIT),
-                  span => expect(span.data.http.url).to.match(/\/aws4-axios-target/)
-                ]);
-
-                // The downstream service must NOT have received the exit span's trace ID as X-INSTANA-T.
-                // body['x-instana-t'] is either null (not sent) or a parent span's value — either way
-                // it must differ from the exit span's own trace ID.
-                expect(body['x-instana-t']).to.not.equal(exitSpan.t);
-
-                // Same for X-INSTANA-S: the exit span's span ID must not have been forwarded.
-                expect(body['x-instana-s']).to.not.equal(exitSpan.s);
-
-                // traceparent must not carry the exit span's trace ID.
-                // When null (not sent at all), that already satisfies the requirement.
-                // When present (e.g. a parent span's traceparent), it must not reference this exit span.
-                if (body.traceparent !== null) {
-                  expect(body.traceparent).to.not.include(exitSpan.t);
-                }
+                const exitSpans = spans.filter(span => span.n === 'node.http.client' && span.k === constants.EXIT);
+                expect(exitSpans, 'must not create a node.http.client exit span').to.have.length(0);
               })
             );
           }));

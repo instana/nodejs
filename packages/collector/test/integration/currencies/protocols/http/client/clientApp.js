@@ -367,9 +367,6 @@ app.get('/request-shared-headers', (req, res) => {
   });
 });
 
-// Simulates an outgoing request signed by aws4-axios:
-//   - Authorization: AWS4-HMAC-SHA256 (SigV4-signed)
-//   - User-Agent: axios/1.18.1
 app.get('/aws4-axios-signed-request', (req, res) => {
   httpModule
     .request(
@@ -398,9 +395,6 @@ app.get('/aws4-axios-signed-request', (req, res) => {
     .end();
 });
 
-// Simulates an outgoing request from the aws-sdk (v3):
-//   - Authorization: AWS4-HMAC-SHA256 (SigV4-signed)
-//   - User-Agent: aws-sdk-js/3.400.0 ... (identifies this as a real aws-sdk call)
 app.get('/aws-sdk-signed-request', (req, res) => {
   httpModule
     .request(
