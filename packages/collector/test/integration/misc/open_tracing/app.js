@@ -14,7 +14,7 @@ process.on('SIGTERM', () => {
 const instana = require('@instana/collector');
 
 instana({
-  agentPort: process.env.AGENT_PORT,
+  agentPort: process.env.AGENT_STUB_PORT,
   level: 'warn',
   serviceName: 'theFancyServiceYouWouldntBelieveActuallyExists',
   tracing: {

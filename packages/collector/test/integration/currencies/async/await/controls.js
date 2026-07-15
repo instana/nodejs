@@ -22,7 +22,7 @@ exports.start = opts => {
   opts = opts || {};
 
   const env = Object.create(process.env);
-  env.AGENT_PORT = opts.useGlobalAgent ? agentControls.getPort() : opts.agentControls.getPort();
+  env.AGENT_STUB_PORT = opts.useGlobalAgent ? agentControls.getPort() : opts.agentControls.getPort();
   env.APP_PORT = portfinder();
 
   appPort = env.APP_PORT;
@@ -33,7 +33,7 @@ exports.start = opts => {
   // eslint-disable-next-line no-console
   console.log(
     // eslint-disable-next-line max-len
-    `[AsyncAwaitControls] starting with port: ${appPort}, upstreamPort: ${env.UPSTREAM_PORT} and agentPort: ${env.AGENT_PORT}`
+    `[AsyncAwaitControls] starting with port: ${appPort}, upstreamPort: ${env.UPSTREAM_PORT} and agentPort: ${env.AGENT_STUB_PORT}`
   );
 
   expressApp = spawn('node', [path.join(__dirname, 'app.js')], {

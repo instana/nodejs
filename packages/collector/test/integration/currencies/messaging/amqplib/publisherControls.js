@@ -22,7 +22,7 @@ exports.registerTestHooks = opts => {
     opts = opts || {};
 
     const env = Object.create(process.env);
-    env.AGENT_PORT = agentControls.getPort();
+    env.AGENT_STUB_PORT = agentControls.getPort();
     env.APP_PORT = portfinder();
     appPort = env.APP_PORT;
     env.TRACING_ENABLED = 'enableTracing' in opts ? opts.enableTracing : true;

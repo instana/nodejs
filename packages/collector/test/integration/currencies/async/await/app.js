@@ -12,7 +12,7 @@ process.on('SIGTERM', () => {
 });
 
 require('@instana/collector')({
-  agentPort: process.env.AGENT_PORT,
+  agentPort: process.env.AGENT_STUB_PORT,
   level: 'warn',
   tracing: {
     forceTransmissionStartingAt: 1

@@ -26,27 +26,32 @@ if (process.env.INSTANA_DEBUG === 'true') {
 }
 
 // NOTE: we can leave the hardcoded port here as this file is not used in the test env!
-const port = process.env.AGENT_PORT || 42699;
-const uniqueAgentUuids = process.env.AGENT_UNIQUE_UUIDS === 'true';
-const slowHostResponse = process.env.SLOW_HOST_RESPONSE === 'true';
-const extraHeaders = process.env.EXTRA_HEADERS ? process.env.EXTRA_HEADERS.split(',') : [];
-const secretsMatcher = process.env.SECRETS_MATCHER ? process.env.SECRETS_MATCHER : 'contains-ignore-case';
-const secretsList = process.env.SECRETS_LIST ? process.env.SECRETS_LIST.split(',') : ['pass', 'secret', 'token'];
-const dropAllData = process.env.DROP_DATA === 'true';
-const logTraces = process.env.LOG_TRACES === 'true';
-const logProfiles = process.env.LOG_PROFILES === 'true';
-const rejectTraces = process.env.REJECT_TRACES === 'true';
-const doesntHandleProfiles = process.env.DOESNT_HANDLE_PROFILES === 'true';
-const tracingMetrics = process.env.TRACING_METRICS !== 'false';
-let slowMetricsReply = process.env.SLOW_METRICS_REPLY === 'true';
-const enableSpanBatching = process.env.ENABLE_SPANBATCHING === 'true';
-const kafkaTraceCorrelation = process.env.KAFKA_TRACE_CORRELATION
-  ? process.env.KAFKA_TRACE_CORRELATION === 'true'
+const port = process.env.AGENT_STUB_PORT || 42699;
+const uniqueAgentUuids = process.env.AGENT_STUB_AGENT_UNIQUE_UUIDS === 'true';
+const slowHostResponse = process.env.AGENT_STUB_SLOW_HOST_RESPONSE === 'true';
+const extraHeaders = process.env.AGENT_STUB_EXTRA_HEADERS ? process.env.AGENT_STUB_EXTRA_HEADERS.split(',') : [];
+const secretsMatcher = process.env.AGENT_STUB_SECRETS_MATCHER
+  ? process.env.AGENT_STUB_SECRETS_MATCHER
+  : 'contains-ignore-case';
+const secretsList = process.env.AGENT_STUB_SECRETS_LIST
+  ? process.env.AGENT_STUB_SECRETS_LIST.split(',')
+  : ['pass', 'secret', 'token'];
+const dropAllData = process.env.AGENT_STUB_DROP_DATA === 'true';
+const logTraces = process.env.AGENT_STUB_LOG_TRACES === 'true';
+const logProfiles = process.env.AGENT_STUB_LOG_PROFILES === 'true';
+const rejectTraces = process.env.AGENT_STUB_REJECT_TRACES === 'true';
+const doesntHandleProfiles = process.env.AGENT_STUB_DOESNT_HANDLE_PROFILES === 'true';
+const tracingMetrics = process.env.AGENT_STUB_TRACING_METRICS !== 'false';
+let slowMetricsReply = process.env.AGENT_STUB_SLOW_METRICS_REPLY === 'true';
+const enableSpanBatching = process.env.AGENT_STUB_ENABLE_SPANBATCHING === 'true';
+const kafkaTraceCorrelation = process.env.AGENT_STUB_KAFKA_TRACE_CORRELATION
+  ? process.env.AGENT_STUB_KAFKA_TRACE_CORRELATION === 'true'
   : null;
-const ignoreEndpoints = process.env.IGNORE_ENDPOINTS && JSON.parse(process.env.IGNORE_ENDPOINTS);
-const disable = process.env.AGENT_DISABLE_TRACING && JSON.parse(process.env.AGENT_DISABLE_TRACING);
-const stackTraceConfig = process.env.STACK_TRACE_CONFIG && JSON.parse(process.env.STACK_TRACE_CONFIG);
-const otlpExporter = process.env.OTLP_EXPORTER && JSON.parse(process.env.OTLP_EXPORTER);
+const ignoreEndpoints = process.env.AGENT_STUB_IGNORE_ENDPOINTS && JSON.parse(process.env.AGENT_STUB_IGNORE_ENDPOINTS);
+const disable = process.env.AGENT_STUB_DISABLE_TRACING && JSON.parse(process.env.AGENT_STUB_DISABLE_TRACING);
+const stackTraceConfig =
+  process.env.AGENT_STUB_STACK_TRACE_CONFIG && JSON.parse(process.env.AGENT_STUB_STACK_TRACE_CONFIG);
+const otlpExporter = process.env.AGENT_STUB_OTLP_EXPORTER && JSON.parse(process.env.AGENT_STUB_OTLP_EXPORTER);
 const httpExitConfig = process.env.AGENT_STUB_HTTP_EXIT_CONFIG && JSON.parse(process.env.AGENT_STUB_HTTP_EXIT_CONFIG);
 
 const uuids = {};

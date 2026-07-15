@@ -9,7 +9,7 @@
 
 const expect = require('chai').expect;
 
-const agentPort = process.env.AGENT_PORT;
+const agentPort = process.env.AGENT_STUB_PORT;
 const instana = require('@instana/collector')({
   agentPort,
   level: 'warn',

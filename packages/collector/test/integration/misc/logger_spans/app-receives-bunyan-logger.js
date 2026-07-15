@@ -13,7 +13,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const agentPort = process.env.AGENT_PORT;
+const agentPort = process.env.AGENT_STUB_PORT;
 const instana = require('@instana/collector')({
   agentPort,
   level: 'info',

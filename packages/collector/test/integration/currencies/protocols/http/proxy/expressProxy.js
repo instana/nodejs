@@ -16,7 +16,7 @@ process.on('SIGTERM', () => {
 // to test distributed tracing.
 
 const instanaConfig = {
-  agentPort: process.env.AGENT_PORT,
+  agentPort: process.env.AGENT_STUB_PORT,
   level: 'warn',
   tracing: {
     enabled: true,

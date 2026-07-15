@@ -48,7 +48,7 @@ exports.getPort = () => appPort;
 
 exports.start = async (opts = {}) => {
   const env = Object.create(process.env);
-  env.AGENT_PORT = opts.useGlobalAgent ? agentControls.getPort() : opts.agentControls.getPort();
+  env.AGENT_STUB_PORT = opts.useGlobalAgent ? agentControls.getPort() : opts.agentControls.getPort();
   env.APP_PORT = portfinder();
   appPort = env.APP_PORT;
 

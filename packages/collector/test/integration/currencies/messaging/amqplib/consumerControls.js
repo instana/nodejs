@@ -18,7 +18,7 @@ exports.registerTestHooks = opts => {
     opts = opts || {};
 
     const env = Object.create(process.env);
-    env.AGENT_PORT = agentPort;
+    env.AGENT_STUB_PORT = agentPort;
     env.TRACING_ENABLED = 'enableTracing' in opts ? opts.enableTracing : true;
     env.INSTANA_RETRY_AGENT_CONNECTION_IN_MS = 100;
 

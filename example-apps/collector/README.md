@@ -7,7 +7,7 @@ This is a trivial Node.js application suitable for quick experiments with the @i
 The app can be started via `node .` or `npm start`.
 
 It is configured via environment variables. The default values for the environment variables are in the `.env` file.
-The defaults can be overwritten like this `AGENT_PORT=3210 node .`.
+The defaults can be overwritten like this `AGENT_STUB_PORT=3210 node .`.
 
 ## Using The Agent Stub
 
@@ -16,7 +16,7 @@ If you want to use the agent stub instead of an actual agent, do this:
 ```
 # start the agent stub
 cd nodejs/packages/collector
-DROP_DATA=true npm run agent-stub
+AGENT_STUB_DROP_DATA=true npm run agent-stub
 
 # start the app (in a separate terminal)
 cd nodejs/example-apps/collector

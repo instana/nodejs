@@ -40,7 +40,7 @@ let unresponsive = process.env.BACKEND_UNRESPONSIVE === 'true';
 
 const app = express();
 
-const dropAllData = process.env.DROP_DATA === 'true';
+const dropAllData = process.env.AGENT_STUB_DROP_DATA === 'true';
 let receivedData = resetReceivedData();
 
 if (process.env.WITH_STDOUT) {
