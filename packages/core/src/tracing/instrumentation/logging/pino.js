@@ -19,7 +19,7 @@ const cls = require('../../cls');
 let isActive = false;
 
 // Reverse the log level mapping once for numeric-to-name lookups.
-// Pino internally represents log levels as numbers (for example, 30 -> "info").
+// pino uses numerical log levels (for example, 30 -> "info").
 const LEVEL_NAMES = Object.fromEntries(Object.entries(LOG_LEVEL_PRIORITY).map(([name, value]) => [value, name]));
 
 exports.init = function init() {
