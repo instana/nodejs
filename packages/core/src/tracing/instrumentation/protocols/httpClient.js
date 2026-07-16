@@ -80,9 +80,21 @@ function evaluateHeaderValue(headerValue, validator) {
 }
 
 /**
+ * @param {Object} options
+ * @returns {boolean}
+ */
+function isAwsSdkRequest(options) {
+  const headers = options?.headers;
+  const userAgent = headers?.['User-Agent'] ?? headers?.['user-agent'];
+  return evaluateHeaderValue(
+    userAgent,
+    header => header.toLowerCase().indexOf('aws-sdk-nodejs') > -1 || header.toLowerCase().indexOf('aws-sdk-js') > -1
+  );
+}
+
+/**
  * Checks whether an outgoing HTTP request should not be traced. This is intended to suppress the creation of HTTP exits
- * for which a higher level instrumentation exists, for example, HTTP requests made by AWS SQS that represent the queue
- * polling when we already created an SQS entry span for it.
+ * for which a higher level instrumentation exists.
  *
  * When using GCP storage library, the default way to upload a file is the resumable strategy.
  * This strategy uses google-auth-library -> gaxios -> http/https node core libs, which create http exit spans.
@@ -102,32 +114,14 @@ function shouldBeBypassed(parentSpan, options) {
   const headers = options && options.headers;
   const userAgent = (headers && headers['User-Agent']) || (headers && headers['user-agent']);
 
-  const isAWSNodeJSHeader = evaluateHeaderValue(
-    userAgent,
-    header => header.toLowerCase().indexOf('aws-sdk-nodejs') > -1 || header.toLowerCase().indexOf('aws-sdk-js') > -1
-  );
-
-  const hostInfo = (headers && headers.Host) || (headers && headers.host);
-
-  // Same regex used by AWS SDK at /lib/services/sqs.js
-  const hostMatchesSQS = evaluateHeaderValue(hostInfo, header => header.match(/^sqs\.(?:.+?)\./) !== null);
-
-  // 'user-agent': 'aws-sdk-js/3.329.0 os/darwin/22.5.0 lang/js md/nodejs/18.14.2 api/sqs/3.329.0'
-  const agentMatchesSQS = evaluateHeaderValue(userAgent, header => header.toLowerCase().indexOf('api/sqs') > -1);
-
-  if (parentSpan && parentSpan.n === 'sqs' && isAWSNodeJSHeader && (hostMatchesSQS || agentMatchesSQS)) {
-    return true;
-  }
-
   const isGCPNodeJSHeader = evaluateHeaderValue(
     userAgent,
     header => header.toLowerCase().indexOf('google-api-nodejs-client') > -1
   );
 
   const hostMatchesGPC = options && options.host && options.host === 'storage.googleapis.com';
-  if (isGCPNodeJSHeader && hostMatchesGPC) return true;
 
-  return false;
+  return isGCPNodeJSHeader && hostMatchesGPC;
 }
 
 function instrument(coreModule, forceHttps) {
@@ -177,6 +171,12 @@ function instrument(coreModule, forceHttps) {
     });
 
     const parentSpan = skipTracingResult.parentSpan;
+
+    // Note: There is no need to create http EXIT spans for AWS SDK operations. They have their own AWS instrumentations and spans.
+    // Note: There was a case in the past where customers hit SignatureDoesNotMatch from AWS, because we have attached Instana headers to outgoing AWS SDK requests. We could only reproduce these in a script - see https://github.com/instana/nodejs/tree/main/packages/collector/test/bin/reproduce-scripts
+    if (isAwsSdkRequest(options)) {
+      return originalRequest.apply(coreModule, arguments);
+    }
 
     if (skipTracingResult.skip || shouldBeBypassed(skipTracingResult.parentSpan, options)) {
       let traceLevelHeaderHasBeenAdded = false;
@@ -388,9 +388,6 @@ function tryToAddHeadersToOpts(options, span, w3cTraceContext) {
   // (see setHeadersOnRequest).
 
   if (hasHeadersOption(options)) {
-    if (!isItSafeToModifiyHeadersInOptions(options)) {
-      return true;
-    }
     options.headers[constants.spanIdHeaderName] = span.s;
     options.headers[constants.traceIdHeaderName] = span.t;
     options.headers[constants.traceLevelHeaderName] = '1';
@@ -403,11 +400,6 @@ function tryToAddHeadersToOpts(options, span, w3cTraceContext) {
 
 function tryToAddTraceLevelAddHeaderToOpts(options, level, w3cTraceContext) {
   if (hasHeadersOption(options)) {
-    if (!isItSafeToModifiyHeadersInOptions(options)) {
-      // Return true to convince the caller that headers have been added although we have in fact not added them. This
-      // will result in no headers being added. See isItSafeToModifiyHeadersInOptions for the motivation behind this.
-      return true;
-    }
     options.headers[constants.traceLevelHeaderName] = level;
     tryToAddW3cHeaderToOpts(options, w3cTraceContext);
     return true;
@@ -444,10 +436,6 @@ function removeInstanaHeadersFromOpts(options) {
 }
 
 function setHeadersOnRequest(clientRequest, span, w3cTraceContext) {
-  if (!isItSafeToModifiyHeadersForRequest(clientRequest)) {
-    return;
-  }
-
   if (span.shouldSuppressDownstream) {
     // Suppress trace propagation to downstream services.
     clientRequest.setHeader(constants.traceLevelHeaderName, '0');
@@ -471,40 +459,6 @@ function setW3cHeadersOnRequest(clientRequest, w3cTraceContext) {
       clientRequest.setHeader(constants.w3cTraceState, w3cTraceContext.renderTraceState());
     }
   }
-}
-
-function isItSafeToModifiyHeadersInOptions(options) {
-  const keys = Object.keys(options.headers);
-  let key;
-  for (let i = 0; i < keys.length; i++) {
-    key = keys[i];
-    if (
-      'authorization' === key.toLowerCase() &&
-      typeof options.headers[key] === 'string' &&
-      options.headers[key].indexOf('AWS') === 0
-    ) {
-      // This is a signed AWS API request (probably from the aws-sdk package).
-      // Adding our headers too this request would trigger a SignatureDoesNotMatch error in case the request will be
-      // retried:
-      // "SignatureDoesNotMatch: The request signature we calculated does not match the signature you provided.
-      // Check your key and signing method."
-      // See https://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html
-      //
-      // Additionally, adding our headers to this request would not have any benefit - the receiving end will be an AWS
-      // service like S3 and those are not instrumented. (There is a very small chance that the receiving end is an
-      // instrumented Lambda function behind an API gateway and the user is using
-      // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/APIGateway.html to invoke this Gateway/Lambda
-      // combination, which _would_ benefit from tracing headers.)
-      return false;
-    }
-  }
-  return true;
-}
-
-function isItSafeToModifiyHeadersForRequest(clientRequest) {
-  const authHeader = clientRequest.getHeader('Authorization');
-  // see comment in isItSafeToModifiyHeadersInOptions
-  return !authHeader || authHeader.indexOf('AWS') !== 0;
 }
 
 function captureRequestHeaders(options, clientRequest, response) {
