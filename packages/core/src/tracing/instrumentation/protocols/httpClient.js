@@ -172,8 +172,13 @@ function instrument(coreModule, forceHttps) {
 
     const parentSpan = skipTracingResult.parentSpan;
 
-    // Note: There is no need to create http EXIT spans for AWS SDK operations. They have their own AWS instrumentations and spans.
-    // Note: There was a case in the past where customers hit SignatureDoesNotMatch from AWS, because we have attached Instana headers to outgoing AWS SDK requests. We could only reproduce these in a script - see https://github.com/instana/nodejs/tree/main/packages/collector/test/bin/reproduce-scripts
+    // Note: There is no need to create http EXIT spans for AWS SDK operations.
+    // They have their own AWS instrumentations and spans.
+
+    // Note: There was a case in the past where customers hit SignatureDoesNotMatch from AWS,
+    // because we have attached Instana headers to outgoing AWS SDK requests.
+    // We could only reproduce these in a script -
+    // see https://github.com/instana/nodejs/tree/main/packages/collector/test/bin/reproduce-scripts
     if (isAwsSdkRequest(options)) {
       return originalRequest.apply(coreModule, arguments);
     }
