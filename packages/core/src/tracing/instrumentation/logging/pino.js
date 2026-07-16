@@ -10,13 +10,17 @@
 const { inspect } = require('util');
 const shimmer = require('../../shimmer');
 
-const { LOG_LEVEL } = require('../../../util/constants');
+const { LOG_LEVEL_PRIORITY } = require('../../../util/constants');
 const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
 
 let isActive = false;
+
+// Reverse the log level mapping once for numeric-to-name lookups.
+// Pino internally represents log levels as numbers (for example, 30 -> "info").
+const LEVEL_NAMES = Object.fromEntries(Object.entries(LOG_LEVEL_PRIORITY).map(([name, value]) => [value, name]));
 
 exports.init = function init() {
   // TODO: Fix the issue with Pino instrumentation. If Pino is required multiple times,
@@ -105,27 +109,10 @@ function shimGenLog(originalGenLog) {
 }
 
 function resolveLogLevel(level) {
-  if (typeof level === 'string') {
-    return level.toLowerCase();
-  }
-
-  if (level >= 60) {
-    return LOG_LEVEL.FATAL;
-  }
-  if (level >= 50) {
-    return LOG_LEVEL.ERROR;
-  }
-  if (level >= 40) {
-    return LOG_LEVEL.WARN;
-  }
-  if (level >= 30) {
-    return LOG_LEVEL.INFO;
-  }
-  if (level >= 20) {
-    return LOG_LEVEL.DEBUG;
-  }
-
-  return LOG_LEVEL.TRACE;
+  // `logLevelCapture` only accepts the standard log level names. Round custom
+  // Pino numeric levels (e.g. 35, 55) down to the nearest standard level.
+  const rounded = Math.floor(level / 10) * 10;
+  return LEVEL_NAMES[rounded];
 }
 
 exports.activate = function activate() {
