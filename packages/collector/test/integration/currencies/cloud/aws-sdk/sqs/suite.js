@@ -314,6 +314,9 @@ module.exports = function (libraryEnv) {
             // The SQS entry will be the root of a new trace because we were not able to add tracing headers.
             const sqsEntry = verifySQSEntry(receiverControls, spans, null);
             verifyHttpExit({ spans, parent: sqsEntry, pid: String(receiverControls.getPid()) });
+
+            // 1 HTTP entry + 1 SQS exit + 1 SQS entry (new root, no correlation headers) + 1 HTTP exit
+            expect(spans.length).to.equal(4);
           }, 1000);
 
           await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
@@ -476,6 +479,8 @@ module.exports = function (libraryEnv) {
             span => expect(span.p).to.equal(spanId),
             span => expect(span.k).to.equal(constants.ENTRY)
           ]);
+          // 1 SQS entry span (from the SNS notification) + 1 HTTP exit span (the follow-up request)
+          expect(spans.length).to.equal(2);
         }, 1000);
       }
 
@@ -486,6 +491,15 @@ module.exports = function (libraryEnv) {
         if (withError !== 'publisher') {
           const sqsEntry = verifySQSEntry(receiverControls, spans, sqsExit, messageId, withError, isBatch);
           verifyHttpExit({ spans, parent: sqsEntry, pid: String(receiverControls.getPid()) });
+
+          // For non-batch scenarios the span count is deterministic: 1 HTTP entry + 1 SQS exit + 1 SQS entry +
+          // 1 HTTP exit = 4. For batch, SQS may deliver messages across multiple receive calls producing additional
+          // SQS entry spans, so we only assert a minimum.
+          if (!isBatch) {
+            expect(spans.length).to.equal(4);
+          } else {
+            expect(spans.length).to.be.at.least(4);
+          }
         }
       }
 
@@ -748,6 +762,8 @@ module.exports = function (libraryEnv) {
             span => expect(span.ec).equal(1),
             span => expect(span.data.sqs.error).to.contain('specified queue does not exist')
           ]);
+          // The receiver polls continuously, so more error spans may accumulate before the retry succeeds
+          expect(spans.length).to.be.at.least(1);
         });
 
         await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
