@@ -10,7 +10,7 @@ const path = require('path');
 const StringDecoder = require('string_decoder').StringDecoder;
 
 const stackTrace = require('../util/stackTrace');
-const { STACK_TRACE_MODES, LOG_LEVEL_PRIORITY, DEFAULT_LOG_LEVEL, LOG_LEVEL } = require('../util/constants');
+const { STACK_TRACE_MODES, LOG_LEVEL_PRIORITY, LOG_LEVEL } = require('../util/constants');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -463,10 +463,6 @@ exports.shouldCaptureLogSpan = function shouldCaptureLogSpan(level) {
     return false;
   }
   const minLevel = LOG_LEVEL_PRIORITY[logLevelConfig];
-
-  if (typeof level === 'number') {
-    return level >= minLevel;
-  }
 
   const numericLevel = LOG_LEVEL_PRIORITY[level?.toLowerCase()];
 

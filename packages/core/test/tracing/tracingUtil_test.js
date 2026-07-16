@@ -13,7 +13,6 @@ const util = require('util');
 
 const config = require('../config');
 const { isCI, createFakeLogger } = require('../test_util');
-const { LOG_LEVEL_PRIORITY, LOG_LEVEL } = require('../../src/util/constants');
 
 const {
   findCallback,
@@ -1624,24 +1623,6 @@ describe('tracing/tracingUtil', () => {
 
       it('should return true for fatal', () => {
         expect(shouldCaptureLogSpan('fatal')).to.equal(true);
-      });
-
-      it('should return false for numeric levels below WARN', () => {
-        expect(shouldCaptureLogSpan(LOG_LEVEL_PRIORITY[LOG_LEVEL.TRACE])).to.equal(false);
-        expect(shouldCaptureLogSpan(LOG_LEVEL_PRIORITY[LOG_LEVEL.DEBUG])).to.equal(false);
-        expect(shouldCaptureLogSpan(LOG_LEVEL_PRIORITY[LOG_LEVEL.INFO])).to.equal(false);
-      });
-
-      it('should return true for numeric WARN level', () => {
-        expect(shouldCaptureLogSpan(LOG_LEVEL_PRIORITY[LOG_LEVEL.WARN])).to.equal(true);
-      });
-
-      it('should return true for numeric error level', () => {
-        expect(shouldCaptureLogSpan(LOG_LEVEL_PRIORITY[LOG_LEVEL.ERROR])).to.equal(true);
-      });
-
-      it('should return true for numeric fatal level', () => {
-        expect(shouldCaptureLogSpan(LOG_LEVEL_PRIORITY[LOG_LEVEL.FATAL])).to.equal(true);
       });
     });
   });
