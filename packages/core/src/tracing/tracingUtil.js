@@ -33,7 +33,7 @@ let httpExitConfig;
 /**
  * @type {string}
  */
-let logLevelConfig = DEFAULT_LOG_LEVEL;
+let logLevelConfig;
 /**
  * @param {import('../config').InstanaConfig} config
  */
