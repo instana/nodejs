@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.4.0](https://github.com/instana/nodejs/compare/v6.3.0...v6.4.0) (2026-07-16)
+
+
+### Bug Fixes
+
+* bumped nan from 2.27.0 to 2.28.0 ([#2632](https://github.com/instana/nodejs/issues/2632)) ([3b51070](https://github.com/instana/nodejs/commit/3b51070f73a11c970099125078cf32a344b60a26))
+* preserved trace headers in aws4-axios pkg triggered calls ([#2653](https://github.com/instana/nodejs/issues/2653)) ([ae12047](https://github.com/instana/nodejs/commit/ae1204752c76bd2c54bb2e518e9112c2cdd43b98))
+* **winston:** avoid wrapping error logger method twice ([#2649](https://github.com/instana/nodejs/issues/2649)) ([5af36af](https://github.com/instana/nodejs/commit/5af36af47808ad2aba955f1caf21c17dd8d96f0f))
+
+
+### Features
+
+* added env variable to disable W3C header reading & propagating ([#2652](https://github.com/instana/nodejs/issues/2652)) ([5d50c70](https://github.com/instana/nodejs/commit/5d50c7081c02234b0362c6c10fa58c2ec749869a))
+
+
+
+
+
 # [6.3.0](https://github.com/instana/nodejs/compare/v6.2.2...v6.3.0) (2026-07-13)
 
 

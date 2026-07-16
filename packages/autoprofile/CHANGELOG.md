@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.4.0](https://github.com/instana/nodejs/compare/v6.3.0...v6.4.0) (2026-07-16)
+
+
+### Bug Fixes
+
+* bumped nan from 2.27.0 to 2.28.0 ([#2632](https://github.com/instana/nodejs/issues/2632)) ([3b51070](https://github.com/instana/nodejs/commit/3b51070f73a11c970099125078cf32a344b60a26))
+
+
+
+
+
 # [6.3.0](https://github.com/instana/nodejs/compare/v6.2.2...v6.3.0) (2026-07-13)
 
 **Note:** Version bump only for package @instana/autoprofile

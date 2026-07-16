@@ -1,6 +1,6 @@
 {
   "name": "@instana/opentelemetry-sampler",
-  "version": "6.3.0",
+  "version": "6.4.0",
   "description": "OpenTelemetry Instana sampler",
   "keywords": [
     "opentelemetry",
