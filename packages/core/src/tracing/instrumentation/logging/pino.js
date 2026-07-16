@@ -10,6 +10,7 @@
 const { inspect } = require('util');
 const shimmer = require('../../shimmer');
 
+const { LOG_LEVEL } = require('../../../util/constants');
 const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
@@ -30,9 +31,9 @@ function instrumentPinoTools(toolsModule) {
 
 function shimGenLog(originalGenLog) {
   return function (level) {
-    // pino uses numerical log levels, 40 is 'warn', level increases with severity.
-    if (!level || level < 40) {
-      // we are not interested in anything below warn
+    const levelName = resolveLogLevel(level);
+
+    if (!levelName || !tracingUtil.shouldCaptureLogSpan(levelName)) {
       return originalGenLog.apply(this, arguments);
     } else {
       const originalLoggingFunction = originalGenLog.apply(this, arguments);
@@ -101,6 +102,30 @@ function shimGenLog(originalGenLog) {
       };
     }
   };
+}
+
+function resolveLogLevel(level) {
+  if (typeof level === 'string') {
+    return level.toLowerCase();
+  }
+
+  if (level >= 60) {
+    return LOG_LEVEL.FATAL;
+  }
+  if (level >= 50) {
+    return LOG_LEVEL.ERROR;
+  }
+  if (level >= 40) {
+    return LOG_LEVEL.WARN;
+  }
+  if (level >= 30) {
+    return LOG_LEVEL.INFO;
+  }
+  if (level >= 20) {
+    return LOG_LEVEL.DEBUG;
+  }
+
+  return LOG_LEVEL.TRACE;
 }
 
 exports.activate = function activate() {
