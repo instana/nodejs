@@ -168,6 +168,7 @@ exports.preInit = function preInit(preliminaryConfig) {
   shimmer.init(preliminaryConfig);
   cls.init(preliminaryConfig);
   sdk.init(preliminaryConfig, cls);
+  tracingUtil.init(preliminaryConfig);
 
   initInstanaInstrumentations(preliminaryConfig);
 };
