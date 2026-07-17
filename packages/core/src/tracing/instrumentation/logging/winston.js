@@ -98,7 +98,7 @@ function instrumentedLevelMethod(originalMethod, markAsError, level) {
       return originalMethod.apply(this, arguments);
     }
 
-    if (!tracingUtil.shouldCaptureLogSpan(level)) {
+    if (!tracingUtil.shouldCaptureLogSpan(resolveLogLevel(level))) {
       return originalMethod.apply(this, arguments);
     }
 
