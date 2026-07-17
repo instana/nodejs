@@ -74,7 +74,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/info', (req, res) => {
-  plainVanillaPino.info('Info message - must not be traced.');
+  plainVanillaPino.info('Info message - must not be traced by default.');
   finish(res);
 });
 

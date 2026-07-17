@@ -154,6 +154,87 @@ module.exports = function (name, version, isLatest) {
       });
     });
 
+    describe('log span capture configuration via INSTANA_LOG_LEVEL_CAPTURE', function () {
+      runCaptureTests({
+        captureLevel: 'error',
+        traced: [
+          ['error', true, 'Error message - should be traced.'],
+          ['fatal', true, 'Fatal message - should be traced.']
+        ],
+        notTraced: ['warn', 'info']
+      });
+
+      runCaptureTests({
+        captureLevel: 'info',
+        traced: [
+          ['info', false, 'Info message - must not be traced by default.'],
+          ['warn', false, 'Warn message - should be traced.'],
+          ['error', true, 'Error message - should be traced.'],
+          ['fatal', true, 'Fatal message - should be traced.']
+        ],
+        notTraced: []
+      });
+
+      runCaptureTests({
+        captureLevel: 'off',
+        traced: [],
+        notTraced: ['warn', 'info', 'error', 'fatal']
+      });
+
+      function runCaptureTests({ captureLevel, traced, notTraced }) {
+        describe(`when INSTANA_LOG_LEVEL_CAPTURE=${captureLevel}`, function () {
+          let controls;
+
+          before(async () => {
+            controls = new ProcessControls({
+              dirname: __dirname,
+              useGlobalAgent: true,
+              env: {
+                INSTANA_LOG_LEVEL_CAPTURE: captureLevel,
+                LIBRARY_LATEST: isLatest,
+                LIBRARY_VERSION: version,
+                LIBRARY_NAME: name,
+                PINO_EXPRESS: 'false'
+              }
+            });
+
+            await controls.startAndWaitForAgentConnection();
+          });
+
+          beforeEach(async () => {
+            await agentControls.clearReceivedTraceData();
+          });
+
+          after(async () => {
+            await controls.stop();
+          });
+
+          traced.forEach(([level, erroneous, message]) => {
+            it(`should trace ${level}`, () => runTest(level, false, erroneous, message, controls));
+          });
+
+          notTraced.forEach(level => {
+            it(`should not trace ${level}`, () =>
+              trigger(level, false, controls).then(() =>
+                testUtils.retry(() =>
+                  agentControls.getSpans().then(spans => {
+                    const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                      span => expect(span.n).to.equal('node.http.server'),
+                      span => expect(span.f.e).to.equal(String(controls.getPid())),
+                      span => expect(span.f.h).to.equal('agent-stub-uuid')
+                    ]);
+
+                    testUtils.expectAtLeastOneMatching(spans, checkNextExitSpan(entrySpan, controls));
+
+                    expect(testUtils.getSpansByName(spans, 'log.pino')).to.be.empty;
+                  })
+                )
+              ));
+          });
+        });
+      }
+    });
+
     function runTests(pinoVersion, useExpressPino) {
       const suffix = useExpressPino ? ' (express-pino)' : '';
 

@@ -10,12 +10,17 @@
 const { inspect } = require('util');
 const shimmer = require('../../shimmer');
 
+const { LOG_LEVEL_PRIORITY, LOG_LEVEL } = require('../../../util/constants');
 const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
 
 let isActive = false;
+
+// Reverse the log level mapping once for numeric-to-name lookups.
+// pino uses numerical log levels (for example, 30 -> "info").
+const LEVEL_NAMES = Object.fromEntries(Object.entries(LOG_LEVEL_PRIORITY).map(([name, value]) => [value, name]));
 
 exports.init = function init() {
   // TODO: Fix the issue with Pino instrumentation. If Pino is required multiple times,
@@ -30,9 +35,9 @@ function instrumentPinoTools(toolsModule) {
 
 function shimGenLog(originalGenLog) {
   return function (level) {
-    // pino uses numerical log levels, 40 is 'warn', level increases with severity.
-    if (!level || level < 40) {
-      // we are not interested in anything below warn
+    const levelName = resolveLogLevel(level);
+
+    if (!levelName || !tracingUtil.shouldCaptureLogSpan(levelName)) {
       return originalGenLog.apply(this, arguments);
     } else {
       const originalLoggingFunction = originalGenLog.apply(this, arguments);
@@ -87,7 +92,7 @@ function shimGenLog(originalGenLog) {
             message
           };
 
-          if (level >= 50) {
+          if (levelName === LOG_LEVEL.ERROR || levelName === LOG_LEVEL.FATAL) {
             span.ec = 1;
           }
 
@@ -101,6 +106,13 @@ function shimGenLog(originalGenLog) {
       };
     }
   };
+}
+
+function resolveLogLevel(level) {
+  // `logLevelCapture` only accepts the standard log level names. Round custom
+  // Pino numeric levels (e.g. 35, 55) down to the nearest standard level.
+  const rounded = Math.floor(level / 10) * 10;
+  return LEVEL_NAMES[rounded];
 }
 
 exports.activate = function activate() {
