@@ -43,7 +43,7 @@ app.get('/log', (req, res) => {
 });
 
 app.get('/info', (req, res) => {
-  console.info('console.info - should not be traced');
+  console.info('console.info - should not be traced by default');
   finish(res);
 });
 

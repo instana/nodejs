@@ -148,6 +148,169 @@ module.exports = function (name, version, isLatest) {
       ));
   });
 
+  describe('log span capture configuration via INSTANA_LOG_LEVEL_CAPTURE', () => {
+    let customAgentControls;
+    describe('when INSTANA_LOG_LEVEL_CAPTURE=error', () => {
+      before(async () => {
+        customAgentControls = new ProcessControls({
+          useGlobalAgent: true,
+          dirname: __dirname,
+          env: {
+            INSTANA_LOG_LEVEL_CAPTURE: 'error',
+            LIBRARY_LATEST: isLatest,
+            LIBRARY_VERSION: version,
+            LIBRARY_NAME: name
+          }
+        });
+        await customAgentControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await customAgentControls.stop();
+      });
+
+      it('should trace console.error calls', async () => {
+        await customAgentControls.sendRequest({ path: '/error' });
+
+        await testUtils.retry(async () => {
+          const spans = await agentControls.getSpans();
+          console.log('spans', JSON.stringify(spans));
+          const httpEntrySpan = verifyHttpRootEntry({
+            spans,
+            apiPath: '/error',
+            pid: String(customAgentControls.getPid())
+          });
+
+          verifyHttpExit({
+            spans,
+            parent: httpEntrySpan,
+            pid: String(customAgentControls.getPid())
+          });
+
+          const consoleLogSpans = testUtils.getSpansByName(spans, 'log.console');
+          expect(consoleLogSpans.length).to.equal(1);
+          expect(consoleLogSpans[0].data.log.level).to.equal('error');
+          expect(consoleLogSpans[0].data.log.message).to.equal('console.error - should be traced');
+        });
+      });
+
+      it('should not trace console.warn calls', async () => {
+        await customAgentControls.sendRequest({ path: '/warn' });
+
+        await testUtils.retry(async () => {
+          const spans = await agentControls.getSpans();
+          const httpEntrySpan = verifyHttpRootEntry({
+            spans,
+            apiPath: '/warn',
+            pid: String(customAgentControls.getPid())
+          });
+
+          verifyHttpExit({
+            spans,
+            parent: httpEntrySpan,
+            pid: String(customAgentControls.getPid())
+          });
+
+          const consoleLogSpans = testUtils.getSpansByName(spans, 'log.console');
+          expect(consoleLogSpans).to.be.empty;
+        });
+      });
+    });
+
+    describe('when INSTANA_LOG_LEVEL_CAPTURE=info', () => {
+      before(async () => {
+        customAgentControls = new ProcessControls({
+          useGlobalAgent: true,
+          dirname: __dirname,
+          env: {
+            INSTANA_LOG_LEVEL_CAPTURE: 'info',
+            LIBRARY_LATEST: isLatest,
+            LIBRARY_VERSION: version,
+            LIBRARY_NAME: name
+          }
+        });
+        await customAgentControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await customAgentControls.stop();
+      });
+
+      it('should trace console.info calls', async () => {
+        await customAgentControls.sendRequest({ path: '/info' });
+
+        await testUtils.retry(async () => {
+          const spans = await agentControls.getSpans();
+          console.log('spans', JSON.stringify(spans));
+          const httpEntrySpan = verifyHttpRootEntry({
+            spans,
+            apiPath: '/info',
+            pid: String(customAgentControls.getPid())
+          });
+
+          verifyHttpExit({
+            spans,
+            parent: httpEntrySpan,
+            pid: String(customAgentControls.getPid())
+          });
+
+          const consoleLogSpans = testUtils.getSpansByName(spans, 'log.console');
+          expect(consoleLogSpans.length).to.equal(1);
+          expect(consoleLogSpans[0].data.log.level).to.equal('info');
+          expect(consoleLogSpans[0].data.log.message).to.equal('console.info - should not be traced by default');
+        });
+      });
+
+      it('should trace console.error calls', async () => {
+        await customAgentControls.sendRequest({ path: '/error' });
+
+        await testUtils.retry(async () => {
+          const spans = await agentControls.getSpans();
+          console.log('spans', JSON.stringify(spans));
+          const httpEntrySpan = verifyHttpRootEntry({
+            spans,
+            apiPath: '/error',
+            pid: String(customAgentControls.getPid())
+          });
+
+          verifyHttpExit({
+            spans,
+            parent: httpEntrySpan,
+            pid: String(customAgentControls.getPid())
+          });
+
+          const consoleLogSpans = testUtils.getSpansByName(spans, 'log.console');
+          expect(consoleLogSpans.length).to.equal(1);
+          expect(consoleLogSpans[0].data.log.level).to.equal('error');
+          expect(consoleLogSpans[0].data.log.message).to.equal('console.error - should be traced');
+        });
+      });
+
+      it('should not trace console.log calls', async () => {
+        await customAgentControls.sendRequest({ path: '/log' });
+
+        await testUtils.retry(async () => {
+          const spans = await agentControls.getSpans();
+          console.log('spans', JSON.stringify(spans));
+          const httpEntrySpan = verifyHttpRootEntry({
+            spans,
+            apiPath: '/log',
+            pid: String(customAgentControls.getPid())
+          });
+
+          verifyHttpExit({
+            spans,
+            parent: httpEntrySpan,
+            pid: String(customAgentControls.getPid())
+          });
+
+          const consoleLogSpans = testUtils.getSpansByName(spans, 'log.console');
+          expect(consoleLogSpans.length).to.equal(0);
+        });
+      });
+    });
+  });
+
   describe('when logging is disabled', () => {
     describe('through environment variables', () => {
       let envVarControls;
