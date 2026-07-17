@@ -175,6 +175,12 @@ module.exports = function (name, version, isLatest) {
         notTraced: []
       });
 
+      runCaptureTests({
+        captureLevel: 'off',
+        traced: [],
+        notTraced: ['warn', 'info', 'error', 'fatal']
+      });
+
       function runCaptureTests({ captureLevel, traced, notTraced }) {
         describe(`when INSTANA_LOG_LEVEL_CAPTURE=${captureLevel}`, function () {
           let controls;

@@ -10,7 +10,7 @@
 const { inspect } = require('util');
 const shimmer = require('../../shimmer');
 
-const { LOG_LEVEL_PRIORITY } = require('../../../util/constants');
+const { LOG_LEVEL_PRIORITY, LOG_LEVEL } = require('../../../util/constants');
 const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
@@ -92,7 +92,7 @@ function shimGenLog(originalGenLog) {
             message
           };
 
-          if (level >= 50) {
+          if (levelName === LOG_LEVEL.ERROR || levelName === LOG_LEVEL.FATAL) {
             span.ec = 1;
           }
 
