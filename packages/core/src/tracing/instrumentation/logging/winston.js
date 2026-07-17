@@ -98,7 +98,9 @@ function instrumentedLevelMethod(originalMethod, markAsError, level) {
       return originalMethod.apply(this, arguments);
     }
 
-    if (!tracingUtil.shouldCaptureLogSpan(resolveLogLevel(level))) {
+    const normalizedLogLevel = resolveLogLevel(level);
+
+    if (!tracingUtil.shouldCaptureLogSpan(normalizedLogLevel)) {
       return originalMethod.apply(this, arguments);
     }
 
@@ -164,7 +166,9 @@ function instrumentedLog(originalMethod) {
       }
     }
 
-    if (cls.skipExitTracing({ isActive }) || !tracingUtil.shouldCaptureLogSpan(resolveLogLevel(level))) {
+    const normalizedLogLevel = resolveLogLevel(level);
+
+    if (cls.skipExitTracing({ isActive }) || !tracingUtil.shouldCaptureLogSpan(normalizedLogLevel)) {
       return originalMethod.apply(this, arguments);
     }
 
@@ -173,7 +177,7 @@ function instrumentedLog(originalMethod) {
       originalArgs[j] = arguments[j];
     }
     const ctx = this;
-    return createSpan(ctx, originalMethod, originalArgs, message, levelIsError(level));
+    return createSpan(ctx, originalMethod, originalArgs, message, levelIsError(normalizedLogLevel));
   };
 }
 
@@ -181,9 +185,8 @@ function resolveLogLevel(level) {
   return LEVEL_MAP[level];
 }
 
-function levelIsError(level) {
-  const resolvedLevel = resolveLogLevel(level);
-  return resolvedLevel === LOG_LEVEL.ERROR || resolvedLevel === LOG_LEVEL.FATAL;
+function levelIsError(normalizedLogLevel) {
+  return normalizedLogLevel === LOG_LEVEL.ERROR || normalizedLogLevel === LOG_LEVEL.FATAL;
 }
 
 function createSpan(ctx, originalMethod, originalArgs, message, markAsError) {
