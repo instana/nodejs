@@ -13,6 +13,7 @@ const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
+const { LOG_LEVEL } = require('../../../util/constants');
 
 let isActive = false;
 
@@ -21,12 +22,13 @@ exports.init = function init() {
 };
 
 function instrument(Logger) {
-  shimmer.wrap(Logger.prototype, 'warn', shimLog(false));
-  shimmer.wrap(Logger.prototype, 'error', shimLog(true));
-  shimmer.wrap(Logger.prototype, 'fatal', shimLog(true));
+  shimmer.wrap(Logger.prototype, 'info', shimLog(LOG_LEVEL.INFO));
+  shimmer.wrap(Logger.prototype, 'warn', shimLog(LOG_LEVEL.WARN));
+  shimmer.wrap(Logger.prototype, 'error', shimLog(LOG_LEVEL.ERROR));
+  shimmer.wrap(Logger.prototype, 'fatal', shimLog(LOG_LEVEL.FATAL));
 }
 
-function shimLog(markAsError) {
+function shimLog(level) {
   return originalLog =>
     function () {
       // CASE: Customer is using a custom bunyan logger (instana.setLogger(bunyanLogger)).
@@ -42,6 +44,10 @@ function shimLog(markAsError) {
         return originalLog.apply(this, arguments);
       }
 
+      if (!tracingUtil.shouldCaptureLogSpan(level)) {
+        return originalLog.apply(this, arguments);
+      }
+
       if (cls.skipExitTracing({ isActive, skipAllowRootExitSpanPresence: true })) {
         return originalLog.apply(this, arguments);
       }
@@ -50,11 +56,11 @@ function shimLog(markAsError) {
       for (let i = 0; i < arguments.length; i++) {
         originalArgs[i] = arguments[i];
       }
-      instrumentedLog(this, originalLog, originalArgs, markAsError);
+      instrumentedLog(this, originalLog, originalArgs, level);
     };
 }
 
-function instrumentedLog(ctx, originalLog, originalArgs, markAsError) {
+function instrumentedLog(ctx, originalLog, originalArgs, level) {
   return cls.ns.runAndReturn(() => {
     const span = cls.startSpan({
       spanName: 'log.bunyan',
@@ -114,7 +120,7 @@ function instrumentedLog(ctx, originalLog, originalArgs, markAsError) {
     span.data.log = {
       message
     };
-    if (markAsError) {
+    if (isError(level)) {
       span.ec = 1;
     }
     try {
@@ -124,6 +130,10 @@ function instrumentedLog(ctx, originalLog, originalArgs, markAsError) {
       span.transmit();
     }
   });
+}
+
+function isError(level) {
+  return level === LOG_LEVEL.ERROR || level === LOG_LEVEL.FATAL;
 }
 
 exports.activate = function activate() {
