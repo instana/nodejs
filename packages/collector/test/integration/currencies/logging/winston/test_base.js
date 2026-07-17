@@ -95,6 +95,66 @@ module.exports = function (name, version, isLatest, mode) {
     })
   );
 
+  describe('log span capture respects INSTANA_LOG_LEVEL_CAPTURE', () => {
+    let customControls;
+
+    async function start(level) {
+      customControls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {
+          INSTANA_LOG_LEVEL_CAPTURE: level,
+          LIBRARY_LATEST: isLatest,
+          LIBRARY_VERSION: version,
+          LIBRARY_NAME: name
+        }
+      });
+
+      await customControls.startAndWaitForAgentConnection();
+    }
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    afterEach(async () => {
+      if (customControls) {
+        await customControls.stop();
+        customControls = null;
+      }
+    });
+
+    describe('when the minimum log level is ERROR', () => {
+      before(() => start('error'));
+
+      it('should not trace info', () => runTests(customControls, 'info', false));
+
+      it('should not trace warn', () => runTests(customControls, 'warn', false));
+
+      it('should trace error', () => runTests(customControls, 'error', true));
+    });
+
+    describe('when the minimum log level is INFO', () => {
+      before(() => start('info'));
+
+      it('should trace info', () => runTests(customControls, 'info', true));
+
+      it('should trace warn', () => runTests(customControls, 'warn', true));
+
+      it('should trace error', () => runTests(customControls, 'error', true));
+    });
+
+    describe('when the minimum log level is OFF', () => {
+      before(() => start('off'));
+
+      it('should not trace info', () => runTests(customControls, 'info', false));
+
+      it('should not trace warn', () => runTests(customControls, 'warn', false));
+
+      it('should not trace error', () => runTests(customControls, 'error', false));
+    });
+  });
+
   function runTests(useGlobalLogger, useLevelMethod, variant, level) {
     let testName;
     const shouldTrace = level !== 'info';

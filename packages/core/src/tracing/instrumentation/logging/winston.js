@@ -9,8 +9,26 @@ const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
+const { LOG_LEVEL } = require('../../../util/constants');
 
 let isActive = false;
+
+const LEVEL_MAP = {
+  // npm levels
+  error: LOG_LEVEL.ERROR,
+  warn: LOG_LEVEL.WARN,
+  info: LOG_LEVEL.INFO,
+  debug: LOG_LEVEL.DEBUG,
+  verbose: LOG_LEVEL.TRACE,
+  silly: LOG_LEVEL.TRACE,
+
+  // RFC 5424 syslog levels
+  emerg: LOG_LEVEL.FATAL,
+  alert: LOG_LEVEL.FATAL,
+  crit: LOG_LEVEL.ERROR,
+  warning: LOG_LEVEL.WARN,
+  notice: LOG_LEVEL.INFO
+};
 
 exports.init = function init() {
   // Winston 2.x
@@ -45,12 +63,14 @@ function instrumentWinston3(createLogger) {
     // npm levels
     shimLevelMethod(derivedLogger, 'error', true);
     shimLevelMethod(derivedLogger, 'warn', false);
+    shimLevelMethod(derivedLogger, 'info', false);
 
     // syslog levels (RFC5424)
     shimLevelMethod(derivedLogger, 'emerg', true);
     shimLevelMethod(derivedLogger, 'alert', true);
     shimLevelMethod(derivedLogger, 'crit', true);
     shimLevelMethod(derivedLogger, 'warning', false);
+    shimLevelMethod(derivedLogger, 'notice', false);
 
     shimLogMethod(derivedLogger);
     return derivedLogger;
@@ -62,10 +82,10 @@ function shimLevelMethod(derivedLogger, key, markAsError) {
   if (typeof originalMethod !== 'function') {
     return;
   }
-  derivedLogger[key] = instrumentedLevelMethod(originalMethod, markAsError);
+  derivedLogger[key] = instrumentedLevelMethod(originalMethod, markAsError, key);
 }
 
-function instrumentedLevelMethod(originalMethod, markAsError) {
+function instrumentedLevelMethod(originalMethod, markAsError, level) {
   return function (message) {
     // CASE: Customer is using a custom winston logger (instana.setLogger(winstonLogger)).
     //       We create a winston child logger for all instana internal logs.
@@ -75,6 +95,10 @@ function instrumentedLevelMethod(originalMethod, markAsError) {
     }
 
     if (cls.skipExitTracing({ isActive, skipAllowRootExitSpanPresence: true })) {
+      return originalMethod.apply(this, arguments);
+    }
+
+    if (!tracingUtil.shouldCaptureLogSpan(level)) {
       return originalMethod.apply(this, arguments);
     }
 
@@ -140,7 +164,7 @@ function instrumentedLog(originalMethod) {
       }
     }
 
-    if (cls.skipExitTracing({ isActive }) || !levelIsTraced(level)) {
+    if (cls.skipExitTracing({ isActive }) || !tracingUtil.shouldCaptureLogSpan(resolveLogLevel(level))) {
       return originalMethod.apply(this, arguments);
     }
 
@@ -153,12 +177,13 @@ function instrumentedLog(originalMethod) {
   };
 }
 
-function levelIsTraced(level) {
-  return levelIsError(level) || level === 'warn' || level === 'warning';
+function resolveLogLevel(level) {
+  return LEVEL_MAP[level];
 }
 
 function levelIsError(level) {
-  return level === 'error' || level === 'emerg' || level === 'alert' || level === 'crit';
+  const resolvedLevel = resolveLogLevel(level);
+  return resolvedLevel === LOG_LEVEL.ERROR || resolvedLevel === LOG_LEVEL.FATAL;
 }
 
 function createSpan(ctx, originalMethod, originalArgs, message, markAsError) {
