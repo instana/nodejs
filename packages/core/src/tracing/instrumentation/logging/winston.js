@@ -77,12 +77,12 @@ function instrumentWinston3(createLogger) {
   }
 }
 
-function shimLevelMethod(derivedLogger, key, markAsError) {
-  const originalMethod = derivedLogger[key];
+function shimLevelMethod(derivedLogger, level, markAsError) {
+  const originalMethod = derivedLogger[level];
   if (typeof originalMethod !== 'function') {
     return;
   }
-  derivedLogger[key] = instrumentedLevelMethod(originalMethod, markAsError, key);
+  derivedLogger[level] = instrumentedLevelMethod(originalMethod, markAsError, level);
 }
 
 function instrumentedLevelMethod(originalMethod, markAsError, level) {
