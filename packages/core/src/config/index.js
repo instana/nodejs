@@ -992,7 +992,12 @@ function normalizeDisableW3cTraceCorrelation({ userConfig = {}, defaultConfig = 
 
   // Pass the env var name to util.resolve (which calls process.env[envValue] internally).
   // New env var takes precedence; fall back to deprecated if new is not set.
-  const envValue = isNewEnvSet ? newEnvName : isDeprecatedEnvSet ? deprecatedEnvName : undefined;
+  let envValue;
+  if (isNewEnvSet) {
+    envValue = newEnvName;
+  } else if (isDeprecatedEnvSet) {
+    envValue = deprecatedEnvName;
+  }
 
   const deprecatedInCode = userConfig.tracing.disableW3cTraceCorrelation;
   const newInCode = userConfig.tracing.disableW3cCorrelation;
