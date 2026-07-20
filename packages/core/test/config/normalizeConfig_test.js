@@ -1161,11 +1161,16 @@ describe('config.normalizeConfig', () => {
           expect(config.tracing.disableW3cCorrelation).to.be.true;
         });
 
-        it('should give precedence to new in-code option over the deprecated one', () => {
+        it('should give precedence to new in-code option over the deprecated one when both are set', () => {
           const config = coreConfig.normalize({
             userConfig: { tracing: { disableW3cCorrelation: true, disableW3cTraceCorrelation: false } }
           });
           expect(config.tracing.disableW3cCorrelation).to.be.true;
+        });
+
+        it('should use deprecated value as false when only deprecated is set to false', () => {
+          const config = coreConfig.normalize({ userConfig: { tracing: { disableW3cTraceCorrelation: false } } });
+          expect(config.tracing.disableW3cCorrelation).to.be.false;
         });
       });
     });

@@ -15,6 +15,7 @@ const {
 } = require('../util/constants');
 const util = require('./util');
 const validators = require('./validator');
+const { dependencyDistanceCalculator } = require('@instana/shared-metrics/src/util');
 const { validateStackTraceMode, validateStackTraceLength } = validators;
 
 // @typedef {{ [x: string]: any }} configMeta
@@ -980,48 +981,57 @@ function normalizeDisableW3cTraceCorrelation({ userConfig = {}, defaultConfig = 
   const newEnvName = 'INSTANA_TRACING_DISABLE_W3C_CORRELATION';
   const deprecatedEnvName = 'INSTANA_DISABLE_W3C_TRACE_CORRELATION';
 
-  const isNewEnvSet = process.env[newEnvName] !== undefined;
-  const isDeprecatedEnvSet = process.env[deprecatedEnvName] !== undefined;
+  const newEnvVar = process.env[newEnvName];
+  const deprecatedEnvVar = process.env[deprecatedEnvName];
+  let envValue;
 
-  if (!isNewEnvSet && isDeprecatedEnvSet) {
+  if (deprecatedEnvVar !== undefined) {
     logger.warn(
       // eslint-disable-next-line max-len
       `[Deprecation Warning] The environment variable ${deprecatedEnvName} is deprecated and will be removed in a future release. Please use ${newEnvName} instead.`
     );
+
+    envValue = deprecatedEnvVar;
   }
 
-  const hasDeprecatedInCode =
-    userConfig.tracing.disableW3cTraceCorrelation !== undefined &&
-    userConfig.tracing.disableW3cCorrelation === undefined;
+  if (newEnvVar !== undefined) {
+    envValue = newEnvVar;
+  }
 
-  if (hasDeprecatedInCode) {
+  const deprecatedInCode = userConfig.tracing.disableW3cTraceCorrelation;
+  const newInCode = userConfig?.tracing.disableW3cCorrelation;
+  let inCodeValue;
+
+  if (deprecatedInCode !== undefined) {
     logger.warn(
       // eslint-disable-next-line max-len
-      '[Deprecation Warning] The configuration option config.tracing.disableW3cTraceCorrelation is deprecated and will be removed in a future release. Please use config.tracing.disableW3cCorrelation instead.'
+      '[Deprecation Warning] The configuration option "config.tracing.disableW3cTraceCorrelation" is deprecated and will be removed in a future release. Please use "config.tracing.disableW3cCorrelation" instead.'
     );
+
+    inCodeValue = deprecatedInCode;
   }
 
-  const inCodeValue = hasDeprecatedInCode
-    ? userConfig.tracing.disableW3cTraceCorrelation
-    : userConfig.tracing.disableW3cCorrelation;
+  if (newInCode !== undefined) {
+    inCodeValue = newInCode;
+  }
 
   const { value, source } = util.resolve(
     {
-      envValue: isNewEnvSet ? newEnvName : deprecatedEnvName,
+      envValue,
       inCodeValue,
       defaultValue: defaultConfig.tracing.disableW3cCorrelation
     },
     [validators.validateTruthyBoolean]
   );
 
-  const usedEnvName = isNewEnvSet ? newEnvName : deprecatedEnvName;
   configStore.set('config.tracing.disableW3cCorrelation', { source });
   finalConfig.tracing.disableW3cCorrelation = value;
+
   util.log({
     configPath: 'config.tracing.disableW3cCorrelation',
     source,
     value,
-    envVarName: usedEnvName
+    envVarName: newEnvName
   });
 }
 
