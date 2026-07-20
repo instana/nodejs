@@ -999,7 +999,7 @@ function normalizeDisableW3cTraceCorrelation({ userConfig = {}, defaultConfig = 
   }
 
   const deprecatedInCode = userConfig.tracing.disableW3cTraceCorrelation;
-  const newInCode = userConfig?.tracing.disableW3cCorrelation;
+  const newInCode = userConfig.tracing.disableW3cCorrelation;
   let inCodeValue;
 
   if (deprecatedInCode !== undefined) {
