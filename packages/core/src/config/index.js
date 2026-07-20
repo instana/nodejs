@@ -15,7 +15,6 @@ const {
 } = require('../util/constants');
 const util = require('./util');
 const validators = require('./validator');
-const { dependencyDistanceCalculator } = require('@instana/shared-metrics/src/util');
 const { validateStackTraceMode, validateStackTraceLength } = validators;
 
 // @typedef {{ [x: string]: any }} configMeta
