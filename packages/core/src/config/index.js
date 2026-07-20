@@ -980,22 +980,19 @@ function normalizeDisableW3cTraceCorrelation({ userConfig = {}, defaultConfig = 
   const newEnvName = 'INSTANA_TRACING_DISABLE_W3C_CORRELATION';
   const deprecatedEnvName = 'INSTANA_DISABLE_W3C_TRACE_CORRELATION';
 
-  const newEnvVar = process.env[newEnvName];
-  const deprecatedEnvVar = process.env[deprecatedEnvName];
-  let envValue;
+  const isNewEnvSet = process.env[newEnvName] !== undefined;
+  const isDeprecatedEnvSet = process.env[deprecatedEnvName] !== undefined;
 
-  if (deprecatedEnvVar !== undefined) {
+  if (isDeprecatedEnvSet) {
     logger.warn(
       // eslint-disable-next-line max-len
       `[Deprecation Warning] The environment variable ${deprecatedEnvName} is deprecated and will be removed in a future release. Please use ${newEnvName} instead.`
     );
-
-    envValue = deprecatedEnvVar;
   }
 
-  if (newEnvVar !== undefined) {
-    envValue = newEnvVar;
-  }
+  // Pass the env var name to util.resolve (which calls process.env[envValue] internally).
+  // New env var takes precedence; fall back to deprecated if new is not set.
+  const envValue = isNewEnvSet ? newEnvName : isDeprecatedEnvSet ? deprecatedEnvName : undefined;
 
   const deprecatedInCode = userConfig.tracing.disableW3cTraceCorrelation;
   const newInCode = userConfig.tracing.disableW3cCorrelation;
@@ -1030,7 +1027,7 @@ function normalizeDisableW3cTraceCorrelation({ userConfig = {}, defaultConfig = 
     configPath: 'config.tracing.disableW3cCorrelation',
     source,
     value,
-    envVarName: newEnvName
+    envVarName: envValue || newEnvName
   });
 }
 

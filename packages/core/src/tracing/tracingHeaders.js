@@ -14,7 +14,7 @@ const w3c = require('./w3c_trace_context');
  */
 let logger;
 
-let disableW3cTraceCorrelation = false;
+let disableW3cCorrelation = false;
 
 /**
  * @param {import('../config').InstanaConfig} config
@@ -23,7 +23,7 @@ exports.init = function (config) {
   logger = config.logger;
 
   w3c.init(config);
-  disableW3cTraceCorrelation = config.tracing.disableW3cTraceCorrelation;
+  disableW3cCorrelation = config.tracing.disableW3cCorrelation;
 };
 
 /**
@@ -164,7 +164,7 @@ exports.fromHeaders = function fromHeaders(headers) {
         !isSuppressed(level)
       )
     });
-  } else if (w3cTraceContext && !disableW3cTraceCorrelation) {
+  } else if (w3cTraceContext && !disableW3cCorrelation) {
     // There are no X-INSTANA- headers, but there are W3C trace context headers. As of 2021-02, we use the IDs from
     // traceparent (previously, we would rely on the `in` key value pair or, if that is not present, start a new
     // Instana trace by generating a trace ID).
