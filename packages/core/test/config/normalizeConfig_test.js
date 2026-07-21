@@ -37,6 +37,7 @@ describe('config.normalizeConfig', () => {
     delete process.env.INSTANA_TRACING_INITIAL_TRANSMISSION_DELAY;
     delete process.env.INSTANA_SPANBATCHING_ENABLED;
     delete process.env.INSTANA_DISABLE_SPANBATCHING;
+    delete process.env.INSTANA_TRACING_DISABLE_W3C_CORRELATION;
     delete process.env.INSTANA_DISABLE_W3C_TRACE_CORRELATION;
     delete process.env.INSTANA_TRACING_DISABLE_W3C_PROPAGATION;
     delete process.env.INSTANA_TRACING_DISABLE_W3C;
@@ -1111,26 +1112,66 @@ describe('config.normalizeConfig', () => {
     });
 
     describe('W3C trace correlation', () => {
-      it('should disable W3C trace correlation', () => {
-        const config = coreConfig.normalize({ userConfig: { tracing: { disableW3cTraceCorrelation: true } } });
-        expect(config.tracing.disableW3cTraceCorrelation).to.be.true;
+      it('should disable W3C correlation via config.tracing.disableW3cCorrelation', () => {
+        const config = coreConfig.normalize({ userConfig: { tracing: { disableW3cCorrelation: true } } });
+        expect(config.tracing.disableW3cCorrelation).to.be.true;
       });
 
-      it('should disable W3C trace correlation via INSTANA_DISABLE_W3C_TRACE_CORRELATION', () => {
-        process.env.INSTANA_DISABLE_W3C_TRACE_CORRELATION = 'false'; // any non-empty string will disable, even "false"!
+      it('should disable W3C correlation via INSTANA_TRACING_DISABLE_W3C_CORRELATION', () => {
+        process.env.INSTANA_TRACING_DISABLE_W3C_CORRELATION = 'true';
         const config = coreConfig.normalize();
-        expect(config.tracing.disableW3cTraceCorrelation).to.be.true;
+        expect(config.tracing.disableW3cCorrelation).to.be.true;
       });
 
-      it('should use default (false) for disableW3cTraceCorrelation when neither env nor config is set', () => {
+      it('should disable W3C correlation via INSTANA_TRACING_DISABLE_W3C_CORRELATION even when set to "false"', () => {
+        process.env.INSTANA_TRACING_DISABLE_W3C_CORRELATION = 'false'; // any non-empty string will disable, even "false"!
+        const config = coreConfig.normalize();
+        expect(config.tracing.disableW3cCorrelation).to.be.true;
+      });
+
+      it('should use default (false) for disableW3cCorrelation when neither env nor config is set', () => {
         const config = coreConfig.normalize({});
-        expect(config.tracing.disableW3cTraceCorrelation).to.be.false;
+        expect(config.tracing.disableW3cCorrelation).to.be.false;
       });
 
-      it('should give precedence to INSTANA_DISABLE_W3C_TRACE_CORRELATION env var over config (truthy env)', () => {
-        process.env.INSTANA_DISABLE_W3C_TRACE_CORRELATION = 'any-value';
-        const config = coreConfig.normalize({ userConfig: { tracing: { disableW3cTraceCorrelation: false } } });
-        expect(config.tracing.disableW3cTraceCorrelation).to.be.true;
+      it('should give precedence to INSTANA_TRACING_DISABLE_W3C_CORRELATION env var over in-code config', () => {
+        process.env.INSTANA_TRACING_DISABLE_W3C_CORRELATION = 'any-value';
+        const config = coreConfig.normalize({ userConfig: { tracing: { disableW3cCorrelation: false } } });
+        expect(config.tracing.disableW3cCorrelation).to.be.true;
+      });
+
+      describe('deprecated: INSTANA_DISABLE_W3C_TRACE_CORRELATION', () => {
+        it('should still work via the deprecated env var', () => {
+          process.env.INSTANA_DISABLE_W3C_TRACE_CORRELATION = 'true';
+          const config = coreConfig.normalize();
+          expect(config.tracing.disableW3cCorrelation).to.be.true;
+        });
+
+        it('should give precedence to new env var over the deprecated one', () => {
+          process.env.INSTANA_TRACING_DISABLE_W3C_CORRELATION = 'true';
+          process.env.INSTANA_DISABLE_W3C_TRACE_CORRELATION = 'false';
+          const config = coreConfig.normalize();
+          expect(config.tracing.disableW3cCorrelation).to.be.true;
+        });
+      });
+
+      describe('deprecated: config.tracing.disableW3cTraceCorrelation', () => {
+        it('should still work via the deprecated in-code config option', () => {
+          const config = coreConfig.normalize({ userConfig: { tracing: { disableW3cTraceCorrelation: true } } });
+          expect(config.tracing.disableW3cCorrelation).to.be.true;
+        });
+
+        it('should give precedence to new in-code option over the deprecated one when both are set', () => {
+          const config = coreConfig.normalize({
+            userConfig: { tracing: { disableW3cCorrelation: true, disableW3cTraceCorrelation: false } }
+          });
+          expect(config.tracing.disableW3cCorrelation).to.be.true;
+        });
+
+        it('should use deprecated value as false when only deprecated is set to false', () => {
+          const config = coreConfig.normalize({ userConfig: { tracing: { disableW3cTraceCorrelation: false } } });
+          expect(config.tracing.disableW3cCorrelation).to.be.false;
+        });
       });
     });
 
@@ -1146,30 +1187,30 @@ describe('config.normalizeConfig', () => {
         expect(config.tracing.disableW3cPropagation).to.be.true;
       });
 
-      it('should disable W3C trace correlation and propagation via INSTANA_TRACING_DISABLE_W3C', () => {
+      it('should disable W3C correlation and propagation via INSTANA_TRACING_DISABLE_W3C', () => {
         process.env.INSTANA_TRACING_DISABLE_W3C = 'true';
         const config = coreConfig.normalize();
-        expect(config.tracing.disableW3cTraceCorrelation).to.be.true;
+        expect(config.tracing.disableW3cCorrelation).to.be.true;
         expect(config.tracing.disableW3cPropagation).to.be.true;
       });
 
-      it('should not disable W3C trace correlation and propagation via INSTANA_TRACING_DISABLE_W3C when not set', () => {
+      it('should not disable W3C correlation and propagation via INSTANA_TRACING_DISABLE_W3C when not set', () => {
         const config = coreConfig.normalize({});
-        expect(config.tracing.disableW3cTraceCorrelation).to.be.false;
+        expect(config.tracing.disableW3cCorrelation).to.be.false;
         expect(config.tracing.disableW3cPropagation).to.be.false;
       });
 
-      it('should disable W3C trace correlation and propagation via INSTANA_TRACING_DISABLE_W3C when set to false', () => {
+      it('should disable W3C correlation and propagation via INSTANA_TRACING_DISABLE_W3C when set to false', () => {
         process.env.INSTANA_TRACING_DISABLE_W3C = 'false';
         const config = coreConfig.normalize({});
-        expect(config.tracing.disableW3cTraceCorrelation).to.be.true;
+        expect(config.tracing.disableW3cCorrelation).to.be.true;
         expect(config.tracing.disableW3cPropagation).to.be.true;
       });
 
-      it('should not disable W3C trace correlation and propagation via INSTANA_TRACING_DISABLE_W3C when set to an empty string', () => {
+      it('should not disable W3C correlation and propagation via INSTANA_TRACING_DISABLE_W3C when set to an empty string', () => {
         process.env.INSTANA_TRACING_DISABLE_W3C = '';
         const config = coreConfig.normalize({});
-        expect(config.tracing.disableW3cTraceCorrelation).to.be.false;
+        expect(config.tracing.disableW3cCorrelation).to.be.false;
         expect(config.tracing.disableW3cPropagation).to.be.false;
       });
 
@@ -2638,7 +2679,7 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.stackTrace).to.equal('all');
     expect(config.tracing.stackTraceLength).to.equal(10);
     expect(config.tracing.spanBatchingEnabled).to.be.false;
-    expect(config.tracing.disableW3cTraceCorrelation).to.be.false;
+    expect(config.tracing.disableW3cCorrelation).to.be.false;
     expect(config.tracing.disableW3cPropagation).to.be.false;
     expect(config.tracing.kafka.traceCorrelation).to.be.true;
     expect(config.tracing.useOpentelemetry).to.equal(true);
