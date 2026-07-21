@@ -70,6 +70,7 @@ let currentConfig;
  * @property {HTTPTracingOptions} [http]
  * @property {import('../config/types').Disable} [disable]
  * @property {boolean} [spanBatchingEnabled]
+ * @property {boolean} [disableW3cCorrelation]
  * @property {boolean} [disableW3cTraceCorrelation]
  * @property {boolean} [disableW3cPropagation]
  * @property {KafkaTracingOptions} [kafka]
@@ -179,6 +180,7 @@ let defaults = {
     stackTraceLength: DEFAULT_STACK_TRACE_LENGTH,
     disable: {},
     spanBatchingEnabled: false,
+    disableW3cCorrelation: false,
     disableW3cTraceCorrelation: false,
     disableW3cPropagation: false,
     kafka: {
@@ -961,10 +963,10 @@ function normalizeDisableW3c({ finalConfig = {} } = {}) {
     envVarName: 'INSTANA_TRACING_DISABLE_W3C'
   });
 
-  configStore.set('config.tracing.disableW3cTraceCorrelation', { source });
-  finalConfig.tracing.disableW3cTraceCorrelation = true;
+  configStore.set('config.tracing.disableW3cCorrelation', { source });
+  finalConfig.tracing.disableW3cCorrelation = true;
   util.log({
-    configPath: 'config.tracing.disableW3cTraceCorrelation',
+    configPath: 'config.tracing.disableW3cCorrelation',
     source,
     value: true,
     envVarName: 'INSTANA_TRACING_DISABLE_W3C'
@@ -975,22 +977,61 @@ function normalizeDisableW3c({ finalConfig = {} } = {}) {
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
 function normalizeDisableW3cTraceCorrelation({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
+  const newEnvName = 'INSTANA_TRACING_DISABLE_W3C_CORRELATION';
+  const deprecatedEnvName = 'INSTANA_DISABLE_W3C_TRACE_CORRELATION';
+
+  const isNewEnvSet = process.env[newEnvName] !== undefined;
+  const isDeprecatedEnvSet = process.env[deprecatedEnvName] !== undefined;
+
+  if (isDeprecatedEnvSet) {
+    logger.warn(
+      // eslint-disable-next-line max-len
+      `[Deprecation Warning] The environment variable ${deprecatedEnvName} is deprecated and will be removed in a future release. Please use ${newEnvName} instead.`
+    );
+  }
+
+  // New env var takes precedence; fall back to deprecated if new is not set.
+  let envValue;
+  if (isNewEnvSet) {
+    envValue = newEnvName;
+  } else if (isDeprecatedEnvSet) {
+    envValue = deprecatedEnvName;
+  }
+
+  const deprecatedInCode = userConfig.tracing.disableW3cTraceCorrelation;
+  const newInCode = userConfig.tracing.disableW3cCorrelation;
+  let inCodeValue;
+
+  if (deprecatedInCode !== undefined) {
+    logger.warn(
+      // eslint-disable-next-line max-len
+      '[Deprecation Warning] The configuration option "config.tracing.disableW3cTraceCorrelation" is deprecated and will be removed in a future release. Please use "config.tracing.disableW3cCorrelation" instead.'
+    );
+
+    inCodeValue = deprecatedInCode;
+  }
+
+  if (newInCode !== undefined) {
+    inCodeValue = newInCode;
+  }
+
   const { value, source } = util.resolve(
     {
-      envValue: 'INSTANA_DISABLE_W3C_TRACE_CORRELATION',
-      inCodeValue: userConfig.tracing.disableW3cTraceCorrelation,
-      defaultValue: defaultConfig.tracing.disableW3cTraceCorrelation
+      envValue,
+      inCodeValue,
+      defaultValue: defaultConfig.tracing.disableW3cCorrelation
     },
     [validators.validateTruthyBoolean]
   );
 
-  configStore.set('config.tracing.disableW3cTraceCorrelation', { source });
-  finalConfig.tracing.disableW3cTraceCorrelation = value;
+  configStore.set('config.tracing.disableW3cCorrelation', { source });
+  finalConfig.tracing.disableW3cCorrelation = value;
+
   util.log({
-    configPath: 'config.tracing.disableW3cTraceCorrelation',
+    configPath: 'config.tracing.disableW3cCorrelation',
     source,
     value,
-    envVarName: 'INSTANA_DISABLE_W3C_TRACE_CORRELATION'
+    envVarName: envValue || newEnvName
   });
 }
 

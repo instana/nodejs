@@ -35,7 +35,7 @@ const traceStateWithInstanaLeftMostNarrow = `${instanaNarrowTraceStateValue},roj
 
 describe('tracing/headers', () => {
   before(() => {
-    tracingHeaders.init({ logger: createFakeLogger(), tracing: { disableW3cTraceCorrelation: false } });
+    tracingHeaders.init({ logger: createFakeLogger(), tracing: { disableW3cCorrelation: false } });
   });
 
   it('should read X-INSTANA- headers', () => {
