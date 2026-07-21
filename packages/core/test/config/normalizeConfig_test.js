@@ -51,7 +51,7 @@ describe('config.normalizeConfig', () => {
     delete process.env.INSTANA_TRACING_OTLP_ENABLED;
     delete process.env.INSTANA_TRACING_HTTP_EXIT_CLASSIFY_ALL_4XX_AS_ERRORS;
     delete process.env.INSTANA_TRACING_HTTP_EXIT_CLASSIFY_AS_ERRORS;
-    delete process.env.INSTANA_LOG_LEVEL_CAPTURE;
+    delete process.env.INSTANA_TRACING_CAPTURE_LOG_LEVEL;
   }
 
   describe('default configuration', () => {
@@ -2746,73 +2746,73 @@ describe('config.normalizeConfig', () => {
     });
   }
 
-  describe('log level capture configuration (INSTANA_LOG_LEVEL_CAPTURE)', () => {
+  describe('log level capture configuration (INSTANA_TRACING_CAPTURE_LOG_LEVEL)', () => {
     it('should default to warn when not set', () => {
       const config = coreConfig.normalize();
-      expect(config.tracing.logLevelCapture).to.equal('warn');
+      expect(config.tracing.captureLogLevel).to.equal('warn');
     });
 
     it('should accept warn from env var', () => {
-      process.env.INSTANA_LOG_LEVEL_CAPTURE = 'warn';
+      process.env.INSTANA_TRACING_CAPTURE_LOG_LEVEL = 'warn';
       const config = coreConfig.normalize();
-      expect(config.tracing.logLevelCapture).to.equal('warn');
+      expect(config.tracing.captureLogLevel).to.equal('warn');
     });
 
     it('should accept info from env var', () => {
-      process.env.INSTANA_LOG_LEVEL_CAPTURE = 'info';
+      process.env.INSTANA_TRACING_CAPTURE_LOG_LEVEL = 'info';
       const config = coreConfig.normalize();
-      expect(config.tracing.logLevelCapture).to.equal('info');
+      expect(config.tracing.captureLogLevel).to.equal('info');
     });
 
     it('should accept error from env var', () => {
-      process.env.INSTANA_LOG_LEVEL_CAPTURE = 'error';
+      process.env.INSTANA_TRACING_CAPTURE_LOG_LEVEL = 'error';
       const config = coreConfig.normalize();
-      expect(config.tracing.logLevelCapture).to.equal('error');
+      expect(config.tracing.captureLogLevel).to.equal('error');
     });
 
     it('should accept off from env var', () => {
-      process.env.INSTANA_LOG_LEVEL_CAPTURE = 'off';
+      process.env.INSTANA_TRACING_CAPTURE_LOG_LEVEL = 'off';
       const config = coreConfig.normalize();
-      expect(config.tracing.logLevelCapture).to.equal('off');
+      expect(config.tracing.captureLogLevel).to.equal('off');
     });
 
     it('should normalize env var value to uppercase (lowercase "warn")', () => {
-      process.env.INSTANA_LOG_LEVEL_CAPTURE = 'warn';
+      process.env.INSTANA_TRACING_CAPTURE_LOG_LEVEL = 'warn';
       const config = coreConfig.normalize();
-      expect(config.tracing.logLevelCapture).to.equal('warn');
+      expect(config.tracing.captureLogLevel).to.equal('warn');
     });
 
     it('should normalize env var value to uppercase (mixed case "Info")', () => {
-      process.env.INSTANA_LOG_LEVEL_CAPTURE = 'Info';
+      process.env.INSTANA_TRACING_CAPTURE_LOG_LEVEL = 'Info';
       const config = coreConfig.normalize();
-      expect(config.tracing.logLevelCapture).to.equal('info');
+      expect(config.tracing.captureLogLevel).to.equal('info');
     });
 
     it('should fall back to warn for an invalid env var value', () => {
-      process.env.INSTANA_LOG_LEVEL_CAPTURE = 'VERBOSE';
+      process.env.INSTANA_TRACING_CAPTURE_LOG_LEVEL = 'VERBOSE';
       const config = coreConfig.normalize();
-      expect(config.tracing.logLevelCapture).to.equal('warn');
+      expect(config.tracing.captureLogLevel).to.equal('warn');
     });
 
     it('should accept info from in-code config', () => {
-      const config = coreConfig.normalize({ userConfig: { tracing: { logLevelCapture: 'info' } } });
-      expect(config.tracing.logLevelCapture).to.equal('info');
+      const config = coreConfig.normalize({ userConfig: { tracing: { captureLogLevel: 'info' } } });
+      expect(config.tracing.captureLogLevel).to.equal('info');
     });
 
     it('should accept off from in-code config', () => {
-      const config = coreConfig.normalize({ userConfig: { tracing: { logLevelCapture: 'off' } } });
-      expect(config.tracing.logLevelCapture).to.equal('off');
+      const config = coreConfig.normalize({ userConfig: { tracing: { captureLogLevel: 'off' } } });
+      expect(config.tracing.captureLogLevel).to.equal('off');
     });
 
     it('should fall back to warn for an invalid in-code config value', () => {
-      const config = coreConfig.normalize({ userConfig: { tracing: { logLevelCapture: 'INVALID' } } });
-      expect(config.tracing.logLevelCapture).to.equal('warn');
+      const config = coreConfig.normalize({ userConfig: { tracing: { captureLogLevel: 'INVALID' } } });
+      expect(config.tracing.captureLogLevel).to.equal('warn');
     });
 
     it('should give precedence to env var over in-code config', () => {
-      process.env.INSTANA_LOG_LEVEL_CAPTURE = 'error';
-      const config = coreConfig.normalize({ userConfig: { tracing: { logLevelCapture: 'info' } } });
-      expect(config.tracing.logLevelCapture).to.equal('error');
+      process.env.INSTANA_TRACING_CAPTURE_LOG_LEVEL = 'error';
+      const config = coreConfig.normalize({ userConfig: { tracing: { captureLogLevel: 'info' } } });
+      expect(config.tracing.captureLogLevel).to.equal('error');
     });
   });
 });

@@ -148,15 +148,15 @@ module.exports = function (name, version, isLatest) {
       ));
   });
 
-  describe('log span capture configuration via INSTANA_LOG_LEVEL_CAPTURE', () => {
+  describe('log span capture configuration via INSTANA_TRACING_CAPTURE_LOG_LEVEL', () => {
     let customAgentControls;
-    describe('when INSTANA_LOG_LEVEL_CAPTURE=error', () => {
+    describe('when INSTANA_TRACING_CAPTURE_LOG_LEVEL=error', () => {
       before(async () => {
         customAgentControls = new ProcessControls({
           useGlobalAgent: true,
           dirname: __dirname,
           env: {
-            INSTANA_LOG_LEVEL_CAPTURE: 'error',
+            INSTANA_TRACING_CAPTURE_LOG_LEVEL: 'error',
             LIBRARY_LATEST: isLatest,
             LIBRARY_VERSION: version,
             LIBRARY_NAME: name
@@ -217,13 +217,13 @@ module.exports = function (name, version, isLatest) {
       });
     });
 
-    describe('when INSTANA_LOG_LEVEL_CAPTURE=info', () => {
+    describe('when INSTANA_TRACING_CAPTURE_LOG_LEVEL=info', () => {
       before(async () => {
         customAgentControls = new ProcessControls({
           useGlobalAgent: true,
           dirname: __dirname,
           env: {
-            INSTANA_LOG_LEVEL_CAPTURE: 'info',
+            INSTANA_TRACING_CAPTURE_LOG_LEVEL: 'info',
             LIBRARY_LATEST: isLatest,
             LIBRARY_VERSION: version,
             LIBRARY_NAME: name

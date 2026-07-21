@@ -1508,7 +1508,7 @@ describe('tracing/tracingUtil', () => {
   describe('shouldCaptureLogSpan', () => {
     const { shouldCaptureLogSpan } = tracingUtil;
 
-    describe('when logLevelCapture is OFF', () => {
+    describe('when captureLogLevel is OFF', () => {
       before(() => {
         tracingUtil.init({
           logger: createFakeLogger(),
@@ -1520,7 +1520,7 @@ describe('tracing/tracingUtil', () => {
                 classifyAsErrors: []
               }
             },
-            logLevelCapture: 'off'
+            captureLogLevel: 'off'
           }
         });
       });
@@ -1532,7 +1532,7 @@ describe('tracing/tracingUtil', () => {
       });
     });
 
-    describe('when logLevelCapture is INFO', () => {
+    describe('when captureLogLevel is INFO', () => {
       before(() => {
         tracingUtil.init({
           logger: createFakeLogger(),
@@ -1544,7 +1544,7 @@ describe('tracing/tracingUtil', () => {
                 classifyAsErrors: []
               }
             },
-            logLevelCapture: 'info'
+            captureLogLevel: 'info'
           }
         });
       });
@@ -1584,7 +1584,7 @@ describe('tracing/tracingUtil', () => {
       });
     });
 
-    describe('when logLevelCapture is WARN(default)', () => {
+    describe('when captureLogLevel is WARN(default)', () => {
       before(() => {
         tracingUtil.init({
           logger: createFakeLogger(),
@@ -1596,7 +1596,7 @@ describe('tracing/tracingUtil', () => {
                 classifyAsErrors: []
               }
             },
-            logLevelCapture: 'warn'
+            captureLogLevel: 'warn'
           }
         });
       });
