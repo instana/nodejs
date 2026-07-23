@@ -42,7 +42,7 @@ exports.init = function (config) {
   stackTraceLength = config?.tracing?.stackTraceLength;
   stackTraceMode = config?.tracing?.stackTrace;
   httpExitConfig = config.tracing.http.exit;
-  logLevelConfig = config.tracing.logLevelCapture;
+  logLevelConfig = config.tracing.captureLogLevel;
 };
 
 /**

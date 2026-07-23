@@ -154,7 +154,7 @@ module.exports = function (name, version, isLatest) {
       });
     });
 
-    describe('log span capture configuration via INSTANA_LOG_LEVEL_CAPTURE', function () {
+    describe('log span capture configuration via INSTANA_TRACING_CAPTURE_LOG_LEVEL', function () {
       runCaptureTests({
         captureLevel: 'error',
         traced: [
@@ -182,7 +182,7 @@ module.exports = function (name, version, isLatest) {
       });
 
       function runCaptureTests({ captureLevel, traced, notTraced }) {
-        describe(`when INSTANA_LOG_LEVEL_CAPTURE=${captureLevel}`, function () {
+        describe(`when INSTANA_TRACING_CAPTURE_LOG_LEVEL=${captureLevel}`, function () {
           let controls;
 
           before(async () => {
@@ -190,7 +190,7 @@ module.exports = function (name, version, isLatest) {
               dirname: __dirname,
               useGlobalAgent: true,
               env: {
-                INSTANA_LOG_LEVEL_CAPTURE: captureLevel,
+                INSTANA_TRACING_CAPTURE_LOG_LEVEL: captureLevel,
                 LIBRARY_LATEST: isLatest,
                 LIBRARY_VERSION: version,
                 LIBRARY_NAME: name,

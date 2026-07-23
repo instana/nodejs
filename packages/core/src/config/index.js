@@ -80,7 +80,7 @@ let currentConfig;
  * @property {boolean} [disableEOLEvents]
  * @property {globalStackTraceConfig} [global]
  * @property {otlpExporterOptions} [otlp]
- * @property {string} [logLevelCapture]
+ * @property {string} [captureLogLevel]
  */
 
 /**
@@ -189,7 +189,7 @@ let defaults = {
     ignoreEndpoints: {},
     ignoreEndpointsDisableSuppression: false,
     disableEOLEvents: false,
-    logLevelCapture: DEFAULT_LOG_LEVEL,
+    captureLogLevel: DEFAULT_LOG_LEVEL,
     otlp: {
       enabled: false,
       // Currently, we only have http protocol support and default to 4318
@@ -1300,22 +1300,22 @@ function normalizeDisableEOLEvents({ userConfig = {}, defaultConfig = {}, finalC
 function normalizeLogLevelCapture({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
   const { value, source } = util.resolve(
     {
-      envValue: 'INSTANA_LOG_LEVEL_CAPTURE',
-      inCodeValue: userConfig.tracing?.logLevelCapture,
-      defaultValue: defaultConfig.tracing.logLevelCapture
+      envValue: 'INSTANA_TRACING_CAPTURE_LOG_LEVEL',
+      inCodeValue: userConfig.tracing?.captureLogLevel,
+      defaultValue: defaultConfig.tracing.captureLogLevel
     },
     [validators.logLevelValidator]
   );
 
-  configStore.set('config.tracing.logLevelCapture', { source });
+  configStore.set('config.tracing.captureLogLevel', { source });
 
-  finalConfig.tracing.logLevelCapture = value;
+  finalConfig.tracing.captureLogLevel = value;
 
   util.log({
-    configPath: 'config.tracing.logLevelCapture',
+    configPath: 'config.tracing.captureLogLevel',
     source,
     value,
-    envVarName: 'INSTANA_LOG_LEVEL_CAPTURE'
+    envVarName: 'INSTANA_TRACING_CAPTURE_LOG_LEVEL'
   });
 }
 

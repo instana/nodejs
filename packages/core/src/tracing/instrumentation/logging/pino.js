@@ -109,7 +109,7 @@ function shimGenLog(originalGenLog) {
 }
 
 function resolveLogLevel(level) {
-  // `logLevelCapture` only accepts the standard log level names. Round custom
+  // `captureLogLevel` only accepts the standard log level names. Round custom
   // Pino numeric levels (e.g. 35, 55) down to the nearest standard level.
   const rounded = Math.floor(level / 10) * 10;
   return LEVEL_NAMES[rounded];
