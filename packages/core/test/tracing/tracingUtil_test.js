@@ -13,6 +13,7 @@ const util = require('util');
 
 const config = require('../config');
 const { isCI, createFakeLogger } = require('../test_util');
+const { LOG_LEVEL } = require('../../src/util/constants');
 
 const {
   findCallback,
@@ -1624,6 +1625,37 @@ describe('tracing/tracingUtil', () => {
       it('should return true for fatal', () => {
         expect(shouldCaptureLogSpan('fatal')).to.equal(true);
       });
+    });
+  });
+
+  describe('isLogLevelAnError', () => {
+    const { isLogLevelAnError } = tracingUtil;
+    before(() => {
+      tracingUtil.init({
+        logger: createFakeLogger(),
+        tracing: {
+          stackTraceLength: 10,
+          http: {
+            exit: {
+              classifyAll4xxAsErrors: false,
+              classifyAsErrors: []
+            }
+          },
+          captureLogLevel: 'warn'
+        }
+      });
+    });
+
+    it('should return true for ERROR and FATAL log levels', () => {
+      expect(isLogLevelAnError(LOG_LEVEL.ERROR)).to.be.true;
+      expect(isLogLevelAnError(LOG_LEVEL.FATAL)).to.be.true;
+    });
+
+    it('should return false for non-error log levels', () => {
+      expect(isLogLevelAnError(LOG_LEVEL.TRACE)).to.be.false;
+      expect(isLogLevelAnError(LOG_LEVEL.DEBUG)).to.be.false;
+      expect(isLogLevelAnError(LOG_LEVEL.INFO)).to.be.false;
+      expect(isLogLevelAnError(LOG_LEVEL.WARN)).to.be.false;
     });
   });
 });
