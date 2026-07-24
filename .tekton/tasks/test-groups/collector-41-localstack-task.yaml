@@ -1,19 +1,16 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: collector-39-oracledb
+  name: collector-41-localstack
 spec:
   sidecars:
-    - name: oracledb
-      image: container-registry.oracle.com/database/free:23.6.0.0-lite
+    - name: localstack
+      image: public.ecr.aws/localstack/localstack:4.5
       imagePullPolicy: IfNotPresent
       resources:
         requests:
           cpu: "500m"
           memory: "1Gi"
-      env:
-          - name: "ORACLE_PWD"
-            value: "teamnodejspassword"
   envFrom:
     - configMapRef:
         name: environment-properties
@@ -89,8 +86,8 @@ spec:
           memory: "8Gi"
       script: |
         #!/bin/bash
-        AVAILABLE_SIDECARS="oracledb"
-        SIDECAR_COUNTS="redis=20,redis-slave=20,redis-sentinel=20,zookeeper=6,kafka=6,kafka-topics=6,postgres=3,elasticsearch=2,mongodb=1,couchbase=1,rabbitmq=1,nats=1,nats-streaming=1,nats-streaming-2=1,mysql=1,localstack=1,memcached=1,oracledb=1"
+        AVAILABLE_SIDECARS="localstack"
+        SIDECAR_COUNTS="redis=20,redis-slave=20,redis-sentinel=20,zookeeper=10,kafka=10,kafka-topics=10,postgres=3,elasticsearch=2,mongodb=1,couchbase=1,rabbitmq=1,nats=1,nats-streaming=1,nats-streaming-2=1,mysql=1,localstack=1,memcached=1,oracledb=1"
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         BASE_REVISION=$(git rev-parse origin/main)
@@ -142,7 +139,7 @@ spec:
         echo "GIT_COMMIT_DESC: $GIT_COMMIT_DESC"
         if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && true; then
           echo "Skipping group."
-          touch "collector-39-oracledb.succeeded"
+          touch "collector-41-localstack.succeeded"
           exit 0
         fi
         export CI=true
@@ -156,50 +153,50 @@ spec:
           export RUN_ESM=true
           if ! echo "test:ci:collector" | grep -q 'ci:collector'; then
             echo "Skipping tests because group does not support ESM."
-            touch "collector-39-oracledb.succeeded"
+            touch "collector-41-localstack.succeeded"
             exit 0
           fi
         fi
         if [ "true" == "true" ]; then
-          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*.test.js" "39" "$ARTIFACTS_PATH" "$SIDECAR_COUNTS")
+          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*.test.js" "43" "$ARTIFACTS_PATH" "$SIDECAR_COUNTS")
           if [ -z "$CLAIMED_TESTS" ]; then
             echo "No tests to claim for this task"
-            touch "collector-39-oracledb.succeeded"
+            touch "collector-41-localstack.succeeded"
             exit 0
           fi
           echo "Claimed tests: $CLAIMED_TESTS"
           # Write mapping to shared file (printed by tasks-results)
           SHORT_NAMES=$(echo "$CLAIMED_TESTS" | tr ' ' '\n' | sed 's|.*/currencies/||; s|.*/misc/||; s|.*/unit/||; s|/test\.js$||' | tr '\n' ', ' | sed 's/,$//')
-          echo "collector-39-oracledb: $SHORT_NAMES" >> "$ARTIFACTS_PATH/test-mapping.txt"
+          echo "collector-41-localstack: $SHORT_NAMES" >> "$ARTIFACTS_PATH/test-mapping.txt"
         fi
-        rm -f "collector-39-oracledb.succeeded" "collector-39-oracledb.failed"
+        rm -f "collector-41-localstack.succeeded" "collector-41-localstack.failed"
         retry=1
         LAST_EXIT=1
         while [ $retry -le 2 ]; do
           LAST_EXIT=0
           if [ "$(params.coverage)" == "true" ]; then
             if [ "true" == "true" ]; then
-              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="39" CI_TEST_SPLIT_CURRENT="39" npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-39-oracledb" || LAST_EXIT=$?
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="43" CI_TEST_SPLIT_CURRENT="41" npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-41-localstack" || LAST_EXIT=$?
             else
-              CI_TEST_SPLIT="39" CI_TEST_SPLIT_CURRENT="39" npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-39-oracledb" || LAST_EXIT=$?
+              CI_TEST_SPLIT="43" CI_TEST_SPLIT_CURRENT="41" npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-41-localstack" || LAST_EXIT=$?
             fi
           else
             if [ "true" == "true" ]; then
-              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="39" CI_TEST_SPLIT_CURRENT="39" npm run "test:ci:collector" || LAST_EXIT=$?
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="43" CI_TEST_SPLIT_CURRENT="41" npm run "test:ci:collector" || LAST_EXIT=$?
             else
-              CI_TEST_SPLIT="39" CI_TEST_SPLIT_CURRENT="39" npm run "test:ci:collector" || LAST_EXIT=$?
+              CI_TEST_SPLIT="43" CI_TEST_SPLIT_CURRENT="41" npm run "test:ci:collector" || LAST_EXIT=$?
             fi
           fi
           if [ $LAST_EXIT -eq 0 ]; then
-            touch "collector-39-oracledb.succeeded"
+            touch "collector-41-localstack.succeeded"
             break
           else
             echo "Attempt $retry failed with exit code $LAST_EXIT"
             retry=$((retry + 1))
           fi
         done
-        if [ ! -f "collector-39-oracledb.succeeded" ]; then
-          echo "All $((retry - 1)) retries failed for collector-39-oracledb"
-          touch "collector-39-oracledb.failed"
+        if [ ! -f "collector-41-localstack.succeeded" ]; then
+          echo "All $((retry - 1)) retries failed for collector-41-localstack"
+          touch "collector-41-localstack.failed"
           exit 1
         fi

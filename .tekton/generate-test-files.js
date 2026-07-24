@@ -17,7 +17,7 @@ const sidecarGroups = {
 // Adjust these numbers to control parallelism for each sidecar.
 const collectorSidecarTasks = {
   redis: 20,
-  kafka: 6,
+  kafka: 10,
   postgres: 3,
   elasticsearch: 2,
   mongodb: 1,

@@ -1064,11 +1064,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-27-postgres-task
+    - name: collector-27-kafka-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-27-postgres
+        name: collector-27-kafka
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1089,11 +1089,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-28-postgres-task
+    - name: collector-28-kafka-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-28-postgres
+        name: collector-28-kafka
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1114,11 +1114,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-29-postgres-task
+    - name: collector-29-kafka-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-29-postgres
+        name: collector-29-kafka
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1139,11 +1139,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-30-elasticsearch-task
+    - name: collector-30-kafka-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-30-elasticsearch
+        name: collector-30-kafka
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1164,11 +1164,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-31-elasticsearch-task
+    - name: collector-31-postgres-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-31-elasticsearch
+        name: collector-31-postgres
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1189,11 +1189,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-32-mongodb-task
+    - name: collector-32-postgres-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-32-mongodb
+        name: collector-32-postgres
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1214,11 +1214,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-33-couchbase-task
+    - name: collector-33-postgres-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-33-couchbase
+        name: collector-33-postgres
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1239,11 +1239,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-34-rabbitmq-task
+    - name: collector-34-elasticsearch-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-34-rabbitmq
+        name: collector-34-elasticsearch
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1264,11 +1264,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-35-nats-task
+    - name: collector-35-elasticsearch-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-35-nats
+        name: collector-35-elasticsearch
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1289,11 +1289,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-36-mysql-task
+    - name: collector-36-mongodb-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-36-mysql
+        name: collector-36-mongodb
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1314,11 +1314,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-37-localstack-task
+    - name: collector-37-couchbase-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-37-localstack
+        name: collector-37-couchbase
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1339,11 +1339,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-38-memcached-task
+    - name: collector-38-rabbitmq-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-38-memcached
+        name: collector-38-rabbitmq
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1364,11 +1364,111 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-39-oracledb-task
+    - name: collector-39-nats-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-39-oracledb
+        name: collector-39-nats
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-40-mysql-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-40-mysql
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-41-localstack-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-41-localstack
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-42-memcached-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-42-memcached
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-43-oracledb-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-43-oracledb
       params:
         - name: node-version
           value: $(params.node-version)
