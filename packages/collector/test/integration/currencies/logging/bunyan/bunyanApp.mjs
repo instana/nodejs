@@ -41,7 +41,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/info', (req, res) => {
-  logger.info('Info message - must not be traced.');
+  logger.info('Info message - must not be traced by default.');
   finish(res);
 });
 

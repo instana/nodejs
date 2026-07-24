@@ -153,6 +153,133 @@ module.exports = function (name, version, isLatest) {
           }
         });
     });
+
+    describe('log span capture respects INSTANA_TRACING_CAPTURE_LOG_LEVEL', () => {
+      let customControls;
+
+      async function start(level) {
+        customControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'bunyanApp',
+          useGlobalAgent: true,
+          env: {
+            INSTANA_TRACING_CAPTURE_LOG_LEVEL: level,
+            LIBRARY_LATEST: isLatest,
+            LIBRARY_VERSION: version,
+            LIBRARY_NAME: name
+          }
+        });
+
+        await customControls.startAndWaitForAgentConnection();
+      }
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      afterEach(async () => {
+        if (customControls) {
+          await customControls.stop();
+          customControls = null;
+        }
+      });
+
+      describe('when the minimum log level is ERROR', () => {
+        beforeEach(async () => {
+          await start('error');
+        });
+
+        afterEach(async () => {
+          await customControls.stop();
+        });
+
+        it('should not trace warn', () =>
+          trigger('warn', customControls).then(() =>
+            retry(async () => {
+              const spans = await agentControls.getSpans();
+
+              const entrySpan = expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.f.e).to.equal(String(customControls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid')
+              ]);
+
+              expectAtLeastOneMatching(spans, span => {
+                checkNextExitSpan(span, entrySpan, customControls);
+              });
+
+              expect(getSpansByName(spans, 'log.bunyan')).to.be.empty;
+            })
+          ));
+
+        it('should trace error', () => runTest('error', true, 'Error message - should be traced.', customControls));
+      });
+
+      describe('when the minimum log level is INFO', () => {
+        beforeEach(async () => {
+          await start('info');
+        });
+
+        afterEach(async () => {
+          await customControls.stop();
+        });
+
+        it('should trace info', () =>
+          runTest('info', false, 'Info message - must not be traced by default.', customControls));
+
+        it('should trace warn', () => runTest('warn', false, 'Warn message - should be traced.', customControls));
+
+        it('should trace error', () => runTest('error', true, 'Error message - should be traced.', customControls));
+      });
+
+      describe('when the minimum log level is OFF', () => {
+        beforeEach(async () => {
+          await start('off');
+        });
+
+        afterEach(async () => {
+          await customControls.stop();
+        });
+
+        it('should not trace warn', () =>
+          trigger('warn', customControls).then(() =>
+            retry(async () => {
+              const spans = await agentControls.getSpans();
+
+              const entrySpan = expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.f.e).to.equal(String(customControls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid')
+              ]);
+
+              expectAtLeastOneMatching(spans, span => {
+                checkNextExitSpan(span, entrySpan, customControls);
+              });
+
+              expect(getSpansByName(spans, 'log.bunyan')).to.be.empty;
+            })
+          ));
+
+        it('should not trace error', () =>
+          trigger('error', customControls).then(() =>
+            retry(async () => {
+              const spans = await agentControls.getSpans();
+
+              const entrySpan = expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.f.e).to.equal(String(customControls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid')
+              ]);
+
+              expectAtLeastOneMatching(spans, span => {
+                checkNextExitSpan(span, entrySpan, customControls);
+              });
+
+              expect(getSpansByName(spans, 'log.bunyan')).to.be.empty;
+            })
+          ));
+      });
+    });
   });
 
   function runTest(url, expectErroneous, message, controls, lengthOfMessage, numberOfSpans) {
