@@ -67,7 +67,7 @@ module.exports = function (name, version, isLatest) {
       }
 
       it(`must not trace info ${suffix}`, async () => {
-        await trigger({ level: 'info', message: 'Info message - must not be traced.', useLogMethod });
+        await trigger({ level: 'info', message: 'Info message - must not be traced by default.', useLogMethod });
         return retry(async () => {
           const spans = await agentControls.getSpans();
           const entrySpan = expectAtLeastOneMatching(spans, [
@@ -130,6 +130,139 @@ module.exports = function (name, version, isLatest) {
         }));
     }
 
+    describe('log span capture configuration via INSTANA_TRACING_CAPTURE_LOG_LEVEL', () => {
+      let customControls;
+
+      describe('when INSTANA_TRACING_CAPTURE_LOG_LEVEL=error', () => {
+        before(async () => {
+          customControls = new ProcessControls({
+            dirname: __dirname,
+            useGlobalAgent: true,
+            env: {
+              INSTANA_TRACING_CAPTURE_LOG_LEVEL: 'error',
+              LIBRARY_LATEST: isLatest,
+              LIBRARY_VERSION: version,
+              LIBRARY_NAME: name
+            }
+          });
+
+          await customControls.startAndWaitForAgentConnection();
+        });
+
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
+        });
+
+        after(async () => {
+          await customControls.stop();
+        });
+
+        it('should trace error', async () => {
+          await trigger({
+            level: 'error',
+            message: 'Error message',
+            useLogMethod: false,
+            controls: customControls
+          });
+
+          await retry(async () => {
+            const spans = await agentControls.getSpans();
+            const logSpans = getSpansByName(spans, 'log.log4js');
+
+            expect(logSpans).to.have.length(1);
+            expect(logSpans[0].data.log.message).to.equal('Error message');
+          });
+        });
+
+        it('should not trace warn', async () => {
+          await trigger({
+            level: 'warn',
+            message: 'Warn message',
+            useLogMethod: false,
+            controls: customControls
+          });
+
+          await retry(async () => {
+            const spans = await agentControls.getSpans();
+            expect(getSpansByName(spans, 'log.log4js')).to.be.empty;
+          });
+        });
+      });
+
+      describe('when INSTANA_TRACING_CAPTURE_LOG_LEVEL=info', () => {
+        before(async () => {
+          customControls = new ProcessControls({
+            dirname: __dirname,
+            useGlobalAgent: true,
+            env: {
+              INSTANA_TRACING_CAPTURE_LOG_LEVEL: 'info',
+              LIBRARY_LATEST: isLatest,
+              LIBRARY_VERSION: version,
+              LIBRARY_NAME: name
+            }
+          });
+
+          await customControls.startAndWaitForAgentConnection();
+        });
+
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
+        });
+
+        after(async () => {
+          await customControls.stop();
+        });
+
+        it('should trace info', async () => {
+          await trigger({
+            level: 'info',
+            message: 'Info message',
+            useLogMethod: false,
+            controls: customControls
+          });
+
+          await retry(async () => {
+            const spans = await agentControls.getSpans();
+            const logSpans = getSpansByName(spans, 'log.log4js');
+
+            expect(logSpans).to.have.length(1);
+            expect(logSpans[0].data.log.message).to.equal('Info message');
+          });
+        });
+
+        it('should not trace debug', async () => {
+          await trigger({
+            level: 'debug',
+            message: 'Debug message',
+            useLogMethod: false,
+            controls: customControls
+          });
+
+          await retry(async () => {
+            const spans = await agentControls.getSpans();
+            expect(getSpansByName(spans, 'log.log4js')).to.be.empty;
+          });
+        });
+
+        it('should trace error', async () => {
+          await trigger({
+            level: 'error',
+            message: 'Error message',
+            useLogMethod: false,
+            controls: customControls
+          });
+
+          await retry(async () => {
+            const spans = await agentControls.getSpans();
+            const logSpans = getSpansByName(spans, 'log.log4js');
+
+            expect(logSpans).to.have.length(1);
+            expect(logSpans[0].data.log.message).to.equal('Error message');
+          });
+        });
+      });
+    });
+
     async function runTest({ level, message, useLogMethod, expectErroneous = false, multipleArguments = false }) {
       await trigger({ level, message, useLogMethod, multipleArguments });
       await retry(async () => {
@@ -176,18 +309,25 @@ module.exports = function (name, version, isLatest) {
       expect(span.n).to.equal('node.http.client');
     }
 
-    function trigger({ level, message, useLogMethod, multipleArguments = false }) {
+    function trigger({
+      level,
+      message,
+      useLogMethod,
+      multipleArguments = false,
+      controls: processControls = controls
+    }) {
       const query = {
         level,
         message,
         useLogMethod,
         multipleArguments
       };
+
       const queryString = Object.keys(query)
         .map(key => `${key}=${query[key]}`)
         .join('&');
 
-      return controls.sendRequest({
+      return processControls.sendRequest({
         method: 'POST',
         path: `/log?${queryString}`,
         simple: false

@@ -8,12 +8,22 @@
 const util = require('util');
 const shimmer = require('../../shimmer');
 
+const { LOG_LEVEL } = require('../../../util/constants');
 const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
 
 let isActive = false;
+
+const LEVEL_MAP = {
+  5000: LOG_LEVEL.TRACE,
+  10000: LOG_LEVEL.DEBUG,
+  20000: LOG_LEVEL.INFO,
+  30000: LOG_LEVEL.WARN,
+  40000: LOG_LEVEL.ERROR,
+  50000: LOG_LEVEL.FATAL
+};
 
 exports.init = function init() {
   hook.onFileLoad(/\/log4js\/lib\/logger\.js/, instrumentLog4jsLogger);
@@ -34,15 +44,20 @@ function shimLog(originalLog) {
       return originalLog.apply(this, arguments);
     }
 
-    if (level == null || typeof level.level !== 'number' || level.level < 30000) {
+    if (level == null || typeof level.level !== 'number') {
       return originalLog.apply(this, arguments);
     }
 
-    return instrumentedLog(this, data, originalLog, level.level >= 40000, level);
+    const resolvedLogLevel = resolveLogLevel(level.level);
+    if (!resolvedLogLevel || !tracingUtil.shouldCaptureLogSpan(resolvedLogLevel)) {
+      return originalLog.apply(this, arguments);
+    }
+
+    return instrumentedLog(this, data, originalLog, resolvedLogLevel);
   };
 }
 
-function instrumentedLog(ctx, data, originalLog, markAsError, level) {
+function instrumentedLog(ctx, data, originalLog, level) {
   return cls.ns.runAndReturn(() => {
     let message;
 
@@ -61,7 +76,7 @@ function instrumentedLog(ctx, data, originalLog, markAsError, level) {
     span.data.log = {
       message
     };
-    if (markAsError) {
+    if (tracingUtil.isLogLevelAnError(level)) {
       span.ec = 1;
     }
 
@@ -72,6 +87,10 @@ function instrumentedLog(ctx, data, originalLog, markAsError, level) {
       span.transmit();
     }
   });
+}
+
+function resolveLogLevel(level) {
+  return LEVEL_MAP[level];
 }
 
 exports.activate = function activate() {
