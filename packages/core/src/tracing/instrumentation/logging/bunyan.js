@@ -121,7 +121,7 @@ function instrumentedLog(ctx, originalLog, originalArgs, level) {
       message
     };
 
-    if (tracingUtil.shouldMarkErrorForLogLevel(level)) {
+    if (tracingUtil.isLogLevelAnError(level)) {
       span.ec = 1;
     }
 
