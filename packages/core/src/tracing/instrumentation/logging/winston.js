@@ -177,7 +177,7 @@ function instrumentedLog(originalMethod) {
       originalArgs[j] = arguments[j];
     }
     const ctx = this;
-    return createSpan(ctx, originalMethod, originalArgs, message, levelIsError(normalizedLogLevel));
+    return createSpan(ctx, originalMethod, originalArgs, message, normalizedLogLevel);
   };
 }
 
@@ -185,11 +185,7 @@ function resolveLogLevel(level) {
   return LEVEL_MAP[level];
 }
 
-function levelIsError(normalizedLogLevel) {
-  return normalizedLogLevel === LOG_LEVEL.ERROR || normalizedLogLevel === LOG_LEVEL.FATAL;
-}
-
-function createSpan(ctx, originalMethod, originalArgs, message, markAsError) {
+function createSpan(ctx, originalMethod, originalArgs, message, level) {
   return cls.ns.runAndReturn(() => {
     const span = cls.startSpan({
       spanName: 'log.winston',
@@ -199,7 +195,7 @@ function createSpan(ctx, originalMethod, originalArgs, message, markAsError) {
     span.data.log = {
       message
     };
-    if (markAsError) {
+    if (tracingUtil.shouldMarkErrorForLogLevel(level)) {
       span.ec = 1;
     }
     try {
