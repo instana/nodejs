@@ -154,7 +154,7 @@ module.exports = function (name, version, isLatest) {
         });
     });
 
-    describe('log span capture respects INSTANA_LOG_LEVEL_CAPTURE', () => {
+    describe('log span capture respects INSTANA_TRACING_CAPTURE_LOG_LEVEL', () => {
       let customControls;
 
       async function start(level) {
@@ -163,7 +163,7 @@ module.exports = function (name, version, isLatest) {
           appName: 'bunyanApp',
           useGlobalAgent: true,
           env: {
-            INSTANA_LOG_LEVEL_CAPTURE: level,
+            INSTANA_TRACING_CAPTURE_LOG_LEVEL: level,
             LIBRARY_LATEST: isLatest,
             LIBRARY_VERSION: version,
             LIBRARY_NAME: name
