@@ -468,3 +468,11 @@ exports.shouldCaptureLogSpan = function shouldCaptureLogSpan(level) {
 
   return numericLevel !== undefined && numericLevel >= minLevel;
 };
+
+/**
+ * @param {string} level
+ * @returns {boolean}
+ */
+exports.isLogLevelAnError = function isLogLevelAnError(level) {
+  return level === LOG_LEVEL.ERROR || level === LOG_LEVEL.FATAL;
+};
