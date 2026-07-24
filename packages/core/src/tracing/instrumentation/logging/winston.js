@@ -195,7 +195,7 @@ function createSpan(ctx, originalMethod, originalArgs, message, level) {
     span.data.log = {
       message
     };
-    if (tracingUtil.shouldMarkErrorForLogLevel(level)) {
+    if (tracingUtil.isLogLevelAnError(level)) {
       span.ec = 1;
     }
     try {
