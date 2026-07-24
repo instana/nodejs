@@ -61,31 +61,31 @@ function instrumentWinston3(createLogger) {
     const derivedLogger = createLogger.apply(this, arguments);
 
     // npm levels
-    shimLevelMethod(derivedLogger, 'error', true);
-    shimLevelMethod(derivedLogger, 'warn', false);
-    shimLevelMethod(derivedLogger, 'info', false);
+    shimLevelMethod(derivedLogger, 'error');
+    shimLevelMethod(derivedLogger, 'warn');
+    shimLevelMethod(derivedLogger, 'info');
 
     // syslog levels (RFC5424)
-    shimLevelMethod(derivedLogger, 'emerg', true);
-    shimLevelMethod(derivedLogger, 'alert', true);
-    shimLevelMethod(derivedLogger, 'crit', true);
-    shimLevelMethod(derivedLogger, 'warning', false);
-    shimLevelMethod(derivedLogger, 'notice', false);
+    shimLevelMethod(derivedLogger, 'emerg');
+    shimLevelMethod(derivedLogger, 'alert');
+    shimLevelMethod(derivedLogger, 'crit');
+    shimLevelMethod(derivedLogger, 'warning');
+    shimLevelMethod(derivedLogger, 'notice');
 
     shimLogMethod(derivedLogger);
     return derivedLogger;
   }
 }
 
-function shimLevelMethod(derivedLogger, level, markAsError) {
+function shimLevelMethod(derivedLogger, level) {
   const originalMethod = derivedLogger[level];
   if (typeof originalMethod !== 'function') {
     return;
   }
-  derivedLogger[level] = instrumentedLevelMethod(originalMethod, markAsError, level);
+  derivedLogger[level] = instrumentedLevelMethod(originalMethod, level);
 }
 
-function instrumentedLevelMethod(originalMethod, markAsError, level) {
+function instrumentedLevelMethod(originalMethod, level) {
   return function (message) {
     // CASE: Customer is using a custom winston logger (instana.setLogger(winstonLogger)).
     //       We create a winston child logger for all instana internal logs.
@@ -126,7 +126,7 @@ function instrumentedLevelMethod(originalMethod, markAsError, level) {
     }
 
     const ctx = this;
-    return createSpan(ctx, originalMethod, originalArgs, message, markAsError);
+    return createSpan(ctx, originalMethod, originalArgs, message, normalizedLogLevel);
   };
 }
 
