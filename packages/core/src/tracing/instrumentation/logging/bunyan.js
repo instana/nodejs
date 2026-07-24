@@ -120,9 +120,11 @@ function instrumentedLog(ctx, originalLog, originalArgs, level) {
     span.data.log = {
       message
     };
-    if (isError(level)) {
+
+    if (tracingUtil.shouldMarkErrorForLogLevel(level)) {
       span.ec = 1;
     }
+
     try {
       return originalLog.apply(ctx, originalArgs);
     } finally {
@@ -130,10 +132,6 @@ function instrumentedLog(ctx, originalLog, originalArgs, level) {
       span.transmit();
     }
   });
-}
-
-function isError(level) {
-  return level === LOG_LEVEL.ERROR || level === LOG_LEVEL.FATAL;
 }
 
 exports.activate = function activate() {
