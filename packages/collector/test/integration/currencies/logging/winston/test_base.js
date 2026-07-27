@@ -212,7 +212,13 @@ module.exports = function (name, version, isLatest, mode) {
               ]);
               if (shouldTrace) {
                 expectAtLeastOneMatching(spans, span => {
-                  checkWinstonSpan(span, entrySpan, expectErroneous, expectedMessage, level);
+                  checkWinstonSpan({
+                    span,
+                    parent: entrySpan,
+                    erroneous: expectErroneous,
+                    message: expectedMessage,
+                    level
+                  });
                 });
 
                 // entry + exit + winston log
@@ -232,7 +238,7 @@ module.exports = function (name, version, isLatest, mode) {
     );
   }
 
-  function checkWinstonSpan(span, parent, erroneous, message, level) {
+  function checkWinstonSpan({ span, parent, erroneous, message, level }) {
     expect(span.t).to.equal(parent.t);
     expect(span.p).to.equal(parent.s);
     expect(span.k).to.equal(constants.EXIT);
