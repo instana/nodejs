@@ -69,20 +69,21 @@ module.exports = function (name, version, isLatest) {
         )
       ));
 
-    it('must trace warn', () => runTest('warn', false, 'Warn message - should be traced.', controls));
+    it('must trace warn', () => runTest('warn', false, 'Warn message - should be traced.', 'warn', controls));
 
-    it('must trace error', () => runTest('error', true, 'Error message - should be traced.', controls));
+    it('must trace error', () => runTest('error', true, 'Error message - should be traced.', 'error', controls));
 
-    it('must trace fatal', () => runTest('fatal', true, 'Fatal message - should be traced.', controls));
+    it('must trace fatal', () => runTest('fatal', true, 'Fatal message - should be traced.', 'fatal', controls));
 
     it("must capture an error object's message", () =>
-      runTest('error-object-only', true, 'Error: This is an error.', controls));
+      runTest('error-object-only', true, 'Error: This is an error.', 'error', controls));
 
     it("must capture a nested error object's message", async () => {
-      await runTest('nested-error-object-only', true, 'Error: This is a nested error.', controls);
+      await runTest('nested-error-object-only', true, 'Error: This is a nested error.', 'error', controls);
     });
 
-    it('must serialize random object', () => runTest('error-random-object-only', true, '{"foo":"[Object]"}', controls));
+    it('must serialize random object', () =>
+      runTest('error-random-object-only', true, '{"foo":"[Object]"}', 'error', controls));
 
     it('must serialize large object', () =>
       runTest(
@@ -90,6 +91,7 @@ module.exports = function (name, version, isLatest) {
         true,
         // eslint-disable-next-line max-len
         '{"_id":"638dea148cff492d47e792ea","index":0,"guid":"01b61bfa-fe4c-4d75-9224-389c4c04de10","isActive":false,"balance":"$1,919.18","picture":"http://placehold.it/32x32","age":37,"eyeColor":"blue","name":"Manning Brady","gender":"male","company":"ZYTRAC","email":"manningbrady@zytrac.com","phone":"+1 (957) 538-2183","address":"146 Bushwick Court, Gilgo, New York, 2992","about":"Ullamco cillum reprehenderit eu proident veniam laboris tempor voluptate. Officia deserunt velit incididunt consequat la...',
+        'error',
         controls,
         500,
         3
@@ -100,6 +102,7 @@ module.exports = function (name, version, isLatest) {
         'error-object-and-string',
         true,
         'Error: This is an error. -- Error message - should be traced.',
+        'error',
         controls
       ));
 
@@ -109,6 +112,7 @@ module.exports = function (name, version, isLatest) {
         true,
         // eslint-disable-next-line max-len
         'Error: This is a nested error. -- Error message - should be traced.',
+        'error',
         controls
       ));
 
@@ -117,20 +121,22 @@ module.exports = function (name, version, isLatest) {
         'error-random-object-and-string',
         true,
         '{"foo":"[Object]"} - Error message - should be traced.',
+        'error',
         controls
       ));
 
     it('must trace child logger error', () =>
-      runTest('child-error', true, 'Child logger error message - should be traced.', controls));
+      runTest('child-error', true, 'Child logger error message - should be traced.', 'error', controls));
 
     it('must trace an error with cause property', () =>
-      runTest('error-with-cause', true, 'Error: This is the cause error', controls));
+      runTest('error-with-cause', true, 'Error: This is the cause error', 'error', controls));
 
     it('must trace an error with cause property and extra string', () =>
       runTest(
         'error-with-cause-and-extra-string',
         true,
         'Error: This is the cause error -- Error message - should be traced.',
+        'error',
         controls
       ));
 
@@ -139,6 +145,7 @@ module.exports = function (name, version, isLatest) {
         'nested-error-with-cause',
         true,
         'Error: This is the cause error -- Error message - should be traced.',
+        'error',
         controls
       ));
 
@@ -212,7 +219,8 @@ module.exports = function (name, version, isLatest) {
             })
           ));
 
-        it('should trace error', () => runTest('error', true, 'Error message - should be traced.', customControls));
+        it('should trace error', () =>
+          runTest('error', true, 'Error message - should be traced.', 'error', customControls));
       });
 
       describe('when the minimum log level is INFO', () => {
@@ -225,11 +233,13 @@ module.exports = function (name, version, isLatest) {
         });
 
         it('should trace info', () =>
-          runTest('info', false, 'Info message - must not be traced by default.', customControls));
+          runTest('info', false, 'Info message - must not be traced by default.', 'info', customControls));
 
-        it('should trace warn', () => runTest('warn', false, 'Warn message - should be traced.', customControls));
+        it('should trace warn', () =>
+          runTest('warn', false, 'Warn message - should be traced.', 'warn', customControls));
 
-        it('should trace error', () => runTest('error', true, 'Error message - should be traced.', customControls));
+        it('should trace error', () =>
+          runTest('error', true, 'Error message - should be traced.', 'error', customControls));
       });
 
       describe('when the minimum log level is OFF', () => {
@@ -282,7 +292,7 @@ module.exports = function (name, version, isLatest) {
     });
   });
 
-  function runTest(url, expectErroneous, message, controls, lengthOfMessage, numberOfSpans) {
+  function runTest(url, expectErroneous, message, level, controls, lengthOfMessage, numberOfSpans) {
     return trigger(url, controls).then(async () => {
       return retry(async () => {
         const spans = await agentControls.getSpans();
@@ -299,7 +309,7 @@ module.exports = function (name, version, isLatest) {
         ]);
 
         expectAtLeastOneMatching(spans, span => {
-          checkBunyanSpan(span, entrySpan, expectErroneous, message, controls, lengthOfMessage);
+          checkBunyanSpan(span, entrySpan, expectErroneous, message, level, controls, lengthOfMessage);
         });
 
         expectAtLeastOneMatching(spans, span => {
@@ -313,7 +323,7 @@ module.exports = function (name, version, isLatest) {
     });
   }
 
-  function checkBunyanSpan(span, parent, erroneous, message, controls, lengthOfMessage) {
+  function checkBunyanSpan(span, parent, erroneous, message, level, controls, lengthOfMessage) {
     expect(span.t).to.equal(parent.t);
     expect(span.p).to.equal(parent.s);
     expect(span.k).to.equal(constants.EXIT);
@@ -326,6 +336,7 @@ module.exports = function (name, version, isLatest) {
     expect(span.data).to.exist;
     expect(span.data.log).to.exist;
     expect(span.data.log.message).to.equal(message);
+    expect(span.data.log.level).to.equal(level);
 
     if (lengthOfMessage) {
       expect(span.data.log.message.length).to.equal(lengthOfMessage);

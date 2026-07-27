@@ -101,7 +101,8 @@ module.exports = function (name, version, isLatest) {
         runTest({
           level: 'warn',
           message: 'Warn message - should be traced.',
-          useLogMethod
+          useLogMethod,
+          expectedLevel: 'warn'
         }));
 
       it(`must trace error ${suffix}`, () =>
@@ -109,7 +110,8 @@ module.exports = function (name, version, isLatest) {
           level: 'error',
           message: 'Error message - should be traced.',
           useLogMethod,
-          expectErroneous: true
+          expectErroneous: true,
+          expectedLevel: 'error'
         }));
 
       it(`must trace fatal ${suffix}`, () =>
@@ -117,7 +119,8 @@ module.exports = function (name, version, isLatest) {
           level: 'fatal',
           message: 'Fatal message - should be traced.',
           useLogMethod,
-          expectErroneous: true
+          expectErroneous: true,
+          expectedLevel: 'fatal'
         }));
 
       it(`must trace error ${suffix} with multiple log arguments`, () =>
@@ -126,7 +129,8 @@ module.exports = function (name, version, isLatest) {
           message: 'Error message - should be traced.',
           useLogMethod,
           expectErroneous: true,
-          multipleArguments: true
+          multipleArguments: true,
+          expectedLevel: 'error'
         }));
     }
 
@@ -171,6 +175,7 @@ module.exports = function (name, version, isLatest) {
 
             expect(logSpans).to.have.length(1);
             expect(logSpans[0].data.log.message).to.equal('Error message');
+            expect(logSpans[0].data.log.level).to.equal('error');
           });
         });
 
@@ -227,6 +232,7 @@ module.exports = function (name, version, isLatest) {
 
             expect(logSpans).to.have.length(1);
             expect(logSpans[0].data.log.message).to.equal('Info message');
+            expect(logSpans[0].data.log.level).to.equal('info');
           });
         });
 
@@ -258,12 +264,20 @@ module.exports = function (name, version, isLatest) {
 
             expect(logSpans).to.have.length(1);
             expect(logSpans[0].data.log.message).to.equal('Error message');
+            expect(logSpans[0].data.log.level).to.equal('error');
           });
         });
       });
     });
 
-    async function runTest({ level, message, useLogMethod, expectErroneous = false, multipleArguments = false }) {
+    async function runTest({
+      level,
+      message,
+      useLogMethod,
+      expectErroneous = false,
+      multipleArguments = false,
+      expectedLevel
+    }) {
       await trigger({ level, message, useLogMethod, multipleArguments });
       await retry(async () => {
         const spans = await agentControls.getSpans();
@@ -273,7 +287,7 @@ module.exports = function (name, version, isLatest) {
           span => expect(span.f.h).to.equal('agent-stub-uuid')
         ]);
         expectAtLeastOneMatching(spans, span => {
-          checkLog4jsSpan(span, entrySpan, expectErroneous, message, multipleArguments);
+          checkLog4jsSpan(span, entrySpan, expectErroneous, message, multipleArguments, expectedLevel);
         });
         expectAtLeastOneMatching(spans, span => {
           checkNextExitSpan(span, entrySpan);
@@ -281,7 +295,7 @@ module.exports = function (name, version, isLatest) {
       });
     }
 
-    function checkLog4jsSpan(span, parent, expectErroneous, message, multipleArguments) {
+    function checkLog4jsSpan(span, parent, expectErroneous, message, multipleArguments, expectedLevel) {
       expect(span.t).to.equal(parent.t);
       expect(span.p).to.equal(parent.s);
       expect(span.k).to.equal(constants.EXIT);
@@ -297,6 +311,9 @@ module.exports = function (name, version, isLatest) {
         expect(span.data.log.message).to.equal(`${message} more arguments`);
       } else {
         expect(span.data.log.message).to.equal(message);
+      }
+      if (expectedLevel) {
+        expect(span.data.log.level).to.equal(expectedLevel);
       }
     }
 

@@ -67,7 +67,8 @@ module.exports = function (name, version, isLatest) {
         await controls.stop();
       });
 
-      it('must trace error', () => runTest('error', false, true, 'Error message - should be traced.', controls, 4));
+      it('must trace error', () =>
+        runTest('error', false, true, 'Error message - should be traced.', 'error', controls, 4));
     });
 
     describe('with second pino instance', function () {
@@ -97,7 +98,8 @@ module.exports = function (name, version, isLatest) {
         await controls.stop();
       });
 
-      it('must trace error', () => runTest('error', false, true, 'Error message - should be traced.', controls, 4));
+      it('must trace error', () =>
+        runTest('error', false, true, 'Error message - should be traced.', 'error', controls, 4));
     });
 
     describe('with express-pino', function () {
@@ -144,6 +146,7 @@ module.exports = function (name, version, isLatest) {
         const logSpan = spans.find(s => s.n === 'log.pino');
         expect(logSpan).to.exist;
         expect(logSpan.data.log.message).to.equal('Pino worker test error log');
+        expect(logSpan.data.log.level).to.equal('error');
 
         const httpSpan = spans.find(s => s.n === 'node.http.server');
         expect(httpSpan).to.exist;
@@ -210,7 +213,7 @@ module.exports = function (name, version, isLatest) {
           });
 
           traced.forEach(([level, erroneous, message]) => {
-            it(`should trace ${level}`, () => runTest(level, false, erroneous, message, controls));
+            it(`should trace ${level}`, () => runTest(level, false, erroneous, message, level, controls));
           });
 
           notTraced.forEach(level => {
@@ -300,15 +303,18 @@ module.exports = function (name, version, isLatest) {
           });
       });
 
-      it(`must trace warn${suffix}`, () => runTest('warn', useExpressPino, false, 'Warn message - should be traced.', controls));
+      it(`must trace warn${suffix}`, () =>
+        runTest('warn', useExpressPino, false, 'Warn message - should be traced.', 'warn', controls));
 
-      it(`must trace error${suffix}`, () => runTest('error', useExpressPino, true, 'Error message - should be traced.', controls));
+      it(`must trace error${suffix}`, () =>
+        runTest('error', useExpressPino, true, 'Error message - should be traced.', 'error', controls));
 
-      it(`must trace fatal${suffix}`, () => runTest('fatal', useExpressPino, true, 'Fatal message - should be traced.', controls));
+      it(`must trace fatal${suffix}`, () =>
+        runTest('fatal', useExpressPino, true, 'Fatal message - should be traced.', 'fatal', controls));
 
       // prettier-ignore
       it(`must trace error object without message${suffix}`, () =>
-                runTest('error-object-only', useExpressPino, true, 'This is an error.', controls)
+                runTest('error-object-only', useExpressPino, true, 'This is an error.', 'error', controls)
             );
 
       // prettier-ignore
@@ -318,6 +324,7 @@ module.exports = function (name, version, isLatest) {
                     useExpressPino,
                     true,
                     ['{ payload: ', 'statusCode: 404', "error: 'Not Found'", 'very: [Object'],
+                    'error',
                     controls
                 )
             );
@@ -329,13 +336,14 @@ module.exports = function (name, version, isLatest) {
                     useExpressPino,
                     true,
                     'This is an error. -- Error message - should be traced.',
+                    'error',
                     controls
                 )
             );
 
       // prettier-ignore
       it(`must trace random object and string${suffix}`, () =>
-                runTest('error-random-object-and-string', useExpressPino, true, 'Error message - should be traced.', controls)
+                runTest('error-random-object-and-string', useExpressPino, true, 'Error message - should be traced.', 'error', controls)
             );
 
       it(`must not trace custom info${suffix}`, () =>
@@ -354,17 +362,18 @@ module.exports = function (name, version, isLatest) {
           )
         ));
 
-      it(`must trace custom error${suffix}`, () => runTest('custom-error', useExpressPino, true, 'Custom error level message - should be traced.', controls));
+      it(`must trace custom error${suffix}`, () =>
+        runTest('custom-error', useExpressPino, true, 'Custom error level message - should be traced.', 'error', controls));
 
       it(`must trace child logger error${suffix}`, () => {
         if (useExpressPino) {
           return;
         }
-        return runTest('child-error', false, true, 'Child logger error message - should be traced.', controls);
+        return runTest('child-error', false, true, 'Child logger error message - should be traced.', 'error', controls);
       });
     }
 
-    function runTest(level, useExpressPino, expectErroneous, message, controls, expectedSpans = 3) {
+    function runTest(level, useExpressPino, expectErroneous, message, expectedLevel, controls, expectedSpans = 3) {
       return trigger(level, useExpressPino, controls).then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
@@ -374,7 +383,10 @@ module.exports = function (name, version, isLatest) {
               span => expect(span.f.h).to.equal('agent-stub-uuid')
             ]);
 
-            testUtils.expectAtLeastOneMatching(spans, checkPinoSpan(entrySpan, expectErroneous, message, controls));
+            testUtils.expectAtLeastOneMatching(
+              spans,
+              checkPinoSpan(entrySpan, expectErroneous, message, expectedLevel, controls)
+            );
             testUtils.expectAtLeastOneMatching(spans, checkNextExitSpan(entrySpan, controls));
 
             // entry + exit + pino log
@@ -390,7 +402,7 @@ module.exports = function (name, version, isLatest) {
       return controls.sendRequest({ path: `/${(useExpressPino ? 'express-pino-' : '') + level}` });
     }
 
-    function checkPinoSpan(parent, expectErroneous, message, controls) {
+    function checkPinoSpan(parent, expectErroneous, message, expectedLevel, controls) {
       const expectations = [
         span => expect(span.t).to.equal(parent.t),
         span => expect(span.p).to.equal(parent.s),
@@ -411,6 +423,7 @@ module.exports = function (name, version, isLatest) {
       } else {
         expectations.push(span => expect(span.data.log.message).to.equal(message));
       }
+      expectations.push(span => expect(span.data.log.level).to.equal(expectedLevel));
       return expectations;
     }
 
