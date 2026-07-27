@@ -251,9 +251,7 @@ module.exports = function (name, version, isLatest, mode) {
     expect(span.data).to.exist;
     expect(span.data.log).to.exist;
     expect(span.data.log.message).to.equal(message);
-    if (level) {
-      expect(span.data.log.level).to.equal(level);
-    }
+    expect(span.data.log.level).to.equal(level);
     verifyStackTrace(span);
   }
 
