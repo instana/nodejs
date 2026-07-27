@@ -69,7 +69,10 @@ spec:
           npx eslint packages/ -f json -o eslint-report.json || true
 
           echo "Installing SonarCloud scanner..."
-          npm install -g @sonar/scan
+          
+          # @sonar/scan v5 requires `sonar-scanner-npm`:
+          # https://github.com/SonarSource/sonar-scanner-npm/releases/tag/5.0.0
+          npm install -g @sonar/scan@4.4.0
 
           if [ -n "$(params.pr-number)" ]; then
             echo '$(params.pr-payload)' > pr.json
