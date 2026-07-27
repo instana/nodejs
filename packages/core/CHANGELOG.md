@@ -3,6 +3,32 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.5.0](https://github.com/instana/nodejs/compare/v6.4.0...v6.5.0) (2026-07-27)
+
+
+### Bug Fixes
+
+* bumped @opentelemetry/core from 2.8.0 to 2.9.0 ([#2644](https://github.com/instana/nodejs/issues/2644)) ([2b563ce](https://github.com/instana/nodejs/commit/2b563ceef7e21e3cce522f299c110944e55c91ee))
+* bumped @opentelemetry/instrumentation-fs from 0.37.0 to 0.39.0 ([#2645](https://github.com/instana/nodejs/issues/2645)) ([4bed0c6](https://github.com/instana/nodejs/commit/4bed0c687c4a287afe682e9f3552037b927f5391))
+* bumped @opentelemetry/instrumentation-socket.io from 0.65.0 to 0.67.0 ([#2663](https://github.com/instana/nodejs/issues/2663)) ([e8696e2](https://github.com/instana/nodejs/commit/e8696e247cae1d9c8a8ba7b224d6d39f054b504f))
+* bumped js-yaml from v4.2.0 to v4.3.0 ([6219dcc](https://github.com/instana/nodejs/commit/6219dccab1c7942e0a93ef53696c82f6b4c76224))
+* **core:** resolved potential bootstrap problems during preinit ([#2660](https://github.com/instana/nodejs/issues/2660)) ([af88aed](https://github.com/instana/nodejs/commit/af88aed4466acb2465a2012926ea91ac91226b24))
+* renamed env variable to INSTANA_TRACING_DISABLE_W3C_CORRELATION ([#2665](https://github.com/instana/nodejs/issues/2665)) ([0ce8a2e](https://github.com/instana/nodejs/commit/0ce8a2e212cfbd2388b1267ca21ab612aef4c920))
+
+
+### Features
+
+* added support for oracledb v7 ([#2667](https://github.com/instana/nodejs/issues/2667)) ([24d3737](https://github.com/instana/nodejs/commit/24d37379202bd1b2f02017ec9e45d5f5aa6dfa3d))
+* **bunyan:** added option to capture info logs ([#2651](https://github.com/instana/nodejs/issues/2651)) ([5107cb2](https://github.com/instana/nodejs/commit/5107cb2e8e427f66a80c80788ec55a0ed5031f4f))
+* **console:** added option to capture info logs ([#2658](https://github.com/instana/nodejs/issues/2658)) ([f1584ee](https://github.com/instana/nodejs/commit/f1584ee86fd6b98f375a4d9564ff838f92c0e674))
+* **log4js:** added option to capture info logs ([671fc5d](https://github.com/instana/nodejs/commit/671fc5d322352149fe7bd743831d015cfa45bf7f))
+* **pino:** added option to capture info logs ([#2661](https://github.com/instana/nodejs/issues/2661)) ([1d2b568](https://github.com/instana/nodejs/commit/1d2b568d3df5ceee4613687b0b9c82f511e3c649))
+* **winston:** added option to capture info logs ([#2662](https://github.com/instana/nodejs/issues/2662)) ([19e8038](https://github.com/instana/nodejs/commit/19e803843a3682225bff264432c75ab69dd0f992))
+
+
+
+
+
 # [6.4.0](https://github.com/instana/nodejs/compare/v6.3.0...v6.4.0) (2026-07-16)
 
 

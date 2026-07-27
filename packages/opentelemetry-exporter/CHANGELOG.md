@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.5.0](https://github.com/instana/nodejs/compare/v6.4.0...v6.5.0) (2026-07-27)
+
+
+### Bug Fixes
+
+* bumped @opentelemetry/core from 2.8.0 to 2.9.0 ([#2644](https://github.com/instana/nodejs/issues/2644)) ([2b563ce](https://github.com/instana/nodejs/commit/2b563ceef7e21e3cce522f299c110944e55c91ee))
+
+
+
+
+
 # [6.4.0](https://github.com/instana/nodejs/compare/v6.3.0...v6.4.0) (2026-07-16)
 
 **Note:** Version bump only for package @instana/opentelemetry-exporter

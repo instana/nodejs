@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.5.0](https://github.com/instana/nodejs/compare/v6.4.0...v6.5.0) (2026-07-27)
+
+
+### Features
+
+* **bunyan:** added option to capture info logs ([#2651](https://github.com/instana/nodejs/issues/2651)) ([5107cb2](https://github.com/instana/nodejs/commit/5107cb2e8e427f66a80c80788ec55a0ed5031f4f))
+* **console:** added option to capture info logs ([#2658](https://github.com/instana/nodejs/issues/2658)) ([f1584ee](https://github.com/instana/nodejs/commit/f1584ee86fd6b98f375a4d9564ff838f92c0e674))
+* **log4js:** added option to capture info logs ([671fc5d](https://github.com/instana/nodejs/commit/671fc5d322352149fe7bd743831d015cfa45bf7f))
+* **pino:** added option to capture info logs ([#2661](https://github.com/instana/nodejs/issues/2661)) ([1d2b568](https://github.com/instana/nodejs/commit/1d2b568d3df5ceee4613687b0b9c82f511e3c649))
+* **winston:** added option to capture info logs ([#2662](https://github.com/instana/nodejs/issues/2662)) ([19e8038](https://github.com/instana/nodejs/commit/19e803843a3682225bff264432c75ab69dd0f992))
+
+
+
+
+
 # [6.4.0](https://github.com/instana/nodejs/compare/v6.3.0...v6.4.0) (2026-07-16)
 
 
