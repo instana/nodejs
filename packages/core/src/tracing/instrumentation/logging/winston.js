@@ -193,7 +193,8 @@ function createSpan(ctx, originalMethod, originalArgs, message, level) {
     });
     span.stack = tracingUtil.getStackTrace(createSpan);
     span.data.log = {
-      message
+      message,
+      level
     };
     if (tracingUtil.isLogLevelAnError(level)) {
       span.ec = 1;

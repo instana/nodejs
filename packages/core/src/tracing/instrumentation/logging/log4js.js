@@ -74,7 +74,8 @@ function instrumentedLog(ctx, data, originalLog, level) {
     });
     span.stack = tracingUtil.getStackTrace(instrumentedLog);
     span.data.log = {
-      message
+      message,
+      level
     };
     if (tracingUtil.isLogLevelAnError(level)) {
       span.ec = 1;

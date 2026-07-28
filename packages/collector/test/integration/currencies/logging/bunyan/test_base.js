@@ -69,78 +69,137 @@ module.exports = function (name, version, isLatest) {
         )
       ));
 
-    it('must trace warn', () => runTest('warn', false, 'Warn message - should be traced.', controls));
+    it('must trace warn', () =>
+      runTest({
+        url: 'warn',
+        expectErroneous: false,
+        message: 'Warn message - should be traced.',
+        level: 'warn',
+        controls
+      }));
 
-    it('must trace error', () => runTest('error', true, 'Error message - should be traced.', controls));
+    it('must trace error', () =>
+      runTest({
+        url: 'error',
+        expectErroneous: true,
+        message: 'Error message - should be traced.',
+        level: 'error',
+        controls
+      }));
 
-    it('must trace fatal', () => runTest('fatal', true, 'Fatal message - should be traced.', controls));
+    it('must trace fatal', () =>
+      runTest({
+        url: 'fatal',
+        expectErroneous: true,
+        message: 'Fatal message - should be traced.',
+        level: 'fatal',
+        controls
+      }));
 
     it("must capture an error object's message", () =>
-      runTest('error-object-only', true, 'Error: This is an error.', controls));
+      runTest({
+        url: 'error-object-only',
+        expectErroneous: true,
+        message: 'Error: This is an error.',
+        level: 'error',
+        controls
+      }));
 
     it("must capture a nested error object's message", async () => {
-      await runTest('nested-error-object-only', true, 'Error: This is a nested error.', controls);
+      await runTest({
+        url: 'nested-error-object-only',
+        expectErroneous: true,
+        message: 'Error: This is a nested error.',
+        level: 'error',
+        controls
+      });
     });
 
-    it('must serialize random object', () => runTest('error-random-object-only', true, '{"foo":"[Object]"}', controls));
+    it('must serialize random object', () =>
+      runTest({
+        url: 'error-random-object-only',
+        expectErroneous: true,
+        message: '{"foo":"[Object]"}',
+        level: 'error',
+        controls
+      }));
 
     it('must serialize large object', () =>
-      runTest(
-        'error-large-object-only',
-        true,
+      runTest({
+        url: 'error-large-object-only',
+        expectErroneous: true,
         // eslint-disable-next-line max-len
-        '{"_id":"638dea148cff492d47e792ea","index":0,"guid":"01b61bfa-fe4c-4d75-9224-389c4c04de10","isActive":false,"balance":"$1,919.18","picture":"http://placehold.it/32x32","age":37,"eyeColor":"blue","name":"Manning Brady","gender":"male","company":"ZYTRAC","email":"manningbrady@zytrac.com","phone":"+1 (957) 538-2183","address":"146 Bushwick Court, Gilgo, New York, 2992","about":"Ullamco cillum reprehenderit eu proident veniam laboris tempor voluptate. Officia deserunt velit incididunt consequat la...',
+        message:
+          '{"_id":"638dea148cff492d47e792ea","index":0,"guid":"01b61bfa-fe4c-4d75-9224-389c4c04de10","isActive":false,"balance":"$1,919.18","picture":"http://placehold.it/32x32","age":37,"eyeColor":"blue","name":"Manning Brady","gender":"male","company":"ZYTRAC","email":"manningbrady@zytrac.com","phone":"+1 (957) 538-2183","address":"146 Bushwick Court, Gilgo, New York, 2992","about":"Ullamco cillum reprehenderit eu proident veniam laboris tempor voluptate. Officia deserunt velit incididunt consequat la...',
+        level: 'error',
         controls,
-        500,
-        3
-      ));
+        lengthOfMessage: 500,
+        numberOfSpans: 3
+      }));
 
     it("must capture an error object's message and an additional string", () =>
-      runTest(
-        'error-object-and-string',
-        true,
-        'Error: This is an error. -- Error message - should be traced.',
+      runTest({
+        url: 'error-object-and-string',
+        expectErroneous: true,
+        message: 'Error: This is an error. -- Error message - should be traced.',
+        level: 'error',
         controls
-      ));
+      }));
 
     it("must capture a nested error object's message and an additional string", () =>
-      runTest(
-        'nested-error-object-and-string',
-        true,
+      runTest({
+        url: 'nested-error-object-and-string',
+        expectErroneous: true,
         // eslint-disable-next-line max-len
-        'Error: This is a nested error. -- Error message - should be traced.',
+        message: 'Error: This is a nested error. -- Error message - should be traced.',
+        level: 'error',
         controls
-      ));
+      }));
 
     it('must trace random object and string', () =>
-      runTest(
-        'error-random-object-and-string',
-        true,
-        '{"foo":"[Object]"} - Error message - should be traced.',
+      runTest({
+        url: 'error-random-object-and-string',
+        expectErroneous: true,
+        message: '{"foo":"[Object]"} - Error message - should be traced.',
+        level: 'error',
         controls
-      ));
+      }));
 
     it('must trace child logger error', () =>
-      runTest('child-error', true, 'Child logger error message - should be traced.', controls));
+      runTest({
+        url: 'child-error',
+        expectErroneous: true,
+        message: 'Child logger error message - should be traced.',
+        level: 'error',
+        controls
+      }));
 
     it('must trace an error with cause property', () =>
-      runTest('error-with-cause', true, 'Error: This is the cause error', controls));
+      runTest({
+        url: 'error-with-cause',
+        expectErroneous: true,
+        message: 'Error: This is the cause error',
+        level: 'error',
+        controls
+      }));
 
     it('must trace an error with cause property and extra string', () =>
-      runTest(
-        'error-with-cause-and-extra-string',
-        true,
-        'Error: This is the cause error -- Error message - should be traced.',
+      runTest({
+        url: 'error-with-cause-and-extra-string',
+        expectErroneous: true,
+        message: 'Error: This is the cause error -- Error message - should be traced.',
+        level: 'error',
         controls
-      ));
+      }));
 
     it('must trace a nested error with cause property and extra string', () =>
-      runTest(
-        'nested-error-with-cause',
-        true,
-        'Error: This is the cause error -- Error message - should be traced.',
+      runTest({
+        url: 'nested-error-with-cause',
+        expectErroneous: true,
+        message: 'Error: This is the cause error -- Error message - should be traced.',
+        level: 'error',
         controls
-      ));
+      }));
 
     it('[suppression] should not trace', async function () {
       await trigger('warn', controls, { 'X-INSTANA-L': '0' });
@@ -212,7 +271,14 @@ module.exports = function (name, version, isLatest) {
             })
           ));
 
-        it('should trace error', () => runTest('error', true, 'Error message - should be traced.', customControls));
+        it('should trace error', () =>
+          runTest({
+            url: 'error',
+            expectErroneous: true,
+            message: 'Error message - should be traced.',
+            level: 'error',
+            controls: customControls
+          }));
       });
 
       describe('when the minimum log level is INFO', () => {
@@ -225,11 +291,31 @@ module.exports = function (name, version, isLatest) {
         });
 
         it('should trace info', () =>
-          runTest('info', false, 'Info message - must not be traced by default.', customControls));
+          runTest({
+            url: 'info',
+            expectErroneous: false,
+            message: 'Info message - must not be traced by default.',
+            level: 'info',
+            controls: customControls
+          }));
 
-        it('should trace warn', () => runTest('warn', false, 'Warn message - should be traced.', customControls));
+        it('should trace warn', () =>
+          runTest({
+            url: 'warn',
+            expectErroneous: false,
+            message: 'Warn message - should be traced.',
+            level: 'warn',
+            controls: customControls
+          }));
 
-        it('should trace error', () => runTest('error', true, 'Error message - should be traced.', customControls));
+        it('should trace error', () =>
+          runTest({
+            url: 'error',
+            expectErroneous: true,
+            message: 'Error message - should be traced.',
+            level: 'error',
+            controls: customControls
+          }));
       });
 
       describe('when the minimum log level is OFF', () => {
@@ -282,7 +368,7 @@ module.exports = function (name, version, isLatest) {
     });
   });
 
-  function runTest(url, expectErroneous, message, controls, lengthOfMessage, numberOfSpans) {
+  function runTest({ url, expectErroneous, message, level, controls, lengthOfMessage, numberOfSpans }) {
     return trigger(url, controls).then(async () => {
       return retry(async () => {
         const spans = await agentControls.getSpans();
@@ -299,7 +385,7 @@ module.exports = function (name, version, isLatest) {
         ]);
 
         expectAtLeastOneMatching(spans, span => {
-          checkBunyanSpan(span, entrySpan, expectErroneous, message, controls, lengthOfMessage);
+          checkBunyanSpan(span, entrySpan, expectErroneous, message, level, controls, lengthOfMessage);
         });
 
         expectAtLeastOneMatching(spans, span => {
@@ -313,7 +399,7 @@ module.exports = function (name, version, isLatest) {
     });
   }
 
-  function checkBunyanSpan(span, parent, erroneous, message, controls, lengthOfMessage) {
+  function checkBunyanSpan(span, parent, erroneous, message, level, controls, lengthOfMessage) {
     expect(span.t).to.equal(parent.t);
     expect(span.p).to.equal(parent.s);
     expect(span.k).to.equal(constants.EXIT);
@@ -326,6 +412,7 @@ module.exports = function (name, version, isLatest) {
     expect(span.data).to.exist;
     expect(span.data.log).to.exist;
     expect(span.data.log.message).to.equal(message);
+    expect(span.data.log.level).to.equal(level);
 
     if (lengthOfMessage) {
       expect(span.data.log.message.length).to.equal(lengthOfMessage);

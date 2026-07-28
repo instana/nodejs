@@ -89,7 +89,8 @@ function shimGenLog(originalGenLog) {
           }
 
           span.data.log = {
-            message
+            message,
+            level: levelName
           };
 
           if (tracingUtil.isLogLevelAnError(levelName)) {

@@ -118,7 +118,8 @@ function instrumentedLog(ctx, originalLog, originalArgs, level) {
     }
 
     span.data.log = {
-      message
+      message,
+      level
     };
 
     if (tracingUtil.isLogLevelAnError(level)) {
