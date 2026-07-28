@@ -35,6 +35,7 @@ exports.init = function init(config) {
 
 exports.updateConfig = config => {
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
+  disableW3cPropagation = config.tracing.disableW3cPropagation;
 };
 
 exports.activate = function activate(_config) {
