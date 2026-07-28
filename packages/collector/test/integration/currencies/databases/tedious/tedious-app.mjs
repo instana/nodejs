@@ -32,6 +32,14 @@ if (!tediousPath.includes(expectedLocalPath)) {
   );
 }
 
+const localNodeModules = tediousPath.substring(0, tediousPath.lastIndexOf('node_modules') + 'node_modules'.length);
+const tediousVersion = require(resolve(localNodeModules, 'tedious', 'package.json')).version;
+const otelTediousVersion = require(resolve(localNodeModules, '@opentelemetry', 'instrumentation-tedious', 'package.json')).version;
+
+console.log('[tedious-app] tedious version:', tediousVersion);
+console.log('[tedious-app] tedious resolved path:', tediousPath);
+console.log('[tedious-app] @opentelemetry/instrumentation-tedious version:', otelTediousVersion);
+
 const Connection = tedious.Connection;
 const Request = tedious.Request;
 const app = express();
