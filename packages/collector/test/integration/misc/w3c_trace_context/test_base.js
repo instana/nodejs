@@ -1007,6 +1007,149 @@ module.exports = function (name, version, isLatest, mode) {
           });
         }));
     });
+
+    describe('agent yaml: disable-w3c-propagation', () => {
+      const { AgentStubControls } = require('@_local/collector/test/apps/agentStubControls');
+      const agentStubControls = new AgentStubControls();
+      let instanaAppControlsAgentW3c;
+
+      before(async () => {
+        await agentStubControls.startAgent({
+          w3cDisableConfig: { 'disable-w3c-propagation': true }
+        });
+        instanaAppControlsAgentW3c = new ProcessControls({
+          dirname: __dirname,
+          agentControls: agentStubControls,
+          http2: isHTTP2,
+          env: {
+            APM_VENDOR: 'instana',
+            DOWNSTREAM_PORT: otherVendorAppPort,
+            APP_USES_HTTP2: isHTTP2
+          }
+        });
+        await instanaAppControlsAgentW3c.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await instanaAppControlsAgentW3c.stop();
+        await agentStubControls.stopAgent();
+      });
+
+      it('should not propagate traceparent/tracestate headers downstream', () =>
+        startRequest({ app: instanaAppControlsAgentW3c, depth: 1 }).then(response => {
+          response = response && response.body ? JSON.parse(response.body) : response;
+          expect(response.w3cTraceContext).to.be.an('object');
+          expect(response.w3cTraceContext.receivedHeaders.traceparent).to.not.exist;
+          expect(response.w3cTraceContext.receivedHeaders.tracestate).to.not.exist;
+          return retryUntilSpansMatch(agentStubControls, spans => {
+            const instanaHttpEntryRoot = verifyHttpRootEntry({
+              spans,
+              url: '/start',
+              instanaAppControls: instanaAppControlsAgentW3c
+            });
+            verifyHttpExit(spans, instanaHttpEntryRoot, '/end');
+          });
+        }));
+    });
+
+    describe('agent yaml: disable-w3c-correlation', () => {
+      const { AgentStubControls } = require('@_local/collector/test/apps/agentStubControls');
+      const agentStubControls = new AgentStubControls();
+      let instanaAppControlsAgentW3c;
+
+      before(async () => {
+        await agentStubControls.startAgent({
+          w3cDisableConfig: { 'disable-w3c-correlation': true }
+        });
+        instanaAppControlsAgentW3c = new ProcessControls({
+          dirname: __dirname,
+          agentControls: agentStubControls,
+          http2: isHTTP2,
+          env: {
+            APM_VENDOR: 'instana',
+            DOWNSTREAM_PORT: otherVendorAppPort,
+            APP_USES_HTTP2: isHTTP2
+          }
+        });
+        await instanaAppControlsAgentW3c.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await instanaAppControlsAgentW3c.stop();
+        await agentStubControls.stopAgent();
+      });
+
+      it('should not pick up W3C trace context from incoming headers', () =>
+        startRequest({
+          app: instanaAppControlsAgentW3c,
+          depth: 1,
+          withSpecHeaders: 'valid-sampled-no-random-trace-id'
+        }).then(response => {
+          response = response && response.body ? JSON.parse(response.body) : response;
+          expect(response.w3cTraceContext).to.be.an('object');
+          return retryUntilSpansMatch(agentStubControls, spans => {
+            const instanaHttpEntryRoot = verifyHttpRootEntry({
+              spans,
+              url: '/start',
+              instanaAppControls: instanaAppControlsAgentW3c
+            });
+            // W3C correlation disabled: Instana must NOT adopt the foreign trace ID
+            expect(instanaHttpEntryRoot.t).to.not.equal(foreignTraceIdRightHalf);
+            expect(instanaHttpEntryRoot.p).to.not.equal(foreignParentId);
+            verifyHttpExit(spans, instanaHttpEntryRoot, '/end');
+          });
+        }));
+    });
+
+    describe('agent yaml: disable-w3c (shorthand)', () => {
+      const { AgentStubControls } = require('@_local/collector/test/apps/agentStubControls');
+      const agentStubControls = new AgentStubControls();
+      let instanaAppControlsAgentW3c;
+
+      before(async () => {
+        await agentStubControls.startAgent({
+          w3cDisableConfig: { 'disable-w3c': true }
+        });
+        instanaAppControlsAgentW3c = new ProcessControls({
+          dirname: __dirname,
+          agentControls: agentStubControls,
+          http2: isHTTP2,
+          env: {
+            APM_VENDOR: 'instana',
+            DOWNSTREAM_PORT: otherVendorAppPort,
+            APP_USES_HTTP2: isHTTP2
+          }
+        });
+        await instanaAppControlsAgentW3c.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await instanaAppControlsAgentW3c.stop();
+        await agentStubControls.stopAgent();
+      });
+
+      it('should ignore incoming W3C headers and not propagate W3C headers downstream', () =>
+        startRequest({
+          app: instanaAppControlsAgentW3c,
+          depth: 1,
+          withSpecHeaders: 'valid-sampled-no-random-trace-id'
+        }).then(response => {
+          response = response && response.body ? JSON.parse(response.body) : response;
+          expect(response.w3cTraceContext).to.be.an('object');
+          expect(response.w3cTraceContext.receivedHeaders.traceparent).to.not.exist;
+          expect(response.w3cTraceContext.receivedHeaders.tracestate).to.not.exist;
+          return retryUntilSpansMatch(agentStubControls, spans => {
+            const instanaHttpEntryRoot = verifyHttpRootEntry({
+              spans,
+              url: '/start',
+              instanaAppControls: instanaAppControlsAgentW3c
+            });
+            expect(instanaHttpEntryRoot.t).to.not.equal(foreignTraceIdRightHalf);
+            expect(instanaHttpEntryRoot.p).to.not.equal(foreignParentId);
+            verifyHttpExit(spans, instanaHttpEntryRoot, '/end');
+          });
+        }));
+    });
   });
 };
 

@@ -1271,6 +1271,160 @@ describe('unannounced state', () => {
       });
     });
 
+    describe('applyW3cDisableConfiguration', () => {
+      it('should apply disable-w3c-correlation from agent response', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'disable-w3c-correlation': true
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                disableW3cCorrelation: true,
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should apply disable-w3c-propagation from agent response', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'disable-w3c-propagation': true
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                disableW3cPropagation: true,
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should apply disable-w3c (shorthand) and set both flags', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'disable-w3c': true
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                disableW3cCorrelation: true,
+                disableW3cPropagation: true,
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should apply all three W3C flags when all are set', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'disable-w3c-correlation': true,
+              'disable-w3c-propagation': true,
+              'disable-w3c': true
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                disableW3cCorrelation: true,
+                disableW3cPropagation: true,
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should not apply W3C config when value is false', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'disable-w3c-correlation': false,
+              'disable-w3c-propagation': false
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should ignore non-boolean W3C config values', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'disable-w3c-correlation': 'yes',
+              'disable-w3c-propagation': 1
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should not apply W3C config when tracing.global is missing', done => {
+        prepareAnnounceResponse({
+          tracing: {}
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({});
+            done();
+          }
+        });
+      });
+
+      it('should not apply W3C config when tracing is missing', done => {
+        prepareAnnounceResponse({});
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({});
+            done();
+          }
+        });
+      });
+    });
+
     describe('OTLP exporter configuration', () => {
       it('should apply OTLP exporter configuration when enabled is true', done => {
         prepareAnnounceResponse({
