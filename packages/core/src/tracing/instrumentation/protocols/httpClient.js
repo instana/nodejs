@@ -229,6 +229,8 @@ function instrument(coreModule, forceHttps) {
 
       span.stack = tracingUtil.getStackTrace(request);
 
+      let requestHeader;
+
       const boundCallback = cls.ns.bind(function boundCallback(res) {
         span.data.http = {
           operation: clientRequest.method,
@@ -237,9 +239,21 @@ function instrument(coreModule, forceHttps) {
           params
         };
 
-        const headers = captureRequestHeaders(options, clientRequest, res);
-        if (headers) {
-          span.data.http.header = headers;
+        const responseHeader = captureResponseHeaders(res);
+        const combinedHeader = mergeExtraHeadersFromIncomingMessage(
+          requestHeader ? Object.assign({}, requestHeader) : undefined,
+          res,
+          extraHttpHeadersToCapture
+        );
+
+        if (requestHeader) {
+          span.data.http.requestHeader = requestHeader;
+        }
+        if (responseHeader) {
+          span.data.http.responseHeader = responseHeader;
+        }
+        if (combinedHeader) {
+          span.data.http.header = combinedHeader;
         }
 
         span.d = Date.now() - span.ts;
@@ -262,6 +276,8 @@ function instrument(coreModule, forceHttps) {
       try {
         instanaHeadersHaveBeenAdded = tryToAddHeadersToOpts(options, span, w3cTraceContext);
         clientRequest = originalRequest.apply(coreModule, originalArgs);
+        // Capture outgoing request headers now that clientRequest exists and before any async response arrives.
+        requestHeader = captureRequestHeaders(options, clientRequest);
         removeInstanaHeadersFromOpts(options);
       } catch (e) {
         removeInstanaHeadersFromOpts(options);
@@ -466,9 +482,12 @@ function setW3cHeadersOnRequest(clientRequest, w3cTraceContext) {
   }
 }
 
-function captureRequestHeaders(options, clientRequest, response) {
+function captureRequestHeaders(options, clientRequest) {
   let headers = getExtraHeadersFromOptions(options, extraHttpHeadersToCapture);
   headers = mergeExtraHeadersFromServerResponseOrClientRequest(headers, clientRequest, extraHttpHeadersToCapture);
-  headers = mergeExtraHeadersFromIncomingMessage(headers, response, extraHttpHeadersToCapture);
   return headers;
+}
+
+function captureResponseHeaders(response) {
+  return mergeExtraHeadersFromIncomingMessage(undefined, response, extraHttpHeadersToCapture);
 }

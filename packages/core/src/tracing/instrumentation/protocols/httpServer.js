@@ -86,13 +86,16 @@ function shimEmit(realEmit) {
       if (urlParts.length >= 2) {
         urlParts[1] = filterParams(urlParts[1]);
       }
+
+      const requestHeader = getExtraHeadersFromMessage(req, extraHttpHeadersToCapture);
       const spanData = {
         http: {
           operation: req.method,
           endpoints: sanitizeUrl(urlParts.shift()),
           params: urlParts.length > 0 ? urlParts.join('?') : undefined,
           connection: req.headers.host,
-          header: getExtraHeadersFromMessage(req, extraHttpHeadersToCapture)
+          header: requestHeader ? Object.assign({}, requestHeader) : undefined,
+          requestHeader
         }
       };
 
@@ -180,6 +183,11 @@ function shimEmit(realEmit) {
           span.data.http.status = res.statusCode;
           span.data.http.header = mergeExtraHeadersFromServerResponseOrClientRequest(
             span.data.http.header,
+            res,
+            extraHttpHeadersToCapture
+          );
+          span.data.http.responseHeader = mergeExtraHeadersFromServerResponseOrClientRequest(
+            undefined,
             res,
             extraHttpHeadersToCapture
           );

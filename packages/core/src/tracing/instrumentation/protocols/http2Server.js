@@ -106,13 +106,16 @@ function shimEmit(realEmit) {
       if (pathParts.length >= 2) {
         pathParts[1] = filterParams(pathParts[1]);
       }
+
+      const requestHeader = getExtraHeadersFromNormalizedObjectLiteral(headers, extraHttpHeadersToCapture);
       const spanData = {
         http: {
           operation: method,
           endpoints: sanitizeUrl(pathParts.shift()),
           params: pathParts.length > 0 ? pathParts.join('?') : undefined,
           connection: authority,
-          header: getExtraHeadersFromNormalizedObjectLiteral(headers, extraHttpHeadersToCapture)
+          header: requestHeader,
+          requestHeader
         }
       };
 
@@ -167,8 +170,12 @@ function shimEmit(realEmit) {
           // take over the span) but did not actually transmit this span.
           span.data.http = span.data.http || {};
           span.data.http.status = status;
+
+          const responseHeader = getExtraHeadersFromNormalizedObjectLiteral(resHeaders, extraHttpHeadersToCapture);
+          span.data.http.responseHeader = responseHeader;
+
           span.data.http.header = mergeExtraHeadersCaseInsensitive(
-            span.data.http.header,
+            span.data.http.requestHeader,
             resHeaders,
             extraHttpHeadersToCapture
           );
