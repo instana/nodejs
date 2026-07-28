@@ -134,6 +134,7 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
     ignoreEndpoints ||
     disable ||
     stackTraceConfig ||
+    w3cDisableConfig ||
     otlpExporter ||
     httpExitConfig
   ) {
