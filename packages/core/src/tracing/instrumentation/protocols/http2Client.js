@@ -39,6 +39,7 @@ exports.updateConfig = config => {
 
 exports.activate = function activate(_config) {
   extraHttpHeadersToCapture = _config.tracing.http.extraHttpHeadersToCapture;
+  disableW3cPropagation = _config.tracing.disableW3cPropagation;
 
   isActive = true;
 };

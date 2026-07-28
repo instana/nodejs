@@ -268,6 +268,7 @@ exports.activate = function activate(_config = config) {
     coreUtil.activate(_config);
     tracingUtil.activate(_config);
     spanBuffer.activate(_config);
+    tracingHeaders.activate(_config);
     secrets.activate(_config);
     opentracing.activate();
     sdk.activate();
