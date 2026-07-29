@@ -27,6 +27,13 @@ exports.init = function (config) {
 };
 
 /**
+ * @param {import('../config').InstanaConfig} config
+ */
+exports.activate = function (config) {
+  disableW3cCorrelation = config.tracing.disableW3cCorrelation;
+};
+
+/**
  * The functions in this module return an object literal with the following shape:
  *
  * @typedef {Object} TracingHeaders

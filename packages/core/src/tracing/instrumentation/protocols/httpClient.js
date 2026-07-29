@@ -43,10 +43,12 @@ function logDeprecatedWarning() {
 }
 exports.updateConfig = function updateConfig(config) {
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
+  disableW3cPropagation = config.tracing.disableW3cPropagation;
 };
 
 exports.activate = function activate(_config) {
   extraHttpHeadersToCapture = _config.tracing.http.extraHttpHeadersToCapture;
+  disableW3cPropagation = _config.tracing.disableW3cPropagation;
 
   isActive = true;
 };

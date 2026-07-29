@@ -66,6 +66,10 @@ class AgentStubControls {
       env.AGENT_STUB_STACK_TRACE_CONFIG = JSON.stringify(opts.stackTraceConfig);
     }
 
+    if (opts.w3cDisableConfig) {
+      env.AGENT_STUB_W3C_DISABLE_CONFIG = JSON.stringify(opts.w3cDisableConfig);
+    }
+
     if (opts.otlpExporter) {
       env.AGENT_STUB_OTLP_EXPORTER = JSON.stringify(opts.otlpExporter);
     }

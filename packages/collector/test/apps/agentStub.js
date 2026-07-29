@@ -51,6 +51,8 @@ const ignoreEndpoints = process.env.AGENT_STUB_IGNORE_ENDPOINTS && JSON.parse(pr
 const disable = process.env.AGENT_STUB_DISABLE_TRACING && JSON.parse(process.env.AGENT_STUB_DISABLE_TRACING);
 const stackTraceConfig =
   process.env.AGENT_STUB_STACK_TRACE_CONFIG && JSON.parse(process.env.AGENT_STUB_STACK_TRACE_CONFIG);
+const w3cDisableConfig =
+  process.env.AGENT_STUB_W3C_DISABLE_CONFIG && JSON.parse(process.env.AGENT_STUB_W3C_DISABLE_CONFIG);
 const otlpExporter = process.env.AGENT_STUB_OTLP_EXPORTER && JSON.parse(process.env.AGENT_STUB_OTLP_EXPORTER);
 const httpExitConfig = process.env.AGENT_STUB_HTTP_EXIT_CONFIG && JSON.parse(process.env.AGENT_STUB_HTTP_EXIT_CONFIG);
 
@@ -132,6 +134,7 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
     ignoreEndpoints ||
     disable ||
     stackTraceConfig ||
+    w3cDisableConfig ||
     otlpExporter ||
     httpExitConfig
   ) {
@@ -160,6 +163,10 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
     if (stackTraceConfig) {
       response.tracing.global = response.tracing.global || {};
       deepMerge(response.tracing.global, stackTraceConfig);
+    }
+    if (w3cDisableConfig) {
+      response.tracing.global = response.tracing.global || {};
+      deepMerge(response.tracing.global, w3cDisableConfig);
     }
     if (otlpExporter) {
       response.tracing.otlp = otlpExporter;

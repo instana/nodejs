@@ -47,8 +47,17 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @property {import('@instana/core/src/config/types').IgnoreEndpoints} [ignore-endpoints]
  * @property {boolean} [span-batching-enabled]
  * @property {import('@instana/core/src/config/types').Disable} [disable]
- * @property {StackTraceConfig} [global]
+ * @property {GlobalTracingConfig} [global]
  * @property {HTTPTracingConfig} [http]
+ */
+
+/**
+ * @typedef {Object} GlobalTracingConfig
+ * @property {string} [stack-trace] - Stack trace mode ('error'|'all'|'none')
+ * @property {number} [stack-trace-length] - Maximum number of stack trace frames to capture
+ * @property {boolean} [disable-w3c-correlation]
+ * @property {boolean} [disable-w3c-propagation]
+ * @property {boolean} [disable-w3c]
  */
 
 /**
@@ -61,12 +70,6 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @typedef {Object} HTTPTracingConfig
  *  @property {Array.<string>} [extra-http-headers]
  * @property {HTTPExitConfig} [exit]
- */
-
-/**
- * @typedef {Object} StackTraceConfig
- * @property {string} [stack-trace] - Stack trace mode ('error'|'all'|'none')
- * @property {number} [stack-trace-length] - Maximum number of stack trace frames to capture
  */
 
 /**
@@ -152,6 +155,7 @@ function applyAgentConfiguration(agentResponse) {
   applyIgnoreEndpointsConfiguration(agentResponse);
   applyStackTraceConfiguration(agentResponse);
   applyDisableConfiguration(agentResponse);
+  applyW3cDisableConfiguration(agentResponse);
 }
 
 /**
@@ -329,6 +333,32 @@ function applyStackTraceConfiguration(agentResponse) {
     } else {
       logger.warn(`Invalid stack-trace-length value from agent: ${stackTraceLengthValidation.error}`);
     }
+  }
+}
+
+/**
+ * Applies W3C trace context configuration from the agent response.
+ * Reads `disable-w3c-correlation`, `disable-w3c-propagation`, and the shorthand `disable-w3c`
+ * from `tracing.global`. Only `true` (strict boolean) is accepted.
+ *
+ * @param {AgentAnnounceResponse} agentResponse
+ */
+function applyW3cDisableConfiguration(agentResponse) {
+  const globalConfig = agentResponse?.tracing?.global;
+  if (!globalConfig) return;
+
+  const disableW3cShorthand = globalConfig['disable-w3c'] === true;
+  const disableW3cCorrelation = disableW3cShorthand || globalConfig['disable-w3c-correlation'] === true;
+  const disableW3cPropagation = disableW3cShorthand || globalConfig['disable-w3c-propagation'] === true;
+
+  if (disableW3cCorrelation) {
+    ensureNestedObjectExists(agentOpts.config, ['tracing']);
+    agentOpts.config.tracing.disableW3cCorrelation = true;
+  }
+
+  if (disableW3cPropagation) {
+    ensureNestedObjectExists(agentOpts.config, ['tracing']);
+    agentOpts.config.tracing.disableW3cPropagation = true;
   }
 }
 
