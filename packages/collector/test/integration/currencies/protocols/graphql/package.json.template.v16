@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@apollo/server": "latest",
+    "@as-integrations/express5": "latest"
+  }
+}

@@ -5,6 +5,7 @@
 'use strict';
 
 const expect = require('chai').expect;
+const semver = require('semver');
 
 const constants = require('@_local/core').tracing.constants;
 const supportedVersion = require('@_local/core').tracing.supportedVersion;
@@ -25,6 +26,11 @@ module.exports = function (name, version, isLatest, mode) {
   this.timeout(config.getTestTimeout() * 5);
 
   if (!supportedVersion(process.versions.node)) {
+    return;
+  }
+
+  if (mode === 'apollo' && semver.major(version) >= 17) {
+    it.skip(`Apollo mode is not supported for graphql v${semver.major(version)}`);
     return;
   }
 
@@ -322,7 +328,7 @@ module.exports = function (name, version, isLatest, mode) {
       before(async () => {
         serverControls = new ProcessControls({
           dirname: __dirname,
-          appName: 'apolloServer',
+          appName: mode === 'raw' ? 'rawGraphQLServer' : 'apolloServer',
           useGlobalAgent: true,
           env: {
             LIBRARY_VERSION: version,
