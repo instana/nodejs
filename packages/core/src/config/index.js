@@ -185,6 +185,7 @@ let defaults = {
     disableW3cCorrelation: false,
     disableW3cTraceCorrelation: false,
     disableW3cPropagation: false,
+    disableW3cBaggage: false,
     kafka: {
       traceCorrelation: true
     },
@@ -376,6 +377,7 @@ function normalizeTracingConfig({ userConfig = {}, defaultConfig = {}, finalConf
   normalizeSpanBatchingEnabled({ userConfig, defaultConfig, finalConfig });
   normalizeDisableW3cTraceCorrelation({ userConfig, defaultConfig, finalConfig });
   normalizeDisableW3cPropagation({ userConfig, defaultConfig, finalConfig });
+  normalizeDisableW3cBaggage({ userConfig, defaultConfig, finalConfig });
   normalizeDisableW3c({ userConfig, defaultConfig, finalConfig });
   normalizeTracingKafka({ userConfig, defaultConfig, finalConfig });
   normalizeAllowRootExitSpan({ userConfig, defaultConfig, finalConfig });
@@ -937,6 +939,29 @@ function normalizeDisableW3cPropagation({ userConfig = {}, defaultConfig = {}, f
     source,
     value,
     envVarName: 'INSTANA_TRACING_DISABLE_W3C_PROPAGATION'
+  });
+}
+
+/**
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
+ */
+function normalizeDisableW3cBaggage({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
+  const { value, source } = util.resolve(
+    {
+      envValue: 'INSTANA_TRACING_DISABLE_W3C_BAGGAGE',
+      inCodeValue: userConfig.tracing.disableW3cBaggage,
+      defaultValue: defaultConfig.tracing.disableW3cBaggage
+    },
+    [validators.validateTruthyBoolean]
+  );
+
+  configStore.set('config.tracing.disableW3cBaggage', { source });
+  finalConfig.tracing.disableW3cBaggage = value;
+  util.log({
+    configPath: 'config.tracing.disableW3cBaggage',
+    source,
+    value,
+    envVarName: 'INSTANA_TRACING_DISABLE_W3C_BAGGAGE'
   });
 }
 

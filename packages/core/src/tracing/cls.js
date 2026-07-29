@@ -21,6 +21,7 @@ const currentSpanKey = 'com.instana.span';
 const reducedSpanKey = 'com.instana.reduced';
 const tracingLevelKey = 'com.instana.tl';
 const w3cTraceContextKey = 'com.instana.w3ctc';
+const baggageKey = 'com.instana.baggage';
 
 // eslint-disable-next-line no-undef-init
 /** @type {String} */
@@ -515,6 +516,22 @@ function getW3cTraceContext() {
   return ns.get(w3cTraceContextKey);
 }
 
+/**
+ * Stores the raw W3C baggage header value in CLS so it is available across async boundaries.
+ * @param {string | null} baggage
+ */
+function setBaggage(baggage) {
+  ns.set(baggageKey, baggage);
+}
+
+/**
+ * Returns the raw W3C baggage header value from CLS.
+ * @returns {string | null}
+ */
+function getBaggage() {
+  return ns.get(baggageKey);
+}
+
 /*
  * Determine if we're currently tracing or not.
  */
@@ -731,6 +748,7 @@ module.exports = {
   reducedSpanKey,
   tracingLevelKey,
   w3cTraceContextKey,
+  baggageKey,
   ns,
   init,
   startSpan,
@@ -741,6 +759,8 @@ module.exports = {
   getReducedSpan,
   setW3cTraceContext,
   getW3cTraceContext,
+  setBaggage,
+  getBaggage,
   isTracing,
   setTracingLevel,
   tracingLevel,

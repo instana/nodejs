@@ -37,6 +37,7 @@ exports.w3cTraceParent = 'traceparent';
 exports.w3cTraceState = 'tracestate';
 exports.w3cInstana = 'in';
 exports.w3cInstanaEquals = `${exports.w3cInstana}=`;
+exports.w3cBaggage = 'baggage';
 
 exports.ENTRY = 1;
 exports.EXIT = 2;
