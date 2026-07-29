@@ -24,7 +24,20 @@ const subscriptionUpdate = 'subscription-update';
 exports.init = function init(config) {
   logger = config.logger;
 
+  // For graphql < v17: hook into the execution file as it is loaded (CJS).
   hook.onFileLoad(/\/graphql\/execution\/execute.js/, instrumentExecute);
+
+  // For graphql >= v17: ships as module-sync ESM (index.mjs) on Node 22+.
+  // require('graphql') resolves to index.mjs
+  // graphqlExports.defaultHarness is the live harness.mjs object that graphql() calls directly
+  hook.onModuleLoad('graphql', graphqlExports => {
+    if (!graphqlExports || typeof graphqlExports.defaultHarness !== 'object') return;
+    const harness = graphqlExports.defaultHarness;
+    if (typeof harness.execute === 'function' && !harness.execute.__wrapped) {
+      shimmer.wrap(harness, 'execute', shimExecuteFunction.bind(null));
+    }
+  });
+
   hook.onFileLoad(/\/@apollo\/gateway\/dist\/executeQueryPlan.js/, instrumentApolloGatewayExecuteQueryPlan);
   hook.onModuleLoad('@apollo/federation', logDeprecatedWarning);
 };
