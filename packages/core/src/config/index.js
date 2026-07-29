@@ -70,6 +70,7 @@ let currentConfig;
  * @property {HTTPTracingOptions} [http]
  * @property {import('../config/types').Disable} [disable]
  * @property {boolean} [spanBatchingEnabled]
+ * @property {boolean} [disableW3c]
  * @property {boolean} [disableW3cCorrelation]
  * @property {boolean} [disableW3cTraceCorrelation]
  * @property {boolean} [disableW3cPropagation]
@@ -180,6 +181,7 @@ let defaults = {
     stackTraceLength: DEFAULT_STACK_TRACE_LENGTH,
     disable: {},
     spanBatchingEnabled: false,
+    disableW3c: false,
     disableW3cCorrelation: false,
     disableW3cTraceCorrelation: false,
     disableW3cPropagation: false,
@@ -941,10 +943,11 @@ function normalizeDisableW3cPropagation({ userConfig = {}, defaultConfig = {}, f
 /**
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
-function normalizeDisableW3c({ finalConfig = {} } = {}) {
+function normalizeDisableW3c({ userConfig = {}, finalConfig = {} } = {}) {
   const { value, source } = util.resolve(
     {
       envValue: 'INSTANA_TRACING_DISABLE_W3C',
+      inCodeValue: userConfig.tracing.disableW3c,
       defaultValue: undefined
     },
     [validators.validateTruthyBoolean]
