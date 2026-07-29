@@ -181,6 +181,7 @@ let defaults = {
     stackTraceLength: DEFAULT_STACK_TRACE_LENGTH,
     disable: {},
     spanBatchingEnabled: false,
+    disableW3c: false,
     disableW3cCorrelation: false,
     disableW3cTraceCorrelation: false,
     disableW3cPropagation: false,
