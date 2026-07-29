@@ -20,6 +20,8 @@ class OtlpConfigContext {
     this._pid = null;
     /** @type {string | null} */
     this._serviceName = null;
+    /** @type {string | null} */
+    this._serviceVersion = null;
   }
 
   /**
@@ -54,6 +56,20 @@ class OtlpConfigContext {
 
   get serviceName() {
     return this._serviceName;
+  }
+
+  /**
+   * @param {string} serviceVersion
+   */
+  setServiceVersion(serviceVersion) {
+    if (!serviceVersion || this._serviceVersion === serviceVersion) {
+      return;
+    }
+    this._serviceVersion = serviceVersion;
+  }
+
+  get serviceVersion() {
+    return this._serviceVersion;
   }
 }
 
