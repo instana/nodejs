@@ -16,13 +16,12 @@ const require = createRequire(import.meta.url);
 
 import bodyParser from 'body-parser';
 import express from 'express';
+import { graphql } from 'graphql';
 import morgan from 'morgan';
 import amqp from 'amqplib';
 
 const schemaFactory = require('./schema.js');
 const { schema } = schemaFactory();
-const graphQL = require('graphql');
-const graphql = graphQL.graphql;
 
 const portFactory = require('@_local/collector/test/test_util/app-port');
 const port = portFactory();
