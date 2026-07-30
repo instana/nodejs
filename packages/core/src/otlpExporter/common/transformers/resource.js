@@ -5,8 +5,6 @@
 'use strict';
 
 const os = require('os');
-const { randomUUID } = require('crypto');
-
 const ctx = require('../context');
 const { INSTRUMENTATION_SCOPE_NAME } = require('../constants');
 const { MAPPINGS } = require('../semconv/base/mappings');
@@ -21,7 +19,6 @@ try {
   // ignore the error
 }
 
-const generatedServiceInstanceId = randomUUID();
 const SDK_LANGUAGE = 'nodejs';
 const SDK_NAME = 'instana';
 
@@ -35,7 +32,6 @@ const INSTRUMENTATION_SCOPE = {
  * @property {Record<string, any>} [data]
  * @property {Record<string, any>} [resource]
  * @property {Record<string, any>} [f]
- * @property {string} [version]
  */
 
 const resourceMapper = {
@@ -46,24 +42,6 @@ const resourceMapper = {
   serviceName(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
     return resource[RESOURCE.SERVICE_NAME] || ctx.serviceName;
-  },
-
-  /**
-   * @param {RawPayload} rawPayload
-   * @returns {string | undefined}
-   */
-  serviceVersion(rawPayload) {
-    const resource = rawPayload.data?.resource || rawPayload.resource || {};
-    return resource[RESOURCE.SERVICE_VERSION] || ctx.serviceVersion || undefined;
-  },
-
-  /**
-   * @param {RawPayload} rawPayload
-   * @returns {string | undefined}
-   */
-  serviceInstanceId(rawPayload) {
-    const resource = rawPayload.data?.resource || rawPayload.resource || {};
-    return resource[RESOURCE.SERVICE_INSTANCE_ID] || generatedServiceInstanceId;
   },
 
   /**
@@ -141,7 +119,6 @@ const resourceMapper = {
 
     return resource[RESOURCE.HOST_ID] || metadata.h;
   },
-
   /**
    * @param {RawPayload} rawPayload
    * @returns {string | undefined}
@@ -154,24 +131,6 @@ const resourceMapper = {
     }
 
     return normalizeOsType(os.platform());
-  },
-
-  /**
-   * @param {RawPayload} rawPayload
-   * @returns {string | undefined}
-   */
-  containerId(rawPayload) {
-    const resource = rawPayload.data?.resource || rawPayload.resource || {};
-    return resource[RESOURCE.CONTAINER_ID];
-  },
-
-  /**
-   * @param {RawPayload} rawPayload
-   * @returns {string | undefined}
-   */
-  k8sPodUid(rawPayload) {
-    const resource = rawPayload.data?.resource || rawPayload.resource || {};
-    return resource[RESOURCE.K8S_POD_UID];
   }
 };
 
@@ -190,16 +149,6 @@ function extractResourceAttributes(rawPayload) {
     {
       otlp: OTLP.resource.SERVICE_NAME,
       transform: resourceMapper.serviceName,
-      valueType: 'string'
-    },
-    {
-      otlp: OTLP.resource.SERVICE_VERSION,
-      transform: resourceMapper.serviceVersion,
-      valueType: 'string'
-    },
-    {
-      otlp: OTLP.resource.SERVICE_INSTANCE_ID,
-      transform: resourceMapper.serviceInstanceId,
       valueType: 'string'
     },
     {
@@ -230,21 +179,6 @@ function extractResourceAttributes(rawPayload) {
     {
       otlp: OTLP.resource.HOST_NAME,
       transform: resourceMapper.hostName,
-      valueType: 'string'
-    },
-    {
-      otlp: OTLP.resource.HOST_ID,
-      transform: resourceMapper.hostId,
-      valueType: 'string'
-    },
-    {
-      otlp: OTLP.resource.CONTAINER_ID,
-      transform: resourceMapper.containerId,
-      valueType: 'string'
-    },
-    {
-      otlp: OTLP.resource.K8S_POD_UID,
-      transform: resourceMapper.k8sPodUid,
       valueType: 'string'
     }
   ];

@@ -23,12 +23,9 @@ function init(config) {
 /**
  * @param {any} metrics
  */
-function resolveServiceIdentity(metrics) {
+function resolveServiceName(metrics) {
   if (metrics?.name && typeof metrics.name === 'string' && !otlpCtx.serviceName) {
     otlpCtx.setServiceName(metrics.name);
-  }
-  if (metrics?.version && typeof metrics.version === 'string' && !otlpCtx.serviceVersion) {
-    otlpCtx.setServiceVersion(metrics.version);
   }
 }
 
@@ -44,9 +41,8 @@ function convert(metrics) {
       return { resourceMetrics: [] };
     }
 
-    // Service identity(name + version) resolution, it not come from first metric once it set it
-    // will be used for all metrics
-    resolveServiceIdentity(metrics);
+    // Service name resolution, it not come from first metric once it set it will be used for all metrics
+    resolveServiceName(metrics);
 
     // All metrics share the same resource, so we can extract the attributes from the first one
     const resource = transformers.resource.extractResourceAttributes(/** @type {any} */ (metricsArray[0]));

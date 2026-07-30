@@ -57,13 +57,6 @@ describe('metrics/converters/otlp', () => {
 
         const result = converter.transform(input);
 
-        const attrs = result.resourceMetrics[0].resource.attributes;
-        const instanceIdAttr = attrs.find(a => a.key === 'service.instance.id');
-        expect(instanceIdAttr, 'service.instance.id should be present').to.exist;
-        expect(instanceIdAttr.value.stringValue).to.match(/^[0-9a-f-]{36}$/);
-
-        result.resourceMetrics[0].resource.attributes = attrs.filter(a => a.key !== 'service.instance.id');
-
         expect(result).to.deep.equal(expectedOutput);
       });
 

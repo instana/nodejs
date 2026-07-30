@@ -9,17 +9,13 @@
 const MAPPINGS = {
   resource: {
     SERVICE_NAME: 'service.name',
-    SERVICE_VERSION: 'service.version',
-    SERVICE_INSTANCE_ID: 'service.instance.id',
     SDK_LANGUAGE: 'telemetry.sdk.language',
     SDK_NAME: 'telemetry.sdk.name',
     SDK_VERSION: 'telemetry.sdk.version',
     HOST_NAME: 'host.name',
     HOST_ID: 'host.id',
     PROCESS_PID: 'process.pid',
-    OS_TYPE: 'os.type',
-    CONTAINER_ID: 'container.id',
-    K8S_POD_UID: 'k8s.pod.uid'
+    OS_TYPE: 'os.type'
   },
 
   metadata: {

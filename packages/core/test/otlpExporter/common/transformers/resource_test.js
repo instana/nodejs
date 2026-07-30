@@ -109,32 +109,6 @@ describe('otlpExporter/common/transformers/resource', () => {
     });
   });
 
-  describe('service.version', () => {
-    it('uses resource["service.version"] from span data', () => {
-      const span = makeSpan({ data: { resource: { 'service.version': '3.1.4' } } });
-      expectStr(extract(span), 'service.version', '3.1.4');
-    });
-
-    it('omits service.version when no source is set', () => {
-      expectAbsent(extract(makeSpan()), 'service.version');
-    });
-  });
-
-  describe('service.instance.id', () => {
-    it('uses resource["service.instance.id"] when explicitly present', () => {
-      const span = makeSpan({ data: { resource: { 'service.instance.id': 'explicit-id' } } });
-      expectStr(extract(span), 'service.instance.id', 'explicit-id');
-    });
-
-    it('derives from resource["container.id"]', () => {
-      const span = makeSpan({ data: { resource: { 'container.id': 'ctr-abc123' } } });
-      const attrs = extract(span);
-      const attr = attrs.find(a => a.key === 'service.instance.id');
-      expect(attr).to.exist;
-      expect(attr.value.stringValue).to.match(/^[0-9a-f-]{36}$/);
-    });
-  });
-
   describe('telemetry.sdk.*', () => {
     it('emits hardcoded sdk.language "nodejs"', () => {
       expectStr(extract(makeSpan()), 'telemetry.sdk.language', 'nodejs');
@@ -224,40 +198,6 @@ describe('otlpExporter/common/transformers/resource', () => {
 
     it('falls back to os.hostname() when not in span data', () => {
       expectStr(extract(makeSpan()), 'host.name', 'stub.hostname.test');
-    });
-  });
-
-  describe('host.id', () => {
-    it('uses resource["host.id"] from span data', () => {
-      const span = makeSpan({ data: { resource: { 'host.id': 'explicit-host-id' } } });
-      expectStr(extract(span), 'host.id', 'explicit-host-id');
-    });
-
-    it('derives from span metadata f.h', () => {
-      const span = makeSpan({ f: { e: '1', h: 'metadata-host-id' } });
-      expectStr(extract(span), 'host.id', 'metadata-host-id');
-    });
-  });
-
-  describe('container.id', () => {
-    it('emits container.id when present in span resource data', () => {
-      const span = makeSpan({ data: { resource: { 'container.id': 'sha256-deadbeef' } } });
-      expectStr(extract(span), 'container.id', 'sha256-deadbeef');
-    });
-
-    it('omits container.id when absent', () => {
-      expectAbsent(extract(makeSpan()), 'container.id');
-    });
-  });
-
-  describe('k8s.pod.uid', () => {
-    it('emits k8s.pod.uid when present in span resource data', () => {
-      const span = makeSpan({ data: { resource: { 'k8s.pod.uid': 'uid-abcdef' } } });
-      expectStr(extract(span), 'k8s.pod.uid', 'uid-abcdef');
-    });
-
-    it('omits k8s.pod.uid when neither span data nor env var is set', () => {
-      expectAbsent(extract(makeSpan()), 'k8s.pod.uid');
     });
   });
 

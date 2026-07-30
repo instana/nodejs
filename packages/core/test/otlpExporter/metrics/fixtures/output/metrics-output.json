@@ -4,7 +4,6 @@
       "resource": {
         "attributes": [
           { "key": "service.name", "value": { "stringValue": "otel-exporter-test" } },
-          { "key": "service.version", "value": { "stringValue": "1.0.0" } },
           { "key": "telemetry.sdk.language", "value": { "stringValue": "nodejs" } },
           { "key": "telemetry.sdk.name", "value": { "stringValue": "instana" } },
           { "key": "telemetry.sdk.version", "value": { "stringValue": "6.0.0" } },
