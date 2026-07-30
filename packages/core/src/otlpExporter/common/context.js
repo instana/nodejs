@@ -15,8 +15,6 @@ class OtlpConfigContext {
     /** @type {any} */
     this._compiledSemConv = null;
     /** @type {string | null} */
-    this._hostId = null;
-    /** @type {string | null} */
     this._pid = null;
     /** @type {string | null} */
     this._serviceName = null;
