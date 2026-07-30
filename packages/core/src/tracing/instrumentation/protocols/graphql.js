@@ -27,7 +27,11 @@ exports.init = function init(config) {
   // For graphql < v17: require('graphql') triggers the internal file load 'execution/execute'
   hook.onFileLoad(/\/graphql\/execution\/execute.js/, instrumentExecute);
 
-  // For graphql >= v17: They shipped ESM support including a larger refactoring loading the execute file from an internal harness module. CJS apps load the index.mjs entrypoint because of the `module-sync` feature which was added in Node v22 (https://nodejs.org/api/packages.html#conditional-exports). Thats why CJS apps with GraphQL v17 do not trigger `onFileLoad` for `execution/execute`.
+  // For graphql >= v17:
+  //  They shipped ESM support including a larger refactoring loading the execute file from an internal harness module.
+  //  CJS apps load the index.mjs entrypoint because of the `module-sync` feature
+  //  which was added in Node v22 (https://nodejs.org/api/packages.html#conditional-exports).
+  //  Thats why CJS apps with GraphQL v17 do not trigger `onFileLoad` for `execution/execute`.
   hook.onModuleLoad('graphql', instrumentGraphQL, { nativeEsm: true });
 
   hook.onFileLoad(/\/@apollo\/gateway\/dist\/executeQueryPlan.js/, instrumentApolloGatewayExecuteQueryPlan);
@@ -35,9 +39,6 @@ exports.init = function init(config) {
 };
 
 function instrumentGraphQL(graphqlExports) {
-  // require('graphql') resolves to index.mjs via CJS; nativeEsm covers the case where
-  // graphql is imported as a native ESM module (import { ... } from 'graphql').
-  // graphqlExports.defaultHarness is the live harness.mjs object that graphql() calls directly.
   const harness = graphqlExports?.defaultHarness;
 
   if (harness && typeof harness.execute === 'function' && !harness.execute.__wrapped) {
