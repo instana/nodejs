@@ -5,15 +5,6 @@
 'use strict';
 
 /**
- * @param {Record<string, any>} from
- * @returns {string}
- */
-function getResourceKey(from) {
-  if (!from) return 'h:empty|e:empty';
-  return `h:${from.h || 'empty'}|e:${from.e || 'empty'}`;
-}
-
-/**
  * @param {Record<string, any>} obj
  * @param {string} [prefix]
  * @returns {Record<string, any>}
@@ -90,6 +81,5 @@ function normalizeObject(metricsObj) {
 
 module.exports = {
   flattenObject,
-  normalizeMetrics,
-  getResourceKey
+  normalizeMetrics
 };

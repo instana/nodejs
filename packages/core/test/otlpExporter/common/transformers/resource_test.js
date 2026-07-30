@@ -74,7 +74,6 @@ describe('otlpExporter/common/transformers/resource', () => {
     ctx._config = null;
     ctx._semConvVersion = null;
     ctx._compiledSemConv = null;
-    ctx._hostId = null;
     ctx._pid = null;
     ctx._serviceName = null;
     ctx._serviceVersion = null;
@@ -129,28 +128,10 @@ describe('otlpExporter/common/transformers/resource', () => {
 
     it('derives from resource["container.id"]', () => {
       const span = makeSpan({ data: { resource: { 'container.id': 'ctr-abc123' } } });
-      expectStr(extract(span), 'service.instance.id', 'ctr-abc123');
-    });
-
-    it('derives from resource["k8s.pod.uid"]', () => {
-      const span = makeSpan({ data: { resource: { 'k8s.pod.uid': 'pod-uid-xyz' } } });
-      expectStr(extract(span), 'service.instance.id', 'pod-uid-xyz');
-    });
-
-    it('derives from span metadata f.h as last resort', () => {
-      const span = makeSpan({ f: { e: '1234', h: 'metadata-host-fallback' } });
-      expectStr(extract(span), 'service.instance.id', 'metadata-host-fallback');
-    });
-
-    it('prefers container.id over k8s.pod.uid', () => {
-      const span = makeSpan({ data: { resource: { 'container.id': 'ctr-wins', 'k8s.pod.uid': 'pod-loses' } } });
-      expectStr(extract(span), 'service.instance.id', 'ctr-wins');
-    });
-
-    it('prefers k8s.pod.uid over MY_POD_UID env var', () => {
-      process.env.MY_POD_UID = 'env-loses';
-      const span = makeSpan({ data: { resource: { 'k8s.pod.uid': 'pod-uid-wins' } } });
-      expectStr(extract(span), 'service.instance.id', 'pod-uid-wins');
+      const attrs = extract(span);
+      const attr = attrs.find(a => a.key === 'service.instance.id');
+      expect(attr).to.exist;
+      expect(attr.value.stringValue).to.match(/^[0-9a-f-]{36}$/);
     });
   });
 

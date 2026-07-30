@@ -5,8 +5,13 @@
 'use strict';
 
 const os = require('os');
+const { randomUUID } = require('crypto');
+
 const ctx = require('../context');
 const { INSTRUMENTATION_SCOPE_NAME } = require('../constants');
+const { MAPPINGS } = require('../semconv/base/mappings');
+
+const RESOURCE = MAPPINGS.resource;
 
 let SDK_VERSION = '1.0.0';
 try {
@@ -16,6 +21,7 @@ try {
   // ignore the error
 }
 
+const generatedServiceInstanceId = randomUUID();
 const SDK_LANGUAGE = 'nodejs';
 const SDK_NAME = 'instana';
 
@@ -39,7 +45,7 @@ const resourceMapper = {
    */
   serviceName(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
-    return resource['service.name'] || ctx.serviceName;
+    return resource[RESOURCE.SERVICE_NAME] || ctx.serviceName;
   },
 
   /**
@@ -48,7 +54,7 @@ const resourceMapper = {
    */
   serviceVersion(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
-    return resource['service.version'] || ctx.serviceVersion || undefined;
+    return resource[RESOURCE.SERVICE_VERSION] || ctx.serviceVersion || undefined;
   },
 
   /**
@@ -57,15 +63,7 @@ const resourceMapper = {
    */
   serviceInstanceId(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
-    const metadata = rawPayload.f || {};
-    return (
-      resource['service.instance.id'] ||
-      resource['container.id'] ||
-      resource['k8s.pod.uid'] ||
-      resource['host.id'] ||
-      metadata.h ||
-      ctx._hostId
-    );
+    return resource[RESOURCE.SERVICE_INSTANCE_ID] || generatedServiceInstanceId;
   },
 
   /**
@@ -74,7 +72,7 @@ const resourceMapper = {
    */
   sdkLanguage(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
-    return resource['telemetry.sdk.language'] || SDK_LANGUAGE;
+    return resource[RESOURCE.SDK_LANGUAGE] || SDK_LANGUAGE;
   },
 
   /**
@@ -83,7 +81,7 @@ const resourceMapper = {
    */
   sdkName(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
-    return resource['telemetry.sdk.name'] || SDK_NAME;
+    return resource[RESOURCE.SDK_NAME] || SDK_NAME;
   },
 
   /**
@@ -92,7 +90,7 @@ const resourceMapper = {
    */
   sdkVersion(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
-    return resource['telemetry.sdk.version'] || SDK_VERSION;
+    return resource[RESOURCE.SDK_VERSION] || SDK_VERSION;
   },
 
   /**
@@ -103,7 +101,7 @@ const resourceMapper = {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
     const metadata = rawPayload.f || {};
 
-    const pid = resource['process.pid'] || metadata.e || ctx._pid;
+    const pid = resource[RESOURCE.PROCESS_PID] || metadata.e || ctx._pid;
 
     if (pid === null || pid === undefined) {
       return undefined;
@@ -119,7 +117,7 @@ const resourceMapper = {
    */
   hostName(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
-    let hostName = resource['host.name'];
+    let hostName = resource[RESOURCE.HOST_NAME];
 
     if (!hostName) {
       try {
@@ -141,7 +139,7 @@ const resourceMapper = {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
     const metadata = rawPayload.f || {};
 
-    return resource['host.id'] || metadata.h || ctx._hostId;
+    return resource[RESOURCE.HOST_ID] || metadata.h;
   },
 
   /**
@@ -151,8 +149,8 @@ const resourceMapper = {
   osType(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
 
-    if (resource['os.type']) {
-      return String(resource['os.type']);
+    if (resource[RESOURCE.OS_TYPE]) {
+      return String(resource[RESOURCE.OS_TYPE]);
     }
 
     return normalizeOsType(os.platform());
@@ -164,7 +162,7 @@ const resourceMapper = {
    */
   containerId(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
-    return resource['container.id'];
+    return resource[RESOURCE.CONTAINER_ID];
   },
 
   /**
@@ -173,7 +171,7 @@ const resourceMapper = {
    */
   k8sPodUid(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
-    return resource['k8s.pod.uid'];
+    return resource[RESOURCE.K8S_POD_UID];
   }
 };
 
