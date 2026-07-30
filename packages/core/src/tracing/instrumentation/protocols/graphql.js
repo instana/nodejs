@@ -27,20 +27,23 @@ exports.init = function init(config) {
   // For graphql < v17: hook into the execution file as it is loaded (CJS).
   hook.onFileLoad(/\/graphql\/execution\/execute.js/, instrumentExecute);
 
-  // For graphql >= v17: ships as module-sync ESM (index.mjs) on Node 22+.
-  // require('graphql') resolves to index.mjs
-  // graphqlExports.defaultHarness is the live harness.mjs object that graphql() calls directly
-  hook.onModuleLoad('graphql', graphqlExports => {
-    const harness = graphqlExports?.defaultHarness;
-
-    if (harness && typeof harness.execute === 'function' && !harness.execute.__wrapped) {
-      instrumentExecute(harness);
-    }
-  });
+  // For graphql >= v17: it is shipped as ESM first
+  hook.onModuleLoad('graphql', instrumentGraphQL, { nativeEsm: true });
 
   hook.onFileLoad(/\/@apollo\/gateway\/dist\/executeQueryPlan.js/, instrumentApolloGatewayExecuteQueryPlan);
   hook.onModuleLoad('@apollo/federation', logDeprecatedWarning);
 };
+
+function instrumentGraphQL(graphqlExports) {
+  // require('graphql') resolves to index.mjs via CJS; nativeEsm covers the case where
+  // graphql is imported as a native ESM module (import { ... } from 'graphql').
+  // graphqlExports.defaultHarness is the live harness.mjs object that graphql() calls directly.
+  const harness = graphqlExports?.defaultHarness;
+
+  if (harness && typeof harness.execute === 'function' && !harness.execute.__wrapped) {
+    instrumentExecute(harness);
+  }
+}
 
 function instrumentExecute(executeModule) {
   shimmer.wrap(executeModule, 'execute', shimExecuteFunction.bind(null));
