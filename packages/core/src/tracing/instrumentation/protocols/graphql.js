@@ -31,10 +31,10 @@ exports.init = function init(config) {
   // require('graphql') resolves to index.mjs
   // graphqlExports.defaultHarness is the live harness.mjs object that graphql() calls directly
   hook.onModuleLoad('graphql', graphqlExports => {
-    if (!graphqlExports || typeof graphqlExports.defaultHarness !== 'object') return;
-    const harness = graphqlExports.defaultHarness;
-    if (typeof harness.execute === 'function' && !harness.execute.__wrapped) {
-      shimmer.wrap(harness, 'execute', shimExecuteFunction.bind(null));
+    const harness = graphqlExports?.defaultHarness;
+
+    if (harness && typeof harness.execute === 'function' && !harness.execute.__wrapped) {
+      instrumentExecute(harness);
     }
   });
 
