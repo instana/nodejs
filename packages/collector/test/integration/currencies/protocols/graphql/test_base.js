@@ -57,7 +57,7 @@ module.exports = function (name, version, isLatest, mode) {
               before(async () => {
                 serverControls = new ProcessControls({
                   dirname: __dirname,
-                  appName: mode === 'raw' ? 'rawGraphQLServer.js' : 'apolloServer.js',
+                  appName: mode === 'raw' ? 'rawGraphQLServer' : 'apolloServer',
                   useGlobalAgent: true,
                   env: {
                     LIBRARY_VERSION: version,
@@ -272,7 +272,7 @@ module.exports = function (name, version, isLatest, mode) {
         before(async () => {
           serverControls = new ProcessControls({
             dirname: __dirname,
-            appName: mode === 'raw' ? 'rawGraphQLServer.js' : 'apolloServer.js',
+            appName: mode === 'raw' ? 'rawGraphQLServer' : 'apolloServer',
             useGlobalAgent: true,
             env: {
               LIBRARY_VERSION: version,
