@@ -127,7 +127,7 @@ const resourceMapper = {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
 
     if (resource[RESOURCE.OS_TYPE]) {
-      return String(resource[RESOURCE.OS_TYPE]);
+      return resource[RESOURCE.OS_TYPE];
     }
 
     return normalizeOsType(os.platform());
