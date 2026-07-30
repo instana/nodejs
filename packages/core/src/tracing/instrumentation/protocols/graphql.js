@@ -24,10 +24,27 @@ const subscriptionUpdate = 'subscription-update';
 exports.init = function init(config) {
   logger = config.logger;
 
+  // For graphql < v17: require('graphql') triggers the internal file load 'execution/execute'
   hook.onFileLoad(/\/graphql\/execution\/execute.js/, instrumentExecute);
+
+  // For graphql >= v17:
+  //  They shipped ESM support including a larger refactoring loading the execute file from an internal harness module.
+  //  CJS apps load the index.mjs entrypoint because of the `module-sync` feature
+  //  which was added in Node v22 (https://nodejs.org/api/packages.html#conditional-exports).
+  //  Thats why CJS apps with GraphQL v17 do not trigger `onFileLoad` for `execution/execute`.
+  hook.onModuleLoad('graphql', instrumentGraphQL, { nativeEsm: true });
+
   hook.onFileLoad(/\/@apollo\/gateway\/dist\/executeQueryPlan.js/, instrumentApolloGatewayExecuteQueryPlan);
   hook.onModuleLoad('@apollo/federation', logDeprecatedWarning);
 };
+
+function instrumentGraphQL(graphqlExports) {
+  const harness = graphqlExports?.defaultHarness;
+
+  if (harness && typeof harness.execute === 'function' && !harness.execute.__wrapped) {
+    instrumentExecute(harness);
+  }
+}
 
 function instrumentExecute(executeModule) {
   shimmer.wrap(executeModule, 'execute', shimExecuteFunction.bind(null));

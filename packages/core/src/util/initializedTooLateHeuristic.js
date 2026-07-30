@@ -36,7 +36,7 @@ let patterns = [
   /\/express\/index.js/,
   /\/fastify\/fastify/,
   /\/graphql-subscriptions\/dist\//,
-  /\/graphql\/execution\//,
+  /\/graphql\//,
   /\/ibm_db\/lib/,
   /\/ioredis\/built\//,
   /\/kafka-node\/kafka.js/,
