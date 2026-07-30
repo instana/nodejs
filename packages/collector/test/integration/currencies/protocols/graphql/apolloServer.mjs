@@ -1,6 +1,5 @@
 /*
- * (c) Copyright IBM Corp. 2021
- * (c) Copyright Instana Inc. and contributors 2019
+ * (c) Copyright IBM Corp. 2026
  */
 
 'use strict';
@@ -19,9 +18,8 @@ import bodyParser from 'body-parser';
 import express from 'express';
 import morgan from 'morgan';
 import { expressMiddleware } from '@as-integrations/express5';
+import { schema } from './schema.mjs';
 
-const schemaFactory = require('./schema.js');
-const { schema } = schemaFactory();
 const portFactory = require('@_local/collector/test/test_util/app-port');
 const port = portFactory();
 const app = express();

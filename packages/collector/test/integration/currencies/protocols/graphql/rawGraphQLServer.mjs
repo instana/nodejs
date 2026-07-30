@@ -1,6 +1,5 @@
 /*
- * (c) Copyright IBM Corp. 2021
- * (c) Copyright Instana Inc. and contributors 2019
+ * (c) Copyright IBM Corp. 2026
  */
 
 'use strict';
@@ -19,9 +18,7 @@ import express from 'express';
 import { graphql } from 'graphql';
 import morgan from 'morgan';
 import amqp from 'amqplib';
-
-const schemaFactory = require('./schema.js');
-const { schema } = schemaFactory();
+import { schema } from './schema.mjs';
 
 const portFactory = require('@_local/collector/test/test_util/app-port');
 const port = portFactory();
