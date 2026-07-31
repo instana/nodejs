@@ -201,6 +201,24 @@ describe('otlpExporter/common/transformers/resource', () => {
     });
   });
 
+  describe('faas.name', () => {
+    it('uses data.lambda.functionName from AWS Lambda span', () => {
+      const span = makeSpan({ data: { lambda: { functionName: 'my-lambda' } } });
+      expectStr(extract(span), 'faas.name', 'my-lambda');
+    });
+
+    it('prefers resource["faas.name"] override over span data', () => {
+      const span = makeSpan({
+        data: { resource: { 'faas.name': 'override-fn' }, lambda: { functionName: 'my-lambda' } }
+      });
+      expectStr(extract(span), 'faas.name', 'override-fn');
+    });
+
+    it('omits faas.name when no FaaS span data is present', () => {
+      expectAbsent(extract(makeSpan()), 'faas.name');
+    });
+  });
+
   describe('required attributes always present', () => {
     it('emits all required attributes on every span', () => {
       const attrs = extract(makeSpan());
