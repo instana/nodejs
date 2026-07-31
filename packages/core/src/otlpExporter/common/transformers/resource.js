@@ -34,6 +34,19 @@ const INSTRUMENTATION_SCOPE = {
  * @property {Record<string, any>} [f]
  */
 
+/**
+ * Extracts faas.name from provider-specific span data fields.
+ *
+ * @param {RawPayload} rawPayload
+ * @returns {string | undefined}
+ */
+function getFaasNameFromSpanData(rawPayload) {
+  return (
+    // AWS Lambda
+    rawPayload.data?.lambda?.functionName
+  );
+}
+
 const resourceMapper = {
   /**
    * @param {RawPayload} rawPayload
@@ -119,6 +132,16 @@ const resourceMapper = {
 
     return resource[RESOURCE.HOST_ID] || metadata.h;
   },
+
+  /**
+   * @param {RawPayload} rawPayload
+   * @returns {string | undefined}
+   */
+  faasName(rawPayload) {
+    const resource = rawPayload.data?.resource || rawPayload.resource || {};
+    return resource[RESOURCE.FAAS_NAME] || getFaasNameFromSpanData(rawPayload) || undefined;
+  },
+
   /**
    * @param {RawPayload} rawPayload
    * @returns {string | undefined}
@@ -179,6 +202,11 @@ function extractResourceAttributes(rawPayload) {
     {
       otlp: OTLP.resource.HOST_NAME,
       transform: resourceMapper.hostName,
+      valueType: 'string'
+    },
+    {
+      otlp: OTLP.resource.FAAS_NAME,
+      transform: resourceMapper.faasName,
       valueType: 'string'
     }
   ];
