@@ -89,11 +89,10 @@ module.exports = function (name, version, isLatest) {
                         expect(span.data.tags.name).to.eql(`${queryType} azure-nodejs-test`);
 
                         expect(span.data.operation).to.equal('tedious');
-                        expect(span.data.tags['db.system']).to.eql('mssql');
-                        expect(span.data.tags['db.name']).to.eql('azure-nodejs-test');
-                        expect(span.data.tags['db.user']).to.eql('admin@instana@nodejs-team-db-server');
-                        expect(span.data.tags['db.statement']).to.eql(expectedStatement);
-                        expect(span.data.tags['net.peer.name']).to.eql('nodejs-team-db-server.database.windows.net');
+                        expect(span.data.tags['db.system.name']).to.eql('microsoft.sql_server');
+                        expect(span.data.tags['db.namespace']).to.eql('azure-nodejs-test');
+                        expect(span.data.tags['db.query.text']).to.eql(expectedStatement);
+                        expect(span.data.tags['server.address']).to.eql('nodejs-team-db-server.database.windows.net');
                         checkTelemetryResourceAttrs(span);
                       }
                     });
