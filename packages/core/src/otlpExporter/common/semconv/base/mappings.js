@@ -15,7 +15,8 @@ const MAPPINGS = {
     HOST_NAME: 'host.name',
     HOST_ID: 'host.id',
     PROCESS_PID: 'process.pid',
-    OS_TYPE: 'os.type'
+    OS_TYPE: 'os.type',
+    FAAS_NAME: 'faas.name'
   },
 
   metadata: {
