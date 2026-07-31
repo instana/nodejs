@@ -119,6 +119,7 @@ function instrument() {
       const resource = originalArgs[0];
       let params;
       let capturedHeaders;
+      let capturedRequestHeaders;
 
       if (resource != null) {
         let rawUrl;
@@ -129,6 +130,7 @@ function instrument() {
           rawUrl = resource.url;
           method = resource.method;
           capturedHeaders = getExtraHeadersFromFetchHeaders(resource.headers, extraHttpHeadersToCapture);
+          capturedRequestHeaders = capturedHeaders ? Object.assign({}, capturedHeaders) : undefined;
         } else if (typeof resource.toString === 'function') {
           // This also handles the case when the resource is a URL object, as well as any object that has a custom
           // stringifier.
@@ -155,6 +157,7 @@ function instrument() {
           } else {
             capturedHeaders = getExtraHeadersCaseInsensitive(options.headers, extraHttpHeadersToCapture);
           }
+          capturedRequestHeaders = capturedHeaders ? Object.assign({}, capturedHeaders) : undefined;
         }
       }
 
@@ -173,6 +176,12 @@ function instrument() {
         .then(response => {
           span.data.http.status = response.status;
           span.ec = tracingUtil.shouldMarkAsError(response.status) ? 1 : 0;
+
+          const capturedResponseHeaders = mergeExtraHeadersFromFetchHeaders(
+            undefined,
+            response.headers,
+            extraHttpHeadersToCapture
+          );
           capturedHeaders = mergeExtraHeadersFromFetchHeaders(
             capturedHeaders,
             response.headers,
@@ -182,6 +191,12 @@ function instrument() {
           span.d = Date.now() - span.ts;
           if (capturedHeaders != null && Object.keys(capturedHeaders).length > 0) {
             span.data.http.header = capturedHeaders;
+          }
+          if (capturedRequestHeaders != null && Object.keys(capturedRequestHeaders).length > 0) {
+            span.data.http.requestHeader = capturedRequestHeaders;
+          }
+          if (capturedResponseHeaders != null && Object.keys(capturedResponseHeaders).length > 0) {
+            span.data.http.responseHeader = capturedResponseHeaders;
           }
           span.transmit();
         })

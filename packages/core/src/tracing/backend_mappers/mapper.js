@@ -36,7 +36,10 @@ const fieldMappings = {
   http: {
     operation: 'method',
     endpoints: 'url',
-    connection: 'host'
+    connection: 'host',
+    // The null mapping indicates the field is internal-only and will be dropped
+    requestHeader: null,
+    responseHeader: null
   }
 };
 

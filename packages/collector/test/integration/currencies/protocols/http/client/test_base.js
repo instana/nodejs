@@ -1226,7 +1226,9 @@ module.exports = function (name, version, isLatest) {
                     'x-my-exit-options-request-multi-header':
                       'x-my-exit-options-request-multi-header-value-1, x-my-exit-options-request-multi-header-value-2'
                   }),
-                span => expect(span.data.http.url).to.match(/\/request-only-opts/)
+                span => expect(span.data.http.url).to.match(/\/request-only-opts/),
+                span => expect(span.data.http.requestHeader).to.not.exist,
+                span => expect(span.data.http.responseHeader).to.not.exist
               ]);
             })
           )
@@ -1250,7 +1252,9 @@ module.exports = function (name, version, isLatest) {
                     'x-my-exit-set-on-request-multi-header':
                       'x-my-exit-set-on-request-multi-header-value-1, x-my-exit-set-on-request-multi-header-value-2'
                   }),
-                span => expect(span.data.http.url).to.match(/\/request-only-opts/)
+                span => expect(span.data.http.url).to.match(/\/request-only-opts/),
+                span => expect(span.data.http.requestHeader).to.not.exist,
+                span => expect(span.data.http.responseHeader).to.not.exist
               ]);
             })
           )
@@ -1273,7 +1277,9 @@ module.exports = function (name, version, isLatest) {
                   expect(span.data.http.header['x-my-exit-response-header']).to.equal(
                     'x-my-exit-response-header-value'
                   ),
-                span => expect(span.data.http.url).to.match(/\/request-only-opts/)
+                span => expect(span.data.http.url).to.match(/\/request-only-opts/),
+                span => expect(span.data.http.requestHeader).to.not.exist,
+                span => expect(span.data.http.responseHeader).to.not.exist
               ]);
             })
           )

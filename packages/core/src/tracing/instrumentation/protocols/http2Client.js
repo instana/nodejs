@@ -103,7 +103,10 @@ function instrumentClientHttp2Session(clientHttp2Session) {
 
       const origin = readSymbolProperty(stream, originS);
       const reqHeaders = readSymbolProperty(stream, sentHeadersS);
-      let capturedHeaders = getExtraHeadersCaseInsensitive(reqHeaders, extraHttpHeadersToCapture);
+      const requestHeader = getExtraHeadersCaseInsensitive(reqHeaders, extraHttpHeadersToCapture);
+
+      let responseHeader;
+      let combinedHeader = requestHeader;
 
       let method;
       let path;
@@ -128,8 +131,11 @@ function instrumentClientHttp2Session(clientHttp2Session) {
 
       stream.on('response', resHeaders => {
         status = resHeaders[HTTP2_HEADER_STATUS];
-        capturedHeaders = mergeExtraHeadersFromNormalizedObjectLiteral(
-          capturedHeaders,
+
+        responseHeader = getExtraHeadersCaseInsensitive(resHeaders, extraHttpHeadersToCapture);
+
+        combinedHeader = mergeExtraHeadersFromNormalizedObjectLiteral(
+          combinedHeader,
           resHeaders,
           extraHttpHeadersToCapture
         );
@@ -139,8 +145,16 @@ function instrumentClientHttp2Session(clientHttp2Session) {
         span.d = Date.now() - span.ts;
         span.ec = tracingUtil.shouldMarkAsError(status) ? 1 : 0;
         span.data.http.status = status;
-        if (capturedHeaders) {
-          span.data.http.header = capturedHeaders;
+        if (requestHeader) {
+          span.data.http.requestHeader = requestHeader;
+        }
+
+        if (responseHeader) {
+          span.data.http.responseHeader = responseHeader;
+        }
+
+        if (combinedHeader) {
+          span.data.http.header = combinedHeader;
         }
         span.transmit();
       });
