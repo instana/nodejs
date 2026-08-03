@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.6.0](https://github.com/instana/nodejs/compare/v6.5.0...v6.6.0) (2026-08-03)
+
+
+### Bug Fixes
+
+* captured missing log level in log spans  ([#2678](https://github.com/instana/nodejs/issues/2678)) ([944b73e](https://github.com/instana/nodejs/commit/944b73ebe8eefd1588d6378560084b2a48fd3060))
+
+
+### Features
+
+* added support for graphql v17 ([#2642](https://github.com/instana/nodejs/issues/2642)) ([415a255](https://github.com/instana/nodejs/commit/415a2554a1cb946a1c13441ff78f12dc9a116d87))
+* added support to disable W3C via agent yaml ([#2681](https://github.com/instana/nodejs/issues/2681)) ([d39299b](https://github.com/instana/nodejs/commit/d39299b7fab368c256a80483ba6be5a167c46256))
+
+
+
+
+
 # [6.5.0](https://github.com/instana/nodejs/compare/v6.4.0...v6.5.0) (2026-07-27)
 
 

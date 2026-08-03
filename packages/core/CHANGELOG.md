@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.6.0](https://github.com/instana/nodejs/compare/v6.5.0...v6.6.0) (2026-08-03)
+
+
+### Bug Fixes
+
+* bumped @opentelemetry/sdk-trace-base from 2.8.0 to 2.9.0 ([#2675](https://github.com/instana/nodejs/issues/2675)) ([ce8364d](https://github.com/instana/nodejs/commit/ce8364dfb525ee8fb4710aafaea935ae8819e784))
+* captured missing log level in log spans  ([#2678](https://github.com/instana/nodejs/issues/2678)) ([944b73e](https://github.com/instana/nodejs/commit/944b73ebe8eefd1588d6378560084b2a48fd3060))
+* respected W3C disable shorthand via in-code config ([#2683](https://github.com/instana/nodejs/issues/2683)) ([2563483](https://github.com/instana/nodejs/commit/25634837bc8b6b7fea3c41718156d3cb95efcdd8))
+
+
+### Features
+
+* added support for graphql v17 ([#2642](https://github.com/instana/nodejs/issues/2642)) ([415a255](https://github.com/instana/nodejs/commit/415a2554a1cb946a1c13441ff78f12dc9a116d87))
+* added support to disable W3C via agent yaml ([#2681](https://github.com/instana/nodejs/issues/2681)) ([d39299b](https://github.com/instana/nodejs/commit/d39299b7fab368c256a80483ba6be5a167c46256))
+
+
+
+
+
 # [6.5.0](https://github.com/instana/nodejs/compare/v6.4.0...v6.5.0) (2026-07-27)
 
 

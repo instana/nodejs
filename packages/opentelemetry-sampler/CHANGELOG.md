@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.6.0](https://github.com/instana/nodejs/compare/v6.5.0...v6.6.0) (2026-08-03)
+
+**Note:** Version bump only for package @instana/opentelemetry-sampler
+
+
+
+
+
 # [6.5.0](https://github.com/instana/nodejs/compare/v6.4.0...v6.5.0) (2026-07-27)
 
 **Note:** Version bump only for package @instana/opentelemetry-sampler
