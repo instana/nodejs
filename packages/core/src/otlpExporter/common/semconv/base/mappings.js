@@ -122,6 +122,28 @@ const MAPPINGS = {
 
   error: {
     TYPE: 'error.type'
+  },
+
+  metrics: {
+    v8js: {
+      GC_DURATION: 'v8js.gc.duration',
+      HEAP_SPACE_AVAILABLE_SIZE: 'v8js.memory.heap.space.available_size',
+      HEAP_SPACE_PHYSICAL_SIZE: 'v8js.memory.heap.space.physical_size',
+      HEAP_SPACE_SIZE: 'v8js.memory.heap.space.size',
+      HEAP_USED: 'v8js.memory.heap.used',
+      RESOURCE_ACTIVE: 'v8js.resource.active',
+
+      attributes: {
+        GC_TYPE: 'v8js.gc.type',
+        HEAP_SPACE_NAME: 'v8js.heap.space.name',
+        RESOURCE_TYPE: 'v8js.resource.type'
+      }
+    },
+    nodejs: {
+      EVENTLOOP_DELAY_MIN: 'nodejs.eventloop.delay.min',
+      EVENTLOOP_DELAY_MAX: 'nodejs.eventloop.delay.max',
+      EVENTLOOP_DELAY_MEAN: 'nodejs.eventloop.delay.mean'
+    }
   }
 };
 

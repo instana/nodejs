@@ -37,6 +37,7 @@
   },
   "keywords": ["opentelemetry", "instana", "tracing"],
   "libuv": {
+    "min": 0,
     "max": 496,
     "num": 241,
     "sum": 1003
