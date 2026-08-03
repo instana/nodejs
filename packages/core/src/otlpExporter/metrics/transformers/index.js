@@ -5,7 +5,10 @@
 'use strict';
 
 const resource = require('../../common/transformers/resource');
+const runtimeMetrics = require('./runtimeMetrics');
 
 module.exports = {
-  resource
+  resource,
+  /** Engine: iterates mapper.metricMappings → OTLP metric array */
+  runtimeMetrics
 };

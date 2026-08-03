@@ -11,7 +11,78 @@
           { "key": "host.name", "value": { "stringValue": "test-hostname" } }
         ]
       },
-      "scopeMetrics": [{ "scope": { "name": "@instana/collector", "version": "6.0.0" }, "metrics": [] }]
+      "scopeMetrics": [
+        {
+          "scope": { "name": "@instana/collector", "version": "6.0.0" },
+          "metrics": [
+            {
+              "descriptor": { "name": "v8js.memory.heap.space.available_size", "unit": "By" },
+              "type": "updowncounter",
+              "dataPoints": [
+                { "attributes": { "v8js.heap.space.name": "new_space" }, "value": 6153600 },
+                { "attributes": { "v8js.heap.space.name": "old_space" }, "value": 522192 },
+                { "attributes": { "v8js.heap.space.name": "code_space" }, "value": 345536 },
+                { "attributes": { "v8js.heap.space.name": "trusted_space" }, "value": 370768 }
+              ]
+            },
+            {
+              "descriptor": { "name": "v8js.memory.heap.space.physical_size", "unit": "By" },
+              "type": "updowncounter",
+              "dataPoints": [
+                { "attributes": { "v8js.heap.space.name": "new_space" }, "value": 27901952 },
+                { "attributes": { "v8js.heap.space.name": "old_space" }, "value": 17039360 },
+                { "attributes": { "v8js.heap.space.name": "code_space" }, "value": 1572864 }
+              ]
+            },
+            {
+              "descriptor": { "name": "v8js.memory.heap.space.size", "unit": "By" },
+              "type": "updowncounter",
+              "dataPoints": [
+                { "attributes": { "v8js.heap.space.name": "old_space" }, "value": 16859136 },
+                { "attributes": { "v8js.heap.space.name": "code_space" }, "value": 1572864 }
+              ]
+            },
+            {
+              "descriptor": { "name": "v8js.memory.heap.used", "unit": "By" },
+              "type": "updowncounter",
+              "dataPoints": [
+                { "attributes": { "v8js.heap.space.name": "new_space" }, "value": 10622592 },
+                { "attributes": { "v8js.heap.space.name": "old_space" }, "value": 16309064 },
+                { "attributes": { "v8js.heap.space.name": "code_space" }, "value": 1227136 },
+                { "attributes": { "v8js.heap.space.name": "trusted_space" }, "value": 2659888 }
+              ]
+            },
+            {
+              "descriptor": { "name": "v8js.resource.active", "unit": "{resource}" },
+              "type": "gauge",
+              "dataPoints": [
+                { "attributes": { "v8js.resource.type": "all" }, "value": 3 }
+              ]
+            },
+            {
+              "descriptor": { "name": "nodejs.eventloop.delay.min", "unit": "s" },
+              "type": "gauge",
+              "dataPoints": [
+                { "attributes": {}, "value": 0 }
+              ]
+            },
+            {
+              "descriptor": { "name": "nodejs.eventloop.delay.max", "unit": "s" },
+              "type": "gauge",
+              "dataPoints": [
+                { "attributes": {}, "value": 0.496 }
+              ]
+            },
+            {
+              "descriptor": { "name": "nodejs.eventloop.delay.mean", "unit": "s" },
+              "type": "gauge",
+              "dataPoints": [
+                { "attributes": {}, "value": 0.004161825726141079 }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ]
 }
