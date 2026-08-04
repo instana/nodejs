@@ -462,6 +462,9 @@ exports.shouldCaptureLogSpan = function shouldCaptureLogSpan(level) {
   if (logLevelConfig === LOG_LEVEL.OFF) {
     return false;
   }
+  if (typeof level !== 'string') {
+    return false;
+  }
   const minLevel = LOG_LEVEL_PRIORITY[logLevelConfig];
 
   const numericLevel = LOG_LEVEL_PRIORITY[level.toLowerCase()];

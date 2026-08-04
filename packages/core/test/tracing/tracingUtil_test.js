@@ -1583,6 +1583,18 @@ describe('tracing/tracingUtil', () => {
       it('should return false for an unknown log level', () => {
         expect(shouldCaptureLogSpan('INVALID')).to.equal(false);
       });
+
+      it('should return false for undefined without throwing', () => {
+        expect(shouldCaptureLogSpan(undefined)).to.equal(false);
+      });
+
+      it('should return false for null without throwing', () => {
+        expect(shouldCaptureLogSpan(null)).to.equal(false);
+      });
+
+      it('should return false for a numeric level without throwing', () => {
+        expect(shouldCaptureLogSpan(42)).to.equal(false);
+      });
     });
 
     describe('when captureLogLevel is WARN(default)', () => {
