@@ -51,35 +51,35 @@ describe('util/iitmHook', () => {
   });
 
   describe('activate — IITM version-conflict detection', () => {
-    it('should not warn when only one IITM instance is in the module cache', () => {
+    it('should not debug when only one IITM instance is in the module cache', () => {
       iitmHook.activate();
 
-      expect(fakeLogger.warn.called).to.be.false;
+      expect(fakeLogger.debug.called).to.be.false;
     });
 
-    it('should warn when two IITM instances are found in the module cache', () => {
+    it('should debug when two IITM instances are found in the module cache', () => {
       require.cache[fakeIitmKey1] = { id: fakeIitmKey1, exports: {}, loaded: true };
       require.cache[fakeIitmKey2] = { id: fakeIitmKey2, exports: {}, loaded: true };
 
       iitmHook.activate();
 
-      expect(fakeLogger.warn.calledOnce).to.be.true;
-      const warnMessage = fakeLogger.warn.firstCall.args[0];
-      expect(warnMessage).to.include('Multiple import-in-the-middle (IITM) instances detected');
-      expect(warnMessage).to.include(fakeIitmKey1);
-      expect(warnMessage).to.include(fakeIitmKey2);
+      expect(fakeLogger.debug.calledOnce).to.be.true;
+      const debugMessage = fakeLogger.debug.firstCall.args[0];
+      expect(debugMessage).to.include('Multiple import-in-the-middle (IITM) instances detected');
+      expect(debugMessage).to.include(fakeIitmKey1);
+      expect(debugMessage).to.include(fakeIitmKey2);
     });
 
-    it('should include both conflicting paths in the warning message', () => {
+    it('should include both conflicting paths in the debug message', () => {
       require.cache[fakeIitmKey1] = { id: fakeIitmKey1, exports: {}, loaded: true };
       require.cache[fakeIitmKey2] = { id: fakeIitmKey2, exports: {}, loaded: true };
 
       iitmHook.activate();
 
-      const warnMessage = fakeLogger.warn.firstCall.args[0];
-      expect(warnMessage).to.include('Detected instances:');
-      expect(warnMessage).to.include(`  - ${fakeIitmKey1}`);
-      expect(warnMessage).to.include(`  - ${fakeIitmKey2}`);
+      const debugMessage = fakeLogger.debug.firstCall.args[0];
+      expect(debugMessage).to.include('Detected instances:');
+      expect(debugMessage).to.include(`  - ${fakeIitmKey1}`);
+      expect(debugMessage).to.include(`  - ${fakeIitmKey2}`);
     });
   });
 });

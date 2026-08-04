@@ -41,7 +41,7 @@ exports.init = function init(config) {
 exports.activate = function activate() {
   const iitmInstances = findAllIitmRegisterPaths();
   if (iitmInstances.length > 1) {
-    logger.warn(
+    logger.debug(
       '[Instana] Multiple import-in-the-middle (IITM) instances detected in the module cache. ' +
         'This typically happens when different packages depend on incompatible IITM versions ' +
         'and npm deduplication places both on disk. ' +
