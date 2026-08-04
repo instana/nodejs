@@ -20,6 +20,8 @@
  * OpenTelemetry Integration correlation
  * 
  * Our OpenTelemetry integration works because we load the IITM hook for ESM here. See https://github.com/open-telemetry/opentelemetry-js/blob/main/doc/esm-support.md.
+ * > register('@instana/core/iitm-loader.mjs', import.meta.url);
+ * This line adds support for Instana instrumentations and our Otel integration instrumentations working.
  * 
  * Instana pins IITM v3 (via @instana/core). In general, some OTel instrumentation packages still depend on
  * IITM v2. When npm deduplication places an IITM v2 copy at the project root, both versions end up
