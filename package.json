@@ -181,7 +181,8 @@
     },
     "mocha": {
       "yargs": "17.7.3"
-    }
+    },
+    "tar": "7.5.3"
   },
   "config": {
     "commitizen": {
