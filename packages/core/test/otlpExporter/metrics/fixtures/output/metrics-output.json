@@ -16,69 +16,161 @@
           "scope": { "name": "@instana/collector", "version": "6.0.0" },
           "metrics": [
             {
-              "descriptor": { "name": "v8js.memory.heap.space.available_size", "unit": "By" },
-              "type": "updowncounter",
-              "dataPoints": [
-                { "attributes": { "v8js.heap.space.name": "new_space" }, "value": 6153600 },
-                { "attributes": { "v8js.heap.space.name": "old_space" }, "value": 522192 },
-                { "attributes": { "v8js.heap.space.name": "code_space" }, "value": 345536 },
-                { "attributes": { "v8js.heap.space.name": "trusted_space" }, "value": 370768 }
-              ]
+              "name": "v8js.memory.heap.space.available_size",
+              "unit": "By",
+              "sum": {
+                "aggregationTemporality": 2,
+                "isMonotonic": false,
+                "dataPoints": [
+                  {
+                    "asInt": 6153600,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "new_space" } }]
+                  },
+                  {
+                    "asInt": 522192,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "old_space" } }]
+                  },
+                  {
+                    "asInt": 345536,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "code_space" } }]
+                  },
+                  {
+                    "asInt": 370768,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "trusted_space" } }]
+                  }
+                ]
+              }
             },
             {
-              "descriptor": { "name": "v8js.memory.heap.space.physical_size", "unit": "By" },
-              "type": "updowncounter",
-              "dataPoints": [
-                { "attributes": { "v8js.heap.space.name": "new_space" }, "value": 27901952 },
-                { "attributes": { "v8js.heap.space.name": "old_space" }, "value": 17039360 },
-                { "attributes": { "v8js.heap.space.name": "code_space" }, "value": 1572864 }
-              ]
+              "name": "v8js.memory.heap.space.physical_size",
+              "unit": "By",
+              "sum": {
+                "aggregationTemporality": 2,
+                "isMonotonic": false,
+                "dataPoints": [
+                  {
+                    "asInt": 27901952,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "new_space" } }]
+                  },
+                  {
+                    "asInt": 17039360,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "old_space" } }]
+                  },
+                  {
+                    "asInt": 1572864,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "code_space" } }]
+                  }
+                ]
+              }
             },
             {
-              "descriptor": { "name": "v8js.memory.heap.space.size", "unit": "By" },
-              "type": "updowncounter",
-              "dataPoints": [
-                { "attributes": { "v8js.heap.space.name": "old_space" }, "value": 16859136 },
-                { "attributes": { "v8js.heap.space.name": "code_space" }, "value": 1572864 }
-              ]
+              "name": "v8js.memory.heap.space.size",
+              "unit": "By",
+              "sum": {
+                "aggregationTemporality": 2,
+                "isMonotonic": false,
+                "dataPoints": [
+                  {
+                    "asInt": 16859136,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "old_space" } }]
+                  },
+                  {
+                    "asInt": 1572864,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "code_space" } }]
+                  }
+                ]
+              }
             },
             {
-              "descriptor": { "name": "v8js.memory.heap.used", "unit": "By" },
-              "type": "updowncounter",
-              "dataPoints": [
-                { "attributes": { "v8js.heap.space.name": "new_space" }, "value": 10622592 },
-                { "attributes": { "v8js.heap.space.name": "old_space" }, "value": 16309064 },
-                { "attributes": { "v8js.heap.space.name": "code_space" }, "value": 1227136 },
-                { "attributes": { "v8js.heap.space.name": "trusted_space" }, "value": 2659888 }
-              ]
+              "name": "v8js.memory.heap.used",
+              "unit": "By",
+              "sum": {
+                "aggregationTemporality": 2,
+                "isMonotonic": false,
+                "dataPoints": [
+                  {
+                    "asInt": 10622592,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "new_space" } }]
+                  },
+                  {
+                    "asInt": 16309064,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "old_space" } }]
+                  },
+                  {
+                    "asInt": 1227136,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "code_space" } }]
+                  },
+                  {
+                    "asInt": 2659888,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "trusted_space" } }]
+                  }
+                ]
+              }
             },
             {
-              "descriptor": { "name": "v8js.resource.active", "unit": "{resource}" },
-              "type": "gauge",
-              "dataPoints": [
-                { "attributes": { "v8js.resource.type": "all" }, "value": 3 }
-              ]
+              "name": "v8js.resource.active",
+              "unit": "{resource}",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "asInt": 3,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.resource.type", "value": { "stringValue": "all" } }]
+                  }
+                ]
+              }
             },
             {
-              "descriptor": { "name": "nodejs.eventloop.delay.min", "unit": "s" },
-              "type": "gauge",
-              "dataPoints": [
-                { "attributes": {}, "value": 0 }
-              ]
+              "name": "nodejs.eventloop.delay.min",
+              "unit": "s",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "asInt": 0,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": []
+                  }
+                ]
+              }
             },
             {
-              "descriptor": { "name": "nodejs.eventloop.delay.max", "unit": "s" },
-              "type": "gauge",
-              "dataPoints": [
-                { "attributes": {}, "value": 0.496 }
-              ]
+              "name": "nodejs.eventloop.delay.max",
+              "unit": "s",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "asDouble": 0.496,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": []
+                  }
+                ]
+              }
             },
             {
-              "descriptor": { "name": "nodejs.eventloop.delay.mean", "unit": "s" },
-              "type": "gauge",
-              "dataPoints": [
-                { "attributes": {}, "value": 0.004161825726141079 }
-              ]
+              "name": "nodejs.eventloop.delay.mean",
+              "unit": "s",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "asDouble": 0.004161825726141079,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": []
+                  }
+                ]
+              }
             }
           ]
         }
