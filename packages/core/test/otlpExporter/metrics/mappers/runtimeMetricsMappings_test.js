@@ -10,7 +10,7 @@ const { MAPPINGS } = require('../../../../src/otlpExporter/common/semconv/base/m
 const V8 = MAPPINGS.metrics.v8js;
 const NODEJS = MAPPINGS.metrics.nodejs;
 
-const mapper = require('../../../../src/otlpExporter/metrics/mappers/runtimeMetrics');
+const mapper = require('../../../../src/otlpExporter/metrics/mappers/runtimeMetricsMappings');
 
 const FULL_PAYLOAD = {
   gc: { gcPause: 414 },
