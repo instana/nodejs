@@ -44,7 +44,7 @@ function shimLog(level) {
         return originalLog.apply(this, arguments);
       }
 
-      if (!tracingUtil.shouldCaptureLogSpan(level)) {
+      if (!level || !tracingUtil.shouldCaptureLogSpan(level)) {
         return originalLog.apply(this, arguments);
       }
 

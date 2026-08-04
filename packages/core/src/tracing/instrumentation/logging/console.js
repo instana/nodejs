@@ -39,7 +39,7 @@ function shimLog(options) {
         return originalLog.apply(this, arguments);
       }
 
-      if (!tracingUtil.shouldCaptureLogSpan(options.level)) {
+      if (!options.level || !tracingUtil.shouldCaptureLogSpan(options.level)) {
         return originalLog.apply(this, arguments);
       }
 

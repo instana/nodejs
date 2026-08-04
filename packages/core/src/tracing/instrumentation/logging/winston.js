@@ -100,7 +100,7 @@ function instrumentedLevelMethod(originalMethod, level) {
 
     const normalizedLogLevel = resolveLogLevel(level);
 
-    if (!tracingUtil.shouldCaptureLogSpan(normalizedLogLevel)) {
+    if (!normalizedLogLevel || !tracingUtil.shouldCaptureLogSpan(normalizedLogLevel)) {
       return originalMethod.apply(this, arguments);
     }
 
@@ -168,7 +168,11 @@ function instrumentedLog(originalMethod) {
 
     const normalizedLogLevel = resolveLogLevel(level);
 
-    if (cls.skipExitTracing({ isActive }) || !tracingUtil.shouldCaptureLogSpan(normalizedLogLevel)) {
+    if (
+      cls.skipExitTracing({ isActive }) ||
+      !normalizedLogLevel ||
+      !tracingUtil.shouldCaptureLogSpan(normalizedLogLevel)
+    ) {
       return originalMethod.apply(this, arguments);
     }
 
