@@ -6,24 +6,24 @@
 
 const ctx = require('../../common/context');
 const { METRIC_TYPES, METRIC_UNITS } = require('./constants');
+const { msToSeconds, heapSpacePoints, singlePoint } = require('./util');
 
 const OTLP = /** @type {any} */ (ctx.semConv);
 
 /**
  * @typedef {Object} MetricDataPointMapping
- * @property {string} instana      - dot-path into the Instana payload (e.g. 'gc.gcPause')
- * @property {Record<string,any>} attributes  - fixed OTel attribute set for this data point
- * @property {(value: any) => any} [transform] - optional value transform
+ * @property {string} instana
+ * @property {Record<string,any>} attributes
+ * @property {(value: any) => any} [transform]
  */
 
 /**
  * @typedef {Object} MetricMapping
- * @property {string} name           - OTel metric name (from semConv)
- * @property {string} unit           - OTel unit string
- * @property {string} type           - 'gauge' | 'updowncounter' | 'histogram'
- * @property {string} instanaPrefix  - top-level key in the Instana payload that must exist
+ * @property {string} name
+ * @property {string} unit
+ * @property {string} type
+ * @property {string} instanaPrefix
  * @property {(payload: Record<string,any>) => Array<{attributes: Record<string,any>, value: any}> | null} dataPoints
- *   - returns the data-point array for this metric, or null when the source field is absent
  */
 
 /** @type {MetricMapping[]} */
@@ -36,12 +36,7 @@ const v8Mappings = [
     dataPoints(payload) {
       const gc = payload.gc;
       if (!gc || typeof gc.gcPause !== 'number') return null;
-      return [
-        {
-          attributes: { [OTLP.metrics.v8js.attributes.GC_TYPE]: 'all' },
-          value: { count: 1, sum: gc.gcPause / 1000 }
-        }
-      ];
+      return singlePoint({ count: 1, sum: msToSeconds(gc.gcPause) }, { [OTLP.metrics.v8js.attributes.GC_TYPE]: 'all' });
     }
   },
 
@@ -51,12 +46,7 @@ const v8Mappings = [
     type: METRIC_TYPES.UPDOWNCOUNTER,
     instanaPrefix: 'heapSpaces',
     dataPoints(payload) {
-      const heapSpaces = payload.heapSpaces;
-      if (!heapSpaces || typeof heapSpaces !== 'object') return null;
-      const points = Object.entries(heapSpaces)
-        .filter(([, s]) => s && typeof s.available === 'number')
-        .map(([name, s]) => ({ attributes: { [OTLP.metrics.v8js.attributes.HEAP_SPACE_NAME]: name }, value: s.available }));
-      return points.length ? points : null;
+      return heapSpacePoints(payload.heapSpaces, 'available', OTLP.metrics.v8js.attributes.HEAP_SPACE_NAME);
     }
   },
 
@@ -66,12 +56,7 @@ const v8Mappings = [
     type: METRIC_TYPES.UPDOWNCOUNTER,
     instanaPrefix: 'heapSpaces',
     dataPoints(payload) {
-      const heapSpaces = payload.heapSpaces;
-      if (!heapSpaces || typeof heapSpaces !== 'object') return null;
-      const points = Object.entries(heapSpaces)
-        .filter(([, s]) => s && typeof s.physical === 'number')
-        .map(([name, s]) => ({ attributes: { [OTLP.metrics.v8js.attributes.HEAP_SPACE_NAME]: name }, value: s.physical }));
-      return points.length ? points : null;
+      return heapSpacePoints(payload.heapSpaces, 'physical', OTLP.metrics.v8js.attributes.HEAP_SPACE_NAME);
     }
   },
 
@@ -81,12 +66,7 @@ const v8Mappings = [
     type: METRIC_TYPES.UPDOWNCOUNTER,
     instanaPrefix: 'heapSpaces',
     dataPoints(payload) {
-      const heapSpaces = payload.heapSpaces;
-      if (!heapSpaces || typeof heapSpaces !== 'object') return null;
-      const points = Object.entries(heapSpaces)
-        .filter(([, s]) => s && typeof s.current === 'number')
-        .map(([name, s]) => ({ attributes: { [OTLP.metrics.v8js.attributes.HEAP_SPACE_NAME]: name }, value: s.current }));
-      return points.length ? points : null;
+      return heapSpacePoints(payload.heapSpaces, 'current', OTLP.metrics.v8js.attributes.HEAP_SPACE_NAME);
     }
   },
 
@@ -96,12 +76,7 @@ const v8Mappings = [
     type: METRIC_TYPES.UPDOWNCOUNTER,
     instanaPrefix: 'heapSpaces',
     dataPoints(payload) {
-      const heapSpaces = payload.heapSpaces;
-      if (!heapSpaces || typeof heapSpaces !== 'object') return null;
-      const points = Object.entries(heapSpaces)
-        .filter(([, s]) => s && typeof s.used === 'number')
-        .map(([name, s]) => ({ attributes: { [OTLP.metrics.v8js.attributes.HEAP_SPACE_NAME]: name }, value: s.used }));
-      return points.length ? points : null;
+      return heapSpacePoints(payload.heapSpaces, 'used', OTLP.metrics.v8js.attributes.HEAP_SPACE_NAME);
     }
   },
 
@@ -113,7 +88,7 @@ const v8Mappings = [
     dataPoints(payload) {
       const ar = payload.activeResources;
       if (!ar || typeof ar.count !== 'number') return null;
-      return [{ attributes: { [OTLP.metrics.v8js.attributes.RESOURCE_TYPE]: 'all' }, value: ar.count }];
+      return singlePoint(ar.count, { [OTLP.metrics.v8js.attributes.RESOURCE_TYPE]: 'all' });
     }
   }
 ];
@@ -128,7 +103,7 @@ const nodejsMappings = [
     dataPoints(payload) {
       const libuv = payload.libuv;
       if (!libuv || typeof libuv.min !== 'number') return null;
-      return [{ attributes: {}, value: libuv.min / 1000 }];
+      return singlePoint(msToSeconds(libuv.min), {});
     }
   },
 
@@ -140,12 +115,11 @@ const nodejsMappings = [
     dataPoints(payload) {
       const libuv = payload.libuv;
       if (!libuv || typeof libuv.max !== 'number') return null;
-      return [{ attributes: {}, value: libuv.max / 1000 }];
+      return singlePoint(msToSeconds(libuv.max), {});
     }
   },
 
   {
-    // Derived: sum / num.  Requires num > 0.
     name: OTLP.metrics.nodejs.EVENTLOOP_DELAY_MEAN,
     unit: METRIC_UNITS.SECONDS,
     type: METRIC_TYPES.GAUGE,
@@ -153,7 +127,7 @@ const nodejsMappings = [
     dataPoints(payload) {
       const libuv = payload.libuv;
       if (!libuv || typeof libuv.sum !== 'number' || typeof libuv.num !== 'number' || libuv.num === 0) return null;
-      return [{ attributes: {}, value: libuv.sum / libuv.num / 1000 }];
+      return singlePoint(msToSeconds(libuv.sum / libuv.num), {});
     }
   }
 ];

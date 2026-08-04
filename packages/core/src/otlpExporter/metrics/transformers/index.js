@@ -9,6 +9,5 @@ const runtimeMetrics = require('./runtimeMetrics');
 
 module.exports = {
   resource,
-  /** Engine: iterates mapper.metricMappings → OTLP metric array */
   runtimeMetrics
 };
