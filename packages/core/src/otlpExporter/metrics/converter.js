@@ -45,8 +45,6 @@ function convert(metrics) {
     // Service name resolution, it not come from first metric once it set it will be used for all metrics
     resolveServiceName(metrics);
 
-    const mapper = mappers.get(metrics);
-
     // All metrics share the same resource, so we can extract the attributes from the first one
     const resource = transformers.resource.extractResourceAttributes(/** @type {any} */ (metricsArray[0]));
 
@@ -57,7 +55,7 @@ function convert(metrics) {
           scopeMetrics: [
             {
               scope: INSTRUMENTATION_SCOPE,
-              metrics: transformers.runtimeMetrics.extractMetrics(metrics, mapper)
+              metrics: transformers.extractMetrics(metrics, mappers.allMappings)
             }
           ]
         }
