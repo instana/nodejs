@@ -4,41 +4,79 @@
 
 'use strict';
 
-/**
- * @typedef {import('../mappers/runtimeMetrics').MetricMapping} MetricMapping
- */
+const { METRIC_TYPES } = require('../mappers/constants');
+const { buildDataPoints } = require('./util');
 
 /**
- * Iterates the mapper's declarative metricMappings and produces an array of
- * OTLP metric objects for the given Instana metrics payload.
+ * @typedef {import('../mappers/runtimeMetricsMappings').MetricMapping} MetricMapping
+ */
+
+const OTLP_AGGREGATION_TEMPORALITY_CUMULATIVE = 2;
+
+/**
+ * @param {string} type
+ * @param {Array<Record<string, any>>} dataPoints
+ * @returns {Record<string, any>} OTLP
+ */
+function buildMetricEnvelope(type, dataPoints) {
+  switch (type) {
+    case METRIC_TYPES.UPDOWNCOUNTER:
+      return {
+        sum: {
+          aggregationTemporality: OTLP_AGGREGATION_TEMPORALITY_CUMULATIVE,
+          isMonotonic: false,
+          dataPoints
+        }
+      };
+
+    case METRIC_TYPES.HISTOGRAM:
+      return {
+        histogram: {
+          aggregationTemporality: OTLP_AGGREGATION_TEMPORALITY_CUMULATIVE,
+          dataPoints
+        }
+      };
+
+    case METRIC_TYPES.GAUGE:
+    default:
+      return {
+        gauge: {
+          dataPoints
+        }
+      };
+  }
+}
+
+/**
+ * Converts Instana runtime metrics into OTLP metric objects.
  *
- * This is the engine — it knows nothing about specific metric names or field
- * paths; all that knowledge lives in the mapper's mapping tables.
- *
- * @param {Record<string, any>} metricsPayload  Top-level Instana metrics object
+ * @param {Record<string, any>} metricsPayload
  * @param {{ metricMappings: MetricMapping[] }} mapper
- * @returns {Array<{ descriptor: { name: string, unit: string }, type: string, dataPoints: Array<any> }>}
+ * @returns {Array<Record<string, any>>} OTLP
  */
 function extractMetrics(metricsPayload, mapper) {
-  if (!metricsPayload || !mapper || !Array.isArray(mapper.metricMappings)) {
+  if (!metricsPayload || !Array.isArray(mapper?.metricMappings)) {
     return [];
   }
 
-  /** @type {Array<{ descriptor: { name: string, unit: string }, type: string, dataPoints: Array<any> }>} */
-  const result = [];
+  const timeUnixNano = (metricsPayload.timestamp ?? Date.now()) * 1e6;
 
-  for (const mapping of mapper.metricMappings) {
-    const dataPoints = mapping.dataPoints(metricsPayload);
-    if (!dataPoints) continue;
+  return mapper.metricMappings.reduce((metrics, mapping) => {
+    const rawDataPoints = mapping.dataPoints(metricsPayload);
 
-    result.push({
-      descriptor: { name: mapping.name, unit: mapping.unit },
-      type: mapping.type,
-      dataPoints
+    if (!rawDataPoints) {
+      return metrics;
+    }
+
+    // @ts-ignore
+    metrics.push({
+      name: mapping.name,
+      unit: mapping.unit,
+      ...buildMetricEnvelope(mapping.type, buildDataPoints(rawDataPoints, timeUnixNano))
     });
-  }
 
-  return result;
+    return metrics;
+  }, []);
 }
 
 module.exports = {
