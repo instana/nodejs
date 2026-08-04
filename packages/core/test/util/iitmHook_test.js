@@ -19,14 +19,10 @@ describe('util/iitmHook', () => {
   const fakeIitmKey1 = path.join('/project/node_modules', registrySuffix);
   const fakeIitmKey2 = path.join('/project/packages/core/node_modules', registrySuffix);
 
-  // Real lib/register.js entries that may be in require.cache when the full suite runs.
-  // We snapshot them before each test so we have full control over what the detector sees.
   let snapshotKeys;
 
   beforeEach(() => {
-    // Load a fresh module instance to avoid state leaking between tests.
     iitmHook = proxyquire('../../src/util/iitmHook', {
-      // Suppress real import-in-the-middle side-effects; return a no-op constructor.
       'import-in-the-middle': function FakeIitm() {}
     });
 
@@ -45,10 +41,8 @@ describe('util/iitmHook', () => {
   });
 
   afterEach(() => {
-    // Remove fake entries added during the test.
     delete require.cache[fakeIitmKey1];
     delete require.cache[fakeIitmKey2];
-    // Restore the real entries that were snapshotted in beforeEach.
     snapshotKeys.forEach(k => {
       if (!require.cache[k]) {
         require.cache[k] = { id: k, exports: {}, loaded: true };
@@ -58,14 +52,12 @@ describe('util/iitmHook', () => {
 
   describe('activate — IITM version-conflict detection', () => {
     it('should not warn when only one IITM instance is in the module cache', () => {
-      // No registry entries in cache at all — no conflict.
       iitmHook.activate();
 
       expect(fakeLogger.warn.called).to.be.false;
     });
 
     it('should warn when two IITM instances are found in the module cache', () => {
-      // Simulate a second IITM copy (e.g. v2 hoisted by npm) sitting at the project root.
       require.cache[fakeIitmKey1] = { id: fakeIitmKey1, exports: {}, loaded: true };
       require.cache[fakeIitmKey2] = { id: fakeIitmKey2, exports: {}, loaded: true };
 
