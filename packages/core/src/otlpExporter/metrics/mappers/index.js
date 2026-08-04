@@ -4,16 +4,13 @@
 
 'use strict';
 
-const runtimeMetrics = require('./runtimeMetricsMappings');
-
-/**
- * @param {any} _metrics
- */
-// eslint-disable-next-line no-unused-vars
-function get(_metrics) {
-  return runtimeMetrics;
-}
+const runtimeMetricsMappings = require('./runtimeMetricsMappings');
 
 module.exports = {
-  get
+  get allMappings() {
+    return [
+      runtimeMetricsMappings
+      // future: httpMetricsMappings,
+    ];
+  }
 };
