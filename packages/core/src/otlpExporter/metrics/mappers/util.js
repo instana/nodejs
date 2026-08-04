@@ -5,44 +5,36 @@
 'use strict';
 
 /**
- *
- * @param {number} ms
- * @returns {number}
+ * @param {any} ms
+ * @returns {number | undefined}
  */
 function msToSeconds(ms) {
+  if (typeof ms !== 'number') return undefined;
   return ms / 1000;
 }
 
 /**
- * @param {Record<string, any>} heapSpaces
- * @param {string}field
- * @param {string} attributeKey
- * @returns {Array<{attributes: Record<string, any>, value: number}> | null}
+ * @param {any} libuv - The `libuv` sub-object from the metrics payload
+ * @returns {number | undefined}
  */
-function heapSpacePoints(heapSpaces, field, attributeKey) {
-  if (!heapSpaces || typeof heapSpaces !== 'object') return null;
-
-  const points = Object.entries(heapSpaces)
-    .filter(([, space]) => space && typeof space[field] === 'number')
-    .map(([name, space]) => ({
-      attributes: { [attributeKey]: name },
-      value: space[field]
-    }));
-
-  return points.length ? points : null;
+function computeMean(libuv) {
+  if (!libuv || typeof libuv.sum !== 'number' || typeof libuv.num !== 'number' || libuv.num === 0) {
+    return undefined;
+  }
+  return msToSeconds(libuv.sum / libuv.num);
 }
 
 /**
- * @param {any} value
- * @param {Record<string, any>} attributes
- * @returns {Array<{attributes: Record<string, any>, value: any}>}
+ * @param {Record<string, any>} payload
+ * @param {string} path
+ * @returns {any}
  */
-function singlePoint(value, attributes) {
-  return [{ attributes, value }];
+function resolvePath(payload, path) {
+  return path.split('.').reduce((obj, key) => (obj != null ? obj[key] : undefined), payload);
 }
 
 module.exports = {
   msToSeconds,
-  heapSpacePoints,
-  singlePoint
+  computeMean,
+  resolvePath
 };
