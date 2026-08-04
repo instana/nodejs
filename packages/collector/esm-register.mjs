@@ -17,9 +17,11 @@
  */
 
 /**
- * Version conflict risk
- * ---------------------
- * Instana pins IITM v3 (via @instana/core). Some older OTel instrumentation packages still depend on
+ * OpenTelemetry Integration correlation
+ * 
+ * Our OpenTelemetry integration works because we load the IITM hook for ESM here. See https://github.com/open-telemetry/opentelemetry-js/blob/main/doc/esm-support.md.
+ * 
+ * Instana pins IITM v3 (via @instana/core). In general, some OTel instrumentation packages still depend on
  * IITM v2. When npm deduplication places an IITM v2 copy at the project root, both versions end up
  * loaded simultaneously: OTel loads v2 from the root, while Instana loads its own v3. Because each
  * IITM instance keeps its own independent hook registry, hooks registered through one instance are
@@ -29,7 +31,7 @@
  * found in the module cache. See packages/core/src/util/iitmHook.js for the detection logic.
  *
  * Reference: https://github.com/open-telemetry/opentelemetry-js/blob/main/doc/esm-support.md#additional-notes-on-experimental-loaders
- * Note: A long-term fix would be to negotiate a single shared hook registry across all IITM versions.
+ * TODO: Address further cases as described as part of [INSTA-107020](https://jsw.ibm.com/browse/INSTA-107020)
  */
 
 // Import the initialization module for Instana collector and it should be executed in the main thread.
