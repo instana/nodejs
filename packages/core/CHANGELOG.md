@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [6.6.1](https://github.com/instana/nodejs/compare/v6.6.0...v6.6.1) (2026-08-04)
+
+
+### Bug Fixes
+
+* added guard against non-string level in log span ([#2693](https://github.com/instana/nodejs/issues/2693)) ([942ce87](https://github.com/instana/nodejs/commit/942ce87958a905e5e88606f13936f6af3a5dad21))
+
+
+
+
+
 # [6.6.0](https://github.com/instana/nodejs/compare/v6.5.0...v6.6.0) (2026-08-03)
 
 
