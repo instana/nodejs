@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "@grpc/proto-loader": "latest"
+    "@grpc/proto-loader": "0.8.1"
   }
 }

@@ -1,8 +1,8 @@
 {
   "dependencies": {
-    "pg": "latest"
+    "pg": "8.22.0"
   },
   "optionalDependencies": {
-    "pg-native": "latest"
+    "pg-native": "3.8.0"
   }
 }

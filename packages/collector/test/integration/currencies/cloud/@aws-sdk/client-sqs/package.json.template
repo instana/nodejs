@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "sqs-consumer": "latest"
+    "sqs-consumer": "15.0.3"
   }
 }

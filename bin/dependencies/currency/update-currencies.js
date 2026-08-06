@@ -133,6 +133,10 @@ currencies.forEach(originalCurrency => {
 
   if (!DRY_RUN) {
     fs.writeFileSync(currenciesPath, JSON.stringify(currencies, null, 2));
+    execSync(
+      `node bin/generate-lock-files.js --currency "${currency.name}" --version "${latestVersion}"`,
+      { cwd, stdio: 'inherit' }
+    );
   } else {
     console.log(`[DRY RUN] Updated currencies.json with ${currency.name} version ${latestVersion}`);
   }
@@ -140,7 +144,7 @@ currencies.forEach(originalCurrency => {
   if (MAJOR_UPDATES_MODE) {
     utils.commitAndCreatePR({
       packageName: currency.name,
-      files: 'currencies.json',
+      files: "'currencies.json' 'packages/collector/test'",
       currentVersion: installedVersion,
       newVersion: latestVersion,
       branchName,
@@ -150,7 +154,7 @@ currencies.forEach(originalCurrency => {
     });
   } else if (!DRY_RUN) {
     try {
-      execSync("git add 'currencies.json'", { cwd });
+      execSync("git add 'currencies.json' 'packages/collector/test'", { cwd });
       execSync(`git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`, { cwd });
     } catch (err) {
       console.error(`[ERROR] Commit failed: ${err.message}`);
