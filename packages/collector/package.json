@@ -74,7 +74,7 @@
     "@instana/shared-metrics": "6.6.1",
     "pino": "^9.13.0",
     "semver": "^7.8.5",
-    "serialize-error": "^8.1.0"
+    "serialize-error": "^13.0.1"
   },
   "optionalDependencies": {
     "@instana/autoprofile": "6.6.1"
