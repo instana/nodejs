@@ -24,6 +24,11 @@ const versionFilter = (() => {
   return idx !== -1 ? process.argv[idx + 1] : null;
 })();
 
+const fromVersion = (() => {
+  const idx = process.argv.indexOf('--from');
+  return idx !== -1 ? process.argv[idx + 1] : null;
+})();
+
 function getInstanaVersion() {
   try {
     return execSync('npm view @instana/collector version', { encoding: 'utf8' }).trim();
@@ -65,7 +70,7 @@ function findTestDirectories(baseDir, name) {
   return results;
 }
 
-function generateLockFile(currencyName, version, testDir, instanaVersion) {
+function generateLockFile(currencyName, version, testDir, instanaVersion, baseLockFile) {
   const safeName = currencyName.replace(/\//g, '-').replace(/^@/, '');
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), `instana-lock-${safeName}-${version}-`));
 
@@ -81,6 +86,11 @@ function generateLockFile(currencyName, version, testDir, instanaVersion) {
       dependencies
     };
     fs.writeFileSync(path.join(tmpDir, 'package.json'), `${JSON.stringify(pkgJson, null, 2)}\n`);
+
+    if (baseLockFile && fs.existsSync(baseLockFile)) {
+      console.log(`  Using ${path.basename(baseLockFile)} as base (incremental update)...`);
+      fs.copyFileSync(baseLockFile, path.join(tmpDir, 'package-lock.json'));
+    }
 
     console.log(`  Generating lock file for ${currencyName}@${version}...`);
     execSync('npm install --package-lock-only --no-audit --no-progress', {
@@ -200,7 +210,10 @@ function main() {
     testDirs.forEach(testDir => {
       allVersions.forEach(version => {
         if (versionFilter && version !== versionFilter) return;
-        generateLockFile(currency.name, version, testDir, instanaVersion);
+        const baseLockFile = fromVersion
+          ? path.join(testDir, `package-lock.json.v${fromVersion}`)
+          : null;
+        generateLockFile(currency.name, version, testDir, instanaVersion, baseLockFile);
       });
       removeOldLockFiles(testDir, allVersions);
     });
