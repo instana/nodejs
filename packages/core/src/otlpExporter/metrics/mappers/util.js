@@ -24,17 +24,7 @@ function computeMean(libuv) {
   return msToSeconds(libuv.sum / libuv.num);
 }
 
-/**
- * @param {Record<string, any>} payload
- * @param {string} path
- * @returns {any}
- */
-function resolvePath(payload, path) {
-  return path.split('.').reduce((obj, key) => (obj != null ? obj[key] : undefined), payload);
-}
-
 module.exports = {
   msToSeconds,
-  computeMean,
-  resolvePath
+  computeMean
 };

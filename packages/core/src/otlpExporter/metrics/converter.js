@@ -5,7 +5,6 @@
 'use strict';
 
 const otlpCtx = require('../common/context');
-const { normalizeMetrics } = require('./util');
 const transformers = require('./transformers');
 const mappers = require('./mappers');
 
@@ -13,6 +12,9 @@ const { INSTRUMENTATION_SCOPE } = transformers.resource;
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
+
+/** @type {{ attributes: Array<{ key: string, value: any }> } | null} */
+let cachedResource = null;
 
 /**
  * @param {import('../../config').InstanaConfig} config
@@ -36,17 +38,17 @@ function resolveServiceName(metrics) {
  */
 function convert(metrics) {
   try {
-    const metricsArray = normalizeMetrics(metrics);
-
-    if (metricsArray.length === 0) {
+    if (!metrics || typeof metrics !== 'object' || (Array.isArray(metrics) && metrics.length === 0)) {
       return { resourceMetrics: [] };
     }
 
     // Service name resolution, it not come from first metric once it set it will be used for all metrics
     resolveServiceName(metrics);
 
-    // All metrics share the same resource, so we can extract the attributes from the first one
-    const resource = transformers.resource.extractResourceAttributes(/** @type {any} */ (metricsArray[0]));
+    if (!cachedResource) {
+      cachedResource = transformers.resource.extractResourceAttributes(/** @type {any} */ (metrics));
+    }
+    const resource = cachedResource;
 
     return {
       resourceMetrics: [
