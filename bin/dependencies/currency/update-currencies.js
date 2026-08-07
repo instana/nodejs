@@ -133,9 +133,10 @@ currencies.forEach(originalCurrency => {
 
   if (!DRY_RUN) {
     fs.writeFileSync(currenciesPath, JSON.stringify(currencies, null, 2));
-    const lockCmd =
-      `node bin/generate-lock-files.js --currency "${currency.name}"` +
-      ` --version "${latestVersion}" --from "${installedVersion}"`;
+    const lockCmd = isMajorUpdate
+      ? `node bin/generate-lock-files.js --currency "${currency.name}" --version "${latestVersion}"`
+      : `node bin/generate-lock-files.js --currency "${currency.name}"` +
+        ` --version "${latestVersion}" --from "${installedVersion}"`;
     execSync(lockCmd, { cwd, stdio: 'inherit' });
   } else {
     console.log(`[DRY RUN] Updated currencies.json with ${currency.name} version ${latestVersion}`);
