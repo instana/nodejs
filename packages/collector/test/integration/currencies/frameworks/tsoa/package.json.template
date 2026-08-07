@@ -5,6 +5,6 @@
     "start": "node build/src/server.js"
   },
   "dependencies": {
-    "@tsoa/runtime": "*"
+    "@tsoa/runtime": "{{CURRENCY_VERSION}}"
   }
 }
