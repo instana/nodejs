@@ -12,8 +12,7 @@ const { extractMappedMetrics } = require('./util');
  * @returns {Array<Record<string, any>>} OTLP metric objects
  */
 function extractMetrics(metricsPayload, mapper) {
-  const timeUnixNano = (metricsPayload?.timestamp ?? Date.now()) * 1e6;
-  return extractMappedMetrics(metricsPayload, mapper, timeUnixNano);
+  return extractMappedMetrics(metricsPayload, mapper);
 }
 
 module.exports = {

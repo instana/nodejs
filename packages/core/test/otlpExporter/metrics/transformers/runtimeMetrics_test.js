@@ -74,6 +74,12 @@ describe('otlpExporter/metrics/transformers/runtimeMetrics', () => {
       expect(gcMetric.histogram.dataPoints[0]).to.include({ count: '1', sum: 1 });
     });
 
+    it('gc.duration histogram uses DELTA aggregationTemporality', () => {
+      const result = extractMetrics({ gc: { gcPause: 1000 } }, runtimeMetricsMappings);
+      const gcMetric = result.find(m => m.name === 'v8js.gc.duration');
+      expect(gcMetric.histogram.aggregationTemporality).to.equal(1);
+    });
+
     it('gauge metrics use gauge envelope', () => {
       const result = extractMetrics({ activeResources: { count: 18 } }, runtimeMetricsMappings);
       const metric = result.find(m => m.name === 'v8js.resource.active');
@@ -90,7 +96,10 @@ describe('otlpExporter/metrics/transformers/runtimeMetrics', () => {
     });
 
     it('data-points have timeUnixNano derived from payload timestamp', () => {
-      const result = extractMetrics({ activeResources: { count: 5 }, timestamp: 1544712660300 }, runtimeMetricsMappings);
+      const result = extractMetrics(
+        { activeResources: { count: 5 }, timestamp: 1544712660300 },
+        runtimeMetricsMappings
+      );
       const metric = result.find(m => m.name === 'v8js.resource.active');
       expect(metric.gauge.dataPoints[0].timeUnixNano).to.equal(String(1544712660300 * 1e6));
     });

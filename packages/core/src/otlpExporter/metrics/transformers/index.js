@@ -13,11 +13,12 @@ const runtimeMetrics = require('./runtimeMetrics');
  * @returns {Array<Record<string, any>>} OTLP metric objects
  */
 function extractMetrics(metricsPayload, allMappings) {
-  return allMappings.flatMap(mapper => runtimeMetrics.extractMetrics(metricsPayload, mapper));
+  return allMappings.flatMap(mapper => [...runtimeMetrics.extractMetrics(metricsPayload, mapper)
+    // Future: Add other metric categories here as needed
+  ]);
 }
 
 module.exports = {
   resource,
-  runtimeMetrics,
   extractMetrics
 };

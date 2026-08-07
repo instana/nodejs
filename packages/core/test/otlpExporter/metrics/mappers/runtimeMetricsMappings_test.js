@@ -11,8 +11,9 @@ const V8 = MAPPINGS.metrics.v8js;
 const NODEJS = MAPPINGS.metrics.nodejs;
 
 const mapper = require('../../../../src/otlpExporter/metrics/mappers/runtimeMetricsMappings');
-const { resolvePath, msToSeconds, computeMean } = require('../../../../src/otlpExporter/metrics/mappers/util');
+const { msToSeconds, computeMean } = require('../../../../src/otlpExporter/metrics/mappers/util');
 const { resolveDataPoints } = require('../../../../src/otlpExporter/metrics/transformers/util');
+const { POINT_TYPES } = require('../../../../src/otlpExporter/metrics/constants');
 
 const FULL_PAYLOAD = {
   gc: { gcPause: 414 },
@@ -57,7 +58,7 @@ describe('otlpExporter/metrics/mappers/runtimeMetrics', () => {
     it('has correct descriptor metadata', () => {
       expect(mapping.unit).to.equal('s');
       expect(mapping.type).to.equal('histogram');
-      expect(mapping.pointType).to.equal('histogram');
+      expect(mapping.pointType).to.equal(POINT_TYPES.HISTOGRAM);
     });
 
     it('declares instana path gc.gcPause', () => {
@@ -97,7 +98,7 @@ describe('otlpExporter/metrics/mappers/runtimeMetrics', () => {
     it('has correct descriptor metadata', () => {
       expect(mapping.unit).to.equal('By');
       expect(mapping.type).to.equal('updowncounter');
-      expect(mapping.pointType).to.equal('heapSpace');
+      expect(mapping.pointType).to.equal(POINT_TYPES.HEAP_SPACE);
     });
 
     it('declares field = "available" and correct attributeKey', () => {
@@ -200,7 +201,7 @@ describe('otlpExporter/metrics/mappers/runtimeMetrics', () => {
     it('has correct descriptor metadata', () => {
       expect(mapping.unit).to.equal('{resource}');
       expect(mapping.type).to.equal('gauge');
-      expect(mapping.pointType).to.equal('single');
+      expect(mapping.pointType).to.equal(POINT_TYPES.SINGLE);
     });
 
     it('declares instana path activeResources.count', () => {
@@ -303,20 +304,6 @@ describe('otlpExporter/metrics/mappers/runtimeMetrics', () => {
   });
 
   describe('mappers/util helpers', () => {
-    describe('resolvePath', () => {
-      it('resolves a nested dot path', () => {
-        expect(resolvePath({ a: { b: 42 } }, 'a.b')).to.equal(42);
-      });
-
-      it('returns undefined for missing segments', () => {
-        expect(resolvePath({}, 'a.b')).to.be.undefined;
-      });
-
-      it('returns undefined when an intermediate segment is null', () => {
-        expect(resolvePath({ a: null }, 'a.b')).to.be.undefined;
-      });
-    });
-
     describe('computeMean', () => {
       it('returns mean in seconds', () => {
         expect(computeMean({ sum: 4200, num: 42 })).to.equal(0.1);
