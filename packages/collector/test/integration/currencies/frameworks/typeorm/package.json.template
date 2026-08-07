@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "pg": "latest"
+    "pg": "8.14.0"
   }
 }
