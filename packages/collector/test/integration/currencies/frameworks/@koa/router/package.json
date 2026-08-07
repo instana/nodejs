@@ -1,7 +1,0 @@
-{
-  "dependencies": {
-    "koa": "latest",
-    "koa-bodyparser": "latest",
-    "koa-morgan": "latest"
-  }
-}

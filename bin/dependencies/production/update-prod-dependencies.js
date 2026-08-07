@@ -122,9 +122,20 @@ Object.entries(dependencyMap).some(([dep, usageList]) => {
       });
     });
 
+    const isInstanaDep = usageList.some(({ pkgRelDir }) =>
+      pkgRelDir.startsWith('packages/collector') ||
+      pkgRelDir.startsWith('packages/core') ||
+      pkgRelDir.startsWith('packages/shared-metrics')
+    );
+
+    if (isInstanaDep && !DRY_RUN) {
+      const { execSync } = require('child_process');
+      execSync('node bin/generate-lock-files.js', { cwd, stdio: 'inherit' });
+    }
+
     const prCreated = utils.commitAndCreatePR({
       packageName: dep,
-      files: "'*package.json' package-lock.json",
+      files: "'*package.json' package-lock.json 'packages/collector/test'",
       currentVersion: currentVersion,
       newVersion: latestVersion,
       branchName,

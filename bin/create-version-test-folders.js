@@ -98,7 +98,9 @@ function generateTestWrapper({
   mode,
   sourceDepth,
   nodeConstraint,
-  verifyDependency
+  verifyDependency,
+  hasLockFile,
+  isTemplateLock
 }) {
   const currentYear = new Date().getFullYear();
   const relSourcePath = sourceDepth === 2 ? '../..' : '..';
@@ -127,6 +129,8 @@ function copyParentFiles(dir, sourceDir) {
       e.name !== 'node_modules' &&
       e.name !== 'package.json' &&
       !e.name.startsWith('package.json.template') &&
+      !e.name.startsWith('package-lock.json.v') &&
+      e.name !== 'package-lock.json.template' &&
       e.name !== 'modes.json'
     )
     .forEach(e => {
@@ -227,11 +231,18 @@ mochaSuiteFn(suiteTitle, function () {
     try {
       rmDir(path.join(__dirname, 'node_modules'));
 
-      log('[INFO] Running npm install for ${suiteName}@${displayVersion}...');
+${hasLockFile ? `\
+      const lockDir = path.resolve(__dirname, '${sourceDepth === 2 ? '../..' : '..'}');
+      const lockFileName = '${isTemplateLock ? 'package-lock.json.template' : `package-lock.json.v${rawVersion}`}';
+      const lockFileSrc = path.join(lockDir, lockFileName);
+      if (fs.existsSync(lockFileSrc)) {
+        fs.copyFileSync(lockFileSrc, path.join(__dirname, 'package-lock.json'));
+      }
+` : ''}      log('[INFO] Running npm install for ${suiteName}@${displayVersion}...');
       const npmCmd = process.env.CI ?
         'npm install --cache ${rootDir}/.npm-offline-cache --prefer-offline ' +
-        '--no-package-lock --no-audit --prefix ./ --no-progress' :
-        'npm install --no-package-lock --no-audit --prefix ./ --no-progress';
+        '${hasLockFile ? '' : '--no-package-lock '}--no-audit --prefix ./ --no-progress' :
+        'npm install ${hasLockFile ? '' : '--no-package-lock '}--no-audit --prefix ./ --no-progress';
 
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         const timeout = 5 * 60 * 1000;
@@ -472,6 +483,9 @@ function main() {
 
           createTgzSymlinks(targetDir);
 
+          const lockSrc = path.join(testDir, `package-lock.json.v${version}`);
+          const hasLockFile = fs.existsSync(lockSrc);
+
           const testContent = generateTestWrapper({
             suiteName: currency.name,
             displayVersion: dirName.substring(1),
@@ -481,7 +495,8 @@ function main() {
             mode,
             sourceDepth: hasModes ? 2 : 1,
             nodeConstraint,
-            verifyDependency: !skipValidation
+            verifyDependency: !skipValidation,
+            hasLockFile
           });
           const fileName = mode ? `${mode}.test.js` : 'default.test.js';
           fs.writeFileSync(path.join(targetDir, fileName), testContent);
@@ -495,6 +510,15 @@ function main() {
             isOptional,
             majorVersion
           });
+
+          if (hasLockFile) {
+            fs.copyFileSync(lockSrc, path.join(targetDir, 'package-lock.json'));
+          } else {
+            const tplLock = path.join(testDir, 'package-lock.json.template');
+            if (fs.existsSync(tplLock)) {
+              fs.copyFileSync(tplLock, path.join(targetDir, 'package-lock.json'));
+            }
+          }
         });
       });
     });
@@ -535,6 +559,9 @@ function main() {
 
       createTgzSymlinks(targetDir);
 
+      const tplLockNonCurrency = path.join(testDir, 'package-lock.json.template');
+      const hasLockFileNonCurrency = fs.existsSync(tplLockNonCurrency);
+
       const testContent = generateTestWrapper({
         suiteName: dirName,
         displayVersion: version,
@@ -543,7 +570,9 @@ function main() {
         esmOnly: false,
         mode,
         sourceDepth: hasModes ? 2 : 1,
-        verifyDependency: false
+        verifyDependency: false,
+        hasLockFile: hasLockFileNonCurrency,
+        isTemplateLock: true
       });
       const fileName = mode ? `${mode}.test.js` : 'default.test.js';
       fs.writeFileSync(path.join(targetDir, fileName), testContent);
@@ -556,6 +585,10 @@ function main() {
         currencyVersion: null,
         isOptional: false
       });
+
+      if (hasLockFileNonCurrency) {
+        fs.copyFileSync(tplLockNonCurrency, path.join(targetDir, 'package-lock.json'));
+      }
     });
   });
 }
