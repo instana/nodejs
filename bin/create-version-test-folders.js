@@ -231,14 +231,18 @@ mochaSuiteFn(suiteTitle, function () {
     try {
       rmDir(path.join(__dirname, 'node_modules'));
 
-${hasLockFile ? `\
+${
+  hasLockFile
+    ? `\
       const lockDir = path.resolve(__dirname, '${sourceDepth === 2 ? '../..' : '..'}');
       const lockFileName = '${isTemplateLock ? 'package-lock.json.template' : `package-lock.json.v${rawVersion}`}';
       const lockFileSrc = path.join(lockDir, lockFileName);
       if (fs.existsSync(lockFileSrc)) {
         fs.copyFileSync(lockFileSrc, path.join(__dirname, 'package-lock.json'));
       }
-` : ''}      log('[INFO] Running npm install for ${suiteName}@${displayVersion}...');
+`
+    : ''
+}      log('[INFO] Running npm install for ${suiteName}@${displayVersion}...');
       const npmCmd = process.env.CI ?
         'npm install --cache ${rootDir}/.npm-offline-cache --prefer-offline ' +
         '${hasLockFile ? '' : '--no-package-lock '}--no-audit --prefix ./ --no-progress' :

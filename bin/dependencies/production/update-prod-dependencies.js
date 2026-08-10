@@ -122,10 +122,11 @@ Object.entries(dependencyMap).some(([dep, usageList]) => {
       });
     });
 
-    const isInstanaDep = usageList.some(({ pkgRelDir }) =>
-      pkgRelDir.startsWith('packages/collector') ||
-      pkgRelDir.startsWith('packages/core') ||
-      pkgRelDir.startsWith('packages/shared-metrics')
+    const isInstanaDep = usageList.some(
+      ({ pkgRelDir }) =>
+        pkgRelDir.startsWith('packages/collector') ||
+        pkgRelDir.startsWith('packages/core') ||
+        pkgRelDir.startsWith('packages/shared-metrics')
     );
 
     if (isInstanaDep && !DRY_RUN) {

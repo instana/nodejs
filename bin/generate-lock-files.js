@@ -210,9 +210,7 @@ function main() {
     testDirs.forEach(testDir => {
       allVersions.forEach(version => {
         if (versionFilter && version !== versionFilter) return;
-        const baseLockFile = fromVersion
-          ? path.join(testDir, `package-lock.json.v${fromVersion}`)
-          : null;
+        const baseLockFile = fromVersion ? path.join(testDir, `package-lock.json.v${fromVersion}`) : null;
         generateLockFile(currency.name, version, testDir, instanaVersion, baseLockFile);
       });
       removeOldLockFiles(testDir, allVersions);
