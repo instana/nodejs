@@ -95,6 +95,8 @@ spec:
         echo "CIRCLE_COMPARE_URL: $CIRCLE_COMPARE_URL"
         # echo "MODIFIED_FILES: $MODIFIED_FILES"
         echo "GIT_COMMIT_DESC: $GIT_COMMIT_DESC"
+        SM_SERVICE_URL="https://2502e0f8-4e08-47d1-bc55-fb1713f22522.private.eu-de.secrets-manager.appdomain.cloud"
+        SM_SERVICE_NAME="secret-manager-team-nodejs"
         if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && ! echo "$MODIFIED_FILES" | grep -q "packages/metrics-util"; then
           echo "Skipping group."
           touch "metrics-util.succeeded"
@@ -144,9 +146,9 @@ spec:
           NEEDED_CREDS=$(echo "$NEEDED_CREDS" | tr ' ' '\n' | sort -u | tr '\n' ' ')
           if [ -n "$NEEDED_CREDS" ]; then
             ibmcloud plugin install secrets-manager -f -r 'IBM Cloud'
-            ibmcloud sm init --service-url https://2502e0f8-4e08-47d1-bc55-fb1713f22522.private.eu-de.secrets-manager.appdomain.cloud
+            ibmcloud sm init --service-url "$SM_SERVICE_URL"
             for CRED in $NEEDED_CREDS; do
-              export $CRED=$(ibmcloud sm secret-value-get --name "$CRED" --service-name secret-manager-team-nodejs --output json | jq -r '.resources[0].secret_data.payload')
+              export $CRED=$(ibmcloud sm secret-value-get --name "$CRED" --service-name "$SM_SERVICE_NAME" --output json | jq -r '.resources[0].secret_data.payload')
             done
           fi
           unset API_KEY
