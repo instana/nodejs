@@ -26,7 +26,6 @@ jobs:
     name: Release the main branch as a new version to the npm registry.
     runs-on: ubuntu-latest
     env:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       FROM_PACKAGE: ${{ inputs.fromPackage }}
       DRY_RUN: ${{ inputs.dryRun }}
     steps:
@@ -46,6 +45,7 @@ jobs:
           node-version: ${{ env.NODEJS_VERSION }}
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: echo versions
         run: |
@@ -56,11 +56,6 @@ jobs:
 
       - name: Disallow major releases
         run: .github/workflows/disallow-major-release.sh
-
-      - name: Add token to .npmrc
-        run: |
-          echo "" >> .npmrc
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> .npmrc
 
       # This is required to make sure that new packages (@instana packages that we publish for the first time) can be
       # published to the npm registry. The default visibility for scoped packages is private, but our npm account
@@ -73,6 +68,8 @@ jobs:
           git config user.email github-actions@github.com
 
       - name: Execute lerna
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -x
           if [[ $DRY_RUN = true ]]; then
