@@ -1,9 +1,9 @@
 {
   "dependencies": {
-    "pino": "latest",
-    "@elastic/ecs-pino-format": "latest",
-    "bunyan": "latest",
-    "winston": "latest",
-    "log4js": "latest"
+    "pino": "10.3.1",
+    "@elastic/ecs-pino-format": "1.5.0",
+    "bunyan": "1.8.15",
+    "winston": "3.19.0",
+    "log4js": "6.9.1"
   }
 }

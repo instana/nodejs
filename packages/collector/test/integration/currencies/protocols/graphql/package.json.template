@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "amqplib": "latest",
-    "pino": "latest"
+    "amqplib": "2.0.1",
+    "pino": "10.3.1"
   }
 }

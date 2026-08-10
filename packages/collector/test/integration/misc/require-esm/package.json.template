@@ -4,6 +4,6 @@
   "description": "Test for Node.js require(esm) support",
   "main": "app.js",
   "dependencies": {
-    "got": "latest"
+    "got": "15.1.0"
   }
 }
