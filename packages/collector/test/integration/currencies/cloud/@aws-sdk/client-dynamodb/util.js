@@ -6,7 +6,25 @@
 'use strict';
 
 const AWS = require('@aws-sdk/client-dynamodb');
-const dynamoDB = new AWS.DynamoDB({ region: 'us-east-2' });
+
+function getClientConfig() {
+  let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
+  if (endpoint) {
+    if (endpoint.startsWith('localstack://')) {
+      endpoint = endpoint.replace('localstack://', 'http://');
+    }
+    return {
+      region: 'us-east-2',
+      endpoint,
+      credentials: { accessKeyId: 'test', secretAccessKey: 'test' }
+    };
+  }
+  return { region: 'us-east-2' };
+}
+
+exports.getClientConfig = getClientConfig;
+
+const dynamoDB = new AWS.DynamoDB(getClientConfig());
 const interval = 1000;
 const MAX_WAIT_TIME = 10000;
 

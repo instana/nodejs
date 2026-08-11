@@ -6,8 +6,27 @@
 'use strict';
 
 const AWS = require('aws-sdk');
+
+function getClientConfig() {
+  let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
+  if (endpoint) {
+    if (endpoint.startsWith('localstack://')) {
+      endpoint = endpoint.replace('localstack://', 'http://');
+    }
+    return {
+      region: 'us-east-2',
+      endpoint,
+      accessKeyId: 'test',
+      secretAccessKey: 'test'
+    };
+  }
+  return { region: 'us-east-2' };
+}
+
 AWS.config.update({ region: 'us-east-2' });
-const dynamoDB = new AWS.DynamoDB();
+exports.getClientConfig = getClientConfig;
+
+const dynamoDB = new AWS.DynamoDB(getClientConfig());
 const interval = 1000;
 const MAX_WAIT_TIME = 10000;
 
