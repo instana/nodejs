@@ -68,41 +68,6 @@ spec:
   steps:
     - name: run-test-group
       env:
-        - name: AWS_ACCESS_KEY_ID
-          valueFrom:
-            secretKeyRef:
-              name: $(params.continuous-delivery-context-secret)
-              key: "AWS_ACCESS_KEY_ID"
-        - name: AWS_SECRET_ACCESS_KEY
-          valueFrom:
-            secretKeyRef:
-              name: $(params.continuous-delivery-context-secret)
-              key: "AWS_SECRET_ACCESS_KEY"
-        - name: AZURE_REDIS_CLUSTER_PWD
-          valueFrom:
-            secretKeyRef:
-              name: $(params.continuous-delivery-context-secret)
-              key: "AZURE_REDIS_CLUSTER_PWD"
-        - name: DB2_CONNECTION_STR
-          valueFrom:
-            secretKeyRef:
-              name: $(params.continuous-delivery-context-secret)
-              key: "DB2_CONNECTION_STR"
-        - name: GOOGLE_APPLICATION_CREDENTIALS_CONTENT
-          valueFrom:
-            secretKeyRef:
-              name: $(params.continuous-delivery-context-secret)
-              key: "GOOGLE_APPLICATION_CREDENTIALS_CONTENT"
-        - name: AZURE_SQL_PWD
-          valueFrom:
-            secretKeyRef:
-              name: $(params.continuous-delivery-context-secret)
-              key: "AZURE_SQL_PWD"
-        - name: AZURE_STORAGE_ACCOUNT_KEY
-          valueFrom:
-            secretKeyRef:
-              name: $(params.continuous-delivery-context-secret)
-              key: "AZURE_STORAGE_ACCOUNT_KEY"
         - name: API_KEY
           valueFrom:
             secretKeyRef:
@@ -168,6 +133,8 @@ spec:
         echo "CIRCLE_COMPARE_URL: $CIRCLE_COMPARE_URL"
         # echo "MODIFIED_FILES: $MODIFIED_FILES"
         echo "GIT_COMMIT_DESC: $GIT_COMMIT_DESC"
+        SM_SERVICE_URL="https://2502e0f8-4e08-47d1-bc55-fb1713f22522.private.eu-de.secrets-manager.appdomain.cloud"
+        SM_SERVICE_NAME="secret-manager-team-nodejs"
         if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && true; then
           echo "Skipping group."
           touch "collector-8-redis.succeeded"
@@ -199,7 +166,31 @@ spec:
           # Write mapping to shared file (printed by tasks-results)
           SHORT_NAMES=$(echo "$CLAIMED_TESTS" | tr ' ' '\n' | sed 's|.*/currencies/||; s|.*/misc/||; s|.*/unit/||; s|/test\.js$||' | tr '\n' ', ' | sed 's/,$//')
           echo "collector-8-redis: $SHORT_NAMES" >> "$ARTIFACTS_PATH/test-mapping.txt"
+          NEEDED_CREDS=""
+          for TEST_FILE in $CLAIMED_TESTS; do
+            TEST_DIR=$(dirname "$TEST_FILE")
+            SCAN_DIR="$TEST_DIR"
+            if echo "$TEST_DIR" | grep -q '/_v[^/]*$'; then
+              SCAN_DIR="$(dirname "$TEST_DIR")"
+            elif echo "$(dirname "$TEST_DIR")" | grep -q '/_v[^/]*$'; then
+              SCAN_DIR="$(dirname "$(dirname "$TEST_DIR")")"
+            fi
+            if [ -f "$SCAN_DIR/.credentials" ]; then
+              while IFS= read -r CRED; do
+                [ -n "$CRED" ] && NEEDED_CREDS="$NEEDED_CREDS $CRED"
+              done < "$SCAN_DIR/.credentials"
+            fi
+          done
+          NEEDED_CREDS=$(echo "$NEEDED_CREDS" | tr ' ' '\n' | sort -u | tr '\n' ' ')
+          if [ -n "$NEEDED_CREDS" ]; then
+            ibmcloud plugin install secrets-manager -f -r 'IBM Cloud'
+            ibmcloud sm init --service-url "$SM_SERVICE_URL"
+            for CRED in $NEEDED_CREDS; do
+              export $CRED=$(ibmcloud sm secret-value-get --name "$CRED" --service-name "$SM_SERVICE_NAME" --output json | jq -r '.resources[0].secret_data.payload')
+            done
+          fi
         fi
+        unset API_KEY
         rm -f "collector-8-redis.succeeded" "collector-8-redis.failed"
         retry=1
         LAST_EXIT=1
