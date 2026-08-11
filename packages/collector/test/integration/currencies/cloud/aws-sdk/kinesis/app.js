@@ -21,8 +21,9 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 const AWS = require('aws-sdk');
 const logPrefix = `AWS SDK v2 Kinesis (${process.pid}):\t`;
 const log = require('@_local/core/test/test_util/log').getLogger(logPrefix);
+const { getClientConfig } = require('./util');
 AWS.config.update({ region: 'us-east-2' });
-const kinesis = new AWS.Kinesis();
+const kinesis = new AWS.Kinesis(getClientConfig());
 
 const availableOperations = {
   deleteStream: {
