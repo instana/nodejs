@@ -239,7 +239,6 @@ if [ -n "$PACKAGE" ]; then
     fi
     args="-- --grep \"$COMBINED_GREP\" $args"
     echo "Running tests for $ACTUAL_PACKAGE${VERSION:+ version $VERSION} (grep pattern: $COMBINED_GREP)"
-    echo "Warning: Could not identify specific test files, running full suite with filter."
   fi
 
 else
