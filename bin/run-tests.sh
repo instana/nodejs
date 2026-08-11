@@ -121,13 +121,17 @@ if [ -n "$PACKAGE" ]; then
       echo "Running tests for all versions of $ACTUAL_PACKAGE"
       echo "Available versions: $AVAILABLE_VERSIONS"
 
-      SEARCH_PATTERN="*.test.js"
-      if [ -n "$TEST_NAME_FILTER" ]; then
-        SEARCH_PATTERN="*${TEST_NAME_FILTER}*.test.js"
-      fi
-
       for VERSION_DIR in $ALL_VERSION_DIRS; do
-        FOUND_FILES=$(find "$VERSION_DIR" -maxdepth 2 -name "$SEARCH_PATTERN" ! -name "test_base.js")
+        if [ -n "$TEST_NAME_FILTER" ]; then
+          NAMED_FILES=$(find "$VERSION_DIR" -maxdepth 2 -name "*${TEST_NAME_FILTER}*.test.js" ! -name "test_base.js")
+          if [ -n "$NAMED_FILES" ]; then
+            FOUND_FILES="$NAMED_FILES"
+          else
+            FOUND_FILES=$(find "$VERSION_DIR" -maxdepth 2 -name "*.test.js" ! -name "test_base.js")
+          fi
+        else
+          FOUND_FILES=$(find "$VERSION_DIR" -maxdepth 2 -name "*.test.js" ! -name "test_base.js")
+        fi
         if [ -n "$FOUND_FILES" ]; then
           TEST_FILES="$TEST_FILES $FOUND_FILES"
         fi
@@ -154,12 +158,20 @@ if [ -n "$PACKAGE" ]; then
 
       GREP_PATTERN="$ACTUAL_PACKAGE@$VERSION"
 
-      # Check for test files in the version directory
+      # Check for test files in the version directory.
+      # Same fallback logic: if the name-filtered search finds nothing, use all test files
+      # and apply the filter as a mocha --grep instead.
       SEARCH_PATTERN="*.test.js"
       if [ -n "$TEST_NAME_FILTER" ]; then
-        SEARCH_PATTERN="*${TEST_NAME_FILTER}*.test.js"
+        NAMED_FILES=$(find "$PACKAGE_DIR/_${VERSION}" -maxdepth 2 -name "*${TEST_NAME_FILTER}*.test.js" ! -name "test_base.js")
+        if [ -n "$NAMED_FILES" ]; then
+          FOUND_FILES="$NAMED_FILES"
+        else
+          FOUND_FILES=$(find "$PACKAGE_DIR/_${VERSION}" -maxdepth 2 -name "$SEARCH_PATTERN" ! -name "test_base.js")
+        fi
+      else
+        FOUND_FILES=$(find "$PACKAGE_DIR/_${VERSION}" -maxdepth 2 -name "$SEARCH_PATTERN" ! -name "test_base.js")
       fi
-      FOUND_FILES=$(find "$PACKAGE_DIR/_${VERSION}" -maxdepth 2 -name "$SEARCH_PATTERN" ! -name "test_base.js")
       if [ -n "$FOUND_FILES" ]; then
         TEST_FILES=$(echo "$FOUND_FILES" | tr '\n' ' ')
       fi
@@ -170,12 +182,21 @@ if [ -n "$PACKAGE" ]; then
     if [ -n "$HIGHEST_VERSION" ]; then
       GREP_PATTERN="$ACTUAL_PACKAGE@v$HIGHEST_VERSION"
 
-      # Check for test files in the highest version directory
+      # Check for test files in the highest version directory.
+      # If a TEST_NAME_FILTER is given, first try to find files whose name matches it.
+      # If that yields nothing (e.g. the whole suite lives in a single default.test.js),
+      # fall back to all test files in the directory and let the filter become a mocha --grep.
       SEARCH_PATTERN="*.test.js"
       if [ -n "$TEST_NAME_FILTER" ]; then
-        SEARCH_PATTERN="*${TEST_NAME_FILTER}*.test.js"
+        NAMED_FILES=$(find "$PACKAGE_DIR/_v${HIGHEST_VERSION}" -maxdepth 2 -name "*${TEST_NAME_FILTER}*.test.js" ! -name "test_base.js")
+        if [ -n "$NAMED_FILES" ]; then
+          FOUND_FILES="$NAMED_FILES"
+        else
+          FOUND_FILES=$(find "$PACKAGE_DIR/_v${HIGHEST_VERSION}" -maxdepth 2 -name "$SEARCH_PATTERN" ! -name "test_base.js")
+        fi
+      else
+        FOUND_FILES=$(find "$PACKAGE_DIR/_v${HIGHEST_VERSION}" -maxdepth 2 -name "$SEARCH_PATTERN" ! -name "test_base.js")
       fi
-      FOUND_FILES=$(find "$PACKAGE_DIR/_v${HIGHEST_VERSION}" -maxdepth 2 -name "$SEARCH_PATTERN" ! -name "test_base.js")
       if [ -n "$FOUND_FILES" ]; then
         TEST_FILES=$(echo "$FOUND_FILES" | tr '\n' ' ')
       fi
@@ -201,16 +222,23 @@ if [ -n "$PACKAGE" ]; then
     # Use test:debug:files to run only the specific files
     npm_command="npm run test:debug:files -- $RELATIVE_TEST_FILES"
 
-    # We still pass grep pattern just in case, though mocha might not need it if we pass specific files
-    # But usually filtering by file is enough.
-    # args="-- --grep \"$GREP_PATTERN\" $args"
+    # When a TEST_NAME_FILTER was given but no matching file was found (e.g. the whole suite
+    # lives in a single default.test.js), apply it as a mocha --grep on the describe/it labels.
+    if [ -n "$TEST_NAME_FILTER" ]; then
+      args="$args -- --grep \"$TEST_NAME_FILTER\""
+    fi
 
     echo "Running tests for $ACTUAL_PACKAGE${VERSION:+ version $VERSION}"
     echo "Target files: $RELATIVE_TEST_FILES"
+    [ -n "$TEST_NAME_FILTER" ] && echo "Grep filter: $TEST_NAME_FILTER"
   else
     # If we couldn't determine specific files, fall back to old behavior but warn
-    args="-- --grep \"$GREP_PATTERN\" $args"
-    echo "Running tests for $ACTUAL_PACKAGE${VERSION:+ version $VERSION} (grep pattern: $GREP_PATTERN)"
+    COMBINED_GREP="$GREP_PATTERN"
+    if [ -n "$TEST_NAME_FILTER" ]; then
+      COMBINED_GREP="$GREP_PATTERN.*$TEST_NAME_FILTER"
+    fi
+    args="-- --grep \"$COMBINED_GREP\" $args"
+    echo "Running tests for $ACTUAL_PACKAGE${VERSION:+ version $VERSION} (grep pattern: $COMBINED_GREP)"
     echo "Warning: Could not identify specific test files, running full suite with filter."
   fi
 
