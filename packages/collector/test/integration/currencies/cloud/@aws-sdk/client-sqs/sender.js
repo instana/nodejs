@@ -16,15 +16,15 @@ const express = require('express');
 const delay = require('@_local/core/test/test_util/delay');
 
 const awsSdk3 = require('@aws-sdk/client-sqs');
+const { getClientConfig } = require('./util');
 const logPrefix = `AWS SDK v3 SQS Sender (${process.pid}):\t`;
 const log = require('@_local/core/test/test_util/log').getLogger(logPrefix);
 const port = require('@_local/collector/test/test_util/app-port')();
 const agentPort = process.env.INSTANA_AGENT_PORT;
 const app = express();
 const queueURL = process.env.AWS_SQS_QUEUE_URL;
-const awsRegion = 'us-east-2';
-const sqs = new awsSdk3.SQSClient({ region: awsRegion });
-const sqsv2 = new awsSdk3.SQS({ region: awsRegion });
+const sqs = new awsSdk3.SQSClient(getClientConfig());
+const sqsv2 = new awsSdk3.SQS(getClientConfig());
 
 app.get('/', (_req, res) => {
   res.send('Ok');

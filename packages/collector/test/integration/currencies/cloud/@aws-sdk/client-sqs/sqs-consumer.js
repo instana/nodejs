@@ -14,11 +14,11 @@ const instana = require('@instana/collector')();
 const express = require('express');
 const awsSdk3 = require('@aws-sdk/client-sqs');
 const { Consumer } = require('sqs-consumer');
+const { getClientConfig } = require('./util');
 
 const { sendToParent } = require('@_local/core/test/test_util');
 const delay = require('@_local/core/test/test_util/delay');
 
-const awsRegion = 'us-east-2';
 const port = require('@_local/collector/test/test_util/app-port')();
 const agentPort = process.env.INSTANA_AGENT_PORT;
 const withError = process.env.AWS_SQS_RECEIVER_ERROR === 'true';
@@ -37,7 +37,7 @@ function log() {
   /* eslint-enable no-console */
 }
 
-const sqs = new awsSdk3.SQSClient({ region: awsRegion });
+const sqs = new awsSdk3.SQSClient(getClientConfig());
 
 const handleMessageFn = async message => {
   // make sure the span took at least one second to complete
@@ -91,6 +91,8 @@ const consumerApp = Consumer.create(
       // https://github.com/aws/aws-sdk-js-v3/issues/1394
       visibilityTimeout: 1,
       queueUrl: queueURL,
+      // Use 'All' so localstack (which does not support the X_INSTANA* wildcard) returns Instana trace attributes
+      messageAttributeNames: ['All'],
       sqs
     },
     fn

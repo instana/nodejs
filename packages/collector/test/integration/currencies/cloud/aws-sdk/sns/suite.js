@@ -24,8 +24,8 @@ const {
 const { promisifyNonSequentialCases } = require('../promisify_non_sequential');
 
 const topicAndQueueName = `nodejs-team-v2-${semver.major(process.versions.node)}-${uuid()}`;
-const topicArn = `arn:aws:sns:us-east-2:767398002385:${topicAndQueueName}`;
-const sqsQueueUrl = `https://sqs.us-east-2.amazonaws.com/767398002385/${topicAndQueueName}`;
+let topicArn;
+let sqsQueueUrl;
 
 const withErrorOptions = [false, true];
 const requestMethods = ['Callback', 'Promise', 'Async'];
@@ -42,7 +42,7 @@ module.exports = function (libraryEnv) {
     const agentControls = globalAgent.instance;
 
     before(async () => {
-      await createTopic(topicAndQueueName);
+      ({ topicArn, queueUrl: sqsQueueUrl } = await createTopic(topicAndQueueName));
     });
 
     after(async () => {
@@ -68,6 +68,7 @@ module.exports = function (libraryEnv) {
           useGlobalAgent: true,
           env: {
             SQS_RECEIVE_METHOD: 'callback',
+            SQS_POLL_DELAY: 1,
             AWS_SQS_QUEUE_URL: sqsQueueUrl,
             ...libraryEnv
           }

@@ -19,10 +19,11 @@ const delay = require('@_local/core/test/test_util/delay');
 const AWS = require('aws-sdk');
 const express = require('express');
 const logPrefix = `AWS SDK v2 SNS (${process.pid}):\t`;
+const { getClientConfig } = require('./util');
 AWS.config.update({ region: 'us-east-2' });
-const sns = new AWS.SNS();
+const sns = new AWS.SNS(getClientConfig());
 
-const topicArn = process.env.AWS_SNS_TOPIC_ARN || 'arn:aws:sns:us-east-2:767398002385:nodejs-team';
+const topicArn = process.env.AWS_SNS_TOPIC_ARN;
 const log = require('@_local/core/test/test_util/log').getLogger(logPrefix);
 
 const operationParams = {
