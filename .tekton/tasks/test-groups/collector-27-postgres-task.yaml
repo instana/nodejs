@@ -174,8 +174,8 @@ spec:
               export $CRED=$(ibmcloud sm secret-value-get --name "$CRED" --service-name "$SM_SERVICE_NAME" --output json | jq -r '.resources[0].secret_data.payload')
             done
           fi
-          unset API_KEY
         fi
+        unset API_KEY
         rm -f "collector-27-postgres.succeeded" "collector-27-postgres.failed"
         retry=1
         LAST_EXIT=1
