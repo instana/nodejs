@@ -11,28 +11,23 @@ const {
   GetFunctionConfigurationCommand
 } = require('@aws-sdk/client-lambda');
 const AdmZip = require('adm-zip');
-const { isCI } = require('@_local/core/test/test_util');
-/**
- * Lambda invocation has not yet been tested on Tekton(CI environment).
- * TODO: Implement support for running Lambda function tests on LocalStack with Tekton (INSTA-771).
- */
-exports.isLocalStackDisabled = function () {
-  return isCI();
-};
 
 exports.getClientConfig = function () {
-  if (exports.isLocalStackDisabled()) {
+  let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
+  if (endpoint) {
+    if (endpoint.startsWith('localstack://')) {
+      endpoint = endpoint.replace('localstack://', 'http://');
+    }
     return {
-      region: 'us-east-2'
-    };
-  } else {
-    return {
-      endpoint: process.env.INSTANA_CONNECT_LOCALSTACK_AWS,
-      region: 'us-east-2'
+      region: 'us-east-2',
+      endpoint,
+      credentials: { accessKeyId: 'test', secretAccessKey: 'test' }
     };
   }
+  return { region: 'us-east-2' };
 };
-const clientOpts = this.getClientConfig();
+
+const clientOpts = exports.getClientConfig();
 const lambdaClient = new LambdaClient(clientOpts);
 const zip = new AdmZip();
 const lambdaFunctionCode = `

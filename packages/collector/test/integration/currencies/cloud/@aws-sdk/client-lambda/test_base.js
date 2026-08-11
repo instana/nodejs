@@ -25,39 +25,28 @@ const availableOperations = ['invoke', 'getFunction'];
 let envConfig = {};
 const getNextCallMethod = require('@_local/core/test/test_util/circular_list').getCircularList(requestMethods);
 let libraryEnv;
-async function start() {
+
+function start() {
   this.timeout(config.getTestTimeout() * 20);
 
   if (!supportedVersion(process.versions.node)) {
     it.skip('unsupported node version', () => {});
     return;
   }
-  const { isLocalStackDisabled } = require('./utils');
 
-  if (isLocalStackDisabled()) {
-    // invokeAsync currently not supported in localstack
-    // https://docs.localstack.cloud/references/coverage/coverage_lambda/
-    availableOperations.push('invokeAsync');
-    envConfig = {
-      AWS_LAMBDA_FUNCTION_NAME: functionName
-    };
-  } else {
-    envConfig = {
-      AWS_LAMBDA_FUNCTION_NAME: functionName,
-      AWS_ENDPOINT: process.env.INSTANA_CONNECT_LOCALSTACK_AWS
-    };
-  }
+  envConfig = {
+    AWS_LAMBDA_FUNCTION_NAME: functionName
+  };
 
-  if (!isLocalStackDisabled()) {
-    const { createFunction, removeFunction } = require('./utils');
-    before(async () => {
-      await createFunction(functionName);
-    });
+  before(async () => {
+    const { createFunction } = require('./utils');
+    await createFunction(functionName);
+  });
 
-    after(async () => {
-      await removeFunction(functionName);
-    });
-  }
+  after(async () => {
+    const { removeFunction } = require('./utils');
+    await removeFunction(functionName);
+  });
   describe('tracing enabled', function () {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;

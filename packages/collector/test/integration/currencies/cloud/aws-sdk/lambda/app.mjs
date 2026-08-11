@@ -14,8 +14,25 @@ process.on('SIGTERM', () => {
 import AWS from 'aws-sdk';
 import express from 'express';
 const logPrefix = `AWS SDK v2 Lambda (${process.pid}):\t`;
+
+function getClientConfig() {
+  let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
+  if (endpoint) {
+    if (endpoint.startsWith('localstack://')) {
+      endpoint = endpoint.replace('localstack://', 'http://');
+    }
+    return {
+      region: 'us-east-2',
+      endpoint,
+      accessKeyId: 'test',
+      secretAccessKey: 'test'
+    };
+  }
+  return { region: 'us-east-2' };
+}
+
 AWS.config.update({ region: 'us-east-2' });
-const lambda = new AWS.Lambda();
+const lambda = new AWS.Lambda(getClientConfig());
 const functionName = process.env.AWS_LAMBDA_FUNCTION_NAME || 'nodejs-tracer-lambda';
 import getAppPort from '@_local/collector/test/test_util/app-port.js';
 const port = getAppPort();
