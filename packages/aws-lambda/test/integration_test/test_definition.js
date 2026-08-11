@@ -20,6 +20,32 @@ const expectExactlyOneMatching = require('@_local/core/test/test_util/expectExac
 const { fail } = expect;
 
 const awsRegion = 'us-east-2';
+
+function getLocalstackEndpoint() {
+  let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
+  if (!endpoint) return null;
+  if (endpoint.startsWith('localstack://')) {
+    endpoint = endpoint.replace('localstack://', 'http://');
+  }
+  return endpoint;
+}
+
+function getSsmClientConfig() {
+  const endpoint = getLocalstackEndpoint();
+  if (endpoint) {
+    return { region: awsRegion, endpoint, credentials: { accessKeyId: 'test', secretAccessKey: 'test' } };
+  }
+  return { region: awsRegion };
+}
+
+function getKmsClientConfig() {
+  const endpoint = getLocalstackEndpoint();
+  if (endpoint) {
+    return { region: awsRegion, endpoint, credentials: { accessKeyId: 'test', secretAccessKey: 'test' } };
+  }
+  return { region: awsRegion };
+}
+
 const functionName = 'functionName';
 const unqualifiedArn = `arn:aws:lambda:${awsRegion}:767398002385:function:${functionName}`;
 const version = '$LATEST';
@@ -322,7 +348,7 @@ function registerTests(handlerDefinitionPath, reduced) {
       });
     });
 
-    describeOrSkipIfReduced(reduced)('and it succeeds', () => {
+    (getLocalstackEndpoint() ? describeOrSkipIfReduced(reduced) : describe.skip)('and it succeeds', () => {
       // - INSTANA_ENDPOINT_URL is configured
       // - INSTANA_AGENT_KEY is configured via SSM
       // - back end is reachable
@@ -336,7 +362,7 @@ function registerTests(handlerDefinitionPath, reduced) {
 
       before(callback => {
         const { SSMClient, PutParameterCommand } = require('@aws-sdk/client-ssm');
-        const ssmClient = new SSMClient({ region: awsRegion });
+        const ssmClient = new SSMClient(getSsmClientConfig());
         const params = {
           Name: '/Nodejstest/MyAgentKey',
           Value: instanaAgentKey,
@@ -394,7 +420,7 @@ function registerTests(handlerDefinitionPath, reduced) {
       });
     });
 
-    describeOrSkipIfReduced(reduced)('[with decryption] error', () => {
+    (getLocalstackEndpoint() ? describeOrSkipIfReduced(reduced) : describe.skip)('[with decryption] error', () => {
       const { SSMClient, PutParameterCommand } = require('@aws-sdk/client-ssm');
       const { KMSClient, CreateKeyCommand, ScheduleKeyDeletionCommand } = require('@aws-sdk/client-kms');
       let kmsKeyId;
@@ -431,7 +457,8 @@ function registerTests(handlerDefinitionPath, reduced) {
       });
 
       after(async () => {
-        const kmsClient = new KMSClient({ region: awsRegion });
+        if (!kmsKeyId) return;
+        const kmsClient = new KMSClient(getKmsClientConfig());
         try {
           await kmsClient.send(
             new ScheduleKeyDeletionCommand({
@@ -445,8 +472,8 @@ function registerTests(handlerDefinitionPath, reduced) {
       });
 
       before(async () => {
-        const ssmClient = new SSMClient({ region: awsRegion });
-        const kmsClient = new KMSClient({ region: awsRegion });
+        const ssmClient = new SSMClient(getSsmClientConfig());
+        const kmsClient = new KMSClient(getKmsClientConfig());
 
         try {
           const kmsResponse = await kmsClient.send(new CreateKeyCommand({}));
@@ -495,7 +522,7 @@ function registerTests(handlerDefinitionPath, reduced) {
       });
     });
 
-    describe('[with decryption] succeeds', () => {
+    (getLocalstackEndpoint() ? describeOrSkipIfReduced(reduced) : describe.skip)('[with decryption] succeeds', () => {
       const { SSMClient, PutParameterCommand } = require('@aws-sdk/client-ssm');
       const { KMSClient, CreateKeyCommand, ScheduleKeyDeletionCommand } = require('@aws-sdk/client-kms');
       let kmsKeyId;
@@ -533,7 +560,8 @@ function registerTests(handlerDefinitionPath, reduced) {
       });
 
       after(async () => {
-        const kmsClient = new KMSClient({ region: awsRegion });
+        if (!kmsKeyId) return;
+        const kmsClient = new KMSClient(getKmsClientConfig());
         try {
           await kmsClient.send(
             new ScheduleKeyDeletionCommand({
@@ -547,8 +575,8 @@ function registerTests(handlerDefinitionPath, reduced) {
       });
 
       before(async () => {
-        const ssmClient = new SSMClient({ region: awsRegion });
-        const kmsClient = new KMSClient({ region: awsRegion });
+        const ssmClient = new SSMClient(getSsmClientConfig());
+        const kmsClient = new KMSClient(getKmsClientConfig());
 
         try {
           const kmsResponse = await kmsClient.send(new CreateKeyCommand({}));
