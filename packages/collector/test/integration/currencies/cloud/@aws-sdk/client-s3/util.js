@@ -6,7 +6,24 @@
 'use strict';
 
 const awsSdk3 = require('@aws-sdk/client-s3');
-const s3 = new awsSdk3.S3({ region: 'us-east-2' });
+
+exports.getClientConfig = function () {
+  let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
+  if (endpoint) {
+    if (endpoint.startsWith('localstack://')) {
+      endpoint = endpoint.replace('localstack://', 'http://');
+    }
+    return {
+      region: 'us-east-2',
+      endpoint,
+      credentials: { accessKeyId: 'test', secretAccessKey: 'test' },
+      forcePathStyle: true
+    };
+  }
+  return { region: 'us-east-2' };
+};
+
+const s3 = new awsSdk3.S3(exports.getClientConfig());
 
 /**
  * Attempts to delete a previous created bucket before the test starts

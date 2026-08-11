@@ -6,8 +6,27 @@
 'use strict';
 
 const AWS = require('aws-sdk');
+
+function getClientConfig() {
+  let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
+  if (endpoint) {
+    if (endpoint.startsWith('localstack://')) {
+      endpoint = endpoint.replace('localstack://', 'http://');
+    }
+    return {
+      region: 'us-east-2',
+      endpoint,
+      accessKeyId: 'test',
+      secretAccessKey: 'test',
+      s3ForcePathStyle: true
+    };
+  }
+  return { region: 'us-east-2' };
+}
+
 AWS.config.update({ region: 'us-east-2' });
-const s3 = new AWS.S3();
+exports.getClientConfig = getClientConfig;
+const s3 = new AWS.S3(getClientConfig());
 
 /**
  * Attempts to delete a previous created bucket before the test starts

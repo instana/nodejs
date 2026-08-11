@@ -19,8 +19,9 @@ const delay = require('@_local/core/test/test_util/delay');
 const AWS = require('aws-sdk');
 const express = require('express');
 const logPrefix = `AWS SDK v2 S3 (${process.pid}):\t`;
+const { getClientConfig } = require('./util');
 AWS.config.update({ region: 'us-east-2' });
-const s3 = new AWS.S3();
+const s3 = new AWS.S3(getClientConfig());
 
 const app = express();
 const port = require('@_local/collector/test/test_util/app-port')();
