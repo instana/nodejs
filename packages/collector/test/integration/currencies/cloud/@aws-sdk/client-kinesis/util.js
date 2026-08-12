@@ -18,6 +18,7 @@ exports.getClientConfig = function () {
       credentials: { accessKeyId: 'test', secretAccessKey: 'test' }
     };
   }
+  return { region: 'us-east-2' };
 };
 
 const kinesis = new KinesisClient(exports.getClientConfig());
