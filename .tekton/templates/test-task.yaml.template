@@ -118,9 +118,6 @@ spec:
         fi
 
         export CI=true
-        if echo "$AVAILABLE_SIDECARS" | grep -q 'localstack'; then
-          export INSTANA_CONNECT_LOCALSTACK_AWS=http://localhost:4566
-        fi
         export GCP_PROJECT="k8s-brewery"
         export AZURE_SQL_USERNAME="admin@instana@nodejs-team-db-server"
         export AZURE_SQL_SERVER="nodejs-team-db-server.database.windows.net"
