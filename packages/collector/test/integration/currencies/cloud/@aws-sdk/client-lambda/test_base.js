@@ -47,6 +47,8 @@ function start() {
     const { removeFunction } = require('./utils');
     await removeFunction(functionName);
   });
+  // NOTE: To run against real AWS instead of LocalStack, log in (e.g. `aws sso login`) and
+  // either unset INSTANA_CONNECT_LOCALSTACK_AWS or remove it from hosts_config.json.
   describe('tracing enabled', function () {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;

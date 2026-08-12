@@ -41,6 +41,8 @@ function start() {
   const runSqsConsumerAPI =
     supportedVersion(process.versions.node) && semver.gte(process.versions.node, '20.0.0') ? describe : describe.skip;
 
+  // NOTE: To run against real AWS instead of LocalStack, log in (e.g. `aws sso login`) and
+  // either unset INSTANA_CONNECT_LOCALSTACK_AWS or remove it from hosts_config.json.
   mochaSuiteFn(`npm: ${libraryEnv.LIBRARY_NAME}`, function () {
     this.timeout(config.getTestTimeout() * 4);
 
