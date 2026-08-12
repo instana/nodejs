@@ -33,7 +33,14 @@ function getLocalstackEndpoint() {
 function getSsmClientConfig() {
   const endpoint = getLocalstackEndpoint();
   if (endpoint) {
-    return { region: awsRegion, endpoint, credentials: { accessKeyId: 'test', secretAccessKey: 'test' } };
+    return {
+      region: awsRegion,
+      endpoint,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'test',
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'test'
+      }
+    };
   }
   return { region: awsRegion };
 }
@@ -41,7 +48,14 @@ function getSsmClientConfig() {
 function getKmsClientConfig() {
   const endpoint = getLocalstackEndpoint();
   if (endpoint) {
-    return { region: awsRegion, endpoint, credentials: { accessKeyId: 'test', secretAccessKey: 'test' } };
+    return {
+      region: awsRegion,
+      endpoint,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'test',
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'test'
+      }
+    };
   }
   return { region: awsRegion };
 }
@@ -271,6 +285,8 @@ function registerTests(handlerDefinitionPath, reduced) {
     });
   });
 
+  // NOTE: To run against real AWS instead of LocalStack, log in (e.g. `aws sso login`) and
+  // either unset INSTANA_CONNECT_LOCALSTACK_AWS or remove it from hosts_config.json.
   describeOrSkipIfReduced(reduced)('when INSTANA_SSM_PARAM_NAME is used', function () {
     describeOrSkipIfReduced(reduced)('but we cannot fetch the key from AWS', () => {
       // - INSTANA_ENDPOINT_URL is configured
@@ -348,7 +364,7 @@ function registerTests(handlerDefinitionPath, reduced) {
       });
     });
 
-    (getLocalstackEndpoint() ? describeOrSkipIfReduced(reduced) : describe.skip)('and it succeeds', () => {
+    describeOrSkipIfReduced(reduced)('and it succeeds', () => {
       // - INSTANA_ENDPOINT_URL is configured
       // - INSTANA_AGENT_KEY is configured via SSM
       // - back end is reachable
@@ -357,6 +373,15 @@ function registerTests(handlerDefinitionPath, reduced) {
         handlerDefinitionPath,
         instanaAgentKeyViaSSM: '/Nodejstest/MyAgentKey'
       });
+      // When using LocalStack, tell the AWS SDK inside the Lambda process to use the localstack endpoint.
+      // AWS_ENDPOINT_URL is the standard AWS SDK v3 env var that overrides the endpoint for all clients,
+      // so ssm.js (production code) picks it up without any code changes.
+      const localstackEndpoint = getLocalstackEndpoint();
+      if (localstackEndpoint) {
+        env.AWS_ENDPOINT_URL = localstackEndpoint;
+        env.AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID || 'test';
+        env.AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY || 'test';
+      }
 
       let control;
 
@@ -420,7 +445,7 @@ function registerTests(handlerDefinitionPath, reduced) {
       });
     });
 
-    (getLocalstackEndpoint() ? describeOrSkipIfReduced(reduced) : describe.skip)('[with decryption] error', () => {
+    describeOrSkipIfReduced(reduced)('[with decryption] error', () => {
       const { SSMClient, PutParameterCommand } = require('@aws-sdk/client-ssm');
       const { KMSClient, CreateKeyCommand, ScheduleKeyDeletionCommand } = require('@aws-sdk/client-kms');
       let kmsKeyId;
@@ -433,6 +458,12 @@ function registerTests(handlerDefinitionPath, reduced) {
         handlerDefinitionPath,
         instanaAgentKeyViaSSM: '/Nodejstest/MyAgentKeyEncrypted'
       });
+      const localstackEndpoint2 = getLocalstackEndpoint();
+      if (localstackEndpoint2) {
+        env.AWS_ENDPOINT_URL = localstackEndpoint2;
+        env.AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID || 'test';
+        env.AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY || 'test';
+      }
 
       let control;
 
@@ -522,7 +553,7 @@ function registerTests(handlerDefinitionPath, reduced) {
       });
     });
 
-    (getLocalstackEndpoint() ? describeOrSkipIfReduced(reduced) : describe.skip)('[with decryption] succeeds', () => {
+    describe('[with decryption] succeeds', () => {
       const { SSMClient, PutParameterCommand } = require('@aws-sdk/client-ssm');
       const { KMSClient, CreateKeyCommand, ScheduleKeyDeletionCommand } = require('@aws-sdk/client-kms');
       let kmsKeyId;
@@ -536,6 +567,12 @@ function registerTests(handlerDefinitionPath, reduced) {
         instanaAgentKeyViaSSM: '/Nodejstest/MyAgentKeyEncrypted',
         instanaSSMDecryption: true
       });
+      const localstackEndpoint3 = getLocalstackEndpoint();
+      if (localstackEndpoint3) {
+        env.AWS_ENDPOINT_URL = localstackEndpoint3;
+        env.AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID || 'test';
+        env.AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY || 'test';
+      }
 
       let control;
 

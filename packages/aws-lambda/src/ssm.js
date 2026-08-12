@@ -72,18 +72,7 @@ module.exports.init = (config, _coldStart) => {
     };
 
     logger.debug(`INSTANA_SSM_PARAM_NAME is ${process.env.INSTANA_SSM_PARAM_NAME}.`);
-    let ssmEndpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
-    if (ssmEndpoint && ssmEndpoint.startsWith('localstack://')) {
-      ssmEndpoint = ssmEndpoint.replace('localstack://', 'http://');
-    }
-    const ssmConfig = ssmEndpoint
-      ? {
-          region: process.env.AWS_REGION,
-          endpoint: ssmEndpoint,
-          credentials: { accessKeyId: 'test', secretAccessKey: 'test' }
-        }
-      : { region: process.env.AWS_REGION };
-    const client = new SSMClient(ssmConfig);
+    const client = new SSMClient({ region: process.env.AWS_REGION });
     const command = new GetParameterCommand(params);
     client
       .send(command)
