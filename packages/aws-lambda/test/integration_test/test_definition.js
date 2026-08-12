@@ -37,8 +37,8 @@ function getSsmClientConfig() {
       region: awsRegion,
       endpoint,
       credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'test',
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'test'
+        accessKeyId: 'test',
+        secretAccessKey: 'test'
       }
     };
   }
@@ -52,8 +52,8 @@ function getKmsClientConfig() {
       region: awsRegion,
       endpoint,
       credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'test',
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'test'
+        accessKeyId: 'test',
+        secretAccessKey: 'test'
       }
     };
   }
