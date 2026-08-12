@@ -563,7 +563,7 @@ function start(reducedTestSuite = false) {
           if (process.env.RUN_AWS) {
             expect(response.result.TableDescription.TableStatus).to.equal('CREATING');
           } else {
-            expect(['ACTIVE']).to.include(response.result.TableDescription.TableStatus);
+            expect(response.result.TableDescription.TableStatus).to.equal('ACTIVE');
           }
           break;
         case 'listTables':

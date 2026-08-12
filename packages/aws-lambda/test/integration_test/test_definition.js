@@ -163,13 +163,12 @@ function prelude(opts) {
   }
 
   // When using LocalStack, inject AWS_ENDPOINT_URL so the AWS SDK inside the lambda process
-  // (including ssm.js production code) routes all service calls to LocalStack automatically,
-  // without any changes to production code.
+  // (including ssm.js) routes all service calls to LocalStack automatically
   const localstackEndpoint = getLocalstackEndpoint();
   if (localstackEndpoint) {
     env.AWS_ENDPOINT_URL = localstackEndpoint;
-    env.AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID || 'test';
-    env.AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY || 'test';
+    env.AWS_ACCESS_KEY_ID = 'test';
+    env.AWS_SECRET_ACCESS_KEY = 'test';
   }
 
   return env;
