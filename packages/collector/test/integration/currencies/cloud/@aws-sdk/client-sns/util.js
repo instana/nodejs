@@ -6,12 +6,19 @@
 
 const { StandardRetryStrategy } = require('@aws-sdk/middleware-retry');
 
-exports.getClientConfig = function () {
+function getLocalstackEndpoint() {
+  if (process.env.RUN_AWS === 'true') return null;
   let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
+  if (!endpoint) return null;
+  if (endpoint.startsWith('localstack://')) {
+    endpoint = endpoint.replace('localstack://', 'http://');
+  }
+  return endpoint;
+}
+
+exports.getClientConfig = function () {
+  const endpoint = getLocalstackEndpoint();
   if (endpoint) {
-    if (endpoint.startsWith('localstack://')) {
-      endpoint = endpoint.replace('localstack://', 'http://');
-    }
     const customRetryStrategy = new StandardRetryStrategy(async () => 6, {
       retryDecider: () => true,
       delayDecider: () => 5000

@@ -7,12 +7,19 @@
 
 const AWS = require('aws-sdk');
 
-function getClientConfig() {
+function getLocalstackEndpoint() {
+  if (process.env.RUN_AWS === 'true') return null;
   let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
+  if (!endpoint) return null;
+  if (endpoint.startsWith('localstack://')) {
+    endpoint = endpoint.replace('localstack://', 'http://');
+  }
+  return endpoint;
+}
+
+function getClientConfig() {
+  const endpoint = getLocalstackEndpoint();
   if (endpoint) {
-    if (endpoint.startsWith('localstack://')) {
-      endpoint = endpoint.replace('localstack://', 'http://');
-    }
     return {
       region: 'us-east-2',
       endpoint,

@@ -10,16 +10,18 @@ const awsSdk3 = require('@aws-sdk/client-sqs');
 const sns = require('@aws-sdk/client-sns');
 const { getClientConfig } = require('./util');
 
-const sqs = new awsSdk3.SQS(getClientConfig());
-const snsClient = new sns.SNSClient(getClientConfig());
-
 function getLocalstackEndpoint() {
+  if (process.env.RUN_AWS === 'true') return null;
   let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
-  if (endpoint && endpoint.startsWith('localstack://')) {
+  if (!endpoint) return null;
+  if (endpoint.startsWith('localstack://')) {
     endpoint = endpoint.replace('localstack://', 'http://');
   }
-  return endpoint || null;
+  return endpoint;
 }
+
+const sqs = new awsSdk3.SQS(getClientConfig());
+const snsClient = new sns.SNSClient(getClientConfig());
 
 function normaliseQueueUrl(queueUrl) {
   const endpoint = getLocalstackEndpoint();

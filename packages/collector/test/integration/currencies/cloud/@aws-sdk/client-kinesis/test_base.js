@@ -61,8 +61,7 @@ function start() {
   const { cleanup } = require('./util');
   const { checkStreamExistence } = require('./util');
 
-  // NOTE: To run against real AWS instead of LocalStack, log in (e.g. `aws sso login`) and
-  // either unset INSTANA_CONNECT_LOCALSTACK_AWS or remove it from hosts_config.json.
+  // NOTE: Set RUN_AWS=true to run against real AWS instead of LocalStack.
   mochaSuiteFn('tracing', function () {
     this.timeout(config.getTestTimeout() * 10);
 

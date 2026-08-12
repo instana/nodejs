@@ -287,8 +287,6 @@ function registerTests(handlerDefinitionPath, reduced) {
     });
   });
 
-  // NOTE: To run against real AWS instead of LocalStack, log in (e.g. `aws sso login`) and
-  // either unset INSTANA_CONNECT_LOCALSTACK_AWS or remove it from hosts_config.json.
   describeOrSkipIfReduced(reduced)('when INSTANA_SSM_PARAM_NAME is used', function () {
     describeOrSkipIfReduced(reduced)('but we cannot fetch the key from AWS', () => {
       // - INSTANA_ENDPOINT_URL is configured

@@ -7,16 +7,26 @@
 
 const awsSdk3 = require('@aws-sdk/client-s3');
 
-exports.getClientConfig = function () {
+function getLocalstackEndpoint() {
+  if (process.env.RUN_AWS === 'true') return null;
   let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
+  if (!endpoint) return null;
+  if (endpoint.startsWith('localstack://')) {
+    endpoint = endpoint.replace('localstack://', 'http://');
+  }
+  return endpoint;
+}
+
+exports.getClientConfig = function () {
+  const endpoint = getLocalstackEndpoint();
   if (endpoint) {
-    if (endpoint.startsWith('localstack://')) {
-      endpoint = endpoint.replace('localstack://', 'http://');
-    }
     return {
       region: 'us-east-2',
       endpoint,
-      credentials: { accessKeyId: 'test', secretAccessKey: 'test' },
+      credentials: {
+        accessKeyId: 'test',
+        secretAccessKey: 'test'
+      },
       forcePathStyle: true
     };
   }

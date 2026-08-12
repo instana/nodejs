@@ -46,8 +46,7 @@ let requestMethod;
 function start(reducedTestSuite = false) {
   const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-  // NOTE: To run against real AWS instead of LocalStack, log in (e.g. `aws sso login`) and
-  // either unset INSTANA_CONNECT_LOCALSTACK_AWS or remove it from hosts_config.json.
+  // NOTE: Set RUN_AWS=true to run against real AWS instead of LocalStack.
   mochaSuiteFn(`npm: ${libraryEnv.LIBRARY_NAME}, style: ${requestMethod}`, function () {
     this.timeout(config.getTestTimeout() * 5);
 

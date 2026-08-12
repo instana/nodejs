@@ -30,8 +30,7 @@ const esmLoaderPath = path.join(__dirname, '..', 'node_modules', '@instana', 'co
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 module.exports = function (libraryEnv) {
-  // NOTE: To run against real AWS instead of LocalStack, log in (e.g. `aws sso login`) and
-  // either unset INSTANA_CONNECT_LOCALSTACK_AWS or remove it from hosts_config.json.
+  // NOTE: Set RUN_AWS=true to run against real AWS instead of LocalStack.
   mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
     this.timeout(config.getTestTimeout() * 10);
 
