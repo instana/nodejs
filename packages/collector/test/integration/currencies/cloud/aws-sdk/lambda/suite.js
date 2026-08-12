@@ -22,7 +22,7 @@ const functionName = 'nodejs-tracer-lambda';
 const withErrorOptions = [false, true];
 const availableCtx = [null, '{"Custom": {"awesome_company": "Instana"}}', '{"Custom": "Something"}'];
 const requestMethods = ['Callback', 'Promise'];
-const availableOperations = ['invoke'];
+const availableOperations = process.env.RUN_AWS ? ['invoke', 'invokeAsync'] : ['invoke'];
 
 const getNextCallMethod = require('@_local/core/test/test_util/circular_list').getCircularList(requestMethods);
 
