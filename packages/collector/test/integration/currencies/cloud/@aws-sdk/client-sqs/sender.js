@@ -23,8 +23,24 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 const app = express();
 const queueURL = process.env.AWS_SQS_QUEUE_URL;
 const awsRegion = 'us-east-2';
-const sqs = new awsSdk3.SQSClient({ region: awsRegion });
-const sqsv2 = new awsSdk3.SQS({ region: awsRegion });
+let sqs;
+let sqsv2;
+
+if (process.env.AWS_ENDPOINT) {
+  sqs = new awsSdk3.SQSClient({
+    region: awsRegion,
+    endpoint: process.env.AWS_ENDPOINT,
+    credentials: { accessKeyId: 'test', secretAccessKey: 'test' }
+  });
+  sqsv2 = new awsSdk3.SQS({
+    region: awsRegion,
+    endpoint: process.env.AWS_ENDPOINT,
+    credentials: { accessKeyId: 'test', secretAccessKey: 'test' }
+  });
+} else {
+  sqs = new awsSdk3.SQSClient({ region: awsRegion });
+  sqsv2 = new awsSdk3.SQS({ region: awsRegion });
+}
 
 app.get('/', (_req, res) => {
   res.send('Ok');
