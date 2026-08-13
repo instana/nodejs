@@ -50,7 +50,6 @@ module.exports = function (libraryEnv) {
     mochaSuiteFn = describe;
   }
 
-  // NOTE: Set RUN_AWS=true to run against real AWS instead of LocalStack.
   mochaSuiteFn('tracing/cloud/aws-sdk/v2/combined-products', function () {
     this.timeout(config.getTestTimeout() * 3);
 

@@ -53,7 +53,6 @@ const esmLoaderPath = path.join(__dirname, '..', 'node_modules', '@instana', 'co
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 module.exports = function (libraryEnv) {
-  // NOTE: Set RUN_AWS=true to run against real AWS instead of LocalStack.
   mochaSuiteFn('tracing/cloud/aws-sdk/v2/kinesis', function () {
     this.timeout(config.getTestTimeout() * 10);
 
