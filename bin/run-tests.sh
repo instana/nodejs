@@ -81,10 +81,6 @@ if [ -n "$PACKAGE" ]; then
   # Normalize package name for scoped packages (e.g., @redis/client -> redis_client)
   NORMALIZED_PACKAGE=$(normalize_folder_name "$PACKAGE")
 
-  # Only include the normalized path alternative when the package contains a slash
-  # (i.e., it is a @scope/pkg pattern like @redis/client -> redis_client).
-  # For a bare scope like "@aws-sdk" the normalized form "aws-sdk" would accidentally
-  # match the unrelated aws-sdk folder that lives alongside @aws-sdk.
   PACKAGE_DIR=""
   while IFS= read -r _candidate; do
     [ -z "$_candidate" ] && continue
