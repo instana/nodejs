@@ -34,11 +34,7 @@ async function start() {
     return;
   }
 
-  envConfig = {
-    AWS_LAMBDA_FUNCTION_NAME: functionName
-  };
-
-  if (process.env.RUN_AWS()) {
+  if (process.env.RUN_AWS === 'true') {
     // invokeAsync currently not supported in localstack
     // https://docs.localstack.cloud/references/coverage/coverage_lambda/
     availableOperations.push('invokeAsync');
@@ -50,29 +46,17 @@ async function start() {
       AWS_LAMBDA_FUNCTION_NAME: functionName,
       AWS_ENDPOINT: process.env.INSTANA_CONNECT_LOCALSTACK_AWS
     };
-  }
 
-  if (!process.env.RUN_AWS()) {
     before(async () => {
-    const { createFunction } = require('./utils');
-    await createFunction(functionName);
-  });
+      const { createFunction } = require('./utils');
+      await createFunction(functionName);
+    });
 
-  after(async () => {
-    const { removeFunction } = require('./utils');
-    await removeFunction(functionName);
-  });
+    after(async () => {
+      const { removeFunction } = require('./utils');
+      await removeFunction(functionName);
+    });
   }
-
-  before(async () => {
-    const { createFunction } = require('./utils');
-    await createFunction(functionName);
-  });
-
-  after(async () => {
-    const { removeFunction } = require('./utils');
-    await removeFunction(functionName);
-  });
 
   describe('tracing enabled', function () {
     globalAgent.setUpCleanUpHooks();
