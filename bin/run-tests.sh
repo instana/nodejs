@@ -81,6 +81,10 @@ if [ -n "$PACKAGE" ]; then
   # Normalize package name for scoped packages (e.g., @redis/client -> redis_client)
   NORMALIZED_PACKAGE=$(normalize_folder_name "$PACKAGE")
 
+  # Only include the normalized path alternative when the package contains a slash
+  # (i.e., it is a @scope/pkg pattern like @redis/client -> redis_client).
+  # For a bare scope like "@aws-sdk" the normalized form "aws-sdk" would accidentally
+  # match the unrelated aws-sdk folder that lives alongside @aws-sdk.
   PACKAGE_DIR=""
   while IFS= read -r _candidate; do
     [ -z "$_candidate" ] && continue
@@ -89,7 +93,13 @@ if [ -n "$PACKAGE" ]; then
       break
     fi
     [ -z "$PACKAGE_DIR" ] && PACKAGE_DIR="$_candidate"
-  done < <(find "$TEST_BASE_DIR" -type d \( -path "*/$PACKAGE" -o -path "*/$NORMALIZED_PACKAGE" \) ! -path "*/node_modules/*" ! -path "*/_v*" 2>/dev/null)
+  done < <(
+    if [[ "$PACKAGE" == *"/"* ]]; then
+      find "$TEST_BASE_DIR" -type d \( -path "*/$PACKAGE" -o -path "*/$NORMALIZED_PACKAGE" \) ! -path "*/node_modules/*" ! -path "*/_v*" 2>/dev/null
+    else
+      find "$TEST_BASE_DIR" -type d -path "*/$PACKAGE" ! -path "*/node_modules/*" ! -path "*/_v*" 2>/dev/null
+    fi
+  )
 
   if [ -z "$PACKAGE_DIR" ]; then
     # No directory found — try matching a test file by name (e.g. cmdline -> cmdline.test.js or cmdline_test.js)
