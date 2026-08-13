@@ -52,7 +52,7 @@ spec:
       script: |
         #!/bin/bash
         AVAILABLE_SIDECARS="localstack"
-        SIDECAR_COUNTS="localstack=1"
+        SIDECAR_COUNTS=""
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         BASE_REVISION=$(git rev-parse origin/main)
