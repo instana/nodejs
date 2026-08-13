@@ -89,7 +89,13 @@ if [ -n "$PACKAGE" ]; then
       break
     fi
     [ -z "$PACKAGE_DIR" ] && PACKAGE_DIR="$_candidate"
-  done < <(find "$TEST_BASE_DIR" -type d \( -path "*/$PACKAGE" -o -path "*/$NORMALIZED_PACKAGE" \) ! -path "*/node_modules/*" ! -path "*/_v*" 2>/dev/null)
+  done < <(
+    if [[ "$PACKAGE" == *"/"* ]]; then
+      find "$TEST_BASE_DIR" -type d \( -path "*/$PACKAGE" -o -path "*/$NORMALIZED_PACKAGE" \) ! -path "*/node_modules/*" ! -path "*/_v*" 2>/dev/null
+    else
+      find "$TEST_BASE_DIR" -type d -path "*/$PACKAGE" ! -path "*/node_modules/*" ! -path "*/_v*" 2>/dev/null
+    fi
+  )
 
   if [ -z "$PACKAGE_DIR" ]; then
     # No directory found — try matching a test file by name (e.g. cmdline -> cmdline.test.js or cmdline_test.js)
