@@ -34,13 +34,15 @@ module.exports = function (libraryEnv) {
   mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
     this.timeout(config.getTestTimeout() * 10);
 
-    before(async () => {
-      await createFunction(functionName);
-    });
+    if (!process.env.RUN_AWS) {
+      before(async () => {
+        await createFunction(functionName);
+      });
 
-    after(async () => {
-      await removeFunction(functionName);
-    });
+      after(async () => {
+        await removeFunction(functionName);
+      });
+    }
 
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;

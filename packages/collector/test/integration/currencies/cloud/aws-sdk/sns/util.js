@@ -30,48 +30,46 @@ function getClientConfig() {
   return { region: 'us-east-2' };
 }
 
-/**
- * Normalises a queue URL returned by localstack (which uses the cloud hostname
- * sqs.<region>.localhost.localstack.cloud:<port>) to the plain localhost URL that
- * matches the configured endpoint, so AWS SDK v2 routes the request correctly.
- */
-exports.normaliseQueueUrl = function normaliseQueueUrl(queueUrl) {
-  const endpoint = getLocalstackEndpoint();
-  if (!endpoint || !queueUrl) return queueUrl;
-  // Replace the localstack cloud hostname with the plain endpoint host:port
-  const endpointUrl = new URL(endpoint);
-  return queueUrl.replace(/https?:\/\/[^/]+/, `${endpointUrl.protocol}//${endpointUrl.host}`);
-};
+const accountId = getLocalstackEndpoint() ? '000000000000' : '767398002385';
+exports.getClientConfig = getClientConfig;
+exports.accountId = accountId;
 
 AWS.config.update({ region: 'us-east-2' });
-exports.getClientConfig = getClientConfig;
 const sns = new AWS.SNS(getClientConfig());
 const sqs = new AWS.SQS(getClientConfig());
 
-function getPolicy(topicArn, queueArn) {
+function getPolicy(topicName, queueName) {
   const policy = {
     Version: '2008-10-17',
     Id: '__default_policy_ID',
     Statement: [
       {
-        Sid: `topic-subscription-${topicArn}`,
+        Sid: `topic-subscription-arn:aws:sns:us-east-2:${accountId}:${topicName}`,
         Effect: 'Allow',
-        Principal: { AWS: '*' },
+        Principal: {
+          AWS: '*'
+        },
         Action: 'SQS:SendMessage',
-        Resource: queueArn,
+        Resource: `arn:aws:sqs:us-east-2:${accountId}:${queueName}`,
         Condition: {
-          ArnLike: { 'aws:SourceArn': topicArn }
+          ArnLike: {
+            'aws:SourceArn': `arn:aws:sns:us-east-2:${accountId}:${topicName}`
+          }
         }
       }
     ]
   };
+
   return JSON.stringify(policy);
 }
 
-exports.createSQSQueue = function createSQSQueue(queueName) {
+exports.createSQSQueue = function createSQSQueue(queueName, topicName) {
   return sqs
     .createQueue({
-      QueueName: queueName
+      QueueName: queueName,
+      Attributes: {
+        Policy: getPolicy(topicName, queueName)
+      }
     })
     .promise();
 };
@@ -107,48 +105,23 @@ exports.cleanup = async function (topicArn, queueURL) {
  * * Creates an SQS queue to subscribe to SNS
  * * Creates the SNS topic
  * * Subscribes the SQS queue to the SNS topic
- * @returns {{ topicArn: string, queueUrl: string }}
  */
 exports.createTopic = async function createTopic(topicAndQueueName) {
-  const queueData = await exports.createSQSQueue(topicAndQueueName);
-  const queueUrl = exports.normaliseQueueUrl(queueData.QueueUrl);
-
+  await exports.createSQSQueue(topicAndQueueName, topicAndQueueName);
   const topicData = await sns
     .createTopic({
       Name: topicAndQueueName
     })
     .promise();
 
-  const topicArn = topicData.TopicArn;
-
-  // Retrieve the actual SQS queue ARN so the subscription works for both real AWS and localstack
-  const queueAttrs = await sqs
-    .getQueueAttributes({
-      QueueUrl: queueUrl,
-      AttributeNames: ['QueueArn']
-    })
-    .promise();
-
-  const queueArn = queueAttrs.Attributes.QueueArn;
-
-  // Set an SQS policy that allows the SNS topic to send messages to the queue
-  await sqs
-    .setQueueAttributes({
-      QueueUrl: queueUrl,
-      Attributes: { Policy: getPolicy(topicArn, queueArn) }
-    })
-    .promise();
-
   await sns
     .subscribe({
-      TopicArn: topicArn,
+      TopicArn: topicData.TopicArn,
       Protocol: 'sqs',
-      Endpoint: queueArn,
+      Endpoint: `arn:aws:sqs:us-east-2:${accountId}:${topicAndQueueName}`,
       Attributes: {
         RawMessageDelivery: 'true'
       }
     })
     .promise();
-
-  return { topicArn, queueUrl };
 };

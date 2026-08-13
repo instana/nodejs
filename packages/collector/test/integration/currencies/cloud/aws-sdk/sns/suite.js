@@ -6,7 +6,7 @@
 'use strict';
 
 const { v4: uuid } = require('uuid');
-const { cleanup, createTopic } = require('./util');
+const { cleanup, createTopic, accountId } = require('./util');
 const semver = require('semver');
 const { expect } = require('chai');
 const { fail } = expect;
@@ -24,8 +24,13 @@ const {
 const { promisifyNonSequentialCases } = require('../promisify_non_sequential');
 
 const topicAndQueueName = `nodejs-team-v2-${semver.major(process.versions.node)}-${uuid()}`;
-let topicArn;
-let sqsQueueUrl;
+const topicArn = `arn:aws:sns:us-east-2:${accountId}:${topicAndQueueName}`;
+const localstackEndpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS
+  ? process.env.INSTANA_CONNECT_LOCALSTACK_AWS.replace('localstack://', 'http://')
+  : 'http://localhost:4566';
+const sqsQueueUrl = process.env.RUN_AWS
+  ? `https://sqs.us-east-2.amazonaws.com/${accountId}/${topicAndQueueName}`
+  : `${localstackEndpoint}/${accountId}/${topicAndQueueName}`;
 
 const withErrorOptions = [false, true];
 const requestMethods = ['Callback', 'Promise', 'Async'];
@@ -35,7 +40,6 @@ const getNextCallMethod = require('@_local/core/test/test_util/circular_list').g
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 module.exports = function (libraryEnv) {
-  // NOTE: Set RUN_AWS=true to run against real AWS instead of LocalStack.
   mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
     this.timeout(config.getTestTimeout() * 3);
 
@@ -43,7 +47,7 @@ module.exports = function (libraryEnv) {
     const agentControls = globalAgent.instance;
 
     before(async () => {
-      ({ topicArn, queueUrl: sqsQueueUrl } = await createTopic(topicAndQueueName));
+      await createTopic(topicAndQueueName);
     });
 
     after(async () => {
@@ -69,7 +73,6 @@ module.exports = function (libraryEnv) {
           useGlobalAgent: true,
           env: {
             SQS_RECEIVE_METHOD: 'callback',
-            SQS_POLL_DELAY: 1,
             AWS_SQS_QUEUE_URL: sqsQueueUrl,
             ...libraryEnv
           }

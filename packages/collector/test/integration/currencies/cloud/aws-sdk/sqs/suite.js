@@ -25,16 +25,21 @@ const globalAgent = require('@_local/collector/test/globalAgent');
 const { sendSnsNotificationToSqsQueue } = require('./sendNonInstrumented');
 const { verifyHttpRootEntry, verifyHttpExit } = require('@_local/core/test/test_util/common_verifications');
 
+const localstackEndpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS
+  ? process.env.INSTANA_CONNECT_LOCALSTACK_AWS.replace('localstack://', 'http://')
+  : 'http://localhost:4566';
+const defaultPrefix = process.env.RUN_AWS
+  ? 'https://sqs.us-east-2.amazonaws.com/767398002385/'
+  : `${localstackEndpoint}/000000000000/`;
+const queueUrlPrefix = process.env.SQS_QUEUE_URL_PREFIX || defaultPrefix;
 const queueNamePrefix = process.env.SQS_QUEUE_NAME || 'nodejs-team';
 const queueName = `${queueNamePrefix}-${semver.major(process.versions.node)}-${uuid()}`;
+const queueURL = `${queueUrlPrefix}${queueName}`;
 
 const sendingMethods = ['callback', 'promise'];
 const receivingMethods = ['callback', 'promise', 'async'];
 const queueNames = [queueName, `${queueName}-consumer`, `${queueName}-batch`];
-
-// Populated in before() from the createQueues() response so the actual URLs
-// (which differ between real AWS and localstack) are used everywhere.
-let queueUrlMap = {};
+const queueURLs = queueNames.map(name => `${queueUrlPrefix}${name}`);
 
 const getNextSendMethod = require('@_local/core/test/test_util/circular_list').getCircularList(sendingMethods);
 const getNextReceiveMethod = require('@_local/core/test/test_util/circular_list').getCircularList(receivingMethods);
@@ -85,16 +90,15 @@ async function verifyNoUnclosedSpansHaveBeenDetected(receiverControls) {
 }
 
 module.exports = function (libraryEnv) {
-  // NOTE: Set RUN_AWS=true to run against real AWS instead of LocalStack.
   mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
     this.timeout(config.getTestTimeout() * 4);
 
     before(async () => {
-      queueUrlMap = await createQueues(queueNames);
+      await createQueues(queueNames);
     });
 
     after(async () => {
-      await deleteQueues(Object.values(queueUrlMap));
+      await deleteQueues(queueURLs);
     });
 
     globalAgent.setUpCleanUpHooks();
@@ -111,7 +115,7 @@ module.exports = function (libraryEnv) {
           appName: 'sendMessage',
           useGlobalAgent: true,
           env: {
-            AWS_SQS_QUEUE_URL: queueUrlMap[queueName],
+            AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`,
             ...libraryEnv
           }
         });
@@ -120,7 +124,7 @@ module.exports = function (libraryEnv) {
           appName: 'sendMessage',
           useGlobalAgent: true,
           env: {
-            AWS_SQS_QUEUE_URL: queueUrlMap[`${queueName}-consumer`],
+            AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
             ...libraryEnv
           }
         });
@@ -129,7 +133,7 @@ module.exports = function (libraryEnv) {
           appName: 'sendMessage',
           useGlobalAgent: true,
           env: {
-            AWS_SQS_QUEUE_URL: queueUrlMap[`${queueName}-batch`],
+            AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-batch`,
             ...libraryEnv
           }
         });
@@ -166,7 +170,7 @@ module.exports = function (libraryEnv) {
               useGlobalAgent: true,
               env: {
                 SQS_RECEIVE_METHOD: sqsReceiveMethod,
-                AWS_SQS_QUEUE_URL: queueUrlMap[queueName],
+                AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`,
                 ...libraryEnv
               }
             });
@@ -206,7 +210,7 @@ module.exports = function (libraryEnv) {
           it('continues trace from a SNS notification routed to an SQS queue via SNS-to-SQS subscription', async () => {
             const traceId = 'abcdef9876543210';
             const spanId = '9876543210abcdef';
-            await sendSnsNotificationToSqsQueue(queueUrlMap[queueName], traceId, spanId);
+            await sendSnsNotificationToSqsQueue(queueURL, traceId, spanId);
             await verifySingleSqsEntrySpanWithParent(traceId, spanId);
             await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
           });
@@ -223,7 +227,7 @@ module.exports = function (libraryEnv) {
               env: {
                 SQS_RECEIVE_METHOD: sqsReceiveMethod,
                 SQS_POLL_DELAY: 1,
-                AWS_SQS_QUEUE_URL: queueUrlMap[queueName],
+                AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`,
                 ...libraryEnv
               }
             });
@@ -277,7 +281,7 @@ module.exports = function (libraryEnv) {
             useGlobalAgent: true,
             env: {
               SQS_RECEIVE_METHOD: 'async',
-              AWS_SQS_QUEUE_URL: queueUrlMap[queueName],
+              AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`,
               ...libraryEnv
             }
           });
@@ -334,7 +338,7 @@ module.exports = function (libraryEnv) {
               appName: 'sqs-consumer',
               useGlobalAgent: true,
               env: {
-                AWS_SQS_QUEUE_URL: queueUrlMap[`${queueName}-consumer`],
+                AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
                 ...libraryEnv
               }
             });
@@ -375,7 +379,7 @@ module.exports = function (libraryEnv) {
               appName: 'sqs-consumer',
               useGlobalAgent: true,
               env: {
-                AWS_SQS_QUEUE_URL: queueUrlMap[`${queueName}-consumer`],
+                AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
                 AWS_SQS_RECEIVER_ERROR: 'true',
                 ...libraryEnv
               }
@@ -421,7 +425,7 @@ module.exports = function (libraryEnv) {
                 useGlobalAgent: true,
                 env: {
                   SQS_RECEIVE_METHOD: sqsReceiveMethod,
-                  AWS_SQS_QUEUE_URL: queueUrlMap[`${queueName}-batch`],
+                  AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-batch`,
                   ...libraryEnv
                 }
               });
@@ -532,7 +536,7 @@ module.exports = function (libraryEnv) {
           span => expect(span.data).to.exist,
           span => expect(span.data.sqs).to.be.an('object'),
           span => expect(span.data.sqs.sort).to.equal('entry'),
-          span => expect(span.data.sqs.queue).to.include(queueName),
+          span => expect(span.data.sqs.queue).to.match(new RegExp(`^${queueUrlPrefix}${queueName}`)),
           span => expect(span.data.sqs.size).to.be.an('number'),
           span => {
             if (!isBatch) {
@@ -557,7 +561,7 @@ module.exports = function (libraryEnv) {
           span => expect(span.data).to.exist,
           span => expect(span.data.sqs).to.be.an('object'),
           span => expect(span.data.sqs.sort).to.equal('exit'),
-          span => expect(span.data.sqs.queue).to.include(queueName)
+          span => expect(span.data.sqs.queue).to.match(new RegExp(`^${queueUrlPrefix}${queueName}`))
         ]);
       }
     });
@@ -574,7 +578,7 @@ module.exports = function (libraryEnv) {
           useGlobalAgent: true,
           tracingEnabled: false,
           env: {
-            AWS_SQS_QUEUE_URL: queueUrlMap[queueName],
+            AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`,
             ...libraryEnv
           }
         });
@@ -606,7 +610,7 @@ module.exports = function (libraryEnv) {
             tracingEnabled: false,
             env: {
               SQS_RECEIVE_METHOD: receivingMethod,
-              AWS_SQS_QUEUE_URL: queueUrlMap[queueName],
+              AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`,
               ...libraryEnv
             }
           });
@@ -652,7 +656,7 @@ module.exports = function (libraryEnv) {
           appName: 'sendMessage',
           useGlobalAgent: true,
           env: {
-            AWS_SQS_QUEUE_URL: queueUrlMap[queueName],
+            AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`,
             ...libraryEnv
           }
         });
@@ -683,7 +687,7 @@ module.exports = function (libraryEnv) {
             useGlobalAgent: true,
             env: {
               SQS_RECEIVE_METHOD: receivingMethod,
-              AWS_SQS_QUEUE_URL: queueUrlMap[queueName],
+              AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`,
               ...libraryEnv
             }
           });
@@ -735,7 +739,7 @@ module.exports = function (libraryEnv) {
           useGlobalAgent: true,
           env: {
             SQS_RECEIVE_METHOD: 'callback',
-            AWS_SQS_QUEUE_URL: `${queueUrlMap[queueName]}-non-existent`,
+            AWS_SQS_QUEUE_URL: `${queueURL}-non-existent`,
             ...libraryEnv
           }
         });

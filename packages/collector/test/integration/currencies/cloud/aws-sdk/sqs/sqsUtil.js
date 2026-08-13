@@ -7,6 +7,17 @@
 
 const AWS = require('aws-sdk');
 
+/**
+ * Here we "hack" into AWS SDK to force the User Agent header to be an array, so we can test if our instrumentation of
+ * httpClient is properly handling this case. The Node.js outgoing HTTP headers accept string, number or array of
+ * strings, which is why we want to test this.
+ */
+const _appendToUserAgent = AWS.HttpRequest.prototype.appendToUserAgent;
+AWS.HttpRequest.prototype.appendToUserAgent = function () {
+  _appendToUserAgent.apply(this, arguments);
+  this.headers[this.getUserAgentHeaderName()] = [this._userAgent];
+};
+
 function getLocalstackEndpoint() {
   if (process.env.RUN_AWS === 'true') return null;
   let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
@@ -29,31 +40,6 @@ function getClientConfig() {
   }
   return { region: 'us-east-2' };
 }
-
-/**
- * Normalises a queue URL returned by localstack (which uses the cloud hostname
- * sqs.<region>.localhost.localstack.cloud:<port>) to the plain localhost URL that
- * matches the configured endpoint, so AWS SDK v2 routes the request correctly.
- */
-function normaliseQueueUrl(queueUrl) {
-  const endpoint = getLocalstackEndpoint();
-  if (!endpoint || !queueUrl) return queueUrl;
-  const endpointUrl = new URL(endpoint);
-  return queueUrl.replace(/https?:\/\/[^/]+/, `${endpointUrl.protocol}//${endpointUrl.host}`);
-}
-
-exports.normaliseQueueUrl = normaliseQueueUrl;
-
-/**
- * Here we "hack" into AWS SDK to force the User Agent header to be an array, so we can test if our instrumentation of
- * httpClient is properly handling this case. The Node.js outgoing HTTP headers accept string, number or array of
- * strings, which is why we want to test this.
- */
-const _appendToUserAgent = AWS.HttpRequest.prototype.appendToUserAgent;
-AWS.HttpRequest.prototype.appendToUserAgent = function () {
-  _appendToUserAgent.apply(this, arguments);
-  this.headers[this.getUserAgentHeaderName()] = [this._userAgent];
-};
 
 AWS.config.update({ region: 'us-east-2' });
 exports.getClientConfig = getClientConfig;
@@ -88,23 +74,16 @@ exports.purgeQueues = function (urls) {
   return Promise.all(promises);
 };
 
-exports.createQueues = async function (queueNames) {
-  const results = await Promise.all(
-    queueNames.map(name =>
-      sqs
-        .createQueue({
-          QueueName: name
-        })
-        .promise()
-    )
+exports.createQueues = function (queueNames) {
+  const promises = queueNames.map(name =>
+    sqs
+      .createQueue({
+        QueueName: name
+      })
+      .promise()
   );
-  // Return a map of { name -> QueueUrl } so callers can use the actual URL
-  // returned by the service (important for localstack which uses a different base URL).
-  const urlMap = {};
-  queueNames.forEach((name, i) => {
-    urlMap[name] = normaliseQueueUrl(results[i].QueueUrl);
-  });
-  return urlMap;
+
+  return Promise.all(promises);
 };
 
 exports.deleteQueues = function (urls) {
