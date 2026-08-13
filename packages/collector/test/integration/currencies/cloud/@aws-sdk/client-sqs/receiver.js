@@ -15,7 +15,6 @@ const instana = require('@instana/collector')();
 const express = require('express');
 
 const awsSdk3 = require('@aws-sdk/client-sqs');
-const { getClientConfig } = require('./util');
 const logPrefix = `AWS SDK v3 SQS Receiver (${process.pid}):\t`;
 const log = require('@_local/core/test/test_util/log').getLogger(logPrefix);
 const delay = require('@_local/core/test/test_util/delay');
@@ -32,8 +31,36 @@ const port = require('@_local/collector/test/test_util/app-port')();
 const agentPort = process.env.INSTANA_AGENT_PORT;
 const sqsV3ReceiveMethod = process.env.SQSV3_RECEIVE_METHOD || 'v3';
 const queueURL = process.env.AWS_SQS_QUEUE_URL;
-const sqs = new awsSdk3.SQSClient(getClientConfig());
-const sqsv2 = new awsSdk3.SQS(getClientConfig());
+const awsRegion = 'us-east-2';
+let sqs;
+let sqsv2;
+
+// CASE: sns uses this receiver as well and forwards localstack endpoint
+if (process.env.AWS_ENDPOINT) {
+  sqs = new awsSdk3.SQSClient({
+    region: awsRegion,
+    endpoint: process.env.AWS_ENDPOINT,
+    credentials: {
+      accessKeyId: 'test',
+      secretAccessKey: 'test'
+    }
+  });
+  sqsv2 = new awsSdk3.SQS({
+    region: awsRegion,
+    endpoint: process.env.AWS_ENDPOINT,
+    credentials: {
+      accessKeyId: 'test',
+      secretAccessKey: 'test'
+    }
+  });
+} else {
+  sqs = new awsSdk3.SQSClient({
+    region: awsRegion
+  });
+  sqsv2 = new awsSdk3.SQS({
+    region: awsRegion
+  });
+}
 // Keep the default value above 5, as tests can fail if not all messages are fetched.
 let sqsPollDelay = 7;
 if (process.env.SQS_POLL_DELAY) {

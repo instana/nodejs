@@ -6,56 +6,16 @@
 'use strict';
 
 const AWS = require('@aws-sdk/client-sqs');
+const sqs = new AWS.SQS({ region: 'us-east-2' });
 
-function getLocalstackEndpoint() {
-  if (process.env.RUN_AWS === 'true') return null;
-  let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
-  if (!endpoint) return null;
-  if (endpoint.startsWith('localstack://')) {
-    endpoint = endpoint.replace('localstack://', 'http://');
-  }
-  return endpoint;
-}
-
-exports.getClientConfig = function () {
-  const endpoint = getLocalstackEndpoint();
-  if (endpoint) {
-    return {
-      region: 'us-east-2',
-      endpoint,
-      credentials: { accessKeyId: 'test', secretAccessKey: 'test' }
-    };
-  }
-  return { region: 'us-east-2' };
-};
-
-/**
- * Normalises a queue URL returned by localstack to the plain localhost URL
- * that matches the configured endpoint.
- */
-exports.normaliseQueueUrl = function normaliseQueueUrl(queueUrl) {
-  const endpoint = getLocalstackEndpoint();
-  if (!endpoint || !queueUrl) return queueUrl;
-  const endpointUrl = new URL(endpoint);
-  return queueUrl.replace(/https?:\/\/[^/]+/, `${endpointUrl.protocol}//${endpointUrl.host}`);
-};
-
-const sqs = new AWS.SQS(exports.getClientConfig());
-
-exports.createQueues = async function (queueNames) {
-  const results = await Promise.all(
-    queueNames.map(name =>
-      sqs.createQueue({
-        QueueName: name
-      })
-    )
+exports.createQueues = function (queueNames) {
+  const promises = queueNames.map(name =>
+    sqs.createQueue({
+      QueueName: name
+    })
   );
-  // Return a map of { name -> QueueUrl } using the normalised URL.
-  const urlMap = {};
-  queueNames.forEach((name, i) => {
-    urlMap[name] = exports.normaliseQueueUrl(results[i].QueueUrl);
-  });
-  return urlMap;
+
+  return Promise.all(promises);
 };
 
 exports.deleteQueues = function (urls) {

@@ -22,6 +22,9 @@ const {
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 const globalAgent = require('@_local/collector/test/globalAgent');
 const { verifyHttpRootEntry, verifyHttpExit } = require('@_local/core/test/test_util/common_verifications');
+const defaultPrefix = 'https://sqs.us-east-2.amazonaws.com/767398002385/';
+const queueUrlPrefix = process.env.SQS_QUEUE_URL_PREFIX || defaultPrefix;
+
 const { createQueues, deleteQueues, sendSnsNotificationToSqsQueue } = require('./util');
 
 const sendingMethods = ['v3', 'cb', 'v2'];
@@ -41,7 +44,6 @@ function start() {
   const runSqsConsumerAPI =
     supportedVersion(process.versions.node) && semver.gte(process.versions.node, '20.0.0') ? describe : describe.skip;
 
-  // NOTE: Set RUN_AWS=true to run against real AWS instead of LocalStack.
   mochaSuiteFn(`npm: ${libraryEnv.LIBRARY_NAME}`, function () {
     this.timeout(config.getTestTimeout() * 4);
 
@@ -54,15 +56,16 @@ function start() {
     const randomNumber = Math.floor(Math.random() * 1000);
     queueName = `${queueName}-${randomNumber}`;
 
+    const queueURL = `${queueUrlPrefix}${queueName}`;
     const queueNames = [queueName, `${queueName}-consumer`, `${queueName}-batch`];
-    let queueUrlMap = {};
+    const queueURLs = queueNames.map(name => `${queueUrlPrefix}${name}`);
 
     before(async () => {
-      queueUrlMap = await createQueues(queueNames);
+      await createQueues(queueNames);
     });
 
     after(async () => {
-      await deleteQueues(Object.values(queueUrlMap));
+      await deleteQueues(queueURLs);
     });
 
     globalAgent.setUpCleanUpHooks();
@@ -80,7 +83,7 @@ function start() {
           useGlobalAgent: true,
           env: {
             ...libraryEnv,
-            AWS_SQS_QUEUE_URL: queueUrlMap[queueName]
+            AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
           }
         });
         senderControlsSQSConsumer = new ProcessControls({
@@ -89,7 +92,7 @@ function start() {
           useGlobalAgent: true,
           env: {
             ...libraryEnv,
-            AWS_SQS_QUEUE_URL: queueUrlMap[`${queueName}-consumer`]
+            AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`
           }
         });
         senderControlsBatch = new ProcessControls({
@@ -98,7 +101,7 @@ function start() {
           useGlobalAgent: true,
           env: {
             ...libraryEnv,
-            AWS_SQS_QUEUE_URL: queueUrlMap[`${queueName}-batch`]
+            AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-batch`
           }
         });
 
@@ -135,7 +138,7 @@ function start() {
               env: {
                 ...libraryEnv,
                 SQSV3_RECEIVE_METHOD: sqsReceiveMethod,
-                AWS_SQS_QUEUE_URL: queueUrlMap[queueName]
+                AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
               }
             });
 
@@ -175,7 +178,7 @@ function start() {
           it('continues trace from a SNS notification routed to an SQS queue via SNS-to-SQS subscription', async () => {
             const traceId = 'abcdef9876543210';
             const spanId = '9876543210abcdef';
-            await sendSnsNotificationToSqsQueue(queueUrlMap[queueName], traceId, spanId);
+            await sendSnsNotificationToSqsQueue(queueURL, traceId, spanId);
             await verifySingleSqsEntrySpanWithParent(traceId, spanId);
             await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
           });
@@ -193,7 +196,7 @@ function start() {
                 ...libraryEnv,
                 SQSV3_RECEIVE_METHOD: sqsReceiveMethod,
                 SQS_POLL_DELAY: 1,
-                AWS_SQS_QUEUE_URL: queueUrlMap[queueName]
+                AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
               }
             });
 
@@ -247,7 +250,7 @@ function start() {
               useGlobalAgent: true,
               env: {
                 ...libraryEnv,
-                AWS_SQS_QUEUE_URL: queueUrlMap[`${queueName}-consumer`]
+                AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`
               }
             });
 
@@ -310,7 +313,7 @@ function start() {
               useGlobalAgent: true,
               env: {
                 ...libraryEnv,
-                AWS_SQS_QUEUE_URL: queueUrlMap[`${queueName}-consumer`],
+                AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
                 HANDLE_MESSAGE_BATCH: true
               }
             });
@@ -375,7 +378,7 @@ function start() {
               useGlobalAgent: true,
               env: {
                 ...libraryEnv,
-                AWS_SQS_QUEUE_URL: queueUrlMap[`${queueName}-consumer`],
+                AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
                 AWS_SQS_RECEIVER_ERROR: 'true'
               }
             });
@@ -428,7 +431,7 @@ function start() {
                 env: {
                   ...libraryEnv,
                   SQSV3_RECEIVE_METHOD: sqsReceiveMethod,
-                  AWS_SQS_QUEUE_URL: queueUrlMap[`${queueName}-batch`]
+                  AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-batch`
                 }
               });
 
@@ -483,7 +486,7 @@ function start() {
           tracingEnabled: false,
           env: {
             ...libraryEnv,
-            AWS_SQS_QUEUE_URL: queueUrlMap[queueName]
+            AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
           }
         });
 
@@ -516,7 +519,7 @@ function start() {
             env: {
               ...libraryEnv,
               SQSV3_RECEIVE_METHOD: receivingMethod,
-              AWS_SQS_QUEUE_URL: queueUrlMap[queueName]
+              AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
             }
           });
 
@@ -565,7 +568,7 @@ function start() {
           useGlobalAgent: true,
           env: {
             ...libraryEnv,
-            AWS_SQS_QUEUE_URL: queueUrlMap[queueName]
+            AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
           }
         });
 
@@ -596,7 +599,7 @@ function start() {
             env: {
               ...libraryEnv,
               SQSV3_RECEIVE_METHOD: receivingMethod,
-              AWS_SQS_QUEUE_URL: queueUrlMap[queueName]
+              AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
             }
           });
 
@@ -651,7 +654,7 @@ function start() {
           env: {
             ...libraryEnv,
             SQSV3_RECEIVE_METHOD: 'v3',
-            AWS_SQS_QUEUE_URL: `${queueUrlMap[queueName]}-non-existent`
+            AWS_SQS_QUEUE_URL: `${queueURL}-non-existent`
           }
         });
 
@@ -699,7 +702,7 @@ function start() {
           useGlobalAgent: true,
           env: {
             ...libraryEnv,
-            AWS_SQS_QUEUE_URL: queueUrlMap[queueName]
+            AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
           }
         });
         receiverControls = new ProcessControls({
@@ -708,7 +711,7 @@ function start() {
           useGlobalAgent: true,
           env: {
             ...libraryEnv,
-            AWS_SQS_QUEUE_URL: queueUrlMap[queueName]
+            AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
           }
         });
 
@@ -758,9 +761,7 @@ function start() {
 
     async function verify({ receiverControls, senderControls, response, apiPath, withError, isBatch, isSQSConsumer }) {
       if (withError === 'sender') {
-        // Real AWS returns 'MissingParameter: The request must contain the parameter MessageBody.'
-        // Localstack returns an InternalError for the same missing-body condition.
-        expect(response.error).to.be.a('string').and.have.length.greaterThan(0);
+        expect(response.error).to.equal('MissingParameter: The request must contain the parameter MessageBody.');
       } else {
         await retry(async () => {
           if (isBatch) {
@@ -876,7 +877,7 @@ function start() {
         span => expect(span.data).to.exist,
         span => expect(span.data.sqs).to.be.an('object'),
         span => expect(span.data.sqs.sort).to.equal('entry'),
-        span => expect(span.data.sqs.queue).to.contain(queueName),
+        span => expect(span.data.sqs.queue).to.match(new RegExp(`^${queueUrlPrefix}${queueName}`)),
         span => expect(span.data.sqs.size).to.be.an('number'),
         span => {
           if (!isBatch) {
@@ -901,7 +902,7 @@ function start() {
         span => expect(span.data).to.exist,
         span => expect(span.data.sqs).to.be.an('object'),
         span => expect(span.data.sqs.sort).to.equal('exit'),
-        span => expect(span.data.sqs.queue).to.contain(queueName)
+        span => expect(span.data.sqs.queue).to.match(new RegExp(`^${queueUrlPrefix}${queueName}`))
       ]);
     }
 
