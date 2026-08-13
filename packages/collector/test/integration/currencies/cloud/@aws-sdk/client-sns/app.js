@@ -18,6 +18,7 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 const port = require('@_local/collector/test/test_util/app-port')();
 const sns = require('@aws-sdk/client-sns');
 const { StandardRetryStrategy } = require('@aws-sdk/middleware-retry');
+const { getLocalstackEndpoint } = require('./utils');
 
 const logPrefix = `AWS SDK v3 SNS (${process.pid}):\t`;
 const log = require('@_local/core/test/test_util/log').getLogger(logPrefix);
@@ -32,15 +33,18 @@ const customRetryStrategy = new StandardRetryStrategy(async () => maxAttempts, {
   delayDecider: () => 5000
 });
 
-const clientOpts = {
-  credentials: {
-    accessKeyId: 'test',
-    secretAccessKey: 'test'
-  },
-  endpoint: process.env.INSTANA_CONNECT_LOCALSTACK_AWS,
-  region: 'us-east-2',
-  retryStrategy: customRetryStrategy
-};
+const localstackEndpoint = getLocalstackEndpoint();
+const clientOpts = localstackEndpoint
+  ? {
+      credentials: {
+        accessKeyId: 'test',
+        secretAccessKey: 'test'
+      },
+      endpoint: localstackEndpoint,
+      region: 'us-east-2',
+      retryStrategy: customRetryStrategy
+    }
+  : { region: 'us-east-2' };
 
 const client = new sns.SNSClient(clientOpts);
 const clientV2 = new sns.SNS(clientOpts);

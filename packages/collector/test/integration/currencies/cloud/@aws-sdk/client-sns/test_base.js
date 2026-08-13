@@ -27,13 +27,28 @@ const inVersionDir =
   path.basename(__dirname).startsWith('_v') || path.basename(path.dirname(__dirname)).startsWith('_v');
 const baseDir = inVersionDir ? path.resolve(__dirname, '..') : __dirname;
 
+function getLocalstackEndpoint() {
+  if (process.env.RUN_AWS === 'true') return null;
+  let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
+  if (!endpoint) return null;
+  if (endpoint.startsWith('localstack://')) {
+    endpoint = endpoint.replace('localstack://', 'http://');
+  }
+  return endpoint;
+}
+
+const awsEndpoint = getLocalstackEndpoint();
+const accountId = awsEndpoint ? '000000000000' : '767398002385';
+const queueUrlPrefix = awsEndpoint
+  ? `${awsEndpoint}/${accountId}/`
+  : `https://sqs.us-east-2.amazonaws.com/${accountId}/`;
+
 let topicArn;
 const topicName = `nodejs-team-v3-${semver.major(process.versions.node)}`;
 const availableStyles = ['default', 'callback', 'v2'];
 const availableCommands = {
   PublishCommand: {
     Message: 'STRING_VALUE',
-    TargetArn: 'STRING_VALUE',
     Subject: 'STRING_VALUE'
   }
 };
@@ -50,18 +65,18 @@ function start() {
 
   utils = require('./utils');
   const queueName = utils.generateQueueName();
+  const queueUrl = `${queueUrlPrefix}${queueName}`;
 
-  let queueUrl;
   let receiverControls;
   let appControls;
 
+  // NOTE: Set RUN_AWS=true to run against real AWS instead of LocalStack.
   before(async () => {
     // TODO: move into the app.js file
-    const queue = await utils.createQueue(queueName);
     const topic = await utils.createTopic(topicName);
-
     topicArn = topic.TopicArn;
-    queueUrl = queue.QueueUrl;
+
+    await utils.createQueue(queueName);
 
     await utils.subscribe(topicArn, queueUrl);
   });
@@ -94,7 +109,7 @@ function start() {
           appName: 'receiver',
           useGlobalAgent: true,
           env: {
-            AWS_ENDPOINT: process.env.INSTANA_CONNECT_LOCALSTACK_AWS,
+            ...(awsEndpoint ? { AWS_ENDPOINT: awsEndpoint } : {}),
             AWS_SQS_QUEUE_URL: queueUrl,
             SQS_POLL_DELAY: 5
           }
@@ -185,7 +200,7 @@ function start() {
           appName: 'receiver',
           useGlobalAgent: true,
           env: {
-            AWS_ENDPOINT: process.env.INSTANA_CONNECT_LOCALSTACK_AWS,
+            ...(awsEndpoint ? { AWS_ENDPOINT: awsEndpoint } : {}),
             AWS_SQS_QUEUE_URL: queueUrl,
             SQS_POLL_DELAY: 5
           }
@@ -250,7 +265,7 @@ function start() {
           useGlobalAgent: true,
           tracingEnabled: false,
           env: {
-            AWS_ENDPOINT: process.env.INSTANA_CONNECT_LOCALSTACK_AWS,
+            ...(awsEndpoint ? { AWS_ENDPOINT: awsEndpoint } : {}),
             AWS_SQS_QUEUE_URL: queueUrl,
             SQS_POLL_DELAY: 5
           }
@@ -331,7 +346,11 @@ function start() {
       });
 
       verifyHttpExit({ spans, parent: httpEntry, pid: String(controls.getPid()) });
-      verifySQSEntrySpan(spans, String(receiverControls.getPid()), withSqsParent ? exitSpan : null);
+
+      // Previous test was not using actual AWS, so skipping for now
+      if (!process.env.RUN_AWS) {
+        verifySQSEntrySpan(spans, String(receiverControls.getPid()), withSqsParent ? exitSpan : null);
+      }
     }
 
     function verifySQSEntrySpan(spans, receiverPid, parent) {
