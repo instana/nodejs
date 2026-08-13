@@ -8,50 +8,45 @@ const uuid = require('uuid');
 const semver = require('semver');
 const awsSdk3 = require('@aws-sdk/client-sqs');
 const sns = require('@aws-sdk/client-sns');
-const { getClientConfig } = require('./util');
+const { StandardRetryStrategy } = require('@aws-sdk/middleware-retry');
 
-function getLocalstackEndpoint() {
-  if (process.env.RUN_AWS === 'true') return null;
-  let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
-  if (!endpoint) return null;
-  if (endpoint.startsWith('localstack://')) {
-    endpoint = endpoint.replace('localstack://', 'http://');
-  }
-  return endpoint;
-}
+const maxAttempts = 6;
 
-const sqs = new awsSdk3.SQS(getClientConfig());
-const snsClient = new sns.SNSClient(getClientConfig());
+const customRetryStrategy = new StandardRetryStrategy(async () => maxAttempts, {
+  retryDecider: err => {
+    // eslint-disable-next-line no-console
+    console.log('Not connected to LocalStack, retrying...', err.code);
+    return true;
+  },
+  delayDecider: () => 5000
+});
 
-function normaliseQueueUrl(queueUrl) {
-  const endpoint = getLocalstackEndpoint();
-  if (!endpoint || !queueUrl) return queueUrl;
-  const endpointUrl = new URL(endpoint);
-  return queueUrl.replace(/https?:\/\/[^/]+/, `${endpointUrl.protocol}//${endpointUrl.host}`);
-}
+const sqs = new awsSdk3.SQS({
+  credentials: {
+    accessKeyId: 'test',
+    secretAccessKey: 'test'
+  },
+  region: 'us-east-2',
+  endpoint: process.env.INSTANA_CONNECT_LOCALSTACK_AWS,
+  retryStrategy: customRetryStrategy
+});
 
-function getPolicy(topicArn, queueArn) {
-  return JSON.stringify({
-    Version: '2008-10-17',
-    Id: '__default_policy_ID',
-    Statement: [
-      {
-        Sid: `topic-subscription-${topicArn}`,
-        Effect: 'Allow',
-        Principal: { AWS: '*' },
-        Action: 'SQS:SendMessage',
-        Resource: queueArn,
-        Condition: { ArnLike: { 'aws:SourceArn': topicArn } }
-      }
-    ]
-  });
-}
+const clientOpts = {
+  credentials: {
+    accessKeyId: 'test',
+    secretAccessKey: 'test'
+  },
+  endpoint: process.env.INSTANA_CONNECT_LOCALSTACK_AWS,
+  region: 'us-east-2',
+  retryStrategy: customRetryStrategy
+};
 
-exports.normaliseQueueUrl = normaliseQueueUrl;
+const snsClient = new sns.SNSClient(clientOpts);
 
 exports.createQueue = async name => {
-  const result = await sqs.createQueue({ QueueName: name });
-  return { ...result, QueueUrl: normaliseQueueUrl(result.QueueUrl) };
+  return sqs.createQueue({
+    QueueName: name
+  });
 };
 
 exports.createTopic = async name => {
@@ -65,19 +60,12 @@ exports.subscribe = async (arn, queueUrl) => {
   });
 
   const getQueueAttributesResponse = await sqs.send(getQueueAttributesCommand);
-  const queueArn = getQueueAttributesResponse.Attributes.QueueArn;
-
-  // Set an SQS policy that allows the SNS topic to send messages to the queue
-  await sqs.setQueueAttributes({
-    QueueUrl: queueUrl,
-    Attributes: { Policy: getPolicy(arn, queueArn) }
-  });
 
   await snsClient.send(
     new sns.SubscribeCommand({
       TopicArn: arn,
       Protocol: 'sqs',
-      Endpoint: queueArn,
+      Endpoint: getQueueAttributesResponse.Attributes.QueueArn,
       Attributes: {
         RawMessageDelivery: 'true'
       }

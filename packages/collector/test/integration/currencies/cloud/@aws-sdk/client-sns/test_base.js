@@ -83,7 +83,6 @@ function start() {
     }
   });
 
-  // NOTE: Set RUN_AWS=true to run against real AWS instead of LocalStack.
   describe(`npm: ${libraryEnv.LIBRARY_VERSION}`, function () {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
