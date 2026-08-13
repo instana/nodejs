@@ -13,11 +13,30 @@ const delay = require('@_local/core/test/test_util/delay');
 const AWS = require('aws-sdk');
 const express = require('express');
 const logPrefix = `Combined AWS SDK v2 products (${process.pid}):\t`;
+
+function getLocalstackEndpoint() {
+  if (process.env.RUN_AWS === 'true') return null;
+  let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
+  if (!endpoint) return null;
+  if (endpoint.startsWith('localstack://')) {
+    endpoint = endpoint.replace('localstack://', 'http://');
+  }
+  return endpoint;
+}
+
+function getClientConfig(extraOptions) {
+  const endpoint = getLocalstackEndpoint();
+  if (endpoint) {
+    return Object.assign({ region: 'us-east-2', endpoint, accessKeyId: 'test', secretAccessKey: 'test' }, extraOptions);
+  }
+  return { region: 'us-east-2' };
+}
+
 AWS.config.update({ region: 'us-east-2' });
-const s3 = new AWS.S3();
-const lambda = new AWS.Lambda();
-const dynamoDB = new AWS.DynamoDB();
-const kinesis = new AWS.Kinesis();
+const s3 = new AWS.S3(getClientConfig({ s3ForcePathStyle: true }));
+const lambda = new AWS.Lambda(getClientConfig());
+const dynamoDB = new AWS.DynamoDB(getClientConfig());
+const kinesis = new AWS.Kinesis(getClientConfig());
 
 const app = express();
 const port = require('@_local/collector/test/test_util/app-port')();
