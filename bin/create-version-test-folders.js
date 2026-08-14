@@ -245,8 +245,8 @@ ${
 }      log('[INFO] Running npm install for ${suiteName}@${displayVersion}...');
       const npmCmd = process.env.CI ?
         'npm install --cache ${rootDir}/.npm-offline-cache --prefer-offline ' +
-        '${hasLockFile ? '' : '--no-package-lock '}--no-audit --prefix ./ --no-progress' :
-        'npm install ${hasLockFile ? '' : '--no-package-lock '}--no-audit --prefix ./ --no-progress';
+        '${hasLockFile ? '' : '--no-package-lock '}--no-audit --ignore-scripts --prefix ./ --no-progress' :
+        'npm install ${hasLockFile ? '' : '--no-package-lock '}--no-audit --ignore-scripts --prefix ./ --no-progress';
 
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         const timeout = 5 * 60 * 1000;
