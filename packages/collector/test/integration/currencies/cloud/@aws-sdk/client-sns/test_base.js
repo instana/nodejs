@@ -20,24 +20,14 @@ const {
   verifyHttpExit
 } = require('@_local/core/test/test_util/common_verifications');
 const constants = require('@_local/core').tracing.constants;
-let utils;
+const utils = require('./utils');
 
 // Resolve the base directory (works from both the original dir and _v* copies)
 const inVersionDir =
   path.basename(__dirname).startsWith('_v') || path.basename(path.dirname(__dirname)).startsWith('_v');
 const baseDir = inVersionDir ? path.resolve(__dirname, '..') : __dirname;
 
-function getLocalstackEndpoint() {
-  if (process.env.RUN_AWS === 'true') return null;
-  let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
-  if (!endpoint) return null;
-  if (endpoint.startsWith('localstack://')) {
-    endpoint = endpoint.replace('localstack://', 'http://');
-  }
-  return endpoint;
-}
-
-const awsEndpoint = getLocalstackEndpoint();
+const awsEndpoint = utils.getLocalstackEndpoint();
 const accountId = awsEndpoint ? '000000000000' : '767398002385';
 const queueUrlPrefix = awsEndpoint
   ? `${awsEndpoint}/${accountId}/`
@@ -63,7 +53,6 @@ function start() {
     return;
   }
 
-  utils = require('./utils');
   const queueName = utils.generateQueueName();
   const queueUrl = `${queueUrlPrefix}${queueName}`;
 

@@ -58,8 +58,7 @@ function start() {
     mochaSuiteFn = describe;
   }
 
-  const { cleanup } = require('./util');
-  const { checkStreamExistence } = require('./util');
+  const { cleanup, checkStreamExistence } = require('./util');
 
   // NOTE: Set RUN_AWS=true to run against real AWS instead of LocalStack.
   mochaSuiteFn('tracing', function () {

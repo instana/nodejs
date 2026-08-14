@@ -16,25 +16,10 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 import delay from '@_local/core/test/test_util/delay.js';
 import AWS from 'aws-sdk';
 import express from 'express';
+import util from './util.js';
 
+const { getClientConfig } = util;
 const logPrefix = `AWS SDK v2 S3 (${process.pid}):\t`;
-
-function getClientConfig() {
-  let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
-  if (endpoint) {
-    if (endpoint.startsWith('localstack://')) {
-      endpoint = endpoint.replace('localstack://', 'http://');
-    }
-    return {
-      region: 'us-east-2',
-      endpoint,
-      accessKeyId: 'test',
-      secretAccessKey: 'test',
-      s3ForcePathStyle: true
-    };
-  }
-  return { region: 'us-east-2' };
-}
 
 AWS.config.update({ region: 'us-east-2' });
 const s3 = new AWS.S3(getClientConfig());

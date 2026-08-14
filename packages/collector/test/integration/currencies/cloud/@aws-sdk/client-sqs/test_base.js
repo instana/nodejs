@@ -23,30 +23,13 @@ const ProcessControls = require('@_local/collector/test/test_util/ProcessControl
 const globalAgent = require('@_local/collector/test/globalAgent');
 const { verifyHttpRootEntry, verifyHttpExit } = require('@_local/core/test/test_util/common_verifications');
 
-function getLocalstackQueueUrlPrefix() {
-  if (process.env.RUN_AWS === 'true') return null;
-  let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
-  if (!endpoint) return null;
-  if (endpoint.startsWith('localstack://')) {
-    endpoint = endpoint.replace('localstack://', 'http://');
-  }
-  return `${endpoint}/000000000000/`;
-}
+const { createQueues, deleteQueues, sendSnsNotificationToSqsQueue, getLocalstackEndpoint } = require('./util');
 
-const defaultPrefix = process.env.SQS_QUEUE_URL_PREFIX || getLocalstackQueueUrlPrefix() || 'https://sqs.us-east-2.amazonaws.com/767398002385/';
-const queueUrlPrefix = defaultPrefix;
-
-const awsEndpoint = (() => {
-  if (process.env.RUN_AWS === 'true') return null;
-  let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
-  if (!endpoint) return null;
-  if (endpoint.startsWith('localstack://')) {
-    endpoint = endpoint.replace('localstack://', 'http://');
-  }
-  return endpoint;
-})();
-
-const { createQueues, deleteQueues, sendSnsNotificationToSqsQueue } = require('./util');
+const awsEndpoint = getLocalstackEndpoint();
+const queueUrlPrefix =
+  process.env.SQS_QUEUE_URL_PREFIX ||
+  (awsEndpoint ? `${awsEndpoint}/000000000000/` : null) ||
+  'https://sqs.us-east-2.amazonaws.com/767398002385/';
 
 const sendingMethods = ['v3', 'cb', 'v2'];
 const receivingMethods = ['v3', 'cb', 'v2'];
