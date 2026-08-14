@@ -6,18 +6,11 @@
 'use strict';
 
 const AWS = require('aws-sdk');
+const { getLocalstackEndpoint } = require('@_local/collector/test/integration/currencies/cloud/aws-sdk/aws-utils');
 
-function getLocalstackEndpoint() {
-  if (process.env.RUN_AWS === 'true') return null;
-  let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
-  if (!endpoint) return null;
-  if (endpoint.startsWith('localstack://')) {
-    endpoint = endpoint.replace('localstack://', 'http://');
-  }
-  return endpoint;
-}
+exports.getLocalstackEndpoint = getLocalstackEndpoint;
 
-function getClientConfig() {
+exports.getClientConfig = function () {
   const endpoint = getLocalstackEndpoint();
   if (endpoint) {
     return {
@@ -29,12 +22,10 @@ function getClientConfig() {
     };
   }
   return { region: 'us-east-2' };
-}
+};
 
 AWS.config.update({ region: 'us-east-2' });
-exports.getLocalstackEndpoint = getLocalstackEndpoint;
-exports.getClientConfig = getClientConfig;
-const s3 = new AWS.S3(getClientConfig());
+const s3 = new AWS.S3(exports.getClientConfig());
 
 /**
  * Attempts to delete a previous created bucket before the test starts

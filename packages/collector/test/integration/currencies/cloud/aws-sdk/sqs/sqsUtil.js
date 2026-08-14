@@ -18,28 +18,7 @@ AWS.HttpRequest.prototype.appendToUserAgent = function () {
   this.headers[this.getUserAgentHeaderName()] = [this._userAgent];
 };
 
-function getLocalstackEndpoint() {
-  if (process.env.RUN_AWS === 'true') return null;
-  let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
-  if (!endpoint) return null;
-  if (endpoint.startsWith('localstack://')) {
-    endpoint = endpoint.replace('localstack://', 'http://');
-  }
-  return endpoint;
-}
-
-function getClientConfig() {
-  const endpoint = getLocalstackEndpoint();
-  if (endpoint) {
-    return {
-      region: 'us-east-2',
-      endpoint,
-      accessKeyId: 'test',
-      secretAccessKey: 'test'
-    };
-  }
-  return { region: 'us-east-2' };
-}
+const { getLocalstackEndpoint, getClientConfig } = require('@_local/collector/test/integration/currencies/cloud/aws-sdk/aws-utils');
 
 AWS.config.update({ region: 'us-east-2' });
 exports.getLocalstackEndpoint = getLocalstackEndpoint;
