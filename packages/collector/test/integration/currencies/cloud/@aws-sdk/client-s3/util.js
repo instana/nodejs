@@ -6,16 +6,7 @@
 'use strict';
 
 const awsSdk3 = require('@aws-sdk/client-s3');
-
-function getLocalstackEndpoint() {
-  if (process.env.RUN_AWS === 'true') return null;
-  let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
-  if (!endpoint) return null;
-  if (endpoint.startsWith('localstack://')) {
-    endpoint = endpoint.replace('localstack://', 'http://');
-  }
-  return endpoint;
-}
+const { getLocalstackEndpoint } = require('@_local/collector/test/integration/currencies/cloud/@aws-sdk/aws-utils');
 
 exports.getLocalstackEndpoint = getLocalstackEndpoint;
 

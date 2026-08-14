@@ -5,35 +5,11 @@
 'use strict';
 
 const { KinesisClient, DescribeStreamCommand, DeleteStreamCommand } = require('@aws-sdk/client-kinesis');
+const { getClientConfig } = require('@_local/collector/test/integration/currencies/cloud/@aws-sdk/aws-utils');
 
-function getLocalstackEndpoint() {
-  if (process.env.RUN_AWS === 'true') return null;
-  let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
-  if (!endpoint) return null;
-  if (endpoint.startsWith('localstack://')) {
-    endpoint = endpoint.replace('localstack://', 'http://');
-  }
-  return endpoint;
-}
+exports.getClientConfig = getClientConfig;
 
-exports.getLocalstackEndpoint = getLocalstackEndpoint;
-
-exports.getClientConfig = function () {
-  const endpoint = getLocalstackEndpoint();
-  if (endpoint) {
-    return {
-      region: 'us-east-2',
-      endpoint,
-      credentials: {
-        accessKeyId: 'test',
-        secretAccessKey: 'test'
-      }
-    };
-  }
-  return { region: 'us-east-2' };
-};
-
-const kinesis = new KinesisClient(exports.getClientConfig());
+const kinesis = new KinesisClient(getClientConfig());
 const interval = 1000;
 const MAX_WAIT_TIME = 10000;
 

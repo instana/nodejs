@@ -21,15 +21,7 @@ const customRetryStrategy = new StandardRetryStrategy(async () => maxAttempts, {
   delayDecider: () => 5000
 });
 
-function getLocalstackEndpoint() {
-  if (process.env.RUN_AWS === 'true') return null;
-  let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
-  if (!endpoint) return null;
-  if (endpoint.startsWith('localstack://')) {
-    endpoint = endpoint.replace('localstack://', 'http://');
-  }
-  return endpoint;
-}
+const { getLocalstackEndpoint } = require('@_local/collector/test/integration/currencies/cloud/@aws-sdk/aws-utils');
 
 function getClientConfig() {
   const endpoint = getLocalstackEndpoint();
@@ -48,6 +40,7 @@ function getClientConfig() {
 }
 
 exports.getLocalstackEndpoint = getLocalstackEndpoint;
+exports.getClientConfig = getClientConfig;
 
 const accountId = getLocalstackEndpoint() ? '000000000000' : '767398002385';
 exports.accountId = accountId;

@@ -12,34 +12,12 @@ const {
 } = require('@aws-sdk/client-lambda');
 const AdmZip = require('adm-zip');
 
-function getLocalstackEndpoint() {
-  if (process.env.RUN_AWS === 'true') return null;
-  let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
-  if (!endpoint) return null;
-  if (endpoint.startsWith('localstack://')) {
-    endpoint = endpoint.replace('localstack://', 'http://');
-  }
-  return endpoint;
-}
+const { getLocalstackEndpoint, getClientConfig } = require('@_local/collector/test/integration/currencies/cloud/@aws-sdk/aws-utils');
 
 exports.getLocalstackEndpoint = getLocalstackEndpoint;
+exports.getClientConfig = getClientConfig;
 
-exports.getClientConfig = function () {
-  const endpoint = getLocalstackEndpoint();
-  if (endpoint) {
-    return {
-      region: 'us-east-2',
-      endpoint,
-      credentials: {
-        accessKeyId: 'test',
-        secretAccessKey: 'test'
-      }
-    };
-  }
-  return { region: 'us-east-2' };
-};
-
-const clientOpts = exports.getClientConfig();
+const clientOpts = getClientConfig();
 const lambdaClient = new LambdaClient(clientOpts);
 const zip = new AdmZip();
 const lambdaFunctionCode = `

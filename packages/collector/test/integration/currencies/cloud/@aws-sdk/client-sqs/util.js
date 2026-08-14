@@ -6,32 +6,11 @@
 'use strict';
 
 const AWS = require('@aws-sdk/client-sqs');
+const awsUtils = require('@_local/collector/test/integration/currencies/cloud/@aws-sdk/aws-utils');
 
-function getLocalstackEndpoint() {
-  if (process.env.RUN_AWS === 'true') return null;
-  let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
-  if (!endpoint) return null;
-  if (endpoint.startsWith('localstack://')) {
-    endpoint = endpoint.replace('localstack://', 'http://');
-  }
-  return endpoint;
-}
+exports.getLocalstackEndpoint = awsUtils.getLocalstackEndpoint;
 
-exports.getLocalstackEndpoint = getLocalstackEndpoint;
-
-function getClientConfig() {
-  const endpoint = getLocalstackEndpoint();
-  if (endpoint) {
-    return {
-      region: 'us-east-2',
-      endpoint,
-      credentials: { accessKeyId: 'test', secretAccessKey: 'test' }
-    };
-  }
-  return { region: 'us-east-2' };
-}
-
-const sqs = new AWS.SQS(getClientConfig());
+const sqs = new AWS.SQS(awsUtils.getClientConfig());
 
 exports.createQueues = function (queueNames) {
   const promises = queueNames.map(name =>
