@@ -17,6 +17,8 @@ function getLocalstackEndpoint() {
   return endpoint;
 }
 
+exports.getLocalstackEndpoint = getLocalstackEndpoint;
+
 function getClientConfig() {
   const endpoint = getLocalstackEndpoint();
   if (endpoint) {

@@ -31,6 +31,7 @@ function getClientConfig() {
 }
 
 const accountId = getLocalstackEndpoint() ? '000000000000' : '767398002385';
+exports.getLocalstackEndpoint = getLocalstackEndpoint;
 exports.getClientConfig = getClientConfig;
 exports.accountId = accountId;
 

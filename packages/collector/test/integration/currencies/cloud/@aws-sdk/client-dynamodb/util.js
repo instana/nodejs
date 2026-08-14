@@ -32,6 +32,7 @@ function getClientConfig() {
   return { region: 'us-east-2' };
 }
 
+exports.getLocalstackEndpoint = getLocalstackEndpoint;
 exports.getClientConfig = getClientConfig;
 
 const dynamoDB = new AWS.DynamoDB(getClientConfig());

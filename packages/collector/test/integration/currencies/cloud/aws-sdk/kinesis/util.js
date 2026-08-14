@@ -31,6 +31,7 @@ function getClientConfig() {
 }
 
 AWS.config.update({ region: 'us-east-2' });
+exports.getLocalstackEndpoint = getLocalstackEndpoint;
 exports.getClientConfig = getClientConfig;
 const kinesis = new AWS.Kinesis(getClientConfig());
 const interval = 1000;
