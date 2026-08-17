@@ -59,7 +59,7 @@ function start() {
   let receiverControls;
   let appControls;
 
-  // NOTE: Set RUN_AWS=true to run against real AWS instead of LocalStack.
+  // NOTE: Set RUN_REAL_AWS=true to run against real AWS instead of LocalStack.
   before(async () => {
     // TODO: move into the app.js file
     const topic = await utils.createTopic(topicName);
@@ -337,7 +337,7 @@ function start() {
       verifyHttpExit({ spans, parent: httpEntry, pid: String(controls.getPid()) });
 
       // Previous test was not using actual AWS, so skipping for now
-      if (!process.env.RUN_AWS) {
+      if (!process.env.RUN_REAL_AWS) {
         verifySQSEntrySpan(spans, String(receiverControls.getPid()), withSqsParent ? exitSpan : null);
       }
     }

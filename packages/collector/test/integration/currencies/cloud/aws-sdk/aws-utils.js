@@ -13,7 +13,7 @@
  * @returns {string|null}
  */
 function getLocalstackEndpoint() {
-  if (process.env.RUN_AWS === 'true') return null;
+  if (process.env.RUN_REAL_AWS === 'true') return null;
   let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
   if (!endpoint) return null;
   if (endpoint.startsWith('localstack://')) {

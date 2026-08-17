@@ -22,7 +22,7 @@ const functionName = 'nodejs-tracer-lambda';
 const withErrorOptions = [false, true];
 const availableCtx = [null, '{"Custom": {"awesome_company": "Instana"}}', '{"Custom": "Something"}'];
 const requestMethods = ['Callback', 'Promise'];
-const availableOperations = process.env.RUN_AWS ? ['invoke', 'invokeAsync'] : ['invoke'];
+const availableOperations = process.env.RUN_REAL_AWS ? ['invoke', 'invokeAsync'] : ['invoke'];
 
 const getNextCallMethod = require('@_local/core/test/test_util/circular_list').getCircularList(requestMethods);
 
@@ -33,7 +33,7 @@ module.exports = function (libraryEnv) {
   mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
     this.timeout(config.getTestTimeout() * 10);
 
-    if (!process.env.RUN_AWS) {
+    if (!process.env.RUN_REAL_AWS) {
       before(async () => {
         await createFunction(functionName);
       });

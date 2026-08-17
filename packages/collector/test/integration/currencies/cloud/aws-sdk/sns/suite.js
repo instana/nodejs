@@ -28,7 +28,7 @@ const topicArn = `arn:aws:sns:us-east-2:${accountId}:${topicAndQueueName}`;
 const localstackEndpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS
   ? process.env.INSTANA_CONNECT_LOCALSTACK_AWS.replace('localstack://', 'http://')
   : 'http://localhost:4566';
-const sqsQueueUrl = process.env.RUN_AWS
+const sqsQueueUrl = process.env.RUN_REAL_AWS
   ? `https://sqs.us-east-2.amazonaws.com/${accountId}/${topicAndQueueName}`
   : `${localstackEndpoint}/${accountId}/${topicAndQueueName}`;
 

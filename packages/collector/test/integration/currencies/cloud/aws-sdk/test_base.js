@@ -5,7 +5,7 @@
 
 'use strict';
 
-// NOTE: Set RUN_AWS=true to run against real AWS instead of LocalStack.
+// NOTE: Set RUN_REAL_AWS=true to run against real AWS instead of LocalStack.
 module.exports = function (name, version, isLatest) {
   const libraryEnv = { LIBRARY_VERSION: version, LIBRARY_NAME: name, LIBRARY_LATEST: isLatest };
 

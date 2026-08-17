@@ -46,7 +46,7 @@ let requestMethod;
 function start(reducedTestSuite = false) {
   const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-  // NOTE: Set RUN_AWS=true to run against real AWS instead of LocalStack.
+  // NOTE: Set RUN_REAL_AWS=true to run against real AWS instead of LocalStack.
   mochaSuiteFn(`npm: ${libraryEnv.LIBRARY_NAME}, style: ${requestMethod}`, function () {
     this.timeout(config.getTestTimeout() * 5);
 
@@ -128,7 +128,7 @@ function start(reducedTestSuite = false) {
 
         await appControls.startAndWaitForAgentConnection();
 
-        if (!process.env.RUN_AWS) {
+        if (!process.env.RUN_REAL_AWS) {
           // Ensure the table exists before listTables is called. Real AWS has a pre-existing
           // 'nodejs-team' table; LocalStack starts empty so we create one here.
           await appControls.sendRequest({ method: 'GET', path: `/createTable/${requestMethod}` });
@@ -560,7 +560,7 @@ function start(reducedTestSuite = false) {
           expect(response.result.TableDescription).to.exist;
           expect(response.result.TableDescription.TableName).to.equal(tableName);
           // Real AWS returns 'CREATING' while the table initialises; LocalStack returns 'ACTIVE' immediately.
-          if (process.env.RUN_AWS) {
+          if (process.env.RUN_REAL_AWS) {
             expect(response.result.TableDescription.TableStatus).to.equal('CREATING');
           } else {
             expect(response.result.TableDescription.TableStatus).to.equal('ACTIVE');

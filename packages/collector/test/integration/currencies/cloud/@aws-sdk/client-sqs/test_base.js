@@ -39,7 +39,7 @@ const getNextReceiveMethod = require('@_local/core/test/test_util/circular_list'
 
 let libraryEnv;
 
-// NOTE: Set RUN_AWS=true to run against real AWS instead of LocalStack.
+// NOTE: Set RUN_REAL_AWS=true to run against real AWS instead of LocalStack.
 function start() {
   const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 

@@ -53,7 +53,7 @@ module.exports = function (libraryEnv) {
   mochaSuiteFn('tracing/cloud/aws-sdk/v2/combined-products', function () {
     this.timeout(config.getTestTimeout() * 3);
 
-    if (!process.env.RUN_AWS) {
+    if (!process.env.RUN_REAL_AWS) {
       before(async () => {
         await createFunction(functionName);
       });

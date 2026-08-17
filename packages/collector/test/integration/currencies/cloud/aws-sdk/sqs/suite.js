@@ -28,7 +28,7 @@ const { verifyHttpRootEntry, verifyHttpExit } = require('@_local/core/test/test_
 const localstackEndpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS
   ? process.env.INSTANA_CONNECT_LOCALSTACK_AWS.replace('localstack://', 'http://')
   : 'http://localhost:4566';
-const defaultPrefix = process.env.RUN_AWS
+const defaultPrefix = process.env.RUN_REAL_AWS
   ? 'https://sqs.us-east-2.amazonaws.com/767398002385/'
   : `${localstackEndpoint}/000000000000/`;
 const queueUrlPrefix = process.env.SQS_QUEUE_URL_PREFIX || defaultPrefix;

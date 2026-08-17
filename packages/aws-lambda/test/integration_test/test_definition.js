@@ -22,8 +22,8 @@ const { fail } = expect;
 const awsRegion = 'us-east-2';
 
 function getLocalstackEndpoint() {
-  // RUN_AWS=true forces real AWS — ignore any LocalStack configuration.
-  if (process.env.RUN_AWS === 'true') return null;
+  // RUN_REAL_AWS=true forces real AWS — ignore any LocalStack configuration.
+  if (process.env.RUN_REAL_AWS === 'true') return null;
   let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
   if (!endpoint) return null;
   if (endpoint.startsWith('localstack://')) {
