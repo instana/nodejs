@@ -6,24 +6,15 @@
 'use strict';
 
 const awsSdk3 = require('@aws-sdk/client-s3');
-const { getLocalstackEndpoint } = require('@_local/collector/test/integration/currencies/cloud/@aws-sdk/aws-utils');
+const {
+  getLocalstackEndpoint,
+  getClientConfig: getSharedClientConfig
+} = require('@_local/collector/test/integration/currencies/cloud/@aws-sdk/aws-utils');
 
 exports.getLocalstackEndpoint = getLocalstackEndpoint;
 
 exports.getClientConfig = function () {
-  const endpoint = getLocalstackEndpoint();
-  if (endpoint) {
-    return {
-      region: 'us-east-2',
-      endpoint,
-      credentials: {
-        accessKeyId: 'test',
-        secretAccessKey: 'test'
-      },
-      forcePathStyle: true
-    };
-  }
-  return { region: 'us-east-2' };
+  return getSharedClientConfig({ forcePathStyle: true });
 };
 
 const s3 = new awsSdk3.S3(exports.getClientConfig());

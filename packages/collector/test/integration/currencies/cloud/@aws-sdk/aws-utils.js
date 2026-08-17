@@ -25,19 +25,23 @@ function getLocalstackEndpoint() {
  * Returns an AWS SDK v3 client configuration object.
  * When a localstack endpoint is detected, test credentials and the endpoint
  * are included; otherwise only the region is set.
+ * @param {object} [extraOptions] - additional properties merged into the config
  * @returns {object}
  */
-function getClientConfig() {
+function getClientConfig(extraOptions) {
   const endpoint = getLocalstackEndpoint();
   if (endpoint) {
-    return {
-      region: 'us-east-2',
-      endpoint,
-      credentials: {
-        accessKeyId: 'test',
-        secretAccessKey: 'test'
-      }
-    };
+    return Object.assign(
+      {
+        region: 'us-east-2',
+        endpoint,
+        credentials: {
+          accessKeyId: 'test',
+          secretAccessKey: 'test'
+        }
+      },
+      extraOptions
+    );
   }
   return { region: 'us-east-2' };
 }
