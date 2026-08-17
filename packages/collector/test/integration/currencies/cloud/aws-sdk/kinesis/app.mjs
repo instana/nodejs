@@ -20,12 +20,15 @@ const streamName = process.env.AWS_KINESIS_STREAM_NAME || 'nodejs-team';
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 import AWS from 'aws-sdk';
+import util from './util.js';
+
 const logPrefix = `AWS SDK v2 Kinesis (${process.pid}):\t`;
 import log from '@_local/core/test/test_util/log.js';
 const logger = log.getLogger(logPrefix);
+const { getClientConfig } = util;
 
 AWS.config.update({ region: 'us-east-2' });
-const kinesis = new AWS.Kinesis();
+const kinesis = new AWS.Kinesis(getClientConfig());
 
 const availableOperations = {
   deleteStream: {

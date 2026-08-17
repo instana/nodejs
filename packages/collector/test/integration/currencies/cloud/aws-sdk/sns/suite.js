@@ -6,7 +6,7 @@
 'use strict';
 
 const { v4: uuid } = require('uuid');
-const { cleanup, createTopic } = require('./util');
+const { cleanup, createTopic, accountId } = require('./util');
 const semver = require('semver');
 const { expect } = require('chai');
 const { fail } = expect;
@@ -24,8 +24,13 @@ const {
 const { promisifyNonSequentialCases } = require('../promisify_non_sequential');
 
 const topicAndQueueName = `nodejs-team-v2-${semver.major(process.versions.node)}-${uuid()}`;
-const topicArn = `arn:aws:sns:us-east-2:767398002385:${topicAndQueueName}`;
-const sqsQueueUrl = `https://sqs.us-east-2.amazonaws.com/767398002385/${topicAndQueueName}`;
+const topicArn = `arn:aws:sns:us-east-2:${accountId}:${topicAndQueueName}`;
+const localstackEndpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS
+  ? process.env.INSTANA_CONNECT_LOCALSTACK_AWS.replace('localstack://', 'http://')
+  : 'http://localhost:4566';
+const sqsQueueUrl = process.env.RUN_REAL_AWS
+  ? `https://sqs.us-east-2.amazonaws.com/${accountId}/${topicAndQueueName}`
+  : `${localstackEndpoint}/${accountId}/${topicAndQueueName}`;
 
 const withErrorOptions = [false, true];
 const requestMethods = ['Callback', 'Promise', 'Async'];

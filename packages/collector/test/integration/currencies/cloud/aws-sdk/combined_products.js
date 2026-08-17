@@ -13,11 +13,14 @@ const delay = require('@_local/core/test/test_util/delay');
 const AWS = require('aws-sdk');
 const express = require('express');
 const logPrefix = `Combined AWS SDK v2 products (${process.pid}):\t`;
+
+const { getClientConfig } = require('@_local/collector/test/integration/currencies/cloud/aws-sdk/aws-utils');
+
 AWS.config.update({ region: 'us-east-2' });
-const s3 = new AWS.S3();
-const lambda = new AWS.Lambda();
-const dynamoDB = new AWS.DynamoDB();
-const kinesis = new AWS.Kinesis();
+const s3 = new AWS.S3(getClientConfig({ s3ForcePathStyle: true }));
+const lambda = new AWS.Lambda(getClientConfig());
+const dynamoDB = new AWS.DynamoDB(getClientConfig());
+const kinesis = new AWS.Kinesis(getClientConfig());
 
 const app = express();
 const port = require('@_local/collector/test/test_util/app-port')();

@@ -21,10 +21,10 @@ const port = require('@_local/collector/test/test_util/app-port')();
 const agentPort = process.env.INSTANA_AGENT_PORT;
 const app = express();
 const bucketName = process.env.AWS_S3_BUCKET_NAME || 'nodejs-team';
-const awsRegion = 'us-east-2';
+const { getClientConfig } = require('./util');
 
-const s3 = new awsSdk3.S3Client({ region: awsRegion });
-const s3v2 = new awsSdk3.S3({ region: awsRegion });
+const s3 = new awsSdk3.S3Client(getClientConfig());
+const s3v2 = new awsSdk3.S3(getClientConfig());
 
 const availableOperations = [
   'createBucket',

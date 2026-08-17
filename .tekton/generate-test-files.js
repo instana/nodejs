@@ -37,7 +37,7 @@ const packages = {
 
   'test:ci:autoprofile': {},
   'test:ci:aws-fargate': {},
-  'test:ci:aws-lambda': { split: 5 },
+  'test:ci:aws-lambda': { split: 5, sidecars: ['localstack'] },
   'test:ci:azure-container-services': {},
   'test:ci:core': {},
   'test:ci:google-cloud-run': {},

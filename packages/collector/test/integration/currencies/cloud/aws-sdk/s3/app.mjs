@@ -16,10 +16,13 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 import delay from '@_local/core/test/test_util/delay.js';
 import AWS from 'aws-sdk';
 import express from 'express';
+import util from './util.js';
 
+const { getClientConfig } = util;
 const logPrefix = `AWS SDK v2 S3 (${process.pid}):\t`;
+
 AWS.config.update({ region: 'us-east-2' });
-const s3 = new AWS.S3();
+const s3 = new AWS.S3(getClientConfig());
 
 const app = express();
 import getAppPort from '@_local/collector/test/test_util/app-port.js';

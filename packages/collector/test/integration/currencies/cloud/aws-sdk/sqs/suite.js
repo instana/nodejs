@@ -25,7 +25,12 @@ const globalAgent = require('@_local/collector/test/globalAgent');
 const { sendSnsNotificationToSqsQueue } = require('./sendNonInstrumented');
 const { verifyHttpRootEntry, verifyHttpExit } = require('@_local/core/test/test_util/common_verifications');
 
-const defaultPrefix = 'https://sqs.us-east-2.amazonaws.com/767398002385/';
+const localstackEndpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS
+  ? process.env.INSTANA_CONNECT_LOCALSTACK_AWS.replace('localstack://', 'http://')
+  : 'http://localhost:4566';
+const defaultPrefix = process.env.RUN_REAL_AWS
+  ? 'https://sqs.us-east-2.amazonaws.com/767398002385/'
+  : `${localstackEndpoint}/000000000000/`;
 const queueUrlPrefix = process.env.SQS_QUEUE_URL_PREFIX || defaultPrefix;
 const queueNamePrefix = process.env.SQS_QUEUE_NAME || 'nodejs-team';
 const queueName = `${queueNamePrefix}-${semver.major(process.versions.node)}-${uuid()}`;

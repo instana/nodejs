@@ -13,9 +13,12 @@ process.on('SIGTERM', () => {
 
 import AWS from 'aws-sdk';
 import express from 'express';
+import localUtil from './util.js';
+const { getClientConfig } = localUtil;
 const logPrefix = `AWS SDK v2 Lambda (${process.pid}):\t`;
+
 AWS.config.update({ region: 'us-east-2' });
-const lambda = new AWS.Lambda();
+const lambda = new AWS.Lambda(getClientConfig());
 const functionName = process.env.AWS_LAMBDA_FUNCTION_NAME || 'nodejs-tracer-lambda';
 import getAppPort from '@_local/collector/test/test_util/app-port.js';
 const port = getAppPort();

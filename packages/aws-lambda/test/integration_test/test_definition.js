@@ -20,6 +20,38 @@ const expectExactlyOneMatching = require('@_local/core/test/test_util/expectExac
 const { fail } = expect;
 
 const awsRegion = 'us-east-2';
+
+function getLocalstackEndpoint() {
+  // NOTE: Set RUN_REAL_AWS=true to run against real AWS instead of LocalStack.
+  if (process.env.RUN_REAL_AWS === 'true') return null;
+  let endpoint = process.env.INSTANA_CONNECT_LOCALSTACK_AWS;
+  if (!endpoint) return null;
+  if (endpoint.startsWith('localstack://')) {
+    endpoint = endpoint.replace('localstack://', 'http://');
+  }
+  return endpoint;
+}
+
+/**
+ * Returns an AWS SDK client config. When LocalStack is active the endpoint and
+ * dummy credentials are added; otherwise the SDK resolves credentials from the
+ * environment / ~/.aws as usual (real AWS).
+ */
+function getAwsClientConfig() {
+  const endpoint = getLocalstackEndpoint();
+  if (endpoint) {
+    return {
+      region: awsRegion,
+      endpoint,
+      credentials: {
+        accessKeyId: 'test',
+        secretAccessKey: 'test'
+      }
+    };
+  }
+  return { region: awsRegion };
+}
+
 const functionName = 'functionName';
 const unqualifiedArn = `arn:aws:lambda:${awsRegion}:767398002385:function:${functionName}`;
 const version = '$LATEST';
@@ -128,6 +160,15 @@ function prelude(opts) {
   }
   if (opts.handlerDelay) {
     env.HANDLER_DELAY = opts.handlerDelay;
+  }
+
+  // When using LocalStack, inject AWS_ENDPOINT_URL so the AWS SDK inside the lambda process
+  // (including ssm.js) routes all service calls to LocalStack automatically
+  const localstackEndpoint = getLocalstackEndpoint();
+  if (localstackEndpoint) {
+    env.AWS_ENDPOINT_URL = localstackEndpoint;
+    env.AWS_ACCESS_KEY_ID = 'test';
+    env.AWS_SECRET_ACCESS_KEY = 'test';
   }
 
   return env;
@@ -331,12 +372,11 @@ function registerTests(handlerDefinitionPath, reduced) {
         handlerDefinitionPath,
         instanaAgentKeyViaSSM: '/Nodejstest/MyAgentKey'
       });
-
       let control;
 
       before(callback => {
         const { SSMClient, PutParameterCommand } = require('@aws-sdk/client-ssm');
-        const ssmClient = new SSMClient({ region: awsRegion });
+        const ssmClient = new SSMClient(getAwsClientConfig());
         const params = {
           Name: '/Nodejstest/MyAgentKey',
           Value: instanaAgentKey,
@@ -407,7 +447,6 @@ function registerTests(handlerDefinitionPath, reduced) {
         handlerDefinitionPath,
         instanaAgentKeyViaSSM: '/Nodejstest/MyAgentKeyEncrypted'
       });
-
       let control;
 
       before(async () => {
@@ -431,7 +470,8 @@ function registerTests(handlerDefinitionPath, reduced) {
       });
 
       after(async () => {
-        const kmsClient = new KMSClient({ region: awsRegion });
+        if (!kmsKeyId) return;
+        const kmsClient = new KMSClient(getAwsClientConfig());
         try {
           await kmsClient.send(
             new ScheduleKeyDeletionCommand({
@@ -445,8 +485,8 @@ function registerTests(handlerDefinitionPath, reduced) {
       });
 
       before(async () => {
-        const ssmClient = new SSMClient({ region: awsRegion });
-        const kmsClient = new KMSClient({ region: awsRegion });
+        const ssmClient = new SSMClient(getAwsClientConfig());
+        const kmsClient = new KMSClient(getAwsClientConfig());
 
         try {
           const kmsResponse = await kmsClient.send(new CreateKeyCommand({}));
@@ -509,7 +549,6 @@ function registerTests(handlerDefinitionPath, reduced) {
         instanaAgentKeyViaSSM: '/Nodejstest/MyAgentKeyEncrypted',
         instanaSSMDecryption: true
       });
-
       let control;
 
       before(async () => {
@@ -533,7 +572,8 @@ function registerTests(handlerDefinitionPath, reduced) {
       });
 
       after(async () => {
-        const kmsClient = new KMSClient({ region: awsRegion });
+        if (!kmsKeyId) return;
+        const kmsClient = new KMSClient(getAwsClientConfig());
         try {
           await kmsClient.send(
             new ScheduleKeyDeletionCommand({
@@ -547,8 +587,8 @@ function registerTests(handlerDefinitionPath, reduced) {
       });
 
       before(async () => {
-        const ssmClient = new SSMClient({ region: awsRegion });
-        const kmsClient = new KMSClient({ region: awsRegion });
+        const ssmClient = new SSMClient(getAwsClientConfig());
+        const kmsClient = new KMSClient(getAwsClientConfig());
 
         try {
           const kmsResponse = await kmsClient.send(new CreateKeyCommand({}));

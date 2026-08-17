@@ -14,6 +14,7 @@ const { retry, stringifyItems, delay } = require('@_local/core/test/test_util');
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 const globalAgent = require('@_local/collector/test/globalAgent');
 const { verifyHttpRootEntry, verifyExitSpan } = require('@_local/core/test/test_util/common_verifications');
+const { createFunction, removeFunction } = require('./util');
 
 const SPAN_NAME = 'aws.lambda.invoke';
 const functionName = 'nodejs-tracer-lambda';
@@ -21,7 +22,7 @@ const functionName = 'nodejs-tracer-lambda';
 const withErrorOptions = [false, true];
 const availableCtx = [null, '{"Custom": {"awesome_company": "Instana"}}', '{"Custom": "Something"}'];
 const requestMethods = ['Callback', 'Promise'];
-const availableOperations = ['invoke', 'invokeAsync'];
+const availableOperations = process.env.RUN_REAL_AWS ? ['invoke', 'invokeAsync'] : ['invoke'];
 
 const getNextCallMethod = require('@_local/core/test/test_util/circular_list').getCircularList(requestMethods);
 
@@ -31,6 +32,17 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
 module.exports = function (libraryEnv) {
   mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
     this.timeout(config.getTestTimeout() * 10);
+
+    if (!process.env.RUN_REAL_AWS) {
+      before(async () => {
+        await createFunction(functionName);
+      });
+
+      after(async () => {
+        await removeFunction(functionName);
+      });
+    }
+
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 

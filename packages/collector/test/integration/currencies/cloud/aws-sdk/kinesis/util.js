@@ -6,8 +6,15 @@
 'use strict';
 
 const AWS = require('aws-sdk');
+const {
+  getLocalstackEndpoint,
+  getClientConfig
+} = require('@_local/collector/test/integration/currencies/cloud/aws-sdk/aws-utils');
+
 AWS.config.update({ region: 'us-east-2' });
-const kinesis = new AWS.Kinesis();
+exports.getLocalstackEndpoint = getLocalstackEndpoint;
+exports.getClientConfig = getClientConfig;
+const kinesis = new AWS.Kinesis(getClientConfig());
 const interval = 1000;
 const MAX_WAIT_TIME = 10000;
 

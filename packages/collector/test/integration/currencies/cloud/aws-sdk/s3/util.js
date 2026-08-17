@@ -6,8 +6,26 @@
 'use strict';
 
 const AWS = require('aws-sdk');
+const { getLocalstackEndpoint } = require('@_local/collector/test/integration/currencies/cloud/aws-sdk/aws-utils');
+
+exports.getLocalstackEndpoint = getLocalstackEndpoint;
+
+exports.getClientConfig = function () {
+  const endpoint = getLocalstackEndpoint();
+  if (endpoint) {
+    return {
+      region: 'us-east-2',
+      endpoint,
+      accessKeyId: 'test',
+      secretAccessKey: 'test',
+      s3ForcePathStyle: true
+    };
+  }
+  return { region: 'us-east-2' };
+};
+
 AWS.config.update({ region: 'us-east-2' });
-const s3 = new AWS.S3();
+const s3 = new AWS.S3(exports.getClientConfig());
 
 /**
  * Attempts to delete a previous created bucket before the test starts

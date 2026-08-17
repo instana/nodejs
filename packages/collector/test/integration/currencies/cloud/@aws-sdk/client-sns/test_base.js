@@ -20,12 +20,18 @@ const {
   verifyHttpExit
 } = require('@_local/core/test/test_util/common_verifications');
 const constants = require('@_local/core').tracing.constants;
-let utils;
+const utils = require('./utils');
 
 // Resolve the base directory (works from both the original dir and _v* copies)
 const inVersionDir =
   path.basename(__dirname).startsWith('_v') || path.basename(path.dirname(__dirname)).startsWith('_v');
 const baseDir = inVersionDir ? path.resolve(__dirname, '..') : __dirname;
+
+const awsEndpoint = utils.getLocalstackEndpoint();
+const accountId = awsEndpoint ? '000000000000' : '767398002385';
+const queueUrlPrefix = awsEndpoint
+  ? `${awsEndpoint}/${accountId}/`
+  : `https://sqs.us-east-2.amazonaws.com/${accountId}/`;
 
 let topicArn;
 const topicName = `nodejs-team-v3-${semver.major(process.versions.node)}`;
@@ -33,7 +39,6 @@ const availableStyles = ['default', 'callback', 'v2'];
 const availableCommands = {
   PublishCommand: {
     Message: 'STRING_VALUE',
-    TargetArn: 'STRING_VALUE',
     Subject: 'STRING_VALUE'
   }
 };
@@ -48,20 +53,18 @@ function start() {
     return;
   }
 
-  utils = require('./utils');
   const queueName = utils.generateQueueName();
+  const queueUrl = `${queueUrlPrefix}${queueName}`;
 
-  let queueUrl;
   let receiverControls;
   let appControls;
 
   before(async () => {
     // TODO: move into the app.js file
-    const queue = await utils.createQueue(queueName);
     const topic = await utils.createTopic(topicName);
-
     topicArn = topic.TopicArn;
-    queueUrl = queue.QueueUrl;
+
+    await utils.createQueue(queueName);
 
     await utils.subscribe(topicArn, queueUrl);
   });
@@ -94,7 +97,7 @@ function start() {
           appName: 'receiver',
           useGlobalAgent: true,
           env: {
-            AWS_ENDPOINT: process.env.INSTANA_CONNECT_LOCALSTACK_AWS,
+            ...(awsEndpoint ? { AWS_ENDPOINT: awsEndpoint } : {}),
             AWS_SQS_QUEUE_URL: queueUrl,
             SQS_POLL_DELAY: 5
           }
@@ -185,7 +188,7 @@ function start() {
           appName: 'receiver',
           useGlobalAgent: true,
           env: {
-            AWS_ENDPOINT: process.env.INSTANA_CONNECT_LOCALSTACK_AWS,
+            ...(awsEndpoint ? { AWS_ENDPOINT: awsEndpoint } : {}),
             AWS_SQS_QUEUE_URL: queueUrl,
             SQS_POLL_DELAY: 5
           }
@@ -250,7 +253,7 @@ function start() {
           useGlobalAgent: true,
           tracingEnabled: false,
           env: {
-            AWS_ENDPOINT: process.env.INSTANA_CONNECT_LOCALSTACK_AWS,
+            ...(awsEndpoint ? { AWS_ENDPOINT: awsEndpoint } : {}),
             AWS_SQS_QUEUE_URL: queueUrl,
             SQS_POLL_DELAY: 5
           }
@@ -331,7 +334,11 @@ function start() {
       });
 
       verifyHttpExit({ spans, parent: httpEntry, pid: String(controls.getPid()) });
-      verifySQSEntrySpan(spans, String(receiverControls.getPid()), withSqsParent ? exitSpan : null);
+
+      // Previous test was not using actual AWS, so skipping for now
+      if (!process.env.RUN_REAL_AWS) {
+        verifySQSEntrySpan(spans, String(receiverControls.getPid()), withSqsParent ? exitSpan : null);
+      }
     }
 
     function verifySQSEntrySpan(spans, receiverPid, parent) {

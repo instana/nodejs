@@ -126,6 +126,13 @@ function start(reducedTestSuite = false) {
         });
 
         await appControls.startAndWaitForAgentConnection();
+
+        if (!process.env.RUN_REAL_AWS) {
+          // Ensure the table exists before listTables is called. Real AWS has a pre-existing
+          // 'nodejs-team' table; LocalStack starts empty so we create one here.
+          await appControls.sendRequest({ method: 'GET', path: `/createTable/${requestMethod}` });
+          await checkTableExistence(tableName, true);
+        }
       });
 
       beforeEach(async () => {
@@ -551,7 +558,12 @@ function start(reducedTestSuite = false) {
         case 'createTable':
           expect(response.result.TableDescription).to.exist;
           expect(response.result.TableDescription.TableName).to.equal(tableName);
-          expect(response.result.TableDescription.TableStatus).to.equal('CREATING');
+          // Real AWS returns 'CREATING' while the table initialises; LocalStack returns 'ACTIVE' immediately.
+          if (process.env.RUN_REAL_AWS) {
+            expect(response.result.TableDescription.TableStatus).to.equal('CREATING');
+          } else {
+            expect(response.result.TableDescription.TableStatus).to.equal('ACTIVE');
+          }
           break;
         case 'listTables':
           expect(response.result.TableNames.length).to.gte(1);

@@ -15,6 +15,7 @@ const instana = require('@instana/collector')();
 const express = require('express');
 const AWS = require('aws-sdk');
 const { Consumer } = require('sqs-consumer');
+const { getClientConfig } = require('./sqsUtil');
 
 const { sendToParent } = require('@_local/core/test/test_util');
 const delay = require('@_local/core/test/test_util/delay');
@@ -37,11 +38,13 @@ function log() {
   /* eslint-enable no-console */
 }
 
-const sqs = new AWS.SQS();
+const sqs = new AWS.SQS(getClientConfig());
 
 const consumerApp = Consumer.create({
   queueUrl: queueURL,
   sqs,
+  messageAttributeNames: ['All'],
+  visibilityTimeout: 1,
   handleMessage: async message => {
     // make sure the span took at least one second to complete
     await delay(1000);

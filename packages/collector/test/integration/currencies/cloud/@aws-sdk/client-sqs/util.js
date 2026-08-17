@@ -6,7 +6,11 @@
 'use strict';
 
 const AWS = require('@aws-sdk/client-sqs');
-const sqs = new AWS.SQS({ region: 'us-east-2' });
+const awsUtils = require('@_local/collector/test/integration/currencies/cloud/@aws-sdk/aws-utils');
+
+exports.getLocalstackEndpoint = awsUtils.getLocalstackEndpoint;
+
+const sqs = new AWS.SQS(awsUtils.getClientConfig());
 
 exports.createQueues = function (queueNames) {
   const promises = queueNames.map(name =>

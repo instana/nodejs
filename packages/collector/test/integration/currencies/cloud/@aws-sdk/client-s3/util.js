@@ -6,7 +6,18 @@
 'use strict';
 
 const awsSdk3 = require('@aws-sdk/client-s3');
-const s3 = new awsSdk3.S3({ region: 'us-east-2' });
+const {
+  getLocalstackEndpoint,
+  getClientConfig: getSharedClientConfig
+} = require('@_local/collector/test/integration/currencies/cloud/@aws-sdk/aws-utils');
+
+exports.getLocalstackEndpoint = getLocalstackEndpoint;
+
+exports.getClientConfig = function () {
+  return getSharedClientConfig({ forcePathStyle: true });
+};
+
+const s3 = new awsSdk3.S3(exports.getClientConfig());
 
 /**
  * Attempts to delete a previous created bucket before the test starts

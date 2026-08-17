@@ -58,8 +58,7 @@ function start() {
     mochaSuiteFn = describe;
   }
 
-  const { cleanup } = require('./util');
-  const { checkStreamExistence } = require('./util');
+  const { cleanup, checkStreamExistence } = require('./util');
 
   mochaSuiteFn('tracing', function () {
     this.timeout(config.getTestTimeout() * 10);

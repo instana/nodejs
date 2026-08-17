@@ -21,27 +21,49 @@ const customRetryStrategy = new StandardRetryStrategy(async () => maxAttempts, {
   delayDecider: () => 5000
 });
 
-const sqs = new awsSdk3.SQS({
-  credentials: {
-    accessKeyId: 'test',
-    secretAccessKey: 'test'
-  },
-  region: 'us-east-2',
-  endpoint: process.env.INSTANA_CONNECT_LOCALSTACK_AWS,
-  retryStrategy: customRetryStrategy
-});
+const { getLocalstackEndpoint } = require('@_local/collector/test/integration/currencies/cloud/@aws-sdk/aws-utils');
 
-const clientOpts = {
-  credentials: {
-    accessKeyId: 'test',
-    secretAccessKey: 'test'
-  },
-  endpoint: process.env.INSTANA_CONNECT_LOCALSTACK_AWS,
-  region: 'us-east-2',
-  retryStrategy: customRetryStrategy
-};
+function getClientConfig() {
+  const endpoint = getLocalstackEndpoint();
+  if (endpoint) {
+    return {
+      credentials: {
+        accessKeyId: 'test',
+        secretAccessKey: 'test'
+      },
+      endpoint,
+      region: 'us-east-2',
+      retryStrategy: customRetryStrategy
+    };
+  }
+  return { region: 'us-east-2' };
+}
 
-const snsClient = new sns.SNSClient(clientOpts);
+exports.getLocalstackEndpoint = getLocalstackEndpoint;
+exports.getClientConfig = getClientConfig;
+
+const accountId = getLocalstackEndpoint() ? '000000000000' : '767398002385';
+exports.accountId = accountId;
+
+const sqs = new awsSdk3.SQS(getClientConfig());
+const snsClient = new sns.SNSClient(getClientConfig());
+
+function getSqsPolicy(queueArn, topicArn) {
+  return JSON.stringify({
+    Version: '2008-10-17',
+    Statement: [
+      {
+        Effect: 'Allow',
+        Principal: { AWS: '*' },
+        Action: 'SQS:SendMessage',
+        Resource: queueArn,
+        Condition: {
+          ArnLike: { 'aws:SourceArn': topicArn }
+        }
+      }
+    ]
+  });
+}
 
 exports.createQueue = async name => {
   return sqs.createQueue({
@@ -60,12 +82,22 @@ exports.subscribe = async (arn, queueUrl) => {
   });
 
   const getQueueAttributesResponse = await sqs.send(getQueueAttributesCommand);
+  const queueArn = getQueueAttributesResponse.Attributes.QueueArn;
+
+  // Real AWS requires an explicit queue policy allowing SNS to deliver messages.
+  // LocalStack does not enforce this, but we set it unconditionally for correctness.
+  await sqs.setQueueAttributes({
+    QueueUrl: queueUrl,
+    Attributes: {
+      Policy: getSqsPolicy(queueArn, arn)
+    }
+  });
 
   await snsClient.send(
     new sns.SubscribeCommand({
       TopicArn: arn,
       Protocol: 'sqs',
-      Endpoint: getQueueAttributesResponse.Attributes.QueueArn,
+      Endpoint: queueArn,
       Attributes: {
         RawMessageDelivery: 'true'
       }

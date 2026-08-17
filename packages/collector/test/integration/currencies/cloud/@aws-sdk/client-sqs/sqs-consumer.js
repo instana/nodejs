@@ -37,7 +37,13 @@ function log() {
   /* eslint-enable no-console */
 }
 
-const sqs = new awsSdk3.SQSClient({ region: awsRegion });
+const sqs = process.env.AWS_ENDPOINT
+  ? new awsSdk3.SQSClient({
+      region: awsRegion,
+      endpoint: process.env.AWS_ENDPOINT,
+      credentials: { accessKeyId: 'test', secretAccessKey: 'test' }
+    })
+  : new awsSdk3.SQSClient({ region: awsRegion });
 
 const handleMessageFn = async message => {
   // make sure the span took at least one second to complete
@@ -91,6 +97,7 @@ const consumerApp = Consumer.create(
       // https://github.com/aws/aws-sdk-js-v3/issues/1394
       visibilityTimeout: 1,
       queueUrl: queueURL,
+      messageAttributeNames: ['All'],
       sqs
     },
     fn

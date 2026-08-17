@@ -15,6 +15,7 @@ module.exports = function (libraryEnv) {
   const globalAgent = require('@_local/collector/test/globalAgent');
   const { verifyHttpRootEntry, verifyExitSpan } = require('@_local/core/test/test_util/common_verifications');
   const { promisifyNonSequentialCases } = require('./promisify_non_sequential');
+  const { createFunction, removeFunction } = require('./lambda/util');
 
   // We are using a single function, 'nodejs-tracer-lambda', for our Lambda testing since we invoke an existing function.
   // Our tests focus on invoking function and retrieving details of the function, rather than creating new ones.
@@ -51,6 +52,17 @@ module.exports = function (libraryEnv) {
 
   mochaSuiteFn('tracing/cloud/aws-sdk/v2/combined-products', function () {
     this.timeout(config.getTestTimeout() * 3);
+
+    if (!process.env.RUN_REAL_AWS) {
+      before(async () => {
+        await createFunction(functionName);
+      });
+
+      after(async () => {
+        await removeFunction(functionName);
+      });
+    }
+
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 

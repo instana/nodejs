@@ -6,8 +6,16 @@
 'use strict';
 
 const AWS = require('aws-sdk');
+const {
+  getLocalstackEndpoint,
+  getClientConfig
+} = require('@_local/collector/test/integration/currencies/cloud/aws-sdk/aws-utils');
+
 AWS.config.update({ region: 'us-east-2' });
-const dynamoDB = new AWS.DynamoDB();
+exports.getLocalstackEndpoint = getLocalstackEndpoint;
+exports.getClientConfig = getClientConfig;
+
+const dynamoDB = new AWS.DynamoDB(getClientConfig());
 const interval = 1000;
 const MAX_WAIT_TIME = 10000;
 

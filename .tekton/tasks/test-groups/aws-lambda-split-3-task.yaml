@@ -4,6 +4,13 @@ metadata:
   name: aws-lambda-split-3
 spec:
   sidecars:
+    - name: localstack
+      image: public.ecr.aws/localstack/localstack:4.5
+      imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "1Gi"
   envFrom:
     - configMapRef:
         name: environment-properties
@@ -44,7 +51,7 @@ spec:
           memory: "8Gi"
       script: |
         #!/bin/bash
-        AVAILABLE_SIDECARS=""
+        AVAILABLE_SIDECARS="localstack"
         SIDECAR_COUNTS=""
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH

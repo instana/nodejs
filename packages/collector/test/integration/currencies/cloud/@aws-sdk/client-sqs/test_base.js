@@ -22,10 +22,14 @@ const {
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 const globalAgent = require('@_local/collector/test/globalAgent');
 const { verifyHttpRootEntry, verifyHttpExit } = require('@_local/core/test/test_util/common_verifications');
-const defaultPrefix = 'https://sqs.us-east-2.amazonaws.com/767398002385/';
-const queueUrlPrefix = process.env.SQS_QUEUE_URL_PREFIX || defaultPrefix;
 
-const { createQueues, deleteQueues, sendSnsNotificationToSqsQueue } = require('./util');
+const { createQueues, deleteQueues, sendSnsNotificationToSqsQueue, getLocalstackEndpoint } = require('./util');
+
+const awsEndpoint = getLocalstackEndpoint();
+const queueUrlPrefix =
+  process.env.SQS_QUEUE_URL_PREFIX ||
+  (awsEndpoint ? `${awsEndpoint}/000000000000/` : null) ||
+  'https://sqs.us-east-2.amazonaws.com/767398002385/';
 
 const sendingMethods = ['v3', 'cb', 'v2'];
 const receivingMethods = ['v3', 'cb', 'v2'];
@@ -83,6 +87,7 @@ function start() {
           useGlobalAgent: true,
           env: {
             ...libraryEnv,
+            ...(awsEndpoint ? { AWS_ENDPOINT: awsEndpoint } : {}),
             AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
           }
         });
@@ -92,6 +97,7 @@ function start() {
           useGlobalAgent: true,
           env: {
             ...libraryEnv,
+            ...(awsEndpoint ? { AWS_ENDPOINT: awsEndpoint } : {}),
             AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`
           }
         });
@@ -101,6 +107,7 @@ function start() {
           useGlobalAgent: true,
           env: {
             ...libraryEnv,
+            ...(awsEndpoint ? { AWS_ENDPOINT: awsEndpoint } : {}),
             AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-batch`
           }
         });
@@ -137,6 +144,7 @@ function start() {
               useGlobalAgent: true,
               env: {
                 ...libraryEnv,
+                ...(awsEndpoint ? { AWS_ENDPOINT: awsEndpoint } : {}),
                 SQSV3_RECEIVE_METHOD: sqsReceiveMethod,
                 AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
               }
@@ -194,6 +202,7 @@ function start() {
               useGlobalAgent: true,
               env: {
                 ...libraryEnv,
+                ...(awsEndpoint ? { AWS_ENDPOINT: awsEndpoint } : {}),
                 SQSV3_RECEIVE_METHOD: sqsReceiveMethod,
                 SQS_POLL_DELAY: 1,
                 AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
@@ -250,6 +259,7 @@ function start() {
               useGlobalAgent: true,
               env: {
                 ...libraryEnv,
+                ...(awsEndpoint ? { AWS_ENDPOINT: awsEndpoint } : {}),
                 AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`
               }
             });
@@ -313,6 +323,7 @@ function start() {
               useGlobalAgent: true,
               env: {
                 ...libraryEnv,
+                ...(awsEndpoint ? { AWS_ENDPOINT: awsEndpoint } : {}),
                 AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
                 HANDLE_MESSAGE_BATCH: true
               }
@@ -378,6 +389,7 @@ function start() {
               useGlobalAgent: true,
               env: {
                 ...libraryEnv,
+                ...(awsEndpoint ? { AWS_ENDPOINT: awsEndpoint } : {}),
                 AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
                 AWS_SQS_RECEIVER_ERROR: 'true'
               }
@@ -430,6 +442,7 @@ function start() {
                 useGlobalAgent: true,
                 env: {
                   ...libraryEnv,
+                  ...(awsEndpoint ? { AWS_ENDPOINT: awsEndpoint } : {}),
                   SQSV3_RECEIVE_METHOD: sqsReceiveMethod,
                   AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-batch`
                 }
@@ -486,6 +499,7 @@ function start() {
           tracingEnabled: false,
           env: {
             ...libraryEnv,
+            ...(awsEndpoint ? { AWS_ENDPOINT: awsEndpoint } : {}),
             AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
           }
         });
@@ -518,6 +532,7 @@ function start() {
             tracingEnabled: false,
             env: {
               ...libraryEnv,
+              ...(awsEndpoint ? { AWS_ENDPOINT: awsEndpoint } : {}),
               SQSV3_RECEIVE_METHOD: receivingMethod,
               AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
             }
@@ -568,6 +583,7 @@ function start() {
           useGlobalAgent: true,
           env: {
             ...libraryEnv,
+            ...(awsEndpoint ? { AWS_ENDPOINT: awsEndpoint } : {}),
             AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
           }
         });
@@ -598,6 +614,7 @@ function start() {
             useGlobalAgent: true,
             env: {
               ...libraryEnv,
+              ...(awsEndpoint ? { AWS_ENDPOINT: awsEndpoint } : {}),
               SQSV3_RECEIVE_METHOD: receivingMethod,
               AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
             }
@@ -653,6 +670,7 @@ function start() {
           useGlobalAgent: true,
           env: {
             ...libraryEnv,
+            ...(awsEndpoint ? { AWS_ENDPOINT: awsEndpoint } : {}),
             SQSV3_RECEIVE_METHOD: 'v3',
             AWS_SQS_QUEUE_URL: `${queueURL}-non-existent`
           }
@@ -702,6 +720,7 @@ function start() {
           useGlobalAgent: true,
           env: {
             ...libraryEnv,
+            ...(awsEndpoint ? { AWS_ENDPOINT: awsEndpoint } : {}),
             AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
           }
         });
@@ -711,6 +730,7 @@ function start() {
           useGlobalAgent: true,
           env: {
             ...libraryEnv,
+            ...(awsEndpoint ? { AWS_ENDPOINT: awsEndpoint } : {}),
             AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
           }
         });
@@ -761,7 +781,10 @@ function start() {
 
     async function verify({ receiverControls, senderControls, response, apiPath, withError, isBatch, isSQSConsumer }) {
       if (withError === 'sender') {
-        expect(response.error).to.equal('MissingParameter: The request must contain the parameter MessageBody.');
+        const expectedError = awsEndpoint
+          ? "InternalError: exception while calling sqs.SendMessage: object of type 'NoneType' has no len()"
+          : 'MissingParameter: The request must contain the parameter MessageBody.';
+        expect(response.error).to.equal(expectedError);
       } else {
         await retry(async () => {
           if (isBatch) {

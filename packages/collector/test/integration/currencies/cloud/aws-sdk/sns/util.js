@@ -6,9 +6,19 @@
 'use strict';
 
 const AWS = require('aws-sdk');
+const {
+  getLocalstackEndpoint,
+  getClientConfig
+} = require('@_local/collector/test/integration/currencies/cloud/aws-sdk/aws-utils');
+
+const accountId = getLocalstackEndpoint() ? '000000000000' : '767398002385';
+exports.getLocalstackEndpoint = getLocalstackEndpoint;
+exports.getClientConfig = getClientConfig;
+exports.accountId = accountId;
+
 AWS.config.update({ region: 'us-east-2' });
-const sns = new AWS.SNS();
-const sqs = new AWS.SQS();
+const sns = new AWS.SNS(getClientConfig());
+const sqs = new AWS.SQS(getClientConfig());
 
 function getPolicy(topicName, queueName) {
   const policy = {
@@ -16,16 +26,16 @@ function getPolicy(topicName, queueName) {
     Id: '__default_policy_ID',
     Statement: [
       {
-        Sid: `topic-subscription-arn:aws:sns:us-east-2:767398002385:${topicName}`,
+        Sid: `topic-subscription-arn:aws:sns:us-east-2:${accountId}:${topicName}`,
         Effect: 'Allow',
         Principal: {
           AWS: '*'
         },
         Action: 'SQS:SendMessage',
-        Resource: `arn:aws:sqs:us-east-2:767398002385:${queueName}`,
+        Resource: `arn:aws:sqs:us-east-2:${accountId}:${queueName}`,
         Condition: {
           ArnLike: {
-            'aws:SourceArn': `arn:aws:sns:us-east-2:767398002385:${topicName}`
+            'aws:SourceArn': `arn:aws:sns:us-east-2:${accountId}:${topicName}`
           }
         }
       }
@@ -90,7 +100,7 @@ exports.createTopic = async function createTopic(topicAndQueueName) {
     .subscribe({
       TopicArn: topicData.TopicArn,
       Protocol: 'sqs',
-      Endpoint: `arn:aws:sqs:us-east-2:767398002385:${topicAndQueueName}`,
+      Endpoint: `arn:aws:sqs:us-east-2:${accountId}:${topicAndQueueName}`,
       Attributes: {
         RawMessageDelivery: 'true'
       }

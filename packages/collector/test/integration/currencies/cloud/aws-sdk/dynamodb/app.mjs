@@ -21,9 +21,13 @@ const port = getAppPort();
 
 import AWS from 'aws-sdk';
 import express from 'express';
+import util from './util.js';
+
 const logPrefix = `AWS SDK v2 DynamoDB (${process.pid}):\t`;
+const { getClientConfig } = util;
+
 AWS.config.update({ region: 'us-east-2' });
-const dynamoDB = new AWS.DynamoDB();
+const dynamoDB = new AWS.DynamoDB(getClientConfig());
 const tableName = process.env.AWS_DYNAMODB_TABLE_NAME || 'nodejs-team';
 const log = logger.getLogger(logPrefix);
 

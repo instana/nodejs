@@ -15,29 +15,24 @@ require('@instana/collector')();
 
 const express = require('express');
 
-const awsRegion = 'us-east-2';
 let dynamoDB;
 
 const awsSdk3 = require('@aws-sdk/client-dynamodb');
+const { getClientConfig } = require('./util');
 
 if (process.env.USE_LIB_DYNAMODB) {
   const { DynamoDBDocumentClient } = require('@aws-sdk/lib-dynamodb');
 
-  dynamoDB = DynamoDBDocumentClient.from(
-    new awsSdk3.DynamoDBClient({
-      region: awsRegion
-    }),
-    {
-      marshallOptions: {
-        removeUndefinedValues: true
-      }
+  dynamoDB = DynamoDBDocumentClient.from(new awsSdk3.DynamoDBClient(getClientConfig()), {
+    marshallOptions: {
+      removeUndefinedValues: true
     }
-  );
+  });
 } else {
-  dynamoDB = new awsSdk3.DynamoDBClient({ region: awsRegion });
+  dynamoDB = new awsSdk3.DynamoDBClient(getClientConfig());
 }
 
-const dynamoDBv2 = new awsSdk3.DynamoDB({ region: awsRegion });
+const dynamoDBv2 = new awsSdk3.DynamoDB(getClientConfig());
 const cls = require('@instana/core/src/tracing/cls');
 
 const logPrefix = `AWS SDK v3 DynamoDB (${process.pid}):\t`;
