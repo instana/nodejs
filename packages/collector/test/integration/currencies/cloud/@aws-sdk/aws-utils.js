@@ -31,6 +31,8 @@ function getLocalstackEndpoint() {
 function getClientConfig(extraOptions) {
   const endpoint = getLocalstackEndpoint();
   if (endpoint) {
+    // eslint-disable-next-line no-console
+    console.log(`[aws-utils] Running against Localstack at ${endpoint}`);
     return Object.assign(
       {
         region: 'us-east-2',
@@ -43,6 +45,8 @@ function getClientConfig(extraOptions) {
       extraOptions
     );
   }
+  // eslint-disable-next-line no-console
+  console.log('[aws-utils] Running against real AWS');
   return { region: 'us-east-2' };
 }
 
