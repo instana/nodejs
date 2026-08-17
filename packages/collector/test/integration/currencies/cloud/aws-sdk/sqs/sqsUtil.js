@@ -18,7 +18,10 @@ AWS.HttpRequest.prototype.appendToUserAgent = function () {
   this.headers[this.getUserAgentHeaderName()] = [this._userAgent];
 };
 
-const { getLocalstackEndpoint, getClientConfig } = require('@_local/collector/test/integration/currencies/cloud/aws-sdk/aws-utils');
+const {
+  getLocalstackEndpoint,
+  getClientConfig
+} = require('@_local/collector/test/integration/currencies/cloud/aws-sdk/aws-utils');
 
 AWS.config.update({ region: 'us-east-2' });
 exports.getLocalstackEndpoint = getLocalstackEndpoint;

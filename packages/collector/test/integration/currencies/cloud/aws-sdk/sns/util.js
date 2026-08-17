@@ -6,7 +6,10 @@
 'use strict';
 
 const AWS = require('aws-sdk');
-const { getLocalstackEndpoint, getClientConfig } = require('@_local/collector/test/integration/currencies/cloud/aws-sdk/aws-utils');
+const {
+  getLocalstackEndpoint,
+  getClientConfig
+} = require('@_local/collector/test/integration/currencies/cloud/aws-sdk/aws-utils');
 
 const accountId = getLocalstackEndpoint() ? '000000000000' : '767398002385';
 exports.getLocalstackEndpoint = getLocalstackEndpoint;

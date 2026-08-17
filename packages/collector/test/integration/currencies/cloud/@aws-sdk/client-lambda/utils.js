@@ -12,7 +12,10 @@ const {
 } = require('@aws-sdk/client-lambda');
 const AdmZip = require('adm-zip');
 
-const { getLocalstackEndpoint, getClientConfig } = require('@_local/collector/test/integration/currencies/cloud/@aws-sdk/aws-utils');
+const {
+  getLocalstackEndpoint,
+  getClientConfig
+} = require('@_local/collector/test/integration/currencies/cloud/@aws-sdk/aws-utils');
 
 exports.getLocalstackEndpoint = getLocalstackEndpoint;
 exports.getClientConfig = getClientConfig;

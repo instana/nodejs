@@ -6,7 +6,10 @@
 
 const AWS = require('aws-sdk');
 const AdmZip = require('adm-zip');
-const { getLocalstackEndpoint, getClientConfig } = require('@_local/collector/test/integration/currencies/cloud/aws-sdk/aws-utils');
+const {
+  getLocalstackEndpoint,
+  getClientConfig
+} = require('@_local/collector/test/integration/currencies/cloud/aws-sdk/aws-utils');
 
 AWS.config.update({ region: 'us-east-2' });
 exports.getLocalstackEndpoint = getLocalstackEndpoint;
