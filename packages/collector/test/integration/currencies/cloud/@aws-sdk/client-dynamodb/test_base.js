@@ -46,7 +46,6 @@ let requestMethod;
 function start(reducedTestSuite = false) {
   const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-  // NOTE: Set RUN_REAL_AWS=true to run against real AWS instead of LocalStack.
   mochaSuiteFn(`npm: ${libraryEnv.LIBRARY_NAME}, style: ${requestMethod}`, function () {
     this.timeout(config.getTestTimeout() * 5);
 

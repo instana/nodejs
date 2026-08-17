@@ -60,7 +60,6 @@ function start() {
 
   const { cleanup, checkStreamExistence } = require('./util');
 
-  // NOTE: Set RUN_REAL_AWS=true to run against real AWS instead of LocalStack.
   mochaSuiteFn('tracing', function () {
     this.timeout(config.getTestTimeout() * 10);
 

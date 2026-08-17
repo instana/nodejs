@@ -10,6 +10,7 @@
 
 /**
  * Returns the localstack endpoint URL, or null when running against real AWS.
+ *
  * @returns {string|null}
  */
 function getLocalstackEndpoint() {

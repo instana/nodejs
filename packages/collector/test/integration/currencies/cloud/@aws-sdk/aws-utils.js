@@ -6,6 +6,7 @@
 
 /**
  * Shared localstack / AWS test utilities for @aws-sdk (v3) test apps.
+ * NOTE: Set RUN_REAL_AWS=true to run against real AWS instead of LocalStack.
 
 /**
  * Returns the localstack endpoint URL, or null when running against real AWS.

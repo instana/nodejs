@@ -59,7 +59,6 @@ function start() {
   let receiverControls;
   let appControls;
 
-  // NOTE: Set RUN_REAL_AWS=true to run against real AWS instead of LocalStack.
   before(async () => {
     // TODO: move into the app.js file
     const topic = await utils.createTopic(topicName);

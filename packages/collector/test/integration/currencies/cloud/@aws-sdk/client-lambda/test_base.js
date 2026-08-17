@@ -26,7 +26,6 @@ let envConfig = {};
 const getNextCallMethod = require('@_local/core/test/test_util/circular_list').getCircularList(requestMethods);
 let libraryEnv;
 
-// NOTE: Set RUN_REAL_AWS=true to run against real AWS instead of LocalStack.
 async function start() {
   this.timeout(config.getTestTimeout() * 20);
 
