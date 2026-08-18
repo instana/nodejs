@@ -116,27 +116,39 @@ describe('config.normalizeConfig', () => {
       expect(config.metrics.transmissionDelay).to.equal(1000);
     });
 
-    it('should use max metrics transmission settings when value exceeds max of 5000', () => {
-      process.env.INSTANA_METRICS_TRANSMISSION_DELAY = '6000';
+    it('should accept metrics transmission delay of 5s', () => {
+      process.env.INSTANA_METRICS_TRANSMISSION_DELAY = String(5 * 1000);
       const normalizedConfig = coreConfig.normalize();
-      expect(normalizedConfig.metrics.transmissionDelay).to.equal(5000);
+      expect(normalizedConfig.metrics.transmissionDelay).to.equal(5 * 1000);
     });
 
-    it('should accept metrics transmission delay at max value of 5000', () => {
-      process.env.INSTANA_METRICS_TRANSMISSION_DELAY = '5000';
+    it('should accept metrics transmission delay of 30s', () => {
+      process.env.INSTANA_METRICS_TRANSMISSION_DELAY = String(30 * 1000);
       const normalizedConfig = coreConfig.normalize();
-      expect(normalizedConfig.metrics.transmissionDelay).to.equal(5000);
+      expect(normalizedConfig.metrics.transmissionDelay).to.equal(30 * 1000);
     });
 
-    it('should use max metrics transmission settings when value exceeds max 5000', () => {
+    it('should cap metrics transmission delay of 120s to max of 60s', () => {
+      process.env.INSTANA_METRICS_TRANSMISSION_DELAY = String(120 * 1000);
+      const normalizedConfig = coreConfig.normalize();
+      expect(normalizedConfig.metrics.transmissionDelay).to.equal(60 * 1000);
+    });
+
+    it('should accept metrics transmission delay at max value of 60s', () => {
+      process.env.INSTANA_METRICS_TRANSMISSION_DELAY = String(60 * 1000);
+      const normalizedConfig = coreConfig.normalize();
+      expect(normalizedConfig.metrics.transmissionDelay).to.equal(60 * 1000);
+    });
+
+    it('should cap metrics transmission delay from config exceeding 60s', () => {
       const config = coreConfig.normalize({
         userConfig: {
           metrics: {
-            transmissionDelay: 9753
+            transmissionDelay: 90 * 1000
           }
         }
       });
-      expect(config.metrics.transmissionDelay).to.equal(5000);
+      expect(config.metrics.transmissionDelay).to.equal(60 * 1000);
     });
 
     it('should use default (1000) for transmissionDelay when neither env nor config is set', () => {
