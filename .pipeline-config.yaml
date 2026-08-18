@@ -1,31 +1,26 @@
----
-# Minimal SPS pipeline config — smoke-test only.
-# Goal: verify the pipeline triggers, clones the repo, and npm install works.
-# No tests. No cache. No tooling. Nothing that can fail for env-config reasons.
+version: '2'
 
-version: "1"
+tasks:
+  # PR pipeline
+  pr-code-checks:
+    steps:
+      - name: unit-test
+        image: public.ecr.aws/docker/library/node:20
+        script: |
+          #!/bin/bash
+          echo "Node: $(node --version)"
+          echo "npm:  $(npm --version)"
+          npm install --loglevel warn --foreground-scripts
+          echo "npm install done."
 
-setup:
-  image: icr.io/continuous-delivery/pipeline/pipeline-base-ubi:3.29
-  script: |
-    #!/bin/bash
-    set -eo pipefail
-    echo "=== SPS smoke-test pipeline ==="
-    echo "Node version param: $(get_env node-version '24')"
-    echo "Pipeline is alive."
-
-code-build:
-  - name: npm-install
-    image: public.ecr.aws/docker/library/node:20
-    script: |
-      #!/bin/bash
-      set -eo pipefail
-      echo "Node: $(node --version)"
-      echo "npm:  $(npm --version)"
-      echo "Working directory: $(pwd)"
-      echo "Listing root files:"
-      ls -la
-      echo "Running npm install..."
-      npm install --loglevel warn --foreground-scripts
-      echo "npm install done."
-      echo "node_modules present: $(ls node_modules | wc -l) packages"
+  # CI pipeline
+  code-build:
+    steps:
+      - name: unit-test
+        image: public.ecr.aws/docker/library/node:20
+        script: |
+          #!/bin/bash
+          echo "Node: $(node --version)"
+          echo "npm:  $(npm --version)"
+          npm install --loglevel warn --foreground-scripts
+          echo "npm install done."
