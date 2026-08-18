@@ -13,9 +13,10 @@ tasks:
       - name: static-scan
         when: false
 
+  # CI build — npm install only
   code-build:
     steps:
-      - name: unit-test
+      - name: build-artifact
         displayName: npm-install
         image: public.ecr.aws/docker/library/node:24
         script: |
@@ -24,8 +25,6 @@ tasks:
           echo "npm:  $(npm --version)"
           npm install --loglevel warn --foreground-scripts
           echo "npm install done."
-      - name: build-artifact
-        when: false
       - name: unit-test
         when: false
       - name: scan-artifact
@@ -39,3 +38,9 @@ tasks:
 
   deploy-release:
     when: false
+
+  code-checks:
+    steps:
+      - name: run-stage
+        when: false
+
