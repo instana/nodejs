@@ -39,7 +39,7 @@ tasks:
   deploy-release:
     when: false
 
-  code-checks:
+  code-ci-finish:
     steps:
       - name: run-stage
         when: false
