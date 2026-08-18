@@ -133,7 +133,7 @@ let currentConfig;
 /** @type {String[]} */
 const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'contains-ignore-case', 'regex', 'none'];
 
-const transmissionDelayMaxValue = 5000;
+const transmissionDelayMaxValue = 60 * 1000;
 
 /**
  * @typedef {Object} InstanaConfig
