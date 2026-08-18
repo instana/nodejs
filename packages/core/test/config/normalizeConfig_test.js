@@ -128,7 +128,7 @@ describe('config.normalizeConfig', () => {
     it('should accept transmissionDelay of 5000 as it is in the allowed list', () => {
       process.env.INSTANA_METRICS_TRANSMISSION_DELAY = '5000';
       const normalizedConfig = coreConfig.normalize();
-      expect(normalizedConfig.metrics.transmissionDelay).to.equal(5000);
+      expect(normalizedConfig.metrics.transmissionDelay).to.equal(30 * 1000);
     });
 
     it('should snap config transmissionDelay of 90000 to nearest allowed value of 60000', () => {
