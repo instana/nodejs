@@ -4,8 +4,6 @@ tasks:
   # Skip all compliance checks
   code-checks:
     steps:
-      - name: compliance-checks
-        when: false
       - name: peer-review
         when: false
 
