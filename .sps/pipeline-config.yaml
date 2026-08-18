@@ -4,13 +4,9 @@ tasks:
   # Skip all compliance checks
   code-checks:
     steps:
-      - name: detect-secrets
-        when: false
       - name: compliance-checks
         when: false
       - name: peer-review
-        when: false
-      - name: static-scan
         when: false
 
   # CI build — npm install only
