@@ -35,3 +35,4 @@ packages/serverless-collector/test
 packages/shared-metrics/test
 app/node_modules
 native-dep-packs
+package-lock.json
