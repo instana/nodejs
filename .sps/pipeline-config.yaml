@@ -121,11 +121,7 @@ tasks:
 
           # ── Generate versioned test folders then find redis tests ─────────────
           export CI=true
-          echo 'Running create-version-test-folders.js...'
           node bin/create-version-test-folders.js 2>&1 | grep -E 'redis|ioredis|@redis|Error|error' || true
-          echo 'Generator done.'
-          echo 'redis _v* dirs after generation:'
-          ls packages/collector/test/integration/currencies/databases/redis/ 2>&1
 
           export TEST_FILES=$(cd packages/collector && find \
             test/integration/currencies/databases/redis \
@@ -144,6 +140,14 @@ tasks:
 
           echo "Redis test files:"
           echo "$TEST_FILES" | tr ' ' '\n'
+
+          # Re-export Azure Redis cluster credentials so lerna/mocha child
+          # processes inherit them (SPS injects them into the container env
+          # but they must be explicitly exported for child process inheritance).
+          export AZURE_REDIS_CLUSTER="${AZURE_REDIS_CLUSTER:-}"
+          export AZURE_REDIS_CLUSTER_PWD="${AZURE_REDIS_CLUSTER_PWD:-}"
+          echo "AZURE_REDIS_CLUSTER set: $([ -n "$AZURE_REDIS_CLUSTER" ] && echo yes || echo NO)"
+          echo "AZURE_REDIS_CLUSTER_PWD set: $([ -n "$AZURE_REDIS_CLUSTER_PWD" ] && echo yes || echo NO)"
 
           npm run test:ci:collector
       - name: sign-artifact
