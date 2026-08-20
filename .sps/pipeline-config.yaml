@@ -112,8 +112,26 @@ tasks:
             'until docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 1; done'
           echo "Redis ready."
 
-          # ── Run collector tests ──────────────────────────────────────────────
-          CI_TEST_SPLIT="39" CI_TEST_SPLIT_CURRENT="1" \
+          # ── Claim and run tests (same as Tekton claim-tests.sh approach) ────
+          AVAILABLE_SIDECARS="redis,redis-slave,redis-sentinel"
+          SIDECAR_COUNTS="redis=20,redis-slave=20,redis-sentinel=20,zookeeper=6,kafka=6,kafka-topics=6,postgres=3,elasticsearch=2,mongodb=1,couchbase=1,rabbitmq=1,nats=1,nats-streaming=1,nats-streaming-2=1,mysql=1,localstack=1,memcached=1,oracledb=1"
+          CI_TEST_SPLIT="39"
+          CI_TEST_SPLIT_CURRENT="1"
+
+          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh \
+            "$AVAILABLE_SIDECARS" "test/**/*.test.js" "$CI_TEST_SPLIT" \
+            "$PWD" "$SIDECAR_COUNTS")
+
+          if [ -z "$CLAIMED_TESTS" ]; then
+            echo "No tests claimed for this slot — skipping."
+            exit 0
+          fi
+
+          echo "Claimed tests: $CLAIMED_TESTS"
+
+          TEST_FILES="$CLAIMED_TESTS" \
+            CI_TEST_SPLIT="$CI_TEST_SPLIT" \
+            CI_TEST_SPLIT_CURRENT="$CI_TEST_SPLIT_CURRENT" \
             npm run test:ci:collector
 
   # ── Skip signing and deploy stages ──────────────────────────────────────────
