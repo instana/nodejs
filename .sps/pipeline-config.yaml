@@ -387,11 +387,12 @@ tasks:
           export CI=true
 
           # ── Azure Redis cluster credentials ──────────────────────────────────
-          # AZURE_REDIS_CLUSTER and AZURE_REDIS_CLUSTER_PWD must be set as Secret
-          # env properties in the SPS pipeline (not fetched at runtime).
-          # The cluster hostname is also injected this way so it can be rotated
-          # without changing the pipeline-config.
-          echo "AZURE_REDIS_CLUSTER set:     $([ -n "$AZURE_REDIS_CLUSTER" ]     && echo yes || echo 'NO — add as pipeline env property')"
+          # SPS injects pipeline env properties into the container, but they are
+          # not automatically exported to child processes. Explicit export is
+          # required so lerna → mocha → test app subprocess inherits them.
+          export AZURE_REDIS_CLUSTER="${AZURE_REDIS_CLUSTER:-}"
+          export AZURE_REDIS_CLUSTER_PWD="${AZURE_REDIS_CLUSTER_PWD:-}" # pragma: allowlist secret
+          echo "AZURE_REDIS_CLUSTER set:     $([ -n "$AZURE_REDIS_CLUSTER" ]     && echo yes || echo 'NO — add as Text pipeline env property')"
           echo "AZURE_REDIS_CLUSTER_PWD set: $([ -n "$AZURE_REDIS_CLUSTER_PWD" ] && echo yes || echo 'NO — add as Secret pipeline env property')" # pragma: allowlist secret
 
           # ── Generate versioned test folders ──────────────────────────────────
