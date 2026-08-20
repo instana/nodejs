@@ -115,23 +115,36 @@ tasks:
           echo "Redis ready."
 
           # ── Run Redis-specific collector tests ───────────────────────────────
-          # TARGET: all redis, ioredis, @redis/client tests + span-batching-with-redis
+          # Use claim-tests.sh to discover all tests that require the redis sidecar
+          # (exactly as Tekton does), then pass absolute paths to mocha via TEST_FILES.
+          # With total_tasks=1 and a fresh ARTIFACTS_PATH, every redis test is claimed.
           export CI=true
+          ARTIFACTS_PATH=/tmp/sps-artifacts
+          mkdir -p "$ARTIFACTS_PATH"
+          AVAILABLE_SIDECARS="redis,redis-slave,redis-sentinel"
+          SIDECAR_COUNTS="redis=1,redis-slave=1,redis-sentinel=1"
 
-          export TEST_FILES=$(find packages/collector/test \
-            \( \
-              -path "*/databases/redis/*" \
-              -o -path "*/databases/ioredis/*" \
-              -o -path "*/databases/@redis/*" \
-              -o -path "*/span-batching-with-redis/*" \
-            \) \
-            -name "*.test.js" \
-            -not -path "*/node_modules/*" \
-            | sort \
-            | tr '\n' ' ')
+          CLAIMED_TESTS=$(bash packages/collector/scripts/claim-tests.sh \
+            "$AVAILABLE_SIDECARS" \
+            "test/**/*.test.js" \
+            "1" \
+            "$ARTIFACTS_PATH" \
+            "$SIDECAR_COUNTS")
+
+          if [ -z "$CLAIMED_TESTS" ]; then
+            echo "No redis tests found — nothing to run."
+            exit 0
+          fi
 
           echo "Redis test files:"
-          echo "$TEST_FILES" | tr ' ' '\n'
+          echo "$CLAIMED_TESTS" | tr ' ' '\n'
+
+          # claim-tests.sh returns absolute paths; mocha runs from packages/collector,
+          # so strip the repo-root prefix to get collector-relative paths.
+          COLLECTOR_DIR="$(pwd)/packages/collector"
+          export TEST_FILES=$(echo "$CLAIMED_TESTS" | tr ' ' '\n' \
+            | sed "s|^${COLLECTOR_DIR}/||" \
+            | tr '\n' ' ')
 
           npm run test:ci:collector
       - name: sign-artifact
