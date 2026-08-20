@@ -114,14 +114,26 @@ tasks:
             'until docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 1; done'
           echo "Redis ready."
 
-          # ── Run collector tests — slot 1 of 39 ──────────────────────────────
-          # SPS fan-out tasks have isolated workspaces — no shared filesystem.
-          # claim-tests.sh cannot coordinate across tasks in SPS.
-          # Instead each task owns a fixed numbered slot via CI_TEST_SPLIT_CURRENT.
-          # mocha splits the full test suite into 39 equal parts and runs slot 1.
+          # ── Run Redis-specific collector tests ───────────────────────────────
+          # TARGET: all redis, ioredis, @redis/client tests + span-batching-with-redis
           export CI=true
-          CI_TEST_SPLIT="39" CI_TEST_SPLIT_CURRENT="1" \
-            npm run test:ci:collector
+
+          export TEST_FILES=$(find packages/collector/test \
+            \( \
+              -path "*/databases/redis/*" \
+              -o -path "*/databases/ioredis/*" \
+              -o -path "*/databases/@redis/*" \
+              -o -path "*/span-batching-with-redis/*" \
+            \) \
+            -name "*.test.js" \
+            -not -path "*/node_modules/*" \
+            | sort \
+            | tr '\n' ' ')
+
+          echo "Redis test files:"
+          echo "$TEST_FILES" | tr ' ' '\n'
+
+          npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
 
