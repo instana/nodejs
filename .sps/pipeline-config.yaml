@@ -387,13 +387,23 @@ tasks:
           export CI=true
 
           # ── Azure Redis cluster credentials ──────────────────────────────────
-          # SPS injects pipeline env properties into the container, but they are
-          # not automatically exported to child processes. Explicit export is
-          # required so lerna → mocha → test app subprocess inherits them.
-          export AZURE_REDIS_CLUSTER="${AZURE_REDIS_CLUSTER:-}"
+          # AZURE_REDIS_CLUSTER: static hostname — hardcoded here (same as every
+          #   Tekton task). No pipeline property needed.
+          # AZURE_REDIS_CLUSTER_PWD: must be a Secure env property on the pipeline.
+          #   SPS injects it into the container but does NOT export it to child
+          #   processes — the explicit export below is required so the full chain
+          #   (lerna → npm run → mocha → ProcessControls fork → test app) inherits it.
+          export AZURE_REDIS_CLUSTER="team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380" # pragma: allowlist secret
           export AZURE_REDIS_CLUSTER_PWD="${AZURE_REDIS_CLUSTER_PWD:-}" # pragma: allowlist secret
-          echo "AZURE_REDIS_CLUSTER set:     $([ -n "$AZURE_REDIS_CLUSTER" ]     && echo yes || echo 'NO — add as Text pipeline env property')"
-          echo "AZURE_REDIS_CLUSTER_PWD set: $([ -n "$AZURE_REDIS_CLUSTER_PWD" ] && echo yes || echo 'NO — add as Secret pipeline env property')" # pragma: allowlist secret
+          echo "AZURE_REDIS_CLUSTER:     $AZURE_REDIS_CLUSTER"
+          echo "AZURE_REDIS_CLUSTER_PWD: $([ -n "$AZURE_REDIS_CLUSTER_PWD" ] && echo '(set)' || echo 'NOT SET — add as Secure env property on this pipeline')" # pragma: allowlist secret
+          if [ -z "$AZURE_REDIS_CLUSTER_PWD" ]; then
+            echo "ERROR: AZURE_REDIS_CLUSTER_PWD is not set. Cluster tests will fail."
+            echo "  → In the toolchain UI: pipeline → Environment properties → Add → Secure"
+            echo "  → Name: AZURE_REDIS_CLUSTER_PWD"
+            echo "  → Value: (from 1Password 'Team Node.js: Azure Redis cluster')"
+            exit 1
+          fi
 
           # ── Generate versioned test folders ──────────────────────────────────
           # code-build ran this too, but fan-out tasks get a fresh container.
