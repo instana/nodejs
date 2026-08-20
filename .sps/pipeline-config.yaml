@@ -121,6 +121,9 @@ tasks:
 
           # ── Generate versioned test folders then find redis tests ─────────────
           export CI=true
+          echo '=== ENV DUMP (AZURE/azure) ==='
+          env | grep -i azure || echo '(no AZURE vars found)'
+          echo '=== END ENV DUMP ==='
           node bin/create-version-test-folders.js 2>&1 | grep -E 'redis|ioredis|@redis|Error|error' || true
 
           export TEST_FILES=$(cd packages/collector && find \
