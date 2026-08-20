@@ -312,8 +312,19 @@ tasks:
           echo "Redis ready."
 
           export CI=true
-          export AZURE_REDIS_CLUSTER="${AZURE_REDIS_CLUSTER:-}"
-          export AZURE_REDIS_CLUSTER_PWD="${AZURE_REDIS_CLUSTER_PWD:-}"
+
+          # ── Fetch Azure Redis cluster credentials from IBM Secrets Manager ────
+          # Hostname is static; password fetched via ibmcloud sm (same as Tekton).
+          export AZURE_REDIS_CLUSTER="team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380"
+          curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
+          ibmcloud login -a https://cloud.ibm.com -r eu-de --apikey "$IBMCLOUD_API_KEY" -q
+          ibmcloud plugin install secrets-manager -f -r 'IBM Cloud' -q
+          ibmcloud sm init --service-url "https://2502e0f8-4e08-47d1-bc55-fb1713f22522.private.eu-de.secrets-manager.appdomain.cloud"
+          export AZURE_REDIS_CLUSTER_PWD=$(ibmcloud sm secret-value-get \
+            --name "AZURE_REDIS_CLUSTER_PWD" \
+            --service-name "secret-manager-team-nodejs" \
+            --output json | jq -r '.resources[0].secret_data.payload')
+          echo "AZURE_REDIS_CLUSTER_PWD set: $([ -n "$AZURE_REDIS_CLUSTER_PWD" ] && echo yes || echo NO)"
 
           node bin/create-version-test-folders.js
 
