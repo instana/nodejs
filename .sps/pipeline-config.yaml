@@ -120,10 +120,12 @@ tasks:
           echo "Redis ready."
 
           # ── Generate versioned test folders then find redis tests ─────────────
-          # create-version-test-folders.js is also run in code-build, but fan-out
-          # tasks get a fresh container so we run it here too to be safe.
           export CI=true
-          node bin/create-version-test-folders.js
+          echo 'Running create-version-test-folders.js...'
+          node bin/create-version-test-folders.js 2>&1 | grep -E 'redis|ioredis|@redis|Error|error' || true
+          echo 'Generator done.'
+          echo 'redis _v* dirs after generation:'
+          ls packages/collector/test/integration/currencies/databases/redis/ 2>&1
 
           export TEST_FILES=$(cd packages/collector && find \
             test/integration/currencies/databases/redis \
