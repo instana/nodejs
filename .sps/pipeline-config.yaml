@@ -49,6 +49,8 @@ tasks:
           npm install --loglevel warn --foreground-scripts
 
           npm run test:ci:core
+      - name: sign-artifact
+        when: 'false'
 
   # ── Sidecar test group: collector redis ──────────────────────────────────────
   # DinD + docker-socket to start redis services on --network host (localhost).
@@ -120,6 +122,8 @@ tasks:
           export CI=true
           CI_TEST_SPLIT="39" CI_TEST_SPLIT_CURRENT="1" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
 
   # ── Skip signing and deploy stages ──────────────────────────────────────────
   sign-artifact:
