@@ -91,7 +91,6 @@ tasks:
           CI_TEST_SPLIT="39" CI_TEST_SPLIT_CURRENT="1" \
             npm run test:ci:collector
 
-  # ── Skip deploy stages ───────────────────────────────────────────────────────
   deploy-checks:
     when: false
 
