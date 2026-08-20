@@ -6,7 +6,6 @@ tasks:
       - name: peer-review
         when: false
 
-  # ── Install dependencies ─────────────────────────────────────────────────────
   # Base task. All test tasks fan out from this via `from: code-build`.
   code-build:
     runtimeClassName: large
