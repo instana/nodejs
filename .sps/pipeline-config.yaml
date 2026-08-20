@@ -115,36 +115,27 @@ tasks:
           echo "Redis ready."
 
           # ── Run Redis-specific collector tests ───────────────────────────────
-          # Use claim-tests.sh to discover all tests that require the redis sidecar
-          # (exactly as Tekton does), then pass absolute paths to mocha via TEST_FILES.
-          # With total_tasks=1 and a fresh ARTIFACTS_PATH, every redis test is claimed.
+          # Find all redis/ioredis/@redis test files relative to packages/collector
+          # (the working directory mocha uses when lerna runs test:ci).
           export CI=true
-          ARTIFACTS_PATH=/tmp/sps-artifacts
-          mkdir -p "$ARTIFACTS_PATH"
-          AVAILABLE_SIDECARS="redis,redis-slave,redis-sentinel"
-          SIDECAR_COUNTS="redis=1,redis-slave=1,redis-sentinel=1"
 
-          CLAIMED_TESTS=$(bash packages/collector/scripts/claim-tests.sh \
-            "$AVAILABLE_SIDECARS" \
-            "test/**/*.test.js" \
-            "1" \
-            "$ARTIFACTS_PATH" \
-            "$SIDECAR_COUNTS")
+          export TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/databases/redis \
+            test/integration/currencies/databases/ioredis \
+            "test/integration/currencies/databases/@redis" \
+            test/integration/misc/span-batching-with-redis \
+            -name "*.test.js" \
+            -not -path "*/node_modules/*" \
+            | sort \
+            | tr '\n' ' ')
 
-          if [ -z "$CLAIMED_TESTS" ]; then
-            echo "No redis tests found — nothing to run."
-            exit 0
+          if [ -z "$TEST_FILES" ]; then
+            echo "No redis test files found — check test directory structure."
+            exit 1
           fi
 
           echo "Redis test files:"
-          echo "$CLAIMED_TESTS" | tr ' ' '\n'
-
-          # claim-tests.sh returns absolute paths; mocha runs from packages/collector,
-          # so strip the repo-root prefix to get collector-relative paths.
-          COLLECTOR_DIR="$(pwd)/packages/collector"
-          export TEST_FILES=$(echo "$CLAIMED_TESTS" | tr ' ' '\n' \
-            | sed "s|^${COLLECTOR_DIR}/||" \
-            | tr '\n' ' ')
+          echo "$TEST_FILES" | tr ' ' '\n'
 
           npm run test:ci:collector
       - name: sign-artifact
