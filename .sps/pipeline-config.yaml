@@ -381,7 +381,7 @@ tasks:
           # The cluster hostname is also injected this way so it can be rotated
           # without changing the pipeline-config.
           echo "AZURE_REDIS_CLUSTER set:     $([ -n "$AZURE_REDIS_CLUSTER" ]     && echo yes || echo 'NO — add as pipeline env property')"
-          echo "AZURE_REDIS_CLUSTER_PWD set: $([ -n "$AZURE_REDIS_CLUSTER_PWD" ] && echo yes || echo 'NO — add as Secret pipeline env property')"
+          echo "AZURE_REDIS_CLUSTER_PWD set: $([ -n "$AZURE_REDIS_CLUSTER_PWD" ] && echo yes || echo 'NO — add as Secret pipeline env property')" # pragma: allowlist secret
 
           # ── Generate versioned test folders ──────────────────────────────────
           # code-build ran this too, but fan-out tasks get a fresh container.
@@ -560,7 +560,7 @@ tasks:
           # ── Start PostgreSQL ─────────────────────────────────────────────────
           docker run -d --network host --name postgres \
             -e POSTGRES_USER=node \
-            -e POSTGRES_PASSWORD=nodepw \
+            -e POSTGRES_PASSWORD=nodepw \ # pragma: allowlist secret
             -e POSTGRES_DB=nodedb \
             public.ecr.aws/docker/library/postgres:15.15
 
@@ -1018,18 +1018,18 @@ tasks:
 
           # ── Start MySQL ──────────────────────────────────────────────────────
           docker run -d --network host --name mysql \
-            -e MYSQL_ROOT_PASSWORD=nodepw \
+            -e MYSQL_ROOT_PASSWORD=nodepw \ # pragma: allowlist secret
             -e MYSQL_DATABASE=nodedb \
             -e MYSQL_USER=node \
-            -e MYSQL_PASSWORD=nodepw \
+            -e MYSQL_PASSWORD=nodepw \ # pragma: allowlist secret
             -e MYSQL_ROOT_HOST=0.0.0.0 \
             public.ecr.aws/docker/library/mysql:8.0.26 \
-            --default-authentication-plugin=mysql_native_password
+            --default-authentication-plugin=mysql_native_password # pragma: allowlist secret
 
           # ── Wait for MySQL ───────────────────────────────────────────────────
           echo "Waiting for MySQL..."
           timeout 90 bash -c \
-            "until docker exec mysql sh -c \"mysql -h 0.0.0.0 -u node -p'nodepw' -e 'SELECT 1'\" 2>/dev/null; do sleep 3; done"
+            "until docker exec mysql sh -c \"mysql -h 0.0.0.0 -u node -p'nodepw' -e 'SELECT 1'\" 2>/dev/null; do sleep 3; done" # pragma: allowlist secret
           echo "MySQL ready."
 
           export CI=true
@@ -1243,13 +1243,13 @@ tasks:
 
           # ── Start Oracle DB Free 23c ─────────────────────────────────────────
           docker run -d --network host --name oracledb \
-            -e ORACLE_PWD=teamnodejspassword \
+            -e ORACLE_PWD=teamnodejspassword \ # pragma: allowlist secret
             container-registry.oracle.com/database/free:23.6.0.0-lite
 
           # ── Wait for Oracle listener (port 1521) ─────────────────────────────
           echo "Waiting for Oracle DB (this takes ~90s)..."
           timeout 180 bash -c \
-            'until docker exec oracledb bash -c "echo exit | sqlplus -L system/teamnodejspassword@//localhost:1521/FREE" 2>&1 | grep -q "Connected to"; do sleep 5; done'
+            'until docker exec oracledb bash -c "echo exit | sqlplus -L system/teamnodejspassword@//localhost:1521/FREE" 2>&1 | grep -q "Connected to"; do sleep 5; done' # pragma: allowlist secret
           echo "Oracle DB ready."
 
           export CI=true
