@@ -73,6 +73,20 @@ tasks:
           # Fan-out tasks get a fresh container — install deps first
           npm install --loglevel warn --foreground-scripts
 
+          # ── Install Docker CLI (not included in node:24 image) ───────────────
+          apt-get update -qq
+          apt-get install -y -qq ca-certificates curl gnupg
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg \
+            | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+            | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq
+          apt-get install -y -qq docker-ce-cli
+          docker version
+
           # ── Start Redis primary ──────────────────────────────────────────────
           docker run -d --network host --name redis \
             public.ecr.aws/docker/library/redis:7.4.3
@@ -102,7 +116,10 @@ tasks:
           CI_TEST_SPLIT="39" CI_TEST_SPLIT_CURRENT="1" \
             npm run test:ci:collector
 
-  # ── Skip deploy stages ───────────────────────────────────────────────────────
+  # ── Skip signing and deploy stages ──────────────────────────────────────────
+  sign-artifact:
+    when: false
+
   deploy-checks:
     when: false
 
