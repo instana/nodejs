@@ -1,20 +1,21 @@
 version: '2'
 
 tasks:
-  # Skip all compliance checks
   code-checks:
     steps:
       - name: peer-review
         when: false
 
-  # CI build — npm install only
+  # ── Install dependencies ─────────────────────────────────────────────────────
+  # Base task. All test tasks fan out from this via `from: code-build`.
   code-build:
+    runtimeClassName: large
     steps:
       - name: build-artifact
         displayName: npm-install
         image: public.ecr.aws/docker/library/node:24
         script: |
-          #!/bin/bash
+          #!/usr/bin/env bash
           echo "Node: $(node --version)"
           echo "npm:  $(npm --version)"
           npm install --loglevel warn --foreground-scripts
@@ -26,7 +27,71 @@ tasks:
       - name: sign-artifact
         when: false
 
-  # Skip deploy stages
+  # ── Non-sidecar test group: core ─────────────────────────────────────────────
+  # No Docker needed — runs directly in the node image.
+  core-tests:
+    from: code-build
+    displayName: core-tests
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: core-tests
+        image: public.ecr.aws/docker/library/node:24
+        script: |
+          #!/usr/bin/env bash
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm run test:ci:core
+
+  # ── Sidecar test group: collector redis ──────────────────────────────────────
+  # Uses DinD (Docker-in-Docker) to start redis, redis-slave, redis-sentinel
+  # on --network host so tests reach them on 127.0.0.1.
+  # Mirrors Tekton collector-1-redis-task.yaml sidecars behavior.
+  collector-redis-tests:
+    from: code-build
+    displayName: collector-redis-tests
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: collector-redis-tests
+        image: public.ecr.aws/docker/library/node:24
+        include:
+          - docker-socket
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          # ── Start Redis primary ──────────────────────────────────────────────
+          docker run -d --network host --name redis \
+            public.ecr.aws/docker/library/redis:7.4.3
+
+          # ── Start Redis replica ──────────────────────────────────────────────
+          docker run -d --network host --name redis-slave \
+            public.ecr.aws/docker/library/redis:7.4.3 \
+            redis-server --replicaof 127.0.0.1 6379 --port 6380
+
+          # ── Start Redis Sentinel ─────────────────────────────────────────────
+          docker run -d --network host --name redis-sentinel \
+            public.ecr.aws/docker/library/redis:7.4.3 sh -c '
+              echo "sentinel monitor mymaster 127.0.0.1 6379 2"          > /etc/sentinel.conf
+              echo "sentinel down-after-milliseconds mymaster 1000"      >> /etc/sentinel.conf
+              echo "sentinel failover-timeout mymaster 5000"             >> /etc/sentinel.conf
+              echo "sentinel parallel-syncs mymaster 1"                  >> /etc/sentinel.conf
+              echo "sentinel resolve-hostnames no"                       >> /etc/sentinel.conf
+              redis-server /etc/sentinel.conf --sentinel --port 26379'
+
+          # ── Wait for Redis to be ready ───────────────────────────────────────
+          echo "Waiting for Redis primary..."
+          timeout 30 bash -c \
+            'until docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 1; done'
+          echo "Redis ready."
+
+          # ── Run collector tests ──────────────────────────────────────────────
+          CI_TEST_SPLIT="39" CI_TEST_SPLIT_CURRENT="1" \
+            npm run test:ci:collector
+
+  # ── Skip deploy stages ───────────────────────────────────────────────────────
   deploy-checks:
     when: false
 
