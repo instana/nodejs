@@ -120,9 +120,15 @@ tasks:
           echo "Redis ready."
 
           # ── Run Redis-specific collector tests ───────────────────────────────
-          # Find all redis/ioredis/@redis test files relative to packages/collector
-          # (the working directory mocha uses when lerna runs test:ci).
           export CI=true
+
+          echo "=== DEBUG: pwd=$(pwd)"
+          echo "=== DEBUG: packages/collector/test/integration/currencies/databases/ contents:"
+          ls packages/collector/test/integration/currencies/databases/ 2>&1 || echo "(directory missing)"
+          echo "=== DEBUG: redis _v* dirs:"
+          ls packages/collector/test/integration/currencies/databases/redis/ 2>&1 || echo "(redis dir missing)"
+          echo "=== DEBUG: all .test.js under packages/collector/test/integration (first 10):"
+          find packages/collector/test/integration -name "*.test.js" -not -path "*/node_modules/*" 2>/dev/null | head -10 || echo "(none found)"
 
           export TEST_FILES=$(cd packages/collector && find \
             test/integration/currencies/databases/redis \
