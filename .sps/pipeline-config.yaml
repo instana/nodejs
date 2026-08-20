@@ -239,6 +239,62 @@ tasks:
       - name: sign-artifact
         when: 'false'
 
+  # ── collector general (http, frameworks, protocols, logging, misc, etc.) ────
+  # All collector integration tests that do NOT require a Docker sidecar service.
+  # This covers: http, http2, grpc, graphql, apollo, express, koa, fastify,
+  # restify, got, tsoa, typeorm, logging (bunyan/winston/pino/etc.), async,
+  # cloud (azure/gcp), messaging (socket.io, bull), and all misc tests.
+  collector-general-tests:
+    from: code-build
+    displayName: collector-general-tests
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: collector-general-tests
+        image: public.ecr.aws/docker/library/node:24
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          export CI=true
+          node bin/create-version-test-folders.js
+
+          # ── Collect all collector tests that don't need a Docker service ─────
+          # Excludes: databases/* and messaging/* that need sidecars.
+          # Includes: protocols, frameworks, logging, async, cloud, misc tests.
+          export TEST_FILES
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/protocols \
+            test/integration/currencies/frameworks \
+            test/integration/currencies/logging \
+            test/integration/currencies/async \
+            test/integration/currencies/core \
+            test/integration/currencies/cloud/@azure \
+            test/integration/currencies/cloud/@google-cloud \
+            test/integration/currencies/messaging/socket.io \
+            test/integration/currencies/messaging/bull \
+            test/integration/misc \
+            test/unit \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            -not -path '*/long_*/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'ERROR: No general collector test files found.'
+            exit 1
+          fi
+
+          echo "General collector test files ($(echo "$TEST_FILES" | wc -w | xargs) files):"
+          echo "$TEST_FILES" | tr ' ' '\n'
+
+          # Runs: lerna -> packages/collector -> mocha ... $TEST_FILES
+          npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+
   # ────────────────────────────────────────────────────────────────────────────
   # SIDECAR TEST GROUPS — DinD pattern
   # include: dind on the task starts the Docker daemon.
@@ -246,9 +302,6 @@ tasks:
   # All services started with --network host so they're on 127.0.0.1.
   # Docker CLI is not in node:24 — installed via apt in each task.
   # ────────────────────────────────────────────────────────────────────────────
-
-  # ── Shared DinD setup script ─────────────────────────────────────────────────
-  # (inlined into every sidecar task — SPS has no shared include scripts)
 
   # ── collector redis (Tekton tasks 1-20) ─────────────────────────────────────
   # Each task gets 1/20th of the collector test suite (CI_TEST_SPLIT=39,
@@ -273,15 +326,24 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
+          # ── Wait for the DinD docker socket to be available ──────────────────
+          echo "Waiting for Docker socket..."
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+          echo "Docker socket ready."
+
           # ── Install Docker CLI ───────────────────────────────────────────────
+          # Resolve the Debian codename first to avoid quoting issues in the
+          # echo "deb ..." line below.
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
           apt-get update -qq
           apt-get install -y -qq ca-certificates curl gnupg
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg \
             | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian ${CODENAME} stable" \
             | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           docker version
@@ -290,12 +352,12 @@ tasks:
           docker run -d --network host --name redis \
             public.ecr.aws/docker/library/redis:7.4.3
 
-          # ── Start Redis replica ──────────────────────────────────────────────
+          # ── Start Redis replica (port 6380) ──────────────────────────────────
           docker run -d --network host --name redis-slave \
             public.ecr.aws/docker/library/redis:7.4.3 \
             redis-server --replicaof 127.0.0.1 6379 --port 6380
 
-          # ── Start Redis Sentinel ─────────────────────────────────────────────
+          # ── Start Redis Sentinel (port 26379) ────────────────────────────────
           docker run -d --network host --name redis-sentinel \
             public.ecr.aws/docker/library/redis:7.4.3 sh -c '
               echo "sentinel monitor mymaster 127.0.0.1 6379 2"          > /etc/sentinel.conf
@@ -305,7 +367,7 @@ tasks:
               echo "sentinel resolve-hostnames no"                       >> /etc/sentinel.conf
               redis-server /etc/sentinel.conf --sentinel --port 26379'
 
-          # ── Wait for Redis to be ready ───────────────────────────────────────
+          # ── Wait for Redis primary to be ready ───────────────────────────────
           echo "Waiting for Redis primary..."
           timeout 30 bash -c \
             'until docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 1; done'
@@ -313,22 +375,23 @@ tasks:
 
           export CI=true
 
-          # ── Fetch Azure Redis cluster credentials from IBM Secrets Manager ────
-          # Hostname is static; password fetched via ibmcloud sm (same as Tekton).
-          export AZURE_REDIS_CLUSTER="team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380"
-          curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
-          ibmcloud login -a https://cloud.ibm.com -r eu-de --apikey "$IBMCLOUD_API_KEY" -q
-          ibmcloud plugin install secrets-manager -f -r 'IBM Cloud' -q
-          ibmcloud sm init --service-url "https://2502e0f8-4e08-47d1-bc55-fb1713f22522.private.eu-de.secrets-manager.appdomain.cloud"
-          export AZURE_REDIS_CLUSTER_PWD=$(ibmcloud sm secret-value-get \
-            --name "AZURE_REDIS_CLUSTER_PWD" \
-            --service-name "secret-manager-team-nodejs" \
-            --output json | jq -r '.resources[0].secret_data.payload')
-          echo "AZURE_REDIS_CLUSTER_PWD set: $([ -n "$AZURE_REDIS_CLUSTER_PWD" ] && echo yes || echo NO)"
+          # ── Azure Redis cluster credentials ──────────────────────────────────
+          # AZURE_REDIS_CLUSTER and AZURE_REDIS_CLUSTER_PWD must be set as Secret
+          # env properties in the SPS pipeline (not fetched at runtime).
+          # The cluster hostname is also injected this way so it can be rotated
+          # without changing the pipeline-config.
+          echo "AZURE_REDIS_CLUSTER set:     $([ -n "$AZURE_REDIS_CLUSTER" ]     && echo yes || echo 'NO — add as pipeline env property')"
+          echo "AZURE_REDIS_CLUSTER_PWD set: $([ -n "$AZURE_REDIS_CLUSTER_PWD" ] && echo yes || echo 'NO — add as Secret pipeline env property')"
 
+          # ── Generate versioned test folders ──────────────────────────────────
+          # code-build ran this too, but fan-out tasks get a fresh container.
           node bin/create-version-test-folders.js
 
-          export TEST_FILES=$(cd packages/collector && find \
+          # ── Collect redis test files ──────────────────────────────────────────
+          # All paths are relative to packages/collector/ — mocha is invoked
+          # from that directory by lerna, so relative paths work correctly.
+          export TEST_FILES
+          TEST_FILES=$(cd packages/collector && find \
             test/integration/currencies/databases/redis \
             test/integration/currencies/databases/ioredis \
             'test/integration/currencies/databases/@redis' \
@@ -338,16 +401,14 @@ tasks:
             | sort | tr '\n' ' ')
 
           if [ -z "$TEST_FILES" ]; then
-            echo 'No redis test files found.'
+            echo 'ERROR: No redis test files found after folder generation.'
             exit 1
           fi
 
-          echo "Redis test files:"
+          echo "Redis test files ($(echo "$TEST_FILES" | wc -w | xargs) files):"
           echo "$TEST_FILES" | tr ' ' '\n'
 
-          # Run the full redis test suite in one SPS task
-          # (Tekton split it across 20 parallel tasks — SPS large worker
-          #  has enough capacity to run all redis tests in one pass)
+          # Runs: lerna -> packages/collector -> mocha ... $TEST_FILES
           npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
@@ -376,15 +437,22 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
+          # ── Wait for the DinD docker socket to be available ──────────────────
+          echo "Waiting for Docker socket..."
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+          echo "Docker socket ready."
+
           # ── Install Docker CLI ───────────────────────────────────────────────
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
           apt-get update -qq
           apt-get install -y -qq ca-certificates curl gnupg
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg \
             | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian ${CODENAME} stable" \
             | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           docker version
@@ -427,6 +495,25 @@ tasks:
           export CI=true
           node bin/create-version-test-folders.js
 
+          # ── Scope tests to this service's directories ───────────────────────
+          export TEST_FILES
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/messaging/@confluentinc \
+            test/integration/currencies/messaging/kafka-node \
+            test/integration/currencies/messaging/kafkajs \
+            test/integration/currencies/messaging/node-rdkafka \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No kafka test files found — skipping.'
+            exit 0
+          fi
+
+          echo "kafka test files ($(echo "$TEST_FILES" | wc -w | xargs) files):"
+          echo "$TEST_FILES" | tr ' ' '\n'
+
           npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
@@ -450,15 +537,22 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
+          # ── Wait for the DinD docker socket to be available ──────────────────
+          echo "Waiting for Docker socket..."
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+          echo "Docker socket ready."
+
           # ── Install Docker CLI ───────────────────────────────────────────────
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
           apt-get update -qq
           apt-get install -y -qq ca-certificates curl gnupg
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg \
             | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian ${CODENAME} stable" \
             | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           docker version
@@ -478,6 +572,26 @@ tasks:
 
           export CI=true
           node bin/create-version-test-folders.js
+
+          # ── Scope tests to this service's directories ───────────────────────
+          export TEST_FILES
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/databases/pg \
+            test/integration/currencies/databases/pg-native \
+            test/integration/currencies/databases/prisma \
+            test/integration/currencies/databases/sequelize \
+            test/integration/currencies/databases/tedious \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No postgres test files found — skipping.'
+            exit 0
+          fi
+
+          echo "postgres test files ($(echo "$TEST_FILES" | wc -w | xargs) files):"
+          echo "$TEST_FILES" | tr ' ' '\n'
 
           npm run test:ci:collector
       - name: sign-artifact
@@ -502,15 +616,22 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
+          # ── Wait for the DinD docker socket to be available ──────────────────
+          echo "Waiting for Docker socket..."
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+          echo "Docker socket ready."
+
           # ── Install Docker CLI ───────────────────────────────────────────────
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
           apt-get update -qq
           apt-get install -y -qq ca-certificates curl gnupg
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg \
             | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian ${CODENAME} stable" \
             | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           docker version
@@ -531,6 +652,22 @@ tasks:
 
           export CI=true
           node bin/create-version-test-folders.js
+
+          # ── Scope tests to this service's directories ───────────────────────
+          export TEST_FILES
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/databases/@elastic \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No elasticsearch test files found — skipping.'
+            exit 0
+          fi
+
+          echo "elasticsearch test files ($(echo "$TEST_FILES" | wc -w | xargs) files):"
+          echo "$TEST_FILES" | tr ' ' '\n'
 
           npm run test:ci:collector
       - name: sign-artifact
@@ -555,15 +692,22 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
+          # ── Wait for the DinD docker socket to be available ──────────────────
+          echo "Waiting for Docker socket..."
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+          echo "Docker socket ready."
+
           # ── Install Docker CLI ───────────────────────────────────────────────
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
           apt-get update -qq
           apt-get install -y -qq ca-certificates curl gnupg
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg \
             | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian ${CODENAME} stable" \
             | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           docker version
@@ -580,6 +724,23 @@ tasks:
 
           export CI=true
           node bin/create-version-test-folders.js
+
+          # ── Scope tests to this service's directories ───────────────────────
+          export TEST_FILES
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/databases/mongodb \
+            test/integration/currencies/databases/mongoose \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No mongodb test files found — skipping.'
+            exit 0
+          fi
+
+          echo "mongodb test files ($(echo "$TEST_FILES" | wc -w | xargs) files):"
+          echo "$TEST_FILES" | tr ' ' '\n'
 
           npm run test:ci:collector
       - name: sign-artifact
@@ -604,15 +765,22 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
+          # ── Wait for the DinD docker socket to be available ──────────────────
+          echo "Waiting for Docker socket..."
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+          echo "Docker socket ready."
+
           # ── Install Docker CLI ───────────────────────────────────────────────
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
           apt-get update -qq
           apt-get install -y -qq ca-certificates curl gnupg
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg \
             | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian ${CODENAME} stable" \
             | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           docker version
@@ -629,6 +797,22 @@ tasks:
 
           export CI=true
           node bin/create-version-test-folders.js
+
+          # ── Scope tests to this service's directories ───────────────────────
+          export TEST_FILES
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/databases/couchbase \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No couchbase test files found — skipping.'
+            exit 0
+          fi
+
+          echo "couchbase test files ($(echo "$TEST_FILES" | wc -w | xargs) files):"
+          echo "$TEST_FILES" | tr ' ' '\n'
 
           npm run test:ci:collector
       - name: sign-artifact
@@ -653,15 +837,22 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
+          # ── Wait for the DinD docker socket to be available ──────────────────
+          echo "Waiting for Docker socket..."
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+          echo "Docker socket ready."
+
           # ── Install Docker CLI ───────────────────────────────────────────────
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
           apt-get update -qq
           apt-get install -y -qq ca-certificates curl gnupg
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg \
             | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian ${CODENAME} stable" \
             | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           docker version
@@ -678,6 +869,22 @@ tasks:
 
           export CI=true
           node bin/create-version-test-folders.js
+
+          # ── Scope tests to this service's directories ───────────────────────
+          export TEST_FILES
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/messaging/amqplib \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No rabbitmq test files found — skipping.'
+            exit 0
+          fi
+
+          echo "rabbitmq test files ($(echo "$TEST_FILES" | wc -w | xargs) files):"
+          echo "$TEST_FILES" | tr ' ' '\n'
 
           npm run test:ci:collector
       - name: sign-artifact
@@ -703,15 +910,22 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
+          # ── Wait for the DinD docker socket to be available ──────────────────
+          echo "Waiting for Docker socket..."
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+          echo "Docker socket ready."
+
           # ── Install Docker CLI + netcat ──────────────────────────────────────
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
           apt-get update -qq
           apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg \
             | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian ${CODENAME} stable" \
             | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           docker version
@@ -742,6 +956,23 @@ tasks:
           export CI=true
           node bin/create-version-test-folders.js
 
+          # ── Scope tests to this service's directories ───────────────────────
+          export TEST_FILES
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/messaging/nats \
+            test/integration/currencies/messaging/node-nats-streaming \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No nats test files found — skipping.'
+            exit 0
+          fi
+
+          echo "nats test files ($(echo "$TEST_FILES" | wc -w | xargs) files):"
+          echo "$TEST_FILES" | tr ' ' '\n'
+
           npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
@@ -765,15 +996,22 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
+          # ── Wait for the DinD docker socket to be available ──────────────────
+          echo "Waiting for Docker socket..."
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+          echo "Docker socket ready."
+
           # ── Install Docker CLI ───────────────────────────────────────────────
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
           apt-get update -qq
           apt-get install -y -qq ca-certificates curl gnupg
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg \
             | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian ${CODENAME} stable" \
             | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           docker version
@@ -796,6 +1034,24 @@ tasks:
 
           export CI=true
           node bin/create-version-test-folders.js
+
+          # ── Scope tests to this service's directories ───────────────────────
+          export TEST_FILES
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/databases/mysql \
+            test/integration/currencies/databases/mysql2 \
+            test/integration/currencies/databases/mariadb \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No mysql test files found — skipping.'
+            exit 0
+          fi
+
+          echo "mysql test files ($(echo "$TEST_FILES" | wc -w | xargs) files):"
+          echo "$TEST_FILES" | tr ' ' '\n'
 
           npm run test:ci:collector
       - name: sign-artifact
@@ -820,15 +1076,22 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
+          # ── Wait for the DinD docker socket to be available ──────────────────
+          echo "Waiting for Docker socket..."
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+          echo "Docker socket ready."
+
           # ── Install Docker CLI ───────────────────────────────────────────────
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
           apt-get update -qq
           apt-get install -y -qq ca-certificates curl gnupg
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg \
             | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian ${CODENAME} stable" \
             | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           docker version
@@ -845,6 +1108,23 @@ tasks:
 
           export CI=true
           node bin/create-version-test-folders.js
+
+          # ── Scope tests to this service's directories ───────────────────────
+          export TEST_FILES
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/cloud/@aws-sdk \
+            test/integration/currencies/cloud/aws-sdk \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No localstack test files found — skipping.'
+            exit 0
+          fi
+
+          echo "localstack test files ($(echo "$TEST_FILES" | wc -w | xargs) files):"
+          echo "$TEST_FILES" | tr ' ' '\n'
 
           npm run test:ci:collector
       - name: sign-artifact
@@ -869,15 +1149,22 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
+          # ── Wait for the DinD docker socket to be available ──────────────────
+          echo "Waiting for Docker socket..."
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+          echo "Docker socket ready."
+
           # ── Install Docker CLI + netcat ──────────────────────────────────────
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
           apt-get update -qq
           apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg \
             | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian ${CODENAME} stable" \
             | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           docker version
@@ -893,6 +1180,22 @@ tasks:
 
           export CI=true
           node bin/create-version-test-folders.js
+
+          # ── Scope tests to this service's directories ───────────────────────
+          export TEST_FILES
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/databases/memcached \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No memcached test files found — skipping.'
+            exit 0
+          fi
+
+          echo "memcached test files ($(echo "$TEST_FILES" | wc -w | xargs) files):"
+          echo "$TEST_FILES" | tr ' ' '\n'
 
           npm run test:ci:collector
       - name: sign-artifact
@@ -918,15 +1221,22 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
+          # ── Wait for the DinD docker socket to be available ──────────────────
+          echo "Waiting for Docker socket..."
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+          echo "Docker socket ready."
+
           # ── Install Docker CLI ───────────────────────────────────────────────
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
           apt-get update -qq
           apt-get install -y -qq ca-certificates curl gnupg
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg \
             | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian ${CODENAME} stable" \
             | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           docker version
@@ -944,6 +1254,22 @@ tasks:
 
           export CI=true
           node bin/create-version-test-folders.js
+
+          # ── Scope tests to this service's directories ───────────────────────
+          export TEST_FILES
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/databases/oracledb \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No oracledb test files found — skipping.'
+            exit 0
+          fi
+
+          echo "oracledb test files ($(echo "$TEST_FILES" | wc -w | xargs) files):"
+          echo "$TEST_FILES" | tr ' ' '\n'
 
           npm run test:ci:collector
       - name: sign-artifact
@@ -972,15 +1298,22 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
+          # ── Wait for the DinD docker socket to be available ──────────────────
+          echo "Waiting for Docker socket..."
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+          echo "Docker socket ready."
+
           # ── Install Docker CLI ───────────────────────────────────────────────
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
           apt-get update -qq
           apt-get install -y -qq ca-certificates curl gnupg
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg \
             | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian ${CODENAME} stable" \
             | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           docker version
@@ -1015,14 +1348,22 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
+          # ── Wait for the DinD docker socket to be available ──────────────────
+          echo "Waiting for Docker socket..."
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+          echo "Docker socket ready."
+
+          # ── Install Docker CLI ───────────────────────────────────────────────
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
           apt-get update -qq
           apt-get install -y -qq ca-certificates curl gnupg
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg \
             | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian ${CODENAME} stable" \
             | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
 
@@ -1055,14 +1396,22 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
+          # ── Wait for the DinD docker socket to be available ──────────────────
+          echo "Waiting for Docker socket..."
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+          echo "Docker socket ready."
+
+          # ── Install Docker CLI ───────────────────────────────────────────────
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
           apt-get update -qq
           apt-get install -y -qq ca-certificates curl gnupg
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg \
             | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian ${CODENAME} stable" \
             | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
 
@@ -1095,14 +1444,22 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
+          # ── Wait for the DinD docker socket to be available ──────────────────
+          echo "Waiting for Docker socket..."
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+          echo "Docker socket ready."
+
+          # ── Install Docker CLI ───────────────────────────────────────────────
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
           apt-get update -qq
           apt-get install -y -qq ca-certificates curl gnupg
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg \
             | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian ${CODENAME} stable" \
             | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
 
@@ -1135,14 +1492,22 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
+          # ── Wait for the DinD docker socket to be available ──────────────────
+          echo "Waiting for Docker socket..."
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+          echo "Docker socket ready."
+
+          # ── Install Docker CLI ───────────────────────────────────────────────
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
           apt-get update -qq
           apt-get install -y -qq ca-certificates curl gnupg
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg \
             | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian ${CODENAME} stable" \
             | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
 
