@@ -6,7 +6,10 @@ tasks:
       - name: peer-review
         when: false
 
+  # ── Install dependencies ─────────────────────────────────────────────────────
   # Base task. All test tasks fan out from this via `from: code-build`.
+  # NOTE: fan-out tasks get a fresh container — node_modules are NOT shared.
+  # Each test task must run npm install itself before running tests.
   code-build:
     runtimeClassName: large
     steps:
@@ -15,19 +18,20 @@ tasks:
         image: public.ecr.aws/docker/library/node:24
         script: |
           #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
           echo "Node: $(node --version)"
           echo "npm:  $(npm --version)"
           npm install --loglevel warn --foreground-scripts
           echo "npm install done."
       - name: unit-test
-        when: false
+        when: 'false'
       - name: scan-artifact
-        when: false
+        when: 'false'
       - name: sign-artifact
-        when: false
+        when: 'false'
 
   # ── Non-sidecar test group: core ─────────────────────────────────────────────
-  # No Docker needed — runs directly in the node image.
   core-tests:
     from: code-build
     displayName: core-tests
@@ -38,12 +42,16 @@ tasks:
         image: public.ecr.aws/docker/library/node:24
         script: |
           #!/usr/bin/env bash
+          set -eo pipefail
           cd "$WORKSPACE/$(load_repo app-repo path)"
+
+          # Fan-out tasks get a fresh container — install deps first
+          npm install --loglevel warn --foreground-scripts
+
           npm run test:ci:core
 
   # ── Sidecar test group: collector redis ──────────────────────────────────────
-  # Uses DinD (Docker-in-Docker) to start redis, redis-slave, redis-sentinel
-  # on --network host so tests reach them on 127.0.0.1.
+  # DinD + docker-socket to start redis services on --network host (localhost).
   # Mirrors Tekton collector-1-redis-task.yaml sidecars behavior.
   collector-redis-tests:
     from: code-build
@@ -60,8 +68,12 @@ tasks:
         script: |
           #!/usr/bin/env bash
           set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
 
-          # ── Start Redis primary ───────────────────────────────────────────
+          # Fan-out tasks get a fresh container — install deps first
+          npm install --loglevel warn --foreground-scripts
+
+          # ── Start Redis primary ──────────────────────────────────────────────
           docker run -d --network host --name redis \
             public.ecr.aws/docker/library/redis:7.4.3
 
@@ -90,6 +102,7 @@ tasks:
           CI_TEST_SPLIT="39" CI_TEST_SPLIT_CURRENT="1" \
             npm run test:ci:collector
 
+  # ── Skip deploy stages ───────────────────────────────────────────────────────
   deploy-checks:
     when: false
 
