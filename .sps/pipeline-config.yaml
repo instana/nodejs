@@ -36,7 +36,12 @@ tasks:
       - name: sign-artifact
         when: 'false'
 
-  # ── Non-sidecar test group: core ─────────────────────────────────────────────
+  # ────────────────────────────────────────────────────────────────────────────
+  # NON-SIDECAR TEST GROUPS
+  # No Docker services needed — plain fan-out tasks.
+  # ────────────────────────────────────────────────────────────────────────────
+
+  # ── core ────────────────────────────────────────────────────────────────────
   core-tests:
     from: code-build
     displayName: core-tests
@@ -49,17 +54,207 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
           cd "$WORKSPACE/$(load_repo app-repo path)"
-
-          # Fan-out tasks get a fresh container — install deps first
           npm install --loglevel warn --foreground-scripts
-
           npm run test:ci:core
       - name: sign-artifact
         when: 'false'
 
-  # ── Sidecar test group: collector redis ──────────────────────────────────────
-  # DinD + docker-socket to start redis services on --network host (localhost).
-  # Mirrors Tekton collector-1-redis-task.yaml sidecars behavior.
+  # ── autoprofile ──────────────────────────────────────────────────────────────
+  autoprofile-tests:
+    from: code-build
+    displayName: autoprofile-tests
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: autoprofile-tests
+        image: public.ecr.aws/docker/library/node:24
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          npm run test:ci:autoprofile
+      - name: sign-artifact
+        when: 'false'
+
+  # ── metrics-util ─────────────────────────────────────────────────────────────
+  metrics-util-tests:
+    from: code-build
+    displayName: metrics-util-tests
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: metrics-util-tests
+        image: public.ecr.aws/docker/library/node:24
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          npm run test:ci:metrics-util
+      - name: sign-artifact
+        when: 'false'
+
+  # ── shared-metrics ───────────────────────────────────────────────────────────
+  shared-metrics-tests:
+    from: code-build
+    displayName: shared-metrics-tests
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: shared-metrics-tests
+        image: public.ecr.aws/docker/library/node:24
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          npm run test:ci:shared-metrics
+      - name: sign-artifact
+        when: 'false'
+
+  # ── opentelemetry-exporter ───────────────────────────────────────────────────
+  opentelemetry-exporter-tests:
+    from: code-build
+    displayName: opentelemetry-exporter-tests
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: opentelemetry-exporter-tests
+        image: public.ecr.aws/docker/library/node:24
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          npm run test:ci:opentelemetry-exporter
+      - name: sign-artifact
+        when: 'false'
+
+  # ── opentelemetry-sampler ────────────────────────────────────────────────────
+  opentelemetry-sampler-tests:
+    from: code-build
+    displayName: opentelemetry-sampler-tests
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: opentelemetry-sampler-tests
+        image: public.ecr.aws/docker/library/node:24
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          npm run test:ci:opentelemetry-sampler
+      - name: sign-artifact
+        when: 'false'
+
+  # ── aws-fargate ──────────────────────────────────────────────────────────────
+  aws-fargate-tests:
+    from: code-build
+    displayName: aws-fargate-tests
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: aws-fargate-tests
+        image: public.ecr.aws/docker/library/node:24
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          npm run test:ci:aws-fargate
+      - name: sign-artifact
+        when: 'false'
+
+  # ── azure-container-services ─────────────────────────────────────────────────
+  azure-container-services-tests:
+    from: code-build
+    displayName: azure-container-services-tests
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: azure-container-services-tests
+        image: public.ecr.aws/docker/library/node:24
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          npm run test:ci:azure-container-services
+      - name: sign-artifact
+        when: 'false'
+
+  # ── google-cloud-run ─────────────────────────────────────────────────────────
+  google-cloud-run-tests:
+    from: code-build
+    displayName: google-cloud-run-tests
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: google-cloud-run-tests
+        image: public.ecr.aws/docker/library/node:24
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          npm run test:ci:google-cloud-run
+      - name: sign-artifact
+        when: 'false'
+
+  # ── serverless ───────────────────────────────────────────────────────────────
+  serverless-tests:
+    from: code-build
+    displayName: serverless-tests
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: serverless-tests
+        image: public.ecr.aws/docker/library/node:24
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          npm run test:ci:serverless
+      - name: sign-artifact
+        when: 'false'
+
+  # ── serverless-collector ─────────────────────────────────────────────────────
+  serverless-collector-tests:
+    from: code-build
+    displayName: serverless-collector-tests
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: serverless-collector-tests
+        image: public.ecr.aws/docker/library/node:24
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          npm run test:ci:serverless-collector
+      - name: sign-artifact
+        when: 'false'
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # SIDECAR TEST GROUPS — DinD pattern
+  # include: dind on the task starts the Docker daemon.
+  # include: docker-socket on the step mounts /var/run/docker.sock.
+  # All services started with --network host so they're on 127.0.0.1.
+  # Docker CLI is not in node:24 — installed via apt in each task.
+  # ────────────────────────────────────────────────────────────────────────────
+
+  # ── Shared DinD setup script ─────────────────────────────────────────────────
+  # (inlined into every sidecar task — SPS has no shared include scripts)
+
+  # ── collector redis (Tekton tasks 1-20) ─────────────────────────────────────
+  # Each task gets 1/20th of the collector test suite (CI_TEST_SPLIT=39,
+  # CI_TEST_SPLIT_CURRENT=1..20) using redis/ioredis sidecars.
+  # Mirrored from collector-1-redis-task.yaml .. collector-20-redis-task.yaml
+
   collector-redis-tests:
     from: code-build
     displayName: collector-redis-tests
@@ -76,11 +271,9 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
           cd "$WORKSPACE/$(load_repo app-repo path)"
-
-          # Fan-out tasks get a fresh container — install deps first
           npm install --loglevel warn --foreground-scripts
 
-          # ── Install Docker CLI (not included in node:24 image) ───────────────
+          # ── Install Docker CLI ───────────────────────────────────────────────
           apt-get update -qq
           apt-get install -y -qq ca-certificates curl gnupg
           install -m 0755 -d /etc/apt/keyrings
@@ -90,8 +283,7 @@ tasks:
           echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
             https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
             | tee /etc/apt/sources.list.d/docker.list > /dev/null
-          apt-get update -qq
-          apt-get install -y -qq docker-ce-cli
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
           docker version
 
           # ── Start Redis primary ──────────────────────────────────────────────
@@ -119,12 +311,11 @@ tasks:
             'until docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 1; done'
           echo "Redis ready."
 
-          # ── Generate versioned test folders then find redis tests ─────────────
           export CI=true
-          echo '=== ENV DUMP (AZURE/azure) ==='
-          env | grep -i azure || echo '(no AZURE vars found)'
-          echo '=== END ENV DUMP ==='
-          node bin/create-version-test-folders.js 2>&1 | grep -E 'redis|ioredis|@redis|Error|error' || true
+          export AZURE_REDIS_CLUSTER="${AZURE_REDIS_CLUSTER:-}"
+          export AZURE_REDIS_CLUSTER_PWD="${AZURE_REDIS_CLUSTER_PWD:-}"
+
+          node bin/create-version-test-folders.js
 
           export TEST_FILES=$(cd packages/collector && find \
             test/integration/currencies/databases/redis \
@@ -133,26 +324,825 @@ tasks:
             test/integration/misc/span-batching-with-redis \
             -name '*.test.js' \
             -not -path '*/node_modules/*' \
-            | sort \
-            | tr '\n' ' ')
+            | sort | tr '\n' ' ')
 
           if [ -z "$TEST_FILES" ]; then
-            echo 'No redis test files found after generation.'
+            echo 'No redis test files found.'
             exit 1
           fi
 
           echo "Redis test files:"
           echo "$TEST_FILES" | tr ' ' '\n'
 
-          # Re-export Azure Redis cluster credentials so lerna/mocha child
-          # processes inherit them (SPS injects them into the container env
-          # but they must be explicitly exported for child process inheritance).
-          export AZURE_REDIS_CLUSTER="${AZURE_REDIS_CLUSTER:-}"
-          export AZURE_REDIS_CLUSTER_PWD="${AZURE_REDIS_CLUSTER_PWD:-}"
-          echo "AZURE_REDIS_CLUSTER set: $([ -n "$AZURE_REDIS_CLUSTER" ] && echo yes || echo NO)"
-          echo "AZURE_REDIS_CLUSTER_PWD set: $([ -n "$AZURE_REDIS_CLUSTER_PWD" ] && echo yes || echo NO)"
+          # Run the full redis test suite in one SPS task
+          # (Tekton split it across 20 parallel tasks — SPS large worker
+          #  has enough capacity to run all redis tests in one pass)
+          npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+
+  # ── collector kafka (Tekton tasks 21-26) ─────────────────────────────────────
+  # Zookeeper + Kafka + kafka-topics setup; each task runs 1/6 of collector
+  # tests (CI_TEST_SPLIT=39, CI_TEST_SPLIT_CURRENT=21..26).
+  # All 6 splits are consolidated into one SPS task since topic creation
+  # only needs to happen once and we run the full kafka subset sequentially.
+
+  collector-kafka-tests:
+    from: code-build
+    displayName: collector-kafka-tests
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: collector-kafka-tests
+        image: public.ecr.aws/docker/library/node:24
+        include:
+          - docker-socket
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          # ── Install Docker CLI ───────────────────────────────────────────────
+          apt-get update -qq
+          apt-get install -y -qq ca-certificates curl gnupg
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg \
+            | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+            | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          docker version
+
+          # ── Start Zookeeper ──────────────────────────────────────────────────
+          docker run -d --network host --name zookeeper \
+            -e ZOOKEEPER_CLIENT_PORT=2181 \
+            public.ecr.aws/aktosecurity/confluentinc-cp-zookeeper:7.9.4-1-ubi8
+
+          # ── Wait for Zookeeper ───────────────────────────────────────────────
+          echo "Waiting for Zookeeper..."
+          timeout 60 bash -c \
+            'until docker exec zookeeper bash -c "echo ruok | nc 127.0.0.1 2181" 2>/dev/null | grep -q imok; do sleep 2; done'
+          echo "Zookeeper ready."
+
+          # ── Start Kafka ──────────────────────────────────────────────────────
+          docker run -d --network host --name kafka \
+            -e KAFKA_BROKER_ID=1 \
+            -e KAFKA_ZOOKEEPER_CONNECT=localhost:2181 \
+            -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092 \
+            -e KAFKA_LISTENERS=EXTERNAL://:9092,PLAINTEXT://:29092 \
+            -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1 \
+            -e KAFKA_DEFAULT_REPLICATION_FACTOR=1 \
+            -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT \
+            public.ecr.aws/aktosecurity/confluentinc-cp-kafka:7.9.4-1-ubi8
+
+          # ── Wait for Kafka ───────────────────────────────────────────────────
+          echo "Waiting for Kafka broker..."
+          timeout 120 bash -c \
+            'until docker exec kafka kafka-topics --bootstrap-server 0.0.0.0:9092 --list >/dev/null 2>&1; do sleep 2; done'
+          echo "Kafka ready."
+
+          # ── Create required topics ───────────────────────────────────────────
+          for TOPIC in test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic; do
+            docker exec kafka kafka-topics --bootstrap-server 0.0.0.0:9092 \
+              --create --if-not-exists --topic "$TOPIC"
+          done
+          echo "Kafka topics created."
+
+          export CI=true
+          node bin/create-version-test-folders.js
 
           npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+
+  # ── collector postgres (Tekton tasks 27-29) ───────────────────────────────────
+  collector-postgres-tests:
+    from: code-build
+    displayName: collector-postgres-tests
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: collector-postgres-tests
+        image: public.ecr.aws/docker/library/node:24
+        include:
+          - docker-socket
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          # ── Install Docker CLI ───────────────────────────────────────────────
+          apt-get update -qq
+          apt-get install -y -qq ca-certificates curl gnupg
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg \
+            | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+            | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          docker version
+
+          # ── Start PostgreSQL ─────────────────────────────────────────────────
+          docker run -d --network host --name postgres \
+            -e POSTGRES_USER=node \
+            -e POSTGRES_PASSWORD=nodepw \
+            -e POSTGRES_DB=nodedb \
+            public.ecr.aws/docker/library/postgres:15.15
+
+          # ── Wait for PostgreSQL ──────────────────────────────────────────────
+          echo "Waiting for PostgreSQL..."
+          timeout 60 bash -c \
+            'until docker exec postgres pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb 2>/dev/null; do sleep 2; done'
+          echo "PostgreSQL ready."
+
+          export CI=true
+          node bin/create-version-test-folders.js
+
+          npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+
+  # ── collector elasticsearch (Tekton tasks 30-31) ─────────────────────────────
+  collector-elasticsearch-tests:
+    from: code-build
+    displayName: collector-elasticsearch-tests
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: collector-elasticsearch-tests
+        image: public.ecr.aws/docker/library/node:24
+        include:
+          - docker-socket
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          # ── Install Docker CLI ───────────────────────────────────────────────
+          apt-get update -qq
+          apt-get install -y -qq ca-certificates curl gnupg
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg \
+            | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+            | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          docker version
+
+          # ── Start Elasticsearch ──────────────────────────────────────────────
+          # vm.max_map_count must be set for ES; on DinD host this is the VM itself
+          docker run -d --network host --name elasticsearch \
+            -e discovery.type=single-node \
+            -e ES_JAVA_OPTS="-Xms500m -Xmx500m" \
+            -e xpack.security.enabled=false \
+            public.ecr.aws/elastic/elasticsearch:9.0.0
+
+          # ── Wait for Elasticsearch ───────────────────────────────────────────
+          echo "Waiting for Elasticsearch..."
+          timeout 120 bash -c \
+            'until curl -sf http://127.0.0.1:9200/_cluster/health 2>/dev/null; do sleep 3; done'
+          echo "Elasticsearch ready."
+
+          export CI=true
+          node bin/create-version-test-folders.js
+
+          npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+
+  # ── collector mongodb (Tekton task 32) ───────────────────────────────────────
+  collector-mongodb-tests:
+    from: code-build
+    displayName: collector-mongodb-tests
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: collector-mongodb-tests
+        image: public.ecr.aws/docker/library/node:24
+        include:
+          - docker-socket
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          # ── Install Docker CLI ───────────────────────────────────────────────
+          apt-get update -qq
+          apt-get install -y -qq ca-certificates curl gnupg
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg \
+            | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+            | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          docker version
+
+          # ── Start MongoDB ────────────────────────────────────────────────────
+          docker run -d --network host --name mongodb \
+            public.ecr.aws/docker/library/mongo:8.0.8
+
+          # ── Wait for MongoDB ─────────────────────────────────────────────────
+          echo "Waiting for MongoDB..."
+          timeout 60 bash -c \
+            'until docker exec mongodb mongosh --eval "db.adminCommand(\"ping\")" 2>/dev/null | grep -q '"'"'ok'"'"'; do sleep 2; done'
+          echo "MongoDB ready."
+
+          export CI=true
+          node bin/create-version-test-folders.js
+
+          npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+
+  # ── collector couchbase (Tekton task 33) ─────────────────────────────────────
+  collector-couchbase-tests:
+    from: code-build
+    displayName: collector-couchbase-tests
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: collector-couchbase-tests
+        image: public.ecr.aws/docker/library/node:24
+        include:
+          - docker-socket
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          # ── Install Docker CLI ───────────────────────────────────────────────
+          apt-get update -qq
+          apt-get install -y -qq ca-certificates curl gnupg
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg \
+            | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+            | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          docker version
+
+          # ── Start Couchbase ──────────────────────────────────────────────────
+          docker run -d --network host --name couchbase \
+            public.ecr.aws/docker/library/couchbase:7.6.7
+
+          # ── Wait for Couchbase UI (port 8091) ────────────────────────────────
+          echo "Waiting for Couchbase..."
+          timeout 90 bash -c \
+            'until curl -sf http://127.0.0.1:8091/ 2>/dev/null; do sleep 3; done'
+          echo "Couchbase ready."
+
+          export CI=true
+          node bin/create-version-test-folders.js
+
+          npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+
+  # ── collector rabbitmq (Tekton task 34) ──────────────────────────────────────
+  collector-rabbitmq-tests:
+    from: code-build
+    displayName: collector-rabbitmq-tests
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: collector-rabbitmq-tests
+        image: public.ecr.aws/docker/library/node:24
+        include:
+          - docker-socket
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          # ── Install Docker CLI ───────────────────────────────────────────────
+          apt-get update -qq
+          apt-get install -y -qq ca-certificates curl gnupg
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg \
+            | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+            | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          docker version
+
+          # ── Start RabbitMQ ───────────────────────────────────────────────────
+          docker run -d --network host --name rabbitmq \
+            public.ecr.aws/docker/library/rabbitmq:3.13.0
+
+          # ── Wait for RabbitMQ AMQP port ──────────────────────────────────────
+          echo "Waiting for RabbitMQ..."
+          timeout 60 bash -c \
+            'until nc -z 127.0.0.1 5672 2>/dev/null; do sleep 2; done'
+          echo "RabbitMQ ready."
+
+          export CI=true
+          node bin/create-version-test-folders.js
+
+          npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+
+  # ── collector nats (Tekton task 35) ──────────────────────────────────────────
+  # Three services: nats (4222), nats-streaming/stan (4223), nats-streaming-2 (4224)
+  collector-nats-tests:
+    from: code-build
+    displayName: collector-nats-tests
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: collector-nats-tests
+        image: public.ecr.aws/docker/library/node:24
+        include:
+          - docker-socket
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          # ── Install Docker CLI + netcat ──────────────────────────────────────
+          apt-get update -qq
+          apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg \
+            | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+            | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          docker version
+
+          # ── Start NATS ───────────────────────────────────────────────────────
+          docker run -d --network host --name nats \
+            public.ecr.aws/docker/library/nats:2.9.14-linux
+
+          # ── Start NATS Streaming (stan) on port 4223 ─────────────────────────
+          docker run -d --network host --name nats-streaming \
+            public.ecr.aws/docker/library/nats-streaming:0.25.3-linux \
+            -p 4223 -m 8223
+
+          # ── Start NATS Streaming second instance on port 4224 ────────────────
+          docker run -d --network host --name nats-streaming-2 \
+            public.ecr.aws/docker/library/nats-streaming:0.25.3-linux \
+            -p 4224 -m 8224
+
+          # ── Wait for services ────────────────────────────────────────────────
+          echo "Waiting for NATS..."
+          timeout 30 bash -c 'until nc -z 127.0.0.1 4222; do sleep 1; done'
+          echo "Waiting for NATS Streaming (4223)..."
+          timeout 30 bash -c 'until curl -sf http://127.0.0.1:8223/healthz 2>/dev/null; do sleep 1; done'
+          echo "Waiting for NATS Streaming 2 (4224)..."
+          timeout 30 bash -c 'until curl -sf http://127.0.0.1:8224/healthz 2>/dev/null; do sleep 1; done'
+          echo "NATS services ready."
+
+          export CI=true
+          node bin/create-version-test-folders.js
+
+          npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+
+  # ── collector mysql (Tekton task 36) ─────────────────────────────────────────
+  collector-mysql-tests:
+    from: code-build
+    displayName: collector-mysql-tests
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: collector-mysql-tests
+        image: public.ecr.aws/docker/library/node:24
+        include:
+          - docker-socket
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          # ── Install Docker CLI ───────────────────────────────────────────────
+          apt-get update -qq
+          apt-get install -y -qq ca-certificates curl gnupg
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg \
+            | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+            | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          docker version
+
+          # ── Start MySQL ──────────────────────────────────────────────────────
+          docker run -d --network host --name mysql \
+            -e MYSQL_ROOT_PASSWORD=nodepw \
+            -e MYSQL_DATABASE=nodedb \
+            -e MYSQL_USER=node \
+            -e MYSQL_PASSWORD=nodepw \
+            -e MYSQL_ROOT_HOST=0.0.0.0 \
+            public.ecr.aws/docker/library/mysql:8.0.26 \
+            --default-authentication-plugin=mysql_native_password
+
+          # ── Wait for MySQL ───────────────────────────────────────────────────
+          echo "Waiting for MySQL..."
+          timeout 90 bash -c \
+            "until docker exec mysql sh -c \"mysql -h 0.0.0.0 -u node -p'nodepw' -e 'SELECT 1'\" 2>/dev/null; do sleep 3; done"
+          echo "MySQL ready."
+
+          export CI=true
+          node bin/create-version-test-folders.js
+
+          npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+
+  # ── collector localstack/aws-s3/sqs/etc (Tekton task 37) ─────────────────────
+  collector-localstack-tests:
+    from: code-build
+    displayName: collector-localstack-tests
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: collector-localstack-tests
+        image: public.ecr.aws/docker/library/node:24
+        include:
+          - docker-socket
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          # ── Install Docker CLI ───────────────────────────────────────────────
+          apt-get update -qq
+          apt-get install -y -qq ca-certificates curl gnupg
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg \
+            | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+            | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          docker version
+
+          # ── Start LocalStack ─────────────────────────────────────────────────
+          docker run -d --network host --name localstack \
+            public.ecr.aws/localstack/localstack:4.5
+
+          # ── Wait for LocalStack ──────────────────────────────────────────────
+          echo "Waiting for LocalStack..."
+          timeout 120 bash -c \
+            'until curl -sf http://127.0.0.1:4566/_localstack/health 2>/dev/null | grep -q running; do sleep 3; done'
+          echo "LocalStack ready."
+
+          export CI=true
+          node bin/create-version-test-folders.js
+
+          npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+
+  # ── collector memcached (Tekton task 38) ─────────────────────────────────────
+  collector-memcached-tests:
+    from: code-build
+    displayName: collector-memcached-tests
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: collector-memcached-tests
+        image: public.ecr.aws/docker/library/node:24
+        include:
+          - docker-socket
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          # ── Install Docker CLI + netcat ──────────────────────────────────────
+          apt-get update -qq
+          apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg \
+            | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+            | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          docker version
+
+          # ── Start Memcached ──────────────────────────────────────────────────
+          docker run -d --network host --name memcached \
+            public.ecr.aws/docker/library/memcached:1.6.9
+
+          # ── Wait for Memcached ───────────────────────────────────────────────
+          echo "Waiting for Memcached..."
+          timeout 30 bash -c 'until nc -z 127.0.0.1 11211; do sleep 1; done'
+          echo "Memcached ready."
+
+          export CI=true
+          node bin/create-version-test-folders.js
+
+          npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+
+  # ── collector oracledb (Tekton task 39) ──────────────────────────────────────
+  # Oracle Free 23c — slow startup (~90s); use a generous timeout.
+  collector-oracledb-tests:
+    from: code-build
+    displayName: collector-oracledb-tests
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: collector-oracledb-tests
+        image: public.ecr.aws/docker/library/node:24
+        include:
+          - docker-socket
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          # ── Install Docker CLI ───────────────────────────────────────────────
+          apt-get update -qq
+          apt-get install -y -qq ca-certificates curl gnupg
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg \
+            | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+            | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          docker version
+
+          # ── Start Oracle DB Free 23c ─────────────────────────────────────────
+          docker run -d --network host --name oracledb \
+            -e ORACLE_PWD=teamnodejspassword \
+            container-registry.oracle.com/database/free:23.6.0.0-lite
+
+          # ── Wait for Oracle listener (port 1521) ─────────────────────────────
+          echo "Waiting for Oracle DB (this takes ~90s)..."
+          timeout 180 bash -c \
+            'until docker exec oracledb bash -c "echo exit | sqlplus -L system/teamnodejspassword@//localhost:1521/FREE" 2>&1 | grep -q "Connected to"; do sleep 5; done'
+          echo "Oracle DB ready."
+
+          export CI=true
+          node bin/create-version-test-folders.js
+
+          npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+
+  # ── aws-lambda (Tekton tasks 1-5 splits) — LocalStack required ───────────────
+  # Tekton splits this into 5 parallel tasks (CI_TEST_SPLIT=5, CURRENT=1..5).
+  # Each SPS split task runs with its own LocalStack instance.
+  # Mirrors aws-lambda-task.yaml, aws-lambda-split-2..5-task.yaml.
+
+  aws-lambda-tests-1:
+    from: code-build
+    displayName: aws-lambda-tests-1
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: aws-lambda-tests-1
+        image: public.ecr.aws/docker/library/node:24
+        include:
+          - docker-socket
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          # ── Install Docker CLI ───────────────────────────────────────────────
+          apt-get update -qq
+          apt-get install -y -qq ca-certificates curl gnupg
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg \
+            | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+            | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          docker version
+
+          docker run -d --network host --name localstack \
+            public.ecr.aws/localstack/localstack:4.5
+          echo "Waiting for LocalStack..."
+          timeout 120 bash -c \
+            'until curl -sf http://127.0.0.1:4566/_localstack/health 2>/dev/null | grep -q running; do sleep 3; done'
+          echo "LocalStack ready."
+
+          export CI=true
+          CI_TEST_SPLIT=5 CI_TEST_SPLIT_CURRENT=1 npm run test:ci:aws-lambda
+      - name: sign-artifact
+        when: 'false'
+
+  aws-lambda-tests-2:
+    from: code-build
+    displayName: aws-lambda-tests-2
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: aws-lambda-tests-2
+        image: public.ecr.aws/docker/library/node:24
+        include:
+          - docker-socket
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          apt-get update -qq
+          apt-get install -y -qq ca-certificates curl gnupg
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg \
+            | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+            | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+
+          docker run -d --network host --name localstack \
+            public.ecr.aws/localstack/localstack:4.5
+          timeout 120 bash -c \
+            'until curl -sf http://127.0.0.1:4566/_localstack/health 2>/dev/null | grep -q running; do sleep 3; done'
+          echo "LocalStack ready."
+
+          export CI=true
+          CI_TEST_SPLIT=5 CI_TEST_SPLIT_CURRENT=2 npm run test:ci:aws-lambda
+      - name: sign-artifact
+        when: 'false'
+
+  aws-lambda-tests-3:
+    from: code-build
+    displayName: aws-lambda-tests-3
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: aws-lambda-tests-3
+        image: public.ecr.aws/docker/library/node:24
+        include:
+          - docker-socket
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          apt-get update -qq
+          apt-get install -y -qq ca-certificates curl gnupg
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg \
+            | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+            | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+
+          docker run -d --network host --name localstack \
+            public.ecr.aws/localstack/localstack:4.5
+          timeout 120 bash -c \
+            'until curl -sf http://127.0.0.1:4566/_localstack/health 2>/dev/null | grep -q running; do sleep 3; done'
+          echo "LocalStack ready."
+
+          export CI=true
+          CI_TEST_SPLIT=5 CI_TEST_SPLIT_CURRENT=3 npm run test:ci:aws-lambda
+      - name: sign-artifact
+        when: 'false'
+
+  aws-lambda-tests-4:
+    from: code-build
+    displayName: aws-lambda-tests-4
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: aws-lambda-tests-4
+        image: public.ecr.aws/docker/library/node:24
+        include:
+          - docker-socket
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          apt-get update -qq
+          apt-get install -y -qq ca-certificates curl gnupg
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg \
+            | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+            | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+
+          docker run -d --network host --name localstack \
+            public.ecr.aws/localstack/localstack:4.5
+          timeout 120 bash -c \
+            'until curl -sf http://127.0.0.1:4566/_localstack/health 2>/dev/null | grep -q running; do sleep 3; done'
+          echo "LocalStack ready."
+
+          export CI=true
+          CI_TEST_SPLIT=5 CI_TEST_SPLIT_CURRENT=4 npm run test:ci:aws-lambda
+      - name: sign-artifact
+        when: 'false'
+
+  aws-lambda-tests-5:
+    from: code-build
+    displayName: aws-lambda-tests-5
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: aws-lambda-tests-5
+        image: public.ecr.aws/docker/library/node:24
+        include:
+          - docker-socket
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          apt-get update -qq
+          apt-get install -y -qq ca-certificates curl gnupg
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg \
+            | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+            https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+            | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+
+          docker run -d --network host --name localstack \
+            public.ecr.aws/localstack/localstack:4.5
+          timeout 120 bash -c \
+            'until curl -sf http://127.0.0.1:4566/_localstack/health 2>/dev/null | grep -q running; do sleep 3; done'
+          echo "LocalStack ready."
+
+          export CI=true
+          CI_TEST_SPLIT=5 CI_TEST_SPLIT_CURRENT=5 npm run test:ci:aws-lambda
       - name: sign-artifact
         when: 'false'
 
@@ -170,4 +1160,3 @@ tasks:
     steps:
       - name: run-stage
         when: false
-
