@@ -262,24 +262,35 @@ tasks:
           node bin/create-version-test-folders.js
 
           # ── Collect all collector tests that don't need a Docker service ─────
-          # Excludes: databases/* and messaging/* that need sidecars.
-          # Includes: protocols, frameworks, logging, async, cloud, misc tests.
+          # Protocols with sidecar deps are excluded here and run in their own tasks:
+          #   graphql / graphql-subscriptions → collector-rabbitmq-tests (needs RabbitMQ)
+          # Framework tests with sidecar deps are also excluded:
+          #   sequelize / typeorm / restify   → collector-postgres-tests (needs Postgres)
+          # messaging/bull                    → collector-redis-tests (needs Redis)
           export TEST_FILES
           TEST_FILES=$(cd packages/collector && find \
-            test/integration/currencies/protocols \
-            test/integration/currencies/frameworks \
+            test/integration/currencies/protocols/@apollo \
+            test/integration/currencies/protocols/@grpc \
+            test/integration/currencies/protocols/http \
+            test/integration/currencies/protocols/http2 \
+            test/integration/currencies/frameworks/@hapi \
+            test/integration/currencies/frameworks/@koa \
+            test/integration/currencies/frameworks/express \
+            test/integration/currencies/frameworks/fastify \
+            test/integration/currencies/frameworks/got \
+            test/integration/currencies/frameworks/tsoa \
             test/integration/currencies/logging \
             test/integration/currencies/async \
             test/integration/currencies/core \
             test/integration/currencies/cloud/@azure \
             test/integration/currencies/cloud/@google-cloud \
             test/integration/currencies/messaging/socket.io \
-            test/integration/currencies/messaging/bull \
             test/integration/misc \
             test/unit \
             -name '*.test.js' \
             -not -path '*/node_modules/*' \
             -not -path '*/long_*/*' \
+            -not -path '*/span-batching-with-redis/*' \
             | sort | tr '\n' ' ')
 
           if [ -z "$TEST_FILES" ]; then
@@ -396,6 +407,7 @@ tasks:
             test/integration/currencies/databases/ioredis \
             'test/integration/currencies/databases/@redis' \
             test/integration/misc/span-batching-with-redis \
+            test/integration/currencies/messaging/bull \
             -name '*.test.js' \
             -not -path '*/node_modules/*' \
             | sort | tr '\n' ' ')
@@ -581,6 +593,9 @@ tasks:
             test/integration/currencies/databases/prisma \
             test/integration/currencies/databases/sequelize \
             test/integration/currencies/databases/tedious \
+            test/integration/currencies/frameworks/sequelize \
+            test/integration/currencies/frameworks/typeorm \
+            test/integration/currencies/frameworks/restify \
             -name '*.test.js' \
             -not -path '*/node_modules/*' \
             | sort | tr '\n' ' ')
@@ -874,6 +889,8 @@ tasks:
           export TEST_FILES
           TEST_FILES=$(cd packages/collector && find \
             test/integration/currencies/messaging/amqplib \
+            test/integration/currencies/protocols/graphql \
+            test/integration/currencies/protocols/graphql-subscriptions \
             -name '*.test.js' \
             -not -path '*/node_modules/*' \
             | sort | tr '\n' ' ')
