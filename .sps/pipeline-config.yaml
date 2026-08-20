@@ -24,6 +24,11 @@ tasks:
           echo "npm:  $(npm --version)"
           npm install --loglevel warn --foreground-scripts
           echo "npm install done."
+
+          # Generate versioned test folders (_v*/) from currencies.json + templates.
+          # Tekton does this in its prepare-test-env/generate-test-folders step;
+          # in SPS we run it in code-build so all fan-out tasks inherit the output.
+          node bin/create-version-test-folders.js
       - name: unit-test
         when: 'false'
       - name: scan-artifact
