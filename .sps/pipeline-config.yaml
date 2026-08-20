@@ -61,7 +61,7 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          # ── Start Redis primary ──────────────────────────────────────────────
+          # ── Start Redis primary ───────────────────────────────────────────
           docker run -d --network host --name redis \
             public.ecr.aws/docker/library/redis:7.4.3
 
