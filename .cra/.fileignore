@@ -1,0 +1,8 @@
+node_modules
+example-apps
+dockerfile-examples
+coverage
+test-results
+native-dep-packs
+packages/collector/test/apps
+packages/aws-lambda/lambdas/serverless-framework

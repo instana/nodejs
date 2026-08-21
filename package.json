@@ -41,7 +41,6 @@
     "doctoc": "doctoc README.md packages/collector/README.md",
     "format:sh": "find . -name \"*.sh\" -not -path \"*/node_modules/*\" -not -path \"*/dockerfile-examples/*\" -not -path \"*/example-apps/*\" -exec shfmt -w {} +",
     "lint": "eslint .*.js *.js && npm run typecheck && lerna run lint --stream && eslint misc && eslint dockerfile-examples && eslint bin",
-    "tekton:lint": "npx @ibm/tekton-lint .tekton/**/**/*.yaml .tekton/**/*.yaml .tekton/*.yaml",
     "postinstall": "chmod +x ./node_modules/husky/lib/bin.js && husky install && lerna run node_modules:exists",
     "precommit": "npm run doctoc",
     "coverage": "rm -rf ./coverage && c8 --all --exclude='**/test/**/node_modules/**' --exclude='**/test/**/_v*/**' --reporter=none --temp-directory=./coverage/tmp npm run ${npm_config_npm_command} && node ./bin/normalize-c8.js ./coverage/tmp ./coverage/tmp-processed && c8 report --temp-directory=./coverage/tmp-processed --reporter=lcov && npm run open-coverage",
@@ -86,7 +85,6 @@
     "@commitlint/cli": "14.1.0",
     "@commitlint/config-conventional": "14.1.0",
     "@elastic/ecs-pino-format": "^1.5.0",
-    "@ibm/tekton-lint": "1.1.0",
     "@types/chai": "4.3.0",
     "@types/event-loop-lag": "1.0.30",
     "@types/hapi__hapi": "20.0.13",
@@ -105,7 +103,7 @@
     "admin-plugin-healthcheck": "1.1.0",
     "aws-sdk": "2.1693.0",
     "basic-auth-parser": "0.0.2",
-    "body-parser": "1.19.0",
+    "body-parser": "2.3.0",
     "bunyan": "1.8.15",
     "c8": "9.1.0",
     "chai": "4.3.6",
@@ -128,17 +126,17 @@
     "get-caller-file": "2.0.5",
     "graphql-tag": "2.12.6",
     "husky": "7.0.4",
-    "js-yaml": "4.3.0",
+    "js-yaml": "4.3.1",
     "koa-bodyparser": "4.4.1",
     "koa-morgan": "1.0.1",
     "lerna": "8.1.8",
-    "lodash": "4.17.21",
+    "lodash": "4.18.0",
     "mkdirp": "3.0.1",
     "mocha": "8.4.0",
     "mocha-junit-reporter": "2.0.2",
     "mocha-multi-reporters": "1.5.1",
     "moment": "2.30.1",
-    "morgan": "1.10.0",
+    "morgan": "1.11.0",
     "nan": "2.27.0",
     "node-gyp": "11.2.0",
     "opentracing": "0.14.7",
@@ -154,19 +152,45 @@
     "read-pkg-up": "7.0.1",
     "recursive-copy": "2.0.14",
     "rimraf": "3.0.2",
-    "semver": "7.5.4",
+    "semver": "7.8.5",
     "sinon": "15.2.0",
     "sinon-chai": "3.7.0",
     "square-calc": "3.3.1",
     "stealthy-require": "1.1.1",
     "typescript": "5.9.3",
-    "uuid": "9.0.1",
-    "ws": "8.16.0",
+    "ws": "8.21.0",
     "yargs": "17.7.3"
   },
   "overrides": {
+    "admin": {
+      "bootstrap": "4.3.1"
+    },
+    "depcheck": {
+      "postcss": "8.5.23"
+    },
+    "@commitlint/cli": {
+      "semver": "7.8.5"
+    },
+    "@as-integrations/express5": {
+      "@apollo/server": "5.5.1",
+      "body-parser": "2.3.0"
+    },
     "prebuildify": {
       "node-abi": "4.31.0"
+    },
+    "lerna": {
+      "@octokit/plugin-paginate-rest": "9.2.2",
+      "@octokit/request": "8.4.1",
+      "@octokit/request-error": "5.1.1",
+      "micromatch": "4.0.8"
+    },
+    "prebuildify-cross": {
+      "bn.js": "5.2.3",
+      "cipher-base": "1.0.5",
+      "debug": "2.6.9",
+      "pbkdf2": "3.1.3",
+      "trim-newlines": "3.0.1",
+      "shell-quote": "1.9.0"
     },
     "stream-shift": "1.0.2",
     "event-loop-stats": {
@@ -176,8 +200,38 @@
       "nan": "2.27.0"
     },
     "mocha": {
+      "nanoid": "3.1.21",
+      "serialize-javascript": "7.0.5",
       "yargs": "17.7.3"
-    }
+    },
+    "axios": "1.19.0",
+    "braces": "3.0.3",
+    "body-parser": "2.3.0",
+    "elliptic": "6.6.1",
+    "handlebars": "4.7.9",
+    "immutable": "5.1.8",
+    "ip-address": "10.3.1",
+    "js-yaml": "4.3.1",
+    "fast-xml-parser": "5.7.0",
+    "flatted": "3.4.0",
+    "follow-redirects": "1.16.0",
+    "jsonwebtoken": "9.0.2",
+    "lodash": "4.18.0",
+    "nanoid": "3.3.18",
+    "protobufjs": "8.6.6",
+    "morgan": "1.11.0",
+    "minimist": "1.2.7",
+    "prismjs": "1.30.0",
+    "path-to-regexp": "8.4.0",
+    "picomatch": "4.0.4",
+    "qs": "6.15.2",
+    "sha.js": "2.4.12",
+    "tar": "^7.5.22",
+    "tar-fs": "3.1.3",
+    "tmp": "0.2.7",
+    "underscore": "1.13.8",
+    "uuid": "^13.0.2",
+    "yaml": "^2.8.3"
   },
   "config": {
     "commitizen": {
