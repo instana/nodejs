@@ -63,5 +63,9 @@
     "@opentelemetry/sdk-trace-base": "^2.8.0",
     "@opentelemetry/semantic-conventions": "^1.38.0",
     "nock": "^14.0.10"
+  },
+  "overrides": {
+    "protobufjs": "8.6.6",
+    "uuid": "^13.0.2"
   }
 }

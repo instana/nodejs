@@ -16,6 +16,6 @@
   "author": "Bastian Krol <bastian.krol@instana.com>",
   "license": "MIT",
   "devDependencies": {
-    "serverless": "3.21.0"
+    "serverless": "4.41.0"
   }
 }

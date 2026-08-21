@@ -17,10 +17,19 @@
   "author": "Bastian Krol <bastian.krol@instana.com>",
   "license": "MIT",
   "dependencies": {
-    "lodash": "^4.17.15"
+    "lodash": "^4.18.1"
   },
   "devDependencies": {
-    "serverless": "3.21.0",
-    "serverless-offline": "^9.2.0"
+    "serverless": "4.41.0",
+    "serverless-offline": "^13.10.1"
+  },
+  "overrides": {
+    "axios": "0.31.1",
+    "form-data": "4.0.6",
+    "js-yaml": "4.3.0",
+    "picomatch": "4.0.8",
+    "qs": "6.14.2",
+    "tar": "7.5.22",
+    "velocityjs": "2.1.7"
   }
 }
