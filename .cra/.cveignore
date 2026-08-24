@@ -6,13 +6,5 @@
   {
     "cve": "CVE-2021-32822",
     "alwaysOmit": true
-  },
-  {
-    "cve": "CVE-2026-44966",
-    "alwaysOmit": true
-  },
-  {
-    "cve": "CVE-2021-38384",
-    "alwaysOmit": true
   }
 ]
