@@ -43,14 +43,26 @@ Required properties include:
 
 ### Generating `.secrets.baseline`
 
-To add the `.secrets.baseline` file to the repo, navigate to the repo root in your console and run:
+SPS requires the **IBM fork** of detect-secrets. The standard PyPI package will fail with:
+`"The Detect Secrets baseline file present in your repository is not of the IBM version"`.
+
+Install the IBM fork once:
+
+```bash
+pip install "git+https://github.com/IBM/detect-secrets.git@master#egg=detect-secrets"
+detect-secrets --version   # must show 0.13.1+ibm.XX.dss
+```
+
+**Whenever you modify any source file, regenerate and audit the baseline before committing:**
 
 ```bash
 detect-secrets scan --update .secrets.baseline
 detect-secrets audit .secrets.baseline
 ```
 
-This will create (or update) the `.secrets.baseline` file. Be sure to commit it into the GitHub source repository.
+> `detect-secrets audit` opens an interactive prompt for each new potential secret found.
+> Mark each finding as a true/false positive. The pipeline will reject a baseline that has
+> unaudited entries.
 
 ### CRA (Code Risk Analyzer)
 
