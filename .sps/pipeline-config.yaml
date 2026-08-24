@@ -5,8 +5,6 @@ tasks:
     steps:
       - name: peer-review
         when: 'false'
-      - name: detect-secrets
-        when: 'false'
 
   code-build:
     runtimeClassName: large

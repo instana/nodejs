@@ -41,6 +41,17 @@ Required properties include:
 
 `.secrets.baseline` is required for SPS detect-secrets validation.
 
+### Generating `.secrets.baseline`
+
+To add the `.secrets.baseline` file to the repo, navigate to the repo root in your console and run:
+
+```bash
+detect-secrets scan --update .secrets.baseline
+detect-secrets audit .secrets.baseline
+```
+
+This will create (or update) the `.secrets.baseline` file. Be sure to commit it into the GitHub source repository.
+
 ### CRA (Code Risk Analyzer)
 
 CRA scans the repository for vulnerabilities in dependencies and Docker images.
