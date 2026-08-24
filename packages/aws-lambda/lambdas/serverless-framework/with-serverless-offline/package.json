@@ -24,9 +24,6 @@
     "serverless-offline": "^14.0.0"
   },
   "overrides": {
-
-
-
-    "velocityjs": "2.1.4"
+    "velocityjs": "2.1.7"
   }
 }
