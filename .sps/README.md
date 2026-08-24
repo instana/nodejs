@@ -41,7 +41,16 @@ Required properties include:
 
 `.secrets.baseline` is required for SPS detect-secrets validation.
 
-`.cra/.fileignore` is used to configure files excluded from compliance scanning.
+### CRA (Code Risk Analyzer)
+
+CRA scans the repository for vulnerabilities in dependencies and Docker images.
+
+**`.cra/.fileignore`** excludes paths from CRA scanning. Entries are literal path prefixes — globs are **not** supported. List each package path explicitly.
+
+**`.cra/.cveignore`** overrides (suppresses) specific CVE findings reported against dependencies. Each entry requires a CVE identifier and `"alwaysOmit": true` to permanently suppress the finding across all scans.
+
+
+> Use `.cra/.cveignore` only for false positives or CVEs that cannot be remediated (e.g. transitive dependencies with no fix available).
 
 ## References
 
