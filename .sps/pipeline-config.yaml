@@ -680,57 +680,57 @@ tasks:
   #     - name: sign-artifact
   #       when: 'false'
 
-  # collector-mongodb-tests:
-  #   from: code-build
-  #   displayName: collector-mongodb-tests
-  #   runtimeClassName: large
-  #   include:
-  #     - dind
-  #   steps:
-  #     - name: build-artifact
-  #       displayName: collector-mongodb-tests
-  #       image: public.ecr.aws/docker/library/node:24
-  #       include:
-  #         - docker-socket
-  #       script: |
-  #         #!/usr/bin/env bash
-  #         set -eo pipefail
-  #         cd "$WORKSPACE/$(load_repo app-repo path)"
-  #         npm install --loglevel warn --foreground-scripts
+  collector-mongodb-tests:
+    from: code-build
+    displayName: collector-mongodb-tests
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: collector-mongodb-tests
+        image: public.ecr.aws/docker/library/node:24
+        include:
+          - docker-socket
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
 
-  #         timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-  #         CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
-  #         ARCH=$(dpkg --print-architecture)
-  #         apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg
-  #         install -m 0755 -d /etc/apt/keyrings
-  #         curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-  #         chmod a+r /etc/apt/keyrings/docker.gpg
-  #         echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-  #         apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
 
-  #         docker run -d --network host --name mongodb public.ecr.aws/docker/library/mongo:8.0.8
-  #         timeout 60 bash -c 'until docker exec mongodb mongosh --eval "db.adminCommand(\"ping\")" 2>/dev/null | grep -q "ok"; do sleep 2; done'
+          docker run -d --network host --name mongodb public.ecr.aws/docker/library/mongo:8.0.8
+          timeout 60 bash -c 'until docker exec mongodb mongosh --eval "db.adminCommand(\"ping\")" 2>/dev/null | grep -q "ok"; do sleep 2; done'
 
-  #         export CI=true
-  #         node bin/create-version-test-folders.js
+          export CI=true
+          node bin/create-version-test-folders.js
 
-  #         export TEST_FILES
-  #         TEST_FILES=$(cd packages/collector && find \
-  #           test/integration/currencies/databases/mongodb \
-  #           test/integration/currencies/databases/mongoose \
-  #           -name '*.test.js' \
-  #           -not -path '*/node_modules/*' \
-  #           | sort | tr '\n' ' ')
+          export TEST_FILES
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/databases/mongodb \
+            test/integration/currencies/databases/mongoose \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
 
-  #         if [ -z "$TEST_FILES" ]; then
-  #           echo 'WARNING: No mongodb test files found — skipping.'
-  #           exit 0
-  #         fi
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No mongodb test files found — skipping.'
+            exit 0
+          fi
 
-  #         npm run test:ci:collector
-  #     - name: sign-artifact
-  #       when: 'false'
+          npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
 
   # collector-couchbase-tests:
   #   from: code-build
