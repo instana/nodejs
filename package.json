@@ -74,12 +74,12 @@
     "@_local/shared-metrics": "file:./packages/shared-metrics",
     "@as-integrations/express5": "1.1.2",
     "@aws-sdk/client-cloudwatch-logs": "3.696.0",
-    "@aws-sdk/client-dynamodb": "3.985.0",
-    "@aws-sdk/client-kinesis": "3.985.0",
-    "@aws-sdk/client-s3": "3.985.0",
-    "@aws-sdk/client-sns": "3.985.0",
-    "@aws-sdk/client-sqs": "3.985.0",
-    "@aws-sdk/lib-dynamodb": "3.985.0",
+    "@aws-sdk/client-dynamodb": "3.1116.0",
+    "@aws-sdk/client-kinesis": "3.1116.0",
+    "@aws-sdk/client-s3": "3.1116.0 ",
+    "@aws-sdk/client-sns": "3.1116.0",
+    "@aws-sdk/client-sqs": "3.1116.0",
+    "@aws-sdk/lib-dynamodb": "3.1116.0",
     "@aws-sdk/middleware-retry": "3.370.0",
     "@azure/storage-blob": "12.30.0",
     "@commitlint/cli": "14.1.0",
@@ -168,8 +168,7 @@
       "semver": "7.8.5"
     },
     "@as-integrations/express5": {
-      "@apollo/server": "5.5.1",
-      "body-parser": "2.3.0"
+      "@apollo/server": "5.5.1"
     },
     "prebuildify": {
       "node-abi": "4.31.0"
@@ -185,6 +184,7 @@
       "bn.js": "5.2.3",
       "cipher-base": "1.0.5",
       "debug": "2.6.9",
+      "brace-expansion":"5.0.9",
       "pbkdf2": "3.1.3",
       "trim-newlines": "3.0.1",
       "shell-quote": "1.9.0"
@@ -204,10 +204,7 @@
       "minimatch": "3.1.5"
     },
     "admin": {
-      "bootstrap": "4.3.1",
-      "express": {
-        "body-parser": "1.20.6"
-      }
+      "bootstrap": "4.3.1"
     },
     "ajv": "6.14.0",
     "axios": "1.19.0",
