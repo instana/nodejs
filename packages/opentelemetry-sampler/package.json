@@ -66,6 +66,9 @@
   },
   "overrides": {
     "protobufjs": "8.6.6",
+    "@grpc/proto-loader": {
+      "protobufjs": "7.6.5"
+    },
     "uuid": "^13.0.2"
   }
 }
