@@ -75,6 +75,26 @@ CRA scans the repository for vulnerabilities in dependencies and Docker images.
 
 > Use `.cra/.cveignore` only for false positives or CVEs that cannot be remediated (e.g. transitive dependencies with no fix available).
 
+## Closing compliance issues
+
+When a pipeline run raises issues in `instana/instana-issues` (e.g. branch-protection or CRA BOM
+failures), use [`bin/close-matched-prs.sh`](bin/close-matched-prs.sh) to bulk-comment and close
+them once the underlying problem is fixed.
+
+**Requires** the [GitHub CLI (`gh`)](https://cli.github.com/) authenticated with access to `instana/instana-issues`.
+
+```bash
+# Dry run — lists matching open issues without modifying anything (default)
+./bin/close-matched-prs.sh "CVE-2025-14505"
+
+# Live run — prompts for confirmation, then comments "fixed the case" and closes each issue
+./bin/close-matched-prs.sh "CVE-2025-14505" false
+```
+
+The first argument is a **title substring** matched against all open issues in `instana/instana-issues`.
+The second argument is `true` (dry run, default) or `false` (live). Always do a dry run first to
+confirm the match set before closing.
+
 ## References
 
 * [SPS Task-level options](https://pages.github.ibm.com/secure-pipelines-service/sps-docs/optimize/optimize/#task-level-options)

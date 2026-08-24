@@ -25,8 +25,6 @@ tasks:
       - name: sign-artifact
         when: 'false'
 
-  # ── Non-DinD Unit & Package Tests ──────────────────────────────────────────
-
   core-tests:
     from: code-build
     displayName: core-tests
@@ -214,9 +212,6 @@ tasks:
       - name: sign-artifact
         when: 'false'
 
-  # ── Collector General Tests (Remote Cloud & Standalone Modules) ────────────
-
-  # ── Split 1: Frameworks & HTTP (Express, Fastify, Koa, Hapi, Got, Http/2) ──
   collector-frameworks-tests:
     from: code-build
     displayName: collector-frameworks-tests
@@ -257,7 +252,6 @@ tasks:
       - name: sign-artifact
         when: 'false'
 
-  # ── Split 2: Protocols & Messaging (gRPC, Apollo GraphQL, Socket.io) ───────
   collector-protocols-tests:
     from: code-build
     displayName: collector-protocols-tests
@@ -293,7 +287,6 @@ tasks:
       - name: sign-artifact
         when: 'false'
 
-  # ── Split 3: Cloud & Remote Services (Azure Blob/Cosmos, GCP, AWS SDK) ──────
   collector-cloud-tests:
     from: code-build
     when: false
@@ -338,7 +331,6 @@ tasks:
       - name: sign-artifact
         when: 'false'
 
-  # ── Split 4: Core, Logging, Async & Misc Tests ─────────────────────────────
   collector-logging-misc-tests:
     from: code-build
     displayName: collector-logging-misc-tests
@@ -377,7 +369,6 @@ tasks:
       - name: sign-artifact
         when: 'false'
 
-  # ── Split 5: Collector Unit Tests ──────────────────────────────────────────
   collector-unit-tests:
     from: code-build
     displayName: collector-unit-tests
@@ -404,8 +395,6 @@ tasks:
           npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-
-  # ── DinD Sidecar Test Suites ───────────────────────────────────────────────
 
   collector-redis-tests:
     from: code-build
@@ -1124,8 +1113,6 @@ tasks:
       - name: sign-artifact
         when: 'false'
 
-  # ── AWS Lambda Splits (1 to 5) ─────────────────────────────────────────────
-
   aws-lambda-tests-1:
     from: code-build
     displayName: aws-lambda-tests-1
@@ -1310,8 +1297,6 @@ tasks:
           CI_TEST_SPLIT=5 CI_TEST_SPLIT_CURRENT=5 npm run test:ci:aws-lambda
       - name: sign-artifact
         when: 'false'
-
-  # ── Pipeline Lifecycle Overrides ───────────────────────────────────────────
 
   sign-artifact:
     when: 'false'
