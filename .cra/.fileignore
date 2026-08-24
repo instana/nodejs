@@ -5,7 +5,6 @@ coverage
 test-results
 native-dep-packs
 packages/collector/test/apps
-packages/aws-lambda/lambdas/serverless-framework
 packages/aws-fargate/images/inspector/Dockerfile
 packages/aws-lambda/lambdas/container-based/Dockerfile
 packages/aws-lambda/layer/Dockerfile
