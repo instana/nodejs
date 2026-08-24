@@ -227,9 +227,6 @@
     "micromatch": "4.0.8",
     "nanoid": "3.3.18",
     "protobufjs": "8.6.6",
-    "@grpc/proto-loader": {
-      "protobufjs": "7.6.5"
-    },
     "@protobufjs/utf8": "1.1.1",
     "morgan": "1.11.0",
     "minimist": "1.2.7",
