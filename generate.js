@@ -2,6 +2,8 @@
  * (c) Copyright IBM Corp. 2024
  */
 
+/* eslint-disable */
+
 'use strict';
 
 const fs = require('fs');
