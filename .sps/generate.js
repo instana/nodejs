@@ -10,7 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
 
-const NODE_IMAGE = 'public.ecr.aws/docker/library/node:24';
+const NODE_IMAGE = 'mirror.gcr.io/library/node:24';
 const REPO_ROOT = path.join(__dirname, '..');
 const MESSAGING_DIR = path.join(REPO_ROOT, 'packages/collector/test/integration/currencies/messaging');
 

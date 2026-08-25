@@ -9,7 +9,7 @@ tasks:
     steps:
       - name: build-artifact
         displayName: npm-install
-        image: public.ecr.aws/docker/library/node:24
+        image: mirror.gcr.io/library/node:24
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
@@ -31,7 +31,7 @@ tasks:
     steps:
       - name: build-artifact
         displayName: '@confluentinc/kafka-javascript'
-        image: public.ecr.aws/docker/library/node:24
+        image: mirror.gcr.io/library/node:24
         include:
           - docker-socket
         script: |-
@@ -98,7 +98,7 @@ tasks:
     steps:
       - name: build-artifact
         displayName: amqplib
-        image: public.ecr.aws/docker/library/node:24
+        image: mirror.gcr.io/library/node:24
         include:
           - docker-socket
         script: |-
@@ -153,7 +153,7 @@ tasks:
     steps:
       - name: build-artifact
         displayName: bull
-        image: public.ecr.aws/docker/library/node:24
+        image: mirror.gcr.io/library/node:24
         include:
           - docker-socket
         script: |-
@@ -207,7 +207,7 @@ tasks:
     steps:
       - name: build-artifact
         displayName: kafka-node
-        image: public.ecr.aws/docker/library/node:24
+        image: mirror.gcr.io/library/node:24
         include:
           - docker-socket
         script: |-
@@ -274,7 +274,7 @@ tasks:
     steps:
       - name: build-artifact
         displayName: kafkajs
-        image: public.ecr.aws/docker/library/node:24
+        image: mirror.gcr.io/library/node:24
         include:
           - docker-socket
         script: |-
@@ -341,7 +341,7 @@ tasks:
     steps:
       - name: build-artifact
         displayName: nats
-        image: public.ecr.aws/docker/library/node:24
+        image: mirror.gcr.io/library/node:24
         include:
           - docker-socket
         script: |-
@@ -395,7 +395,7 @@ tasks:
     steps:
       - name: build-artifact
         displayName: node-nats-streaming
-        image: public.ecr.aws/docker/library/node:24
+        image: mirror.gcr.io/library/node:24
         include:
           - docker-socket
         script: |-
@@ -455,7 +455,7 @@ tasks:
     steps:
       - name: build-artifact
         displayName: node-rdkafka
-        image: public.ecr.aws/docker/library/node:24
+        image: mirror.gcr.io/library/node:24
         include:
           - docker-socket
         script: |-
@@ -520,7 +520,7 @@ tasks:
     steps:
       - name: build-artifact
         displayName: socket.io
-        image: public.ecr.aws/docker/library/node:24
+        image: mirror.gcr.io/library/node:24
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
