@@ -161,7 +161,11 @@ function buildStep(pkgName, folder) {
     }
   }
 
-  scriptLines.push('export CI=true');
+  scriptLines.push('# strip all env vars except the bare minimum needed to run npm');
+  scriptLines.push('_PATH="$PATH"');
+  scriptLines.push('_HOME="$HOME"');
+  scriptLines.push('unset $(env | cut -d= -f1 | grep -v "^_" | tr \'\\n\' \' \')');
+  scriptLines.push('export PATH="$_PATH" HOME="$_HOME" CI=true');
   scriptLines.push('');
   scriptLines.push('export TEST_FILES');
   scriptLines.push(`TEST_FILES=$(cd packages/collector && find \\`);
@@ -211,11 +215,6 @@ const messagingStage = {
 
 const config = {
   version: '2',
-  input: {
-    type: 'git',
-    branch: 'main',
-    trigger: 'pr'
-  },
   tasks: {
     'code-checks': {
       steps: [{ name: 'peer-review', when: 'false' }]

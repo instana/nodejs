@@ -1,8 +1,4 @@
 version: '2'
-input:
-  type: git
-  branch: main
-  trigger: pr
 tasks:
   code-checks:
     steps:
@@ -72,7 +68,11 @@ tasks:
             --entrypoint "/bin/bash" \
             "public.ecr.aws/aktosecurity/confluentinc-cp-kafka:7.9.4-1-ubi8" "-lc" "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
 
-          export CI=true
+          # strip all env vars except the bare minimum needed to run npm
+          _PATH="$PATH"
+          _HOME="$HOME"
+          unset $(env | cut -d= -f1 | grep -v "^_" | tr '\n' ' ')
+          export PATH="$_PATH" HOME="$_HOME" CI=true
 
           export TEST_FILES
           TEST_FILES=$(cd packages/collector && find \
@@ -114,7 +114,11 @@ tasks:
             "public.ecr.aws/docker/library/rabbitmq:3.13.0"
           timeout 67 bash -c 'until nc -z 127.0.0.1 5672 2>/dev/null; do sleep 2; done'
 
-          export CI=true
+          # strip all env vars except the bare minimum needed to run npm
+          _PATH="$PATH"
+          _HOME="$HOME"
+          unset $(env | cut -d= -f1 | grep -v "^_" | tr '\n' ' ')
+          export PATH="$_PATH" HOME="$_HOME" CI=true
 
           export TEST_FILES
           TEST_FILES=$(cd packages/collector && find \
@@ -155,7 +159,11 @@ tasks:
           docker run -d --network host --name redis \
             "public.ecr.aws/docker/library/redis:7.4.3"
 
-          export CI=true
+          # strip all env vars except the bare minimum needed to run npm
+          _PATH="$PATH"
+          _HOME="$HOME"
+          unset $(env | cut -d= -f1 | grep -v "^_" | tr '\n' ' ')
+          export PATH="$_PATH" HOME="$_HOME" CI=true
 
           export TEST_FILES
           TEST_FILES=$(cd packages/collector && find \
@@ -209,7 +217,11 @@ tasks:
             --entrypoint "/bin/bash" \
             "public.ecr.aws/aktosecurity/confluentinc-cp-kafka:7.9.4-1-ubi8" "-lc" "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
 
-          export CI=true
+          # strip all env vars except the bare minimum needed to run npm
+          _PATH="$PATH"
+          _HOME="$HOME"
+          unset $(env | cut -d= -f1 | grep -v "^_" | tr '\n' ' ')
+          export PATH="$_PATH" HOME="$_HOME" CI=true
 
           export TEST_FILES
           TEST_FILES=$(cd packages/collector && find \
@@ -263,7 +275,11 @@ tasks:
             --entrypoint "/bin/bash" \
             "public.ecr.aws/aktosecurity/confluentinc-cp-kafka:7.9.4-1-ubi8" "-lc" "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
 
-          export CI=true
+          # strip all env vars except the bare minimum needed to run npm
+          _PATH="$PATH"
+          _HOME="$HOME"
+          unset $(env | cut -d= -f1 | grep -v "^_" | tr '\n' ' ')
+          export PATH="$_PATH" HOME="$_HOME" CI=true
 
           export TEST_FILES
           TEST_FILES=$(cd packages/collector && find \
@@ -304,7 +320,11 @@ tasks:
           docker run -d --network host --name nats \
             "public.ecr.aws/docker/library/nats:2.9.14-linux"
 
-          export CI=true
+          # strip all env vars except the bare minimum needed to run npm
+          _PATH="$PATH"
+          _HOME="$HOME"
+          unset $(env | cut -d= -f1 | grep -v "^_" | tr '\n' ' ')
+          export PATH="$_PATH" HOME="$_HOME" CI=true
 
           export TEST_FILES
           TEST_FILES=$(cd packages/collector && find \
@@ -351,7 +371,11 @@ tasks:
             "public.ecr.aws/docker/library/nats-streaming:0.25.3-linux" "-p" "4224" "-m" "8224"
           timeout 20 bash -c 'until curl -sf http://127.0.0.1:8224/healthz 2>/dev/null; do sleep 2; done'
 
-          export CI=true
+          # strip all env vars except the bare minimum needed to run npm
+          _PATH="$PATH"
+          _HOME="$HOME"
+          unset $(env | cut -d= -f1 | grep -v "^_" | tr '\n' ' ')
+          export PATH="$_PATH" HOME="$_HOME" CI=true
 
           export TEST_FILES
           TEST_FILES=$(cd packages/collector && find \
@@ -405,7 +429,11 @@ tasks:
             --entrypoint "/bin/bash" \
             "public.ecr.aws/aktosecurity/confluentinc-cp-kafka:7.9.4-1-ubi8" "-lc" "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
 
-          export CI=true
+          # strip all env vars except the bare minimum needed to run npm
+          _PATH="$PATH"
+          _HOME="$HOME"
+          unset $(env | cut -d= -f1 | grep -v "^_" | tr '\n' ' ')
+          export PATH="$_PATH" HOME="$_HOME" CI=true
 
           export TEST_FILES
           TEST_FILES=$(cd packages/collector && find \
@@ -429,7 +457,11 @@ tasks:
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
 
-          export CI=true
+          # strip all env vars except the bare minimum needed to run npm
+          _PATH="$PATH"
+          _HOME="$HOME"
+          unset $(env | cut -d= -f1 | grep -v "^_" | tr '\n' ' ')
+          export PATH="$_PATH" HOME="$_HOME" CI=true
 
           export TEST_FILES
           TEST_FILES=$(cd packages/collector && find \
