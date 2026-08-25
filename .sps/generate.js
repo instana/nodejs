@@ -163,13 +163,7 @@ function buildTask(pkgName, folder) {
     }
   }
 
-  scriptLines.push('# strip all env vars except the bare minimum needed to run npm');
-  scriptLines.push('_PATH="$PATH"');
-  scriptLines.push('_HOME="$HOME"');
-  scriptLines.push('unset $(env | cut -d= -f1 | grep -v "^_" | tr \'\\n\' \' \')');
-  scriptLines.push('export PATH="$_PATH" HOME="$_HOME" CI=true');
-  scriptLines.push('');
-  scriptLines.push('export TEST_FILES');
+  scriptLines.push('# collect test files');
   scriptLines.push(`TEST_FILES=$(cd packages/collector && find \\`);
   scriptLines.push(`  ${relFolder.replace('packages/collector/', '')} \\`);
   scriptLines.push(`  -name '*.test.js' \\`);
@@ -181,7 +175,13 @@ function buildTask(pkgName, folder) {
   scriptLines.push('  exit 0');
   scriptLines.push('fi');
   scriptLines.push('');
-  scriptLines.push('TEST_FILES="$TEST_FILES" npm run test:ci:collector');
+  scriptLines.push('# run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed');
+  scriptLines.push('exec env -i \\');
+  scriptLines.push('  PATH="$PATH" \\');
+  scriptLines.push('  HOME="$HOME" \\');
+  scriptLines.push('  CI=true \\');
+  scriptLines.push('  TEST_FILES="$TEST_FILES" \\');
+  scriptLines.push('  npm run test:ci:collector');
 
   // safe task name: replace / and @ with nothing, . with -
   const taskName = `pr-messaging-${pkgName.replace(/[@/]/g, '').replace(/\./g, '-')}`;
