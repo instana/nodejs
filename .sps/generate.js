@@ -125,10 +125,10 @@ function findTestFolders(group) {
 }
 
 /**
- * Build a single SPS step for one test folder.
- * Starts required docker containers, waits for readiness, then runs the tests.
+ * Build a single SPS task for one test folder.
+ * Each package gets its own top-level task with from: code-build.
  */
-function buildStep(pkgName, folder) {
+function buildTask(pkgName, folder) {
   const needs = readNeeds(folder);
 
   // relative path used in find command (relative to repo root)
@@ -183,37 +183,41 @@ function buildStep(pkgName, folder) {
   scriptLines.push('');
   scriptLines.push('TEST_FILES="$TEST_FILES" npm run test:ci:collector');
 
-  // safe step name: replace / and @ and . with -
-  const stepName = pkgName.replace(/[@/]/g, '').replace(/\./g, '-');
+  // safe task name: replace / and @ with nothing, . with -
+  const taskName = `pr-messaging-${pkgName.replace(/[@/]/g, '').replace(/\./g, '-')}`;
 
   return {
-    name: stepName,
-    displayName: pkgName,
-    image: NODE_IMAGE,
-    ...(needs.length > 0 ? { include: ['docker-socket'] } : {}),
-    script: scriptLines.join('\n')
+    taskName,
+    task: {
+      from: 'code-build',
+      displayName: pkgName,
+      runtimeClassName: 'large',
+      ...(needs.length > 0 ? { include: ['dind'] } : {}),
+      steps: [
+        {
+          name: 'build-artifact',
+          displayName: pkgName,
+          image: NODE_IMAGE,
+          ...(needs.length > 0 ? { include: ['docker-socket'] } : {}),
+          script: scriptLines.join('\n')
+        },
+        { name: 'sign-artifact', when: 'false' }
+      ]
+    }
   };
 }
 
-// ─── build stage ────────────────────────────────────────────────────────────
-
-const STAGE_NAME = 'pr-collector-currencies-messaging';
+// ─── build tasks ────────────────────────────────────────────────────────────
 
 const messagingFolders = findTestFolders('messaging');
-const testSteps = messagingFolders.map(({ pkgName, folder }) => buildStep(pkgName, folder));
-
-// steps always end with sign-artifact: false
-testSteps.push({ name: 'sign-artifact', when: 'false' });
-
-const messagingStage = {
-  from: 'code-build',
-  displayName: STAGE_NAME,
-  runtimeClassName: 'large',
-  ...(messagingFolders.some(({ folder }) => readNeeds(folder).length > 0) ? { include: ['dind'] } : {}),
-  steps: testSteps
-};
+const messagingTasks = messagingFolders.map(({ pkgName, folder }) => buildTask(pkgName, folder));
 
 // ─── full config ─────────────────────────────────────────────────────────────
+
+const fanOutTasks = {};
+messagingTasks.forEach(({ taskName, task }) => {
+  fanOutTasks[taskName] = task;
+});
 
 const config = {
   version: '2',
@@ -241,7 +245,7 @@ const config = {
         { name: 'sign-artifact', when: 'false' }
       ]
     },
-    [STAGE_NAME]: messagingStage,
+    ...fanOutTasks,
     'sign-artifact': { when: 'false' },
     'deploy-checks': { when: 'false' },
     'deploy-release': { when: 'false' },
@@ -255,7 +259,7 @@ const output = yaml.dump(config, { lineWidth: -1, quotingType: "'", forceQuotes:
 const outPath = path.join(__dirname, 'pipeline-config.yaml');
 fs.writeFileSync(outPath, output);
 console.log(`Written: ${outPath}`);
-console.log(`\nStage '${STAGE_NAME}' has ${testSteps.length - 1} test steps:`);
+console.log(`\nGenerated ${messagingTasks.length} messaging tasks:`);
 messagingFolders.forEach(({ pkgName, folder }) => {
   const needs = readNeeds(folder);
   console.log(`  ${pkgName.padEnd(40)} needs: [${needs.join(', ') || 'none'}]`);

@@ -22,14 +22,14 @@ tasks:
         when: 'false'
       - name: sign-artifact
         when: 'false'
-  pr-collector-currencies-messaging:
+  pr-messaging-confluentinckafka-javascript:
     from: code-build
-    displayName: pr-collector-currencies-messaging
+    displayName: '@confluentinc/kafka-javascript'
     runtimeClassName: large
     include:
       - dind
     steps:
-      - name: confluentinckafka-javascript
+      - name: build-artifact
         displayName: '@confluentinc/kafka-javascript'
         image: public.ecr.aws/docker/library/node:24
         include:
@@ -87,7 +87,16 @@ tasks:
           fi
 
           TEST_FILES="$TEST_FILES" npm run test:ci:collector
-      - name: amqplib
+      - name: sign-artifact
+        when: 'false'
+  pr-messaging-amqplib:
+    from: code-build
+    displayName: amqplib
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
         displayName: amqplib
         image: public.ecr.aws/docker/library/node:24
         include:
@@ -133,7 +142,16 @@ tasks:
           fi
 
           TEST_FILES="$TEST_FILES" npm run test:ci:collector
-      - name: bull
+      - name: sign-artifact
+        when: 'false'
+  pr-messaging-bull:
+    from: code-build
+    displayName: bull
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
         displayName: bull
         image: public.ecr.aws/docker/library/node:24
         include:
@@ -178,7 +196,16 @@ tasks:
           fi
 
           TEST_FILES="$TEST_FILES" npm run test:ci:collector
-      - name: kafka-node
+      - name: sign-artifact
+        when: 'false'
+  pr-messaging-kafka-node:
+    from: code-build
+    displayName: kafka-node
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
         displayName: kafka-node
         image: public.ecr.aws/docker/library/node:24
         include:
@@ -236,7 +263,16 @@ tasks:
           fi
 
           TEST_FILES="$TEST_FILES" npm run test:ci:collector
-      - name: kafkajs
+      - name: sign-artifact
+        when: 'false'
+  pr-messaging-kafkajs:
+    from: code-build
+    displayName: kafkajs
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
         displayName: kafkajs
         image: public.ecr.aws/docker/library/node:24
         include:
@@ -294,7 +330,16 @@ tasks:
           fi
 
           TEST_FILES="$TEST_FILES" npm run test:ci:collector
-      - name: nats
+      - name: sign-artifact
+        when: 'false'
+  pr-messaging-nats:
+    from: code-build
+    displayName: nats
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
         displayName: nats
         image: public.ecr.aws/docker/library/node:24
         include:
@@ -339,7 +384,16 @@ tasks:
           fi
 
           TEST_FILES="$TEST_FILES" npm run test:ci:collector
-      - name: node-nats-streaming
+      - name: sign-artifact
+        when: 'false'
+  pr-messaging-node-nats-streaming:
+    from: code-build
+    displayName: node-nats-streaming
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
         displayName: node-nats-streaming
         image: public.ecr.aws/docker/library/node:24
         include:
@@ -390,7 +444,16 @@ tasks:
           fi
 
           TEST_FILES="$TEST_FILES" npm run test:ci:collector
-      - name: node-rdkafka
+      - name: sign-artifact
+        when: 'false'
+  pr-messaging-node-rdkafka:
+    from: code-build
+    displayName: node-rdkafka
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
         displayName: node-rdkafka
         image: public.ecr.aws/docker/library/node:24
         include:
@@ -448,7 +511,14 @@ tasks:
           fi
 
           TEST_FILES="$TEST_FILES" npm run test:ci:collector
-      - name: socket-io
+      - name: sign-artifact
+        when: 'false'
+  pr-messaging-socket-io:
+    from: code-build
+    displayName: socket.io
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
         displayName: socket.io
         image: public.ecr.aws/docker/library/node:24
         script: |-
