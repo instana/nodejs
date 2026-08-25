@@ -347,6 +347,7 @@
     "ignoreUpdates": false,
     "note": "",
     "core": false,
+    "group": "messaging",
     "versions": [
       {
         "v": "2.0.1"
@@ -399,6 +400,7 @@
     "ignoreUpdates": false,
     "note": "",
     "core": false,
+    "group": "messaging",
     "versions": [
       {
         "v": "4.16.5"
@@ -639,6 +641,7 @@
     "ignoreUpdates": false,
     "note": "",
     "core": false,
+    "group": "messaging",
     "versions": [
       {
         "v": "5.0.0"
@@ -655,6 +658,7 @@
     "ignoreUpdates": false,
     "note": "",
     "core": false,
+    "group": "messaging",
     "versions": [
       {
         "v": "2.2.4"
@@ -857,6 +861,7 @@
     "ignoreUpdates": false,
     "note": "",
     "core": false,
+    "group": "messaging",
     "versions": [
       {
         "v": "2.29.3"
@@ -876,6 +881,7 @@
     "ignoreUpdates": false,
     "note": "",
     "core": false,
+    "group": "messaging",
     "versions": [
       {
         "v": "0.3.2"
@@ -1033,6 +1039,7 @@
     "ignoreUpdates": false,
     "note": "",
     "core": false,
+    "group": "messaging",
     "versions": [
       {
         "v": "4.8.3"
@@ -1049,6 +1056,7 @@
     "ignoreUpdates": false,
     "note": "",
     "core": false,
+    "group": "messaging",
     "versions": [
       {
         "v": "4.8.3"
@@ -1065,6 +1073,7 @@
     "ignoreUpdates": false,
     "note": "",
     "core": false,
+    "group": "messaging",
     "versions": [
       {
         "v": "15.0.3",
@@ -1156,6 +1165,7 @@
     "ignoreUpdates": false,
     "note": "",
     "core": false,
+    "group": "messaging",
     "versions": [
       {
         "v": "3.6.1"
@@ -1337,6 +1347,7 @@
     "ignoreUpdates": false,
     "note": "",
     "core": false,
+    "group": "messaging",
     "versions": [
       {
         "v": "1.10.0",
