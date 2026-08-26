@@ -167,7 +167,7 @@ function buildTask(pkgName, folder) {
   scriptLines.push('  TEST_FILES="$TEST_FILES" \\');
   scriptLines.push('  npm run test:ci:collector');
 
-  const taskName = `collector-${GROUP}-${pkgName.replace(/[@/]/g, '').replace(/\./g, '-')}`;
+  const taskName = `code-build-collector-${GROUP}-${pkgName.replace(/[@/]/g, '').replace(/\./g, '-')}`;
 
   return {
     taskName,

@@ -22,7 +22,7 @@ tasks:
         when: 'false'
       - name: sign-artifact
         when: 'false'
-  collector-logging-bunyan:
+  code-build-collector-logging-bunyan:
     from: code-build
     displayName: bunyan
     runtimeClassName: large
@@ -58,7 +58,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  collector-logging-console:
+  code-build-collector-logging-console:
     from: code-build
     displayName: console
     runtimeClassName: large
@@ -94,7 +94,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  collector-logging-express-winston:
+  code-build-collector-logging-express-winston:
     from: code-build
     displayName: express-winston
     runtimeClassName: large
@@ -130,7 +130,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  collector-logging-log4js:
+  code-build-collector-logging-log4js:
     from: code-build
     displayName: log4js
     runtimeClassName: large
@@ -166,7 +166,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  collector-logging-pino:
+  code-build-collector-logging-pino:
     from: code-build
     displayName: pino
     runtimeClassName: large
@@ -202,7 +202,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  collector-logging-winston:
+  code-build-collector-logging-winston:
     from: code-build
     displayName: winston
     runtimeClassName: large

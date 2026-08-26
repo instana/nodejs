@@ -22,7 +22,7 @@ tasks:
         when: 'false'
       - name: sign-artifact
         when: 'false'
-  pr-code-build-messaging-confluentinckafka-javascript:
+  code-build-collector-messaging-confluentinckafka-javascript:
     from: code-build
     displayName: '@confluentinc/kafka-javascript'
     runtimeClassName: large
@@ -88,7 +88,6 @@ tasks:
             exit 0
           fi
 
-          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
           exec env -i \
             PATH="$PATH" \
             HOME="$HOME" \
@@ -97,7 +96,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  pr-code-build-messaging-amqplib:
+  code-build-collector-messaging-amqplib:
     from: code-build
     displayName: amqplib
     runtimeClassName: large
@@ -145,7 +144,6 @@ tasks:
             exit 0
           fi
 
-          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
           exec env -i \
             PATH="$PATH" \
             HOME="$HOME" \
@@ -154,7 +152,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  pr-code-build-messaging-bull:
+  code-build-collector-messaging-bull:
     from: code-build
     displayName: bull
     runtimeClassName: large
@@ -201,7 +199,6 @@ tasks:
             exit 0
           fi
 
-          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
           exec env -i \
             PATH="$PATH" \
             HOME="$HOME" \
@@ -210,7 +207,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  pr-code-build-messaging-kafka-node:
+  code-build-collector-messaging-kafka-node:
     from: code-build
     displayName: kafka-node
     runtimeClassName: large
@@ -276,7 +273,6 @@ tasks:
             exit 0
           fi
 
-          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
           exec env -i \
             PATH="$PATH" \
             HOME="$HOME" \
@@ -285,7 +281,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  pr-code-build-messaging-kafkajs:
+  code-build-collector-messaging-kafkajs:
     from: code-build
     displayName: kafkajs
     runtimeClassName: large
@@ -351,7 +347,6 @@ tasks:
             exit 0
           fi
 
-          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
           exec env -i \
             PATH="$PATH" \
             HOME="$HOME" \
@@ -360,7 +355,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  pr-code-build-messaging-nats:
+  code-build-collector-messaging-nats:
     from: code-build
     displayName: nats
     runtimeClassName: large
@@ -407,7 +402,6 @@ tasks:
             exit 0
           fi
 
-          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
           exec env -i \
             PATH="$PATH" \
             HOME="$HOME" \
@@ -416,7 +410,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  pr-code-build-messaging-node-nats-streaming:
+  code-build-collector-messaging-node-nats-streaming:
     from: code-build
     displayName: node-nats-streaming
     runtimeClassName: large
@@ -469,7 +463,6 @@ tasks:
             exit 0
           fi
 
-          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
           exec env -i \
             PATH="$PATH" \
             HOME="$HOME" \
@@ -478,7 +471,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  pr-code-build-messaging-node-rdkafka:
+  code-build-collector-messaging-node-rdkafka:
     from: code-build
     displayName: node-rdkafka
     runtimeClassName: large
@@ -544,7 +537,6 @@ tasks:
             exit 0
           fi
 
-          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
           exec env -i \
             PATH="$PATH" \
             HOME="$HOME" \
@@ -553,7 +545,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  pr-code-build-messaging-socket-io:
+  code-build-collector-messaging-socket-io:
     from: code-build
     displayName: socket.io
     runtimeClassName: large
@@ -581,7 +573,6 @@ tasks:
             exit 0
           fi
 
-          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
           exec env -i \
             PATH="$PATH" \
             HOME="$HOME" \
