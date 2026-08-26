@@ -137,10 +137,8 @@ function buildTask(pkgName, folder) {
   const scriptLines = ['#!/usr/bin/env bash', 'set -eo pipefail', ''];
 
   scriptLines.push('cd "$WORKSPACE/$(load_repo app-repo path)"');
-  scriptLines.push('echo "[debug] node_modules:"');
-  scriptLines.push('ls -la node_modules 2>/dev/null | head -5 || echo "[debug] node_modules not found"');
-  scriptLines.push('echo "[debug] random .test.js files in currencies:"');
-  scriptLines.push("find packages/collector/test/integration/currencies -name '*.test.js' -not -path '*/node_modules/*' | head -10 || echo '[debug] none found'");
+  scriptLines.push('npm install --loglevel warn --foreground-scripts');
+  scriptLines.push('node bin/create-version-test-folders.js');
   scriptLines.push('');
 
   if (needs.length > 0) {
