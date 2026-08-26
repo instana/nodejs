@@ -16,15 +16,7 @@ Set `pipeline-config-filename` to:
 
 ## Pipeline
 
-The pipeline runs a `code-build` stage and then fans out into package and integration test tasks such as:
-
-* `core-tests`
-* `collector-*`
-* `aws-lambda-tests-*`
-
-Some collector and AWS Lambda test groups use **Docker-in-Docker (DinD)** to start required services for integration testing.
-
-Fan-out tasks run in separate containers, so each task installs its dependencies before running tests.
+TBD
 
 ## Secrets
 

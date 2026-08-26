@@ -22,7 +22,7 @@ tasks:
         when: 'false'
       - name: sign-artifact
         when: 'false'
-  pr-messaging-bunyan:
+  collector-logging-bunyan:
     from: code-build
     displayName: bunyan
     runtimeClassName: large
@@ -50,7 +50,6 @@ tasks:
             exit 0
           fi
 
-          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
           exec env -i \
             PATH="$PATH" \
             HOME="$HOME" \
@@ -59,7 +58,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  pr-messaging-console:
+  collector-logging-console:
     from: code-build
     displayName: console
     runtimeClassName: large
@@ -87,7 +86,6 @@ tasks:
             exit 0
           fi
 
-          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
           exec env -i \
             PATH="$PATH" \
             HOME="$HOME" \
@@ -96,7 +94,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  pr-messaging-express-winston:
+  collector-logging-express-winston:
     from: code-build
     displayName: express-winston
     runtimeClassName: large
@@ -124,7 +122,6 @@ tasks:
             exit 0
           fi
 
-          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
           exec env -i \
             PATH="$PATH" \
             HOME="$HOME" \
@@ -133,7 +130,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  pr-messaging-log4js:
+  collector-logging-log4js:
     from: code-build
     displayName: log4js
     runtimeClassName: large
@@ -161,7 +158,6 @@ tasks:
             exit 0
           fi
 
-          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
           exec env -i \
             PATH="$PATH" \
             HOME="$HOME" \
@@ -170,7 +166,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  pr-messaging-pino:
+  collector-logging-pino:
     from: code-build
     displayName: pino
     runtimeClassName: large
@@ -198,7 +194,6 @@ tasks:
             exit 0
           fi
 
-          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
           exec env -i \
             PATH="$PATH" \
             HOME="$HOME" \
@@ -207,7 +202,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  pr-messaging-winston:
+  collector-logging-winston:
     from: code-build
     displayName: winston
     runtimeClassName: large
@@ -235,7 +230,6 @@ tasks:
             exit 0
           fi
 
-          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
           exec env -i \
             PATH="$PATH" \
             HOME="$HOME" \
