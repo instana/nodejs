@@ -1,0 +1,13 @@
+[
+  {
+    "type": "branch-protection",
+    "name": "code-review",
+    "params": {
+      "checks": [],
+      "settings": {
+        "require_review": true,
+        "dismiss_stale_reviews": false
+      }
+    }
+  }
+]
