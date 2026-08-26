@@ -1,5 +1,5 @@
 /*
- * (c) Copyright IBM Corp. 2024
+ * (c) Copyright IBM Corp. 2026
  */
 
 /* eslint-disable */
@@ -103,7 +103,11 @@ function readinessScript(name) {
 function readNeeds(folder) {
   const needsPath = path.join(folder, '.needs');
   if (!fs.existsSync(needsPath)) return [];
-  return fs.readFileSync(needsPath, 'utf-8').split('\n').map(l => l.trim()).filter(Boolean);
+  return fs
+    .readFileSync(needsPath, 'utf-8')
+    .split('\n')
+    .map(l => l.trim())
+    .filter(Boolean);
 }
 
 /**
@@ -152,7 +156,7 @@ function buildTask(pkgName, folder) {
   if (needs.length > 0) {
     scriptLines.push('# install docker client');
     scriptLines.push(
-      "CODENAME=$(. /etc/os-release; echo \"$VERSION_CODENAME\")",
+      'CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")',
       'ARCH=$(dpkg --print-architecture)',
       'apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd',
       'install -m 0755 -d /etc/apt/keyrings',
@@ -160,7 +164,7 @@ function buildTask(pkgName, folder) {
       'chmod a+r /etc/apt/keyrings/docker.gpg',
       'echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null',
       'apt-get update -qq && apt-get install -y -qq docker-ce-cli',
-      'timeout 30 bash -c \'until [ -S /var/run/docker.sock ]; do sleep 1; done\'',
+      "timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'",
       ''
     );
 
