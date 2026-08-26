@@ -193,8 +193,8 @@ function buildTask(pkgName, folder) {
   scriptLines.push('  TEST_FILES="$TEST_FILES" \\');
   scriptLines.push('  npm run test:ci:collector');
 
-  // safe task name: replace / and @ with nothing, . with -
-  const taskName = `pr-messaging-${pkgName.replace(/[@/]/g, '').replace(/\./g, '-')}`;
+  // safe task name: pr-code-build-<group>-<pkg>, replace / and @ with nothing, . with -
+  const taskName = `pr-code-build-${GROUP}-${pkgName.replace(/[@/]/g, '').replace(/\./g, '-')}`;
 
   return {
     taskName,

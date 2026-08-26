@@ -22,7 +22,7 @@ tasks:
         when: 'false'
       - name: sign-artifact
         when: 'false'
-  pr-messaging-confluentinckafka-javascript:
+  pr-code-build-messaging-confluentinckafka-javascript:
     from: code-build
     displayName: '@confluentinc/kafka-javascript'
     runtimeClassName: large
@@ -97,7 +97,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  pr-messaging-amqplib:
+  pr-code-build-messaging-amqplib:
     from: code-build
     displayName: amqplib
     runtimeClassName: large
@@ -154,7 +154,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  pr-messaging-bull:
+  pr-code-build-messaging-bull:
     from: code-build
     displayName: bull
     runtimeClassName: large
@@ -210,7 +210,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  pr-messaging-kafka-node:
+  pr-code-build-messaging-kafka-node:
     from: code-build
     displayName: kafka-node
     runtimeClassName: large
@@ -285,7 +285,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  pr-messaging-kafkajs:
+  pr-code-build-messaging-kafkajs:
     from: code-build
     displayName: kafkajs
     runtimeClassName: large
@@ -360,7 +360,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  pr-messaging-nats:
+  pr-code-build-messaging-nats:
     from: code-build
     displayName: nats
     runtimeClassName: large
@@ -416,7 +416,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  pr-messaging-node-nats-streaming:
+  pr-code-build-messaging-node-nats-streaming:
     from: code-build
     displayName: node-nats-streaming
     runtimeClassName: large
@@ -478,7 +478,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  pr-messaging-node-rdkafka:
+  pr-code-build-messaging-node-rdkafka:
     from: code-build
     displayName: node-rdkafka
     runtimeClassName: large
@@ -553,7 +553,7 @@ tasks:
             npm run test:ci:collector
       - name: sign-artifact
         when: 'false'
-  pr-messaging-socket-io:
+  pr-code-build-messaging-socket-io:
     from: code-build
     displayName: socket.io
     runtimeClassName: large
