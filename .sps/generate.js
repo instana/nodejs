@@ -12,10 +12,25 @@ const yaml = require('js-yaml');
 
 const NODE_IMAGE = 'mirror.gcr.io/library/node:24';
 const REPO_ROOT = path.join(__dirname, '..');
-const MESSAGING_DIR = path.join(REPO_ROOT, 'packages/collector/test/integration/currencies/messaging');
+const CURRENCIES_DIR = path.join(REPO_ROOT, 'packages/collector/test/integration/currencies');
 
-const currencies = require('../currencies.json');
 const sidecarsData = require('../.tekton/assets/sidecars.json');
+
+// ─── CLI args ────────────────────────────────────────────────────────────────
+
+const whatArg = process.argv.find(a => a.startsWith('--what='));
+if (!whatArg) {
+  console.error('Usage: node generate.js --what=<group>');
+  console.error('Available groups:', fs.readdirSync(CURRENCIES_DIR).join(', '));
+  process.exit(1);
+}
+const GROUP = whatArg.split('=')[1];
+const GROUP_DIR = path.join(CURRENCIES_DIR, GROUP);
+if (!fs.existsSync(GROUP_DIR)) {
+  console.error(`Unknown group: ${GROUP}`);
+  console.error('Available groups:', fs.readdirSync(CURRENCIES_DIR).join(', '));
+  process.exit(1);
+}
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -93,15 +108,13 @@ function readNeeds(folder) {
 
 /**
  * Collect all test folders (direct children + one level of scoped packages)
- * that belong to a given group, by matching folder names against package names.
+ * from the group directory on disk.
  */
-function findTestFolders(group) {
-  const packageNames = currencies.filter(p => p.group === group).map(p => p.name);
-
+function findTestFolders() {
   const folders = [];
 
-  for (const entry of fs.readdirSync(MESSAGING_DIR)) {
-    const fullPath = path.join(MESSAGING_DIR, entry);
+  for (const entry of fs.readdirSync(GROUP_DIR)) {
+    const fullPath = path.join(GROUP_DIR, entry);
     if (!fs.statSync(fullPath).isDirectory()) continue;
 
     if (entry.startsWith('@')) {
@@ -109,15 +122,10 @@ function findTestFolders(group) {
       for (const sub of fs.readdirSync(fullPath)) {
         const subPath = path.join(fullPath, sub);
         if (!fs.statSync(subPath).isDirectory()) continue;
-        const pkgName = `${entry}/${sub}`;
-        if (packageNames.includes(pkgName)) {
-          folders.push({ pkgName, folder: subPath });
-        }
+        folders.push({ pkgName: `${entry}/${sub}`, folder: subPath });
       }
     } else {
-      if (packageNames.includes(entry)) {
-        folders.push({ pkgName: entry, folder: fullPath });
-      }
+      folders.push({ pkgName: entry, folder: fullPath });
     }
   }
 
@@ -211,7 +219,7 @@ function buildTask(pkgName, folder) {
 
 // ─── build tasks ────────────────────────────────────────────────────────────
 
-const messagingFolders = findTestFolders('messaging');
+const messagingFolders = findTestFolders();
 const messagingTasks = messagingFolders.map(({ pkgName, folder }) => buildTask(pkgName, folder));
 
 // ─── full config ─────────────────────────────────────────────────────────────
@@ -258,10 +266,10 @@ const config = {
 };
 
 const output = yaml.dump(config, { lineWidth: -1, quotingType: "'", forceQuotes: false });
-const outPath = path.join(__dirname, 'pipeline-config.yaml');
+const outPath = path.join(__dirname, `pipeline-config-collector-${GROUP}.yaml`);
 fs.writeFileSync(outPath, output);
 console.log(`Written: ${outPath}`);
-console.log(`\nGenerated ${messagingTasks.length} messaging tasks:`);
+console.log(`\nGenerated ${messagingTasks.length} tasks for group '${GROUP}':`);
 messagingFolders.forEach(({ pkgName, folder }) => {
   const needs = readNeeds(folder);
   console.log(`  ${pkgName.padEnd(40)} needs: [${needs.join(', ') || 'none'}]`);

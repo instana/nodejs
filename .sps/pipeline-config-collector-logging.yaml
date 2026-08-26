@@ -1,0 +1,256 @@
+version: '2'
+tasks:
+  code-checks:
+    steps:
+      - name: peer-review
+        when: 'false'
+  code-build:
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: npm-install
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+      - name: unit-test
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
+      - name: sign-artifact
+        when: 'false'
+  pr-messaging-bunyan:
+    from: code-build
+    displayName: bunyan
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: bunyan
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/logging/bunyan \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for bunyan — skipping.'
+            exit 0
+          fi
+
+          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  pr-messaging-console:
+    from: code-build
+    displayName: console
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: console
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/logging/console \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for console — skipping.'
+            exit 0
+          fi
+
+          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  pr-messaging-express-winston:
+    from: code-build
+    displayName: express-winston
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: express-winston
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/logging/express-winston \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for express-winston — skipping.'
+            exit 0
+          fi
+
+          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  pr-messaging-log4js:
+    from: code-build
+    displayName: log4js
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: log4js
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/logging/log4js \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for log4js — skipping.'
+            exit 0
+          fi
+
+          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  pr-messaging-pino:
+    from: code-build
+    displayName: pino
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: pino
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/logging/pino \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for pino — skipping.'
+            exit 0
+          fi
+
+          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  pr-messaging-winston:
+    from: code-build
+    displayName: winston
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: winston
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/logging/winston \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for winston — skipping.'
+            exit 0
+          fi
+
+          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  sign-artifact:
+    when: 'false'
+  deploy-checks:
+    when: 'false'
+  deploy-release:
+    when: 'false'
+  code-ci-finish:
+    steps:
+      - name: run-stage
+        when: 'false'
