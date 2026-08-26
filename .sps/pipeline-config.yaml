@@ -39,6 +39,10 @@ tasks:
           set -eo pipefail
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+          echo "[debug] node_modules:"
+          ls -la node_modules 2>/dev/null | head -5 || echo "[debug] node_modules not found"
+          echo "[debug] random .test.js files in currencies:"
+          find packages/collector/test/integration/currencies -name '*.test.js' -not -path '*/node_modules/*' | head -10 || echo '[debug] none found'
 
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
@@ -106,6 +110,10 @@ tasks:
           set -eo pipefail
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+          echo "[debug] node_modules:"
+          ls -la node_modules 2>/dev/null | head -5 || echo "[debug] node_modules not found"
+          echo "[debug] random .test.js files in currencies:"
+          find packages/collector/test/integration/currencies -name '*.test.js' -not -path '*/node_modules/*' | head -10 || echo '[debug] none found'
 
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
@@ -161,6 +169,10 @@ tasks:
           set -eo pipefail
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+          echo "[debug] node_modules:"
+          ls -la node_modules 2>/dev/null | head -5 || echo "[debug] node_modules not found"
+          echo "[debug] random .test.js files in currencies:"
+          find packages/collector/test/integration/currencies -name '*.test.js' -not -path '*/node_modules/*' | head -10 || echo '[debug] none found'
 
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
@@ -215,6 +227,10 @@ tasks:
           set -eo pipefail
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+          echo "[debug] node_modules:"
+          ls -la node_modules 2>/dev/null | head -5 || echo "[debug] node_modules not found"
+          echo "[debug] random .test.js files in currencies:"
+          find packages/collector/test/integration/currencies -name '*.test.js' -not -path '*/node_modules/*' | head -10 || echo '[debug] none found'
 
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
@@ -282,6 +298,10 @@ tasks:
           set -eo pipefail
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+          echo "[debug] node_modules:"
+          ls -la node_modules 2>/dev/null | head -5 || echo "[debug] node_modules not found"
+          echo "[debug] random .test.js files in currencies:"
+          find packages/collector/test/integration/currencies -name '*.test.js' -not -path '*/node_modules/*' | head -10 || echo '[debug] none found'
 
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
@@ -349,6 +369,10 @@ tasks:
           set -eo pipefail
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+          echo "[debug] node_modules:"
+          ls -la node_modules 2>/dev/null | head -5 || echo "[debug] node_modules not found"
+          echo "[debug] random .test.js files in currencies:"
+          find packages/collector/test/integration/currencies -name '*.test.js' -not -path '*/node_modules/*' | head -10 || echo '[debug] none found'
 
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
@@ -403,6 +427,10 @@ tasks:
           set -eo pipefail
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+          echo "[debug] node_modules:"
+          ls -la node_modules 2>/dev/null | head -5 || echo "[debug] node_modules not found"
+          echo "[debug] random .test.js files in currencies:"
+          find packages/collector/test/integration/currencies -name '*.test.js' -not -path '*/node_modules/*' | head -10 || echo '[debug] none found'
 
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
@@ -463,6 +491,10 @@ tasks:
           set -eo pipefail
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+          echo "[debug] node_modules:"
+          ls -la node_modules 2>/dev/null | head -5 || echo "[debug] node_modules not found"
+          echo "[debug] random .test.js files in currencies:"
+          find packages/collector/test/integration/currencies -name '*.test.js' -not -path '*/node_modules/*' | head -10 || echo '[debug] none found'
 
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
@@ -526,6 +558,10 @@ tasks:
           set -eo pipefail
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+          echo "[debug] node_modules:"
+          ls -la node_modules 2>/dev/null | head -5 || echo "[debug] node_modules not found"
+          echo "[debug] random .test.js files in currencies:"
+          find packages/collector/test/integration/currencies -name '*.test.js' -not -path '*/node_modules/*' | head -10 || echo '[debug] none found'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
