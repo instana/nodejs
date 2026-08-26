@@ -16,8 +16,6 @@ const CURRENCIES_DIR = path.join(REPO_ROOT, 'packages/collector/test/integration
 
 const sidecarsData = require('../.tekton/assets/sidecars.json');
 
-// ─── CLI args ────────────────────────────────────────────────────────────────
-
 const whatArg = process.argv.find(a => a.startsWith('--what='));
 if (!whatArg) {
   console.error('Usage: node generate.js --what=<group>');
@@ -32,16 +30,10 @@ if (!fs.existsSync(GROUP_DIR)) {
   process.exit(1);
 }
 
-// ─── helpers ────────────────────────────────────────────────────────────────
-
 function sidecar(name) {
   return sidecarsData.sidecars.find(s => s.name === name);
 }
 
-/**
- * Build the `docker run` shell fragment for one sidecar entry from sidecars.json.
- * Returns a multi-line string.
- */
 function dockerRunScript(name) {
   const s = sidecar(name);
   if (!s) throw new Error(`Unknown sidecar: ${name}`);
@@ -55,8 +47,6 @@ function dockerRunScript(name) {
   }
 
   if (s.command) {
-    // command entries become the entrypoint override — not supported in a clean
-    // one-liner, so we pass them via --entrypoint + positional args
     const [entrypoint, ...rest] = s.command;
     lines.push(`  --entrypoint ${JSON.stringify(entrypoint)}`);
     lines.push(`  ${JSON.stringify(s.image.trim())}`);
@@ -69,14 +59,9 @@ function dockerRunScript(name) {
     }
   }
 
-  // join with \ continuation — last line has no continuation
   return lines.map((l, i) => (i < lines.length - 1 ? l + ' \\' : l)).join('\n');
 }
 
-/**
- * Build the readiness-wait shell fragment for one sidecar.
- * Returns a string (may be empty for sidecars without a readinessProbe).
- */
 function readinessScript(name) {
   const s = sidecar(name);
   if (!s || !s.readinessProbe) return '';
@@ -97,9 +82,6 @@ function readinessScript(name) {
   return '';
 }
 
-/**
- * Read .needs file for a test folder. Returns [] if none exists.
- */
 function readNeeds(folder) {
   const needsPath = path.join(folder, '.needs');
   if (!fs.existsSync(needsPath)) return [];
@@ -110,10 +92,6 @@ function readNeeds(folder) {
     .filter(Boolean);
 }
 
-/**
- * Collect all test folders (direct children + one level of scoped packages)
- * from the group directory on disk.
- */
 function findTestFolders() {
   const folders = [];
 
@@ -122,7 +100,6 @@ function findTestFolders() {
     if (!fs.statSync(fullPath).isDirectory()) continue;
 
     if (entry.startsWith('@')) {
-      // scoped package: check children
       for (const sub of fs.readdirSync(fullPath)) {
         const subPath = path.join(fullPath, sub);
         if (!fs.statSync(subPath).isDirectory()) continue;
@@ -136,14 +113,8 @@ function findTestFolders() {
   return folders;
 }
 
-/**
- * Build a single SPS task for one test folder.
- * Each package gets its own top-level task with from: code-build.
- */
 function buildTask(pkgName, folder) {
   const needs = readNeeds(folder);
-
-  // relative path used in find command (relative to repo root)
   const relFolder = path.relative(REPO_ROOT, folder).replace(/\\/g, '/');
 
   const scriptLines = ['#!/usr/bin/env bash', 'set -eo pipefail', ''];
@@ -189,7 +160,6 @@ function buildTask(pkgName, folder) {
   scriptLines.push('  exit 0');
   scriptLines.push('fi');
   scriptLines.push('');
-  scriptLines.push('# run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed');
   scriptLines.push('exec env -i \\');
   scriptLines.push('  PATH="$PATH" \\');
   scriptLines.push('  HOME="$HOME" \\');
@@ -197,8 +167,7 @@ function buildTask(pkgName, folder) {
   scriptLines.push('  TEST_FILES="$TEST_FILES" \\');
   scriptLines.push('  npm run test:ci:collector');
 
-  // safe task name: pr-code-build-<group>-<pkg>, replace / and @ with nothing, . with -
-  const taskName = `pr-code-build-${GROUP}-${pkgName.replace(/[@/]/g, '').replace(/\./g, '-')}`;
+  const taskName = `collector-${GROUP}-${pkgName.replace(/[@/]/g, '').replace(/\./g, '-')}`;
 
   return {
     taskName,
@@ -221,12 +190,8 @@ function buildTask(pkgName, folder) {
   };
 }
 
-// ─── build tasks ────────────────────────────────────────────────────────────
-
 const messagingFolders = findTestFolders();
 const messagingTasks = messagingFolders.map(({ pkgName, folder }) => buildTask(pkgName, folder));
-
-// ─── full config ─────────────────────────────────────────────────────────────
 
 const fanOutTasks = {};
 messagingTasks.forEach(({ taskName, task }) => {
