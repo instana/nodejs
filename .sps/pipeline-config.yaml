@@ -1,0 +1,578 @@
+version: '2'
+tasks:
+  code-checks:
+    steps:
+      - name: peer-review
+        when: 'false'
+  code-build:
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: npm-install
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+      - name: unit-test
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
+      - name: sign-artifact
+        when: 'false'
+  pr-messaging-confluentinckafka-javascript:
+    from: code-build
+    displayName: '@confluentinc/kafka-javascript'
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: '@confluentinc/kafka-javascript'
+        image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start kafka
+          docker run -d --network host --name kafka \
+            -e KAFKA_BROKER_ID="1" \
+            -e KAFKA_ZOOKEEPER_CONNECT="localhost:2181" \
+            -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
+            -e KAFKA_LISTENERS="EXTERNAL://:9092,PLAINTEXT://:29092" \
+            -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR="1" \
+            -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
+            -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
+            "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
+          timeout 150 bash -c 'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 2; done'
+
+          # start kafka-topics
+          docker run -d --network host --name kafka-topics \
+            --entrypoint "/bin/bash" \
+            "mirror.gcr.io/confluentinc/cp-kafka:7.9.4" "-lc" "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/messaging/@confluentinc/kafka-javascript \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for @confluentinc/kafka-javascript — skipping.'
+            exit 0
+          fi
+
+          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  pr-messaging-amqplib:
+    from: code-build
+    displayName: amqplib
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: amqplib
+        image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start rabbitmq
+          docker run -d --network host --name rabbitmq \
+            "mirror.gcr.io/library/rabbitmq:3.13.0"
+          timeout 67 bash -c 'until nc -z 127.0.0.1 5672 2>/dev/null; do sleep 2; done'
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/messaging/amqplib \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for amqplib — skipping.'
+            exit 0
+          fi
+
+          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  pr-messaging-bull:
+    from: code-build
+    displayName: bull
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: bull
+        image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start redis
+          docker run -d --network host --name redis \
+            "mirror.gcr.io/library/redis:7.4.3"
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/messaging/bull \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for bull — skipping.'
+            exit 0
+          fi
+
+          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  pr-messaging-kafka-node:
+    from: code-build
+    displayName: kafka-node
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: kafka-node
+        image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start kafka
+          docker run -d --network host --name kafka \
+            -e KAFKA_BROKER_ID="1" \
+            -e KAFKA_ZOOKEEPER_CONNECT="localhost:2181" \
+            -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
+            -e KAFKA_LISTENERS="EXTERNAL://:9092,PLAINTEXT://:29092" \
+            -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR="1" \
+            -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
+            -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
+            "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
+          timeout 150 bash -c 'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 2; done'
+
+          # start kafka-topics
+          docker run -d --network host --name kafka-topics \
+            --entrypoint "/bin/bash" \
+            "mirror.gcr.io/confluentinc/cp-kafka:7.9.4" "-lc" "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/messaging/kafka-node \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for kafka-node — skipping.'
+            exit 0
+          fi
+
+          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  pr-messaging-kafkajs:
+    from: code-build
+    displayName: kafkajs
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: kafkajs
+        image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start kafka
+          docker run -d --network host --name kafka \
+            -e KAFKA_BROKER_ID="1" \
+            -e KAFKA_ZOOKEEPER_CONNECT="localhost:2181" \
+            -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
+            -e KAFKA_LISTENERS="EXTERNAL://:9092,PLAINTEXT://:29092" \
+            -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR="1" \
+            -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
+            -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
+            "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
+          timeout 150 bash -c 'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 2; done'
+
+          # start kafka-topics
+          docker run -d --network host --name kafka-topics \
+            --entrypoint "/bin/bash" \
+            "mirror.gcr.io/confluentinc/cp-kafka:7.9.4" "-lc" "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/messaging/kafkajs \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for kafkajs — skipping.'
+            exit 0
+          fi
+
+          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  pr-messaging-nats:
+    from: code-build
+    displayName: nats
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: nats
+        image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start nats
+          docker run -d --network host --name nats \
+            "mirror.gcr.io/library/nats:2.9.14-linux"
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/messaging/nats \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for nats — skipping.'
+            exit 0
+          fi
+
+          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  pr-messaging-node-nats-streaming:
+    from: code-build
+    displayName: node-nats-streaming
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: node-nats-streaming
+        image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start nats-streaming
+          docker run -d --network host --name nats-streaming \
+            "mirror.gcr.io/library/nats-streaming:0.25.3-linux" "-p" "4223" "-m" "8223"
+          timeout 20 bash -c 'until curl -sf http://127.0.0.1:8223/healthz 2>/dev/null; do sleep 2; done'
+
+          # start nats-streaming-2
+          docker run -d --network host --name nats-streaming-2 \
+            "mirror.gcr.io/library/nats-streaming:0.25.3-linux" "-p" "4224" "-m" "8224"
+          timeout 20 bash -c 'until curl -sf http://127.0.0.1:8224/healthz 2>/dev/null; do sleep 2; done'
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/messaging/node-nats-streaming \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for node-nats-streaming — skipping.'
+            exit 0
+          fi
+
+          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  pr-messaging-node-rdkafka:
+    from: code-build
+    displayName: node-rdkafka
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: build-artifact
+        displayName: node-rdkafka
+        image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start kafka
+          docker run -d --network host --name kafka \
+            -e KAFKA_BROKER_ID="1" \
+            -e KAFKA_ZOOKEEPER_CONNECT="localhost:2181" \
+            -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
+            -e KAFKA_LISTENERS="EXTERNAL://:9092,PLAINTEXT://:29092" \
+            -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR="1" \
+            -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
+            -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
+            "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
+          timeout 150 bash -c 'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 2; done'
+
+          # start kafka-topics
+          docker run -d --network host --name kafka-topics \
+            --entrypoint "/bin/bash" \
+            "mirror.gcr.io/confluentinc/cp-kafka:7.9.4" "-lc" "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/messaging/node-rdkafka \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for node-rdkafka — skipping.'
+            exit 0
+          fi
+
+          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  pr-messaging-socket-io:
+    from: code-build
+    displayName: socket.io
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: socket.io
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/messaging/socket.io \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for socket.io — skipping.'
+            exit 0
+          fi
+
+          # run tests with clean environment — only PATH, HOME, CI and TEST_FILES are passed
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  sign-artifact:
+    when: 'false'
+  deploy-checks:
+    when: 'false'
+  deploy-release:
+    when: 'false'
+  code-ci-finish:
+    steps:
+      - name: run-stage
+        when: 'false'

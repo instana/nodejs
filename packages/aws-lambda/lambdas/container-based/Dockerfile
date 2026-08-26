@@ -1,9 +1,10 @@
 # (c) Copyright IBM Corp. 2021
 # (c) Copyright Instana Inc. and contributors 2021
 
-FROM instana/aws-lambda-nodejs:latest as instana-layer
+FROM instana/aws-lambda-nodejs:latest AS instana-layer
 
-FROM public.ecr.aws/lambda/nodejs:14
+ARG NODEJS_VERSION
+FROM public.ecr.aws/lambda/nodejs:${NODEJS_VERSION}
 
 COPY --from=instana-layer /opt/extensions/ /opt/extensions/
 COPY --from=instana-layer /opt/nodejs/ /opt/nodejs/

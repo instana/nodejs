@@ -17,10 +17,13 @@
   "author": "Bastian Krol <bastian.krol@instana.com>",
   "license": "MIT",
   "dependencies": {
-    "lodash": "^4.17.15"
+    "lodash": "^4.18.1"
   },
   "devDependencies": {
-    "serverless": "3.21.0",
-    "serverless-offline": "^9.2.0"
+    "serverless": "4.41.0",
+    "serverless-offline": "^14.0.0"
+  },
+  "overrides": {
+    "velocityjs": "2.1.7"
   }
 }
