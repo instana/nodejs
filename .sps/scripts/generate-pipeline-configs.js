@@ -87,7 +87,8 @@ function readinessScript(name) {
   const timeout = (rp.timeoutSeconds || 60) + (rp.initialDelaySeconds || 0);
 
   if (rp.exec) {
-    const cmd = rp.exec.command.map(c => JSON.stringify(c)).join(' ');
+    const [bin, ...args] = rp.exec.command;
+    const cmd = args.length ? `${bin} ${args.map(c => JSON.stringify(c)).join(' ')}` : bin;
     return `timeout ${timeout} bash -c 'until ${cmd} >/dev/null 2>&1; do sleep 2; done'`;
   }
   if (rp.tcpSocket) {
