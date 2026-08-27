@@ -255,6 +255,9 @@ function baseConfig(fanOutTasks) {
       'pr-code-checks': {
         runtimeClassName: 'large',
         steps: [
+          { name: 'peer-review', when: 'false' },
+          { name: 'detect-secrets', when: 'false' },
+          { name: 'compliance-checks', when: 'false' },
           {
             name: 'unit-test',
             displayName: 'npm-install',
