@@ -180,7 +180,7 @@ function buildCurrencyTask(pkgName, folder, group) {
   scriptLines.push('  TEST_FILES="$TEST_FILES" \\');
   scriptLines.push('  npm run test:ci:collector');
 
-  const taskName = `pr-code-checks-collector-${group}-${pkgName.replace(/[@/]/g, '').replace(/\./g, '-')}`;
+  const taskName = `pr-code-checks-collector-${group}-${pkgName.replace(/[@/]/g, '').replace(/[._]/g, '-')}`;
 
   return {
     taskName,
