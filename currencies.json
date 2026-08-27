@@ -1225,7 +1225,7 @@
     "core": false,
     "versions": [
       {
-        "v": "7.9.1",
+        "v": "7.10.0",
         "node": ">=20.19.0 <23 || >=24",
         "skipValidation": true
       },
