@@ -32,7 +32,8 @@
       {
         "v": "4.12.2"
       }
-    ]
+    ],
+    "group": "protocols"
   },
   {
     "name": "@apollo/subgraph",
@@ -48,7 +49,8 @@
       {
         "v": "2.14.3"
       }
-    ]
+    ],
+    "group": "protocols"
   },
   {
     "name": "@apollo/federation",
@@ -75,7 +77,8 @@
       {
         "v": "3.1098.0"
       }
-    ]
+    ],
+    "group": "cloud"
   },
   {
     "name": "@aws-sdk/client-kinesis",
@@ -91,7 +94,8 @@
       {
         "v": "3.1098.0"
       }
-    ]
+    ],
+    "group": "cloud"
   },
   {
     "name": "@aws-sdk/client-kms",
@@ -123,7 +127,8 @@
       {
         "v": "3.1098.0"
       }
-    ]
+    ],
+    "group": "cloud"
   },
   {
     "name": "@aws-sdk/client-s3",
@@ -139,7 +144,8 @@
       {
         "v": "3.1098.0"
       }
-    ]
+    ],
+    "group": "cloud"
   },
   {
     "name": "@aws-sdk/client-sns",
@@ -155,7 +161,8 @@
       {
         "v": "3.1098.0"
       }
-    ]
+    ],
+    "group": "cloud"
   },
   {
     "name": "@aws-sdk/client-sqs",
@@ -171,7 +178,8 @@
       {
         "v": "3.1098.0"
       }
-    ]
+    ],
+    "group": "cloud"
   },
   {
     "name": "@aws-sdk/client-ssm",
@@ -229,7 +237,8 @@
       {
         "v": "7.9.0"
       }
-    ]
+    ],
+    "group": "databases"
   },
   {
     "name": "@google-cloud/pubsub",
@@ -245,7 +254,8 @@
       {
         "v": "5.3.1"
       }
-    ]
+    ],
+    "group": "cloud"
   },
   {
     "name": "@google-cloud/storage",
@@ -261,7 +271,8 @@
       {
         "v": "7.21.0"
       }
-    ]
+    ],
+    "group": "cloud"
   },
   {
     "name": "@grpc/grpc-js",
@@ -280,7 +291,8 @@
       {
         "v": "1.9.4"
       }
-    ]
+    ],
+    "group": "protocols"
   },
   {
     "name": "@grpc/proto-loader",
@@ -312,7 +324,8 @@
       {
         "v": "21.4.10"
       }
-    ]
+    ],
+    "group": "frameworks"
   },
   {
     "name": "@redis/client",
@@ -335,7 +348,8 @@
       {
         "v": "1.6.1"
       }
-    ]
+    ],
+    "group": "databases"
   },
   {
     "name": "amqplib",
@@ -388,7 +402,8 @@
         "v": "2.1693.0",
         "node": "<26"
       }
-    ]
+    ],
+    "group": "cloud"
   },
   {
     "name": "bull",
@@ -426,7 +441,8 @@
         "v": "4.4.3",
         "node": "24"
       }
-    ]
+    ],
+    "group": "databases"
   },
   {
     "name": "express",
@@ -445,7 +461,8 @@
       {
         "v": "4.21.2"
       }
-    ]
+    ],
+    "group": "frameworks"
   },
   {
     "name": "http(s)-server",
@@ -500,7 +517,8 @@
     "isBeta": false,
     "ignoreUpdates": true,
     "note": "",
-    "core": true
+    "core": true,
+    "group": "core"
   },
   {
     "name": "timers",
@@ -533,7 +551,8 @@
       {
         "v": "3.29.5"
       }
-    ]
+    ],
+    "group": "frameworks"
   },
   {
     "name": "got",
@@ -558,7 +577,8 @@
       {
         "v": "11.8.6"
       }
-    ]
+    ],
+    "group": "frameworks"
   },
   {
     "name": "graphql",
@@ -578,7 +598,8 @@
       {
         "v": "16.14.2"
       }
-    ]
+    ],
+    "group": "protocols"
   },
   {
     "name": "graphql-subscriptions",
@@ -597,7 +618,8 @@
       {
         "v": "2.0.0"
       }
-    ]
+    ],
+    "group": "protocols"
   },
   {
     "name": "graphql-ws",
@@ -629,7 +651,8 @@
       {
         "v": "5.11.1"
       }
-    ]
+    ],
+    "group": "databases"
   },
   {
     "name": "kafka-node",
@@ -721,7 +744,8 @@
       {
         "v": "14.0.0"
       }
-    ]
+    ],
+    "group": "frameworks"
   },
   {
     "name": "log4js",
@@ -737,7 +761,8 @@
       {
         "v": "6.9.1"
       }
-    ]
+    ],
+    "group": "logging"
   },
   {
     "name": "memcached",
@@ -753,7 +778,8 @@
       {
         "v": "2.2.2"
       }
-    ]
+    ],
+    "group": "databases"
   },
   {
     "name": "mongodb",
@@ -775,7 +801,8 @@
       {
         "v": "4.17.2"
       }
-    ]
+    ],
+    "group": "databases"
   },
   {
     "name": "mongoose",
@@ -795,7 +822,8 @@
       {
         "v": "6.13.8"
       }
-    ]
+    ],
+    "group": "databases"
   },
   {
     "name": "mssql",
@@ -814,7 +842,8 @@
       {
         "v": "10.0.4"
       }
-    ]
+    ],
+    "group": "databases"
   },
   {
     "name": "mysql",
@@ -830,7 +859,8 @@
       {
         "v": "2.18.1"
       }
-    ]
+    ],
+    "group": "databases"
   },
   {
     "name": "mysql2",
@@ -849,7 +879,8 @@
       {
         "v": "3.11.4"
       }
-    ]
+    ],
+    "group": "databases"
   },
   {
     "name": "nats",
@@ -933,7 +964,8 @@
       {
         "v": "8.22.0"
       }
-    ]
+    ],
+    "group": "databases"
   },
   {
     "name": "pg-native",
@@ -950,7 +982,8 @@
         "v": "3.8.0",
         "node": "<25"
       }
-    ]
+    ],
+    "group": "databases"
   },
   {
     "name": "pino",
@@ -969,7 +1002,8 @@
       {
         "v": "8.21.0"
       }
-    ]
+    ],
+    "group": "logging"
   },
   {
     "name": "redis",
@@ -995,7 +1029,8 @@
       {
         "v": "3.1.2"
       }
-    ]
+    ],
+    "group": "databases"
   },
   {
     "name": "restify",
@@ -1011,7 +1046,8 @@
       {
         "v": "11.1.0"
       }
-    ]
+    ],
+    "group": "frameworks"
   },
   {
     "name": "sequelize",
@@ -1027,7 +1063,8 @@
       {
         "v": "6.37.8"
       }
-    ]
+    ],
+    "group": "frameworks"
   },
   {
     "name": "socket.io",
@@ -1105,7 +1142,8 @@
       {
         "v": "19.2.1"
       }
-    ]
+    ],
+    "group": "databases"
   },
   {
     "name": "winston",
@@ -1121,7 +1159,8 @@
       {
         "v": "3.19.0"
       }
-    ]
+    ],
+    "group": "logging"
   },
   {
     "name": "express-winston",
@@ -1137,7 +1176,8 @@
       {
         "v": "4.2.0"
       }
-    ]
+    ],
+    "group": "logging"
   },
   {
     "name": "ibm_db",
@@ -1153,7 +1193,8 @@
       {
         "v": "4.0.1"
       }
-    ]
+    ],
+    "group": "databases"
   },
   {
     "name": "node-rdkafka",
@@ -1202,7 +1243,8 @@
         "node": "<26",
         "skipValidation": true
       }
-    ]
+    ],
+    "group": "databases"
   },
   {
     "name": "typeorm",
@@ -1222,7 +1264,8 @@
       {
         "v": "0.3.29"
       }
-    ]
+    ],
+    "group": "frameworks"
   },
   {
     "name": "bunyan",
@@ -1238,7 +1281,8 @@
       {
         "v": "1.8.15"
       }
-    ]
+    ],
+    "group": "logging"
   },
   {
     "name": "bluebird",
@@ -1249,7 +1293,8 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "group": "async"
   },
   {
     "name": "@azure/storage-blob",
@@ -1270,7 +1315,8 @@
         "v": "12.27.0",
         "node": ">=20"
       }
-    ]
+    ],
+    "group": "cloud"
   },
   {
     "name": "tsoa",
@@ -1286,7 +1332,8 @@
       {
         "v": "6.6.0"
       }
-    ]
+    ],
+    "group": "frameworks"
   },
   {
     "name": "request",
@@ -1335,7 +1382,8 @@
       {
         "v": "7.0.1"
       }
-    ]
+    ],
+    "group": "databases"
   },
   {
     "name": "@confluentinc/kafka-javascript",

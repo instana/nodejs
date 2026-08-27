@@ -1,0 +1,70 @@
+version: '2'
+tasks:
+  code-checks:
+    steps:
+      - name: peer-review
+        when: 'false'
+  code-build:
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: npm-install
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+      - name: unit-test
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
+      - name: sign-artifact
+        when: 'false'
+  code-build-collector-misc:
+    from: code-build
+    displayName: collector-misc
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: collector-misc
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/misc \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for collector-misc — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  sign-artifact:
+    when: 'false'
+  deploy-checks:
+    when: 'false'
+  deploy-release:
+    when: 'false'
+  code-ci-finish:
+    steps:
+      - name: run-stage
+        when: 'false'

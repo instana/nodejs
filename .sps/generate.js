@@ -16,19 +16,35 @@ const CURRENCIES_DIR = path.join(REPO_ROOT, 'packages/collector/test/integration
 
 const sidecarsData = require('../.tekton/assets/sidecars.json');
 
+// ─── CLI ─────────────────────────────────────────────────────────────────────
+
 const whatArg = process.argv.find(a => a.startsWith('--what='));
 if (!whatArg) {
-  console.error('Usage: node generate.js --what=<group>');
-  console.error('Available groups:', fs.readdirSync(CURRENCIES_DIR).join(', '));
+  console.error('Usage: node generate.js --what=<target>');
+  console.error('');
+  console.error('Collector currency groups:');
+  fs.readdirSync(CURRENCIES_DIR).forEach(g => console.error(`  collector-currencies-${g}`));
+  console.error('');
+  console.error('Other targets:');
+  console.error('  collector-metrics');
+  console.error('  collector-misc');
+  console.error('  aws-lambda');
+  console.error('  aws-fargate');
+  console.error('  azure-container-services');
+  console.error('  google-cloud-run');
+  console.error('  autoprofile');
+  console.error('  core');
+  console.error('  metrics-util');
+  console.error('  opentelemetry-exporter');
+  console.error('  opentelemetry-sampler');
+  console.error('  serverless');
+  console.error('  serverless-collector');
+  console.error('  shared-metrics');
   process.exit(1);
 }
-const GROUP = whatArg.split('=')[1];
-const GROUP_DIR = path.join(CURRENCIES_DIR, GROUP);
-if (!fs.existsSync(GROUP_DIR)) {
-  console.error(`Unknown group: ${GROUP}`);
-  console.error('Available groups:', fs.readdirSync(CURRENCIES_DIR).join(', '));
-  process.exit(1);
-}
+const TARGET = whatArg.split('=')[1];
+
+// ─── sidecar helpers ─────────────────────────────────────────────────────────
 
 function sidecar(name) {
   return sidecarsData.sidecars.find(s => s.name === name);
@@ -85,20 +101,30 @@ function readinessScript(name) {
 function readNeeds(folder) {
   const needsPath = path.join(folder, '.needs');
   if (!fs.existsSync(needsPath)) return [];
-  return fs
-    .readFileSync(needsPath, 'utf-8')
-    .split('\n')
-    .map(l => l.trim())
-    .filter(Boolean);
+  return fs.readFileSync(needsPath, 'utf-8').split('\n').map(l => l.trim()).filter(Boolean);
 }
 
-function findTestFolders() {
+function dockerClientInstallScript() {
+  return [
+    'CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")',
+    'ARCH=$(dpkg --print-architecture)',
+    'apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd',
+    'install -m 0755 -d /etc/apt/keyrings',
+    'curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg',
+    'chmod a+r /etc/apt/keyrings/docker.gpg',
+    'echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null',
+    'apt-get update -qq && apt-get install -y -qq docker-ce-cli',
+    "timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'"
+  ].join('\n');
+}
+
+// ─── collector currencies fan-out tasks ──────────────────────────────────────
+
+function findTestFolders(groupDir) {
   const folders = [];
-
-  for (const entry of fs.readdirSync(GROUP_DIR)) {
-    const fullPath = path.join(GROUP_DIR, entry);
+  for (const entry of fs.readdirSync(groupDir)) {
+    const fullPath = path.join(groupDir, entry);
     if (!fs.statSync(fullPath).isDirectory()) continue;
-
     if (entry.startsWith('@')) {
       for (const sub of fs.readdirSync(fullPath)) {
         const subPath = path.join(fullPath, sub);
@@ -109,16 +135,14 @@ function findTestFolders() {
       folders.push({ pkgName: entry, folder: fullPath });
     }
   }
-
   return folders;
 }
 
-function buildTask(pkgName, folder) {
+function buildCurrencyTask(pkgName, folder, group) {
   const needs = readNeeds(folder);
   const relFolder = path.relative(REPO_ROOT, folder).replace(/\\/g, '/');
 
   const scriptLines = ['#!/usr/bin/env bash', 'set -eo pipefail', ''];
-
   scriptLines.push('cd "$WORKSPACE/$(load_repo app-repo path)"');
   scriptLines.push('npm install --loglevel warn --foreground-scripts');
   scriptLines.push('node bin/create-version-test-folders.js');
@@ -126,19 +150,8 @@ function buildTask(pkgName, folder) {
 
   if (needs.length > 0) {
     scriptLines.push('# install docker client');
-    scriptLines.push(
-      'CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")',
-      'ARCH=$(dpkg --print-architecture)',
-      'apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd',
-      'install -m 0755 -d /etc/apt/keyrings',
-      'curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg',
-      'chmod a+r /etc/apt/keyrings/docker.gpg',
-      'echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null',
-      'apt-get update -qq && apt-get install -y -qq docker-ce-cli',
-      "timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'",
-      ''
-    );
-
+    scriptLines.push(dockerClientInstallScript());
+    scriptLines.push('');
     for (const need of needs) {
       scriptLines.push(`# start ${need}`);
       scriptLines.push(dockerRunScript(need));
@@ -167,7 +180,7 @@ function buildTask(pkgName, folder) {
   scriptLines.push('  TEST_FILES="$TEST_FILES" \\');
   scriptLines.push('  npm run test:ci:collector');
 
-  const taskName = `code-build-collector-${GROUP}-${pkgName.replace(/[@/]/g, '').replace(/\./g, '-')}`;
+  const taskName = `code-build-collector-${group}-${pkgName.replace(/[@/]/g, '').replace(/\./g, '-')}`;
 
   return {
     taskName,
@@ -190,56 +203,193 @@ function buildTask(pkgName, folder) {
   };
 }
 
-const messagingFolders = findTestFolders();
-const messagingTasks = messagingFolders.map(({ pkgName, folder }) => buildTask(pkgName, folder));
+// ─── simple single-task config builder ───────────────────────────────────────
 
-const fanOutTasks = {};
-messagingTasks.forEach(({ taskName, task }) => {
-  fanOutTasks[taskName] = task;
-});
+function buildSimpleTask(displayName, testScript, needs = []) {
+  const scriptLines = ['#!/usr/bin/env bash', 'set -eo pipefail', ''];
+  scriptLines.push('cd "$WORKSPACE/$(load_repo app-repo path)"');
+  scriptLines.push('npm install --loglevel warn --foreground-scripts');
+  scriptLines.push('');
 
-const config = {
-  version: '2',
-  tasks: {
-    'code-checks': {
-      steps: [{ name: 'peer-review', when: 'false' }]
-    },
-    'code-build': {
-      runtimeClassName: 'large',
-      steps: [
-        {
-          name: 'build-artifact',
-          displayName: 'npm-install',
-          image: NODE_IMAGE,
-          script: [
-            '#!/usr/bin/env bash',
-            'set -eo pipefail',
-            'cd "$WORKSPACE/$(load_repo app-repo path)"',
-            'npm install --loglevel warn --foreground-scripts',
-            'node bin/create-version-test-folders.js'
-          ].join('\n')
-        },
-        { name: 'unit-test', when: 'false' },
-        { name: 'scan-artifact', when: 'false' },
-        { name: 'sign-artifact', when: 'false' }
-      ]
-    },
-    ...fanOutTasks,
-    'sign-artifact': { when: 'false' },
-    'deploy-checks': { when: 'false' },
-    'deploy-release': { when: 'false' },
-    'code-ci-finish': {
-      steps: [{ name: 'run-stage', when: 'false' }]
+  if (needs.length > 0) {
+    scriptLines.push('# install docker client');
+    scriptLines.push(dockerClientInstallScript());
+    scriptLines.push('');
+    for (const need of needs) {
+      scriptLines.push(`# start ${need}`);
+      scriptLines.push(dockerRunScript(need));
+      const wait = readinessScript(need);
+      if (wait) scriptLines.push(wait);
+      scriptLines.push('');
     }
   }
-};
 
-const output = yaml.dump(config, { lineWidth: -1, quotingType: "'", forceQuotes: false });
-const outPath = path.join(__dirname, `pipeline-config-collector-${GROUP}.yaml`);
-fs.writeFileSync(outPath, output);
-console.log(`Written: ${outPath}`);
-console.log(`\nGenerated ${messagingTasks.length} tasks for group '${GROUP}':`);
-messagingFolders.forEach(({ pkgName, folder }) => {
-  const needs = readNeeds(folder);
-  console.log(`  ${pkgName.padEnd(40)} needs: [${needs.join(', ') || 'none'}]`);
-});
+  scriptLines.push(`exec env -i \\`);
+  scriptLines.push('  PATH="$PATH" \\');
+  scriptLines.push('  HOME="$HOME" \\');
+  scriptLines.push('  CI=true \\');
+  scriptLines.push(`  npm run ${testScript}`);
+
+  return {
+    from: 'code-build',
+    displayName,
+    runtimeClassName: 'large',
+    ...(needs.length > 0 ? { include: ['dind'] } : {}),
+    steps: [
+      {
+        name: 'build-artifact',
+        displayName,
+        image: NODE_IMAGE,
+        ...(needs.length > 0 ? { include: ['docker-socket'] } : {}),
+        script: scriptLines.join('\n')
+      },
+      { name: 'sign-artifact', when: 'false' }
+    ]
+  };
+}
+
+// ─── base config skeleton ─────────────────────────────────────────────────────
+
+function baseConfig(fanOutTasks) {
+  return {
+    version: '2',
+    tasks: {
+      'code-checks': {
+        steps: [{ name: 'peer-review', when: 'false' }]
+      },
+      'code-build': {
+        runtimeClassName: 'large',
+        steps: [
+          {
+            name: 'build-artifact',
+            displayName: 'npm-install',
+            image: NODE_IMAGE,
+            script: [
+              '#!/usr/bin/env bash',
+              'set -eo pipefail',
+              'cd "$WORKSPACE/$(load_repo app-repo path)"',
+              'npm install --loglevel warn --foreground-scripts',
+              'node bin/create-version-test-folders.js'
+            ].join('\n')
+          },
+          { name: 'unit-test', when: 'false' },
+          { name: 'scan-artifact', when: 'false' },
+          { name: 'sign-artifact', when: 'false' }
+        ]
+      },
+      ...fanOutTasks,
+      'sign-artifact': { when: 'false' },
+      'deploy-checks': { when: 'false' },
+      'deploy-release': { when: 'false' },
+      'code-ci-finish': {
+        steps: [{ name: 'run-stage', when: 'false' }]
+      }
+    }
+  };
+}
+
+function writeConfig(name, config) {
+  const output = yaml.dump(config, { lineWidth: -1, quotingType: "'", forceQuotes: false });
+  const outPath = path.join(__dirname, `pipeline-config-${name}.yaml`);
+  fs.writeFileSync(outPath, output);
+  console.log(`Written: ${outPath}`);
+}
+
+// ─── dispatch ─────────────────────────────────────────────────────────────────
+
+if (TARGET.startsWith('collector-currencies-')) {
+  const group = TARGET.replace('collector-currencies-', '');
+  const groupDir = path.join(CURRENCIES_DIR, group);
+  if (!fs.existsSync(groupDir)) {
+    console.error(`Unknown currency group: ${group}`);
+    process.exit(1);
+  }
+
+  const folders = findTestFolders(groupDir);
+  const tasks = folders.map(({ pkgName, folder }) => buildCurrencyTask(pkgName, folder, group));
+
+  const fanOutTasks = {};
+  tasks.forEach(({ taskName, task }) => { fanOutTasks[taskName] = task; });
+
+  writeConfig(TARGET, baseConfig(fanOutTasks));
+  console.log(`\nGenerated ${tasks.length} tasks for group '${group}':`);
+  folders.forEach(({ pkgName, folder }) => {
+    const needs = readNeeds(folder);
+    console.log(`  ${pkgName.padEnd(40)} needs: [${needs.join(', ') || 'none'}]`);
+  });
+
+} else if (TARGET === 'collector-metrics' || TARGET === 'collector-misc') {
+  const subDir = TARGET.replace('collector-', '');
+  const testDir = path.join(REPO_ROOT, 'packages/collector/test/integration', subDir);
+  const relDir = `test/integration/${subDir}`;
+
+  const scriptLines = [
+    '#!/usr/bin/env bash',
+    'set -eo pipefail',
+    '',
+    'cd "$WORKSPACE/$(load_repo app-repo path)"',
+    'npm install --loglevel warn --foreground-scripts',
+    'node bin/create-version-test-folders.js',
+    '',
+    '# collect test files',
+    `TEST_FILES=$(cd packages/collector && find \\`,
+    `  ${relDir} \\`,
+    `  -name '*.test.js' \\`,
+    `  -not -path '*/node_modules/*' \\`,
+    `  | sort | tr '\\n' ' ')`,
+    '',
+    'if [ -z "$TEST_FILES" ]; then',
+    `  echo 'WARNING: No test files found for ${TARGET} — skipping.'`,
+    '  exit 0',
+    'fi',
+    '',
+    'exec env -i \\',
+    '  PATH="$PATH" \\',
+    '  HOME="$HOME" \\',
+    '  CI=true \\',
+    '  TEST_FILES="$TEST_FILES" \\',
+    '  npm run test:ci:collector'
+  ].join('\n');
+
+  const fanOutTasks = {
+    [`code-build-${TARGET}`]: {
+      from: 'code-build',
+      displayName: TARGET,
+      runtimeClassName: 'large',
+      steps: [
+        { name: 'build-artifact', displayName: TARGET, image: NODE_IMAGE, script: scriptLines },
+        { name: 'sign-artifact', when: 'false' }
+      ]
+    }
+  };
+
+  writeConfig(TARGET, baseConfig(fanOutTasks));
+
+} else {
+  const SIMPLE_TARGETS = {
+    'aws-lambda':                { script: 'test:ci:aws-lambda',                displayName: 'aws-lambda' },
+    'aws-fargate':               { script: 'test:ci:aws-fargate',               displayName: 'aws-fargate' },
+    'azure-container-services':  { script: 'test:ci:azure-container-services',  displayName: 'azure-container-services' },
+    'google-cloud-run':          { script: 'test:ci:google-cloud-run',          displayName: 'google-cloud-run' },
+    'autoprofile':               { script: 'test:ci:autoprofile',               displayName: 'autoprofile' },
+    'core':                      { script: 'test:ci:core',                      displayName: 'core' },
+    'metrics-util':              { script: 'test:ci:metrics-util',              displayName: 'metrics-util' },
+    'opentelemetry-exporter':    { script: 'test:ci:opentelemetry-exporter',    displayName: 'opentelemetry-exporter' },
+    'opentelemetry-sampler':     { script: 'test:ci:opentelemetry-sampler',     displayName: 'opentelemetry-sampler' },
+    'serverless':                { script: 'test:ci:serverless',                displayName: 'serverless' },
+    'serverless-collector':      { script: 'test:ci:serverless-collector',      displayName: 'serverless-collector' },
+    'shared-metrics':            { script: 'test:ci:shared-metrics',            displayName: 'shared-metrics' }
+  };
+
+  if (!SIMPLE_TARGETS[TARGET]) {
+    console.error(`Unknown target: ${TARGET}`);
+    process.exit(1);
+  }
+
+  const { script, displayName } = SIMPLE_TARGETS[TARGET];
+  const taskName = `code-build-${TARGET}`;
+  const fanOutTasks = { [taskName]: buildSimpleTask(displayName, script) };
+
+  writeConfig(TARGET, baseConfig(fanOutTasks));
+  console.log(`Generated task '${taskName}' running: npm run ${script}`);
+}

@@ -1,0 +1,286 @@
+version: '2'
+tasks:
+  code-checks:
+    steps:
+      - name: peer-review
+        when: 'false'
+  code-build:
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: npm-install
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+      - name: unit-test
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
+      - name: sign-artifact
+        when: 'false'
+  code-build-collector-protocols-apolloserver:
+    from: code-build
+    displayName: '@apollo/server'
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: '@apollo/server'
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/protocols/@apollo/server \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for @apollo/server — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  code-build-collector-protocols-apollosubgraph:
+    from: code-build
+    displayName: '@apollo/subgraph'
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: '@apollo/subgraph'
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/protocols/@apollo/subgraph \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for @apollo/subgraph — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  code-build-collector-protocols-grpcgrpc-js:
+    from: code-build
+    displayName: '@grpc/grpc-js'
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: '@grpc/grpc-js'
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/protocols/@grpc/grpc-js \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for @grpc/grpc-js — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  code-build-collector-protocols-graphql:
+    from: code-build
+    displayName: graphql
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: graphql
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/protocols/graphql \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for graphql — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  code-build-collector-protocols-graphql-subscriptions:
+    from: code-build
+    displayName: graphql-subscriptions
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: graphql-subscriptions
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/protocols/graphql-subscriptions \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for graphql-subscriptions — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  code-build-collector-protocols-http:
+    from: code-build
+    displayName: http
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: http
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/protocols/http \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for http — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  code-build-collector-protocols-http2:
+    from: code-build
+    displayName: http2
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: http2
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/protocols/http2 \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for http2 — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  sign-artifact:
+    when: 'false'
+  deploy-checks:
+    when: 'false'
+  deploy-release:
+    when: 'false'
+  code-ci-finish:
+    steps:
+      - name: run-stage
+        when: 'false'

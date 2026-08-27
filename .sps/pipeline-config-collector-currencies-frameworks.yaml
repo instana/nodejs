@@ -1,0 +1,358 @@
+version: '2'
+tasks:
+  code-checks:
+    steps:
+      - name: peer-review
+        when: 'false'
+  code-build:
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: npm-install
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+      - name: unit-test
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
+      - name: sign-artifact
+        when: 'false'
+  code-build-collector-frameworks-hapihapi:
+    from: code-build
+    displayName: '@hapi/hapi'
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: '@hapi/hapi'
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/frameworks/@hapi/hapi \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for @hapi/hapi — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  code-build-collector-frameworks-koarouter:
+    from: code-build
+    displayName: '@koa/router'
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: '@koa/router'
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/frameworks/@koa/router \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for @koa/router — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  code-build-collector-frameworks-express:
+    from: code-build
+    displayName: express
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: express
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/frameworks/express \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for express — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  code-build-collector-frameworks-fastify:
+    from: code-build
+    displayName: fastify
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: fastify
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/frameworks/fastify \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for fastify — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  code-build-collector-frameworks-got:
+    from: code-build
+    displayName: got
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: got
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/frameworks/got \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for got — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  code-build-collector-frameworks-restify:
+    from: code-build
+    displayName: restify
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: restify
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/frameworks/restify \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for restify — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  code-build-collector-frameworks-sequelize:
+    from: code-build
+    displayName: sequelize
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: sequelize
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/frameworks/sequelize \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for sequelize — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  code-build-collector-frameworks-tsoa:
+    from: code-build
+    displayName: tsoa
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: tsoa
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/frameworks/tsoa \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for tsoa — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  code-build-collector-frameworks-typeorm:
+    from: code-build
+    displayName: typeorm
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
+        displayName: typeorm
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/frameworks/typeorm \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for typeorm — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+  sign-artifact:
+    when: 'false'
+  deploy-checks:
+    when: 'false'
+  deploy-release:
+    when: 'false'
+  code-ci-finish:
+    steps:
+      - name: run-stage
+        when: 'false'
