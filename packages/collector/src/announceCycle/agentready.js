@@ -116,7 +116,11 @@ function enter(_ctx) {
 
   if (isMainThread) {
     uncaught.activate();
-    metrics.activate();
+
+    if (process.env.INSTANA_DISABLE_METRICS !== 'true') {
+      metrics.activate();
+    }
+
     requestHandler.activate();
     transmissionCycle.activate(
       metrics,
