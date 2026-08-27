@@ -61,6 +61,7 @@ tasks:
             -e ES_JAVA_OPTS="-Xms500m -Xmx500m" \
             -e xpack.security.enabled="false" \
             "mirror.gcr.io/elastic/elasticsearch:9.0.0"
+          sleep 60
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -120,14 +121,17 @@ tasks:
           # start redis
           docker run -d --network host --name redis \
             "mirror.gcr.io/library/redis:7.4.3"
+          sleep 60
 
           # start redis-slave
           docker run -d --network host --name redis-slave \
             "mirror.gcr.io/library/redis:7.4.3" "redis-server" "--replicaof" "127.0.0.1" "6379" "--port" "6380"
+          sleep 60
 
           # start redis-sentinel
           docker run -d --network host --name redis-sentinel \
             "mirror.gcr.io/library/redis:7.4.3" "sh" "-c" "echo \"sentinel monitor mymaster 127.0.0.1 6379 2\" > /etc/sentinel.conf && echo \"sentinel down-after-milliseconds mymaster 1000\" >> /etc/sentinel.conf && echo \"sentinel failover-timeout mymaster 5000\" >> /etc/sentinel.conf && echo \"sentinel parallel-syncs mymaster 1\" >> /etc/sentinel.conf && echo \"sentinel resolve-hostnames no\" >> /etc/sentinel.conf && redis-server /etc/sentinel.conf --sentinel --port 26379"
+          sleep 60
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -187,7 +191,7 @@ tasks:
           # start couchbase
           docker run -d --network host --name couchbase \
             "mirror.gcr.io/library/couchbase:7.6.7"
-          timeout 75 bash -c 'until curl -sf http://127.0.0.1:8091/ 2>/dev/null; do sleep 2; done'
+          sleep 60
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -327,14 +331,17 @@ tasks:
           # start redis
           docker run -d --network host --name redis \
             "mirror.gcr.io/library/redis:7.4.3"
+          sleep 60
 
           # start redis-slave
           docker run -d --network host --name redis-slave \
             "mirror.gcr.io/library/redis:7.4.3" "redis-server" "--replicaof" "127.0.0.1" "6379" "--port" "6380"
+          sleep 60
 
           # start redis-sentinel
           docker run -d --network host --name redis-sentinel \
             "mirror.gcr.io/library/redis:7.4.3" "sh" "-c" "echo \"sentinel monitor mymaster 127.0.0.1 6379 2\" > /etc/sentinel.conf && echo \"sentinel down-after-milliseconds mymaster 1000\" >> /etc/sentinel.conf && echo \"sentinel failover-timeout mymaster 5000\" >> /etc/sentinel.conf && echo \"sentinel parallel-syncs mymaster 1\" >> /etc/sentinel.conf && echo \"sentinel resolve-hostnames no\" >> /etc/sentinel.conf && redis-server /etc/sentinel.conf --sentinel --port 26379"
+          sleep 60
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -394,6 +401,7 @@ tasks:
           # start memcached
           docker run -d --network host --name memcached \
             "mirror.gcr.io/library/memcached:1.6.9"
+          sleep 60
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -453,6 +461,7 @@ tasks:
           # start mongodb
           docker run -d --network host --name mongodb \
             "mirror.gcr.io/library/mongo:8.0.8"
+          sleep 60
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -512,6 +521,7 @@ tasks:
           # start mongodb
           docker run -d --network host --name mongodb \
             "mirror.gcr.io/library/mongo:8.0.8"
+          sleep 60
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -616,7 +626,7 @@ tasks:
             -e MYSQL_PASSWORD="nodepw" \
             -e MYSQL_ROOT_HOST="0.0.0.0" \
             "mirror.gcr.io/library/mysql:8.0.26" "--default-authentication-plugin=mysql_native_password"
-          timeout 13 bash -c 'until sh -c mysql -h 0.0.0.0 -u node -p'nodepw' -e 'SELECT 1' >/dev/null 2>&1; do sleep 2; done'
+          sleep 60
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -681,7 +691,7 @@ tasks:
             -e MYSQL_PASSWORD="nodepw" \
             -e MYSQL_ROOT_HOST="0.0.0.0" \
             "mirror.gcr.io/library/mysql:8.0.26" "--default-authentication-plugin=mysql_native_password"
-          timeout 13 bash -c 'until sh -c mysql -h 0.0.0.0 -u node -p'nodepw' -e 'SELECT 1' >/dev/null 2>&1; do sleep 2; done'
+          sleep 60
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -742,6 +752,7 @@ tasks:
           docker run -d --network host --name oracledb \
             -e ORACLE_PWD="teamnodejspassword" \
             "container-registry.oracle.com/database/free:23.6.0.0-lite"
+          sleep 60
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -804,7 +815,7 @@ tasks:
             -e POSTGRES_PASSWORD="nodepw" \
             -e POSTGRES_DB="nodedb" \
             "mirror.gcr.io/library/postgres:15.15"
-          timeout 65 bash -c 'until sh -c pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb >/dev/null 2>&1; do sleep 2; done'
+          sleep 60
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -867,7 +878,7 @@ tasks:
             -e POSTGRES_PASSWORD="nodepw" \
             -e POSTGRES_DB="nodedb" \
             "mirror.gcr.io/library/postgres:15.15"
-          timeout 65 bash -c 'until sh -c pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb >/dev/null 2>&1; do sleep 2; done'
+          sleep 60
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -930,7 +941,7 @@ tasks:
             -e POSTGRES_PASSWORD="nodepw" \
             -e POSTGRES_DB="nodedb" \
             "mirror.gcr.io/library/postgres:15.15"
-          timeout 65 bash -c 'until sh -c pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb >/dev/null 2>&1; do sleep 2; done'
+          sleep 60
 
           # start mysql
           docker run -d --network host --name mysql \
@@ -940,7 +951,7 @@ tasks:
             -e MYSQL_PASSWORD="nodepw" \
             -e MYSQL_ROOT_HOST="0.0.0.0" \
             "mirror.gcr.io/library/mysql:8.0.26" "--default-authentication-plugin=mysql_native_password"
-          timeout 13 bash -c 'until sh -c mysql -h 0.0.0.0 -u node -p'nodepw' -e 'SELECT 1' >/dev/null 2>&1; do sleep 2; done'
+          sleep 60
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -1000,14 +1011,17 @@ tasks:
           # start redis
           docker run -d --network host --name redis \
             "mirror.gcr.io/library/redis:7.4.3"
+          sleep 60
 
           # start redis-slave
           docker run -d --network host --name redis-slave \
             "mirror.gcr.io/library/redis:7.4.3" "redis-server" "--replicaof" "127.0.0.1" "6379" "--port" "6380"
+          sleep 60
 
           # start redis-sentinel
           docker run -d --network host --name redis-sentinel \
             "mirror.gcr.io/library/redis:7.4.3" "sh" "-c" "echo \"sentinel monitor mymaster 127.0.0.1 6379 2\" > /etc/sentinel.conf && echo \"sentinel down-after-milliseconds mymaster 1000\" >> /etc/sentinel.conf && echo \"sentinel failover-timeout mymaster 5000\" >> /etc/sentinel.conf && echo \"sentinel parallel-syncs mymaster 1\" >> /etc/sentinel.conf && echo \"sentinel resolve-hostnames no\" >> /etc/sentinel.conf && redis-server /etc/sentinel.conf --sentinel --port 26379"
+          sleep 60
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -1070,7 +1084,7 @@ tasks:
             -e POSTGRES_PASSWORD="nodepw" \
             -e POSTGRES_DB="nodedb" \
             "mirror.gcr.io/library/postgres:15.15"
-          timeout 65 bash -c 'until sh -c pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb >/dev/null 2>&1; do sleep 2; done'
+          sleep 60
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \

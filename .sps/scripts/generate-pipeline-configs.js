@@ -81,22 +81,8 @@ function dockerRunScript(name) {
 
 function readinessScript(name) {
   const s = sidecar(name);
-  if (!s || !s.readinessProbe) return '';
-
-  const rp = s.readinessProbe;
-  const timeout = (rp.timeoutSeconds || 60) + (rp.initialDelaySeconds || 0);
-
-  if (rp.exec) {
-    const cmd = rp.exec.command.join(' ');
-    return `timeout ${timeout} bash -c 'until ${cmd} >/dev/null 2>&1; do sleep 2; done'`;
-  }
-  if (rp.tcpSocket) {
-    return `timeout ${timeout} bash -c 'until nc -z 127.0.0.1 ${rp.tcpSocket.port} 2>/dev/null; do sleep 2; done'`;
-  }
-  if (rp.httpGet) {
-    return `timeout ${timeout} bash -c 'until curl -sf http://127.0.0.1:${rp.httpGet.port}${rp.httpGet.path} 2>/dev/null; do sleep 2; done'`;
-  }
-  return '';
+  if (!s) return '';
+  return 'sleep 60';
 }
 
 function readNeeds(folder) {
