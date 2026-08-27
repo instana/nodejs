@@ -75,32 +75,21 @@ EXISTING=$(curl -s \
 
 # ── create triggers ──────────────────────────────────────────────────────────
 
-YAML_FILES=("$SCRIPT_DIR"/pipeline-config-*.yaml)
-# exclude the default pipeline-config.yaml (no suffix)
-YAML_FILES=("${YAML_FILES[@]/pipeline-config.yaml/}")
+# ── helper: create one trigger ───────────────────────────────────────────────
 
-CREATED=0
-SKIPPED=0
+create_trigger() {
+  local trigger_name="$1"
+  local config_path="$2"
 
-for yaml_file in "${YAML_FILES[@]}"; do
-  [[ -f "$yaml_file" ]] || continue
-
-  filename="$(basename "$yaml_file")"
-  # strip pipeline-config- prefix and .yaml suffix to get the name
-  name="${filename#pipeline-config-}"
-  name="${name%.yaml}"
-
-  config_path=".sps/${filename}"
-  trigger_name="pr-${name}"
-
-  # check if trigger already exists
+  local exists
   exists=$(echo "$EXISTING" | jq -r --arg n "$trigger_name" '.triggers[]? | select(.name == $n) | .name' 2>/dev/null || true)
   if [[ -n "$exists" ]]; then
     echo "  SKIP  ${trigger_name} (already exists)"
     SKIPPED=$((SKIPPED + 1))
-    continue
+    return
   fi
 
+  local PAYLOAD
   PAYLOAD=$(jq -n \
     --arg name "$trigger_name" \
     --arg repo "$REPO_URL" \
@@ -141,12 +130,36 @@ for yaml_file in "${YAML_FILES[@]}"; do
     RESPONSE=$(echo "$RESPONSE" | sed '$d')
     if [[ "$HTTP_CODE" != "201" && "$HTTP_CODE" != "200" ]]; then
       echo "    ERROR (HTTP ${HTTP_CODE}): $(echo "$RESPONSE" | jq -r '.message // .' 2>/dev/null || echo "$RESPONSE")"
-      continue
+      return
     fi
     echo "    OK  id=$(echo "$RESPONSE" | jq -r '.id // "?"')"
   fi
 
   CREATED=$((CREATED + 1))
+}
+
+# ── create default security-checks trigger ───────────────────────────────────
+
+CREATED=0
+SKIPPED=0
+
+create_trigger "pr-security-checks" ".sps/pipeline-config.yaml"
+
+# ── create per-yaml triggers ──────────────────────────────────────────────────
+
+YAML_FILES=("$SCRIPT_DIR"/pipeline-config-*.yaml)
+# exclude the default pipeline-config.yaml (no suffix)
+YAML_FILES=("${YAML_FILES[@]/pipeline-config.yaml/}")
+
+for yaml_file in "${YAML_FILES[@]}"; do
+  [[ -f "$yaml_file" ]] || continue
+
+  filename="$(basename "$yaml_file")"
+  # strip pipeline-config- prefix and .yaml suffix to get the name
+  name="${filename#pipeline-config-}"
+  name="${name%.yaml}"
+
+  create_trigger "pr-${name}" ".sps/${filename}"
 done
 
 echo ""

@@ -272,10 +272,7 @@ function baseConfig(fanOutTasks) {
           }
         ]
       },
-      ...fanOutTasks,
-      'code-pr-finish': {
-        steps: [{ name: 'run-stage', when: 'false' }]
-      }
+      ...fanOutTasks
     }
   };
 }
