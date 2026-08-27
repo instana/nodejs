@@ -379,7 +379,7 @@ if (TARGET.startsWith('collector-currencies-')) {
     'azure-container-services':  { script: 'test:ci:azure-container-services',  displayName: 'azure-container-services' },
     'google-cloud-run':          { script: 'test:ci:google-cloud-run',          displayName: 'google-cloud-run' },
     'autoprofile':               { script: 'test:ci:autoprofile',               displayName: 'autoprofile',
-                                   extraEnv: 'CI_AUTOPROFILE_TEST_FILES=$(find packages/autoprofile/test -name \'*.test.js\' -not -path \'*/node_modules/*\' | sort | tr \'\\n\' \' \')' },
+                                   extraEnv: 'CI_AUTOPROFILE_TEST_FILES=$(cd packages/autoprofile && find test -name \'*.test.js\' -not -path \'*/node_modules/*\' | sort | tr \'\\n\' \' \')' },
     'core':                      { script: 'test:ci:core',                      displayName: 'core' },
     'metrics-util':              { script: 'test:ci:metrics-util',              displayName: 'metrics-util' },
     'opentelemetry-exporter':    { script: 'test:ci:opentelemetry-exporter',    displayName: 'opentelemetry-exporter' },
