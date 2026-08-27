@@ -22,7 +22,7 @@ set -euo pipefail
 TOOLCHAIN_ID="579d9c4d-163d-4171-be94-9535ff3f68c4"
 REGION="us-south"
 REPO_URL="https://github.com/instana/nodejs.git"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 DRY_RUN=false
 if [[ "${1:-}" == "--dry-run" ]]; then
@@ -121,7 +121,7 @@ for yaml_file in "${YAML_FILES[@]}"; do
       },
       properties: [
         {
-          name: "pipeline-config-filename",
+          name: "pipeline-config",
           value: $config,
           type: "text"
         }
