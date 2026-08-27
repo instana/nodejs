@@ -77,7 +77,7 @@ while IFS= read -r run_id; do
       "${API_BASE}/tekton_pipelines/${PIPELINE_ID}/pipeline_runs/${run_id}/cancel")
     CODE=$(echo "$RESP" | tail -1)
     BODY=$(echo "$RESP" | sed '$d')
-    if [[ "$CODE" != "200" && "$CODE" != "204" ]]; then
+    if [[ "$CODE" != "200" && "$CODE" != "202" && "$CODE" != "204" ]]; then
       echo "    ERROR (HTTP ${CODE}): $(echo "$BODY" | jq -r '.message // .' 2>/dev/null || echo "$BODY")"
       FAILED=$((FAILED + 1))
       continue

@@ -58,8 +58,7 @@ if [[ -z "$TRIGGERS" ]]; then
 fi
 
 COUNT=$(echo "$TRIGGERS" | wc -l | tr -d ' ')
-echo "Found ${COUNT} trigger(s):"
-echo "$TRIGGERS" | while IFS= read -r line; do echo "  $line"; done
+echo "Found ${COUNT} trigger(s)."
 echo ""
 
 # ── delete each trigger ──────────────────────────────────────────────────────

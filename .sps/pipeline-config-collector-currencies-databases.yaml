@@ -1,13 +1,9 @@
 version: '2'
 tasks:
-  code-checks:
-    steps:
-      - name: peer-review
-        when: 'false'
-  code-build:
+  pr-code-checks:
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: npm-install
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -16,20 +12,14 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
-      - name: unit-test
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  code-build-collector-databases-elasticelasticsearch:
-    from: code-build
+  pr-code-checks-collector-databases-elasticelasticsearch:
+    from: pr-code-checks
     displayName: '@elastic/elasticsearch'
     runtimeClassName: large
     include:
       - dind
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: '@elastic/elasticsearch'
         image: mirror.gcr.io/library/node:24
         include:
@@ -78,16 +68,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-  code-build-collector-databases-redisclient:
-    from: code-build
+  pr-code-checks-collector-databases-redisclient:
+    from: pr-code-checks
     displayName: '@redis/client'
     runtimeClassName: large
     include:
       - dind
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: '@redis/client'
         image: mirror.gcr.io/library/node:24
         include:
@@ -141,16 +129,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-  code-build-collector-databases-couchbase:
-    from: code-build
+  pr-code-checks-collector-databases-couchbase:
+    from: pr-code-checks
     displayName: couchbase
     runtimeClassName: large
     include:
       - dind
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: couchbase
         image: mirror.gcr.io/library/node:24
         include:
@@ -197,14 +183,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-  code-build-collector-databases-db2:
-    from: code-build
+  pr-code-checks-collector-databases-db2:
+    from: pr-code-checks
     displayName: db2
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: db2
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -233,14 +217,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-  code-build-collector-databases-ibm_db:
-    from: code-build
+  pr-code-checks-collector-databases-ibm_db:
+    from: pr-code-checks
     displayName: ibm_db
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: ibm_db
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -269,16 +251,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-  code-build-collector-databases-ioredis:
-    from: code-build
+  pr-code-checks-collector-databases-ioredis:
+    from: pr-code-checks
     displayName: ioredis
     runtimeClassName: large
     include:
       - dind
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: ioredis
         image: mirror.gcr.io/library/node:24
         include:
@@ -332,16 +312,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-  code-build-collector-databases-memcached:
-    from: code-build
+  pr-code-checks-collector-databases-memcached:
+    from: pr-code-checks
     displayName: memcached
     runtimeClassName: large
     include:
       - dind
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: memcached
         image: mirror.gcr.io/library/node:24
         include:
@@ -387,16 +365,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-  code-build-collector-databases-mongodb:
-    from: code-build
+  pr-code-checks-collector-databases-mongodb:
+    from: pr-code-checks
     displayName: mongodb
     runtimeClassName: large
     include:
       - dind
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: mongodb
         image: mirror.gcr.io/library/node:24
         include:
@@ -442,16 +418,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-  code-build-collector-databases-mongoose:
-    from: code-build
+  pr-code-checks-collector-databases-mongoose:
+    from: pr-code-checks
     displayName: mongoose
     runtimeClassName: large
     include:
       - dind
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: mongoose
         image: mirror.gcr.io/library/node:24
         include:
@@ -497,14 +471,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-  code-build-collector-databases-mssql:
-    from: code-build
+  pr-code-checks-collector-databases-mssql:
+    from: pr-code-checks
     displayName: mssql
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: mssql
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -533,16 +505,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-  code-build-collector-databases-mysql:
-    from: code-build
+  pr-code-checks-collector-databases-mysql:
+    from: pr-code-checks
     displayName: mysql
     runtimeClassName: large
     include:
       - dind
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: mysql
         image: mirror.gcr.io/library/node:24
         include:
@@ -594,16 +564,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-  code-build-collector-databases-mysql2:
-    from: code-build
+  pr-code-checks-collector-databases-mysql2:
+    from: pr-code-checks
     displayName: mysql2
     runtimeClassName: large
     include:
       - dind
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: mysql2
         image: mirror.gcr.io/library/node:24
         include:
@@ -655,16 +623,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-  code-build-collector-databases-oracledb:
-    from: code-build
+  pr-code-checks-collector-databases-oracledb:
+    from: pr-code-checks
     displayName: oracledb
     runtimeClassName: large
     include:
       - dind
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: oracledb
         image: mirror.gcr.io/library/node:24
         include:
@@ -711,16 +677,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-  code-build-collector-databases-pg:
-    from: code-build
+  pr-code-checks-collector-databases-pg:
+    from: pr-code-checks
     displayName: pg
     runtimeClassName: large
     include:
       - dind
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: pg
         image: mirror.gcr.io/library/node:24
         include:
@@ -770,16 +734,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-  code-build-collector-databases-pg-native:
-    from: code-build
+  pr-code-checks-collector-databases-pg-native:
+    from: pr-code-checks
     displayName: pg-native
     runtimeClassName: large
     include:
       - dind
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: pg-native
         image: mirror.gcr.io/library/node:24
         include:
@@ -829,16 +791,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-  code-build-collector-databases-prisma:
-    from: code-build
+  pr-code-checks-collector-databases-prisma:
+    from: pr-code-checks
     displayName: prisma
     runtimeClassName: large
     include:
       - dind
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: prisma
         image: mirror.gcr.io/library/node:24
         include:
@@ -898,16 +858,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-  code-build-collector-databases-redis:
-    from: code-build
+  pr-code-checks-collector-databases-redis:
+    from: pr-code-checks
     displayName: redis
     runtimeClassName: large
     include:
       - dind
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: redis
         image: mirror.gcr.io/library/node:24
         include:
@@ -961,16 +919,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-  code-build-collector-databases-sequelize:
-    from: code-build
+  pr-code-checks-collector-databases-sequelize:
+    from: pr-code-checks
     displayName: sequelize
     runtimeClassName: large
     include:
       - dind
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: sequelize
         image: mirror.gcr.io/library/node:24
         include:
@@ -1020,14 +976,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-  code-build-collector-databases-tedious:
-    from: code-build
+  pr-code-checks-collector-databases-tedious:
+    from: pr-code-checks
     displayName: tedious
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: tedious
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -1056,15 +1010,7 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-  sign-artifact:
-    when: 'false'
-  deploy-checks:
-    when: 'false'
-  deploy-release:
-    when: 'false'
-  code-ci-finish:
+  code-pr-finish:
     steps:
       - name: run-stage
         when: 'false'

@@ -1,13 +1,9 @@
 version: '2'
 tasks:
-  code-checks:
-    steps:
-      - name: peer-review
-        when: 'false'
-  code-build:
+  pr-code-checks:
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: npm-install
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -16,18 +12,12 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
-      - name: unit-test
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  code-build-collector-logging-bunyan:
-    from: code-build
+  pr-code-checks-collector-logging-bunyan:
+    from: pr-code-checks
     displayName: bunyan
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: bunyan
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -56,14 +46,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-  code-build-collector-logging-console:
-    from: code-build
+  pr-code-checks-collector-logging-console:
+    from: pr-code-checks
     displayName: console
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: console
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -92,14 +80,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-  code-build-collector-logging-express-winston:
-    from: code-build
+  pr-code-checks-collector-logging-express-winston:
+    from: pr-code-checks
     displayName: express-winston
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: express-winston
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -128,14 +114,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-  code-build-collector-logging-log4js:
-    from: code-build
+  pr-code-checks-collector-logging-log4js:
+    from: pr-code-checks
     displayName: log4js
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: log4js
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -164,14 +148,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-  code-build-collector-logging-pino:
-    from: code-build
+  pr-code-checks-collector-logging-pino:
+    from: pr-code-checks
     displayName: pino
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: pino
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -200,14 +182,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-  code-build-collector-logging-winston:
-    from: code-build
+  pr-code-checks-collector-logging-winston:
+    from: pr-code-checks
     displayName: winston
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: winston
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -236,15 +216,7 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-  sign-artifact:
-    when: 'false'
-  deploy-checks:
-    when: 'false'
-  deploy-release:
-    when: 'false'
-  code-ci-finish:
+  code-pr-finish:
     steps:
       - name: run-stage
         when: 'false'

@@ -1,13 +1,9 @@
 version: '2'
 tasks:
-  code-checks:
-    steps:
-      - name: peer-review
-        when: 'false'
-  code-build:
+  pr-code-checks:
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: npm-install
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -16,18 +12,12 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
-      - name: unit-test
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  code-build-metrics-util:
-    from: code-build
+  pr-code-checks-metrics-util:
+    from: pr-code-checks
     displayName: metrics-util
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: run-stage
         displayName: metrics-util
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -42,15 +32,7 @@ tasks:
             HOME="$HOME" \
             CI=true \
             npm run test:ci:metrics-util
-      - name: sign-artifact
-        when: 'false'
-  sign-artifact:
-    when: 'false'
-  deploy-checks:
-    when: 'false'
-  deploy-release:
-    when: 'false'
-  code-ci-finish:
+  code-pr-finish:
     steps:
       - name: run-stage
         when: 'false'

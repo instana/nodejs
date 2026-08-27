@@ -11,10 +11,10 @@ const path = require('path');
 const yaml = require('js-yaml');
 
 const NODE_IMAGE = 'mirror.gcr.io/library/node:24';
-const REPO_ROOT = path.join(__dirname, '..');
+const REPO_ROOT = path.join(__dirname, '../..');
 const CURRENCIES_DIR = path.join(REPO_ROOT, 'packages/collector/test/integration/currencies');
 
-const sidecarsData = require('../.tekton/assets/sidecars.json');
+const sidecarsData = require('../../.tekton/assets/sidecars.json');
 
 // ─── CLI ─────────────────────────────────────────────────────────────────────
 
@@ -180,24 +180,23 @@ function buildCurrencyTask(pkgName, folder, group) {
   scriptLines.push('  TEST_FILES="$TEST_FILES" \\');
   scriptLines.push('  npm run test:ci:collector');
 
-  const taskName = `code-build-collector-${group}-${pkgName.replace(/[@/]/g, '').replace(/\./g, '-')}`;
+  const taskName = `pr-code-checks-collector-${group}-${pkgName.replace(/[@/]/g, '').replace(/\./g, '-')}`;
 
   return {
     taskName,
     task: {
-      from: 'code-build',
+      from: 'pr-code-checks',
       displayName: pkgName,
       runtimeClassName: 'large',
       ...(needs.length > 0 ? { include: ['dind'] } : {}),
       steps: [
         {
-          name: 'build-artifact',
+          name: 'run-stage',
           displayName: pkgName,
           image: NODE_IMAGE,
           ...(needs.length > 0 ? { include: ['docker-socket'] } : {}),
           script: scriptLines.join('\n')
-        },
-        { name: 'sign-artifact', when: 'false' }
+        }
       ]
     }
   };
@@ -231,19 +230,18 @@ function buildSimpleTask(displayName, testScript, needs = []) {
   scriptLines.push(`  npm run ${testScript}`);
 
   return {
-    from: 'code-build',
+    from: 'pr-code-checks',
     displayName,
     runtimeClassName: 'large',
     ...(needs.length > 0 ? { include: ['dind'] } : {}),
     steps: [
       {
-        name: 'build-artifact',
+        name: 'run-stage',
         displayName,
         image: NODE_IMAGE,
         ...(needs.length > 0 ? { include: ['docker-socket'] } : {}),
         script: scriptLines.join('\n')
-      },
-      { name: 'sign-artifact', when: 'false' }
+      }
     ]
   };
 }
@@ -254,14 +252,11 @@ function baseConfig(fanOutTasks) {
   return {
     version: '2',
     tasks: {
-      'code-checks': {
-        steps: [{ name: 'peer-review', when: 'false' }]
-      },
-      'code-build': {
+      'pr-code-checks': {
         runtimeClassName: 'large',
         steps: [
           {
-            name: 'build-artifact',
+            name: 'run-stage',
             displayName: 'npm-install',
             image: NODE_IMAGE,
             script: [
@@ -271,17 +266,11 @@ function baseConfig(fanOutTasks) {
               'npm install --loglevel warn --foreground-scripts',
               'node bin/create-version-test-folders.js'
             ].join('\n')
-          },
-          { name: 'unit-test', when: 'false' },
-          { name: 'scan-artifact', when: 'false' },
-          { name: 'sign-artifact', when: 'false' }
+          }
         ]
       },
       ...fanOutTasks,
-      'sign-artifact': { when: 'false' },
-      'deploy-checks': { when: 'false' },
-      'deploy-release': { when: 'false' },
-      'code-ci-finish': {
+      'code-pr-finish': {
         steps: [{ name: 'run-stage', when: 'false' }]
       }
     }
@@ -290,7 +279,7 @@ function baseConfig(fanOutTasks) {
 
 function writeConfig(name, config) {
   const output = yaml.dump(config, { lineWidth: -1, quotingType: "'", forceQuotes: false });
-  const outPath = path.join(__dirname, `pipeline-config-${name}.yaml`);
+  const outPath = path.join(__dirname, '..', `pipeline-config-${name}.yaml`);
   fs.writeFileSync(outPath, output);
   console.log(`Written: ${outPath}`);
 }
@@ -352,13 +341,12 @@ if (TARGET.startsWith('collector-currencies-')) {
   ].join('\n');
 
   const fanOutTasks = {
-    [`code-build-${TARGET}`]: {
-      from: 'code-build',
+    [`pr-code-checks-${TARGET}`]: {
+      from: 'pr-code-checks',
       displayName: TARGET,
       runtimeClassName: 'large',
       steps: [
-        { name: 'build-artifact', displayName: TARGET, image: NODE_IMAGE, script: scriptLines },
-        { name: 'sign-artifact', when: 'false' }
+        { name: 'run-stage', displayName: TARGET, image: NODE_IMAGE, script: scriptLines }
       ]
     }
   };
@@ -387,7 +375,7 @@ if (TARGET.startsWith('collector-currencies-')) {
   }
 
   const { script, displayName } = SIMPLE_TARGETS[TARGET];
-  const taskName = `code-build-${TARGET}`;
+  const taskName = `pr-code-checks-${TARGET}`;
   const fanOutTasks = { [taskName]: buildSimpleTask(displayName, script) };
 
   writeConfig(TARGET, baseConfig(fanOutTasks));
