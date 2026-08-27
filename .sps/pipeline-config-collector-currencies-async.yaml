@@ -1,10 +1,6 @@
 version: '2'
 tasks:
   pr-code-checks:
-    steps:
-      - name: run-stage
-        when: 'false'
-  pr-code-build:
     runtimeClassName: large
     steps:
       - name: unit-test
@@ -16,14 +12,8 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-async-await:
-    from: pr-code-build
+  pr-code-checks-collector-async-await:
+    from: pr-code-checks
     displayName: await
     runtimeClassName: large
     steps:
@@ -56,14 +46,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-async-bluebird:
-    from: pr-code-build
+  pr-code-checks-collector-async-bluebird:
+    from: pr-code-checks
     displayName: bluebird
     runtimeClassName: large
     steps:
@@ -96,14 +80,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-async-native-promise:
-    from: pr-code-build
+  pr-code-checks-collector-async-native-promise:
+    from: pr-code-checks
     displayName: native_promise
     runtimeClassName: large
     steps:
@@ -136,12 +114,6 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
   code-pr-finish:
     steps:
       - name: run-stage

@@ -1,10 +1,6 @@
 version: '2'
 tasks:
   pr-code-checks:
-    steps:
-      - name: run-stage
-        when: 'false'
-  pr-code-build:
     runtimeClassName: large
     steps:
       - name: unit-test
@@ -16,14 +12,8 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-logging-bunyan:
-    from: pr-code-build
+  pr-code-checks-collector-logging-bunyan:
+    from: pr-code-checks
     displayName: bunyan
     runtimeClassName: large
     steps:
@@ -56,14 +46,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-logging-console:
-    from: pr-code-build
+  pr-code-checks-collector-logging-console:
+    from: pr-code-checks
     displayName: console
     runtimeClassName: large
     steps:
@@ -96,14 +80,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-logging-express-winston:
-    from: pr-code-build
+  pr-code-checks-collector-logging-express-winston:
+    from: pr-code-checks
     displayName: express-winston
     runtimeClassName: large
     steps:
@@ -136,14 +114,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-logging-log4js:
-    from: pr-code-build
+  pr-code-checks-collector-logging-log4js:
+    from: pr-code-checks
     displayName: log4js
     runtimeClassName: large
     steps:
@@ -176,14 +148,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-logging-pino:
-    from: pr-code-build
+  pr-code-checks-collector-logging-pino:
+    from: pr-code-checks
     displayName: pino
     runtimeClassName: large
     steps:
@@ -216,14 +182,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-logging-winston:
-    from: pr-code-build
+  pr-code-checks-collector-logging-winston:
+    from: pr-code-checks
     displayName: winston
     runtimeClassName: large
     steps:
@@ -256,12 +216,6 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
   code-pr-finish:
     steps:
       - name: run-stage

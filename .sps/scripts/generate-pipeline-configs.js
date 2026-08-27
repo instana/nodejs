@@ -180,12 +180,12 @@ function buildCurrencyTask(pkgName, folder, group) {
   scriptLines.push('  TEST_FILES="$TEST_FILES" \\');
   scriptLines.push('  npm run test:ci:collector');
 
-  const taskName = `pr-code-build-collector-${group}-${pkgName.replace(/[@/]/g, '').replace(/[._]/g, '-')}`;
+  const taskName = `pr-code-checks-collector-${group}-${pkgName.replace(/[@/]/g, '').replace(/[._]/g, '-')}`;
 
   return {
     taskName,
     task: {
-      from: 'pr-code-build',
+      from: 'pr-code-checks',
       displayName: pkgName,
       runtimeClassName: 'large',
       ...(needs.length > 0 ? { include: ['dind'] } : {}),
@@ -196,10 +196,7 @@ function buildCurrencyTask(pkgName, folder, group) {
           image: NODE_IMAGE,
           ...(needs.length > 0 ? { include: ['docker-socket'] } : {}),
           script: scriptLines.join('\n')
-        },
-        { name: 'build-artifact', when: 'false' },
-        { name: 'scan-artifact', when: 'false' },
-        { name: 'sign-artifact', when: 'false' }
+        }
       ]
     }
   };
@@ -233,7 +230,7 @@ function buildSimpleTask(displayName, testScript, needs = []) {
   scriptLines.push(`  npm run ${testScript}`);
 
   return {
-    from: 'pr-code-build',
+    from: 'pr-code-checks',
     displayName,
     runtimeClassName: 'large',
     ...(needs.length > 0 ? { include: ['dind'] } : {}),
@@ -244,10 +241,7 @@ function buildSimpleTask(displayName, testScript, needs = []) {
         image: NODE_IMAGE,
         ...(needs.length > 0 ? { include: ['docker-socket'] } : {}),
         script: scriptLines.join('\n')
-      },
-      { name: 'build-artifact', when: 'false' },
-      { name: 'scan-artifact', when: 'false' },
-      { name: 'sign-artifact', when: 'false' }
+      }
     ]
   };
 }
@@ -259,9 +253,6 @@ function baseConfig(fanOutTasks) {
     version: '2',
     tasks: {
       'pr-code-checks': {
-        steps: [{ name: 'run-stage', when: 'false' }]
-      },
-      'pr-code-build': {
         runtimeClassName: 'large',
         steps: [
           {
@@ -275,10 +266,7 @@ function baseConfig(fanOutTasks) {
               'npm install --loglevel warn --foreground-scripts',
               'node bin/create-version-test-folders.js'
             ].join('\n')
-          },
-          { name: 'build-artifact', when: 'false' },
-          { name: 'scan-artifact', when: 'false' },
-          { name: 'sign-artifact', when: 'false' }
+          }
         ]
       },
       ...fanOutTasks,
@@ -353,15 +341,12 @@ if (TARGET.startsWith('collector-currencies-')) {
   ].join('\n');
 
   const fanOutTasks = {
-    [`pr-code-build-${TARGET}`]: {
-      from: 'pr-code-build',
+    [`pr-code-checks-${TARGET}`]: {
+      from: 'pr-code-checks',
       displayName: TARGET,
       runtimeClassName: 'large',
       steps: [
-        { name: 'unit-test', displayName: TARGET, image: NODE_IMAGE, script: scriptLines },
-        { name: 'build-artifact', when: 'false' },
-        { name: 'scan-artifact', when: 'false' },
-        { name: 'sign-artifact', when: 'false' }
+        { name: 'unit-test', displayName: TARGET, image: NODE_IMAGE, script: scriptLines }
       ]
     }
   };
@@ -390,7 +375,7 @@ if (TARGET.startsWith('collector-currencies-')) {
   }
 
   const { script, displayName } = SIMPLE_TARGETS[TARGET];
-  const taskName = `pr-code-build-${TARGET}`;
+  const taskName = `pr-code-checks-${TARGET}`;
   const fanOutTasks = { [taskName]: buildSimpleTask(displayName, script) };
 
   writeConfig(TARGET, baseConfig(fanOutTasks));

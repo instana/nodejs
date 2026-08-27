@@ -1,10 +1,6 @@
 version: '2'
 tasks:
   pr-code-checks:
-    steps:
-      - name: run-stage
-        when: 'false'
-  pr-code-build:
     runtimeClassName: large
     steps:
       - name: unit-test
@@ -16,14 +12,8 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-databases-elasticelasticsearch:
-    from: pr-code-build
+  pr-code-checks-collector-databases-elasticelasticsearch:
+    from: pr-code-checks
     displayName: '@elastic/elasticsearch'
     runtimeClassName: large
     include:
@@ -78,14 +68,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-databases-redisclient:
-    from: pr-code-build
+  pr-code-checks-collector-databases-redisclient:
+    from: pr-code-checks
     displayName: '@redis/client'
     runtimeClassName: large
     include:
@@ -145,14 +129,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-databases-couchbase:
-    from: pr-code-build
+  pr-code-checks-collector-databases-couchbase:
+    from: pr-code-checks
     displayName: couchbase
     runtimeClassName: large
     include:
@@ -205,14 +183,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-databases-db2:
-    from: pr-code-build
+  pr-code-checks-collector-databases-db2:
+    from: pr-code-checks
     displayName: db2
     runtimeClassName: large
     steps:
@@ -245,14 +217,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-databases-ibm-db:
-    from: pr-code-build
+  pr-code-checks-collector-databases-ibm-db:
+    from: pr-code-checks
     displayName: ibm_db
     runtimeClassName: large
     steps:
@@ -285,14 +251,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-databases-ioredis:
-    from: pr-code-build
+  pr-code-checks-collector-databases-ioredis:
+    from: pr-code-checks
     displayName: ioredis
     runtimeClassName: large
     include:
@@ -352,14 +312,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-databases-memcached:
-    from: pr-code-build
+  pr-code-checks-collector-databases-memcached:
+    from: pr-code-checks
     displayName: memcached
     runtimeClassName: large
     include:
@@ -411,14 +365,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-databases-mongodb:
-    from: pr-code-build
+  pr-code-checks-collector-databases-mongodb:
+    from: pr-code-checks
     displayName: mongodb
     runtimeClassName: large
     include:
@@ -470,14 +418,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-databases-mongoose:
-    from: pr-code-build
+  pr-code-checks-collector-databases-mongoose:
+    from: pr-code-checks
     displayName: mongoose
     runtimeClassName: large
     include:
@@ -529,14 +471,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-databases-mssql:
-    from: pr-code-build
+  pr-code-checks-collector-databases-mssql:
+    from: pr-code-checks
     displayName: mssql
     runtimeClassName: large
     steps:
@@ -569,14 +505,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-databases-mysql:
-    from: pr-code-build
+  pr-code-checks-collector-databases-mysql:
+    from: pr-code-checks
     displayName: mysql
     runtimeClassName: large
     include:
@@ -634,14 +564,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-databases-mysql2:
-    from: pr-code-build
+  pr-code-checks-collector-databases-mysql2:
+    from: pr-code-checks
     displayName: mysql2
     runtimeClassName: large
     include:
@@ -699,14 +623,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-databases-oracledb:
-    from: pr-code-build
+  pr-code-checks-collector-databases-oracledb:
+    from: pr-code-checks
     displayName: oracledb
     runtimeClassName: large
     include:
@@ -759,14 +677,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-databases-pg:
-    from: pr-code-build
+  pr-code-checks-collector-databases-pg:
+    from: pr-code-checks
     displayName: pg
     runtimeClassName: large
     include:
@@ -822,14 +734,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-databases-pg-native:
-    from: pr-code-build
+  pr-code-checks-collector-databases-pg-native:
+    from: pr-code-checks
     displayName: pg-native
     runtimeClassName: large
     include:
@@ -885,14 +791,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-databases-prisma:
-    from: pr-code-build
+  pr-code-checks-collector-databases-prisma:
+    from: pr-code-checks
     displayName: prisma
     runtimeClassName: large
     include:
@@ -958,14 +858,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-databases-redis:
-    from: pr-code-build
+  pr-code-checks-collector-databases-redis:
+    from: pr-code-checks
     displayName: redis
     runtimeClassName: large
     include:
@@ -1025,14 +919,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-databases-sequelize:
-    from: pr-code-build
+  pr-code-checks-collector-databases-sequelize:
+    from: pr-code-checks
     displayName: sequelize
     runtimeClassName: large
     include:
@@ -1088,14 +976,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-databases-tedious:
-    from: pr-code-build
+  pr-code-checks-collector-databases-tedious:
+    from: pr-code-checks
     displayName: tedious
     runtimeClassName: large
     steps:
@@ -1128,12 +1010,6 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
   code-pr-finish:
     steps:
       - name: run-stage

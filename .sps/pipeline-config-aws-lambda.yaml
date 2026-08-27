@@ -1,10 +1,6 @@
 version: '2'
 tasks:
   pr-code-checks:
-    steps:
-      - name: run-stage
-        when: 'false'
-  pr-code-build:
     runtimeClassName: large
     steps:
       - name: unit-test
@@ -16,14 +12,8 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-aws-lambda:
-    from: pr-code-build
+  pr-code-checks-aws-lambda:
+    from: pr-code-checks
     displayName: aws-lambda
     runtimeClassName: large
     steps:
@@ -42,12 +32,6 @@ tasks:
             HOME="$HOME" \
             CI=true \
             npm run test:ci:aws-lambda
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
   code-pr-finish:
     steps:
       - name: run-stage

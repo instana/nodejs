@@ -1,10 +1,6 @@
 version: '2'
 tasks:
   pr-code-checks:
-    steps:
-      - name: run-stage
-        when: 'false'
-  pr-code-build:
     runtimeClassName: large
     steps:
       - name: unit-test
@@ -16,14 +12,8 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-protocols-apolloserver:
-    from: pr-code-build
+  pr-code-checks-collector-protocols-apolloserver:
+    from: pr-code-checks
     displayName: '@apollo/server'
     runtimeClassName: large
     steps:
@@ -56,14 +46,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-protocols-apollosubgraph:
-    from: pr-code-build
+  pr-code-checks-collector-protocols-apollosubgraph:
+    from: pr-code-checks
     displayName: '@apollo/subgraph'
     runtimeClassName: large
     steps:
@@ -96,14 +80,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-protocols-grpcgrpc-js:
-    from: pr-code-build
+  pr-code-checks-collector-protocols-grpcgrpc-js:
+    from: pr-code-checks
     displayName: '@grpc/grpc-js'
     runtimeClassName: large
     steps:
@@ -136,14 +114,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-protocols-graphql:
-    from: pr-code-build
+  pr-code-checks-collector-protocols-graphql:
+    from: pr-code-checks
     displayName: graphql
     runtimeClassName: large
     steps:
@@ -176,14 +148,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-protocols-graphql-subscriptions:
-    from: pr-code-build
+  pr-code-checks-collector-protocols-graphql-subscriptions:
+    from: pr-code-checks
     displayName: graphql-subscriptions
     runtimeClassName: large
     steps:
@@ -216,14 +182,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-protocols-http:
-    from: pr-code-build
+  pr-code-checks-collector-protocols-http:
+    from: pr-code-checks
     displayName: http
     runtimeClassName: large
     steps:
@@ -256,14 +216,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-protocols-http2:
-    from: pr-code-build
+  pr-code-checks-collector-protocols-http2:
+    from: pr-code-checks
     displayName: http2
     runtimeClassName: large
     steps:
@@ -296,12 +250,6 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
   code-pr-finish:
     steps:
       - name: run-stage

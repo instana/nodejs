@@ -1,10 +1,6 @@
 version: '2'
 tasks:
   pr-code-checks:
-    steps:
-      - name: run-stage
-        when: 'false'
-  pr-code-build:
     runtimeClassName: large
     steps:
       - name: unit-test
@@ -16,14 +12,8 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-frameworks-hapihapi:
-    from: pr-code-build
+  pr-code-checks-collector-frameworks-hapihapi:
+    from: pr-code-checks
     displayName: '@hapi/hapi'
     runtimeClassName: large
     steps:
@@ -56,14 +46,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-frameworks-koarouter:
-    from: pr-code-build
+  pr-code-checks-collector-frameworks-koarouter:
+    from: pr-code-checks
     displayName: '@koa/router'
     runtimeClassName: large
     steps:
@@ -96,14 +80,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-frameworks-express:
-    from: pr-code-build
+  pr-code-checks-collector-frameworks-express:
+    from: pr-code-checks
     displayName: express
     runtimeClassName: large
     steps:
@@ -136,14 +114,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-frameworks-fastify:
-    from: pr-code-build
+  pr-code-checks-collector-frameworks-fastify:
+    from: pr-code-checks
     displayName: fastify
     runtimeClassName: large
     steps:
@@ -176,14 +148,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-frameworks-got:
-    from: pr-code-build
+  pr-code-checks-collector-frameworks-got:
+    from: pr-code-checks
     displayName: got
     runtimeClassName: large
     steps:
@@ -216,14 +182,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-frameworks-restify:
-    from: pr-code-build
+  pr-code-checks-collector-frameworks-restify:
+    from: pr-code-checks
     displayName: restify
     runtimeClassName: large
     steps:
@@ -256,14 +216,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-frameworks-sequelize:
-    from: pr-code-build
+  pr-code-checks-collector-frameworks-sequelize:
+    from: pr-code-checks
     displayName: sequelize
     runtimeClassName: large
     steps:
@@ -296,14 +250,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-frameworks-tsoa:
-    from: pr-code-build
+  pr-code-checks-collector-frameworks-tsoa:
+    from: pr-code-checks
     displayName: tsoa
     runtimeClassName: large
     steps:
@@ -336,14 +284,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-frameworks-typeorm:
-    from: pr-code-build
+  pr-code-checks-collector-frameworks-typeorm:
+    from: pr-code-checks
     displayName: typeorm
     runtimeClassName: large
     steps:
@@ -376,12 +318,6 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
   code-pr-finish:
     steps:
       - name: run-stage

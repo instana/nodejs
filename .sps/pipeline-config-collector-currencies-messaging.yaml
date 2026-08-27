@@ -1,10 +1,6 @@
 version: '2'
 tasks:
   pr-code-checks:
-    steps:
-      - name: run-stage
-        when: 'false'
-  pr-code-build:
     runtimeClassName: large
     steps:
       - name: unit-test
@@ -16,14 +12,8 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-messaging-confluentinckafka-javascript:
-    from: pr-code-build
+  pr-code-checks-collector-messaging-confluentinckafka-javascript:
+    from: pr-code-checks
     displayName: '@confluentinc/kafka-javascript'
     runtimeClassName: large
     include:
@@ -94,14 +84,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-messaging-amqplib:
-    from: pr-code-build
+  pr-code-checks-collector-messaging-amqplib:
+    from: pr-code-checks
     displayName: amqplib
     runtimeClassName: large
     include:
@@ -154,14 +138,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-messaging-bull:
-    from: pr-code-build
+  pr-code-checks-collector-messaging-bull:
+    from: pr-code-checks
     displayName: bull
     runtimeClassName: large
     include:
@@ -213,14 +191,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-messaging-kafka-node:
-    from: pr-code-build
+  pr-code-checks-collector-messaging-kafka-node:
+    from: pr-code-checks
     displayName: kafka-node
     runtimeClassName: large
     include:
@@ -291,14 +263,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-messaging-kafkajs:
-    from: pr-code-build
+  pr-code-checks-collector-messaging-kafkajs:
+    from: pr-code-checks
     displayName: kafkajs
     runtimeClassName: large
     include:
@@ -369,14 +335,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-messaging-nats:
-    from: pr-code-build
+  pr-code-checks-collector-messaging-nats:
+    from: pr-code-checks
     displayName: nats
     runtimeClassName: large
     include:
@@ -428,14 +388,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-messaging-node-nats-streaming:
-    from: pr-code-build
+  pr-code-checks-collector-messaging-node-nats-streaming:
+    from: pr-code-checks
     displayName: node-nats-streaming
     runtimeClassName: large
     include:
@@ -493,14 +447,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-messaging-node-rdkafka:
-    from: pr-code-build
+  pr-code-checks-collector-messaging-node-rdkafka:
+    from: pr-code-checks
     displayName: node-rdkafka
     runtimeClassName: large
     include:
@@ -571,14 +519,8 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-  pr-code-build-collector-messaging-socket-io:
-    from: pr-code-build
+  pr-code-checks-collector-messaging-socket-io:
+    from: pr-code-checks
     displayName: socket.io
     runtimeClassName: large
     steps:
@@ -611,12 +553,6 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
   code-pr-finish:
     steps:
       - name: run-stage
