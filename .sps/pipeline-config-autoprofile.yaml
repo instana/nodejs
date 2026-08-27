@@ -39,8 +39,11 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
+          export CI_AUTOPROFILE_TEST_FILES=$(find packages/autoprofile/test -name '*.test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
+
           exec env -i \
             PATH="$PATH" \
             HOME="$HOME" \
             CI=true \
+            CI_AUTOPROFILE_TEST_FILES="$CI_AUTOPROFILE_TEST_FILES" \
             npm run test:ci:autoprofile

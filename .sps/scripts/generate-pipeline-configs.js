@@ -207,7 +207,7 @@ function buildCurrencyTask(pkgName, folder, group) {
 
 // ─── simple single-task config builder ───────────────────────────────────────
 
-function buildSimpleTask(displayName, testScript, needs = []) {
+function buildSimpleTask(displayName, testScript, needs = [], extraEnv = null) {
   const scriptLines = ['#!/usr/bin/env bash', 'set -eo pipefail', ''];
   scriptLines.push('cd "$WORKSPACE/$(load_repo app-repo path)"');
   scriptLines.push('npm install --loglevel warn --foreground-scripts');
@@ -226,10 +226,19 @@ function buildSimpleTask(displayName, testScript, needs = []) {
     }
   }
 
+  if (extraEnv) {
+    scriptLines.push(`export ${extraEnv}`);
+    scriptLines.push('');
+  }
+
   scriptLines.push(`exec env -i \\`);
   scriptLines.push('  PATH="$PATH" \\');
   scriptLines.push('  HOME="$HOME" \\');
   scriptLines.push('  CI=true \\');
+  if (extraEnv) {
+    const varName = extraEnv.split('=')[0];
+    scriptLines.push(`  ${varName}="$${varName}" \\`);
+  }
   scriptLines.push(`  npm run ${testScript}`);
 
   return {
@@ -368,7 +377,8 @@ if (TARGET.startsWith('collector-currencies-')) {
     'aws-fargate':               { script: 'test:ci:aws-fargate',               displayName: 'aws-fargate' },
     'azure-container-services':  { script: 'test:ci:azure-container-services',  displayName: 'azure-container-services' },
     'google-cloud-run':          { script: 'test:ci:google-cloud-run',          displayName: 'google-cloud-run' },
-    'autoprofile':               { script: 'test:ci:autoprofile',               displayName: 'autoprofile' },
+    'autoprofile':               { script: 'test:ci:autoprofile',               displayName: 'autoprofile',
+                                   extraEnv: 'CI_AUTOPROFILE_TEST_FILES=$(find packages/autoprofile/test -name \'*.test.js\' -not -path \'*/node_modules/*\' | sort | tr \'\\n\' \' \')' },
     'core':                      { script: 'test:ci:core',                      displayName: 'core' },
     'metrics-util':              { script: 'test:ci:metrics-util',              displayName: 'metrics-util' },
     'opentelemetry-exporter':    { script: 'test:ci:opentelemetry-exporter',    displayName: 'opentelemetry-exporter' },
@@ -389,16 +399,16 @@ if (TARGET.startsWith('collector-currencies-')) {
     const members = GROUP_TARGETS[TARGET];
     const fanOutTasks = {};
     for (const member of members) {
-      const { script, displayName } = SIMPLE_TARGETS[member];
+      const { script, displayName, extraEnv } = SIMPLE_TARGETS[member];
       const taskName = `pr-code-checks-${member}`;
-      fanOutTasks[taskName] = buildSimpleTask(displayName, script);
+      fanOutTasks[taskName] = buildSimpleTask(displayName, script, [], extraEnv);
     }
     writeConfig(TARGET, baseConfig(fanOutTasks));
     console.log(`Generated ${members.length} tasks for group '${TARGET}': ${members.join(', ')}`);
   } else if (SIMPLE_TARGETS[TARGET]) {
-    const { script, displayName } = SIMPLE_TARGETS[TARGET];
+    const { script, displayName, extraEnv } = SIMPLE_TARGETS[TARGET];
     const taskName = `pr-code-checks-${TARGET}`;
-    const fanOutTasks = { [taskName]: buildSimpleTask(displayName, script) };
+    const fanOutTasks = { [taskName]: buildSimpleTask(displayName, script, [], extraEnv) };
     writeConfig(TARGET, baseConfig(fanOutTasks));
     console.log(`Generated task '${taskName}' running: npm run ${script}`);
   } else {
