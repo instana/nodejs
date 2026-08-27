@@ -616,7 +616,7 @@ tasks:
             -e MYSQL_PASSWORD="nodepw" \
             -e MYSQL_ROOT_HOST="0.0.0.0" \
             "mirror.gcr.io/library/mysql:8.0.26" "--default-authentication-plugin=mysql_native_password"
-          timeout 13 bash -c 'until "sh" "-c" "mysql -h 0.0.0.0 -u node -p'nodepw' -e 'SELECT 1'" >/dev/null 2>&1; do sleep 2; done'
+          timeout 13 bash -c 'until sh -c mysql -h 0.0.0.0 -u node -p'nodepw' -e 'SELECT 1' >/dev/null 2>&1; do sleep 2; done'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -681,7 +681,7 @@ tasks:
             -e MYSQL_PASSWORD="nodepw" \
             -e MYSQL_ROOT_HOST="0.0.0.0" \
             "mirror.gcr.io/library/mysql:8.0.26" "--default-authentication-plugin=mysql_native_password"
-          timeout 13 bash -c 'until "sh" "-c" "mysql -h 0.0.0.0 -u node -p'nodepw' -e 'SELECT 1'" >/dev/null 2>&1; do sleep 2; done'
+          timeout 13 bash -c 'until sh -c mysql -h 0.0.0.0 -u node -p'nodepw' -e 'SELECT 1' >/dev/null 2>&1; do sleep 2; done'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -804,7 +804,7 @@ tasks:
             -e POSTGRES_PASSWORD="nodepw" \
             -e POSTGRES_DB="nodedb" \
             "mirror.gcr.io/library/postgres:15.15"
-          timeout 13 bash -c 'until "sh" "-c" "pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb" >/dev/null 2>&1; do sleep 2; done'
+          timeout 65 bash -c 'until sh -c pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb >/dev/null 2>&1; do sleep 2; done'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -867,7 +867,7 @@ tasks:
             -e POSTGRES_PASSWORD="nodepw" \
             -e POSTGRES_DB="nodedb" \
             "mirror.gcr.io/library/postgres:15.15"
-          timeout 13 bash -c 'until "sh" "-c" "pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb" >/dev/null 2>&1; do sleep 2; done'
+          timeout 65 bash -c 'until sh -c pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb >/dev/null 2>&1; do sleep 2; done'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -930,7 +930,7 @@ tasks:
             -e POSTGRES_PASSWORD="nodepw" \
             -e POSTGRES_DB="nodedb" \
             "mirror.gcr.io/library/postgres:15.15"
-          timeout 13 bash -c 'until "sh" "-c" "pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb" >/dev/null 2>&1; do sleep 2; done'
+          timeout 65 bash -c 'until sh -c pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb >/dev/null 2>&1; do sleep 2; done'
 
           # start mysql
           docker run -d --network host --name mysql \
@@ -940,7 +940,7 @@ tasks:
             -e MYSQL_PASSWORD="nodepw" \
             -e MYSQL_ROOT_HOST="0.0.0.0" \
             "mirror.gcr.io/library/mysql:8.0.26" "--default-authentication-plugin=mysql_native_password"
-          timeout 13 bash -c 'until "sh" "-c" "mysql -h 0.0.0.0 -u node -p'nodepw' -e 'SELECT 1'" >/dev/null 2>&1; do sleep 2; done'
+          timeout 13 bash -c 'until sh -c mysql -h 0.0.0.0 -u node -p'nodepw' -e 'SELECT 1' >/dev/null 2>&1; do sleep 2; done'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -1070,7 +1070,7 @@ tasks:
             -e POSTGRES_PASSWORD="nodepw" \
             -e POSTGRES_DB="nodedb" \
             "mirror.gcr.io/library/postgres:15.15"
-          timeout 13 bash -c 'until "sh" "-c" "pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb" >/dev/null 2>&1; do sleep 2; done'
+          timeout 65 bash -c 'until sh -c pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb >/dev/null 2>&1; do sleep 2; done'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \

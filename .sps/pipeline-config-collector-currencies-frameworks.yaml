@@ -301,7 +301,7 @@ tasks:
             -e POSTGRES_PASSWORD="nodepw" \
             -e POSTGRES_DB="nodedb" \
             "mirror.gcr.io/library/postgres:15.15"
-          timeout 65 bash -c 'until sh "-c" "pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb" >/dev/null 2>&1; do sleep 2; done'
+          timeout 65 bash -c 'until sh -c pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb >/dev/null 2>&1; do sleep 2; done'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -404,7 +404,7 @@ tasks:
             -e POSTGRES_PASSWORD="nodepw" \
             -e POSTGRES_DB="nodedb" \
             "mirror.gcr.io/library/postgres:15.15"
-          timeout 65 bash -c 'until sh "-c" "pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb" >/dev/null 2>&1; do sleep 2; done'
+          timeout 65 bash -c 'until sh -c pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb >/dev/null 2>&1; do sleep 2; done'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
