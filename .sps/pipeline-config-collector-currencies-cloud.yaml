@@ -23,6 +23,12 @@ tasks:
     displayName: '@aws-sdk/client-dynamodb'
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: '@aws-sdk/client-dynamodb'
         image: mirror.gcr.io/library/node:24
@@ -57,6 +63,12 @@ tasks:
     displayName: '@aws-sdk/client-kinesis'
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: '@aws-sdk/client-kinesis'
         image: mirror.gcr.io/library/node:24
@@ -91,6 +103,12 @@ tasks:
     displayName: '@aws-sdk/client-lambda'
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: '@aws-sdk/client-lambda'
         image: mirror.gcr.io/library/node:24
@@ -125,6 +143,12 @@ tasks:
     displayName: '@aws-sdk/client-s3'
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: '@aws-sdk/client-s3'
         image: mirror.gcr.io/library/node:24
@@ -159,6 +183,12 @@ tasks:
     displayName: '@aws-sdk/client-sns'
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: '@aws-sdk/client-sns'
         image: mirror.gcr.io/library/node:24
@@ -193,6 +223,12 @@ tasks:
     displayName: '@aws-sdk/client-sqs'
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: '@aws-sdk/client-sqs'
         image: mirror.gcr.io/library/node:24
@@ -227,6 +263,12 @@ tasks:
     displayName: '@azure/storage-blob'
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: '@azure/storage-blob'
         image: mirror.gcr.io/library/node:24
@@ -261,6 +303,12 @@ tasks:
     displayName: '@google-cloud/pubsub'
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: '@google-cloud/pubsub'
         image: mirror.gcr.io/library/node:24
@@ -295,6 +343,12 @@ tasks:
     displayName: '@google-cloud/storage'
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: '@google-cloud/storage'
         image: mirror.gcr.io/library/node:24
@@ -329,6 +383,12 @@ tasks:
     displayName: aws-sdk
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: aws-sdk
         image: mirror.gcr.io/library/node:24
@@ -358,7 +418,3 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  code-pr-finish:
-    steps:
-      - name: run-stage
-        when: 'false'

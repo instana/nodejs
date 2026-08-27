@@ -23,6 +23,12 @@ tasks:
     displayName: '@apollo/server'
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: '@apollo/server'
         image: mirror.gcr.io/library/node:24
@@ -57,6 +63,12 @@ tasks:
     displayName: '@apollo/subgraph'
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: '@apollo/subgraph'
         image: mirror.gcr.io/library/node:24
@@ -91,6 +103,12 @@ tasks:
     displayName: '@grpc/grpc-js'
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: '@grpc/grpc-js'
         image: mirror.gcr.io/library/node:24
@@ -125,6 +143,12 @@ tasks:
     displayName: graphql
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: graphql
         image: mirror.gcr.io/library/node:24
@@ -159,6 +183,12 @@ tasks:
     displayName: graphql-subscriptions
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: graphql-subscriptions
         image: mirror.gcr.io/library/node:24
@@ -193,6 +223,12 @@ tasks:
     displayName: http
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: http
         image: mirror.gcr.io/library/node:24
@@ -227,6 +263,12 @@ tasks:
     displayName: http2
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: http2
         image: mirror.gcr.io/library/node:24
@@ -256,7 +298,3 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  code-pr-finish:
-    steps:
-      - name: run-stage
-        when: 'false'

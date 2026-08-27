@@ -23,6 +23,12 @@ tasks:
     displayName: '@hapi/hapi'
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: '@hapi/hapi'
         image: mirror.gcr.io/library/node:24
@@ -57,6 +63,12 @@ tasks:
     displayName: '@koa/router'
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: '@koa/router'
         image: mirror.gcr.io/library/node:24
@@ -91,6 +103,12 @@ tasks:
     displayName: express
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: express
         image: mirror.gcr.io/library/node:24
@@ -125,6 +143,12 @@ tasks:
     displayName: fastify
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: fastify
         image: mirror.gcr.io/library/node:24
@@ -159,6 +183,12 @@ tasks:
     displayName: got
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: got
         image: mirror.gcr.io/library/node:24
@@ -193,6 +223,12 @@ tasks:
     displayName: restify
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: restify
         image: mirror.gcr.io/library/node:24
@@ -227,6 +263,12 @@ tasks:
     displayName: sequelize
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: sequelize
         image: mirror.gcr.io/library/node:24
@@ -261,6 +303,12 @@ tasks:
     displayName: tsoa
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: tsoa
         image: mirror.gcr.io/library/node:24
@@ -295,6 +343,12 @@ tasks:
     displayName: typeorm
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: typeorm
         image: mirror.gcr.io/library/node:24
@@ -324,7 +378,3 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  code-pr-finish:
-    steps:
-      - name: run-stage
-        when: 'false'

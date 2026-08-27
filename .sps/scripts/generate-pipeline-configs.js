@@ -190,6 +190,9 @@ function buildCurrencyTask(pkgName, folder, group) {
       runtimeClassName: 'large',
       ...(needs.length > 0 ? { include: ['dind'] } : {}),
       steps: [
+        { name: 'peer-review', when: 'false' },
+        { name: 'detect-secrets', when: 'false' },
+        { name: 'compliance-checks', when: 'false' },
         {
           name: 'unit-test',
           displayName: pkgName,
@@ -235,6 +238,9 @@ function buildSimpleTask(displayName, testScript, needs = []) {
     runtimeClassName: 'large',
     ...(needs.length > 0 ? { include: ['dind'] } : {}),
     steps: [
+      { name: 'peer-review', when: 'false' },
+      { name: 'detect-secrets', when: 'false' },
+      { name: 'compliance-checks', when: 'false' },
       {
         name: 'unit-test',
         displayName,
@@ -346,6 +352,9 @@ if (TARGET.startsWith('collector-currencies-')) {
       displayName: TARGET,
       runtimeClassName: 'large',
       steps: [
+        { name: 'peer-review', when: 'false' },
+        { name: 'detect-secrets', when: 'false' },
+        { name: 'compliance-checks', when: 'false' },
         { name: 'unit-test', displayName: TARGET, image: NODE_IMAGE, script: scriptLines }
       ]
     }

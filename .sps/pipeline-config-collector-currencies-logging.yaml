@@ -23,6 +23,12 @@ tasks:
     displayName: bunyan
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: bunyan
         image: mirror.gcr.io/library/node:24
@@ -57,6 +63,12 @@ tasks:
     displayName: console
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: console
         image: mirror.gcr.io/library/node:24
@@ -91,6 +103,12 @@ tasks:
     displayName: express-winston
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: express-winston
         image: mirror.gcr.io/library/node:24
@@ -125,6 +143,12 @@ tasks:
     displayName: log4js
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: log4js
         image: mirror.gcr.io/library/node:24
@@ -159,6 +183,12 @@ tasks:
     displayName: pino
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: pino
         image: mirror.gcr.io/library/node:24
@@ -193,6 +223,12 @@ tasks:
     displayName: winston
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: winston
         image: mirror.gcr.io/library/node:24
@@ -222,7 +258,3 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  code-pr-finish:
-    steps:
-      - name: run-stage
-        when: 'false'

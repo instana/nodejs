@@ -25,6 +25,12 @@ tasks:
     include:
       - dind
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: '@elastic/elasticsearch'
         image: mirror.gcr.io/library/node:24
@@ -81,6 +87,12 @@ tasks:
     include:
       - dind
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: '@redis/client'
         image: mirror.gcr.io/library/node:24
@@ -142,6 +154,12 @@ tasks:
     include:
       - dind
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: couchbase
         image: mirror.gcr.io/library/node:24
@@ -194,6 +212,12 @@ tasks:
     displayName: db2
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: db2
         image: mirror.gcr.io/library/node:24
@@ -228,6 +252,12 @@ tasks:
     displayName: ibm_db
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: ibm_db
         image: mirror.gcr.io/library/node:24
@@ -264,6 +294,12 @@ tasks:
     include:
       - dind
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: ioredis
         image: mirror.gcr.io/library/node:24
@@ -325,6 +361,12 @@ tasks:
     include:
       - dind
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: memcached
         image: mirror.gcr.io/library/node:24
@@ -378,6 +420,12 @@ tasks:
     include:
       - dind
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: mongodb
         image: mirror.gcr.io/library/node:24
@@ -431,6 +479,12 @@ tasks:
     include:
       - dind
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: mongoose
         image: mirror.gcr.io/library/node:24
@@ -482,6 +536,12 @@ tasks:
     displayName: mssql
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: mssql
         image: mirror.gcr.io/library/node:24
@@ -518,6 +578,12 @@ tasks:
     include:
       - dind
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: mysql
         image: mirror.gcr.io/library/node:24
@@ -577,6 +643,12 @@ tasks:
     include:
       - dind
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: mysql2
         image: mirror.gcr.io/library/node:24
@@ -636,6 +708,12 @@ tasks:
     include:
       - dind
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: oracledb
         image: mirror.gcr.io/library/node:24
@@ -690,6 +768,12 @@ tasks:
     include:
       - dind
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: pg
         image: mirror.gcr.io/library/node:24
@@ -747,6 +831,12 @@ tasks:
     include:
       - dind
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: pg-native
         image: mirror.gcr.io/library/node:24
@@ -804,6 +894,12 @@ tasks:
     include:
       - dind
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: prisma
         image: mirror.gcr.io/library/node:24
@@ -871,6 +967,12 @@ tasks:
     include:
       - dind
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: redis
         image: mirror.gcr.io/library/node:24
@@ -932,6 +1034,12 @@ tasks:
     include:
       - dind
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: sequelize
         image: mirror.gcr.io/library/node:24
@@ -987,6 +1095,12 @@ tasks:
     displayName: tedious
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: tedious
         image: mirror.gcr.io/library/node:24
@@ -1016,7 +1130,3 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  code-pr-finish:
-    steps:
-      - name: run-stage
-        when: 'false'

@@ -23,6 +23,12 @@ tasks:
     displayName: opentelemetry-sampler
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
       - name: unit-test
         displayName: opentelemetry-sampler
         image: mirror.gcr.io/library/node:24
@@ -38,7 +44,3 @@ tasks:
             HOME="$HOME" \
             CI=true \
             npm run test:ci:opentelemetry-sampler
-  code-pr-finish:
-    steps:
-      - name: run-stage
-        when: 'false'
