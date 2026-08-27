@@ -93,7 +93,7 @@ describe('config.normalizeConfig', () => {
   });
 
   describe('metrics configuration', () => {
-    it('should use custom metrics transmission settings from config', () => {
+    it('should snap to nearest allowed value when config transmissionDelay is not in allowed list', () => {
       const config = coreConfig.normalize({
         userConfig: {
           metrics: {
@@ -101,46 +101,37 @@ describe('config.normalizeConfig', () => {
           }
         }
       });
-      expect(config.metrics.transmissionDelay).to.equal(4753);
+      // nearest allowed value to 4753 ms is 5000 ms
+      expect(config.metrics.transmissionDelay).to.equal(5000);
     });
 
-    it('should use custom metrics transmission settings from env vars', () => {
+    it('should snap to nearest allowed value when INSTANA_METRICS_TRANSMISSION_DELAY is not in allowed list', () => {
       process.env.INSTANA_METRICS_TRANSMISSION_DELAY = '2500';
       const config = coreConfig.normalize();
-      expect(config.metrics.transmissionDelay).to.equal(2500);
-    });
-
-    it('should use default metrics transmission settings when env vars are non-numerical', () => {
-      process.env.INSTANA_METRICS_TRANSMISSION_DELAY = 'x2500';
-      const config = coreConfig.normalize();
+      // nearest allowed value to 2500 ms is 1000 ms
       expect(config.metrics.transmissionDelay).to.equal(1000);
     });
 
-    it('should accept metrics transmission delay of 5s', () => {
-      process.env.INSTANA_METRICS_TRANSMISSION_DELAY = String(5 * 1000);
-      const normalizedConfig = coreConfig.normalize();
-      expect(normalizedConfig.metrics.transmissionDelay).to.equal(5 * 1000);
+    it('should use default transmissionDelay when INSTANA_METRICS_TRANSMISSION_DELAY is non-numerical', () => {
+      process.env.INSTANA_METRICS_TRANSMISSION_DELAY = 'x2500';
+      const config = coreConfig.normalize();
+      expect(config.metrics.transmissionDelay).to.equal(30000);
     });
 
-    it('should accept metrics transmission delay of 30s', () => {
-      process.env.INSTANA_METRICS_TRANSMISSION_DELAY = String(30 * 1000);
+    it('should snap to nearest allowed value when INSTANA_METRICS_TRANSMISSION_DELAY is 6000', () => {
+      process.env.INSTANA_METRICS_TRANSMISSION_DELAY = '6000';
       const normalizedConfig = coreConfig.normalize();
-      expect(normalizedConfig.metrics.transmissionDelay).to.equal(30 * 1000);
+      // nearest allowed value to 6000 ms is 5000 ms
+      expect(normalizedConfig.metrics.transmissionDelay).to.equal(5000);
     });
 
-    it('should cap metrics transmission delay of 120s to max of 60s', () => {
-      process.env.INSTANA_METRICS_TRANSMISSION_DELAY = String(120 * 1000);
+    it('should accept transmissionDelay of 5000 as it is in the allowed list', () => {
+      process.env.INSTANA_METRICS_TRANSMISSION_DELAY = '5000';
       const normalizedConfig = coreConfig.normalize();
-      expect(normalizedConfig.metrics.transmissionDelay).to.equal(60 * 1000);
+      expect(normalizedConfig.metrics.transmissionDelay).to.equal(5000);
     });
 
-    it('should accept metrics transmission delay at max value of 60s', () => {
-      process.env.INSTANA_METRICS_TRANSMISSION_DELAY = String(60 * 1000);
-      const normalizedConfig = coreConfig.normalize();
-      expect(normalizedConfig.metrics.transmissionDelay).to.equal(60 * 1000);
-    });
-
-    it('should cap metrics transmission delay from config exceeding 60s', () => {
+    it('should snap config transmissionDelay of 90000 to nearest allowed value of 60000', () => {
       const config = coreConfig.normalize({
         userConfig: {
           metrics: {
@@ -148,30 +139,55 @@ describe('config.normalizeConfig', () => {
           }
         }
       });
-      expect(config.metrics.transmissionDelay).to.equal(60 * 1000);
+      // nearest allowed value to 90000 ms is 60000 ms (tie broken by first match)
+      expect(config.metrics.transmissionDelay).to.equal(60000);
     });
 
-    it('should use default (1000) for transmissionDelay when neither env nor config is set', () => {
+    it('should use default (30000) for transmissionDelay when neither env nor config is set', () => {
       const config = coreConfig.normalize({});
-      expect(config.metrics.transmissionDelay).to.equal(1000);
+      expect(config.metrics.transmissionDelay).to.equal(30000);
     });
 
     it('should give precedence to INSTANA_METRICS_TRANSMISSION_DELAY env var over config', () => {
-      process.env.INSTANA_METRICS_TRANSMISSION_DELAY = '3000';
+      process.env.INSTANA_METRICS_TRANSMISSION_DELAY = '30000';
       const config = coreConfig.normalize({ userConfig: { metrics: { transmissionDelay: 5000 } } });
-      expect(config.metrics.transmissionDelay).to.equal(3000);
+      expect(config.metrics.transmissionDelay).to.equal(30000);
     });
 
-    it('should fall back to config when env var is invalid', () => {
+    it('should fall back to config when env var is invalid for transmissionDelay', () => {
       process.env.INSTANA_METRICS_TRANSMISSION_DELAY = 'invalid';
       const config = coreConfig.normalize({ userConfig: { metrics: { transmissionDelay: 5000 } } });
       expect(config.metrics.transmissionDelay).to.equal(5000);
     });
 
-    it('should fall back to default when both env and config are invalid', () => {
+    it('should fall back to default when both env and config are invalid for transmissionDelay', () => {
       process.env.INSTANA_METRICS_TRANSMISSION_DELAY = 'invalid';
       const config = coreConfig.normalize({ userConfig: { metrics: { transmissionDelay: 'also-invalid' } } });
-      expect(config.metrics.transmissionDelay).to.equal(1000);
+      expect(config.metrics.transmissionDelay).to.equal(30000);
+    });
+
+    it('should accept transmissionDelay of 60000 as it is in the allowed list', () => {
+      process.env.INSTANA_METRICS_TRANSMISSION_DELAY = '60000';
+      const config = coreConfig.normalize();
+      expect(config.metrics.transmissionDelay).to.equal(60000);
+    });
+
+    it('should accept config transmissionDelay of 60000 as it is in the allowed list', () => {
+      const config = coreConfig.normalize({ userConfig: { metrics: { transmissionDelay: 60000 } } });
+      expect(config.metrics.transmissionDelay).to.equal(60000);
+    });
+
+    it('should snap 72000 to nearest allowed value of 60000 via env var', () => {
+      process.env.INSTANA_METRICS_TRANSMISSION_DELAY = '72000';
+      const config = coreConfig.normalize();
+      // nearest allowed value to 72000 ms is 60000 ms
+      expect(config.metrics.transmissionDelay).to.equal(60000);
+    });
+
+    it('should snap 72000 to nearest allowed value of 60000 via config', () => {
+      const config = coreConfig.normalize({ userConfig: { metrics: { transmissionDelay: 72000 } } });
+      // nearest allowed value to 72000 ms is 60000 ms
+      expect(config.metrics.transmissionDelay).to.equal(60000);
     });
 
     it('should use custom config.metrics.timeBetweenHealthcheckCalls', () => {
@@ -2688,7 +2704,7 @@ describe('config.normalizeConfig', () => {
     expect(config.packageJsonPath).to.not.exist;
 
     expect(config.metrics).to.be.an('object');
-    expect(config.metrics.transmissionDelay).to.equal(1000);
+    expect(config.metrics.transmissionDelay).to.equal(30000);
     expect(config.metrics.timeBetweenHealthcheckCalls).to.equal(3000);
 
     expect(config.tracing).to.be.an('object');
