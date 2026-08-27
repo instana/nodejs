@@ -7,7 +7,7 @@ tasks:
   pr-code-build:
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: npm-install
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -16,6 +16,10 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-logging-bunyan:
@@ -23,7 +27,7 @@ tasks:
     displayName: bunyan
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: bunyan
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -52,6 +56,10 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-logging-console:
@@ -59,7 +67,7 @@ tasks:
     displayName: console
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: console
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -88,6 +96,10 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-logging-express-winston:
@@ -95,7 +107,7 @@ tasks:
     displayName: express-winston
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: express-winston
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -124,6 +136,10 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-logging-log4js:
@@ -131,7 +147,7 @@ tasks:
     displayName: log4js
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: log4js
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -160,6 +176,10 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-logging-pino:
@@ -167,7 +187,7 @@ tasks:
     displayName: pino
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: pino
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -196,6 +216,10 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-logging-winston:
@@ -203,7 +227,7 @@ tasks:
     displayName: winston
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: winston
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -232,9 +256,13 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
-  app-preview-pr-finish:
+  code-pr-finish:
     steps:
       - name: run-stage
         when: 'false'

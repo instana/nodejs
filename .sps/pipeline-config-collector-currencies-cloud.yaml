@@ -7,7 +7,7 @@ tasks:
   pr-code-build:
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: npm-install
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -16,6 +16,10 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-cloud-aws-sdkclient-dynamodb:
@@ -23,7 +27,7 @@ tasks:
     displayName: '@aws-sdk/client-dynamodb'
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: '@aws-sdk/client-dynamodb'
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -52,6 +56,10 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-cloud-aws-sdkclient-kinesis:
@@ -59,7 +67,7 @@ tasks:
     displayName: '@aws-sdk/client-kinesis'
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: '@aws-sdk/client-kinesis'
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -88,6 +96,10 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-cloud-aws-sdkclient-lambda:
@@ -95,7 +107,7 @@ tasks:
     displayName: '@aws-sdk/client-lambda'
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: '@aws-sdk/client-lambda'
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -124,6 +136,10 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-cloud-aws-sdkclient-s3:
@@ -131,7 +147,7 @@ tasks:
     displayName: '@aws-sdk/client-s3'
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: '@aws-sdk/client-s3'
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -160,6 +176,10 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-cloud-aws-sdkclient-sns:
@@ -167,7 +187,7 @@ tasks:
     displayName: '@aws-sdk/client-sns'
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: '@aws-sdk/client-sns'
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -196,6 +216,10 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-cloud-aws-sdkclient-sqs:
@@ -203,7 +227,7 @@ tasks:
     displayName: '@aws-sdk/client-sqs'
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: '@aws-sdk/client-sqs'
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -232,6 +256,10 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-cloud-azurestorage-blob:
@@ -239,7 +267,7 @@ tasks:
     displayName: '@azure/storage-blob'
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: '@azure/storage-blob'
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -268,6 +296,10 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-cloud-google-cloudpubsub:
@@ -275,7 +307,7 @@ tasks:
     displayName: '@google-cloud/pubsub'
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: '@google-cloud/pubsub'
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -304,6 +336,10 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-cloud-google-cloudstorage:
@@ -311,7 +347,7 @@ tasks:
     displayName: '@google-cloud/storage'
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: '@google-cloud/storage'
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -340,6 +376,10 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-cloud-aws-sdk:
@@ -347,7 +387,7 @@ tasks:
     displayName: aws-sdk
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: aws-sdk
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -376,9 +416,13 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
-  app-preview-pr-finish:
+  code-pr-finish:
     steps:
       - name: run-stage
         when: 'false'

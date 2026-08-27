@@ -6,11 +6,15 @@ tasks:
         when: 'false'
   pr-code-build:
     steps:
+      - name: unit-test
+        when: 'false'
       - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
         when: 'false'
       - name: sign-artifact
         when: 'false'
-  app-preview-pr-finish:
+  code-pr-finish:
     steps:
       - name: run-stage
         when: 'false'

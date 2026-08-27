@@ -7,7 +7,7 @@ tasks:
   pr-code-build:
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: npm-install
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -16,6 +16,10 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-metrics-util:
@@ -23,7 +27,7 @@ tasks:
     displayName: metrics-util
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: metrics-util
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -38,9 +42,13 @@ tasks:
             HOME="$HOME" \
             CI=true \
             npm run test:ci:metrics-util
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
-  app-preview-pr-finish:
+  code-pr-finish:
     steps:
       - name: run-stage
         when: 'false'

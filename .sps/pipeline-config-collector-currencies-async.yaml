@@ -7,7 +7,7 @@ tasks:
   pr-code-build:
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: npm-install
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -16,6 +16,10 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-async-await:
@@ -23,7 +27,7 @@ tasks:
     displayName: await
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: await
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -52,6 +56,10 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-async-bluebird:
@@ -59,7 +67,7 @@ tasks:
     displayName: bluebird
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: bluebird
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -88,6 +96,10 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-async-native-promise:
@@ -95,7 +107,7 @@ tasks:
     displayName: native_promise
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: native_promise
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -124,9 +136,13 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
-  app-preview-pr-finish:
+  code-pr-finish:
     steps:
       - name: run-stage
         when: 'false'

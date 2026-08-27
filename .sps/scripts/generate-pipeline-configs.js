@@ -191,12 +191,14 @@ function buildCurrencyTask(pkgName, folder, group) {
       ...(needs.length > 0 ? { include: ['dind'] } : {}),
       steps: [
         {
-          name: 'build-artifact',
+          name: 'unit-test',
           displayName: pkgName,
           image: NODE_IMAGE,
           ...(needs.length > 0 ? { include: ['docker-socket'] } : {}),
           script: scriptLines.join('\n')
         },
+        { name: 'build-artifact', when: 'false' },
+        { name: 'scan-artifact', when: 'false' },
         { name: 'sign-artifact', when: 'false' }
       ]
     }
@@ -237,12 +239,14 @@ function buildSimpleTask(displayName, testScript, needs = []) {
     ...(needs.length > 0 ? { include: ['dind'] } : {}),
     steps: [
       {
-        name: 'build-artifact',
+        name: 'unit-test',
         displayName,
         image: NODE_IMAGE,
         ...(needs.length > 0 ? { include: ['docker-socket'] } : {}),
         script: scriptLines.join('\n')
       },
+      { name: 'build-artifact', when: 'false' },
+      { name: 'scan-artifact', when: 'false' },
       { name: 'sign-artifact', when: 'false' }
     ]
   };
@@ -261,7 +265,7 @@ function baseConfig(fanOutTasks) {
         runtimeClassName: 'large',
         steps: [
           {
-            name: 'build-artifact',
+            name: 'unit-test',
             displayName: 'npm-install',
             image: NODE_IMAGE,
             script: [
@@ -272,11 +276,13 @@ function baseConfig(fanOutTasks) {
               'node bin/create-version-test-folders.js'
             ].join('\n')
           },
+          { name: 'build-artifact', when: 'false' },
+          { name: 'scan-artifact', when: 'false' },
           { name: 'sign-artifact', when: 'false' }
         ]
       },
       ...fanOutTasks,
-      'app-preview-pr-finish': {
+      'code-pr-finish': {
         steps: [{ name: 'run-stage', when: 'false' }]
       }
     }
@@ -352,7 +358,9 @@ if (TARGET.startsWith('collector-currencies-')) {
       displayName: TARGET,
       runtimeClassName: 'large',
       steps: [
-        { name: 'build-artifact', displayName: TARGET, image: NODE_IMAGE, script: scriptLines },
+        { name: 'unit-test', displayName: TARGET, image: NODE_IMAGE, script: scriptLines },
+        { name: 'build-artifact', when: 'false' },
+        { name: 'scan-artifact', when: 'false' },
         { name: 'sign-artifact', when: 'false' }
       ]
     }

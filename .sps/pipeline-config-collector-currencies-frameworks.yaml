@@ -7,7 +7,7 @@ tasks:
   pr-code-build:
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: npm-install
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -16,6 +16,10 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-frameworks-hapihapi:
@@ -23,7 +27,7 @@ tasks:
     displayName: '@hapi/hapi'
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: '@hapi/hapi'
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -52,6 +56,10 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-frameworks-koarouter:
@@ -59,7 +67,7 @@ tasks:
     displayName: '@koa/router'
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: '@koa/router'
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -88,6 +96,10 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-frameworks-express:
@@ -95,7 +107,7 @@ tasks:
     displayName: express
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: express
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -124,6 +136,10 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-frameworks-fastify:
@@ -131,7 +147,7 @@ tasks:
     displayName: fastify
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: fastify
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -160,6 +176,10 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-frameworks-got:
@@ -167,7 +187,7 @@ tasks:
     displayName: got
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: got
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -196,6 +216,10 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-frameworks-restify:
@@ -203,7 +227,7 @@ tasks:
     displayName: restify
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: restify
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -232,6 +256,10 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-frameworks-sequelize:
@@ -239,7 +267,7 @@ tasks:
     displayName: sequelize
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: sequelize
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -268,6 +296,10 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-frameworks-tsoa:
@@ -275,7 +307,7 @@ tasks:
     displayName: tsoa
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: tsoa
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -304,6 +336,10 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
   pr-code-build-collector-frameworks-typeorm:
@@ -311,7 +347,7 @@ tasks:
     displayName: typeorm
     runtimeClassName: large
     steps:
-      - name: build-artifact
+      - name: unit-test
         displayName: typeorm
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -340,9 +376,13 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: sign-artifact
         when: 'false'
-  app-preview-pr-finish:
+  code-pr-finish:
     steps:
       - name: run-stage
         when: 'false'

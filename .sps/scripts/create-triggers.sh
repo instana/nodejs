@@ -108,7 +108,7 @@ for yaml_file in "${YAML_FILES[@]}"; do
     '{
       type: "scm",
       name: $name,
-      event_listener: "app-preview-pr-listener",
+      event_listener: "pr-listener",
       events: ["pull_request"],
       disable_draft_events: false,
       enable_events_from_forks: false,
