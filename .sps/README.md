@@ -31,7 +31,7 @@ SPS secrets are not stored in this repository. Configure them as secure pipeline
 
 Required properties include:
 
-* `git-token` [Enterprise Token 1PWD]
+* `git-token` [Enterprise Token in 1PWD]
 * `cos-api-key`
 * `cos-bucket-name`
 * `cos-endpoint`
