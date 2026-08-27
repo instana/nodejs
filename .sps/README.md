@@ -1,7 +1,5 @@
 # SPS Pipeline
 
-This directory contains the **Secure Pipelines Service (SPS)** configuration for this repository.
-
 ## Links
 
 https://pages.github.ibm.com/secure-pipelines-service/sps-docs/optimize/optimize/#pr-pipeline-structure
