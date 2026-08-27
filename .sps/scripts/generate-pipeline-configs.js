@@ -28,6 +28,7 @@ if (!whatArg) {
   console.error('Other targets:');
   console.error('  collector-metrics');
   console.error('  collector-misc');
+  console.error('  cloud (aws-lambda + aws-fargate + azure-container-services + google-cloud-run)');
   console.error('  aws-lambda');
   console.error('  aws-fargate');
   console.error('  azure-container-services');
@@ -391,6 +392,7 @@ if (TARGET.startsWith('collector-currencies-')) {
   // ── group targets: multiple simple targets in one YAML ───────────────────
   const GROUP_TARGETS = {
     'aws': ['aws-lambda', 'aws-fargate'],
+    'cloud': ['aws-lambda', 'aws-fargate', 'azure-container-services', 'google-cloud-run'],
     'opentelemetry': ['opentelemetry-exporter', 'opentelemetry-sampler'],
     'core-group': ['core', 'metrics-util', 'serverless', 'serverless-collector', 'shared-metrics']
   };
