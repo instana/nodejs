@@ -15,6 +15,23 @@ tasks:
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
@@ -39,6 +56,23 @@ tasks:
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
@@ -102,6 +136,23 @@ tasks:
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
@@ -173,6 +224,23 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
@@ -229,6 +297,23 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
@@ -268,6 +353,23 @@ tasks:
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
@@ -312,6 +414,23 @@ tasks:
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
@@ -383,6 +502,23 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
@@ -442,6 +578,23 @@ tasks:
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
@@ -503,6 +656,23 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
@@ -559,6 +729,23 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
@@ -602,6 +789,23 @@ tasks:
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
@@ -668,6 +872,23 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
@@ -733,6 +954,23 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
@@ -793,6 +1031,23 @@ tasks:
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
@@ -857,6 +1112,23 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
@@ -919,6 +1191,23 @@ tasks:
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
@@ -993,6 +1282,23 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
@@ -1063,6 +1369,23 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
@@ -1121,6 +1444,23 @@ tasks:
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts

@@ -10,7 +10,6 @@ const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
 
-const NODE_IMAGE = 'mirror.gcr.io/library/node:24';
 const REPO_ROOT = path.join(__dirname, '../..');
 const CURRENCIES_DIR = path.join(REPO_ROOT, 'packages/collector/test/integration/currencies');
 
@@ -19,8 +18,12 @@ const sidecarsData = require('../../.tekton/assets/sidecars.json');
 // ─── CLI ─────────────────────────────────────────────────────────────────────
 
 const whatArg = process.argv.find(a => a.startsWith('--what='));
+const nodeArg = process.argv.find(a => a.startsWith('--node-version='));
+
 if (!whatArg) {
-  console.error('Usage: node generate.js --what=<target>');
+  console.error('Usage: node generate.js --what=<target> [--node-version=<version>]');
+  console.error('');
+  console.error('  --node-version  Node.js version to use (default: 24)');
   console.error('');
   console.error('Collector currency groups:');
   fs.readdirSync(CURRENCIES_DIR).forEach(g => console.error(`  collector-currencies-${g}`));
@@ -44,6 +47,7 @@ if (!whatArg) {
   process.exit(1);
 }
 const TARGET = whatArg.split('=')[1];
+const NODE_IMAGE = 'mirror.gcr.io/library/node:24';
 
 // ─── sidecar helpers ─────────────────────────────────────────────────────────
 
@@ -91,6 +95,27 @@ function readNeeds(folder) {
   return fs.readFileSync(needsPath, 'utf-8').split('\n').map(l => l.trim()).filter(Boolean);
 }
 
+function nodeVersionSwitchScript() {
+  return [
+    '# switch Node.js version if node_version trigger property is set',
+    'if [ -n "${node_version:-}" ]; then',
+    '  curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash',
+    '  export NVM_DIR="$HOME/.nvm"',
+    '  # shellcheck source=/dev/null',
+    '  . "$NVM_DIR/nvm.sh"',
+    '  nvm install "$node_version"',
+    '  nvm use "$node_version"',
+    '  ACTUAL=$(node --version)',
+    '  EXPECTED="v${node_version}"',
+    '  if [[ "$ACTUAL" != "$EXPECTED"* ]]; then',
+    '    echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"',
+    '    exit 1',
+    '  fi',
+    '  echo "Node.js version: $ACTUAL"',
+    'fi'
+  ].join('\n');
+}
+
 function dockerClientInstallScript() {
   return [
     'CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")',
@@ -130,6 +155,8 @@ function buildCurrencyTask(pkgName, folder, group) {
   const relFolder = path.relative(REPO_ROOT, folder).replace(/\\/g, '/');
 
   const scriptLines = ['#!/usr/bin/env bash', 'set -eo pipefail', ''];
+  scriptLines.push(nodeVersionSwitchScript());
+  scriptLines.push('');
   scriptLines.push('cd "$WORKSPACE/$(load_repo app-repo path)"');
   scriptLines.push('npm install --loglevel warn --foreground-scripts');
   scriptLines.push('node bin/create-version-test-folders.js');
@@ -196,6 +223,8 @@ function buildCurrencyTask(pkgName, folder, group) {
 
 function buildSimpleTask(displayName, testScript, needs = [], extraEnv = null) {
   const scriptLines = ['#!/usr/bin/env bash', 'set -eo pipefail', ''];
+  scriptLines.push(nodeVersionSwitchScript());
+  scriptLines.push('');
   scriptLines.push('cd "$WORKSPACE/$(load_repo app-repo path)"');
   scriptLines.push('npm install --loglevel warn --foreground-scripts');
   scriptLines.push('');
@@ -267,6 +296,8 @@ function baseConfig(fanOutTasks) {
             script: [
               '#!/usr/bin/env bash',
               'set -eo pipefail',
+              nodeVersionSwitchScript(),
+              '',
               'cd "$WORKSPACE/$(load_repo app-repo path)"',
               'npm install --loglevel warn --foreground-scripts',
               'node bin/create-version-test-folders.js'
