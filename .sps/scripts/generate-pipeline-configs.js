@@ -378,15 +378,31 @@ if (TARGET.startsWith('collector-currencies-')) {
     'shared-metrics':            { script: 'test:ci:shared-metrics',            displayName: 'shared-metrics' }
   };
 
-  if (!SIMPLE_TARGETS[TARGET]) {
+  // ── group targets: multiple simple targets in one YAML ───────────────────
+  const GROUP_TARGETS = {
+    'aws': ['aws-lambda', 'aws-fargate'],
+    'opentelemetry': ['opentelemetry-exporter', 'opentelemetry-sampler'],
+    'core-group': ['core', 'metrics-util', 'serverless', 'serverless-collector', 'shared-metrics']
+  };
+
+  if (GROUP_TARGETS[TARGET]) {
+    const members = GROUP_TARGETS[TARGET];
+    const fanOutTasks = {};
+    for (const member of members) {
+      const { script, displayName } = SIMPLE_TARGETS[member];
+      const taskName = `pr-code-checks-${member}`;
+      fanOutTasks[taskName] = buildSimpleTask(displayName, script);
+    }
+    writeConfig(TARGET, baseConfig(fanOutTasks));
+    console.log(`Generated ${members.length} tasks for group '${TARGET}': ${members.join(', ')}`);
+  } else if (SIMPLE_TARGETS[TARGET]) {
+    const { script, displayName } = SIMPLE_TARGETS[TARGET];
+    const taskName = `pr-code-checks-${TARGET}`;
+    const fanOutTasks = { [taskName]: buildSimpleTask(displayName, script) };
+    writeConfig(TARGET, baseConfig(fanOutTasks));
+    console.log(`Generated task '${taskName}' running: npm run ${script}`);
+  } else {
     console.error(`Unknown target: ${TARGET}`);
     process.exit(1);
   }
-
-  const { script, displayName } = SIMPLE_TARGETS[TARGET];
-  const taskName = `pr-code-checks-${TARGET}`;
-  const fanOutTasks = { [taskName]: buildSimpleTask(displayName, script) };
-
-  writeConfig(TARGET, baseConfig(fanOutTasks));
-  console.log(`Generated task '${taskName}' running: npm run ${script}`);
 }
