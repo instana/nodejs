@@ -2,6 +2,13 @@
 
 This directory contains the **Secure Pipelines Service (SPS)** configuration for this repository.
 
+## Links
+
+https://pages.github.ibm.com/secure-pipelines-service/sps-docs/optimize/optimize/#pr-pipeline-structure
+
+https://pages.github.ibm.com/secure-pipelines-service/sps-docs/optimize/optimize/#pipeline-config-v2-customization-options
+
+
 ## Configuration
 
 * [`pipeline-config.yaml`](.sps/pipeline-config.yaml) – SPS pipeline definition using config version 2.

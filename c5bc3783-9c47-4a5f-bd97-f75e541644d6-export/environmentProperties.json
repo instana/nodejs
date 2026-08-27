@@ -1,0 +1,62 @@
+[
+  {
+    "name": "branch",
+    "value": "ci-sps",
+    "type": "TEXT"
+  },
+  {
+    "name": "pipeline-config",
+    "value": ".sps/pipeline-config-collector-logging.yaml",
+    "type": "TEXT"
+  },
+  {
+    "name": "azure-redis-cluster",
+    "value": "team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380",
+    "type": "TEXT"
+  },
+  {
+    "name": "cos-api-key",
+    "value": "***7ebd4e3d337976fc7bb057015bc1482b575c99615e83a7dde4d83e48b5779507",
+    "type": "SECURE"
+  },
+  {
+    "name": "cos-bucket-name",
+    "value": "cos-secure-pipelines-service-instana",
+    "type": "TEXT"
+  },
+  {
+    "name": "cos-endpoint",
+    "value": "s3.us-south.cloud-object-storage.appdomain.cloud",
+    "type": "TEXT"
+  },
+  {
+    "name": "git-provider",
+    "value": "github",
+    "type": "TEXT"
+  },
+  {
+    "name": "git-token",
+    "value": "***f3c0a003989bc2cdfe5c22386024ea9f73dcba611656424c24bf85b45f8c31e7",
+    "type": "SECURE"
+  },
+  {
+    "name": "ibmcloud-api-key",
+    "value": "***7233ad13f75cb3ef5990942dee545a9d5959902597324afad1abd098ea18bba0",
+    "type": "SECURE"
+  },
+  {
+    "name": "node-version",
+    "value": "24.0.0",
+    "type": "TEXT"
+  },
+  {
+    "name": "pipeline-config-branch",
+    "value": "main",
+    "type": "TEXT"
+  },
+  {
+    "name": "repository",
+    "value": "https://github.com/instana/nodejs",
+    "type": "TEXT"
+  }
+]
