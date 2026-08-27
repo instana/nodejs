@@ -1,9 +1,13 @@
 version: '2'
 tasks:
   pr-code-checks:
-    runtimeClassName: large
     steps:
       - name: run-stage
+        when: 'false'
+  pr-code-build:
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
         displayName: npm-install
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -12,12 +16,14 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
-  pr-code-checks-collector-logging-bunyan:
-    from: pr-code-checks
+      - name: sign-artifact
+        when: 'false'
+  pr-code-build-collector-logging-bunyan:
+    from: pr-code-build
     displayName: bunyan
     runtimeClassName: large
     steps:
-      - name: run-stage
+      - name: build-artifact
         displayName: bunyan
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -46,12 +52,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  pr-code-checks-collector-logging-console:
-    from: pr-code-checks
+      - name: sign-artifact
+        when: 'false'
+  pr-code-build-collector-logging-console:
+    from: pr-code-build
     displayName: console
     runtimeClassName: large
     steps:
-      - name: run-stage
+      - name: build-artifact
         displayName: console
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -80,12 +88,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  pr-code-checks-collector-logging-express-winston:
-    from: pr-code-checks
+      - name: sign-artifact
+        when: 'false'
+  pr-code-build-collector-logging-express-winston:
+    from: pr-code-build
     displayName: express-winston
     runtimeClassName: large
     steps:
-      - name: run-stage
+      - name: build-artifact
         displayName: express-winston
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -114,12 +124,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  pr-code-checks-collector-logging-log4js:
-    from: pr-code-checks
+      - name: sign-artifact
+        when: 'false'
+  pr-code-build-collector-logging-log4js:
+    from: pr-code-build
     displayName: log4js
     runtimeClassName: large
     steps:
-      - name: run-stage
+      - name: build-artifact
         displayName: log4js
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -148,12 +160,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  pr-code-checks-collector-logging-pino:
-    from: pr-code-checks
+      - name: sign-artifact
+        when: 'false'
+  pr-code-build-collector-logging-pino:
+    from: pr-code-build
     displayName: pino
     runtimeClassName: large
     steps:
-      - name: run-stage
+      - name: build-artifact
         displayName: pino
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -182,12 +196,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  pr-code-checks-collector-logging-winston:
-    from: pr-code-checks
+      - name: sign-artifact
+        when: 'false'
+  pr-code-build-collector-logging-winston:
+    from: pr-code-build
     displayName: winston
     runtimeClassName: large
     steps:
-      - name: run-stage
+      - name: build-artifact
         displayName: winston
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -216,7 +232,9 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  code-pr-finish:
+      - name: sign-artifact
+        when: 'false'
+  app-preview-pr-finish:
     steps:
       - name: run-stage
         when: 'false'

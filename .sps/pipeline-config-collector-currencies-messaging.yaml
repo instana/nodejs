@@ -1,9 +1,13 @@
 version: '2'
 tasks:
   pr-code-checks:
-    runtimeClassName: large
     steps:
       - name: run-stage
+        when: 'false'
+  pr-code-build:
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
         displayName: npm-install
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -12,14 +16,16 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
-  pr-code-checks-collector-messaging-confluentinckafka-javascript:
-    from: pr-code-checks
+      - name: sign-artifact
+        when: 'false'
+  pr-code-build-collector-messaging-confluentinckafka-javascript:
+    from: pr-code-build
     displayName: '@confluentinc/kafka-javascript'
     runtimeClassName: large
     include:
       - dind
     steps:
-      - name: run-stage
+      - name: build-artifact
         displayName: '@confluentinc/kafka-javascript'
         image: mirror.gcr.io/library/node:24
         include:
@@ -84,14 +90,16 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  pr-code-checks-collector-messaging-amqplib:
-    from: pr-code-checks
+      - name: sign-artifact
+        when: 'false'
+  pr-code-build-collector-messaging-amqplib:
+    from: pr-code-build
     displayName: amqplib
     runtimeClassName: large
     include:
       - dind
     steps:
-      - name: run-stage
+      - name: build-artifact
         displayName: amqplib
         image: mirror.gcr.io/library/node:24
         include:
@@ -138,14 +146,16 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  pr-code-checks-collector-messaging-bull:
-    from: pr-code-checks
+      - name: sign-artifact
+        when: 'false'
+  pr-code-build-collector-messaging-bull:
+    from: pr-code-build
     displayName: bull
     runtimeClassName: large
     include:
       - dind
     steps:
-      - name: run-stage
+      - name: build-artifact
         displayName: bull
         image: mirror.gcr.io/library/node:24
         include:
@@ -191,14 +201,16 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  pr-code-checks-collector-messaging-kafka-node:
-    from: pr-code-checks
+      - name: sign-artifact
+        when: 'false'
+  pr-code-build-collector-messaging-kafka-node:
+    from: pr-code-build
     displayName: kafka-node
     runtimeClassName: large
     include:
       - dind
     steps:
-      - name: run-stage
+      - name: build-artifact
         displayName: kafka-node
         image: mirror.gcr.io/library/node:24
         include:
@@ -263,14 +275,16 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  pr-code-checks-collector-messaging-kafkajs:
-    from: pr-code-checks
+      - name: sign-artifact
+        when: 'false'
+  pr-code-build-collector-messaging-kafkajs:
+    from: pr-code-build
     displayName: kafkajs
     runtimeClassName: large
     include:
       - dind
     steps:
-      - name: run-stage
+      - name: build-artifact
         displayName: kafkajs
         image: mirror.gcr.io/library/node:24
         include:
@@ -335,14 +349,16 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  pr-code-checks-collector-messaging-nats:
-    from: pr-code-checks
+      - name: sign-artifact
+        when: 'false'
+  pr-code-build-collector-messaging-nats:
+    from: pr-code-build
     displayName: nats
     runtimeClassName: large
     include:
       - dind
     steps:
-      - name: run-stage
+      - name: build-artifact
         displayName: nats
         image: mirror.gcr.io/library/node:24
         include:
@@ -388,14 +404,16 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  pr-code-checks-collector-messaging-node-nats-streaming:
-    from: pr-code-checks
+      - name: sign-artifact
+        when: 'false'
+  pr-code-build-collector-messaging-node-nats-streaming:
+    from: pr-code-build
     displayName: node-nats-streaming
     runtimeClassName: large
     include:
       - dind
     steps:
-      - name: run-stage
+      - name: build-artifact
         displayName: node-nats-streaming
         image: mirror.gcr.io/library/node:24
         include:
@@ -447,14 +465,16 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  pr-code-checks-collector-messaging-node-rdkafka:
-    from: pr-code-checks
+      - name: sign-artifact
+        when: 'false'
+  pr-code-build-collector-messaging-node-rdkafka:
+    from: pr-code-build
     displayName: node-rdkafka
     runtimeClassName: large
     include:
       - dind
     steps:
-      - name: run-stage
+      - name: build-artifact
         displayName: node-rdkafka
         image: mirror.gcr.io/library/node:24
         include:
@@ -519,12 +539,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  pr-code-checks-collector-messaging-socket-io:
-    from: pr-code-checks
+      - name: sign-artifact
+        when: 'false'
+  pr-code-build-collector-messaging-socket-io:
+    from: pr-code-build
     displayName: socket.io
     runtimeClassName: large
     steps:
-      - name: run-stage
+      - name: build-artifact
         displayName: socket.io
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -553,7 +575,9 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  code-pr-finish:
+      - name: sign-artifact
+        when: 'false'
+  app-preview-pr-finish:
     steps:
       - name: run-stage
         when: 'false'

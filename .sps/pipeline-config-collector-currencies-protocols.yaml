@@ -1,9 +1,13 @@
 version: '2'
 tasks:
   pr-code-checks:
-    runtimeClassName: large
     steps:
       - name: run-stage
+        when: 'false'
+  pr-code-build:
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
         displayName: npm-install
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -12,12 +16,14 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
-  pr-code-checks-collector-protocols-apolloserver:
-    from: pr-code-checks
+      - name: sign-artifact
+        when: 'false'
+  pr-code-build-collector-protocols-apolloserver:
+    from: pr-code-build
     displayName: '@apollo/server'
     runtimeClassName: large
     steps:
-      - name: run-stage
+      - name: build-artifact
         displayName: '@apollo/server'
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -46,12 +52,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  pr-code-checks-collector-protocols-apollosubgraph:
-    from: pr-code-checks
+      - name: sign-artifact
+        when: 'false'
+  pr-code-build-collector-protocols-apollosubgraph:
+    from: pr-code-build
     displayName: '@apollo/subgraph'
     runtimeClassName: large
     steps:
-      - name: run-stage
+      - name: build-artifact
         displayName: '@apollo/subgraph'
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -80,12 +88,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  pr-code-checks-collector-protocols-grpcgrpc-js:
-    from: pr-code-checks
+      - name: sign-artifact
+        when: 'false'
+  pr-code-build-collector-protocols-grpcgrpc-js:
+    from: pr-code-build
     displayName: '@grpc/grpc-js'
     runtimeClassName: large
     steps:
-      - name: run-stage
+      - name: build-artifact
         displayName: '@grpc/grpc-js'
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -114,12 +124,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  pr-code-checks-collector-protocols-graphql:
-    from: pr-code-checks
+      - name: sign-artifact
+        when: 'false'
+  pr-code-build-collector-protocols-graphql:
+    from: pr-code-build
     displayName: graphql
     runtimeClassName: large
     steps:
-      - name: run-stage
+      - name: build-artifact
         displayName: graphql
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -148,12 +160,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  pr-code-checks-collector-protocols-graphql-subscriptions:
-    from: pr-code-checks
+      - name: sign-artifact
+        when: 'false'
+  pr-code-build-collector-protocols-graphql-subscriptions:
+    from: pr-code-build
     displayName: graphql-subscriptions
     runtimeClassName: large
     steps:
-      - name: run-stage
+      - name: build-artifact
         displayName: graphql-subscriptions
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -182,12 +196,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  pr-code-checks-collector-protocols-http:
-    from: pr-code-checks
+      - name: sign-artifact
+        when: 'false'
+  pr-code-build-collector-protocols-http:
+    from: pr-code-build
     displayName: http
     runtimeClassName: large
     steps:
-      - name: run-stage
+      - name: build-artifact
         displayName: http
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -216,12 +232,14 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  pr-code-checks-collector-protocols-http2:
-    from: pr-code-checks
+      - name: sign-artifact
+        when: 'false'
+  pr-code-build-collector-protocols-http2:
+    from: pr-code-build
     displayName: http2
     runtimeClassName: large
     steps:
-      - name: run-stage
+      - name: build-artifact
         displayName: http2
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -250,7 +268,9 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
-  code-pr-finish:
+      - name: sign-artifact
+        when: 'false'
+  app-preview-pr-finish:
     steps:
       - name: run-stage
         when: 'false'

@@ -1,9 +1,13 @@
 version: '2'
 tasks:
   pr-code-checks:
-    runtimeClassName: large
     steps:
       - name: run-stage
+        when: 'false'
+  pr-code-build:
+    runtimeClassName: large
+    steps:
+      - name: build-artifact
         displayName: npm-install
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -12,12 +16,14 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
-  pr-code-checks-core:
-    from: pr-code-checks
+      - name: sign-artifact
+        when: 'false'
+  pr-code-build-core:
+    from: pr-code-build
     displayName: core
     runtimeClassName: large
     steps:
-      - name: run-stage
+      - name: build-artifact
         displayName: core
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -32,7 +38,9 @@ tasks:
             HOME="$HOME" \
             CI=true \
             npm run test:ci:core
-  code-pr-finish:
+      - name: sign-artifact
+        when: 'false'
+  app-preview-pr-finish:
     steps:
       - name: run-stage
         when: 'false'
