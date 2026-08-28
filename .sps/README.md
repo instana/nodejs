@@ -1,4 +1,4 @@
-# SPS Pipeline Guideline
+# SPS Pipeline
 
 This directory contains the **Secure Pipelines Service (SPS)** configuration for this repository.
 
