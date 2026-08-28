@@ -98,7 +98,7 @@ create_trigger() {
       type: "scm",
       name: $name,
       event_listener: "pr-listener",
-      events: ["pull_request"],
+      events: ["pull_request", "push"],
       disable_draft_events: false,
       enable_events_from_forks: false,
       source: {
@@ -112,6 +112,16 @@ create_trigger() {
         {
           name: "pipeline-config",
           value: $config,
+          type: "text"
+        },
+        {
+          name: "skip-merge-pr-to-base",
+          value: "true",
+          type: "text"
+        },
+        {
+          name: "opt-in-pr-updates",
+          value: "0",
           type: "text"
         }
       ]
@@ -138,12 +148,12 @@ create_trigger() {
   CREATED=$((CREATED + 1))
 }
 
-# ── create default security-checks trigger ───────────────────────────────────
-
 CREATED=0
 SKIPPED=0
 
-create_trigger "pr-security-checks" ".sps/pipeline-config.yaml"
+# ── create default security-checks trigger ───────────────────────────────────
+
+create_trigger "security-checks" ".sps/pipeline-config.yaml"
 
 # ── create per-yaml triggers ──────────────────────────────────────────────────
 
@@ -159,7 +169,7 @@ for yaml_file in "${YAML_FILES[@]}"; do
   name="${filename#pipeline-config-}"
   name="${name%.yaml}"
 
-  create_trigger "pr-${name}" ".sps/${filename}"
+  create_trigger "$name" ".sps/${filename}"
 done
 
 echo ""
