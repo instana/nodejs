@@ -88,9 +88,15 @@ function readNeeds(folder) {
 
 function nodeVersionSwitchScript() {
   return [
-    '# log and optionally switch Node.js version',
-    '# SPS exposes trigger property "node-version" — read via printenv (bash-safe)',
-    'node_version="$(printenv node-version || true)"',
+    '# debug: dump all env vars and pipelinectl properties',
+    'echo "=== ENV VARS ==="',
+    'env | sort',
+    'echo "=== get_env node-version ==="',
+    'get_env node-version 2>&1 || true',
+    'echo "=== get_env node_version ==="',
+    'get_env node_version 2>&1 || true',
+    '# read node version',
+    'node_version="$(get_env node-version 2>/dev/null || true)"',
     'echo "node_version property: ${node_version:-<not set>}"',
     'if [ -n "${node_version:-}" ]; then',
     '  curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash',
