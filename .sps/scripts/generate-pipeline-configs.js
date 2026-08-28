@@ -89,6 +89,8 @@ function readNeeds(folder) {
 function nodeVersionSwitchScript() {
   return [
     '# log and optionally switch Node.js version',
+    '# SPS exposes "node-version" trigger property — map to bash-safe variable',
+    'node_version="${node_version:-${node-version:-}}"',
     'echo "node_version property: ${node_version:-<not set>}"',
     'if [ -n "${node_version:-}" ]; then',
     '  curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash',
