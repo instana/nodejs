@@ -14,6 +14,7 @@ https://pages.github.ibm.com/secure-pipelines-service/sps-docs/optimize/optimize
 
 Set `pipeline-config-filename` to:
 
+
 ```text id="51307"
 .sps/pipeline-config.yaml
 ```
