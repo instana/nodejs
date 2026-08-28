@@ -21,9 +21,9 @@ const whatArg  = process.argv.find(a => a.startsWith('--what='));
 const nodeArg  = process.argv.find(a => a.startsWith('--node-version='));
 const modeArg  = process.argv.find(a => a.startsWith('--mode='));
 
-const MODE = modeArg ? modeArg.split('=')[1] : 'all'; // 'all' | 'pr' | 'main'
-if (!['all', 'pr', 'main'].includes(MODE)) {
-  console.error(`Unknown --mode: ${MODE}. Use 'all', 'pr' or 'main'.`);
+const MODE = modeArg ? modeArg.split('=')[1] : 'all'; // 'all' | 'pr' | 'main' | 'manual'
+if (!['all', 'pr', 'main', 'manual'].includes(MODE)) {
+  console.error(`Unknown --mode: ${MODE}. Use 'all', 'pr', 'main' or 'manual'.`);
   process.exit(1);
 }
 
@@ -88,7 +88,8 @@ function readNeeds(folder) {
 
 function nodeVersionSwitchScript() {
   return [
-    '# switch Node.js version if node_version trigger property is set',
+    '# log and optionally switch Node.js version',
+    'echo "node_version property: ${node_version:-<not set>}"',
     'if [ -n "${node_version:-}" ]; then',
     '  curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash',
     '  export NVM_DIR="$HOME/.nvm"',
@@ -102,7 +103,9 @@ function nodeVersionSwitchScript() {
     '    echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"',
     '    exit 1',
     '  fi',
-    '  echo "Node.js version: $ACTUAL"',
+    '  echo "Node.js switched to: $ACTUAL"',
+    'else',
+    '  echo "Node.js version (image default): $(node --version)"',
     'fi'
   ].join('\n');
 }
@@ -396,6 +399,7 @@ function generateOne(t) {
     const relDir = `test/integration/${subDir}`;
     const scriptLines = [
       '#!/usr/bin/env bash', 'set -eo pipefail', '',
+      nodeVersionSwitchScript(), '',
       'cd "$WORKSPACE/$(load_repo app-repo path)"',
       'npm install --loglevel warn --foreground-scripts',
       'node bin/create-version-test-folders.js', '',
