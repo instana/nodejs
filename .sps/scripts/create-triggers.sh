@@ -1,28 +1,24 @@
 #!/usr/bin/env bash
 # (c) Copyright IBM Corp. 2026
 #
-# Creates one PR trigger per pipeline-config-*.yaml in this directory.
+# Creates SCM triggers for PR and main-commit pipelines.
+#
+# PR triggers    → .sps/pr/pipeline-config-*.yaml   → pr-listener   → pull_request event
+# Main triggers  → .sps/main/pipeline-config-*.yaml → ci-listener   → push event (branch: main)
 #
 # Usage:
-#   .sps/create-triggers.sh [--dry-run]
+#   .sps/scripts/create-triggers.sh [--dry-run]
 #
 # Prerequisites:
-#   - ibmcloud CLI installed and logged in (ibmcloud login)
+#   - ibmcloud CLI installed and logged in
 #   - jq installed
-#
-# Each trigger will be configured with:
-#   - type: scm
-#   - event: pull_request (open + update)
-#   - repo: https://github.com/instana/nodejs.git
-#   - draft PRs: enabled
-#   - pipeline-config-filename: .sps/pipeline-config-<name>.yaml
 
 set -euo pipefail
 
 TOOLCHAIN_ID="579d9c4d-163d-4171-be94-9535ff3f68c4"
 REGION="us-south"
 REPO_URL="https://github.com/instana/nodejs.git"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SPS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 DRY_RUN=false
 if [[ "${1:-}" == "--dry-run" ]]; then
@@ -31,7 +27,7 @@ if [[ "${1:-}" == "--dry-run" ]]; then
   echo ""
 fi
 
-# ── auth ────────────────────────────────────────────────────────────────────
+# ── auth ─────────────────────────────────────────────────────────────────────
 
 echo "Fetching IBM Cloud IAM token..."
 IAM_TOKEN=$(ibmcloud iam oauth-tokens --output json | jq -r '.iam_token')
@@ -42,30 +38,24 @@ fi
 
 API_BASE="https://api.${REGION}.devops.cloud.ibm.com/pipeline/v2"
 
-# ── get pipeline ID for this toolchain ──────────────────────────────────────
+# ── get pipeline ID ───────────────────────────────────────────────────────────
 
-echo "Fetching Tekton pipelines for toolchain ${TOOLCHAIN_ID}..."
-PIPELINES_RESP=$(curl -s -w "\n%{http_code}" \
+echo "Fetching pipeline ${TOOLCHAIN_ID}..."
+PIPELINE_RESP=$(curl -s -w "\n%{http_code}" \
   -H "Authorization: ${IAM_TOKEN}" \
   -H "Accept: application/json" \
   "${API_BASE}/tekton_pipelines/${TOOLCHAIN_ID}")
-
-HTTP_CODE=$(echo "$PIPELINES_RESP" | tail -1)
-PIPELINES_RESP=$(echo "$PIPELINES_RESP" | sed '$d')
-
+HTTP_CODE=$(echo "$PIPELINE_RESP" | tail -1)
+PIPELINE_RESP=$(echo "$PIPELINE_RESP" | sed '$d')
 if [[ "$HTTP_CODE" != "200" ]]; then
-  echo "ERROR: Could not fetch pipeline info (HTTP ${HTTP_CODE}):"
-  echo "$PIPELINES_RESP" | jq . 2>/dev/null || echo "$PIPELINES_RESP"
+  echo "ERROR: Could not fetch pipeline (HTTP ${HTTP_CODE})"
   exit 1
 fi
-
-PIPELINE_ID=$(echo "$PIPELINES_RESP" | jq -r '.id // empty')
-if [[ -z "$PIPELINE_ID" ]]; then
-  PIPELINE_ID="$TOOLCHAIN_ID"
-fi
+PIPELINE_ID=$(echo "$PIPELINE_RESP" | jq -r '.id // empty')
+[[ -z "$PIPELINE_ID" ]] && PIPELINE_ID="$TOOLCHAIN_ID"
 echo "Pipeline ID: ${PIPELINE_ID}"
 
-# ── list existing triggers to avoid duplicates ──────────────────────────────
+# ── fetch existing triggers ───────────────────────────────────────────────────
 
 echo "Fetching existing triggers..."
 EXISTING=$(curl -s \
@@ -73,16 +63,19 @@ EXISTING=$(curl -s \
   -H "Accept: application/json" \
   "${API_BASE}/tekton_pipelines/${PIPELINE_ID}/triggers" 2>/dev/null || echo '{"triggers":[]}')
 
-# ── create triggers ──────────────────────────────────────────────────────────
+CREATED=0
+SKIPPED=0
 
-# ── helper: create one trigger ───────────────────────────────────────────────
+# ── helpers ───────────────────────────────────────────────────────────────────
 
-create_trigger() {
+create_manual_trigger() {
   local trigger_name="$1"
   local config_path="$2"
+  local node_version="$3"
 
   local exists
-  exists=$(echo "$EXISTING" | jq -r --arg n "$trigger_name" '.triggers[]? | select(.name == $n) | .name' 2>/dev/null || true)
+  exists=$(echo "$EXISTING" | jq -r --arg n "$trigger_name" \
+    '.triggers[]? | select(.name == $n) | .name' 2>/dev/null || true)
   if [[ -n "$exists" ]]; then
     echo "  SKIP  ${trigger_name} (already exists)"
     SKIPPED=$((SKIPPED + 1))
@@ -91,39 +84,79 @@ create_trigger() {
 
   local PAYLOAD
   PAYLOAD=$(jq -n \
-    --arg name "$trigger_name" \
-    --arg repo "$REPO_URL" \
-    --arg config "$config_path" \
+    --arg name       "$trigger_name" \
+    --arg config     "$config_path" \
+    --arg node_ver   "$node_version" \
+    '{
+      type: "manual",
+      name: $name,
+      event_listener: "ci-listener",
+      properties: [
+        { name: "pipeline-config",       value: $config,   type: "text" },
+        { name: "node-version",          value: $node_ver, type: "text" },
+        { name: "skip-merge-pr-to-base", value: "true",    type: "text" },
+        { name: "opt-in-pr-updates",     value: "0",       type: "text" }
+      ]
+    }')
+
+  echo "  CREATE ${trigger_name}  →  ${config_path}  (node ${node_version})"
+
+  if [[ "$DRY_RUN" == "false" ]]; then
+    RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+      -H "Authorization: ${IAM_TOKEN}" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d "$PAYLOAD" \
+      "${API_BASE}/tekton_pipelines/${PIPELINE_ID}/triggers")
+    HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+    RESPONSE=$(echo "$RESPONSE" | sed '$d')
+    if [[ "$HTTP_CODE" != "201" && "$HTTP_CODE" != "200" ]]; then
+      echo "    ERROR (HTTP ${HTTP_CODE}): $(echo "$RESPONSE" | jq -r '.message // .' 2>/dev/null || echo "$RESPONSE")"
+      return
+    fi
+    echo "    OK  id=$(echo "$RESPONSE" | jq -r '.id // "?"')"
+  fi
+
+  CREATED=$((CREATED + 1))
+}
+
+create_trigger() {
+  local trigger_name="$1"
+  local config_path="$2"
+  local listener="$3"   # pr-listener | ci-listener
+  local events="$4"     # JSON array string, e.g. '["pull_request"]'
+
+  local exists
+  exists=$(echo "$EXISTING" | jq -r --arg n "$trigger_name" \
+    '.triggers[]? | select(.name == $n) | .name' 2>/dev/null || true)
+  if [[ -n "$exists" ]]; then
+    echo "  SKIP  ${trigger_name} (already exists)"
+    SKIPPED=$((SKIPPED + 1))
+    return
+  fi
+
+  local PAYLOAD
+  PAYLOAD=$(jq -n \
+    --arg  name     "$trigger_name" \
+    --arg  repo     "$REPO_URL" \
+    --arg  config   "$config_path" \
+    --arg  listener "$listener" \
+    --argjson events "$events" \
     '{
       type: "scm",
       name: $name,
-      event_listener: "pr-listener",
-      events: ["pull_request", "push"],
+      event_listener: $listener,
+      events: $events,
       disable_draft_events: false,
       enable_events_from_forks: false,
       source: {
         type: "git",
-        properties: {
-          url: $repo,
-          branch: "main"
-        }
+        properties: { url: $repo, branch: "main" }
       },
       properties: [
-        {
-          name: "pipeline-config",
-          value: $config,
-          type: "text"
-        },
-        {
-          name: "skip-merge-pr-to-base",
-          value: "true",
-          type: "text"
-        },
-        {
-          name: "opt-in-pr-updates",
-          value: "0",
-          type: "text"
-        }
+        { name: "pipeline-config",       value: $config, type: "text" },
+        { name: "skip-merge-pr-to-base", value: "true",  type: "text" },
+        { name: "opt-in-pr-updates",     value: "0",     type: "text" }
       ]
     }')
 
@@ -148,28 +181,48 @@ create_trigger() {
   CREATED=$((CREATED + 1))
 }
 
-CREATED=0
-SKIPPED=0
+# ── PR triggers (.sps/pr/) ────────────────────────────────────────────────────
 
-# ── create default security-checks trigger ───────────────────────────────────
+echo ""
+echo "── PR triggers (pr-listener, pull_request) ──────────────────────────────"
 
-create_trigger "security-checks" ".sps/pipeline-config.yaml"
-
-# ── create per-yaml triggers ──────────────────────────────────────────────────
-
-YAML_FILES=("$SCRIPT_DIR"/pipeline-config-*.yaml)
-# exclude the default pipeline-config.yaml (no suffix)
-YAML_FILES=("${YAML_FILES[@]/pipeline-config.yaml/}")
-
-for yaml_file in "${YAML_FILES[@]}"; do
+for yaml_file in "${SPS_DIR}/pr"/pipeline-config*.yaml; do
   [[ -f "$yaml_file" ]] || continue
-
   filename="$(basename "$yaml_file")"
-  # strip pipeline-config- prefix and .yaml suffix to get the name
   name="${filename#pipeline-config-}"
   name="${name%.yaml}"
+  # default config has no suffix → use "security-checks"
+  [[ "$name" == "pipeline-config" || "$name" == "" ]] && name="security-checks"
+  create_trigger "pr-${name}" ".sps/pr/${filename}" "pr-listener" '["pull_request"]'
+done
 
-  create_trigger "$name" ".sps/${filename}"
+# ── Main triggers (.sps/main/) ────────────────────────────────────────────────
+
+echo ""
+echo "── Main triggers (ci-listener, push) ────────────────────────────────────"
+
+for yaml_file in "${SPS_DIR}/main"/pipeline-config*.yaml; do
+  [[ -f "$yaml_file" ]] || continue
+  filename="$(basename "$yaml_file")"
+  name="${filename#pipeline-config-}"
+  name="${name%.yaml}"
+  [[ "$name" == "pipeline-config" || "$name" == "" ]] && name="security-checks"
+  create_trigger "main-${name}" ".sps/main/${filename}" "ci-listener" '["push"]'
+done
+
+# ── Manual triggers (.sps/manual/) ───────────────────────────────────────────
+
+echo ""
+echo "── Manual triggers (ci-listener, type: manual) ──────────────────────────"
+
+for yaml_file in "${SPS_DIR}/manual"/pipeline-config*.yaml; do
+  [[ -f "$yaml_file" ]] || continue
+  filename="$(basename "$yaml_file")"
+  name="${filename#pipeline-config-}"
+  name="${name%.yaml}"
+  [[ "$name" == "pipeline-config" || "$name" == "" ]] && name="security-checks"
+  # Default node-version for the trigger property (can be overridden at run time)
+  create_manual_trigger "manual-${name}" ".sps/manual/${filename}" "20"
 done
 
 echo ""

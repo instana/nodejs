@@ -1,0 +1,607 @@
+version: '2'
+tasks:
+  code-build:
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: npm-install
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+  code-build-collector-cloud-aws-sdkclient-dynamodb:
+    from: code-build
+    displayName: '@aws-sdk/client-dynamodb'
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: '@aws-sdk/client-dynamodb'
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/cloud/@aws-sdk/client-dynamodb \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for @aws-sdk/client-dynamodb — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+  code-build-collector-cloud-aws-sdkclient-kinesis:
+    from: code-build
+    displayName: '@aws-sdk/client-kinesis'
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: '@aws-sdk/client-kinesis'
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/cloud/@aws-sdk/client-kinesis \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for @aws-sdk/client-kinesis — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+  code-build-collector-cloud-aws-sdkclient-lambda:
+    from: code-build
+    displayName: '@aws-sdk/client-lambda'
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: '@aws-sdk/client-lambda'
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/cloud/@aws-sdk/client-lambda \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for @aws-sdk/client-lambda — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+  code-build-collector-cloud-aws-sdkclient-s3:
+    from: code-build
+    displayName: '@aws-sdk/client-s3'
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: '@aws-sdk/client-s3'
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/cloud/@aws-sdk/client-s3 \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for @aws-sdk/client-s3 — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+  code-build-collector-cloud-aws-sdkclient-sns:
+    from: code-build
+    displayName: '@aws-sdk/client-sns'
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: '@aws-sdk/client-sns'
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/cloud/@aws-sdk/client-sns \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for @aws-sdk/client-sns — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+  code-build-collector-cloud-aws-sdkclient-sqs:
+    from: code-build
+    displayName: '@aws-sdk/client-sqs'
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: '@aws-sdk/client-sqs'
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/cloud/@aws-sdk/client-sqs \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for @aws-sdk/client-sqs — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+  code-build-collector-cloud-azurestorage-blob:
+    from: code-build
+    displayName: '@azure/storage-blob'
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: '@azure/storage-blob'
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/cloud/@azure/storage-blob \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for @azure/storage-blob — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+  code-build-collector-cloud-google-cloudpubsub:
+    from: code-build
+    displayName: '@google-cloud/pubsub'
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: '@google-cloud/pubsub'
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/cloud/@google-cloud/pubsub \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for @google-cloud/pubsub — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+  code-build-collector-cloud-google-cloudstorage:
+    from: code-build
+    displayName: '@google-cloud/storage'
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: '@google-cloud/storage'
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/cloud/@google-cloud/storage \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for @google-cloud/storage — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+  code-build-collector-cloud-aws-sdk:
+    from: code-build
+    displayName: aws-sdk
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: aws-sdk
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/cloud/aws-sdk \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for aws-sdk — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector

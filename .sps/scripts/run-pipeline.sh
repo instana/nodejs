@@ -1,19 +1,22 @@
 #!/usr/bin/env bash
 # (c) Copyright IBM Corp. 2026
 #
-# Manually triggers a pipeline run on a specific branch with a specific Node.js version.
-# Uses the GitHub API to dispatch a repository_dispatch event which fires the SCM trigger.
+# Fires a manual pipeline trigger by name.
+# Looks up a "manual-<name>" trigger in the pipeline and POSTs a pipeline_run
+# with the given branch and node-version as trigger_properties overrides.
 #
 # Usage:
-#   .sps/scripts/run-pipeline.sh --branch <branch> --node-version <version> [--trigger <trigger-name>]
+#   .sps/scripts/run-pipeline.sh --branch <branch> --node-version <version> \
+#       [--trigger <name>] [--dry-run] [--list]
 #
 # Options:
-#   --branch       Git branch to run against (e.g. my-feature-branch)
-#   --node-version Node.js version to use (e.g. 20, 22, 24)
-#   --trigger      (optional) Trigger name (e.g. collector-currencies-async).
-#                  Without it, ALL scm triggers are run.
-#   --list         List all available scm triggers and exit
-#   --dry-run      Print the API payload without making any calls
+#   --branch        Git branch to run against (e.g. my-feature-branch)
+#   --node-version  Node.js version to use (e.g. 20, 22, 24)
+#   --trigger       Trigger name suffix (e.g. "collector-currencies-async").
+#                   The script looks for a trigger called "manual-<name>".
+#                   Without it, ALL manual triggers are run.
+#   --list          List all available manual triggers and exit
+#   --dry-run       Print the API payload without making any calls
 #
 # Prerequisites:
 #   - ibmcloud CLI installed and logged in (ibmcloud login)
@@ -26,7 +29,7 @@ REGION="us-south"
 
 # ── parse args ───────────────────────────────────────────────────────────────
 
-SCM_TRIGGER=""
+TRIGGER_SUFFIX=""
 BRANCH=""
 NODE_VERSION=""
 DRY_RUN=false
@@ -34,14 +37,14 @@ LIST=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --trigger)      SCM_TRIGGER="$2"; shift 2 ;;
-    --branch)       BRANCH="$2";      shift 2 ;;
-    --node-version) NODE_VERSION="$2";shift 2 ;;
-    --dry-run)      DRY_RUN=true;     shift   ;;
-    --list)         LIST=true;        shift   ;;
+    --trigger)      TRIGGER_SUFFIX="$2"; shift 2 ;;
+    --branch)       BRANCH="$2";         shift 2 ;;
+    --node-version) NODE_VERSION="$2";   shift 2 ;;
+    --dry-run)      DRY_RUN=true;        shift   ;;
+    --list)         LIST=true;           shift   ;;
     *)
       echo "Unknown option: $1"
-      echo "Usage: $0 --branch <branch> --node-version <version> [--trigger <scm-trigger-name>] [--dry-run]"
+      echo "Usage: $0 --branch <branch> --node-version <version> [--trigger <name>] [--dry-run]"
       exit 1
       ;;
   esac
@@ -77,8 +80,8 @@ fi
 
 if [[ "$LIST" == "true" ]]; then
   echo ""
-  echo "Available scm triggers:"
-  echo "$TRIGGERS_RESP" | jq -r '.triggers[]? | select(.type=="scm") | "  \(.name)"' | sort
+  echo "Available manual triggers:"
+  echo "$TRIGGERS_RESP" | jq -r '.triggers[]? | select(.type=="manual") | "  \(.name)"' | sort
   exit 0
 fi
 
@@ -87,29 +90,35 @@ fi
 if [[ -z "$BRANCH" || -z "$NODE_VERSION" ]]; then
   echo "ERROR: --branch and --node-version are required."
   echo ""
-  echo "Usage: $0 --branch <branch> --node-version <version> [--trigger <scm-trigger-name>] [--dry-run]"
+  echo "Usage: $0 --branch <branch> --node-version <version> [--trigger <name>] [--dry-run]"
   echo "       $0 --list"
   exit 1
 fi
 
-# ── resolve pipeline-config per scm trigger name ─────────────────────────────
+# ── resolve trigger_id for a manual trigger by name ──────────────────────────
 
 config_for_trigger() {
-  local scm_name="$1"
+  local name="$1"
   echo "$TRIGGERS_RESP" | jq -r \
-    --arg n "$scm_name" \
-    '.triggers[]? | select(.name == $n) | .properties[]? | select(.name == "pipeline-config") | .value'
+    --arg n "$name" \
+    '.triggers[]? | select(.name==$n) | .properties[]? | select(.name=="pipeline-config") | .value // empty'
 }
 
-# ── build list of scm trigger names to run ───────────────────────────────────
+# ── build list of manual trigger names to run ────────────────────────────────
 
-if [[ -n "$SCM_TRIGGER" ]]; then
-  SCM_TRIGGERS="$SCM_TRIGGER"
+if [[ -n "$TRIGGER_SUFFIX" ]]; then
+  # Accept either "manual-foo" or just "foo"
+  if [[ "$TRIGGER_SUFFIX" == manual-* ]]; then
+    MANUAL_TRIGGERS="$TRIGGER_SUFFIX"
+  else
+    MANUAL_TRIGGERS="manual-${TRIGGER_SUFFIX}"
+  fi
 else
-  SCM_TRIGGERS=$(echo "$TRIGGERS_RESP" | jq -r '.triggers[]? | select(.type=="scm") | .name' | sort)
+  MANUAL_TRIGGERS=$(echo "$TRIGGERS_RESP" | \
+    jq -r '.triggers[]? | select(.type=="manual") | .name' | sort)
 fi
 
-TOTAL=$(echo "$SCM_TRIGGERS" | grep -c . || true)
+TOTAL=$(echo "$MANUAL_TRIGGERS" | grep -c . || true)
 echo ""
 echo "Branch:       ${BRANCH}"
 echo "node-version: ${NODE_VERSION}"
@@ -119,36 +128,46 @@ echo ""
 # ── helper: fire one run ─────────────────────────────────────────────────────
 
 fire_run() {
-  local scm_name="$1"
-  local config
-  config=$(config_for_trigger "$scm_name")
+  local trigger_name="$1"
 
-  if [[ -z "$config" ]]; then
-    echo "  SKIP  ${scm_name} (no pipeline-config property found)"
+  # Verify the trigger exists
+  local exists
+  exists=$(echo "$TRIGGERS_RESP" | jq -r \
+    --arg n "$trigger_name" \
+    '.triggers[]? | select(.type=="manual" and .name==$n) | .name // empty')
+  if [[ -z "$exists" ]]; then
+    echo "  ERROR  ${trigger_name}: trigger not found (type=manual). Run --list to see available triggers."
     return
   fi
 
-  # Resolve HEAD SHA locally via git
-  local sha
-  sha=$(git rev-parse "origin/${BRANCH}" 2>/dev/null || git rev-parse "${BRANCH}" 2>/dev/null || echo "")
-  if [[ -z "$sha" ]]; then
-    echo "  WARN  could not resolve SHA for branch ${BRANCH} — run 'git fetch' first"
-  fi
+  local config
+  config=$(config_for_trigger "$trigger_name")
+
+  # Build trigger_properties — always override branch and node-version.
+  # pipeline-config is included only when the trigger has it as a property
+  # (so the run uses the right config file).
+  local props_jq
+  props_jq=$(jq -n \
+    --arg branch   "$BRANCH" \
+    --arg node_ver "$NODE_VERSION" \
+    --arg config   "$config" \
+    '{
+      "branch":          $branch,
+      "node-version":    $node_ver,
+      "pipeline-config": $config
+    }')
 
   local PAYLOAD
   PAYLOAD=$(jq -n \
-    --arg config   "$config" \
-    --arg node_ver "$NODE_VERSION" \
+    --arg trigger_name "$trigger_name" \
+    --argjson props    "$props_jq" \
     '{
-      "trigger_name": "manual-run",
-      "trigger_properties": {
-        "pipeline-config": $config,
-        "node-version":    $node_ver
-      }
+      "trigger_name":       $trigger_name,
+      "trigger_properties": $props
     }')
 
   if [[ "$DRY_RUN" == "true" ]]; then
-    echo "  DRY RUN  ${scm_name}  →  ${config}"
+    echo "  DRY RUN  ${trigger_name}"
     echo "$PAYLOAD" | jq .
     return
   fi
@@ -163,12 +182,12 @@ fire_run() {
   BODY=$(echo "$RESP" | sed '$d')
 
   if [[ "$HTTP_CODE" != "201" && "$HTTP_CODE" != "200" ]]; then
-    echo "  ERROR  ${scm_name} (HTTP ${HTTP_CODE}): $(echo "$BODY" | jq -r '.errors[0].message // .message // .' 2>/dev/null || echo "$BODY")"
+    echo "  ERROR  ${trigger_name} (HTTP ${HTTP_CODE}): $(echo "$BODY" | jq -r '.errors[0].message // .message // .' 2>/dev/null || echo "$BODY")"
     return
   fi
 
   RUN_ID=$(echo "$BODY" | jq -r '.id // "?"')
-  echo "  OK  ${scm_name}  →  ${RUN_ID}"
+  echo "  OK  ${trigger_name}  →  run ${RUN_ID}"
 }
 
 # ── fire runs ─────────────────────────────────────────────────────────────────
@@ -178,7 +197,7 @@ while IFS= read -r t; do
   [[ -z "$t" ]] && continue
   fire_run "$t"
   STARTED=$((STARTED + 1))
-done <<< "$SCM_TRIGGERS"
+done <<< "$MANUAL_TRIGGERS"
 
 echo ""
 if [[ "$DRY_RUN" == "true" ]]; then

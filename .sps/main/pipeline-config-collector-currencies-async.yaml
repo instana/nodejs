@@ -1,0 +1,208 @@
+version: '2'
+tasks:
+  code-build:
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: npm-install
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+  code-build-collector-async-await:
+    from: code-build
+    displayName: await
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: await
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/async/await \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for await — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+  code-build-collector-async-bluebird:
+    from: code-build
+    displayName: bluebird
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: bluebird
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/async/bluebird \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for bluebird — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+  code-build-collector-async-native-promise:
+    from: code-build
+    displayName: native_promise
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: native_promise
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/async/native_promise \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for native_promise — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector

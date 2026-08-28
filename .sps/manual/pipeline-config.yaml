@@ -1,0 +1,11 @@
+version: '2'
+tasks:
+  code-build:
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: unit-test
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          echo "General PR checks passed."

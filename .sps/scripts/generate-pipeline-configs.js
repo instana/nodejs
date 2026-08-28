@@ -17,36 +17,27 @@ const sidecarsData = require('../../.tekton/assets/sidecars.json');
 
 // ─── CLI ─────────────────────────────────────────────────────────────────────
 
-const whatArg = process.argv.find(a => a.startsWith('--what='));
-const nodeArg = process.argv.find(a => a.startsWith('--node-version='));
+const whatArg  = process.argv.find(a => a.startsWith('--what='));
+const nodeArg  = process.argv.find(a => a.startsWith('--node-version='));
+const modeArg  = process.argv.find(a => a.startsWith('--mode='));
 
-if (!whatArg) {
-  console.error('Usage: node generate.js --what=<target> [--node-version=<version>]');
-  console.error('');
-  console.error('  --node-version  Node.js version to use (default: 24)');
-  console.error('');
-  console.error('Collector currency groups:');
-  fs.readdirSync(CURRENCIES_DIR).forEach(g => console.error(`  collector-currencies-${g}`));
-  console.error('');
-  console.error('Other targets:');
-  console.error('  collector-metrics');
-  console.error('  collector-misc');
-  console.error('  cloud (aws-lambda + aws-fargate + azure-container-services + google-cloud-run)');
-  console.error('  aws-lambda');
-  console.error('  aws-fargate');
-  console.error('  azure-container-services');
-  console.error('  google-cloud-run');
-  console.error('  autoprofile');
-  console.error('  core');
-  console.error('  metrics-util');
-  console.error('  opentelemetry-exporter');
-  console.error('  opentelemetry-sampler');
-  console.error('  serverless');
-  console.error('  serverless-collector');
-  console.error('  shared-metrics');
+const MODE = modeArg ? modeArg.split('=')[1] : 'all'; // 'all' | 'pr' | 'main'
+if (!['all', 'pr', 'main'].includes(MODE)) {
+  console.error(`Unknown --mode: ${MODE}. Use 'all', 'pr' or 'main'.`);
   process.exit(1);
 }
-const TARGET = whatArg.split('=')[1];
+
+// All targets to generate when --what is omitted
+const ALL_CURRENCY_GROUPS = fs.readdirSync(CURRENCIES_DIR).map(g => `collector-currencies-${g}`);
+const ALL_SIMPLE_TARGETS  = [
+  'collector-metrics', 'collector-misc',
+  'cloud', 'autoprofile', 'core-group', 'opentelemetry'
+];
+const ALL_TARGETS = ['default', ...ALL_CURRENCY_GROUPS, ...ALL_SIMPLE_TARGETS];
+
+// 'manual' folder is identical to 'main' (ci-listener, code-build tasks)
+
+const TARGET = whatArg ? whatArg.split('=')[1] : null;
 const NODE_IMAGE = 'mirror.gcr.io/library/node:24';
 
 // ─── sidecar helpers ─────────────────────────────────────────────────────────
@@ -194,12 +185,14 @@ function buildCurrencyTask(pkgName, folder, group) {
   scriptLines.push('  TEST_FILES="$TEST_FILES" \\');
   scriptLines.push('  npm run test:ci:collector');
 
-  const taskName = `pr-code-checks-collector-${group}-${pkgName.replace(/[@/]/g, '').replace(/[._]/g, '-')}`;
+  const prefix   = MODE === 'main' ? 'code-build' : 'pr-code-checks';
+  const taskName = `${prefix}-collector-${group}-${pkgName.replace(/[@/]/g, '').replace(/[._]/g, '-')}`;
 
   return {
     taskName,
+    taskNameMain: taskName.replace('pr-code-checks', 'code-build'),
     task: {
-      from: 'pr-code-checks',
+      from: MODE === 'main' ? 'code-build' : 'pr-code-checks',
       displayName: pkgName,
       runtimeClassName: 'large',
       ...(needs.length > 0 ? { include: ['dind'] } : {}),
@@ -279,11 +272,11 @@ function buildSimpleTask(displayName, testScript, needs = [], extraEnv = null) {
 
 // ─── base config skeleton ─────────────────────────────────────────────────────
 
-function baseConfig(fanOutTasks) {
+function baseConfig(fanOutTasks, rootTask = 'pr-code-checks') {
   return {
     version: '2',
     tasks: {
-      'pr-code-checks': {
+      [rootTask]: {
         runtimeClassName: 'large',
         steps: [
           { name: 'peer-review', when: 'false' },
@@ -310,128 +303,152 @@ function baseConfig(fanOutTasks) {
   };
 }
 
-function writeConfig(name, config) {
-  const output = yaml.dump(config, { lineWidth: -1, quotingType: "'", forceQuotes: false });
-  const outPath = path.join(__dirname, '..', `pipeline-config-${name}.yaml`);
-  fs.writeFileSync(outPath, output);
-  console.log(`Written: ${outPath}`);
+function writeConfig(name, prConfig, mainConfig) {
+  function write(filePath, config) {
+    const outDir = path.dirname(filePath);
+    fs.mkdirSync(outDir, { recursive: true });
+    const output = yaml.dump(config, { lineWidth: -1, quotingType: "'", forceQuotes: false });
+    fs.writeFileSync(filePath, output);
+    console.log(`Written: ${filePath}`);
+  }
+
+  const spsDir = path.join(__dirname, '..');
+  if (MODE === 'all' || MODE === 'pr')     write(path.join(spsDir, 'pr',     `pipeline-config-${name}.yaml`), prConfig);
+  if (MODE === 'all' || MODE === 'main')   write(path.join(spsDir, 'main',   `pipeline-config-${name}.yaml`), mainConfig);
+  if (MODE === 'all' || MODE === 'manual') write(path.join(spsDir, 'manual', `pipeline-config-${name}.yaml`), mainConfig);
+}
+
+function writeDefaultConfig(prConfig, mainConfig) {
+  const spsDir = path.join(__dirname, '..');
+  function write(filePath, config) {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    const output = yaml.dump(config, { lineWidth: -1, quotingType: "'", forceQuotes: false });
+    fs.writeFileSync(filePath, output);
+    console.log(`Written: ${filePath}`);
+  }
+  if (MODE === 'all' || MODE === 'pr')     write(path.join(spsDir, 'pr',     'pipeline-config.yaml'), prConfig);
+  if (MODE === 'all' || MODE === 'main')   write(path.join(spsDir, 'main',   'pipeline-config.yaml'), mainConfig);
+  if (MODE === 'all' || MODE === 'manual') write(path.join(spsDir, 'manual', 'pipeline-config.yaml'), mainConfig);
+  if (MODE === 'all')                      write(path.join(spsDir,           'pipeline-config.yaml'), prConfig);
+}
+
+// Convert a pr config to a main config by swapping pr-code-checks → code-build task names
+function toMainConfig(prConfig) {
+  const raw  = yaml.dump(prConfig, { lineWidth: -1 });
+  const main = raw
+    .replace(/\bpr-code-checks\b/g, 'code-build');
+  return yaml.load(main);
 }
 
 // ─── dispatch ─────────────────────────────────────────────────────────────────
 
-if (TARGET.startsWith('collector-currencies-')) {
-  const group = TARGET.replace('collector-currencies-', '');
-  const groupDir = path.join(CURRENCIES_DIR, group);
-  if (!fs.existsSync(groupDir)) {
-    console.error(`Unknown currency group: ${group}`);
-    process.exit(1);
-  }
+const SIMPLE_TARGETS = {
+  'aws-lambda':                { script: 'test:ci:aws-lambda',                displayName: 'aws-lambda' },
+  'aws-fargate':               { script: 'test:ci:aws-fargate',               displayName: 'aws-fargate' },
+  'azure-container-services':  { script: 'test:ci:azure-container-services',  displayName: 'azure-container-services' },
+  'google-cloud-run':          { script: 'test:ci:google-cloud-run',          displayName: 'google-cloud-run' },
+  'autoprofile':               { script: 'test:ci:autoprofile',               displayName: 'autoprofile',
+                                 extraEnv: 'CI_AUTOPROFILE_TEST_FILES=$(cd packages/autoprofile && find test -name \'*.test.js\' -not -path \'*/node_modules/*\' | sort | tr \'\\n\' \' \')' },
+  'core':                      { script: 'test:ci:core',                      displayName: 'core' },
+  'metrics-util':              { script: 'test:ci:metrics-util',              displayName: 'metrics-util' },
+  'opentelemetry-exporter':    { script: 'test:ci:opentelemetry-exporter',    displayName: 'opentelemetry-exporter' },
+  'opentelemetry-sampler':     { script: 'test:ci:opentelemetry-sampler',     displayName: 'opentelemetry-sampler' },
+  'serverless':                { script: 'test:ci:serverless',                displayName: 'serverless' },
+  'serverless-collector':      { script: 'test:ci:serverless-collector',      displayName: 'serverless-collector' },
+  'shared-metrics':            { script: 'test:ci:shared-metrics',            displayName: 'shared-metrics' }
+};
 
-  const folders = findTestFolders(groupDir);
-  const tasks = folders.map(({ pkgName, folder }) => buildCurrencyTask(pkgName, folder, group));
+const GROUP_TARGETS = {
+  'aws':          ['aws-lambda', 'aws-fargate'],
+  'cloud':        ['aws-lambda', 'aws-fargate', 'azure-container-services', 'google-cloud-run'],
+  'opentelemetry':['opentelemetry-exporter', 'opentelemetry-sampler'],
+  'core-group':   ['core', 'metrics-util', 'serverless', 'serverless-collector', 'shared-metrics']
+};
 
-  const fanOutTasks = {};
-  tasks.forEach(({ taskName, task }) => { fanOutTasks[taskName] = task; });
+function generateOne(t) {
+  if (t === 'default') {
+    const prConfig = {
+      version: '2',
+      tasks: {
+        'pr-code-checks': {
+          steps: [
+            { name: 'peer-review', when: 'false' },
+            { name: 'unit-test', image: NODE_IMAGE, script: '#!/usr/bin/env bash\necho "General PR checks passed."' }
+          ]
+        }
+      }
+    };
+    writeDefaultConfig(prConfig, toMainConfig(prConfig));
 
-  writeConfig(TARGET, baseConfig(fanOutTasks));
-  console.log(`\nGenerated ${tasks.length} tasks for group '${group}':`);
-  folders.forEach(({ pkgName, folder }) => {
-    const needs = readNeeds(folder);
-    console.log(`  ${pkgName.padEnd(40)} needs: [${needs.join(', ') || 'none'}]`);
-  });
+  } else if (t.startsWith('collector-currencies-')) {
+    const group    = t.replace('collector-currencies-', '');
+    const groupDir = path.join(CURRENCIES_DIR, group);
+    if (!fs.existsSync(groupDir)) { console.error(`Unknown currency group: ${group}`); process.exit(1); }
+    const folders     = findTestFolders(groupDir);
+    const tasks       = folders.map(({ pkgName, folder }) => buildCurrencyTask(pkgName, folder, group));
+    const fanOutTasks = {};
+    tasks.forEach(({ taskName, task }) => { fanOutTasks[taskName] = task; });
+    const prConfig = baseConfig(fanOutTasks);
+    writeConfig(t, prConfig, toMainConfig(prConfig));
 
-} else if (TARGET === 'collector-metrics' || TARGET === 'collector-misc') {
-  const subDir = TARGET.replace('collector-', '');
-  const testDir = path.join(REPO_ROOT, 'packages/collector/test/integration', subDir);
-  const relDir = `test/integration/${subDir}`;
+  } else if (t === 'collector-metrics' || t === 'collector-misc') {
+    const subDir = t.replace('collector-', '');
+    const relDir = `test/integration/${subDir}`;
+    const scriptLines = [
+      '#!/usr/bin/env bash', 'set -eo pipefail', '',
+      'cd "$WORKSPACE/$(load_repo app-repo path)"',
+      'npm install --loglevel warn --foreground-scripts',
+      'node bin/create-version-test-folders.js', '',
+      '# collect test files',
+      `TEST_FILES=$(cd packages/collector && find \\`,
+      `  ${relDir} \\`,
+      `  -name '*.test.js' \\`,
+      `  -not -path '*/node_modules/*' \\`,
+      `  | sort | tr '\\n' ' ')`,
+      '', 'if [ -z "$TEST_FILES" ]; then',
+      `  echo 'WARNING: No test files found for ${t} — skipping.'`,
+      '  exit 0', 'fi', '',
+      'exec env -i \\', '  PATH="$PATH" \\', '  HOME="$HOME" \\',
+      '  CI=true \\', '  TEST_FILES="$TEST_FILES" \\',
+      '  npm run test:ci:collector'
+    ].join('\n');
+    const fanOutTasks = {
+      [`pr-code-checks-${t}`]: {
+        from: 'pr-code-checks', displayName: t, runtimeClassName: 'large',
+        steps: [
+          { name: 'peer-review', when: 'false' },
+          { name: 'detect-secrets', when: 'false' },
+          { name: 'compliance-checks', when: 'false' },
+          { name: 'unit-test', displayName: t, image: NODE_IMAGE, script: scriptLines }
+        ]
+      }
+    };
+    const prConfig = baseConfig(fanOutTasks);
+    writeConfig(t, prConfig, toMainConfig(prConfig));
 
-  const scriptLines = [
-    '#!/usr/bin/env bash',
-    'set -eo pipefail',
-    '',
-    'cd "$WORKSPACE/$(load_repo app-repo path)"',
-    'npm install --loglevel warn --foreground-scripts',
-    'node bin/create-version-test-folders.js',
-    '',
-    '# collect test files',
-    `TEST_FILES=$(cd packages/collector && find \\`,
-    `  ${relDir} \\`,
-    `  -name '*.test.js' \\`,
-    `  -not -path '*/node_modules/*' \\`,
-    `  | sort | tr '\\n' ' ')`,
-    '',
-    'if [ -z "$TEST_FILES" ]; then',
-    `  echo 'WARNING: No test files found for ${TARGET} — skipping.'`,
-    '  exit 0',
-    'fi',
-    '',
-    'exec env -i \\',
-    '  PATH="$PATH" \\',
-    '  HOME="$HOME" \\',
-    '  CI=true \\',
-    '  TEST_FILES="$TEST_FILES" \\',
-    '  npm run test:ci:collector'
-  ].join('\n');
-
-  const fanOutTasks = {
-    [`pr-code-checks-${TARGET}`]: {
-      from: 'pr-code-checks',
-      displayName: TARGET,
-      runtimeClassName: 'large',
-      steps: [
-        { name: 'peer-review', when: 'false' },
-        { name: 'detect-secrets', when: 'false' },
-        { name: 'compliance-checks', when: 'false' },
-        { name: 'unit-test', displayName: TARGET, image: NODE_IMAGE, script: scriptLines }
-      ]
-    }
-  };
-
-  writeConfig(TARGET, baseConfig(fanOutTasks));
-
-} else {
-  const SIMPLE_TARGETS = {
-    'aws-lambda':                { script: 'test:ci:aws-lambda',                displayName: 'aws-lambda' },
-    'aws-fargate':               { script: 'test:ci:aws-fargate',               displayName: 'aws-fargate' },
-    'azure-container-services':  { script: 'test:ci:azure-container-services',  displayName: 'azure-container-services' },
-    'google-cloud-run':          { script: 'test:ci:google-cloud-run',          displayName: 'google-cloud-run' },
-    'autoprofile':               { script: 'test:ci:autoprofile',               displayName: 'autoprofile',
-                                   extraEnv: 'CI_AUTOPROFILE_TEST_FILES=$(cd packages/autoprofile && find test -name \'*.test.js\' -not -path \'*/node_modules/*\' | sort | tr \'\\n\' \' \')' },
-    'core':                      { script: 'test:ci:core',                      displayName: 'core' },
-    'metrics-util':              { script: 'test:ci:metrics-util',              displayName: 'metrics-util' },
-    'opentelemetry-exporter':    { script: 'test:ci:opentelemetry-exporter',    displayName: 'opentelemetry-exporter' },
-    'opentelemetry-sampler':     { script: 'test:ci:opentelemetry-sampler',     displayName: 'opentelemetry-sampler' },
-    'serverless':                { script: 'test:ci:serverless',                displayName: 'serverless' },
-    'serverless-collector':      { script: 'test:ci:serverless-collector',      displayName: 'serverless-collector' },
-    'shared-metrics':            { script: 'test:ci:shared-metrics',            displayName: 'shared-metrics' }
-  };
-
-  // ── group targets: multiple simple targets in one YAML ───────────────────
-  const GROUP_TARGETS = {
-    'aws': ['aws-lambda', 'aws-fargate'],
-    'cloud': ['aws-lambda', 'aws-fargate', 'azure-container-services', 'google-cloud-run'],
-    'opentelemetry': ['opentelemetry-exporter', 'opentelemetry-sampler'],
-    'core-group': ['core', 'metrics-util', 'serverless', 'serverless-collector', 'shared-metrics']
-  };
-
-  if (GROUP_TARGETS[TARGET]) {
-    const members = GROUP_TARGETS[TARGET];
+  } else if (GROUP_TARGETS[t]) {
+    const members     = GROUP_TARGETS[t];
     const fanOutTasks = {};
     for (const member of members) {
       const { script, displayName, extraEnv } = SIMPLE_TARGETS[member];
-      const taskName = `pr-code-checks-${member}`;
-      fanOutTasks[taskName] = buildSimpleTask(displayName, script, [], extraEnv);
+      fanOutTasks[`pr-code-checks-${member}`] = buildSimpleTask(displayName, script, [], extraEnv);
     }
-    writeConfig(TARGET, baseConfig(fanOutTasks));
-    console.log(`Generated ${members.length} tasks for group '${TARGET}': ${members.join(', ')}`);
-  } else if (SIMPLE_TARGETS[TARGET]) {
-    const { script, displayName, extraEnv } = SIMPLE_TARGETS[TARGET];
-    const taskName = `pr-code-checks-${TARGET}`;
-    const fanOutTasks = { [taskName]: buildSimpleTask(displayName, script, [], extraEnv) };
-    writeConfig(TARGET, baseConfig(fanOutTasks));
-    console.log(`Generated task '${taskName}' running: npm run ${script}`);
+    const prConfig = baseConfig(fanOutTasks);
+    writeConfig(t, prConfig, toMainConfig(prConfig));
+
+  } else if (SIMPLE_TARGETS[t]) {
+    const { script, displayName, extraEnv } = SIMPLE_TARGETS[t];
+    const fanOutTasks = { [`pr-code-checks-${t}`]: buildSimpleTask(displayName, script, [], extraEnv) };
+    const prConfig = baseConfig(fanOutTasks);
+    writeConfig(t, prConfig, toMainConfig(prConfig));
+
   } else {
-    console.error(`Unknown target: ${TARGET}`);
+    console.error(`Unknown target: ${t}`);
     process.exit(1);
   }
 }
+
+// ─── run ─────────────────────────────────────────────────────────────────────
+
+const targets = TARGET ? [TARGET] : ALL_TARGETS;
+for (const t of targets) generateOne(t);

@@ -1,0 +1,209 @@
+version: '2'
+tasks:
+  code-build:
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: npm-install
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+  code-build-aws-lambda:
+    from: code-build
+    displayName: aws-lambda
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: aws-lambda
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            npm run test:ci:aws-lambda
+  code-build-aws-fargate:
+    from: code-build
+    displayName: aws-fargate
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: aws-fargate
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            npm run test:ci:aws-fargate
+  code-build-azure-container-services:
+    from: code-build
+    displayName: azure-container-services
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: azure-container-services
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            npm run test:ci:azure-container-services
+  code-build-google-cloud-run:
+    from: code-build
+    displayName: google-cloud-run
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: google-cloud-run
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          # switch Node.js version if node_version trigger property is set
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version"
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            EXPECTED="v${node_version}"
+            if [[ "$ACTUAL" != "$EXPECTED"* ]]; then
+              echo "ERROR: expected Node.js ${EXPECTED} but got ${ACTUAL}"
+              exit 1
+            fi
+            echo "Node.js version: $ACTUAL"
+          fi
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            npm run test:ci:google-cloud-run
