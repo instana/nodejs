@@ -93,7 +93,12 @@ tasks:
             -e ES_JAVA_OPTS="-Xms500m -Xmx500m" \
             -e xpack.security.enabled="false" \
             "mirror.gcr.io/elastic/elasticsearch:9.0.0"
-          sleep 60
+
+          # Wait until Elasticsearch cluster health is green or yellow (ready to accept requests)
+          echo "Waiting for Elasticsearch to be ready..."
+          timeout 120 bash -c \
+            'until curl -sf http://127.0.0.1:9200/_cluster/health | grep -q "\"status\":\"green\"\|\"status\":\"yellow\""; do sleep 3; done'
+          echo "Elasticsearch is ready."
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -976,7 +981,12 @@ tasks:
           docker run -d --network host --name oracledb \
             -e ORACLE_PWD="teamnodejspassword" \
             "container-registry.oracle.com/database/free:23.6.0.0-lite"
-          sleep 60
+
+          # Wait for Oracle DB to be fully ready (FREEPDB1 open) — can take up to 5 minutes on first start
+          echo "Waiting for OracleDB to be ready..."
+          timeout 300 bash -c \
+            'until docker exec oracledb /opt/oracle/checkDBStatus.sh 2>/dev/null; do sleep 5; done'
+          echo "OracleDB is ready."
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
