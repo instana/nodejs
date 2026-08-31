@@ -198,6 +198,35 @@
       "image": "mirror.gcr.io/localstack/localstack:4.5"
     },
     {
+      "name": "azurite",
+      "image": "mcr.microsoft.com/azure-storage/azurite:3.37.0",
+      "args": [
+        "azurite",
+        "--blobHost",
+        "0.0.0.0",
+        "--queueHost",
+        "0.0.0.0",
+        "--tableHost",
+        "0.0.0.0",
+        "--loose",
+        "--inMemoryPersistence"
+      ],
+      "env": [
+        {
+          "name": "AZURITE_ACCOUNTS",
+          "value": "devstoreaccount1:Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OceiPiBeEEiypt/RI7k9g4Vm0J8SeBLMYxPTLr8GlFocl2qSA1dV5w=="
+        }
+      ],
+      "readinessProbe": {
+        "tcpSocket": {
+          "port": 10000
+        },
+        "initialDelaySeconds": 3,
+        "periodSeconds": 2,
+        "timeoutSeconds": 30
+      }
+    },
+    {
       "name": "memcached",
       "image": "mirror.gcr.io/library/memcached:1.6.9"
     },

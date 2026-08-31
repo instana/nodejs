@@ -36,5 +36,7 @@
     "INSTANA_CONNECT_MSSQL_PORT": "1433",
     "INSTANA_CONNECT_MSSQL_USER": "sa",
     "INSTANA_CONNECT_MSSQL_PW": "stanCanHazMsSQL1",
-    "INSTANA_PRISMA_SQLITE_URL": "file:./dev.db"
+    "INSTANA_PRISMA_SQLITE_URL": "file:./dev.db",
+    "INSTANA_CONNECT_AZURE_CONNECTION_MODE": "local",
+    "INSTANA_CONNECT_AZURE_BLOB_ENDPOINT": "http://localhost:10000/devstoreaccount1"
 }

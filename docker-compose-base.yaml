@@ -226,6 +226,22 @@ services:
        - ./db2/database:/database
        - ./db2/db2_data:/db2_data
 
+  # Azure Blob Storage Emulator (Azurite)
+  # https://github.com/AleksNeStu/azure-emulators-docker
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:3.37.0
+    pull_policy: if_not_present
+    container_name: azurite
+    ports:
+      - "10000:10000"  # Blob service
+      - "10001:10001"  # Queue service
+      - "10002:10002"  # Table service
+    environment:
+      # Well-known Azurite test credentials — not a secret, published by Microsoft:
+      # https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite#well-known-storage-account-and-key
+      AZURITE_ACCOUNTS: "devstoreaccount1:Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OceiPiBeEEiypt/RI7k9g4Vm0J8SeBLMYxPTLr8GlFocl2qSA1dV5w=="
+    command: azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --loose --inMemoryPersistence
+
   localstack:
     container_name: "${LOCALSTACK_DOCKER_NAME:-localstack-main}"
     image: public.ecr.aws/localstack/localstack:4.5
