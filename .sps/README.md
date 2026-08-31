@@ -256,5 +256,3 @@ confirm the match set before closing.
 - [Pipeline-config v2 customization options](https://pages.github.ibm.com/secure-pipelines-service/sps-docs/optimize/optimize/#pipeline-config-v2-customization-options)
 - [SPS Task-level options](https://pages.github.ibm.com/secure-pipelines-service/sps-docs/optimize/optimize/#task-level-options)
 - [SPS Multi-arch workers](https://pages.github.ibm.com/secure-pipelines-service/sps-docs/optimize/optimize/#multi-arch-workers-v11-only)
-
-

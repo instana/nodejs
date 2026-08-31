@@ -9,3 +9,8 @@ tasks:
         script: |-
           #!/usr/bin/env bash
           echo "General PR checks passed."
+
+  code-pr-finish:
+    steps:
+      - name: run-stage
+        when: 'false'
