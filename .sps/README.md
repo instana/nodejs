@@ -1,27 +1,173 @@
 # SPS Pipeline
 
-## Links
+## Overview
 
-https://pages.github.ibm.com/secure-pipelines-service/sps-docs/optimize/optimize/#pr-pipeline-structure
+Each test group has its own `pipeline-config-*.yaml`. A single IBM Cloud Toolchain
+pipeline hosts all of them; each trigger passes a different `pipeline-config` property
+to select which YAML to load. This keeps runs independent and parallel.
 
-https://pages.github.ibm.com/secure-pipelines-service/sps-docs/optimize/optimize/#pipeline-config-v2-customization-options
+There are four pipeline flavours:
 
-## Configuration
+| Folder | Trigger type | Event | Root task |
+|---|---|---|---|
+| `.sps/pipeline-config.yaml` (root) | SCM | `pull_request` | `pr-code-checks` |
+| `.sps/pr/` | SCM | `pull_request` | `pr-code-checks` |
+| `.sps/main/` | SCM | `push` (branch: `main`) | `code-build` |
+| `.sps/manual/` | Manual | n/a | `code-build` |
 
-* [`pipeline-config.yaml`](.sps/pipeline-config.yaml) – SPS pipeline definition using config version 2.
-* [`.secrets.baseline`](.secrets.baseline) – Secrets detection configuration.
-* [`.cra/.fileignore`](.cra/.fileignore) – Files excluded from compliance scanning.
+**Security checks run once** — only the root `pipeline-config.yaml` / `pr/pipeline-config.yaml`
+carry live `detect-secrets`, `compliance-checks`, and `peer-review` steps. All test-group
+configs disable those steps (`when: 'false'`) to avoid redundant scanning across
+dozens of parallel tasks.
 
-Set `pipeline-config-filename` to:
+Set `pipeline-config-filename` in the IBM Cloud Toolchain to:
 
-
-```text id="51307"
+```text
 .sps/pipeline-config.yaml
 ```
 
-## Pipeline
+Each trigger then overrides `pipeline-config` at run time to point at its own
+group-specific file (e.g. `.sps/pr/pipeline-config-core-group.yaml`).
 
-TBD
+## Configuration files
+
+| Path | Purpose |
+|---|---|
+| [`.sps/pipeline-config.yaml`](.sps/pipeline-config.yaml) | Root default — used for `pipeline-config-filename`. Security checks only, no tests. |
+| [`.sps/pr/`](.sps/pr/) | PR configs — one file per test group. |
+| [`.sps/main/`](.sps/main/) | Main-commit configs — mirrors of `pr/` with `code-build` task names. |
+| [`.sps/manual/`](.sps/manual/) | Manual-run configs — identical to `main/`. |
+| [`.sps/scripts/generate-pipeline-configs.js`](.sps/scripts/generate-pipeline-configs.js) | Generator — produces all YAML under `pr/`, `main/`, `manual/`. |
+| [`.sps/scripts/create-triggers.sh`](.sps/scripts/create-triggers.sh) | Registers all triggers in the IBM Cloud Toolchain via API. |
+| [`.sps/scripts/run-pipeline.sh`](.sps/scripts/run-pipeline.sh) | Fires a manual trigger by name. |
+| [`.secrets.baseline`](.secrets.baseline) | Secrets detection baseline required by SPS. |
+| [`.cra/.fileignore`](.cra/.fileignore) | Paths excluded from CRA compliance scanning. |
+
+## Pipeline structure
+
+Each test-group config follows a **root + fan-out** pattern:
+
+```
+pr-code-checks  (root — runs first)
+  steps:
+    - peer-review        → disabled (when: 'false')
+    - detect-secrets     → disabled (when: 'false')
+    - compliance-checks  → disabled (when: 'false')
+    - unit-test          → npm install + create-version-test-folders
+
+pr-code-checks-<name>  (fan-out child — runs in parallel after root)
+  from: pr-code-checks
+  runtimeClassName: large
+  steps:
+    - peer-review        → disabled
+    - detect-secrets     → disabled
+    - compliance-checks  → disabled
+    - unit-test          → run the actual test suite
+```
+
+The root default config (`pipeline-config.yaml` / `pr/pipeline-config.yaml`) is
+**minimal**: only `peer-review` is disabled; `detect-secrets` and `compliance-checks`
+run normally so security scanning still happens exactly once per PR / commit.
+
+### Task name convention
+
+| Pipeline type | Root task | Fan-out task prefix |
+|---|---|---|
+| PR (`pr/`) | `pr-code-checks` | `pr-code-checks-<name>` |
+| Main / Manual (`main/`, `manual/`) | `code-build` | `code-build-<name>` |
+
+
+### Docker sidecars (databases, message brokers)
+
+SPS does not support native Tekton sidecars. Tests that need an external service
+(Redis, MySQL, Elasticsearch, Kafka, etc.) use **DinD** (Docker-in-Docker):
+
+1. The task declares `include: [dind]` — SPS injects the DinD runtime.
+2. The `unit-test` step declares `include: [docker-socket]` — mounts `/var/run/docker.sock`.
+3. The step script installs `docker-ce-cli` via apt, then starts each service:
+   ```bash
+   docker run -d --network host --name <service> <image> ...
+   sleep 60   # wait for readiness
+   ```
+
+**`.needs` files** declare which sidecars a test folder requires. Place a `.needs`
+file next to the test folder listing one sidecar name per line (names match entries
+in [`.tekton/assets/sidecars.json`](.tekton/assets/sidecars.json)):
+
+```
+# packages/collector/test/integration/currencies/messaging/kafkajs/.needs
+zookeeper
+kafka
+kafka-topics
+```
+
+The generator reads `.needs` files automatically and adds `include: [dind]`,
+`include: [docker-socket]`, and the appropriate `docker run` calls to the generated
+task. **If a test folder needs a sidecar, add a `.needs` file — do not edit the
+generated YAML.**
+
+## Generating pipeline configs
+
+All YAML files under `.sps/pr/`, `.sps/main/`, and `.sps/manual/` are
+**code-generated** — do not edit them by hand. Re-run the generator whenever
+you add a new currency package, add/change a `.needs` file, or modify the generator
+itself.
+
+```bash
+# Regenerate all configs (pr + main + manual)
+node .sps/scripts/generate-pipeline-configs.js
+
+# Regenerate a single group, all modes
+node .sps/scripts/generate-pipeline-configs.js --what=collector-currencies-databases
+
+# Regenerate only pr configs for one group
+node .sps/scripts/generate-pipeline-configs.js --what=core-group --mode=pr
+```
+
+Available `--what` targets:
+
+| Target | Description |
+|---|---|
+| `default` | Root `pipeline-config.yaml` (security-checks only) |
+| `collector-currencies-<group>` | One fan-out task per package in `currencies/<group>/` |
+| `collector-metrics` | Tests under `test/integration/metrics/` |
+| `collector-misc` | Tests under `test/integration/misc/` |
+| `core-group` | core, metrics-util, serverless, serverless-collector, shared-metrics |
+| `cloud` | aws-lambda, aws-fargate, azure-container-services, google-cloud-run |
+| `opentelemetry` | opentelemetry-exporter, opentelemetry-sampler |
+| `autoprofile` | autoprofile package tests |
+
+## Registering triggers
+
+After generating configs, register all triggers in the toolchain once:
+
+```bash
+# Dry run first — no API calls
+.sps/scripts/create-triggers.sh --dry-run
+
+# Live run
+.sps/scripts/create-triggers.sh
+```
+
+Requires `ibmcloud` CLI logged in and `jq` installed. Existing triggers are skipped
+(idempotent).
+
+## Running a pipeline manually
+
+```bash
+# List all available manual triggers
+.sps/scripts/run-pipeline.sh --list
+
+# Run all manual triggers on a branch with Node 20
+.sps/scripts/run-pipeline.sh --branch ci-sps-v2 --node-version 20
+
+# Run a single group
+.sps/scripts/run-pipeline.sh --branch ci-sps-v2 --node-version 20 \
+  --trigger collector-currencies-async
+
+# Dry run — prints the API payload without making calls
+.sps/scripts/run-pipeline.sh --branch ci-sps-v2 --node-version 20 --dry-run
+```
 
 ## Secrets
 
@@ -94,7 +240,9 @@ confirm the match set before closing.
 
 ## References
 
-* [SPS Task-level options](https://pages.github.ibm.com/secure-pipelines-service/sps-docs/optimize/optimize/#task-level-options)
-* [SPS Multi-arch workers](https://pages.github.ibm.com/secure-pipelines-service/sps-docs/optimize/optimize/#multi-arch-workers-v11-only)
+- [SPS PR pipeline structure](https://pages.github.ibm.com/secure-pipelines-service/sps-docs/optimize/optimize/#pr-pipeline-structure)
+- [Pipeline-config v2 customization options](https://pages.github.ibm.com/secure-pipelines-service/sps-docs/optimize/optimize/#pipeline-config-v2-customization-options)
+- [SPS Task-level options](https://pages.github.ibm.com/secure-pipelines-service/sps-docs/optimize/optimize/#task-level-options)
+- [SPS Multi-arch workers](https://pages.github.ibm.com/secure-pipelines-service/sps-docs/optimize/optimize/#multi-arch-workers-v11-only)
 
 
