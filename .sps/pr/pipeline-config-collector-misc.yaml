@@ -34,9 +34,9 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
-  pr-code-checks-collector-misc:
+  pr-code-checks-misc-1:
     from: pr-code-checks
-    displayName: collector-misc
+    displayName: collector-misc-1
     runtimeClassName: large
     steps:
       - name: peer-review
@@ -46,7 +46,7 @@ tasks:
       - name: compliance-checks
         when: 'false'
       - name: unit-test
-        displayName: collector-misc
+        displayName: collector-misc-1
         image: mirror.gcr.io/library/node:24
         script: |-
           #!/usr/bin/env bash
@@ -74,14 +74,156 @@ tasks:
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
-            test/integration/misc \
+            test/integration/misc/sdk \
+            test/integration/misc/actions \
+            test/integration/misc/open_tracing \
+            test/integration/misc/otel_sdk_and_instana \
+            test/integration/misc/otlp-exporter \
+            test/integration/misc/tracing_metrics \
+            test/integration/misc/w3c_trace_context \
+            test/integration/misc/specification_compliance \
             -name '*.test.js' \
             -not -path '*/node_modules/*' \
-            -not -path '*/span-batching-with-redis/*' \
             | sort | tr '\n' ' ')
 
           if [ -z "$TEST_FILES" ]; then
-            echo 'WARNING: No test files found for collector-misc — skipping.'
+            echo 'WARNING: No test files found for collector-misc-1 — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+  pr-code-checks-misc-2:
+    from: pr-code-checks
+    displayName: collector-misc-2
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: collector-misc-2
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          node_version="$(get_env node-version 2>/dev/null || true)"
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version" --no-progress
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
+              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
+              exit 1
+            fi
+          fi
+          echo "Node.js: $(node --version)"
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/misc/native_esm \
+            test/integration/misc/require-esm \
+            test/integration/misc/cjs-via-esm \
+            test/integration/misc/require_hook \
+            test/integration/misc/babel_typescript \
+            test/integration/misc/typescript \
+            test/integration/misc/native_module_retry \
+            test/integration/misc/cls-hooked-conflict \
+            test/integration/misc/common \
+            test/integration/misc/secrets \
+            test/integration/misc/stack_trace \
+            test/integration/misc/restore_context \
+            test/integration/misc/reinit_setLogger \
+            test/integration/misc/logger_spans \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for collector-misc-2 — skipping.'
+            exit 0
+          fi
+
+          exec env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            CI=true \
+            TEST_FILES="$TEST_FILES" \
+            npm run test:ci:collector
+  pr-code-checks-misc-3:
+    from: pr-code-checks
+    displayName: collector-misc-3
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: collector-misc-3
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          node_version="$(get_env node-version 2>/dev/null || true)"
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version" --no-progress
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
+              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
+              exit 1
+            fi
+          fi
+          echo "Node.js: $(node --version)"
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/misc/activate_immediately \
+            test/integration/misc/agent-logs \
+            test/integration/misc/agent_connection \
+            test/integration/misc/disabled \
+            test/integration/misc/immediate \
+            test/integration/misc/invalid_app \
+            test/integration/misc/long_agent_communication \
+            test/integration/misc/long_profiling \
+            test/integration/misc/pre_init \
+            test/integration/misc/prevent_instrumenting_multiple_times \
+            test/integration/misc/too_late \
+            test/integration/misc/uncaught \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for collector-misc-3 — skipping.'
             exit 0
           fi
 

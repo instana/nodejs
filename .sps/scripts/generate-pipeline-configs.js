@@ -489,18 +489,8 @@ function generateOne(t) {
     const prConfig = baseConfig(fanOutTasks);
     writeConfig(t, prConfig, toMainConfig(prConfig));
 
-  } else if (t === 'collector-metrics' || t === 'collector-misc') {
-    const subDir = t.replace('collector-', '');
-    const relDir = `test/integration/${subDir}`;
-
-    const miscDir = path.join(REPO_ROOT, 'packages/collector', relDir);
-    const dindExcludes = t === 'collector-misc' && fs.existsSync(miscDir)
-      ? fs.readdirSync(miscDir, { withFileTypes: true })
-          .filter(e => e.isDirectory() && fs.existsSync(path.join(miscDir, e.name, '.needs')))
-          .map(e => e.name)
-      : [];
-    const excludeLines = dindExcludes.map(d => `  -not -path '*/${d}/*' \\`);
-
+  } else if (t === 'collector-metrics') {
+    const relDir = 'test/integration/metrics';
     const scriptLines = [
       '#!/usr/bin/env bash', 'set -eo pipefail', '',
       nodeVersionSwitchScript(), '',
@@ -512,26 +502,141 @@ function generateOne(t) {
       `  ${relDir} \\`,
       `  -name '*.test.js' \\`,
       `  -not -path '*/node_modules/*' \\`,
-      ...excludeLines,
       `  | sort | tr '\\n' ' ')`,
       '', 'if [ -z "$TEST_FILES" ]; then',
-      `  echo 'WARNING: No test files found for ${t} — skipping.'`,
+      `  echo 'WARNING: No test files found for collector-metrics — skipping.'`,
       '  exit 0', 'fi', '',
       'exec env -i \\', '  PATH="$PATH" \\', '  HOME="$HOME" \\',
       '  CI=true \\', '  TEST_FILES="$TEST_FILES" \\',
       '  npm run test:ci:collector'
     ].join('\n');
     const fanOutTasks = {
-      [`pr-code-checks-${t}`]: {
-        from: 'pr-code-checks', displayName: t, runtimeClassName: 'large',
+      'pr-code-checks-collector-metrics': {
+        from: 'pr-code-checks', displayName: 'collector-metrics', runtimeClassName: 'large',
         steps: [
           { name: 'peer-review', when: 'false' },
           { name: 'detect-secrets', when: 'false' },
           { name: 'compliance-checks', when: 'false' },
-          { name: 'unit-test', displayName: t, image: NODE_IMAGE, script: scriptLines }
+          { name: 'unit-test', displayName: 'collector-metrics', image: NODE_IMAGE, script: scriptLines }
         ]
       }
     };
+    const prConfig = baseConfig(fanOutTasks);
+    writeConfig(t, prConfig, toMainConfig(prConfig));
+
+  } else if (t === 'collector-misc') {
+    // Split into 3 parallel fan-out tasks to reduce per-task run time.
+    //
+    // misc-1: sdk, actions, tracing/otel  (15 tests)
+    // misc-2: esm/cjs, typescript, module format, context  (15 tests)
+    // misc-3: agent behaviour, lifecycle  (13 tests)
+    //
+    // Directories that have a .needs file (require Docker) are handled by
+    // the separate collector-misc-dind target and are excluded from all splits.
+    const miscDir = path.join(REPO_ROOT, 'packages/collector/test/integration/misc');
+    const dindExcludes = fs.existsSync(miscDir)
+      ? fs.readdirSync(miscDir, { withFileTypes: true })
+          .filter(e => e.isDirectory() && fs.existsSync(path.join(miscDir, e.name, '.needs')))
+          .map(e => e.name)
+      : [];
+
+    const splits = [
+      {
+        name: 'misc-1',
+        displayName: 'collector-misc-1',
+        comment: 'sdk, actions, open_tracing, otel_sdk_and_instana, otlp-exporter,\n' +
+                 '          #                      tracing_metrics, w3c_trace_context, specification_compliance',
+        dirs: [
+          'test/integration/misc/sdk',
+          'test/integration/misc/actions',
+          'test/integration/misc/open_tracing',
+          'test/integration/misc/otel_sdk_and_instana',
+          'test/integration/misc/otlp-exporter',
+          'test/integration/misc/tracing_metrics',
+          'test/integration/misc/w3c_trace_context',
+          'test/integration/misc/specification_compliance',
+        ]
+      },
+      {
+        name: 'misc-2',
+        displayName: 'collector-misc-2',
+        comment: 'native_esm, require-esm, cjs-via-esm, require_hook, babel_typescript,\n' +
+                 '          #                      typescript, native_module_retry, cls-hooked-conflict, common,\n' +
+                 '          #                      secrets, stack_trace, restore_context, reinit_setLogger, logger_spans',
+        dirs: [
+          'test/integration/misc/native_esm',
+          'test/integration/misc/require-esm',
+          'test/integration/misc/cjs-via-esm',
+          'test/integration/misc/require_hook',
+          'test/integration/misc/babel_typescript',
+          'test/integration/misc/typescript',
+          'test/integration/misc/native_module_retry',
+          'test/integration/misc/cls-hooked-conflict',
+          'test/integration/misc/common',
+          'test/integration/misc/secrets',
+          'test/integration/misc/stack_trace',
+          'test/integration/misc/restore_context',
+          'test/integration/misc/reinit_setLogger',
+          'test/integration/misc/logger_spans',
+        ]
+      },
+      {
+        name: 'misc-3',
+        displayName: 'collector-misc-3',
+        comment: 'activate_immediately, agent-logs, agent_connection, disabled, immediate,\n' +
+                 '          #                      invalid_app, long_agent_communication, long_profiling, pre_init,\n' +
+                 '          #                      prevent_instrumenting_multiple_times, too_late, uncaught',
+        dirs: [
+          'test/integration/misc/activate_immediately',
+          'test/integration/misc/agent-logs',
+          'test/integration/misc/agent_connection',
+          'test/integration/misc/disabled',
+          'test/integration/misc/immediate',
+          'test/integration/misc/invalid_app',
+          'test/integration/misc/long_agent_communication',
+          'test/integration/misc/long_profiling',
+          'test/integration/misc/pre_init',
+          'test/integration/misc/prevent_instrumenting_multiple_times',
+          'test/integration/misc/too_late',
+          'test/integration/misc/uncaught',
+        ]
+      }
+    ];
+
+    const fanOutTasks = {};
+    for (const split of splits) {
+      // Filter out any dirs that turned out to have .needs (dind) — keep splits stable
+      const dirs = split.dirs.filter(d => !dindExcludes.some(ex => d.endsWith(`/misc/${ex}`)));
+      const findLines = dirs.map(d => `  ${d} \\`);
+      const scriptLines = [
+        '#!/usr/bin/env bash', 'set -eo pipefail', '',
+        nodeVersionSwitchScript(), '',
+        'cd "$WORKSPACE/$(load_repo app-repo path)"',
+        'npm install --loglevel warn --foreground-scripts',
+        'node bin/create-version-test-folders.js', '',
+        `# collect test files`,
+        `TEST_FILES=$(cd packages/collector && find \\`,
+        ...findLines,
+        `  -name '*.test.js' \\`,
+        `  -not -path '*/node_modules/*' \\`,
+        `  | sort | tr '\\n' ' ')`,
+        '', 'if [ -z "$TEST_FILES" ]; then',
+        `  echo 'WARNING: No test files found for ${split.displayName} — skipping.'`,
+        '  exit 0', 'fi', '',
+        'exec env -i \\', '  PATH="$PATH" \\', '  HOME="$HOME" \\',
+        '  CI=true \\', '  TEST_FILES="$TEST_FILES" \\',
+        '  npm run test:ci:collector'
+      ].join('\n');
+      fanOutTasks[`pr-code-checks-${split.name}`] = {
+        from: 'pr-code-checks', displayName: split.displayName, runtimeClassName: 'large',
+        steps: [
+          { name: 'peer-review', when: 'false' },
+          { name: 'detect-secrets', when: 'false' },
+          { name: 'compliance-checks', when: 'false' },
+          { name: 'unit-test', displayName: split.displayName, image: NODE_IMAGE, script: scriptLines }
+        ]
+      };
+    }
     const prConfig = baseConfig(fanOutTasks);
     writeConfig(t, prConfig, toMainConfig(prConfig));
 
