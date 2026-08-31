@@ -12,7 +12,7 @@ const sinonChai = require('sinon-chai');
 const expect = chai.expect;
 chai.use(sinonChai);
 
-const { secrets, tracing } = require('@_local/core');
+const { secrets, tracing, coreConfig } = require('@_local/core');
 const { constants } = tracing;
 const agentConnection = require('@_local/collector/src/agentConnection');
 const testUtils = require('@_local/core/test/test_util');
@@ -33,6 +33,7 @@ describe('unannounced state', () => {
       tracingStub = sinon.stub(tracing);
       secretsStub = sinon.stub(secrets);
       pidStoreStub = sinon.stub();
+      coreConfig.validators.init({ warn: () => {}, debug: () => {} });
 
       unannouncedState = proxyquire('../../../../src/announceCycle/unannounced', {
         '@instana/core': {
@@ -1633,6 +1634,82 @@ describe('unannounced state', () => {
                 }
               }
             });
+            done();
+          }
+        });
+      });
+    });
+
+    describe('applyPollRateConfiguration', () => {
+      it('should store pollRate (seconds) as metrics.transmissionDelay (ms) in agentOpts.config', done => {
+        prepareAnnounceResponse({ pollRate: 5 });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              metrics: { transmissionDelay: 5000 }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should store pollRate of 1 as 1000ms', done => {
+        prepareAnnounceResponse({ pollRate: 1 });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config.metrics.transmissionDelay).to.equal(1000);
+            done();
+          }
+        });
+      });
+
+      it('should store pollRate of 60 as 60000ms', done => {
+        prepareAnnounceResponse({ pollRate: 60 });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config.metrics.transmissionDelay).to.equal(60000);
+            done();
+          }
+        });
+      });
+
+      it('should snap an invalid pollRate to the nearest allowed value', done => {
+        // 7 seconds = 7000ms — nearest allowed is 5000ms
+        prepareAnnounceResponse({ pollRate: 7 });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config.metrics.transmissionDelay).to.equal(5000);
+            done();
+          }
+        });
+      });
+
+      it('should not set metrics.transmissionDelay when pollRate is absent', done => {
+        prepareAnnounceResponse({});
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config.metrics).to.be.undefined;
+            done();
+          }
+        });
+      });
+
+      it('should not set metrics.transmissionDelay when pollRate is null', done => {
+        prepareAnnounceResponse({ pollRate: null });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config.metrics).to.be.undefined;
+            done();
+          }
+        });
+      });
+
+      it('should not override existing metrics config from other sources when pollRate is absent', done => {
+        agentOptsStub.config = { metrics: { transmissionDelay: 30000 } };
+        prepareAnnounceResponse({});
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config.metrics.transmissionDelay).to.equal(30000);
             done();
           }
         });
