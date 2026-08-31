@@ -572,4 +572,39 @@ describe('config.validator', () => {
       expect(validator.logLevelValidator([])).to.be.undefined;
     });
   });
+
+  describe('validateTransmissionDelay', () => {
+    before(() => {
+      validator.init({ warn: () => {} });
+    });
+
+    it('should return the value unchanged when it is in the allowed list', () => {
+      expect(validator.validateTransmissionDelay(1000)).to.equal(1000);
+      expect(validator.validateTransmissionDelay(5000)).to.equal(5000);
+      expect(validator.validateTransmissionDelay(10000)).to.equal(10000);
+      expect(validator.validateTransmissionDelay(60000)).to.equal(60000);
+    });
+
+    it('should snap 2500 to nearest allowed value of 1000', () => {
+      // 2500 is equidistant between 1000 and 5000 — reduce picks the first one found, which is 1000
+      expect(validator.validateTransmissionDelay(2500)).to.equal(1000);
+    });
+
+    it('should snap 3000 to nearest allowed value of 1000 (equidistant, first match wins)', () => {
+      // 3000 is equidistant between 1000 and 5000 — reduce keeps the first minimum, which is 1000
+      expect(validator.validateTransmissionDelay(3000)).to.equal(1000);
+    });
+
+    it('should snap 4999 to nearest allowed value of 5000', () => {
+      expect(validator.validateTransmissionDelay(4999)).to.equal(5000);
+    });
+
+    it('should snap 6000 to nearest allowed value of 5000', () => {
+      expect(validator.validateTransmissionDelay(6000)).to.equal(5000);
+    });
+
+    it('should snap 72000 to nearest allowed value of 60000', () => {
+      expect(validator.validateTransmissionDelay(72000)).to.equal(60000);
+    });
+  });
 });

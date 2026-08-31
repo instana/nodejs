@@ -2701,6 +2701,98 @@ describe('config.normalizeConfig', () => {
       expect(config.tracing.ignoreEndpoints.mongodb).to.deep.equal([{ methods: ['find'] }]);
       expect(config.tracing.ignoreEndpointsDisableSuppression).to.be.true;
     });
+
+    describe('metrics.transmissionDelay from agent pollRate', () => {
+      it('should apply agent pollRate (seconds) as metrics.transmissionDelay (ms)', () => {
+        const config = coreConfig.normalize({});
+
+        coreConfig.update({
+          externalConfig: { metrics: { transmissionDelay: 5000 } },
+          source: CONFIG_SOURCES.AGENT
+        });
+
+        expect(config.metrics.transmissionDelay).to.equal(5000);
+      });
+
+      it('should apply agent pollRate of 1s (1000ms)', () => {
+        const config = coreConfig.normalize({});
+        coreConfig.update({ externalConfig: { metrics: { transmissionDelay: 1000 } }, source: CONFIG_SOURCES.AGENT });
+        expect(config.metrics.transmissionDelay).to.equal(1000);
+      });
+
+      it('should apply agent pollRate of 10s (10000ms)', () => {
+        const config = coreConfig.normalize({});
+        coreConfig.update({ externalConfig: { metrics: { transmissionDelay: 10000 } }, source: CONFIG_SOURCES.AGENT });
+        expect(config.metrics.transmissionDelay).to.equal(10000);
+      });
+
+      it('should apply agent pollRate of 60s (60000ms)', () => {
+        const config = coreConfig.normalize({});
+        coreConfig.update({ externalConfig: { metrics: { transmissionDelay: 60000 } }, source: CONFIG_SOURCES.AGENT });
+        expect(config.metrics.transmissionDelay).to.equal(60000);
+      });
+
+      it('should not override metrics.transmissionDelay when INSTANA_METRICS_TRANSMISSION_DELAY env var is set', () => {
+        process.env.INSTANA_METRICS_TRANSMISSION_DELAY = '5000';
+        const config = coreConfig.normalize({});
+
+        expect(config.metrics.transmissionDelay).to.equal(5000);
+
+        coreConfig.update({
+          externalConfig: { metrics: { transmissionDelay: 10000 } },
+          source: CONFIG_SOURCES.AGENT
+        });
+
+        // env var wins — agent value must be ignored
+        expect(config.metrics.transmissionDelay).to.equal(5000);
+      });
+
+      it('should not override metrics.transmissionDelay when set in-code', () => {
+        const config = coreConfig.normalize({
+          userConfig: { metrics: { transmissionDelay: 20000 } }
+        });
+
+        expect(config.metrics.transmissionDelay).to.equal(20000);
+
+        coreConfig.update({
+          externalConfig: { metrics: { transmissionDelay: 1000 } },
+          source: CONFIG_SOURCES.AGENT
+        });
+
+        // in-code value wins — agent value must be ignored
+        expect(config.metrics.transmissionDelay).to.equal(20000);
+      });
+
+      it('should use the default when agent sends no pollRate', () => {
+        const config = coreConfig.normalize({});
+
+        coreConfig.update({
+          externalConfig: {},
+          source: CONFIG_SOURCES.AGENT
+        });
+
+        expect(config.metrics.transmissionDelay).to.equal(30000);
+      });
+
+      it('should respect precedence: ENV > IN_CODE > AGENT for metrics.transmissionDelay', () => {
+        process.env.INSTANA_METRICS_TRANSMISSION_DELAY = '60000';
+
+        const config = coreConfig.normalize({
+          userConfig: { metrics: { transmissionDelay: 20000 } }
+        });
+
+        // ENV beats in-code
+        expect(config.metrics.transmissionDelay).to.equal(60000);
+
+        coreConfig.update({
+          externalConfig: { metrics: { transmissionDelay: 1000 } },
+          source: CONFIG_SOURCES.AGENT
+        });
+
+        // ENV still wins over agent
+        expect(config.metrics.transmissionDelay).to.equal(60000);
+      });
+    });
   });
 
   function checkDefaults(config) {

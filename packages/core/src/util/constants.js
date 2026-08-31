@@ -45,3 +45,7 @@ exports.LOG_LEVEL_PRIORITY = {
 };
 
 exports.DEFAULT_LOG_LEVEL = exports.LOG_LEVEL.WARN;
+
+// Allowed poll rate values in milliseconds, matching the agent's supported poll_rate seconds:
+// [1, 5, 10, 20, 30, 60]
+exports.allowedTransmissionDelayValues = [1000, 5000, 10000, 20000, 30000, 60000];
