@@ -68,6 +68,7 @@ let patterns = [
   /\/sqs-consumer\/dist\//,
   /\/superagent\/lib\/node\/index.js/,
   /\/@smithy\/smithy-client\//,
+  /\/@smithy\/core\//,
   /\/request\/index.js/,
   /\/@apollo\/federation\/dist\//
 ];
