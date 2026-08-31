@@ -614,7 +614,7 @@ tasks:
           # start pubsub-emulator
           docker run -d --network host --name pubsub-emulator \
             --entrypoint "gcloud" \
-            "mirror.gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators" "beta" "emulators" "pubsub" "start" "--host-port=0.0.0.0:8085" "--project=test-project"
+            "gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators" "beta" "emulators" "pubsub" "start" "--host-port=0.0.0.0:8085" "--project=test-project"
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 8085 2>/dev/null; do sleep 2; done'
 
@@ -691,9 +691,9 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          # start gcs-server
-          docker run -d --network host --name gcs-server \
-            "mirror.gcr.io/fsouza/fake-gcs-server:1.52.2" "-scheme" "http" "-port" "4443" "-public-host" "127.0.0.1:4443"
+          # start fake-gcs-server
+          docker run -d --network host --name fake-gcs-server \
+            "mirror.gcr.io/l9j0i2e0/fake-gcs-server:1.53.0" "-scheme" "http" "-port" "4443" "-public-host" "127.0.0.1:4443"
           timeout 30 bash -c \
             'until curl -sf http://127.0.0.1:4443/storage/v1/b >/dev/null; do sleep 2; done'
 

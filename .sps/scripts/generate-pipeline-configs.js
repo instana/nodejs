@@ -139,7 +139,7 @@ function readinessScript(name) {
         "timeout 60 bash -c \\\n" +
         "  'until nc -z 127.0.0.1 8085 2>/dev/null; do sleep 2; done'"
       );
-    case 'gcs-server':
+    case 'fake-gcs-server':
       return (
         "timeout 30 bash -c \\\n" +
         "  'until curl -sf http://127.0.0.1:4443/storage/v1/b >/dev/null; do sleep 2; done'"
@@ -277,7 +277,7 @@ function buildCurrencyTask(pkgName, folder, group) {
     scriptLines.push('  PUBSUB_EMULATOR_HOST="127.0.0.1:8085" \\');
     scriptLines.push('  GCP_PROJECT="test-project" \\');
   }
-  if (needs.includes('gcs-server')) {
+  if (needs.includes('fake-gcs-server')) {
     scriptLines.push('  GCS_EMULATOR_HOST="http://127.0.0.1:4443" \\');
     scriptLines.push('  GCP_PROJECT="test-project" \\');
     scriptLines.push('  GCS_SERVICE_ACCOUNT_EMAIL="test-service-account@test-project.iam.gserviceaccount.com" \\');

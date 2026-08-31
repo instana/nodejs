@@ -305,7 +305,7 @@
     },
     {
       "name": "pubsub-emulator",
-      "image": "mirror.gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators",
+      "image": "gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators",
       "command": [
         "gcloud"
       ],
@@ -327,8 +327,8 @@
       }
     },
     {
-      "name": "gcs-server",
-      "image": "mirror.gcr.io/fsouza/fake-gcs-server:1.52.2",
+      "name": "fake-gcs-server",
+      "image": "mirror.gcr.io/l9j0i2e0/fake-gcs-server:1.53.0",
       "args": [
         "-scheme",
         "http",
