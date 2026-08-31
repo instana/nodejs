@@ -46,7 +46,7 @@ mochaSuiteFn('ejs require collector in preload', function () {
     await testUtils.retry(() =>
       controls.agentControls.getAllMetrics(controls.getPid()).then(metrics => {
         const name = findMetric(metrics, ['name']);
-        expect(name).to.equal('@instana/shared-metrics');
+        expect(name).to.equal('esm-require-in-preload');
       })
     );
   });
