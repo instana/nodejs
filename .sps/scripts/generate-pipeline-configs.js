@@ -104,6 +104,11 @@ function readinessScript(name) {
         "timeout 120 bash -c \\\n" +
         "  'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'"
       );
+    case 'kafka-topics':
+      // block until the topic-creation container finishes (exits 0)
+      return (
+        "docker wait kafka-topics"
+      );
     case 'zookeeper':
       return (
         "timeout 60 bash -c \\\n" +
