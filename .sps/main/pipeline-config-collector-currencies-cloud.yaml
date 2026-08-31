@@ -38,6 +38,8 @@ tasks:
     from: code-build
     displayName: '@aws-sdk/client-dynamodb'
     runtimeClassName: large
+    include:
+      - dind
     steps:
       - name: peer-review
         when: 'false'
@@ -48,6 +50,8 @@ tasks:
       - name: unit-test
         displayName: '@aws-sdk/client-dynamodb'
         image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
@@ -71,6 +75,23 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
+
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start localstack
+          docker run -d --network host --name localstack \
+            "mirror.gcr.io/localstack/localstack:4.5"
+          timeout 60 bash -c \
+            'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -88,12 +109,15 @@ tasks:
             PATH="$PATH" \
             HOME="$HOME" \
             CI=true \
+            INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
   code-build-collector-cloud-aws-sdkclient-kinesis:
     from: code-build
     displayName: '@aws-sdk/client-kinesis'
     runtimeClassName: large
+    include:
+      - dind
     steps:
       - name: peer-review
         when: 'false'
@@ -104,6 +128,8 @@ tasks:
       - name: unit-test
         displayName: '@aws-sdk/client-kinesis'
         image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
@@ -127,6 +153,23 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
+
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start localstack
+          docker run -d --network host --name localstack \
+            "mirror.gcr.io/localstack/localstack:4.5"
+          timeout 60 bash -c \
+            'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -144,12 +187,15 @@ tasks:
             PATH="$PATH" \
             HOME="$HOME" \
             CI=true \
+            INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
   code-build-collector-cloud-aws-sdkclient-lambda:
     from: code-build
     displayName: '@aws-sdk/client-lambda'
     runtimeClassName: large
+    include:
+      - dind
     steps:
       - name: peer-review
         when: 'false'
@@ -160,6 +206,8 @@ tasks:
       - name: unit-test
         displayName: '@aws-sdk/client-lambda'
         image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
@@ -183,6 +231,23 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
+
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start localstack
+          docker run -d --network host --name localstack \
+            "mirror.gcr.io/localstack/localstack:4.5"
+          timeout 60 bash -c \
+            'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -200,12 +265,15 @@ tasks:
             PATH="$PATH" \
             HOME="$HOME" \
             CI=true \
+            INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
   code-build-collector-cloud-aws-sdkclient-s3:
     from: code-build
     displayName: '@aws-sdk/client-s3'
     runtimeClassName: large
+    include:
+      - dind
     steps:
       - name: peer-review
         when: 'false'
@@ -216,6 +284,8 @@ tasks:
       - name: unit-test
         displayName: '@aws-sdk/client-s3'
         image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
@@ -239,6 +309,23 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
+
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start localstack
+          docker run -d --network host --name localstack \
+            "mirror.gcr.io/localstack/localstack:4.5"
+          timeout 60 bash -c \
+            'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -256,12 +343,15 @@ tasks:
             PATH="$PATH" \
             HOME="$HOME" \
             CI=true \
+            INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
   code-build-collector-cloud-aws-sdkclient-sns:
     from: code-build
     displayName: '@aws-sdk/client-sns'
     runtimeClassName: large
+    include:
+      - dind
     steps:
       - name: peer-review
         when: 'false'
@@ -272,6 +362,8 @@ tasks:
       - name: unit-test
         displayName: '@aws-sdk/client-sns'
         image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
@@ -295,6 +387,23 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
+
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start localstack
+          docker run -d --network host --name localstack \
+            "mirror.gcr.io/localstack/localstack:4.5"
+          timeout 60 bash -c \
+            'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -312,12 +421,15 @@ tasks:
             PATH="$PATH" \
             HOME="$HOME" \
             CI=true \
+            INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
   code-build-collector-cloud-aws-sdkclient-sqs:
     from: code-build
     displayName: '@aws-sdk/client-sqs'
     runtimeClassName: large
+    include:
+      - dind
     steps:
       - name: peer-review
         when: 'false'
@@ -328,6 +440,8 @@ tasks:
       - name: unit-test
         displayName: '@aws-sdk/client-sqs'
         image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
@@ -352,6 +466,23 @@ tasks:
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
 
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start localstack
+          docker run -d --network host --name localstack \
+            "mirror.gcr.io/localstack/localstack:4.5"
+          timeout 60 bash -c \
+            'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
+
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
             test/integration/currencies/cloud/@aws-sdk/client-sqs \
@@ -368,6 +499,7 @@ tasks:
             PATH="$PATH" \
             HOME="$HOME" \
             CI=true \
+            INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
   code-build-collector-cloud-azurestorage-blob:
@@ -542,6 +674,8 @@ tasks:
     from: code-build
     displayName: aws-sdk
     runtimeClassName: large
+    include:
+      - dind
     steps:
       - name: peer-review
         when: 'false'
@@ -552,6 +686,8 @@ tasks:
       - name: unit-test
         displayName: aws-sdk
         image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
@@ -576,6 +712,23 @@ tasks:
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
 
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start localstack
+          docker run -d --network host --name localstack \
+            "mirror.gcr.io/localstack/localstack:4.5"
+          timeout 60 bash -c \
+            'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
+
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
             test/integration/currencies/cloud/aws-sdk \
@@ -592,5 +745,6 @@ tasks:
             PATH="$PATH" \
             HOME="$HOME" \
             CI=true \
+            INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector

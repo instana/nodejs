@@ -91,7 +91,8 @@ tasks:
           docker run -d --network host --name zookeeper \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
-          sleep 60
+          timeout 60 bash -c \
+            'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'
 
           # start kafka
           docker run -d --network host --name kafka \
@@ -103,7 +104,8 @@ tasks:
             -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
             -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
-          sleep 60
+          timeout 120 bash -c \
+            'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'
 
           # start kafka-topics
           docker run -d --network host --name kafka-topics \
@@ -185,7 +187,8 @@ tasks:
           # start rabbitmq
           docker run -d --network host --name rabbitmq \
             "mirror.gcr.io/library/rabbitmq:3.13.0"
-          sleep 60
+          timeout 60 bash -c \
+            'until docker exec rabbitmq rabbitmq-diagnostics -q check_port_connectivity 2>/dev/null; do sleep 2; done'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -261,7 +264,8 @@ tasks:
           # start redis
           docker run -d --network host --name redis \
             "mirror.gcr.io/library/redis:7.4.3"
-          sleep 60
+          timeout 30 bash -c \
+            'until docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 1; done'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -338,7 +342,8 @@ tasks:
           docker run -d --network host --name zookeeper \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
-          sleep 60
+          timeout 60 bash -c \
+            'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'
 
           # start kafka
           docker run -d --network host --name kafka \
@@ -350,7 +355,8 @@ tasks:
             -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
             -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
-          sleep 60
+          timeout 120 bash -c \
+            'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'
 
           # start kafka-topics
           docker run -d --network host --name kafka-topics \
@@ -433,7 +439,8 @@ tasks:
           docker run -d --network host --name zookeeper \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
-          sleep 60
+          timeout 60 bash -c \
+            'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'
 
           # start kafka
           docker run -d --network host --name kafka \
@@ -445,7 +452,8 @@ tasks:
             -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
             -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
-          sleep 60
+          timeout 120 bash -c \
+            'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'
 
           # start kafka-topics
           docker run -d --network host --name kafka-topics \
@@ -603,12 +611,14 @@ tasks:
           # start nats-streaming
           docker run -d --network host --name nats-streaming \
             "mirror.gcr.io/library/nats-streaming:0.25.3-linux" "-p" "4223" "-m" "8223"
-          sleep 60
+          timeout 60 bash -c \
+            'until curl -sf http://127.0.0.1:8223/healthz >/dev/null; do sleep 2; done'
 
           # start nats-streaming-2
           docker run -d --network host --name nats-streaming-2 \
             "mirror.gcr.io/library/nats-streaming:0.25.3-linux" "-p" "4224" "-m" "8224"
-          sleep 60
+          timeout 60 bash -c \
+            'until curl -sf http://127.0.0.1:8224/healthz >/dev/null; do sleep 2; done'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -685,7 +695,8 @@ tasks:
           docker run -d --network host --name zookeeper \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
-          sleep 60
+          timeout 60 bash -c \
+            'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'
 
           # start kafka
           docker run -d --network host --name kafka \
@@ -697,7 +708,8 @@ tasks:
             -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
             -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
-          sleep 60
+          timeout 120 bash -c \
+            'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'
 
           # start kafka-topics
           docker run -d --network host --name kafka-topics \

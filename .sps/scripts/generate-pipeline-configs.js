@@ -77,7 +77,86 @@ function dockerRunScript(name) {
 function readinessScript(name) {
   const s = sidecar(name);
   if (!s) return '';
-  return 'sleep 60';
+
+  switch (name) {
+    case 'elasticsearch':
+      return (
+        "echo \"Waiting for Elasticsearch to be ready...\"\n" +
+        "timeout 120 bash -c \\\n" +
+        "  'until curl -sf http://127.0.0.1:9200/_cluster/health | grep -q '\\''\"status\":\"green\"\\|\"status\":\"yellow\"'\\'' ; do sleep 3; done'\n" +
+        "echo \"Elasticsearch is ready.\""
+      );
+    case 'oracledb':
+      return (
+        "echo \"Waiting for OracleDB to be ready...\"\n" +
+        "timeout 300 bash -c \\\n" +
+        "  'until docker exec oracledb /opt/oracle/checkDBStatus.sh 2>/dev/null; do sleep 5; done'\n" +
+        "echo \"OracleDB is ready.\""
+      );
+    case 'rabbitmq':
+      return (
+        "timeout 60 bash -c \\\n" +
+        "  'until docker exec rabbitmq rabbitmq-diagnostics -q check_port_connectivity 2>/dev/null; do sleep 2; done'"
+      );
+    case 'kafka':
+      // kafka readiness is handled by kafka-topics sidecar; just wait for port
+      return (
+        "timeout 120 bash -c \\\n" +
+        "  'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'"
+      );
+    case 'zookeeper':
+      return (
+        "timeout 60 bash -c \\\n" +
+        "  'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'"
+      );
+    case 'postgres':
+      return (
+        "timeout 60 bash -c \\\n" +
+        "  'until docker exec postgres pg_isready -h 127.0.0.1 -U node 2>/dev/null; do sleep 2; done'"
+      );
+    case 'mysql':
+      return (
+        "timeout 60 bash -c \\\n" +
+        "  'until docker exec mysql mysql -h 127.0.0.1 -u node -pnodepw -e \"SELECT 1\" 2>/dev/null; do sleep 2; done'"
+      );
+    case 'mongodb':
+      return (
+        "timeout 60 bash -c \\\n" +
+        "  'until docker exec mongodb mongosh --quiet --eval \"db.runCommand({ ping: 1 })\" 2>/dev/null | grep -q ok; do sleep 2; done'"
+      );
+    case 'redis':
+      return (
+        "timeout 30 bash -c \\\n" +
+        "  'until docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 1; done'"
+      );
+    case 'localstack':
+      return (
+        "timeout 60 bash -c \\\n" +
+        "  'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'"
+      );
+    default:
+      // For sidecars with a readinessProbe in sidecars.json use a TCP port check,
+      // otherwise fall back to a conservative sleep
+      if (s.readinessProbe) {
+        const probe = s.readinessProbe;
+        if (probe.tcpSocket) {
+          const port = probe.tcpSocket.port;
+          return (
+            `timeout 60 bash -c \\\n` +
+            `  'until nc -z 127.0.0.1 ${port} 2>/dev/null; do sleep 2; done'`
+          );
+        }
+        if (probe.httpGet) {
+          const port = probe.httpGet.port;
+          const path = probe.httpGet.path || '/';
+          return (
+            `timeout 60 bash -c \\\n` +
+            `  'until curl -sf http://127.0.0.1:${port}${path} >/dev/null; do sleep 2; done'`
+          );
+        }
+      }
+      return 'sleep 60';
+  }
 }
 
 function readNeeds(folder) {
@@ -181,6 +260,9 @@ function buildCurrencyTask(pkgName, folder, group) {
   scriptLines.push('  PATH="$PATH" \\');
   scriptLines.push('  HOME="$HOME" \\');
   scriptLines.push('  CI=true \\');
+  if (needs.includes('localstack')) {
+    scriptLines.push('  INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \\');
+  }
   scriptLines.push('  TEST_FILES="$TEST_FILES" \\');
   scriptLines.push('  npm run test:ci:collector');
 
@@ -374,10 +456,27 @@ function generateOne(t) {
             { name: 'peer-review', when: 'false' },
             { name: 'unit-test', image: NODE_IMAGE, script: '#!/usr/bin/env bash\necho "General PR checks passed."' }
           ]
+        },
+        'code-pr-finish': {
+          steps: [
+            { name: 'run-stage', when: 'false' }
+          ]
         }
       }
     };
-    writeDefaultConfig(prConfig, toMainConfig(prConfig));
+
+    const mainConfig = {
+      version: '2',
+      tasks: {
+        'code-build': {
+          steps: [
+            { name: 'peer-review', when: 'false' },
+            { name: 'unit-test', image: NODE_IMAGE, script: '#!/usr/bin/env bash\necho "General PR checks passed."' }
+          ]
+        }
+      }
+    };
+    writeDefaultConfig(prConfig, mainConfig);
 
   } else if (t.startsWith('collector-currencies-')) {
     const group    = t.replace('collector-currencies-', '');

@@ -429,7 +429,8 @@ tasks:
             -e POSTGRES_PASSWORD="nodepw" \
             -e POSTGRES_DB="nodedb" \
             "mirror.gcr.io/library/postgres:15.15"
-          sleep 60
+          timeout 60 bash -c \
+            'until docker exec postgres pg_isready -h 127.0.0.1 -U node 2>/dev/null; do sleep 2; done'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -564,7 +565,8 @@ tasks:
             -e POSTGRES_PASSWORD="nodepw" \
             -e POSTGRES_DB="nodedb" \
             "mirror.gcr.io/library/postgres:15.15"
-          sleep 60
+          timeout 60 bash -c \
+            'until docker exec postgres pg_isready -h 127.0.0.1 -U node 2>/dev/null; do sleep 2; done'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
