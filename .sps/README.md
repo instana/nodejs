@@ -169,6 +169,18 @@ Requires `ibmcloud` CLI logged in and `jq` installed. Existing triggers are skip
 .sps/scripts/run-pipeline.sh --branch ci-sps-v2 --node-version 20 --dry-run
 ```
 
+## Stopping all active runs
+
+Use [`.sps/scripts/stop-all-runs.sh`](.sps/scripts/stop-all-runs.sh) to cancel every actively running pipeline run on the toolchain in one shot.
+
+```bash
+# Dry run — lists runs that would be cancelled without making any API calls
+.sps/scripts/stop-all-runs.sh --dry-run
+
+# Live run — cancels all active runs
+.sps/scripts/stop-all-runs.sh
+```
+
 ## Secrets
 
 SPS secrets are not stored in this repository. Configure them as secure pipeline properties in the IBM Cloud toolchain.
