@@ -222,13 +222,19 @@ mochaSuiteFn('Instana OpenTelemetry Exporter', function () {
 });
 
 function verifySpans(spans, appControls) {
-  // 1 x tcp connect
-  // 1 x request handler - /internal-endpoint
-  // 1 x GET /internal-endpoint (server)
-  // 1 x GET (client)
-  // 1 x request handler - /otel-test
-  // 1 x GET /otel-test (server)
-  expectExactlyNMatching(spans, 6, [
+  // otel-test (4 spans):
+  //   1 x GET /otel-test (server)
+  //   1 x request handler - /otel-test (router)
+  //   1 x request handler - /otel-test (express)
+  //   1 x middleware - patched
+  // internal-endpoint (6 spans):
+  //   1 x tcp.connect
+  //   1 x GET (client)
+  //   1 x GET /internal-endpoint (server)
+  //   1 x request handler - /internal-endpoint (router)
+  //   1 x request handler - /internal-endpoint (express)
+  //   1 x middleware - patched
+  expectExactlyNMatching(spans, 10, [
     span => expect(span.ec).to.eq(0),
     span => expect(span.f.e).to.eq(appControls.getTestAppPid()),
     span => expect(span.n).to.eq('otel'),
