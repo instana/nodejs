@@ -70,7 +70,7 @@ module.exports = function () {
         const directDeps = findMetric(allMetrics, ['directDependencies']);
         expect(directDeps).to.be.an('object');
         expect(Object.keys(directDeps)).to.have.lengthOf.at.least(1);
-        expect(directDeps.dependencies['node-fetch']).to.equal('^2.6.0');
+        expect(directDeps.dependencies['node-fetch']).to.equal('2.7.0');
 
         expect(findMetric(allMetrics, ['execArgs'])).to.be.an('array');
         expect(findMetric(allMetrics, ['execArgs'])).to.be.empty;
