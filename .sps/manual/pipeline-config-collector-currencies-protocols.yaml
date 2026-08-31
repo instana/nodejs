@@ -258,8 +258,8 @@ tasks:
           # start rabbitmq
           docker run -d --network host --name rabbitmq \
             "mirror.gcr.io/library/rabbitmq:3.13.0"
-          timeout 60 bash -c \
-            'until docker exec rabbitmq rabbitmq-diagnostics -q check_port_connectivity 2>/dev/null; do sleep 2; done'
+          timeout 120 bash -c \
+            'until nc -z 127.0.0.1 5672 2>/dev/null; do sleep 2; done'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \

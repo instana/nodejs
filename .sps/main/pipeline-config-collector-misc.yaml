@@ -77,6 +77,7 @@ tasks:
             test/integration/misc \
             -name '*.test.js' \
             -not -path '*/node_modules/*' \
+            -not -path '*/span-batching-with-redis/*' \
             | sort | tr '\n' ' ')
 
           if [ -z "$TEST_FILES" ]; then

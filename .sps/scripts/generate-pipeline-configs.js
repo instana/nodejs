@@ -30,7 +30,7 @@ if (!['all', 'pr', 'main', 'manual'].includes(MODE)) {
 // All targets to generate when --what is omitted
 const ALL_CURRENCY_GROUPS = fs.readdirSync(CURRENCIES_DIR).map(g => `collector-currencies-${g}`);
 const ALL_SIMPLE_TARGETS  = [
-  'collector-metrics', 'collector-misc',
+  'collector-metrics', 'collector-misc', 'collector-misc-dind',
   'cloud', 'autoprofile', 'core-group', 'opentelemetry'
 ];
 const ALL_TARGETS = ['default', ...ALL_CURRENCY_GROUPS, ...ALL_SIMPLE_TARGETS];
@@ -95,8 +95,8 @@ function readinessScript(name) {
       );
     case 'rabbitmq':
       return (
-        "timeout 60 bash -c \\\n" +
-        "  'until docker exec rabbitmq rabbitmq-diagnostics -q check_port_connectivity 2>/dev/null; do sleep 2; done'"
+        "timeout 120 bash -c \\\n" +
+        "  'until nc -z 127.0.0.1 5672 2>/dev/null; do sleep 2; done'"
       );
     case 'kafka':
       // kafka readiness is handled by kafka-topics sidecar; just wait for port
@@ -492,6 +492,15 @@ function generateOne(t) {
   } else if (t === 'collector-metrics' || t === 'collector-misc') {
     const subDir = t.replace('collector-', '');
     const relDir = `test/integration/${subDir}`;
+
+    const miscDir = path.join(REPO_ROOT, 'packages/collector', relDir);
+    const dindExcludes = t === 'collector-misc' && fs.existsSync(miscDir)
+      ? fs.readdirSync(miscDir, { withFileTypes: true })
+          .filter(e => e.isDirectory() && fs.existsSync(path.join(miscDir, e.name, '.needs')))
+          .map(e => e.name)
+      : [];
+    const excludeLines = dindExcludes.map(d => `  -not -path '*/${d}/*' \\`);
+
     const scriptLines = [
       '#!/usr/bin/env bash', 'set -eo pipefail', '',
       nodeVersionSwitchScript(), '',
@@ -503,6 +512,7 @@ function generateOne(t) {
       `  ${relDir} \\`,
       `  -name '*.test.js' \\`,
       `  -not -path '*/node_modules/*' \\`,
+      ...excludeLines,
       `  | sort | tr '\\n' ' ')`,
       '', 'if [ -z "$TEST_FILES" ]; then',
       `  echo 'WARNING: No test files found for ${t} — skipping.'`,
@@ -524,6 +534,24 @@ function generateOne(t) {
     };
     const prConfig = baseConfig(fanOutTasks);
     writeConfig(t, prConfig, toMainConfig(prConfig));
+
+  } else if (t === 'collector-misc-dind') {
+    const miscDir = path.join(REPO_ROOT, 'packages/collector/test/integration/misc');
+    const dindFolders = fs.readdirSync(miscDir, { withFileTypes: true })
+      .filter(e => e.isDirectory() && fs.existsSync(path.join(miscDir, e.name, '.needs')))
+      .map(e => ({ pkgName: e.name, folder: path.join(miscDir, e.name) }));
+
+    if (dindFolders.length === 0) {
+      console.warn('collector-misc-dind: no .needs folders found — skipping.');
+    } else {
+      const fanOutTasks = {};
+      dindFolders.forEach(({ pkgName, folder }) => {
+        const { taskName, task } = buildCurrencyTask(pkgName, folder, 'misc');
+        fanOutTasks[taskName] = task;
+      });
+      const prConfig = baseConfig(fanOutTasks);
+      writeConfig(t, prConfig, toMainConfig(prConfig));
+    }
 
   } else if (GROUP_TARGETS[t]) {
     const members     = GROUP_TARGETS[t];
