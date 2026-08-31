@@ -12,7 +12,7 @@ const { mkdirp } = require('mkdirp');
 const recursiveCopy = require('recursive-copy');
 const os = require('os');
 const path = require('path');
-const rimraf = require('rimraf');
+const { rimraf } = require('rimraf');
 const { satisfies } = require('semver');
 
 const config = require('@_local/core/test/config');
@@ -67,8 +67,8 @@ describe('dependencies', function () {
           expect(Object.keys(deps)).to.have.lengthOf(75);
 
           // Ensure some main example dependencies exist in the metrics
-          expectVersion(deps.fastify, '^3.20.2');
-          expectVersion(deps.express, '^4.17.1');
+          expectVersion(deps.fastify, '^5.12.1');
+          expectVersion(deps.express, '^4.22.2');
         })
       ));
   });
@@ -123,9 +123,7 @@ describe('dependencies', function () {
       await controls.stop();
     });
 
-    after(done => {
-      rimraf(tmpDir, done);
-    });
+    after(() => rimraf(tmpDir));
 
     it('should limit dependencies when there is no package.json file', () =>
       retry(() =>
@@ -140,9 +138,9 @@ describe('dependencies', function () {
 
           expect(deps['@instana/collector']).to.exist;
 
-          expectVersion(deps.fastify, '^3.20.2');
-          expectVersion(deps.express, '^4.17.1');
-          expectVersion(deps.koa, '^2.13.1');
+          expectVersion(deps.fastify, '^5.12.1');
+          expectVersion(deps.express, '^4.22.2');
+          expectVersion(deps.koa, '^3.2.1');
         })
       ));
   });
@@ -189,9 +187,7 @@ describe('dependencies', function () {
       await controls.stop();
     });
 
-    after(done => {
-      rimraf(tmpDir, done);
-    });
+    after(() => rimraf(tmpDir));
 
     it('should limit dependencies when the application is installed into node_modules', () =>
       retry(() =>
