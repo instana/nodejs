@@ -134,10 +134,9 @@ let currentConfig;
 const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'contains-ignore-case', 'regex', 'none'];
 
 // Allowed poll rate values in milliseconds
-// (1s, 5s, 10s, 20s, 30s, 60s, 120s, 180s, 240s, 300s, 360s, 420s, 480s, 540s, 600s)
-const allowedTransmissionDelayValues = [
-  1000, 5000, 10000, 20000, 30000, 60000, 120000, 180000, 240000, 300000, 360000, 420000, 480000, 540000, 600000
-];
+// (1s, 5s, 10s, 20s, 30s, 60s)
+// Will add support for 120s, 180s, 240s, 300s, 360s, 420s, 480s, 540s, 600s once BE is capable
+const allowedTransmissionDelayValues = [1000, 5000, 10000, 20000, 30000, 60000];
 
 /**
  * @typedef {Object} InstanaConfig
@@ -330,7 +329,9 @@ function normalizeMetricsConfig({ userConfig = {}, defaultConfig = {}, finalConf
     );
     logger.warn(
       // eslint-disable-next-line max-len
-      `The value of config.metrics.transmissionDelay (or INSTANA_METRICS_TRANSMISSION_DELAY) (${transmissionDelay}) is not one of the allowed values (${allowedTransmissionDelayValues.join(', ')} ms). Assuming the nearest allowed value ${nearest} ms.`
+      `The value of config.metrics.transmissionDelay (or INSTANA_METRICS_TRANSMISSION_DELAY) (${transmissionDelay}) is not one of the allowed values (${allowedTransmissionDelayValues.join(
+        ', '
+      )} ms). Assuming the nearest allowed value ${nearest} ms.`
     );
     finalConfig.metrics.transmissionDelay = nearest;
   } else {

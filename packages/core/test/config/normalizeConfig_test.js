@@ -190,6 +190,12 @@ describe('config.normalizeConfig', () => {
       expect(config.metrics.transmissionDelay).to.equal(60000);
     });
 
+    it('should snap 112000 to max allowed value of 60000 via config', () => {
+      const config = coreConfig.normalize({ userConfig: { metrics: { transmissionDelay: 112000 } } });
+      // nearest allowed value to 112000 ms is 60000 ms
+      expect(config.metrics.transmissionDelay).to.equal(60000);
+    });
+
     it('should use custom config.metrics.timeBetweenHealthcheckCalls', () => {
       const config = coreConfig.normalize({
         userConfig: {
