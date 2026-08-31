@@ -7,7 +7,7 @@
 
 const { expect } = require('chai');
 const path = require('path');
-const rimraf = require('rimraf');
+const { rimraf } = require('rimraf');
 
 const constants = require('@_local/core').tracing.constants;
 const config = require('@_local/core/test/config');
