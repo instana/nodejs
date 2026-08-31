@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "pino-pretty": "^11.0.0"
+  }
+}
