@@ -18,36 +18,24 @@ const globalAgent = require('@_local/collector/test/globalAgent');
 const defaultTopicName = `nodejs-test-topic-${semver.parse(process.version).major}`;
 const defaultSubscriptionName = `nodejs-test-subscription-${semver.parse(process.version).major}`;
 
-/**
- * This suite is skipped if no GCP project ID has been provided via GPC_PROJECT. It also requires to either have GCP
- * default credentials to be configured, for example via GOOGLE_APPLICATION_CREDENTIALS, or (for CI) to get
- *  the credentials as a string from GOOGLE_APPLICATION_CREDENTIALS_CONTENT.
- *
- * https://console.cloud.google.com/home/dashboard?project=k8s-brewery&pli=1
- *
- * You can find the credentials in 1pwd.
- */
-
 let libraryEnv;
 
+/*
+ * Local testing:
+ * node bin/start-test-containers.js --pubsub-emulator
+ */
+const emulatorHost = process.env.PUBSUB_EMULATOR_HOST;
+const projectId = process.env.GCP_PROJECT || 'test-project';
+
 function start() {
-  if (
-    !process.env.GCP_PROJECT ||
-    !(process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.GOOGLE_APPLICATION_CREDENTIALS_CONTENT)
-  ) {
+  if (!emulatorHost) {
     describe('tracing/cloud/gcp/pubsub', function () {
-      it('configuration for Google Cloud Platform is missing', () => {
-        fail(
-          'Please set GCP_PROJECT and GOOGLE_APPLICATION_CREDENTIALS (or GOOGLE_APPLICATION_CREDENTIALS_CONTENT)' +
-            ' to enable GCP tests.'
-        );
+      it('skipped — PUBSUB_EMULATOR_HOST is not set', () => {
+        fail('Please set PUBSUB_EMULATOR_HOST (e.g. 127.0.0.1:8085) to run PubSub tests.');
       });
     });
     return;
   }
-
-  const projectId = process.env.GCP_PROJECT;
-
   // Note: Skipping test for node v24 as the library is broken
   //       see Issue: https://github.com/googleapis/google-auth-library-nodejs/issues/1964
   if (semver.satisfies(process.versions.node, '>=24.x')) {
@@ -74,7 +62,8 @@ function start() {
         appName: 'publisher',
         useGlobalAgent: true,
         env: {
-          GCP_PROJECT: projectId,
+          PUBSUB_EMULATOR_HOST: emulatorHost,
+          GCP_PROJECT: 'test-project',
           GCP_PUBSUB_TOPIC: topicName,
           GCP_PUBSUB_SUBSCRIPTION: subscriptionName,
           ...libraryEnv
@@ -85,7 +74,7 @@ function start() {
         appName: 'subscriber',
         useGlobalAgent: true,
         env: {
-          GCP_PROJECT: projectId,
+          PUBSUB_EMULATOR_HOST: emulatorHost,
           GCP_PUBSUB_TOPIC: topicName,
           GCP_PUBSUB_SUBSCRIPTION: subscriptionName,
           ...libraryEnv
@@ -231,7 +220,7 @@ function start() {
         appName: 'publisher',
         useGlobalAgent: true,
         env: {
-          GCP_PROJECT: projectId,
+          PUBSUB_EMULATOR_HOST: emulatorHost,
           GCP_PUBSUB_TOPIC: topicName,
           GCP_PUBSUB_SUBSCRIPTION: subscriptionName,
           ...libraryEnv
@@ -242,7 +231,7 @@ function start() {
         appName: 'subscriber',
         useGlobalAgent: true,
         env: {
-          GCP_PROJECT: projectId,
+          PUBSUB_EMULATOR_HOST: emulatorHost,
           GCP_PUBSUB_TOPIC: topicName,
           GCP_PUBSUB_SUBSCRIPTION: subscriptionName,
           ...libraryEnv
@@ -304,7 +293,7 @@ function start() {
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {
-          GCP_PROJECT: projectId,
+          PUBSUB_EMULATOR_HOST: emulatorHost,
           GCP_PUBSUB_TOPIC: topicName,
           GCP_PUBSUB_SUBSCRIPTION: subscriptionName,
           ...libraryEnv
@@ -316,7 +305,7 @@ function start() {
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {
-          GCP_PROJECT: projectId,
+          PUBSUB_EMULATOR_HOST: emulatorHost,
           GCP_PUBSUB_TOPIC: topicName,
           GCP_PUBSUB_SUBSCRIPTION: subscriptionName,
           ...libraryEnv

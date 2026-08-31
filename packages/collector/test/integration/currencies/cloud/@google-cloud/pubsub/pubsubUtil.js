@@ -7,24 +7,14 @@
 
 const { PubSub } = require('@google-cloud/pubsub');
 
-const projectId = process.env.GCP_PROJECT;
-const googleApplicationCredentialsContent = process.env.GOOGLE_APPLICATION_CREDENTIALS_CONTENT;
+const projectId = process.env.GCP_PROJECT || 'test-project';
 const topicName = process.env.GCP_PUBSUB_TOPIC || 'nodejs-test-topic';
 const subscriptionName = process.env.GCP_PUBSUB_SUBSCRIPTION || 'nodejs-test-subscription';
 
 exports.createTopic = async function createTopic(log) {
-  if (!projectId) {
-    throw new Error('No GCP project ID has been set.');
-  }
-
   try {
     const options = { projectId };
-    if (googleApplicationCredentialsContent) {
-      log('Using GCP credentials directly from GOOGLE_APPLICATION_CREDENTIALS_CONTENT.');
-      options.credentials = JSON.parse(googleApplicationCredentialsContent);
-    } else {
-      log('Using default GCP credentials.');
-    }
+    log(`Connecting to PubSub (project: ${projectId}, emulator: ${process.env.PUBSUB_EMULATOR_HOST || 'none'})`);
     const pubsub = new PubSub(options);
 
     log('connecting to Google Cloud PubSub');

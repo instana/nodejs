@@ -302,6 +302,50 @@
         "periodSeconds": 2,
         "timeoutSeconds": 60
       }
+    },
+    {
+      "name": "pubsub-emulator",
+      "image": "mirror.gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators",
+      "command": [
+        "gcloud"
+      ],
+      "args": [
+        "beta",
+        "emulators",
+        "pubsub",
+        "start",
+        "--host-port=0.0.0.0:8085",
+        "--project=test-project"
+      ],
+      "readinessProbe": {
+        "tcpSocket": {
+          "port": 8085
+        },
+        "initialDelaySeconds": 5,
+        "periodSeconds": 2,
+        "timeoutSeconds": 30
+      }
+    },
+    {
+      "name": "gcs-server",
+      "image": "mirror.gcr.io/fsouza/fake-gcs-server:1.52.2",
+      "args": [
+        "-scheme",
+        "http",
+        "-port",
+        "4443",
+        "-public-host",
+        "127.0.0.1:4443"
+      ],
+      "readinessProbe": {
+        "httpGet": {
+          "path": "/storage/v1/b",
+          "port": 4443
+        },
+        "initialDelaySeconds": 2,
+        "periodSeconds": 2,
+        "timeoutSeconds": 15
+      }
     }
   ]
 }
