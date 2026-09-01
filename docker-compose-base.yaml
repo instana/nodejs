@@ -201,7 +201,7 @@ services:
 
   # https://hub.docker.com/r/ibmcom/db2
   db2:
-    image: icr.io/db2_community/db2
+    image: icr.io/db2_community/db2:12.1.5.0
     pull_policy: if_not_present
     platform: linux/amd64
     privileged: true
@@ -241,7 +241,7 @@ services:
       # https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite#well-known-storage-account-and-key
       AZURITE_ACCOUNTS: "devstoreaccount1:Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OceiPiBeEEiypt/RI7k9g4Vm0J8SeBLMYxPTLr8GlFocl2qSA1dV5w=="
     command: azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --loose --inMemoryPersistence
-  
+
   pubsub-emulator:
     image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
     pull_policy: if_not_present
