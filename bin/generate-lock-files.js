@@ -29,6 +29,11 @@ const fromVersion = (() => {
   return idx !== -1 ? process.argv[idx + 1] : null;
 })();
 
+const testFolderFilter = (() => {
+  const idx = process.argv.indexOf('--test-folder');
+  return idx !== -1 ? process.argv[idx + 1] : null;
+})();
+
 function getInstanaVersion() {
   try {
     return execSync('npm view @instana/collector version', { encoding: 'utf8' }).trim();
@@ -198,28 +203,31 @@ function main() {
 
   const currencies = JSON.parse(fs.readFileSync(currenciesPath, 'utf8'));
 
-  currencies.forEach(currency => {
-    if (currencyFilter && currency.name !== currencyFilter) return;
-    if (!currency.versions || currency.versions.length === 0) return;
+  if (!testFolderFilter) {
+    currencies.forEach(currency => {
+      if (currencyFilter && currency.name !== currencyFilter) return;
+      if (!currency.versions || currency.versions.length === 0) return;
 
-    const testDirs = findTestDirectories(collectorTestDir, currency.name);
-    if (testDirs.length === 0) return;
+      const testDirs = findTestDirectories(collectorTestDir, currency.name);
+      if (testDirs.length === 0) return;
 
-    console.log(`\n[${currency.name}]`);
-    const allVersions = currency.versions.map(v => (typeof v === 'string' ? v : v.v));
-    testDirs.forEach(testDir => {
-      allVersions.forEach(version => {
-        if (versionFilter && version !== versionFilter) return;
-        const baseLockFile = fromVersion ? path.join(testDir, `package-lock.json.v${fromVersion}`) : null;
-        generateLockFile(currency.name, version, testDir, instanaVersion, baseLockFile);
+      console.log(`\n[${currency.name}]`);
+      const allVersions = currency.versions.map(v => (typeof v === 'string' ? v : v.v));
+      testDirs.forEach(testDir => {
+        allVersions.forEach(version => {
+          if (versionFilter && version !== versionFilter) return;
+          const baseLockFile = fromVersion ? path.join(testDir, `package-lock.json.v${fromVersion}`) : null;
+          generateLockFile(currency.name, version, testDir, instanaVersion, baseLockFile);
+        });
+        removeOldLockFiles(testDir, allVersions);
       });
-      removeOldLockFiles(testDir, allVersions);
     });
-  });
+  }
 
   if (!currencyFilter && !versionFilter) {
     console.log('\n[templates]');
     findTemplateDirs(collectorTestDir).forEach(tpl => {
+      if (testFolderFilter && !tpl.includes(testFolderFilter)) return;
       generateLockFileFromTemplate(tpl, instanaVersion);
     });
   }

@@ -23,20 +23,61 @@ const { fail } = expect;
 const { createContainer, deleteContainer } = require('./util');
 const expectExactlyOneMatching = require('@_local/core/test/test_util/expectExactlyOneMatching');
 
+const connectionMode = process.env.INSTANA_CONNECT_AZURE_CONNECTION_MODE || 'local';
+
+// remote: real Azure cloud (CI/production)
 const storageAccount = process.env.AZURE_STORAGE_ACCOUNT_NAME;
 const accountKey = process.env.AZURE_STORAGE_ACCOUNT_KEY;
+
+// local: Azurite emulator
+// Well-known Azurite test account — public, not a real secret:
+// https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite#well-known-storage-account-and-key
+const azuriteAccount = 'devstoreaccount1';
+const azuriteKey = ['Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OceiPiBeEEiypt', 'RI7k9g4Vm0J8SeBLMYxPTLr8GlFocl2qSA1dV5w=='].join('/');
+const azuriteBlobEndpoint = process.env.INSTANA_CONNECT_AZURE_BLOB_ENDPOINT || `http://localhost:10000/${azuriteAccount}`;
+const azuriteConnectionString =
+  process.env.INSTANA_CONNECT_AZURE_CONNECTION_STRING ||
+  `DefaultEndpointsProtocol=http;AccountName=${azuriteAccount};AccountKey=${azuriteKey};BlobEndpoint=${azuriteBlobEndpoint};`;
 
 let libraryEnv;
 
 function start() {
   const containerName = `nodejs-team-${uuid()}`;
 
-  /**
-   * refer for azure connection-string and its components:
-   * https://learn.microsoft.com/en-us/azure/storage/common/storage-configure-connection-string
-   */
-  const endPoint = 'EndpointSuffix=core.windows.net';
-  const connStr = `DefaultEndpointsProtocol=https;AccountName=${storageAccount};AccountKey=${accountKey};${endPoint}`;
+  let connStr;
+  let effectiveStorageAccount;
+  let effectiveAccountKey;
+
+  if (connectionMode === 'local') {
+    // Azurite emulator
+    connStr = azuriteConnectionString;
+    const parts = Object.fromEntries(
+      connStr.split(';').filter(Boolean).map(p => p.split(/=(.+)/)).map(([k, v]) => [k, v])
+    );
+    effectiveStorageAccount = parts.AccountName;
+    effectiveAccountKey = parts.AccountKey;
+  } else {
+    // Real Azure cloud
+    /**
+     * refer for azure connection-string and its components:
+     * https://learn.microsoft.com/en-us/azure/storage/common/storage-configure-connection-string
+     */
+    const endPoint = 'EndpointSuffix=core.windows.net';
+    connStr = `DefaultEndpointsProtocol=https;AccountName=${storageAccount};AccountKey=${accountKey};${endPoint}`;
+    effectiveStorageAccount = storageAccount;
+    effectiveAccountKey = accountKey;
+
+    if (!storageAccount || !accountKey) {
+      describe('tracing/cloud/@azure/storage-blob', function () {
+        it('The configuration for Azure is missing', () => {
+          fail(
+            'Please set process.env.AZURE_STORAGE_ACCOUNT_KEY and process.env.AZURE_STORAGE_ACCOUNT_NAME before tests.'
+          );
+        });
+      });
+      return;
+    }
+  }
 
   // Resolve @azure/storage-blob from the version folder's node_modules
   const inVersionDir =
@@ -47,17 +88,6 @@ function start() {
 
   const blobServiceClient = BlobServiceClient.fromConnectionString(connStr);
   const containerClient = blobServiceClient.getContainerClient(containerName);
-
-  if (!storageAccount || !accountKey) {
-    describe('tracing/cloud/@azure/storage-blob', function () {
-      it('The configuration for Azure is missing', () => {
-        fail(
-          'Please set process.env.AZURE_STORAGE_ACCOUNT_KEY and process.env.AZURE_STORAGE_ACCOUNT_NAME before tests.'
-        );
-      });
-    });
-    return;
-  }
 
   this.timeout(config.getTestTimeout());
   globalAgent.setUpCleanUpHooks();
@@ -79,9 +109,9 @@ function start() {
         useGlobalAgent: true,
         env: {
           AZURE_CONTAINER_NAME: containerName,
-          AZURE_CONNECTION_STRING: connStr,
-          AZURE_STORAGE_ACCOUNT: storageAccount,
-          AZURE_ACCOUNT_KEY: accountKey,
+          INSTANA_CONNECT_AZURE_CONNECTION_STRING: connStr,
+          INSTANA_CONNECT_AZURE_STORAGE_ACCOUNT: effectiveStorageAccount,
+          INSTANA_CONNECT_AZURE_ACCOUNT_KEY: effectiveAccountKey,
           ...libraryEnv
         }
       });
@@ -434,9 +464,9 @@ function start() {
         tracingEnabled: false,
         env: {
           AZURE_CONTAINER_NAME: containerName,
-          AZURE_CONNECTION_STRING: connStr,
-          AZURE_STORAGE_ACCOUNT: storageAccount,
-          AZURE_ACCOUNT_KEY: accountKey,
+          INSTANA_CONNECT_AZURE_CONNECTION_STRING: connStr,
+          INSTANA_CONNECT_AZURE_STORAGE_ACCOUNT: effectiveStorageAccount,
+          INSTANA_CONNECT_AZURE_ACCOUNT_KEY: effectiveAccountKey,
           ...libraryEnv
         }
       });
@@ -481,9 +511,9 @@ function start() {
         useGlobalAgent: true,
         env: {
           AZURE_CONTAINER_NAME: containerName,
-          AZURE_CONNECTION_STRING: connStr,
-          AZURE_STORAGE_ACCOUNT: storageAccount,
-          AZURE_ACCOUNT_KEY: accountKey,
+          INSTANA_CONNECT_AZURE_CONNECTION_STRING: connStr,
+          INSTANA_CONNECT_AZURE_STORAGE_ACCOUNT: effectiveStorageAccount,
+          INSTANA_CONNECT_AZURE_ACCOUNT_KEY: effectiveAccountKey,
           ...libraryEnv
         }
       });

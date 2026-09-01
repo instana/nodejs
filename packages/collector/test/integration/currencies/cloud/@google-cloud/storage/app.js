@@ -23,14 +23,16 @@ const { Storage } = require('@google-cloud/storage');
 const { v4: uuid } = require('uuid');
 const logPrefix = `Google Cloud Storage Client (${process.pid}):\t`;
 
-const options = { projectId: process.env.GCP_PROJECT, retryOptions: { maxRetries: 5 } };
-if (process.env.GOOGLE_APPLICATION_CREDENTIALS_CONTENT) {
-  options.credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_CONTENT);
-} else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-  options.keyFilename = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-} else {
-  throw new Error('Credentials are missing.');
+// GCS_EMULATOR_HOST points the Storage client at fake-gcs-server (e.g. http://127.0.0.1:4443).
+const emulatorHost = process.env.GCS_EMULATOR_HOST;
+if (!emulatorHost) {
+  throw new Error('GCS_EMULATOR_HOST is required. Start fake-gcs-server and set this env var.');
 }
+const options = {
+  projectId: process.env.GCP_PROJECT || 'test-project',
+  apiEndpoint: emulatorHost,
+  retryOptions: { maxRetries: 5 }
+};
 
 const storage = new Storage(options);
 
@@ -38,7 +40,9 @@ const port = require('@_local/collector/test/test_util/app-port')();
 const bucketName = 'nodejs-tracer-test-bucket';
 const fileName = 'test-file.txt';
 const localFileName = path.join(__dirname, fileName);
-const serviceAccountEmail = 'team-nodejs@k8s-brewery.iam.gserviceaccount.com';
+// On real GCP this was a fixed service account. For the emulator any email works.
+const serviceAccountEmail =
+  process.env.GCS_SERVICE_ACCOUNT_EMAIL || 'test-service-account@test-project.iam.gserviceaccount.com';
 
 const combineSource1 = randomObjectName('combine-source-1');
 const combineSource2 = randomObjectName('combine-source-2');
@@ -52,7 +56,32 @@ if (process.env.WITH_STDOUT) {
 
 app.use(bodyParser.json());
 
-app.get('/', (req, res) => res.sendStatus(200));
+// The emulator starts empty — create the bucket before any tests hit the routes.
+let ready = false;
+async function ensureBucket() {
+  try {
+    const [exists] = await storage.bucket(bucketName).exists();
+    if (!exists) {
+      await storage.createBucket(bucketName);
+      log(`Created bucket ${bucketName} in emulator`);
+    } else {
+      log(`Bucket ${bucketName} already exists in emulator`);
+    }
+    ready = true;
+  } catch (e) {
+    log(`Failed to create bucket ${bucketName}: ${e.message}`);
+    process.exit(1);
+  }
+}
+ensureBucket();
+
+app.get('/', (req, res) => {
+  if (ready) {
+    res.sendStatus(200);
+  } else {
+    res.status(500).send('Not ready yet.');
+  }
+});
 
 app.post('/storage-createBucket-bucket-delete-promise', async (req, res) => {
   try {

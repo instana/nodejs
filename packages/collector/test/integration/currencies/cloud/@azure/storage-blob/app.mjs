@@ -21,9 +21,20 @@ const __dirname = path.dirname(__filename);
 const filePath = `${__dirname}/sample.pdf`;
 const localFilePath = `${__dirname}/out.pdf`;
 const binaryData = fs.readFileSync(filePath);
-const azureAccountKey = process.env.AZURE_ACCOUNT_KEY;
-const connectionString = process.env.AZURE_CONNECTION_STRING;
-const azureStorageAccount = process.env.AZURE_STORAGE_ACCOUNT;
+const connectionString = process.env.INSTANA_CONNECT_AZURE_CONNECTION_STRING;
+const connectionMode = process.env.INSTANA_CONNECT_AZURE_CONNECTION_MODE || 'local';
+
+// Parse account name and key directly from the connection string
+const connStrParts = Object.fromEntries(
+  connectionString.split(';').filter(Boolean).map(p => p.split(/=(.+)/)).map(([k, v]) => [k, v])
+);
+const azureStorageAccount = connStrParts.AccountName;
+const azureAccountKey = connStrParts.AccountKey;
+
+const blobServiceUrl =
+  connectionMode === 'local'
+    ? `http://127.0.0.1:10000/${azureStorageAccount}`
+    : `https://${azureStorageAccount}.blob.core.windows.net`;
 
 const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
 const containerName = process.env.AZURE_CONTAINER_NAME;
@@ -271,9 +282,9 @@ app.get('/upload-err', async (req, res) => {
 app.get('/uploadData-delete-blobBatch-blobUri', async (req, res) => {
   try {
     await uploadDocumentToAzure();
-    const blobBatchClient = new BlobBatchClient(`https://${azureStorageAccount}.blob.core.windows.net`, cred);
+    const blobBatchClient = new BlobBatchClient(blobServiceUrl, cred);
     await blobBatchClient.deleteBlobs(
-      [`https://${azureStorageAccount}.blob.core.windows.net/${containerName}/${blobName}`],
+      [`${blobServiceUrl}/${containerName}/${blobName}`],
       cred
     );
     res.send();
@@ -286,7 +297,7 @@ app.get('/uploadData-delete-blobBatch-blobClient', async (req, res) => {
   try {
     await uploadDocumentToAzure();
     const blobClient = new BlobClient(connectionString, containerName, blobName);
-    const blobBatchClient = new BlobBatchClient(`https://${azureStorageAccount}.blob.core.windows.net`, cred);
+    const blobBatchClient = new BlobBatchClient(blobServiceUrl, cred);
     await blobBatchClient.deleteBlobs([blobClient], cred);
     res.send();
   } catch (e) {
