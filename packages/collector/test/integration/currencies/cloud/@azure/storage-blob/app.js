@@ -26,7 +26,11 @@ const containerName = process.env.AZURE_CONTAINER_NAME;
 
 // Parse account name and key directly from the connection string
 const connStrParts = Object.fromEntries(
-  connectionString.split(';').filter(Boolean).map(p => p.split(/=(.+)/)).map(([k, v]) => [k, v])
+  connectionString
+    .split(';')
+    .filter(Boolean)
+    .map(p => p.split(/=(.+)/))
+    .map(([k, v]) => [k, v])
 );
 const azureStorageAccount = connStrParts.AccountName;
 const azureAccountKey = connStrParts.AccountKey;
