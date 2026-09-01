@@ -94,6 +94,17 @@ async function setupConsumer() {
           clientId: 'confluent-consumer',
           brokers: [broker],
           groupId: `confluent-consumer-${process.pid}`
+        },
+        rebalance_cb: (err, assignment, fns) => {
+          if (err.code === confluentKafka.CODES.ERRORS.ERR__ASSIGN_PARTITIONS) {
+            fns.assign(assignment);
+            if (!connected) {
+              connected = true;
+              log('Consumer partition assignment complete, ready.');
+            }
+          } else {
+            fns.unassign(assignment);
+          }
         }
       });
 
@@ -116,10 +127,6 @@ async function setupConsumer() {
           await fetch(`http://127.0.0.1:${process.env.INSTANA_AGENT_PORT}/ping`);
         }
       });
-
-      setTimeout(() => {
-        connected = true;
-      }, 30 * 1000);
     }
   } catch (e) {
     log('Consumer setup error', e && e.message);
