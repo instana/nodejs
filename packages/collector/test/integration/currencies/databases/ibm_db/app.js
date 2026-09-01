@@ -95,7 +95,10 @@ const db2OpenPromisified = promisify(ibmdb.open);
 
 function logDb2Container() {
   try {
-    const logs = execSync('docker logs ibm_db 2>&1 | tail -20', { encoding: 'utf8' });
+    const cmd = tries <= 1
+      ? 'docker logs ibm_db 2>&1 | head -80'
+      : 'docker logs ibm_db 2>&1 | tail -5';
+    const logs = execSync(cmd, { encoding: 'utf8' });
     console.log(`[DB2 container logs]\n${logs}`); // eslint-disable-line no-console
   } catch (_) {
     // ignore — container may not exist locally
