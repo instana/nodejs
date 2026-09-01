@@ -56,21 +56,7 @@ async function setupConsumer() {
       consumer = new KafkaClient({
         'bootstrap.servers': broker,
         'group.id': `rdkafka-test-consumer-${process.pid}`,
-        'client.id': 'rdkafka-test-consumer',
-        rebalance_cb: (err, assignment) => {
-          // ERR__ASSIGN_PARTITIONS means the broker has assigned partitions;
-          // only now is the consumer truly ready to receive messages.
-          if (err.code === confluentKafka.CODES.ERRORS.ERR__ASSIGN_PARTITIONS) {
-            consumer.assign(assignment);
-            if (!connected) {
-              connected = true;
-              log('RdKafka Consumer ready.');
-              log('Subscribed to topic', topic);
-            }
-          } else {
-            consumer.unassign();
-          }
-        }
+        'client.id': 'rdkafka-test-consumer'
       });
 
       consumer.on('data', async msg => {
@@ -88,8 +74,18 @@ async function setupConsumer() {
       consumer.connect();
 
       consumer.on('ready', () => {
-        consumer.subscribe([topic]);
-        consumer.consume();
+        function startConsuming() {
+          setTimeout(() => {
+            log('RdKafka Consumer ready.');
+            log('Subscribed to topic', topic);
+            connected = true;
+          }, 3 * 1000);
+
+          consumer.subscribe([topic]);
+          consumer.consume();
+        }
+
+        startConsuming();
       });
     } else {
       const kafka = new KafkaClient({
@@ -97,17 +93,6 @@ async function setupConsumer() {
           clientId: 'confluent-consumer',
           brokers: [broker],
           groupId: `confluent-consumer-${process.pid}`
-        },
-        rebalance_cb: (err, assignment, fns) => {
-          if (err.code === confluentKafka.CODES.ERRORS.ERR__ASSIGN_PARTITIONS) {
-            fns.assign(assignment);
-            if (!connected) {
-              connected = true;
-              log('Consumer partition assignment complete, ready.');
-            }
-          } else {
-            fns.unassign(assignment);
-          }
         }
       });
 
@@ -130,6 +115,11 @@ async function setupConsumer() {
           await fetch(`http://127.0.0.1:${process.env.INSTANA_AGENT_PORT}/ping`);
         }
       });
+
+      // Not implemented yet
+      setTimeout(() => {
+        connected = true;
+      }, 5 * 1000);
     }
   } catch (e) {
     log('Consumer setup error', e && e.message);

@@ -112,7 +112,8 @@ function readinessScript(name) {
       );
     case 'kafka-topics':
       // give the detached topic-creation container time to finish
-      return "sleep 60";
+      // 120s: kafka port opens before it is fully ready, topics creation can take >60s on slow CI
+      return "sleep 120";
     case 'zookeeper':
       return (
         "timeout 60 bash -c \\\n" +

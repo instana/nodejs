@@ -75,15 +75,14 @@ async function setupConsumer() {
 
       consumer.on('ready', () => {
         function startConsuming() {
-          consumer.subscribe([topic]);
-          consumer.consume();
-
-          // Wait for partition assignment to complete before signalling ready.
           setTimeout(() => {
             log('RdKafka Consumer ready.');
             log('Subscribed to topic', topic);
             connected = true;
-          }, 10 * 1000);
+          }, 3 * 1000);
+
+          consumer.subscribe([topic]);
+          consumer.consume();
         }
 
         startConsuming();
@@ -117,9 +116,10 @@ async function setupConsumer() {
         }
       });
 
+      // Not implemented yet
       setTimeout(() => {
         connected = true;
-      }, 30 * 1000);
+      }, 5 * 1000);
     }
   } catch (e) {
     log('Consumer setup error', e && e.message);
