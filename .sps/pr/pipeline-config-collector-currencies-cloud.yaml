@@ -89,6 +89,7 @@ tasks:
 
           # start localstack
           docker run -d --network host --name localstack \
+            -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
@@ -167,6 +168,7 @@ tasks:
 
           # start localstack
           docker run -d --network host --name localstack \
+            -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
@@ -245,6 +247,7 @@ tasks:
 
           # start localstack
           docker run -d --network host --name localstack \
+            -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
@@ -323,6 +326,7 @@ tasks:
 
           # start localstack
           docker run -d --network host --name localstack \
+            -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
@@ -401,6 +405,7 @@ tasks:
 
           # start localstack
           docker run -d --network host --name localstack \
+            -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
@@ -479,6 +484,7 @@ tasks:
 
           # start localstack
           docker run -d --network host --name localstack \
+            -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
@@ -773,6 +779,7 @@ tasks:
 
           # start localstack
           docker run -d --network host --name localstack \
+            -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'

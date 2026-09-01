@@ -52,6 +52,12 @@ function dockerRunScript(name) {
 
   const lines = [`docker run -d --network host --name ${name}`];
 
+  if (s.volumes) {
+    for (const v of s.volumes) {
+      lines.push(`  -v ${v}`);
+    }
+  }
+
   if (s.env) {
     for (const e of s.env) {
       lines.push(`  -e ${e.name}=${JSON.stringify(e.value)}`);

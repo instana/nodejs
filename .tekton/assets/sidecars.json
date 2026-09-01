@@ -207,7 +207,8 @@
     },
     {
       "name": "localstack",
-      "image": "mirror.gcr.io/localstack/localstack:4.5"
+      "image": "mirror.gcr.io/localstack/localstack:4.5",
+      "volumes": ["/var/run/docker.sock:/var/run/docker.sock"]
     },
     {
       "name": "azurite",
