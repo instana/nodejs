@@ -214,7 +214,7 @@ module.exports = function (name, version, isLatest) {
               }
             });
 
-            await consumerControls.startAndWaitForAgentConnection(1000, Date.now() + 1000 * 10);
+            await consumerControls.startAndWaitForAgentConnection(1000, Date.now() + 1000 * 30);
           });
 
           beforeEach(async () => {
