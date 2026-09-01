@@ -775,7 +775,7 @@ function unregisterErrorHandling() {
 }
 
 function waitForFinalLogs(result, done, deadline) {
-  const EXPECTED_LOG = 'The data have been successfully sent to Instana';
+  const EXPECTED_LOG = 'The data have been successfully sent to Instana for Lambda';
   const MAX_WAIT_MS = 500;
   if (!deadline) deadline = Date.now() + MAX_WAIT_MS;
 

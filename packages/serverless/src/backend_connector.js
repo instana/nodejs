@@ -512,6 +512,9 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
     //       That does not mean the server has responded in any way!
     req.end(serializedPayload, () => {
       if (options.isLambdaRequest && finalLambdaRequest) {
+        // NOTE: We remove the `finish` listener for Lambda because we call `removeAllListeners`.
+        //       >  The data have been successfully sent to Instana.
+        //       Will not be triggered.
         logger.debug(`[${requestId}] The data have been successfully sent to Instana for Lambda.`);
         cleanupRequests();
       }
