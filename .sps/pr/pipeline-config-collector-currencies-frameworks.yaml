@@ -9,12 +9,6 @@ tasks:
         when: 'false'
       - name: compliance-checks
         when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
       - name: unit-test
         displayName: npm-install
         image: mirror.gcr.io/library/node:24
@@ -40,6 +34,12 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   code-ci-finish:
     steps:
       - name: run-stage
@@ -58,12 +58,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: '@hapi/hapi'
@@ -110,6 +104,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   pr-code-checks-collector-frameworks-koarouter:
     from: pr-code-checks
     displayName: '@koa/router'
@@ -120,12 +120,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: '@koa/router'
@@ -172,6 +166,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   pr-code-checks-collector-frameworks-express:
     from: pr-code-checks
     displayName: express
@@ -182,12 +182,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: express
@@ -234,6 +228,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   pr-code-checks-collector-frameworks-fastify:
     from: pr-code-checks
     displayName: fastify
@@ -244,12 +244,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: fastify
@@ -296,6 +290,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   pr-code-checks-collector-frameworks-got:
     from: pr-code-checks
     displayName: got
@@ -306,12 +306,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: got
@@ -358,6 +352,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   pr-code-checks-collector-frameworks-restify:
     from: pr-code-checks
     displayName: restify
@@ -368,12 +368,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: restify
@@ -420,6 +414,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   pr-code-checks-collector-frameworks-sequelize:
     from: pr-code-checks
     displayName: sequelize
@@ -432,12 +432,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: sequelize
@@ -506,6 +500,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   pr-code-checks-collector-frameworks-tsoa:
     from: pr-code-checks
     displayName: tsoa
@@ -516,12 +516,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: tsoa
@@ -568,6 +562,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   pr-code-checks-collector-frameworks-typeorm:
     from: pr-code-checks
     displayName: typeorm
@@ -580,12 +580,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: typeorm
@@ -654,3 +648,9 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'

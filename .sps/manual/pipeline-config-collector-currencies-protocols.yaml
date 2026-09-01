@@ -9,12 +9,6 @@ tasks:
         when: 'false'
       - name: compliance-checks
         when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
       - name: unit-test
         displayName: npm-install
         image: mirror.gcr.io/library/node:24
@@ -40,6 +34,12 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   code-ci-finish:
     steps:
       - name: run-stage
@@ -58,12 +58,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: '@apollo/server'
@@ -110,6 +104,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   code-build-collector-protocols-apollosubgraph:
     from: code-build
     displayName: '@apollo/subgraph'
@@ -120,12 +120,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: '@apollo/subgraph'
@@ -172,6 +166,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   code-build-collector-protocols-grpcgrpc-js:
     from: code-build
     displayName: '@grpc/grpc-js'
@@ -182,12 +182,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: '@grpc/grpc-js'
@@ -234,6 +228,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   code-build-collector-protocols-graphql:
     from: code-build
     displayName: graphql
@@ -246,12 +246,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: graphql
@@ -317,6 +311,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   code-build-collector-protocols-graphql-subscriptions:
     from: code-build
     displayName: graphql-subscriptions
@@ -327,12 +327,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: graphql-subscriptions
@@ -379,6 +373,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   code-build-collector-protocols-http:
     from: code-build
     displayName: http
@@ -389,12 +389,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: http
@@ -441,6 +435,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   code-build-collector-protocols-http2:
     from: code-build
     displayName: http2
@@ -451,12 +451,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: http2
@@ -503,3 +497,9 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'

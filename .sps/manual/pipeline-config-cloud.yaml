@@ -9,12 +9,6 @@ tasks:
         when: 'false'
       - name: compliance-checks
         when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
       - name: unit-test
         displayName: npm-install
         image: mirror.gcr.io/library/node:24
@@ -40,6 +34,12 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   code-ci-finish:
     steps:
       - name: run-stage
@@ -60,12 +60,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: aws-lambda
@@ -119,6 +113,12 @@ tasks:
             CI=true \
             INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
             npm run test:ci:aws-lambda
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   code-build-aws-fargate:
     from: code-build
     displayName: aws-fargate
@@ -129,12 +129,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: aws-fargate
@@ -167,6 +161,12 @@ tasks:
             HOME="$HOME" \
             CI=true \
             npm run test:ci:aws-fargate
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   code-build-azure-container-services:
     from: code-build
     displayName: azure-container-services
@@ -177,12 +177,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: azure-container-services
@@ -215,6 +209,12 @@ tasks:
             HOME="$HOME" \
             CI=true \
             npm run test:ci:azure-container-services
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   code-build-google-cloud-run:
     from: code-build
     displayName: google-cloud-run
@@ -225,12 +225,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: google-cloud-run
@@ -263,3 +257,9 @@ tasks:
             HOME="$HOME" \
             CI=true \
             npm run test:ci:google-cloud-run
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'

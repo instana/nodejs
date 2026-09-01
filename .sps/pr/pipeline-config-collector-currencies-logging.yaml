@@ -9,12 +9,6 @@ tasks:
         when: 'false'
       - name: compliance-checks
         when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
       - name: unit-test
         displayName: npm-install
         image: mirror.gcr.io/library/node:24
@@ -40,6 +34,12 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   code-ci-finish:
     steps:
       - name: run-stage
@@ -58,12 +58,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: bunyan
@@ -110,6 +104,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   pr-code-checks-collector-logging-console:
     from: pr-code-checks
     displayName: console
@@ -120,12 +120,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: console
@@ -172,6 +166,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   pr-code-checks-collector-logging-express-winston:
     from: pr-code-checks
     displayName: express-winston
@@ -182,12 +182,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: express-winston
@@ -234,6 +228,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   pr-code-checks-collector-logging-log4js:
     from: pr-code-checks
     displayName: log4js
@@ -244,12 +244,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: log4js
@@ -296,6 +290,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   pr-code-checks-collector-logging-pino:
     from: pr-code-checks
     displayName: pino
@@ -306,12 +306,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: pino
@@ -358,6 +352,12 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   pr-code-checks-collector-logging-winston:
     from: pr-code-checks
     displayName: winston
@@ -368,12 +368,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: winston
@@ -420,3 +414,9 @@ tasks:
             CI=true \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'

@@ -314,16 +314,16 @@ function buildCurrencyTask(pkgName, folder, group) {
         { name: 'peer-review', when: 'false' },
         { name: 'detect-secrets', when: 'false' },
         { name: 'compliance-checks', when: 'false' },
-        { name: 'sign-artifact', when: 'false' },
-        { name: 'build-artifact', when: 'false' },
-        { name: 'scan-artifact', when: 'false' },
         {
           name: 'unit-test',
           displayName: pkgName,
           image: NODE_IMAGE,
           ...(needs.length > 0 ? { include: ['docker-socket'] } : {}),
           script: scriptLines.join('\n')
-        }
+        },
+        { name: 'sign-artifact',  when: 'false' },
+        { name: 'build-artifact', when: 'false' },
+        { name: 'scan-artifact',  when: 'false' }
       ]
     }
   };
@@ -379,16 +379,16 @@ function buildSimpleTask(displayName, testScript, needs = [], extraEnv = null) {
       { name: 'peer-review', when: 'false' },
       { name: 'detect-secrets', when: 'false' },
       { name: 'compliance-checks', when: 'false' },
-      { name: 'sign-artifact', when: 'false' },
-      { name: 'build-artifact', when: 'false' },
-      { name: 'scan-artifact', when: 'false' },
       {
         name: 'unit-test',
         displayName,
         image: NODE_IMAGE,
         ...(needs.length > 0 ? { include: ['docker-socket'] } : {}),
         script: scriptLines.join('\n')
-      }
+      },
+      { name: 'sign-artifact',  when: 'false' },
+      { name: 'build-artifact', when: 'false' },
+      { name: 'scan-artifact',  when: 'false' }
     ]
   };
 }
@@ -405,9 +405,6 @@ function baseConfig(fanOutTasks, rootTask = 'pr-code-checks') {
           { name: 'peer-review', when: 'false' },
           { name: 'detect-secrets', when: 'false' },
           { name: 'compliance-checks', when: 'false' },
-          { name: 'sign-artifact', when: 'false' },
-          { name: 'build-artifact', when: 'false' },
-          { name: 'scan-artifact', when: 'false' },
           {
             name: 'unit-test',
             displayName: 'npm-install',
@@ -421,7 +418,10 @@ function baseConfig(fanOutTasks, rootTask = 'pr-code-checks') {
               'npm install --loglevel warn --foreground-scripts',
               'node bin/create-version-test-folders.js'
             ].join('\n')
-          }
+          },
+          { name: 'sign-artifact',  when: 'false' },
+          { name: 'build-artifact', when: 'false' },
+          { name: 'scan-artifact',  when: 'false' }
         ]
       },
       'code-ci-finish': { steps: [{ name: 'run-stage', when: 'false' }] },

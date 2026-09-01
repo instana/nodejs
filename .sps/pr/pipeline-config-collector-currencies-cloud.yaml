@@ -9,12 +9,6 @@ tasks:
         when: 'false'
       - name: compliance-checks
         when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
       - name: unit-test
         displayName: npm-install
         image: mirror.gcr.io/library/node:24
@@ -40,6 +34,12 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   code-ci-finish:
     steps:
       - name: run-stage
@@ -60,12 +60,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: '@aws-sdk/client-dynamodb'
@@ -133,6 +127,12 @@ tasks:
             INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   pr-code-checks-collector-cloud-aws-sdkclient-kinesis:
     from: pr-code-checks
     displayName: '@aws-sdk/client-kinesis'
@@ -145,12 +145,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: '@aws-sdk/client-kinesis'
@@ -218,6 +212,12 @@ tasks:
             INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   pr-code-checks-collector-cloud-aws-sdkclient-lambda:
     from: pr-code-checks
     displayName: '@aws-sdk/client-lambda'
@@ -230,12 +230,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: '@aws-sdk/client-lambda'
@@ -303,6 +297,12 @@ tasks:
             INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   pr-code-checks-collector-cloud-aws-sdkclient-s3:
     from: pr-code-checks
     displayName: '@aws-sdk/client-s3'
@@ -315,12 +315,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: '@aws-sdk/client-s3'
@@ -388,6 +382,12 @@ tasks:
             INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   pr-code-checks-collector-cloud-aws-sdkclient-sns:
     from: pr-code-checks
     displayName: '@aws-sdk/client-sns'
@@ -400,12 +400,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: '@aws-sdk/client-sns'
@@ -473,6 +467,12 @@ tasks:
             INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   pr-code-checks-collector-cloud-aws-sdkclient-sqs:
     from: pr-code-checks
     displayName: '@aws-sdk/client-sqs'
@@ -485,12 +485,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: '@aws-sdk/client-sqs'
@@ -558,6 +552,12 @@ tasks:
             INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   pr-code-checks-collector-cloud-azurestorage-blob:
     from: pr-code-checks
     displayName: '@azure/storage-blob'
@@ -570,12 +570,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: '@azure/storage-blob'
@@ -643,6 +637,12 @@ tasks:
             INSTANA_CONNECT_AZURE_BLOB_ENDPOINT="http://127.0.0.1:10000/devstoreaccount1" \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   pr-code-checks-collector-cloud-google-cloudpubsub:
     from: pr-code-checks
     displayName: '@google-cloud/pubsub'
@@ -655,12 +655,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: '@google-cloud/pubsub'
@@ -729,6 +723,12 @@ tasks:
             GCP_PROJECT="test-project" \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   pr-code-checks-collector-cloud-google-cloudstorage:
     from: pr-code-checks
     displayName: '@google-cloud/storage'
@@ -741,12 +741,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: '@google-cloud/storage'
@@ -815,6 +809,12 @@ tasks:
             GCS_SERVICE_ACCOUNT_EMAIL="test-service-account@test-project.iam.gserviceaccount.com" \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   pr-code-checks-collector-cloud-aws-sdk:
     from: pr-code-checks
     displayName: aws-sdk
@@ -827,12 +827,6 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: aws-sdk
@@ -900,3 +894,9 @@ tasks:
             INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
