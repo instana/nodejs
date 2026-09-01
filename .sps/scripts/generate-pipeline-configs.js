@@ -505,11 +505,11 @@ function generateOne(t) {
             { name: 'unit-test', image: NODE_IMAGE, script: '#!/usr/bin/env bash\necho "General PR checks passed."' }
           ]
         },
-        'code-pr-finish': {
-          steps: [
-            { name: 'run-stage', when: 'false' }
-          ]
-        }
+        'code-pr-finish':  { steps: [{ name: 'run-stage', when: 'false' }] },
+        'sign-artifact':   { when: 'false' },
+        'deploy-checks':   { when: 'false' },
+        'deploy-release':  { when: 'false' },
+        'code-ci-finish':  { steps: [{ name: 'run-stage', when: 'false' }] }
       }
     };
 
@@ -519,9 +519,16 @@ function generateOne(t) {
         'code-build': {
           steps: [
             { name: 'peer-review', when: 'false' },
-            { name: 'unit-test', image: NODE_IMAGE, script: '#!/usr/bin/env bash\necho "General PR checks passed."' }
+            { name: 'unit-test', image: NODE_IMAGE, script: '#!/usr/bin/env bash\necho "General PR checks passed."' },
+            { name: 'sign-artifact',  when: 'false' },
+            { name: 'build-artifact', when: 'false' },
+            { name: 'scan-artifact',  when: 'false' }
           ]
-        }
+        },
+        'sign-artifact':   { when: 'false' },
+        'deploy-checks':   { when: 'false' },
+        'deploy-release':  { when: 'false' },
+        'code-ci-finish':  { steps: [{ name: 'run-stage', when: 'false' }] }
       }
     };
     writeDefaultConfig(prConfig, mainConfig);

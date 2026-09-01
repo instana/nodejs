@@ -13,3 +13,13 @@ tasks:
     steps:
       - name: run-stage
         when: 'false'
+  sign-artifact:
+    when: 'false'
+  deploy-checks:
+    when: 'false'
+  deploy-release:
+    when: 'false'
+  code-ci-finish:
+    steps:
+      - name: run-stage
+        when: 'false'
