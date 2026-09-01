@@ -776,10 +776,11 @@ function unregisterErrorHandling() {
 
 function waitForFinalLogs(result, done, deadline) {
   const EXPECTED_LOG = 'The data have been successfully sent to Instana';
-  const MAX_WAIT_MS = 500;
+  const MAX_WAIT_MS = 2000;
   if (!deadline) deadline = Date.now() + MAX_WAIT_MS;
 
   const logs = result && result.body && result.body.logs && result.body.logs.debug;
+  log(`[waitForFinalLogs] debug logs so far: ${JSON.stringify(logs)}`);
   if (!logs || logs.some(entry => entry.indexOf(EXPECTED_LOG) >= 0) || Date.now() >= deadline) {
     done();
   } else {
