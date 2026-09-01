@@ -86,32 +86,29 @@ const DB2_TABLE_NAME_3 = process.env.DB2_TABLE_NAME_3 || 'table3';
  * Furthermore the connection creation is sometimes slow too.
  */
 let tries = 0;
-const MAX_TRIES = 10;
-const CONNECT_TIMEOUT_IN_MS = 2000;
+const CONNECT_TIMEOUT_IN_MS = 5000;
 let stmtObjectFromStart;
 
 const db2OpenPromisified = promisify(ibmdb.open);
 
 async function connect(connectionStr) {
   /* eslint-disable no-console */
-  console.log(`Trying to connect to DB2, attempt ${tries} of ${MAX_TRIES}`);
+  console.log(`Trying to connect to DB2, attempt ${tries}`);
 
-  let conn;
   try {
-    conn = await db2OpenPromisified(connectionStr);
+    const conn = await Promise.race([
+      db2OpenPromisified(connectionStr),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('DB2 connect timeout')), CONNECT_TIMEOUT_IN_MS))
+    ]);
+    console.log('A client has successfully connected.');
+    return conn;
   } catch (err) {
-    console.log(err);
-    if (tries > MAX_TRIES) {
-      throw err;
-    }
-
+    console.log(err.message);
     tries += 1;
     console.log(`Trying to connect to DB2 again in ${CONNECT_TIMEOUT_IN_MS} milliseconds.`);
     await delay(CONNECT_TIMEOUT_IN_MS);
     return connect(connectionStr);
   }
-  console.log('A client has successfully connected.');
-  return conn;
   /* eslint-enable no-console */
 }
 
