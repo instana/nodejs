@@ -27,33 +27,34 @@ module.exports = function () {
 
     globalAgent.setUpCleanUpHooks();
 
-    before(done => {
-      rimraf(babelLibDir, err => {
-        if (err) {
-          return done(err);
-        }
-        // If this fails with "Error: Cannot find module './testUtils'" there might be left over node_modules installed by
-        // a different Node.js version. rm -rf packages/collector/test/apps/babel-typescript/node_modules and run again.
+    before(async () => {
+      await rimraf(babelLibDir);
 
-        // We use --omit=optional to make npm install a bit faster. Compiling native add-ons (gcstats.js and friends)
-        // might take longer than the the timeout on CI, and they are not relevant for this test suite.
+      // If this fails with "Error: Cannot find module './testUtils'" there might be left over node_modules installed by
+      // a different Node.js version. rm -rf packages/collector/test/apps/babel-typescript/node_modules and run again.
 
-        // The lock file collector/test/apps/babel-typescript/package-lock.json has some arbitrary (and probably outdated)
-        // version of @instana/collector. We always update to the latest version before actually running the test.
-        const latestCollectorVersion = require('@_local/collector/package.json').version;
+      // We use --omit=optional to make npm install a bit faster. Compiling native add-ons (gcstats.js and friends)
+      // might take longer than the timeout on CI, and they are not relevant for this test suite.
 
+      // The lock file collector/test/apps/babel-typescript/package-lock.json has some arbitrary (and probably outdated)
+      // version of @instana/collector. We always update to the latest version before actually running the test.
+      const latestCollectorVersion = require('@_local/collector/package.json').version;
+
+      await new Promise((resolve, reject) => {
         executeCallback(
           `npm install --no-save --omit=optional --no-audit @instana/collector@${latestCollectorVersion} && ` +
             'npm install --omit=optional --no-audit && ' +
             'npm run build',
           babelAppDir,
-          done
+          err => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve();
+            }
+          }
         );
       });
-    });
-
-    after(done => {
-      rimraf(babelLibDir, done);
     });
 
     this.timeout(config.getTestTimeout());
@@ -77,12 +78,16 @@ module.exports = function () {
       await agentControls.clearReceivedTraceData();
     });
 
-    after(async () => {
-      await controls.stop();
-    });
-
     afterEach(async () => {
       await controls.clearIpcMessages();
+    });
+
+    after(async () => {
+      if (controls) {
+        await controls.stop();
+      }
+
+      await rimraf(babelLibDir);
     });
 
     describe('@instana/collector used in a babel-transpiled typescript app', function () {
