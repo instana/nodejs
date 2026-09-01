@@ -56,6 +56,10 @@ function dockerRunScript(name) {
     lines.push(`  --platform ${s.platform}`);
   }
 
+  if (s.privileged) {
+    lines.push(`  --privileged`);
+  }
+
   if (s.volumes) {
     for (const v of s.volumes) {
       lines.push(`  -v ${v}`);
