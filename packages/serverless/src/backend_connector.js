@@ -400,6 +400,8 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
   }
 
   req.on('response', res => {
+    // eslint-disable-next-line no-console
+    console.log(`[backend_connector] req response event fired, statusCode=${res.statusCode}`);
     const { statusCode } = res;
 
     if (statusCode >= 200 && statusCode < 300) {
@@ -422,6 +424,8 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
   // > Once a socket is assigned to this request **and is connected**
   // > socket.setTimeout() will be called.
   req.on('timeout', () => {
+    // eslint-disable-next-line no-console
+    console.log('[backend_connector] req timeout event fired');
     logger.debug(`[${requestId}] Timeout while sending data to Instana (${requestPath}).`);
 
     if (options.isLambdaRequest) {
@@ -432,6 +436,8 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
   });
 
   req.on('error', e => {
+    // eslint-disable-next-line no-console
+    console.log(`[backend_connector] req error event fired: ${e?.message}`);
     logger.debug(`[${requestId}] Error while sending data to Instana (${requestPath}): ${e?.message} ${e?.stack}`);
 
     if (options.isLambdaRequest) {
@@ -497,6 +503,8 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
 
   // This only indicates that the request has been successfully send! Independent of the response!
   req.on('finish', () => {
+    // eslint-disable-next-line no-console
+    console.log('[backend_connector] req finish event fired');
     logger.debug(
       // eslint-disable-next-line max-len
       `[${requestId}] The data have been successfully sent to Instana.`
@@ -511,7 +519,14 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
     // NOTE: When the callback of `.end` is called, the data was successfully send to the server.
     //       That does not mean the server has responded in any way!
     req.end(serializedPayload, () => {
+      // eslint-disable-next-line no-console
+      console.log(
+        // eslint-disable-next-line max-len
+        `[backend_connector] req.end callback fired, isLambdaRequest=${options.isLambdaRequest}, finalLambdaRequest=${finalLambdaRequest}`
+      );
       if (options.isLambdaRequest && finalLambdaRequest) {
+        // eslint-disable-next-line no-console
+        console.log('[backend_connector] calling cleanupRequests');
         cleanupRequests();
       }
 
