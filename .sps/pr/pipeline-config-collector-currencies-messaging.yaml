@@ -124,8 +124,9 @@ tasks:
           # start kafka-topics
           docker run -d --network host --name kafka-topics \
             --entrypoint "/bin/bash" \
-            "mirror.gcr.io/confluentinc/cp-kafka:7.9.4" "-lc" "kafka_server=\"localhost:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'; touch /tmp/kafka-topics-ready"
-          timeout 120 bash -c 'docker wait kafka-topics'
+            "mirror.gcr.io/confluentinc/cp-kafka:7.9.4" "-lc" "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'; touch /tmp/kafka-topics-ready"
+          timeout 120 bash -c \
+            'until docker exec kafka-topics test -f /tmp/kafka-topics-ready 2>/dev/null; do sleep 2; done'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -393,8 +394,9 @@ tasks:
           # start kafka-topics
           docker run -d --network host --name kafka-topics \
             --entrypoint "/bin/bash" \
-            "mirror.gcr.io/confluentinc/cp-kafka:7.9.4" "-lc" "kafka_server=\"localhost:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'; touch /tmp/kafka-topics-ready"
-          timeout 120 bash -c 'docker wait kafka-topics'
+            "mirror.gcr.io/confluentinc/cp-kafka:7.9.4" "-lc" "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'; touch /tmp/kafka-topics-ready"
+          timeout 120 bash -c \
+            'until docker exec kafka-topics test -f /tmp/kafka-topics-ready 2>/dev/null; do sleep 2; done'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -496,8 +498,9 @@ tasks:
           # start kafka-topics
           docker run -d --network host --name kafka-topics \
             --entrypoint "/bin/bash" \
-            "mirror.gcr.io/confluentinc/cp-kafka:7.9.4" "-lc" "kafka_server=\"localhost:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'; touch /tmp/kafka-topics-ready"
-          timeout 120 bash -c 'docker wait kafka-topics'
+            "mirror.gcr.io/confluentinc/cp-kafka:7.9.4" "-lc" "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'; touch /tmp/kafka-topics-ready"
+          timeout 120 bash -c \
+            'until docker exec kafka-topics test -f /tmp/kafka-topics-ready 2>/dev/null; do sleep 2; done'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -770,8 +773,9 @@ tasks:
           # start kafka-topics
           docker run -d --network host --name kafka-topics \
             --entrypoint "/bin/bash" \
-            "mirror.gcr.io/confluentinc/cp-kafka:7.9.4" "-lc" "kafka_server=\"localhost:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'; touch /tmp/kafka-topics-ready"
-          timeout 120 bash -c 'docker wait kafka-topics'
+            "mirror.gcr.io/confluentinc/cp-kafka:7.9.4" "-lc" "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'; touch /tmp/kafka-topics-ready"
+          timeout 120 bash -c \
+            'until docker exec kafka-topics test -f /tmp/kafka-topics-ready 2>/dev/null; do sleep 2; done'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
