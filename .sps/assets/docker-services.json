@@ -25,16 +25,10 @@
           "value": "0.0.0.0"
         }
       ],
-      "args": [
-        "--default-authentication-plugin=mysql_native_password"
-      ],
+      "args": ["--default-authentication-plugin=mysql_native_password"],
       "readinessProbe": {
         "exec": {
-          "command": [
-            "sh",
-            "-c",
-            "mysql -h 0.0.0.0 -u node -p'nodepw' -e 'SELECT 1'"
-          ]
+          "command": ["sh", "-c", "mysql -h 0.0.0.0 -u node -p'nodepw' -e 'SELECT 1'"]
         },
         "initialDelaySeconds": 3,
         "periodSeconds": 2,
@@ -118,9 +112,7 @@
     {
       "name": "kafka-topics",
       "image": "mirror.gcr.io/confluentinc/cp-kafka:7.9.4",
-      "command": [
-        "/bin/bash"
-      ],
+      "command": ["/bin/bash"],
       "args": [
         "-lc",
         "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
@@ -145,11 +137,7 @@
       ],
       "readinessProbe": {
         "exec": {
-          "command": [
-            "sh",
-            "-c",
-            "pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb"
-          ]
+          "command": ["sh", "-c", "pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb"]
         },
         "initialDelaySeconds": 5,
         "periodSeconds": 2,
@@ -175,14 +163,7 @@
     {
       "name": "redis-slave",
       "image": "mirror.gcr.io/library/redis:7.4.3",
-      "args": [
-        "redis-server",
-        "--replicaof",
-        "127.0.0.1",
-        "6379",
-        "--port",
-        "6380"
-      ]
+      "args": ["redis-server", "--replicaof", "127.0.0.1", "6379", "--port", "6380"]
     },
     {
       "name": "redis-sentinel",
@@ -238,12 +219,7 @@
     {
       "name": "nats-streaming",
       "image": "mirror.gcr.io/library/nats-streaming:0.25.3-linux",
-      "args": [
-        "-p",
-        "4223",
-        "-m",
-        "8223"
-      ],
+      "args": ["-p", "4223", "-m", "8223"],
       "readinessProbe": {
         "httpGet": {
           "path": "/healthz",
@@ -257,12 +233,7 @@
     {
       "name": "nats-streaming-2",
       "image": "mirror.gcr.io/library/nats-streaming:0.25.3-linux",
-      "args": [
-        "-p",
-        "4224",
-        "-m",
-        "8224"
-      ],
+      "args": ["-p", "4224", "-m", "8224"],
       "readinessProbe": {
         "httpGet": {
           "path": "/healthz",
@@ -307,17 +278,8 @@
     {
       "name": "pubsub-emulator",
       "image": "gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators",
-      "command": [
-        "gcloud"
-      ],
-      "args": [
-        "beta",
-        "emulators",
-        "pubsub",
-        "start",
-        "--host-port=0.0.0.0:8085",
-        "--project=test-project"
-      ],
+      "command": ["gcloud"],
+      "args": ["beta", "emulators", "pubsub", "start", "--host-port=0.0.0.0:8085", "--project=test-project"],
       "readinessProbe": {
         "tcpSocket": {
           "port": 8085
@@ -330,14 +292,7 @@
     {
       "name": "fake-gcs-server",
       "image": "mirror.gcr.io/fsouza/fake-gcs-server:1.52.2",
-      "args": [
-        "-scheme",
-        "http",
-        "-port",
-        "4443",
-        "-public-host",
-        "127.0.0.1:4443"
-      ],
+      "args": ["-scheme", "http", "-port", "4443", "-public-host", "127.0.0.1:4443"],
       "readinessProbe": {
         "httpGet": {
           "path": "/storage/v1/b",
@@ -349,13 +304,11 @@
       }
     },
     {
-      "name": "db2",
+      "name": "ibm_db",
       "image": "icr.io/db2_community/db2:12.1.5.0",
       "platform": "linux/amd64",
       "privileged": true,
-      "ports": [
-        "58885:50000"
-      ],
+      "ports": ["58885:50000"],
       "env": [
         {
           "name": "PERSISTENT_HOME",
@@ -413,7 +366,7 @@
           "name": "STARTUP_MODE",
           "value": "restoreIfNotExists"
         }
-      ],
+      ]
     }
   ]
 }
