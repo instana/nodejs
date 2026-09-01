@@ -89,7 +89,7 @@ module.exports = function (name, version, isLatest) {
               }
             });
 
-            await consumerControls.startAndWaitForAgentConnection(1000, Date.now() + 1000 * 45);
+            await consumerControls.startAndWaitForAgentConnection(1000, Date.now() + 1000 * 90);
           });
 
           beforeEach(async () => {
@@ -214,7 +214,7 @@ module.exports = function (name, version, isLatest) {
               }
             });
 
-            await consumerControls.startAndWaitForAgentConnection(1000, Date.now() + 1000 * 30);
+            await consumerControls.startAndWaitForAgentConnection(1000, Date.now() + 1000 * 90);
           });
 
           beforeEach(async () => {

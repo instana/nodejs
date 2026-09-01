@@ -56,7 +56,21 @@ async function setupConsumer() {
       consumer = new KafkaClient({
         'bootstrap.servers': broker,
         'group.id': `rdkafka-test-consumer-${process.pid}`,
-        'client.id': 'rdkafka-test-consumer'
+        'client.id': 'rdkafka-test-consumer',
+        rebalance_cb: (err, assignment) => {
+          // ERR__ASSIGN_PARTITIONS means the broker has assigned partitions;
+          // only now is the consumer truly ready to receive messages.
+          if (err.code === confluentKafka.CODES.ERRORS.ERR__ASSIGN_PARTITIONS) {
+            consumer.assign(assignment);
+            if (!connected) {
+              connected = true;
+              log('RdKafka Consumer ready.');
+              log('Subscribed to topic', topic);
+            }
+          } else {
+            consumer.unassign();
+          }
+        }
       });
 
       consumer.on('data', async msg => {
@@ -74,19 +88,8 @@ async function setupConsumer() {
       consumer.connect();
 
       consumer.on('ready', () => {
-        function startConsuming() {
-          consumer.subscribe([topic]);
-          consumer.consume();
-
-          // Wait for partition assignment to complete before signalling ready.
-          setTimeout(() => {
-            log('RdKafka Consumer ready.');
-            log('Subscribed to topic', topic);
-            connected = true;
-          }, 10 * 1000);
-        }
-
-        startConsuming();
+        consumer.subscribe([topic]);
+        consumer.consume();
       });
     } else {
       const kafka = new KafkaClient({
