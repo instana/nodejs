@@ -28,9 +28,8 @@ const port = require('@_local/collector/test/test_util/app-port')();
 const logPrefix = `DB2 App (${process.pid}):\t`;
 
 const DB2_DATABASE_NAME = process.env.DB2_DATABASE_NAME || 'nodedb';
-const connStr1 = process.env.DB2_CONN_STR || 'HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP';
-const connStr2 =
-  process.env.DB2_CONN_STR_ALTERNATIVE || 'HOSTNAME=127.0.0.1;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP';
+const connStr1 = 'HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP';
+const connStr2 = 'HOSTNAME=127.0.0.1;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP';
 
 /**
  * TODO: enable db2 container on Tekton
