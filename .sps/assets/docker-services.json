@@ -123,20 +123,8 @@
       ],
       "args": [
         "-lc",
-        "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'; touch /tmp/kafka-topics-ready"
-      ],
-      "readinessProbe": {
-        "exec": {
-          "command": [
-            "test",
-            "-f",
-            "/tmp/kafka-topics-ready"
-          ]
-        },
-        "initialDelaySeconds": 5,
-        "periodSeconds": 2,
-        "timeoutSeconds": 120
-      }
+        "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
+      ]
     },
     {
       "name": "postgres",
