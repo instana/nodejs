@@ -113,7 +113,7 @@ function readinessScript(name) {
     case 'kafka-topics':
       // block until the topic-creation container finishes (exits 0)
       return (
-        "docker wait kafka-topics"
+        "timeout 120 bash -c 'docker wait kafka-topics'"
       );
     case 'zookeeper':
       return (
