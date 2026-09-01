@@ -119,7 +119,7 @@ async function setupConsumer() {
       // Not implemented yet
       setTimeout(() => {
         connected = true;
-      }, 5 * 1000);
+      }, 15 * 1000);
     }
   } catch (e) {
     log('Consumer setup error', e && e.message);
