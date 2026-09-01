@@ -284,6 +284,9 @@ function buildCurrencyTask(pkgName, folder, group) {
   if (needs.includes('localstack')) {
     scriptLines.push('  INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \\');
   }
+  if (needs.includes('azurite')) {
+    scriptLines.push('  INSTANA_CONNECT_AZURE_BLOB_ENDPOINT="http://127.0.0.1:10000/devstoreaccount1" \\');
+  }
   if (needs.includes('pubsub-emulator')) {
     scriptLines.push('  PUBSUB_EMULATOR_HOST="127.0.0.1:8085" \\');
     scriptLines.push('  GCP_PROJECT="test-project" \\');

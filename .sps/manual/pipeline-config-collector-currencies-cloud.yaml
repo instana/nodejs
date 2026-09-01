@@ -512,6 +512,8 @@ tasks:
     from: code-build
     displayName: '@azure/storage-blob'
     runtimeClassName: large
+    include:
+      - dind
     steps:
       - name: peer-review
         when: 'false'
@@ -522,6 +524,8 @@ tasks:
       - name: unit-test
         displayName: '@azure/storage-blob'
         image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
@@ -546,6 +550,24 @@ tasks:
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
 
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start azurite
+          docker run -d --network host --name azurite \
+            -e AZURITE_ACCOUNTS="devstoreaccount1:Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OceiPiBeEEiypt/RI7k9g4Vm0J8SeBLMYxPTLr8GlFocl2qSA1dV5w==" \
+            "mcr.microsoft.com/azure-storage/azurite:3.37.0" "azurite" "--blobHost" "0.0.0.0" "--queueHost" "0.0.0.0" "--tableHost" "0.0.0.0" "--loose" "--inMemoryPersistence"
+          timeout 60 bash -c \
+            'until nc -z 127.0.0.1 10000 2>/dev/null; do sleep 2; done'
+
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
             test/integration/currencies/cloud/@azure/storage-blob \
@@ -562,6 +584,7 @@ tasks:
             PATH="$PATH" \
             HOME="$HOME" \
             CI=true \
+            INSTANA_CONNECT_AZURE_BLOB_ENDPOINT="http://127.0.0.1:10000/devstoreaccount1" \
             TEST_FILES="$TEST_FILES" \
             npm run test:ci:collector
   code-build-collector-cloud-google-cloudpubsub:
