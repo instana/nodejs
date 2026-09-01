@@ -355,6 +355,9 @@ function buildSimpleTask(displayName, testScript, needs = [], extraEnv = null) {
   scriptLines.push('  PATH="$PATH" \\');
   scriptLines.push('  HOME="$HOME" \\');
   scriptLines.push('  CI=true \\');
+  if (needs.includes('localstack')) {
+    scriptLines.push('  INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \\');
+  }
   if (extraEnv) {
     const varName = extraEnv.split('=')[0];
     scriptLines.push(`  ${varName}="$${varName}" \\`);
@@ -454,7 +457,7 @@ function toMainConfig(prConfig) {
 // ─── dispatch ─────────────────────────────────────────────────────────────────
 
 const SIMPLE_TARGETS = {
-  'aws-lambda':                { script: 'test:ci:aws-lambda',                displayName: 'aws-lambda' },
+  'aws-lambda':                { script: 'test:ci:aws-lambda',                displayName: 'aws-lambda',   needs: ['localstack'] },
   'aws-fargate':               { script: 'test:ci:aws-fargate',               displayName: 'aws-fargate' },
   'azure-container-services':  { script: 'test:ci:azure-container-services',  displayName: 'azure-container-services' },
   'google-cloud-run':          { script: 'test:ci:google-cloud-run',          displayName: 'google-cloud-run' },
@@ -722,15 +725,15 @@ function generateOne(t) {
     const members     = GROUP_TARGETS[t];
     const fanOutTasks = {};
     for (const member of members) {
-      const { script, displayName, extraEnv } = SIMPLE_TARGETS[member];
-      fanOutTasks[`pr-code-checks-${member}`] = buildSimpleTask(displayName, script, [], extraEnv);
+      const { script, displayName, needs = [], extraEnv } = SIMPLE_TARGETS[member];
+      fanOutTasks[`pr-code-checks-${member}`] = buildSimpleTask(displayName, script, needs, extraEnv);
     }
     const prConfig = baseConfig(fanOutTasks);
     writeConfig(t, prConfig, toMainConfig(prConfig));
 
   } else if (SIMPLE_TARGETS[t]) {
-    const { script, displayName, extraEnv } = SIMPLE_TARGETS[t];
-    const fanOutTasks = { [`pr-code-checks-${t}`]: buildSimpleTask(displayName, script, [], extraEnv) };
+    const { script, displayName, needs = [], extraEnv } = SIMPLE_TARGETS[t];
+    const fanOutTasks = { [`pr-code-checks-${t}`]: buildSimpleTask(displayName, script, needs, extraEnv) };
     const prConfig = baseConfig(fanOutTasks);
     writeConfig(t, prConfig, toMainConfig(prConfig));
 
