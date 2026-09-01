@@ -367,6 +367,7 @@ tasks:
 
           # start ibm_db
           docker run -d --network host --name ibm_db \
+            --platform linux/amd64 \
             -e PERSISTENT_HOME="false" \
             -e DBNAME="nodedb" \
             -e BLU="false" \

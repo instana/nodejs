@@ -52,6 +52,10 @@ function dockerRunScript(name) {
 
   const lines = [`docker run -d --network host --name ${name}`];
 
+  if (s.platform) {
+    lines.push(`  --platform ${s.platform}`);
+  }
+
   if (s.volumes) {
     for (const v of s.volumes) {
       lines.push(`  -v ${v}`);
