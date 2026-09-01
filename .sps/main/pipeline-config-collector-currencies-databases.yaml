@@ -124,12 +124,22 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -217,12 +227,22 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -300,12 +320,22 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -398,12 +428,22 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -491,12 +531,94 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
+  code-build-collector-databases-mariadb:
+    from: code-build
+    displayName: mariadb
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: mariadb
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          node_version="$(get_env node-version 2>/dev/null || true)"
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version" --no-progress
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
+              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
+              exit 1
+            fi
+          fi
+          echo "Node.js: $(node --version)"
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/databases/mariadb \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for mariadb — skipping.'
+            exit 0
+          fi
+
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -573,12 +695,22 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -656,12 +788,22 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -739,12 +881,22 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -801,12 +953,22 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -889,12 +1051,22 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -977,12 +1149,22 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -1063,12 +1245,22 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -1149,12 +1341,22 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -1235,12 +1437,22 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -1332,12 +1544,22 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -1425,12 +1647,22 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -1511,12 +1743,22 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -1573,12 +1815,22 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact

@@ -105,12 +105,22 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
   code-build-misc-2:
     from: code-build
     displayName: collector-misc-2
@@ -174,12 +184,22 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
   code-build-misc-3:
     from: code-build
     displayName: collector-misc-3
@@ -241,12 +261,22 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
   code-build-misc-dind:
     from: code-build
     displayName: collector-misc-dind
@@ -318,9 +348,19 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT

@@ -225,6 +225,30 @@ function dockerClientInstallScript() {
   ].join('\n');
 }
 
+/**
+ * Emits a retry-wrapped test run (up to 2 attempts, matching Tekton behaviour).
+ */
+function runWithRetryLines(npmScript, envLines = []) {
+  return [
+    'retry=1',
+    'while [ $retry -le 2 ]; do',
+    '  LAST_EXIT=0',
+    `  env -i \\`,
+    '    PATH="$PATH" \\',
+    '    HOME="$HOME" \\',
+    '    CI=true \\',
+    ...envLines.map(l => `    ${l}`),
+    `    npm run ${npmScript} || LAST_EXIT=$?`,
+    '  if [ $LAST_EXIT -eq 0 ]; then',
+    '    break',
+    '  fi',
+    '  echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."',
+    '  retry=$((retry + 1))',
+    'done',
+    'exit $LAST_EXIT'
+  ];
+}
+
 // ─── collector currencies fan-out tasks ──────────────────────────────────────
 
 function findTestFolders(groupDir) {
@@ -282,27 +306,20 @@ function buildCurrencyTask(pkgName, folder, group) {
   scriptLines.push('  exit 0');
   scriptLines.push('fi');
   scriptLines.push('');
-  scriptLines.push('exec env -i \\');
-  scriptLines.push('  PATH="$PATH" \\');
-  scriptLines.push('  HOME="$HOME" \\');
-  scriptLines.push('  CI=true \\');
-  if (needs.includes('localstack')) {
-    scriptLines.push('  INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \\');
-  }
-  if (needs.includes('azurite')) {
-    scriptLines.push('  INSTANA_CONNECT_AZURE_BLOB_ENDPOINT="http://127.0.0.1:10000/devstoreaccount1" \\');
-  }
+  const extraEnvLines = [];
+  if (needs.includes('localstack')) extraEnvLines.push('INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \\');
+  if (needs.includes('azurite'))    extraEnvLines.push('INSTANA_CONNECT_AZURE_BLOB_ENDPOINT="http://127.0.0.1:10000/devstoreaccount1" \\');
   if (needs.includes('pubsub-emulator')) {
-    scriptLines.push('  PUBSUB_EMULATOR_HOST="127.0.0.1:8085" \\');
-    scriptLines.push('  GCP_PROJECT="test-project" \\');
+    extraEnvLines.push('PUBSUB_EMULATOR_HOST="127.0.0.1:8085" \\');
+    extraEnvLines.push('GCP_PROJECT="test-project" \\');
   }
   if (needs.includes('fake-gcs-server')) {
-    scriptLines.push('  GCS_EMULATOR_HOST="http://127.0.0.1:4443" \\');
-    scriptLines.push('  GCP_PROJECT="test-project" \\');
-    scriptLines.push('  GCS_SERVICE_ACCOUNT_EMAIL="test-service-account@test-project.iam.gserviceaccount.com" \\');
+    extraEnvLines.push('GCS_EMULATOR_HOST="http://127.0.0.1:4443" \\');
+    extraEnvLines.push('GCP_PROJECT="test-project" \\');
+    extraEnvLines.push('GCS_SERVICE_ACCOUNT_EMAIL="test-service-account@test-project.iam.gserviceaccount.com" \\');
   }
-  scriptLines.push('  TEST_FILES="$TEST_FILES" \\');
-  scriptLines.push('  npm run test:ci:collector');
+  extraEnvLines.push('TEST_FILES="$TEST_FILES" \\');
+  scriptLines.push(...runWithRetryLines('test:ci:collector', extraEnvLines));
 
   const prefix   = MODE === 'main' ? 'code-build' : 'pr-code-checks';
   const taskName = `${prefix}-collector-${group}-${pkgName.replace(/[@/]/g, '').replace(/[._]/g, '-')}`;
@@ -362,18 +379,13 @@ function buildSimpleTask(displayName, testScript, needs = [], extraEnv = null) {
     scriptLines.push('');
   }
 
-  scriptLines.push(`exec env -i \\`);
-  scriptLines.push('  PATH="$PATH" \\');
-  scriptLines.push('  HOME="$HOME" \\');
-  scriptLines.push('  CI=true \\');
-  if (needs.includes('localstack')) {
-    scriptLines.push('  INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \\');
-  }
+  const simpleEnvLines = [];
+  if (needs.includes('localstack')) simpleEnvLines.push('INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \\');
   if (extraEnv) {
     const varName = extraEnv.split('=')[0];
-    scriptLines.push(`  ${varName}="$${varName}" \\`);
+    simpleEnvLines.push(`${varName}="$${varName}" \\`);
   }
-  scriptLines.push(`  npm run ${testScript}`);
+  scriptLines.push(...runWithRetryLines(testScript, simpleEnvLines));
 
   return {
     from: 'pr-code-checks',
@@ -566,9 +578,7 @@ function generateOne(t) {
       '', 'if [ -z "$TEST_FILES" ]; then',
       `  echo 'WARNING: No test files found for collector-metrics — skipping.'`,
       '  exit 0', 'fi', '',
-      'exec env -i \\', '  PATH="$PATH" \\', '  HOME="$HOME" \\',
-      '  CI=true \\', '  TEST_FILES="$TEST_FILES" \\',
-      '  npm run test:ci:collector'
+      ...runWithRetryLines('test:ci:collector', ['TEST_FILES="$TEST_FILES" \\'])
     ].join('\n');
     const fanOutTasks = {
       'pr-code-checks-collector-metrics': {
@@ -676,9 +686,7 @@ function generateOne(t) {
         '', 'if [ -z "$TEST_FILES" ]; then',
         `  echo 'WARNING: No test files found for ${split.displayName} — skipping.'`,
         '  exit 0', 'fi', '',
-        'exec env -i \\', '  PATH="$PATH" \\', '  HOME="$HOME" \\',
-        '  CI=true \\', '  TEST_FILES="$TEST_FILES" \\',
-        '  npm run test:ci:collector'
+        ...runWithRetryLines('test:ci:collector', ['TEST_FILES="$TEST_FILES" \\'])
       ].join('\n');
       fanOutTasks[`pr-code-checks-${split.name}`] = {
         from: 'pr-code-checks', displayName: split.displayName, runtimeClassName: 'large',
@@ -729,9 +737,7 @@ function generateOne(t) {
         '', 'if [ -z "$TEST_FILES" ]; then',
         "  echo 'WARNING: No test files found for collector-misc-dind — skipping.'",
         '  exit 0', 'fi', '',
-        'exec env -i \\', '  PATH="$PATH" \\', '  HOME="$HOME" \\',
-        '  CI=true \\', '  TEST_FILES="$TEST_FILES" \\',
-        '  npm run test:ci:collector'
+        ...runWithRetryLines('test:ci:collector', ['TEST_FILES="$TEST_FILES" \\'])
       );
       fanOutTasks['pr-code-checks-misc-dind'] = {
         from: 'pr-code-checks', displayName: 'collector-misc-dind', runtimeClassName: 'large',

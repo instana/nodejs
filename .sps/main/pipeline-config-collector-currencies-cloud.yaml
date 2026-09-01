@@ -120,13 +120,23 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -205,13 +215,23 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -290,13 +310,23 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -375,13 +405,23 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -460,13 +500,23 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -545,13 +595,23 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -630,13 +690,23 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            INSTANA_CONNECT_AZURE_BLOB_ENDPOINT="http://127.0.0.1:10000/devstoreaccount1" \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              INSTANA_CONNECT_AZURE_BLOB_ENDPOINT="http://127.0.0.1:10000/devstoreaccount1" \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -715,14 +785,24 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            PUBSUB_EMULATOR_HOST="127.0.0.1:8085" \
-            GCP_PROJECT="test-project" \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              PUBSUB_EMULATOR_HOST="127.0.0.1:8085" \
+              GCP_PROJECT="test-project" \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -800,15 +880,25 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            GCS_EMULATOR_HOST="http://127.0.0.1:4443" \
-            GCP_PROJECT="test-project" \
-            GCS_SERVICE_ACCOUNT_EMAIL="test-service-account@test-project.iam.gserviceaccount.com" \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              GCS_EMULATOR_HOST="http://127.0.0.1:4443" \
+              GCP_PROJECT="test-project" \
+              GCS_SERVICE_ACCOUNT_EMAIL="test-service-account@test-project.iam.gserviceaccount.com" \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -887,13 +977,23 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
