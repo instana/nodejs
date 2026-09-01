@@ -60,6 +60,12 @@ function dockerRunScript(name) {
     lines.push(`  --privileged`);
   }
 
+  if (s.tmpfs) {
+    for (const t of s.tmpfs) {
+      lines.push(`  --tmpfs ${t}`);
+    }
+  }
+
   if (s.volumes) {
     for (const v of s.volumes) {
       lines.push(`  -v ${v}`);

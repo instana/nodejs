@@ -308,6 +308,7 @@
       "image": "icr.io/db2_community/db2:12.1.5.0",
       "platform": "linux/amd64",
       "privileged": true,
+      "tmpfs": ["/database:uid=1000,gid=1000"],
       "ports": ["58885:50000"],
       "env": [
         {
@@ -360,11 +361,11 @@
         },
         {
           "name": "DB2_CREATE_DB_ON_PATH",
-          "value": "false"
+          "value": "true"
         },
         {
           "name": "STARTUP_MODE",
-          "value": "fresh"
+          "value": "restoreIfNotExists"
         }
       ]
     }
