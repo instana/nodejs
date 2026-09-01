@@ -159,14 +159,14 @@ Requires `ibmcloud` CLI logged in and `jq` installed. Existing triggers are skip
 .sps/scripts/run-pipeline.sh --list
 
 # Run all manual triggers on a branch with Node 20
-.sps/scripts/run-pipeline.sh --branch ci-sps-v2 --node-version 20
+.sps/scripts/run-pipeline.sh --branch main --node-version 20
 
 # Run a single group
-.sps/scripts/run-pipeline.sh --branch ci-sps-v2 --node-version 20 \
+.sps/scripts/run-pipeline.sh --branch main --node-version 20 \
   --trigger collector-currencies-async
 
 # Dry run — prints the API payload without making calls
-.sps/scripts/run-pipeline.sh --branch ci-sps-v2 --node-version 20 --dry-run
+.sps/scripts/run-pipeline.sh --branch main --node-version 20 --dry-run
 ```
 
 ## Stopping all active runs
