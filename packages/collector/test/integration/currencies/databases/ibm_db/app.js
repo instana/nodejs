@@ -87,6 +87,7 @@ const DB2_TABLE_NAME_3 = process.env.DB2_TABLE_NAME_3 || 'table3';
  * Furthermore the connection creation is sometimes slow too.
  */
 let tries = 0;
+const MAX_TRIES = 50;
 const CONNECT_TIMEOUT_IN_MS = 5000;
 let stmtObjectFromStart;
 
@@ -103,7 +104,7 @@ function logDb2Container() {
 
 async function connect(connectionStr) {
   /* eslint-disable no-console */
-  console.log(`Trying to connect to DB2, attempt ${tries}`);
+  console.log(`Trying to connect to DB2, attempt ${tries} of ${MAX_TRIES}`);
 
   try {
     const conn = await Promise.race([
@@ -116,6 +117,9 @@ async function connect(connectionStr) {
     console.log(err.message);
     tries += 1;
     logDb2Container();
+    if (tries > MAX_TRIES) {
+      throw new Error(`DB2 did not become ready after ${MAX_TRIES} attempts.`);
+    }
     console.log(`Trying to connect to DB2 again in ${CONNECT_TIMEOUT_IN_MS} milliseconds.`);
     await delay(CONNECT_TIMEOUT_IN_MS);
     return connect(connectionStr);
