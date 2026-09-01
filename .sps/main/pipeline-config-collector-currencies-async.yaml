@@ -59,6 +59,12 @@ tasks:
         when: 'false'
       - name: compliance-checks
         when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: unit-test
         displayName: await
         image: mirror.gcr.io/library/node:24
@@ -115,6 +121,12 @@ tasks:
         when: 'false'
       - name: compliance-checks
         when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: unit-test
         displayName: bluebird
         image: mirror.gcr.io/library/node:24
@@ -170,6 +182,12 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
+        when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: native_promise

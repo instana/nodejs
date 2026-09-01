@@ -59,6 +59,12 @@ tasks:
         when: 'false'
       - name: compliance-checks
         when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: unit-test
         displayName: bunyan
         image: mirror.gcr.io/library/node:24
@@ -114,6 +120,12 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
+        when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: console
@@ -171,6 +183,12 @@ tasks:
         when: 'false'
       - name: compliance-checks
         when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: unit-test
         displayName: express-winston
         image: mirror.gcr.io/library/node:24
@@ -226,6 +244,12 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
+        when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: log4js
@@ -283,6 +307,12 @@ tasks:
         when: 'false'
       - name: compliance-checks
         when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: unit-test
         displayName: pino
         image: mirror.gcr.io/library/node:24
@@ -338,6 +368,12 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
+        when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: winston

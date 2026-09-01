@@ -59,6 +59,12 @@ tasks:
         when: 'false'
       - name: compliance-checks
         when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: unit-test
         displayName: '@apollo/server'
         image: mirror.gcr.io/library/node:24
@@ -115,6 +121,12 @@ tasks:
         when: 'false'
       - name: compliance-checks
         when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: unit-test
         displayName: '@apollo/subgraph'
         image: mirror.gcr.io/library/node:24
@@ -170,6 +182,12 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
+        when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: '@grpc/grpc-js'
@@ -228,6 +246,12 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
+        when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: graphql
@@ -304,6 +328,12 @@ tasks:
         when: 'false'
       - name: compliance-checks
         when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: unit-test
         displayName: graphql-subscriptions
         image: mirror.gcr.io/library/node:24
@@ -360,6 +390,12 @@ tasks:
         when: 'false'
       - name: compliance-checks
         when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: unit-test
         displayName: http
         image: mirror.gcr.io/library/node:24
@@ -415,6 +451,12 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
+        when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: http2

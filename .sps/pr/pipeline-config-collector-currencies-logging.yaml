@@ -9,6 +9,12 @@ tasks:
         when: 'false'
       - name: compliance-checks
         when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: unit-test
         displayName: npm-install
         image: mirror.gcr.io/library/node:24
@@ -34,6 +40,14 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
+  code-ci-finish:
+    steps:
+      - name: run-stage
+        when: 'false'
+  deploy-checks:
+    when: false
+  deploy-release:
+    when: false
   pr-code-checks-collector-logging-bunyan:
     from: pr-code-checks
     displayName: bunyan
@@ -44,6 +58,12 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
+        when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: bunyan
@@ -101,6 +121,12 @@ tasks:
         when: 'false'
       - name: compliance-checks
         when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: unit-test
         displayName: console
         image: mirror.gcr.io/library/node:24
@@ -156,6 +182,12 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
+        when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: express-winston
@@ -213,6 +245,12 @@ tasks:
         when: 'false'
       - name: compliance-checks
         when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: unit-test
         displayName: log4js
         image: mirror.gcr.io/library/node:24
@@ -269,6 +307,12 @@ tasks:
         when: 'false'
       - name: compliance-checks
         when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: unit-test
         displayName: pino
         image: mirror.gcr.io/library/node:24
@@ -324,6 +368,12 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
+        when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: winston

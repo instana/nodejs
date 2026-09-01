@@ -9,6 +9,12 @@ tasks:
         when: 'false'
       - name: compliance-checks
         when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: unit-test
         displayName: npm-install
         image: mirror.gcr.io/library/node:24
@@ -34,6 +40,14 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
+  code-ci-finish:
+    steps:
+      - name: run-stage
+        when: 'false'
+  deploy-checks:
+    when: false
+  deploy-release:
+    when: false
   pr-code-checks-collector-messaging-confluentinckafka-javascript:
     from: pr-code-checks
     displayName: '@confluentinc/kafka-javascript'
@@ -46,6 +60,12 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
+        when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: '@confluentinc/kafka-javascript'
@@ -144,6 +164,12 @@ tasks:
         when: 'false'
       - name: compliance-checks
         when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: unit-test
         displayName: amqplib
         image: mirror.gcr.io/library/node:24
@@ -221,6 +247,12 @@ tasks:
         when: 'false'
       - name: compliance-checks
         when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: unit-test
         displayName: bull
         image: mirror.gcr.io/library/node:24
@@ -297,6 +329,12 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
+        when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: kafka-node
@@ -395,6 +433,12 @@ tasks:
         when: 'false'
       - name: compliance-checks
         when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: unit-test
         displayName: kafkajs
         image: mirror.gcr.io/library/node:24
@@ -492,6 +536,12 @@ tasks:
         when: 'false'
       - name: compliance-checks
         when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
       - name: unit-test
         displayName: nats
         image: mirror.gcr.io/library/node:24
@@ -567,6 +617,12 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
+        when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: node-nats-streaming
@@ -650,6 +706,12 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
+        when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: node-rdkafka
@@ -745,6 +807,12 @@ tasks:
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
+        when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
         when: 'false'
       - name: unit-test
         displayName: socket.io

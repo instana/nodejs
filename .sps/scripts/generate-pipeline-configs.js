@@ -314,6 +314,9 @@ function buildCurrencyTask(pkgName, folder, group) {
         { name: 'peer-review', when: 'false' },
         { name: 'detect-secrets', when: 'false' },
         { name: 'compliance-checks', when: 'false' },
+        { name: 'sign-artifact', when: 'false' },
+        { name: 'build-artifact', when: 'false' },
+        { name: 'scan-artifact', when: 'false' },
         {
           name: 'unit-test',
           displayName: pkgName,
@@ -376,6 +379,9 @@ function buildSimpleTask(displayName, testScript, needs = [], extraEnv = null) {
       { name: 'peer-review', when: 'false' },
       { name: 'detect-secrets', when: 'false' },
       { name: 'compliance-checks', when: 'false' },
+      { name: 'sign-artifact', when: 'false' },
+      { name: 'build-artifact', when: 'false' },
+      { name: 'scan-artifact', when: 'false' },
       {
         name: 'unit-test',
         displayName,

@@ -13,11 +13,3 @@ tasks:
     steps:
       - name: run-stage
         when: 'false'
-  code-ci-finish:
-    steps:
-      - name: run-stage
-        when: 'false'
-  deploy-checks:
-    when: false
-  deploy-release:
-    when: false
