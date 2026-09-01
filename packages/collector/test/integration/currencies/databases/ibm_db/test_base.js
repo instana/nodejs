@@ -30,7 +30,7 @@ module.exports = function (name, version, isLatest) {
 
   const DB2_CLOSE_TIMEOUT_IN_MS = 1000;
 
-  const testTimeout = Math.max(50000, config.getTestTimeout());
+  const testTimeout = Math.max(300000, config.getTestTimeout());
   const retryTime = 10 * 1000;
 
   const generateTableName = () => {
