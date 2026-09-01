@@ -254,15 +254,18 @@ function buildCurrencyTask(pkgName, folder, group) {
     scriptLines.push('');
     for (const need of needs) {
       scriptLines.push(`# start ${need}`);
-      scriptLines.push(dockerRunScript(need));
-      // For confluent-kafka, skip the blind sleep for kafka-topics and poll for confirmed readiness instead
+      // For confluent-kafka, run kafka-topics synchronously so we block until topics are confirmed created
       if (need === 'kafka-topics' && pkgName === '@confluentinc/kafka-javascript') {
+        const s = sidecar('kafka-topics');
+        const args = s.args.map(a => JSON.stringify(a)).join(' ');
         scriptLines.push(
-          "timeout 120 bash -c \\\n" +
-          "  'until docker logs kafka-topics 2>&1 | grep -q \"All topics created\"; do sleep 2; done'\n" +
-          "echo \"Kafka topics are ready.\""
+          `timeout 120 docker run --rm --network host --name kafka-topics \\\n` +
+          `  --entrypoint "/bin/bash" \\\n` +
+          `  ${JSON.stringify(s.image.trim())} ${args}\n` +
+          `echo "Kafka topics are ready."`
         );
       } else {
+        scriptLines.push(dockerRunScript(need));
         const wait = readinessScript(need);
         if (wait) scriptLines.push(wait);
       }
