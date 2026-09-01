@@ -411,8 +411,8 @@ tasks:
             -e LICENSE="accept" \
             -e DB2INSTANCE="node" \
             -e DB2INST1_PASSWORD="nodepw" \
-            -e DB2_CREATE_DB_ON_PATH="true" \
-            -e STARTUP_MODE="restoreIfNotExists" \
+            -e DB2_CREATE_DB_ON_PATH="false" \
+            -e STARTUP_MODE="fresh" \
             "icr.io/db2_community/db2:12.1.5.0"
           sleep 60
 

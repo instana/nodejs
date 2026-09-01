@@ -360,11 +360,11 @@
         },
         {
           "name": "DB2_CREATE_DB_ON_PATH",
-          "value": "true"
+          "value": "false"
         },
         {
           "name": "STARTUP_MODE",
-          "value": "restoreIfNotExists"
+          "value": "fresh"
         }
       ]
     }
