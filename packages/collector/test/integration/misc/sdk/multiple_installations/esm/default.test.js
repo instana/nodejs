@@ -8,7 +8,7 @@ const expect = require('chai').expect;
 const path = require('path');
 const os = require('os');
 const { mkdtempSync } = require('fs');
-const rimraf = require('rimraf');
+const { rimraf } = require('rimraf');
 
 const config = require('@_local/core/test/config');
 const testUtils = require('@_local/core/test/test_util');
@@ -25,10 +25,6 @@ describe('[ESM] sdk/multiple_installations', function () {
 
   before(() => {
     testUtils.runCommandSync(`npm install --production --no-optional --no-audit ${pwdCollectorPkg}`, tmpDir);
-  });
-
-  after(done => {
-    rimraf(tmpDir, done);
   });
 
   const agentControls = globalAgent.instance;
@@ -57,12 +53,16 @@ describe('[ESM] sdk/multiple_installations', function () {
     await agentControls.clearReceivedTraceData();
   });
 
-  after(async () => {
-    await controls.stop();
-  });
-
   afterEach(async () => {
     await controls.clearIpcMessages();
+  });
+
+  after(async () => {
+    if (controls) {
+      await controls.stop();
+    }
+
+    await rimraf(tmpDir);
   });
 
   it('should trace http & sdk spans', async () => {

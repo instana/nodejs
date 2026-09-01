@@ -8,7 +8,7 @@ const expect = require('chai').expect;
 const path = require('path');
 const os = require('os');
 const { mkdtempSync } = require('fs');
-const rimraf = require('rimraf');
+const { rimraf } = require('rimraf');
 
 const config = require('@_local/core/test/config');
 const testUtils = require('@_local/core/test/test_util');
@@ -74,16 +74,16 @@ describe('[CJS] sdk/multiple_installations', function () {
     await agentControls.clearReceivedTraceData();
   });
 
-  after(done => {
-    rimraf(tmpDir, done);
+  afterEach(async () => {
+    await controls.clearIpcMessages();
   });
 
   after(async () => {
-    await controls.stop();
-  });
+    if (controls) {
+      await controls.stop();
+    }
 
-  afterEach(async () => {
-    await controls.clearIpcMessages();
+    await rimraf(tmpDir);
   });
 
   it('should trace http & sdk spans', async () => {

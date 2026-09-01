@@ -30,7 +30,7 @@ if (!['all', 'pr', 'main', 'manual'].includes(MODE)) {
 // All targets to generate when --what is omitted
 const ALL_CURRENCY_GROUPS = fs.readdirSync(CURRENCIES_DIR).map(g => `collector-currencies-${g}`);
 const ALL_SIMPLE_TARGETS  = [
-  'collector-metrics', 'collector-misc', 'collector-misc-dind',
+  'collector-metrics', 'collector-misc',
   'cloud', 'autoprofile', 'core-group', 'opentelemetry'
 ];
 const ALL_TARGETS = ['default', ...ALL_CURRENCY_GROUPS, ...ALL_SIMPLE_TARGETS];
@@ -549,27 +549,24 @@ function generateOne(t) {
     writeConfig(t, prConfig, toMainConfig(prConfig));
 
   } else if (t === 'collector-misc') {
-    // Split into 3 parallel fan-out tasks to reduce per-task run time.
+    // Split into 4 parallel fan-out tasks to reduce per-task run time.
     //
-    // misc-1: sdk, actions, tracing/otel  (15 tests)
-    // misc-2: esm/cjs, typescript, module format, context  (15 tests)
-    // misc-3: agent behaviour, lifecycle  (13 tests)
-    //
-    // Directories that have a .needs file (require Docker) are handled by
-    // the separate collector-misc-dind target and are excluded from all splits.
+    // misc-1:    sdk, actions, tracing/otel  (15 tests)
+    // misc-2:    esm/cjs, typescript, module format, context  (15 tests)
+    // misc-3:    agent behaviour, lifecycle  (13 tests)
+    // misc-dind: directories with a .needs file (require Docker / DinD)
     const miscDir = path.join(REPO_ROOT, 'packages/collector/test/integration/misc');
-    const dindExcludes = fs.existsSync(miscDir)
+    const dindFolders = fs.existsSync(miscDir)
       ? fs.readdirSync(miscDir, { withFileTypes: true })
           .filter(e => e.isDirectory() && fs.existsSync(path.join(miscDir, e.name, '.needs')))
           .map(e => e.name)
       : [];
+    const dindExcludes = dindFolders;
 
     const splits = [
       {
         name: 'misc-1',
         displayName: 'collector-misc-1',
-        comment: 'sdk, actions, open_tracing, otel_sdk_and_instana, otlp-exporter,\n' +
-                 '          #                      tracing_metrics, w3c_trace_context, specification_compliance',
         dirs: [
           'test/integration/misc/sdk',
           'test/integration/misc/actions',
@@ -584,9 +581,6 @@ function generateOne(t) {
       {
         name: 'misc-2',
         displayName: 'collector-misc-2',
-        comment: 'native_esm, require-esm, cjs-via-esm, require_hook, babel_typescript,\n' +
-                 '          #                      typescript, native_module_retry, cls-hooked-conflict, common,\n' +
-                 '          #                      secrets, stack_trace, restore_context, reinit_setLogger, logger_spans',
         dirs: [
           'test/integration/misc/native_esm',
           'test/integration/misc/require-esm',
@@ -607,9 +601,6 @@ function generateOne(t) {
       {
         name: 'misc-3',
         displayName: 'collector-misc-3',
-        comment: 'activate_immediately, agent-logs, agent_connection, disabled, immediate,\n' +
-                 '          #                      invalid_app, long_agent_communication, long_profiling, pre_init,\n' +
-                 '          #                      prevent_instrumenting_multiple_times, too_late, uncaught',
         dirs: [
           'test/integration/misc/activate_immediately',
           'test/integration/misc/agent-logs',
@@ -628,6 +619,8 @@ function generateOne(t) {
     ];
 
     const fanOutTasks = {};
+
+    // misc-1 / misc-2 / misc-3 — no Docker needed
     for (const split of splits) {
       // Filter out any dirs that turned out to have .needs (dind) — keep splits stable
       const dirs = split.dirs.filter(d => !dindExcludes.some(ex => d.endsWith(`/misc/${ex}`)));
@@ -638,12 +631,12 @@ function generateOne(t) {
         'cd "$WORKSPACE/$(load_repo app-repo path)"',
         'npm install --loglevel warn --foreground-scripts',
         'node bin/create-version-test-folders.js', '',
-        `# collect test files`,
-        `TEST_FILES=$(cd packages/collector && find \\`,
+        '# collect test files',
+        'TEST_FILES=$(cd packages/collector && find \\',
         ...findLines,
-        `  -name '*.test.js' \\`,
-        `  -not -path '*/node_modules/*' \\`,
-        `  | sort | tr '\\n' ' ')`,
+        "  -name '*.test.js' \\",
+        "  -not -path '*/node_modules/*' \\",
+        "  | sort | tr '\\n' ' ')",
         '', 'if [ -z "$TEST_FILES" ]; then',
         `  echo 'WARNING: No test files found for ${split.displayName} — skipping.'`,
         '  exit 0', 'fi', '',
@@ -661,26 +654,63 @@ function generateOne(t) {
         ]
       };
     }
+
+    // misc-dind — one combined task for all .needs folders (require Docker / DinD)
+    if (dindFolders.length > 0) {
+      const dindNeeds = [
+        ...new Set(
+          dindFolders.flatMap(name =>
+            readNeeds(path.join(miscDir, name))
+          )
+        )
+      ];
+      const dindRelDirs = dindFolders.map(name => `test/integration/misc/${name}`);
+      const findLines = dindRelDirs.map(d => `  ${d} \\`);
+
+      const dindScriptLines = [
+        '#!/usr/bin/env bash', 'set -eo pipefail', '',
+        nodeVersionSwitchScript(), '',
+        'cd "$WORKSPACE/$(load_repo app-repo path)"',
+        'npm install --loglevel warn --foreground-scripts',
+        'node bin/create-version-test-folders.js', '',
+        '# install docker client',
+        dockerClientInstallScript(), '',
+      ];
+      for (const need of dindNeeds) {
+        dindScriptLines.push(`# start ${need}`);
+        dindScriptLines.push(dockerRunScript(need));
+        const wait = readinessScript(need);
+        if (wait) dindScriptLines.push(wait);
+        dindScriptLines.push('');
+      }
+      dindScriptLines.push(
+        '# collect test files',
+        'TEST_FILES=$(cd packages/collector && find \\',
+        ...findLines,
+        "  -name '*.test.js' \\",
+        "  -not -path '*/node_modules/*' \\",
+        "  | sort | tr '\\n' ' ')",
+        '', 'if [ -z "$TEST_FILES" ]; then',
+        "  echo 'WARNING: No test files found for collector-misc-dind — skipping.'",
+        '  exit 0', 'fi', '',
+        'exec env -i \\', '  PATH="$PATH" \\', '  HOME="$HOME" \\',
+        '  CI=true \\', '  TEST_FILES="$TEST_FILES" \\',
+        '  npm run test:ci:collector'
+      );
+      fanOutTasks['pr-code-checks-misc-dind'] = {
+        from: 'pr-code-checks', displayName: 'collector-misc-dind', runtimeClassName: 'large',
+        include: ['dind'],
+        steps: [
+          { name: 'peer-review', when: 'false' },
+          { name: 'detect-secrets', when: 'false' },
+          { name: 'compliance-checks', when: 'false' },
+          { name: 'unit-test', displayName: 'collector-misc-dind', image: NODE_IMAGE, include: ['docker-socket'], script: dindScriptLines.join('\n') }
+        ]
+      };
+    }
+
     const prConfig = baseConfig(fanOutTasks);
     writeConfig(t, prConfig, toMainConfig(prConfig));
-
-  } else if (t === 'collector-misc-dind') {
-    const miscDir = path.join(REPO_ROOT, 'packages/collector/test/integration/misc');
-    const dindFolders = fs.readdirSync(miscDir, { withFileTypes: true })
-      .filter(e => e.isDirectory() && fs.existsSync(path.join(miscDir, e.name, '.needs')))
-      .map(e => ({ pkgName: e.name, folder: path.join(miscDir, e.name) }));
-
-    if (dindFolders.length === 0) {
-      console.warn('collector-misc-dind: no .needs folders found — skipping.');
-    } else {
-      const fanOutTasks = {};
-      dindFolders.forEach(({ pkgName, folder }) => {
-        const { taskName, task } = buildCurrencyTask(pkgName, folder, 'misc');
-        fanOutTasks[taskName] = task;
-      });
-      const prConfig = baseConfig(fanOutTasks);
-      writeConfig(t, prConfig, toMainConfig(prConfig));
-    }
 
   } else if (GROUP_TARGETS[t]) {
     const members     = GROUP_TARGETS[t];
