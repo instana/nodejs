@@ -15,15 +15,7 @@ const globalAgent = require('@_local/collector/test/globalAgent');
 
 module.exports = function (name, version, isLatest) {
   const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-
-  if (testUtils.isCI() && !process.env.DB2_CONNECTION_STR) {
-    throw new Error(
-      'No connection string for IBM DB2, please make sure the environment variable DB2_CONNECTION_STR is set.'
-    );
-  }
-
-  const DB2_CONN_STR =
-    process.env.DB2_CONNECTION_STR || 'HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP';
+  const DB2_CONN_STR = 'HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP';
   let DB2_CONN_STR_ALTERNATIVE;
   let EXPECTED_DB2_CONN_STR;
   let EXPECTED_DB2_CONN_STR_ALTERNATIVE;
