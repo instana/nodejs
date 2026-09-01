@@ -316,6 +316,8 @@ tasks:
     from: pr-code-checks
     displayName: ibm_db
     runtimeClassName: large
+    include:
+      - dind
     steps:
       - name: peer-review
         when: 'false'
@@ -326,6 +328,8 @@ tasks:
       - name: unit-test
         displayName: ibm_db
         image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
@@ -349,6 +353,36 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
+
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start ibm_db
+          docker run -d --network host --name ibm_db \
+            -e PERSISTENT_HOME="false" \
+            -e DBNAME="nodedb" \
+            -e BLU="false" \
+            -e HADR_ENABLED="false" \
+            -e ENABLE_ORACLE_COMPATIBILITY="false" \
+            -e UPDATEAVAIL="NO" \
+            -e SAMPLEDB="false" \
+            -e REPODB="false" \
+            -e IS_OSXFS="false" \
+            -e LICENSE="accept" \
+            -e DB2INSTANCE="node" \
+            -e DB2INST1_PASSWORD="nodepw" \
+            -e DB2_CREATE_DB_ON_PATH="true" \
+            -e STARTUP_MODE="restoreIfNotExists" \
+            "icr.io/db2_community/db2:12.1.5.0"
+          sleep 60
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -452,68 +486,6 @@ tasks:
 
           if [ -z "$TEST_FILES" ]; then
             echo 'WARNING: No test files found for ioredis — skipping.'
-            exit 0
-          fi
-
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
-  pr-code-checks-collector-databases-mariadb:
-    from: pr-code-checks
-    displayName: mariadb
-    runtimeClassName: large
-    steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
-      - name: unit-test
-        displayName: mariadb
-        image: mirror.gcr.io/library/node:24
-        script: |-
-          #!/usr/bin/env bash
-          set -eo pipefail
-
-          node_version="$(get_env node-version 2>/dev/null || true)"
-          if [ -n "${node_version:-}" ]; then
-            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            # shellcheck source=/dev/null
-            . "$NVM_DIR/nvm.sh"
-            nvm install "$node_version" --no-progress
-            nvm use "$node_version"
-            ACTUAL=$(node --version)
-            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
-              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
-              exit 1
-            fi
-          fi
-          echo "Node.js: $(node --version)"
-
-          cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
-          # collect test files
-          TEST_FILES=$(cd packages/collector && find \
-            test/integration/currencies/databases/mariadb \
-            -name '*.test.js' \
-            -not -path '*/node_modules/*' \
-            | sort | tr '\n' ' ')
-
-          if [ -z "$TEST_FILES" ]; then
-            echo 'WARNING: No test files found for mariadb — skipping.'
             exit 0
           fi
 
