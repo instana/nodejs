@@ -15,6 +15,7 @@ process.on('SIGTERM', () => {
 require('@instana/collector')();
 
 const { promisify } = require('util');
+const { execSync } = require('child_process');
 const bodyParser = require('body-parser');
 const express = require('express');
 const fs = require('fs');
@@ -91,6 +92,15 @@ let stmtObjectFromStart;
 
 const db2OpenPromisified = promisify(ibmdb.open);
 
+function logDb2Container() {
+  try {
+    const logs = execSync('docker logs ibm_db 2>&1 | tail -20', { encoding: 'utf8' });
+    console.log(`[DB2 container logs]\n${logs}`); // eslint-disable-line no-console
+  } catch (_) {
+    // ignore — container may not exist locally
+  }
+}
+
 async function connect(connectionStr) {
   /* eslint-disable no-console */
   console.log(`Trying to connect to DB2, attempt ${tries}`);
@@ -105,6 +115,7 @@ async function connect(connectionStr) {
   } catch (err) {
     console.log(err.message);
     tries += 1;
+    logDb2Container();
     console.log(`Trying to connect to DB2 again in ${CONNECT_TIMEOUT_IN_MS} milliseconds.`);
     await delay(CONNECT_TIMEOUT_IN_MS);
     return connect(connectionStr);
