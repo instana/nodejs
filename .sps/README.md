@@ -37,6 +37,7 @@ group-specific file (e.g. `.sps/pr/pipeline-config-core-group.yaml`).
 | [`.sps/pr/`](.sps/pr/) | PR configs — one file per test group. |
 | [`.sps/main/`](.sps/main/) | Main-commit configs — mirrors of `pr/` with `code-build` task names. |
 | [`.sps/manual/`](.sps/manual/) | Manual-run configs — identical to `main/`. |
+| [`.sps/assets/docker-services.json`](.sps/assets/docker-services.json) | Service definitions used by DinD tasks (image, env, args for each Docker service). |
 | [`.sps/scripts/generate-pipeline-configs.js`](.sps/scripts/generate-pipeline-configs.js) | Generator — produces all YAML under `pr/`, `main/`, `manual/`. |
 | [`.sps/scripts/create-triggers.sh`](.sps/scripts/create-triggers.sh) | Registers all triggers in the IBM Cloud Toolchain via API. |
 | [`.sps/scripts/run-pipeline.sh`](.sps/scripts/run-pipeline.sh) | Fires a manual trigger by name. |
@@ -77,7 +78,7 @@ run normally so security scanning still happens exactly once per PR / commit.
 | Main / Manual (`main/`, `manual/`) | `code-build` | `code-build-<name>` |
 
 
-### Docker sidecars (databases, message brokers)
+### Docker services (databases, message brokers)
 
 SPS does not support native Tekton sidecars. Tests that need an external service
 (Redis, MySQL, Elasticsearch, Kafka, etc.) use **DinD** (Docker-in-Docker):
@@ -90,9 +91,12 @@ SPS does not support native Tekton sidecars. Tests that need an external service
    sleep 60   # wait for readiness
    ```
 
-**`.needs` files** declare which sidecars a test folder requires. Place a `.needs`
-file next to the test folder listing one sidecar name per line (names match entries
-in [`.tekton/assets/sidecars.json`](.tekton/assets/sidecars.json)):
+Service definitions (image, environment variables, startup arguments) live in
+[`.sps/assets/docker-services.json`](.sps/assets/docker-services.json).
+
+**`.needs` files** declare which Docker services a test folder requires. Place a `.needs`
+file next to the test folder listing one service name per line (names match entries
+in [`.sps/assets/docker-services.json`](.sps/assets/docker-services.json)):
 
 ```
 # packages/collector/test/integration/currencies/messaging/kafkajs/.needs

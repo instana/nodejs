@@ -13,7 +13,7 @@ const yaml = require('js-yaml');
 const REPO_ROOT = path.join(__dirname, '../..');
 const CURRENCIES_DIR = path.join(REPO_ROOT, 'packages/collector/test/integration/currencies');
 
-const sidecarsData = require('../../.tekton/assets/sidecars.json');
+const sidecarsData = require('../assets/docker-services.json');
 
 // ─── CLI ─────────────────────────────────────────────────────────────────────
 
@@ -157,8 +157,6 @@ function readinessScript(name) {
         "  'until curl -sf http://127.0.0.1:4443/storage/v1/b >/dev/null; do sleep 2; done'"
       );
     default:
-      // For sidecars with a readinessProbe in sidecars.json use a TCP port check,
-      // otherwise fall back to a conservative sleep
       if (s.readinessProbe) {
         const probe = s.readinessProbe;
         if (probe.tcpSocket) {
