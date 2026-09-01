@@ -399,6 +399,9 @@ function baseConfig(fanOutTasks, rootTask = 'pr-code-checks') {
           { name: 'peer-review', when: 'false' },
           { name: 'detect-secrets', when: 'false' },
           { name: 'compliance-checks', when: 'false' },
+          { name: 'sign-artifact', when: 'false' },
+          { name: 'build-artifact', when: 'false' },
+          { name: 'scan-artifact', when: 'false' },
           {
             name: 'unit-test',
             displayName: 'npm-install',
@@ -415,6 +418,9 @@ function baseConfig(fanOutTasks, rootTask = 'pr-code-checks') {
           }
         ]
       },
+      'code-ci-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
+      'deploy-checks':  { when: false },
+      'deploy-release': { when: false },
       ...fanOutTasks
     }
   };
