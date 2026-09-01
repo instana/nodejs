@@ -116,10 +116,15 @@ async function setupConsumer() {
         }
       });
 
-      // Not implemented yet
-      setTimeout(() => {
-        connected = true;
-      }, 5 * 1000);
+      // Wait for partition assignment before signalling ready.
+      // The underlying librdkafka emits 'event.log' with 'Assign partitions' once the
+      // consumer group rebalance completes — that is the earliest safe moment to produce.
+      consumer.on('event.log', evt => {
+        if (!connected && evt && evt.message && evt.message.includes('Assign partitions')) {
+          log('Partition assignment received, marking consumer as ready.');
+          connected = true;
+        }
+      });
     }
   } catch (e) {
     log('Consumer setup error', e && e.message);

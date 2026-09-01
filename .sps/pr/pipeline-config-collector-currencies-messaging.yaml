@@ -122,10 +122,10 @@ tasks:
             'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'
 
           # start kafka-topics
-          timeout 120 docker run --rm --network host --name kafka-topics \
+          docker run -d --network host --name kafka-topics \
             --entrypoint "/bin/bash" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4" "-lc" "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
-          echo "Kafka topics are ready."
+          sleep 60
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
