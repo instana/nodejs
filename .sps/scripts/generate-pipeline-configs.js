@@ -257,6 +257,13 @@ function buildCurrencyTask(pkgName, folder, group) {
       scriptLines.push(dockerRunScript(need));
       const wait = readinessScript(need);
       if (wait) scriptLines.push(wait);
+      if (need === 'kafka-topics' && pkgName === '@confluentinc/kafka-javascript') {
+        scriptLines.push(
+          "timeout 120 bash -c \\\n" +
+          "  'until docker logs kafka-topics 2>&1 | grep -q \"All topics created\"; do sleep 2; done'\n" +
+          "echo \"Kafka topics are ready.\""
+        );
+      }
       scriptLines.push('');
     }
   }
