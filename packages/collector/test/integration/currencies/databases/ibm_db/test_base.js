@@ -15,7 +15,8 @@ const globalAgent = require('@_local/collector/test/globalAgent');
 
 module.exports = function (name, version, isLatest) {
   const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-  const DB2_CONN_STR = 'HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP';
+  const DB2_PORT = isCI() ? '50000' : '58885';
+  const DB2_CONN_STR = `HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=${DB2_PORT};PROTOCOL=TCPIP`;
   let DB2_CONN_STR_ALTERNATIVE;
   let EXPECTED_DB2_CONN_STR;
   let EXPECTED_DB2_CONN_STR_ALTERNATIVE;
