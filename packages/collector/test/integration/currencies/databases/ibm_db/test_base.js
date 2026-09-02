@@ -130,6 +130,7 @@ module.exports = function (name, version, isLatest) {
             DB2_CONN_STR,
             DB2_CONN_STR_ALTERNATIVE,
             DB2_DATABASE_NAME,
+            DB2_PORT,
             DB2_TABLE_NAME_1: TABLE_NAME_1,
             DB2_TABLE_NAME_2: TABLE_NAME_2,
             DB2_TABLE_NAME_3: TABLE_NAME_3,
@@ -1166,6 +1167,7 @@ module.exports = function (name, version, isLatest) {
             DB2_CONN_STR,
             DB2_CONN_STR_ALTERNATIVE,
             DB2_DATABASE_NAME,
+            DB2_PORT,
             DB2_TABLE_NAME_1: TABLE_NAME_1,
             DB2_TABLE_NAME_2: TABLE_NAME_2,
             DB2_TABLE_NAME_3: TABLE_NAME_3,
@@ -1280,6 +1282,7 @@ module.exports = function (name, version, isLatest) {
           env: {
             DB2_CONN_STR,
             DB2_DATABASE_NAME,
+            DB2_PORT,
             DB2_TABLE_NAME_1: TABLE_NAME_1,
             INSTANA_ALLOW_ROOT_EXIT_SPAN: 'true'
           }
@@ -1321,6 +1324,7 @@ module.exports = function (name, version, isLatest) {
             DB2_CONN_STR,
             DB2_CONN_STR_ALTERNATIVE,
             DB2_DATABASE_NAME,
+            DB2_PORT,
             DB2_TABLE_NAME_1: TABLE_NAME_1,
             DB2_TABLE_NAME_2: TABLE_NAME_2,
             DB2_TABLE_NAME_3: TABLE_NAME_3,
