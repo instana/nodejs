@@ -108,7 +108,9 @@ function readinessScript(name) {
         'echo "Waiting for Elasticsearch to be ready..."\n' +
         'timeout 120 bash -c \\\n' +
         '  \'until curl -sf http://127.0.0.1:9200/_cluster/health | grep -q \'\\\'\'"status":"green"\\|"status":"yellow"\'\\\'\' ; do sleep 3; done\'\n' +
-        'echo "Elasticsearch is ready."'
+        'echo "Elasticsearch is ready."\n' +
+        "# Ensure 'localhost' resolves to 127.0.0.1 so the two-hosts test can connect\n" +
+        "grep -qxF '127.0.0.1 localhost' /etc/hosts || echo '127.0.0.1 localhost' >> /etc/hosts"
       );
     case 'oracledb':
       // Oracle Free takes 60-120 s to register FREEPDB1 with the listener.

@@ -115,6 +115,8 @@ tasks:
           timeout 120 bash -c \
             'until curl -sf http://127.0.0.1:9200/_cluster/health | grep -q '\''"status":"green"\|"status":"yellow"'\'' ; do sleep 3; done'
           echo "Elasticsearch is ready."
+          # Ensure 'localhost' resolves to 127.0.0.1 so the two-hosts test can connect
+          grep -qxF '127.0.0.1 localhost' /etc/hosts || echo '127.0.0.1 localhost' >> /etc/hosts
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
