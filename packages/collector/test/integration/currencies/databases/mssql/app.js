@@ -38,17 +38,6 @@ const userTable = process.env.AZURE_USER_TABLE;
 const procedureName = process.env.AZURE_PROCEDURE_NAME;
 const database = process.env.AZURE_SQL_DATABASE;
 
-/*
-if (isCI()) {
-  dbHost = process.env.AZURE_SQL_SERVER;
-  dbUser= process.env.AZURE_SQL_USERNAME;
-  dbPassword = process.env.AZURE_SQL_PWD;
-  userTable = process.env.AZURE_USER_TABLE;
-  procedureName = process.env.AZURE_PROCEDURE_NAME;
-  database = process.env.AZURE_SQL_DATABASE;
-}
-*/
-
 const isLocalHost = dbHost === 'localhost' || dbHost === '127.0.0.1';
 const connectConfigBase = {
   user: dbUser,

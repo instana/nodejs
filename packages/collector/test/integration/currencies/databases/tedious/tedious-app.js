@@ -13,9 +13,7 @@ process.on('SIGTERM', () => {
 /* eslint-disable no-console */
 require('@instana/collector')();
 const express = require('express');
-const fs = require('fs');
 const path = require('path');
-const { isCI } = require('@_local/core/test/test_util');
 const port = require('@_local/collector/test/test_util/app-port')();
 const tedious = require('tedious');
 
@@ -35,29 +33,25 @@ const app = express();
 
 app.use(bodyParser.json());
 
-// Locally:
-// To obtain the credentials for the Azure SQL Database, you can find them in 1password. Search for
-// "Team Node.js: Azure SQL credentials", download the file and copy this to your CMD line:
-// export AZURE_SQL_CONFIG=~/Downloads/nodejs-tracer-azure-sql-server.json
-if (!isCI() && !process.env.AZURE_SQL_CONFIG) {
-  throw new Error('Please set the env variable `AZURE_SQL_CONFIG`.');
-}
+const dbHost = process.env.INSTANA_CONNECT_MSSQL_HOST || '127.0.0.1';
+const dbUser = process.env.INSTANA_CONNECT_MSSQL_USER || 'sa';
+const dbPassword = process.env.INSTANA_CONNECT_MSSQL_PW || 'stanCanHazMsSQL1';
+const database = process.env.MSSQL_DB || 'master';
 
-const azureConfig = process.env.AZURE_SQL_CONFIG
-  ? JSON.parse(fs.readFileSync(process.env.AZURE_SQL_CONFIG, 'utf-8'))
-  : null;
-
+const isLocalHost = dbHost === 'localhost' || dbHost === '127.0.0.1';
 const config = {
-  server: azureConfig?.AZURE_SQL_SERVER || process.env.AZURE_SQL_SERVER,
+  server: dbHost,
   authentication: {
     type: 'default',
     options: {
-      userName: azureConfig?.AZURE_SQL_USERNAME || process.env.AZURE_SQL_USERNAME,
-      password: azureConfig?.AZURE_SQL_PWD || process.env.AZURE_SQL_PWD
+      userName: dbUser,
+      password: dbPassword
     }
   },
   options: {
-    database: azureConfig?.AZURE_SQL_DATABASE || process.env.AZURE_SQL_DATABASE,
+    database,
+    encrypt: true,
+    trustServerCertificate: isLocalHost,
     connectTimeout: 30000
   }
 };
@@ -65,9 +59,24 @@ const config = {
 let connected = false;
 let connection;
 
-const retryDelay = 30000;
-const maxRetries = 2;
+const retryDelay = 2000;
+const maxRetries = 10;
 let currentRetry = 0;
+
+function setupTable(cb) {
+  const setupQuery = `
+    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='packages' and xtype='U')
+    CREATE TABLE packages (id INT, name VARCHAR(50), version INT);
+  `;
+  const request = new Request(setupQuery, err => {
+    if (err) {
+      console.error('Error creating packages table:', err);
+      return cb(err);
+    }
+    cb();
+  });
+  connection.execSql(request);
+}
 
 (function connectWithRetry() {
   if (connection) {
@@ -88,8 +97,14 @@ let currentRetry = 0;
         connection.close();
       }
     } else {
-      connected = true;
-      console.warn('Connected to the database');
+      setupTable(setupErr => {
+        if (setupErr) {
+          console.error('Setup table failed', setupErr);
+        } else {
+          connected = true;
+          console.warn('Connected to the database and table ready');
+        }
+      });
     }
   });
 })();

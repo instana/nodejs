@@ -86,13 +86,15 @@ module.exports = function (name, version, isLatest) {
                       dataProperty: 'tags',
                       extraTests: span => {
                         const queryType = endpoint === '/packages/batch' ? 'execSqlBatch' : 'execSql';
-                        expect(span.data.tags.name).to.eql(`${queryType} azure-nodejs-test`);
+                        const expectedDb = process.env.MSSQL_DB || 'master';
+                        const expectedHost = process.env.INSTANA_CONNECT_MSSQL_HOST || '127.0.0.1';
+                        expect(span.data.tags.name).to.eql(`${queryType} ${expectedDb}`);
 
                         expect(span.data.operation).to.equal('tedious');
                         expect(span.data.tags['db.system.name']).to.eql('microsoft.sql_server');
-                        expect(span.data.tags['db.namespace']).to.eql('azure-nodejs-test');
+                        expect(span.data.tags['db.namespace']).to.eql(expectedDb);
                         expect(span.data.tags['db.query.text']).to.eql(expectedStatement);
-                        expect(span.data.tags['server.address']).to.eql('nodejs-team-db-server.database.windows.net');
+                        expect(span.data.tags['server.address']).to.eql(expectedHost);
                         checkTelemetryResourceAttrs(span);
                       }
                     });
