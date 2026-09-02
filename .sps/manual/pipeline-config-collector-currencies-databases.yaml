@@ -1158,7 +1158,7 @@ tasks:
             -e ORACLE_PWD="teamnodejspassword" \
             "container-registry.oracle.com/database/free:23.6.0.0-lite"
           echo "Waiting for OracleDB to be ready..."
-          timeout 300 bash -c \
+          timeout 600 bash -c \
             'until docker exec oracledb /opt/oracle/checkDBStatus.sh 2>/dev/null; do sleep 5; done'
           echo "OracleDB is ready."
 

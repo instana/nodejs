@@ -109,7 +109,7 @@ function readinessScript(name) {
     case 'oracledb':
       return (
         "echo \"Waiting for OracleDB to be ready...\"\n" +
-        "timeout 300 bash -c \\\n" +
+        "timeout 600 bash -c \\\n" +
         "  'until docker exec oracledb /opt/oracle/checkDBStatus.sh 2>/dev/null; do sleep 5; done'\n" +
         "echo \"OracleDB is ready.\""
       );
