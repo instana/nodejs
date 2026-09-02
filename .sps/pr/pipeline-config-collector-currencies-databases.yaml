@@ -1206,7 +1206,7 @@ tasks:
           # start oracledb early — initialises during npm install
           docker run -d --network host --name oracledb \
             -e ORACLE_PWD="teamnodejspassword" \
-            "container-registry.oracle.com/database/free:23.6.0.0-lite"
+            "container-registry.oracle.com/database/free:23.6.0.0"
 
           npm install --loglevel warn --foreground-scripts
 
