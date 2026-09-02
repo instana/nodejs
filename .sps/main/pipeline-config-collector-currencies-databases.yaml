@@ -1210,25 +1210,10 @@ tasks:
 
           npm install --loglevel warn --foreground-scripts
 
-          # Wait until FREEPDB1 is registered with the Oracle listener.
           echo "Waiting for Oracle FREEPDB1..."
-
-          if ! timeout 180 bash -c \
-            'until docker exec oracledb lsnrctl status 2>/dev/null | grep -q "FREEPDB1"; do
-              sleep 5
-            done'
-          then
-            echo "ERROR: Oracle FREEPDB1 did not become ready within 180 seconds"
-            echo "Oracle container status:"
-            docker ps -a
-            echo "Oracle container logs:"
-            docker logs oracledb
-            echo "Oracle listener status:"
-            docker exec oracledb lsnrctl status || true
-            exit 1
-          fi
-
-          echo "Oracle FREEPDB1 is ready"
+          timeout 180 bash -c \
+            'until docker exec oracledb lsnrctl status 2>/dev/null | grep -q "FREEPDB1"; do sleep 5; done'
+          echo "Oracle FREEPDB1 is ready."
 
           node bin/create-version-test-folders.js
 

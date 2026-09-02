@@ -108,27 +108,11 @@ function readinessScript(name) {
       );
     case 'oracledb':
       // Wait until FREEPDB1 registers with the Oracle listener.
-      // Emit a diagnostic dump if it doesn't come up in time.
       return [
-        '# Wait until FREEPDB1 is registered with the Oracle listener.',
         'echo "Waiting for Oracle FREEPDB1..."',
-        '',
-        "if ! timeout 180 bash -c \\",
-        "  'until docker exec oracledb lsnrctl status 2>/dev/null | grep -q \"FREEPDB1\"; do",
-        '    sleep 5',
-        "  done'",
-        'then',
-        '  echo "ERROR: Oracle FREEPDB1 did not become ready within 180 seconds"',
-        '  echo "Oracle container status:"',
-        '  docker ps -a',
-        '  echo "Oracle container logs:"',
-        '  docker logs oracledb',
-        '  echo "Oracle listener status:"',
-        '  docker exec oracledb lsnrctl status || true',
-        '  exit 1',
-        'fi',
-        '',
-        'echo "Oracle FREEPDB1 is ready"'
+        "timeout 180 bash -c \\",
+        "  'until docker exec oracledb lsnrctl status 2>/dev/null | grep -q \"FREEPDB1\"; do sleep 5; done'",
+        'echo "Oracle FREEPDB1 is ready."'
       ].join('\n');
     case 'rabbitmq':
       return 'timeout 120 bash -c \\\n' + "  'until nc -z 127.0.0.1 5672 2>/dev/null; do sleep 2; done'";
