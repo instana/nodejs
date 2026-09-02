@@ -538,7 +538,7 @@ module.exports = function (name, version, isLatest) {
             span => expect(span.p).to.equal(entrySpan.s),
             span => expect(span.n).to.equal('elasticsearch'),
             span => expect(span.data.elasticsearch.action).to.equal('index'),
-            span => expect(span.data.elasticsearch.address).to.equal('localhost'),
+            span => expect(span.data.elasticsearch.address).to.equal('127.0.0.2'),
             span => expect(span.data.elasticsearch.port).to.equal('9200')
           ]);
         });
