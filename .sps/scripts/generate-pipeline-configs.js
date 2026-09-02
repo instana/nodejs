@@ -15,8 +15,6 @@ const CURRENCIES_DIR = path.join(REPO_ROOT, 'packages/collector/test/integration
 
 const sidecarsData = require('../assets/docker-services.json');
 
-// ─── CLI ─────────────────────────────────────────────────────────────────────
-
 const whatArg = process.argv.find(a => a.startsWith('--what='));
 const nodeArg = process.argv.find(a => a.startsWith('--node-version='));
 const modeArg = process.argv.find(a => a.startsWith('--mode='));
@@ -43,8 +41,6 @@ const ALL_TARGETS = ['default', ...ALL_CURRENCY_GROUPS, ...ALL_SIMPLE_TARGETS];
 
 const TARGET = whatArg ? whatArg.split('=')[1] : null;
 const NODE_IMAGE = 'mirror.gcr.io/library/node:24';
-
-// ─── sidecar helpers ─────────────────────────────────────────────────────────
 
 function sidecar(name) {
   return sidecarsData.sidecars.find(s => s.name === name);
@@ -111,11 +107,29 @@ function readinessScript(name) {
         'echo "Elasticsearch is ready."'
       );
     case 'oracledb':
-      // No shell-level readiness wait: oracle-app.js retries the connection every 5 s
-      // indefinitely. The container is started before npm install (preStart) so it has
-      // ~60-120 s to boot before the test runner reaches the app startup phase.
-      // INSTANA_CONNECT_ORACLEDB is injected via extraEnvLines so the app knows the host.
-      return '';
+      // Wait until FREEPDB1 registers with the Oracle listener.
+      // Emit a diagnostic dump if it doesn't come up in time.
+      return [
+        '# Wait until FREEPDB1 is registered with the Oracle listener.',
+        'echo "Waiting for Oracle FREEPDB1..."',
+        '',
+        "if ! timeout 180 bash -c \\",
+        "  'until docker exec oracledb lsnrctl status 2>/dev/null | grep -q \"FREEPDB1\"; do",
+        '    sleep 5',
+        "  done'",
+        'then',
+        '  echo "ERROR: Oracle FREEPDB1 did not become ready within 180 seconds"',
+        '  echo "Oracle container status:"',
+        '  docker ps -a',
+        '  echo "Oracle container logs:"',
+        '  docker logs oracledb',
+        '  echo "Oracle listener status:"',
+        '  docker exec oracledb lsnrctl status || true',
+        '  exit 1',
+        'fi',
+        '',
+        'echo "Oracle FREEPDB1 is ready"'
+      ].join('\n');
     case 'rabbitmq':
       return 'timeout 120 bash -c \\\n' + "  'until nc -z 127.0.0.1 5672 2>/dev/null; do sleep 2; done'";
     case 'kafka':
@@ -224,9 +238,6 @@ function dockerClientInstallScript() {
   ].join('\n');
 }
 
-/**
- * Emits a retry-wrapped test run (up to 2 attempts, matching Tekton behaviour).
- */
 function runWithRetryLines(npmScript, envLines = []) {
   return [
     'retry=1',
@@ -247,8 +258,6 @@ function runWithRetryLines(npmScript, envLines = []) {
     'exit $LAST_EXIT'
   ];
 }
-
-// ─── collector currencies fan-out tasks ──────────────────────────────────────
 
 function findTestFolders(groupDir) {
   const folders = [];
@@ -382,8 +391,6 @@ function buildCurrencyTask(pkgName, folder, group) {
   };
 }
 
-// ─── simple single-task config builder ───────────────────────────────────────
-
 function buildSimpleTask(displayName, testScript, needs = [], extraEnv = null) {
   const scriptLines = ['#!/usr/bin/env bash', 'set -eo pipefail', ''];
   scriptLines.push(nodeVersionSwitchScript());
@@ -440,8 +447,6 @@ function buildSimpleTask(displayName, testScript, needs = [], extraEnv = null) {
     ]
   };
 }
-
-// ─── base config skeleton ─────────────────────────────────────────────────────
 
 function baseConfig(fanOutTasks, rootTask = 'pr-code-checks') {
   return {
@@ -517,8 +522,6 @@ function toMainConfig(prConfig) {
   const main = raw.replace(/\bpr-code-checks\b/g, 'code-build');
   return yaml.load(main);
 }
-
-// ─── dispatch ─────────────────────────────────────────────────────────────────
 
 const SIMPLE_TARGETS = {
   'aws-lambda': { script: 'test:ci:aws-lambda', displayName: 'aws-lambda', needs: ['localstack'] },
@@ -839,8 +842,6 @@ function generateOne(t) {
     process.exit(1);
   }
 }
-
-// ─── run ─────────────────────────────────────────────────────────────────────
 
 const targets = TARGET ? [TARGET] : ALL_TARGETS;
 for (const t of targets) generateOne(t);
