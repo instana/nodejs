@@ -108,10 +108,11 @@ function readinessScript(name) {
       );
     case 'oracledb':
       // Wait until FREEPDB1 registers with the Oracle listener.
+      // grep -qi: case-insensitive — gvenzl image reports "freepdb1" (lowercase).
       return [
         'echo "Waiting for Oracle FREEPDB1..."',
         "timeout 180 bash -c \\",
-        "  'until docker exec oracledb lsnrctl status 2>/dev/null | grep -q \"FREEPDB1\"; do sleep 5; done'",
+        "  'until docker exec oracledb lsnrctl status 2>/dev/null | grep -qi \"FREEPDB1\"; do sleep 5; done'",
         'echo "Oracle FREEPDB1 is ready."'
       ].join('\n');
     case 'rabbitmq':

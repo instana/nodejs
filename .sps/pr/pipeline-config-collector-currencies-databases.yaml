@@ -1212,7 +1212,7 @@ tasks:
 
           echo "Waiting for Oracle FREEPDB1..."
           timeout 180 bash -c \
-            'until docker exec oracledb lsnrctl status 2>/dev/null | grep -q "FREEPDB1"; do sleep 5; done'
+            'until docker exec oracledb lsnrctl status 2>/dev/null | grep -qi "FREEPDB1"; do sleep 5; done'
           echo "Oracle FREEPDB1 is ready."
 
           node bin/create-version-test-folders.js
