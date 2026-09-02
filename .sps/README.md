@@ -1,12 +1,32 @@
 # SPS Pipeline
 
+## Table of contents
+
+- [Overview](#overview)
+  - [Pipeline flavours](#pipeline-flavours)
+- [Configuration files](#configuration-files)
+- [Pipeline structure](#pipeline-structure)
+  - [Task name convention](#task-name-convention)
+  - [Docker services](#docker-services-databases-message-brokers)
+- [Generating pipeline configs](#generating-pipeline-configs)
+- [Registering triggers](#registering-triggers)
+- [Running a pipeline manually](#running-a-pipeline-manually)
+- [Stopping all active runs](#stopping-all-active-runs)
+- [Secrets](#secrets)
+- [Compliance](#compliance)
+  - [Branch protection](#branch-protection)
+  - [detect-secrets baseline](#detect-secrets-baseline)
+  - [CRA (Code Risk Analyzer)](#cra-code-risk-analyzer)
+- [Closing compliance issues](#closing-compliance-issues)
+- [References](#references)
+
 ## Overview
 
 Each test group has its own `pipeline-config-*.yaml`. A single IBM Cloud Toolchain
 pipeline hosts all of them; each trigger passes a different `pipeline-config` property
 to select which YAML to load. This keeps runs independent and parallel.
 
-There are four pipeline flavours:
+### Pipeline flavours
 
 | Folder | Trigger type | Event | Root task |
 |---|---|---|---|
@@ -76,7 +96,6 @@ run normally so security scanning still happens exactly once per PR / commit.
 |---|---|---|
 | PR (`pr/`) | `pr-code-checks` | `pr-code-checks-<name>` |
 | Main / Manual (`main/`, `manual/`) | `code-build` | `code-build-<name>` |
-
 
 ### Docker services (databases, message brokers)
 
@@ -175,7 +194,8 @@ Requires `ibmcloud` CLI logged in and `jq` installed. Existing triggers are skip
 
 ## Stopping all active runs
 
-Use [`.sps/scripts/stop-all-runs.sh`](.sps/scripts/stop-all-runs.sh) to cancel every actively running pipeline run on the toolchain in one shot.
+Use [`.sps/scripts/stop-all-runs.sh`](.sps/scripts/stop-all-runs.sh) to cancel every
+actively running pipeline run on the toolchain in one shot.
 
 ```bash
 # Dry run — lists runs that would be cancelled without making any API calls
@@ -187,22 +207,38 @@ Use [`.sps/scripts/stop-all-runs.sh`](.sps/scripts/stop-all-runs.sh) to cancel e
 
 ## Secrets
 
-SPS secrets are not stored in this repository. Configure them as secure pipeline properties in the IBM Cloud toolchain.
+SPS secrets are not stored in this repository. Configure them as secure pipeline
+properties in the IBM Cloud toolchain.
 
-Required properties include:
+Required properties:
 
-* `git-token` [Enterprise Token in 1PWD]
-* `cos-api-key`
-* `cos-bucket-name`
-* `cos-endpoint`
+| Property | Source |
+|---|---|
+| `git-token` | Enterprise Token in 1Password |
+| `cos-api-key` | IBM Cloud Object Storage credentials |
+| `cos-bucket-name` | Target COS bucket |
+| `cos-endpoint` | COS regional endpoint |
 
 ## Compliance
 
-`.secrets.baseline` is required for SPS detect-secrets validation.
+### Branch protection
 
-### Generating `.secrets.baseline`
+SPS `compliance-checks` validates that GitHub branch-protection rules are in place
+on the target repository. The required settings are:
 
-SPS requires the **IBM fork** of detect-secrets. The standard PyPI package will fail with:
+- **Require pull request reviews** before merging (at least one approving review).
+- **Require status checks to pass** before merging — add the relevant SPS pipeline
+  checks as required status checks.
+- **Restrict who can push** to `main` directly (no force-push, no deletions).
+
+Configure these rules in **GitHub → Repository Settings → Branches → Branch protection rules**.
+
+> Full configuration reference: [IBM Cloud DevSecOps — Configure GitHub](https://test.cloud.ibm.com/docs/devsecops?topic=devsecops-cd-devsecops-config-github)
+
+### detect-secrets baseline
+
+`.secrets.baseline` is required for SPS detect-secrets validation. SPS requires the
+**IBM fork** of detect-secrets. The standard PyPI package will fail with:
 `"The Detect Secrets baseline file present in your repository is not of the IBM version"`.
 
 Install the IBM fork once:
@@ -227,20 +263,24 @@ detect-secrets audit .secrets.baseline
 
 CRA scans the repository for vulnerabilities in dependencies and Docker images.
 
-**`.cra/.fileignore`** excludes paths from CRA scanning. Entries are literal path prefixes — globs are **not** supported. List each package path explicitly.
+**`.cra/.fileignore`** excludes paths from CRA scanning. Entries are literal path
+prefixes — globs are **not** supported. List each package path explicitly.
 
-**`.cra/.cveignore`** overrides (suppresses) specific CVE findings reported against dependencies. Each entry requires a CVE identifier and `"alwaysOmit": true` to permanently suppress the finding across all scans.
+**`.cra/.cveignore`** overrides (suppresses) specific CVE findings reported against
+dependencies. Each entry requires a CVE identifier and `"alwaysOmit": true` to
+permanently suppress the finding across all scans.
 
-
-> Use `.cra/.cveignore` only for false positives or CVEs that cannot be remediated (e.g. transitive dependencies with no fix available).
+> Use `.cra/.cveignore` only for false positives or CVEs that cannot be remediated
+> (e.g. transitive dependencies with no fix available).
 
 ## Closing compliance issues
 
-When a pipeline run raises issues in `instana/instana-issues` (e.g. branch-protection or CRA BOM
-failures), use [`bin/close-matched-prs.sh`](bin/close-matched-prs.sh) to bulk-comment and close
-them once the underlying problem is fixed.
+When a pipeline run raises issues in `instana/instana-issues` (e.g. branch-protection
+or CRA BOM failures), use [`bin/close-matched-prs.sh`](bin/close-matched-prs.sh) to
+bulk-comment and close them once the underlying problem is fixed.
 
-**Requires** the [GitHub CLI (`gh`)](https://cli.github.com/) authenticated with access to `instana/instana-issues`.
+**Requires** the [GitHub CLI (`gh`)](https://cli.github.com/) authenticated with
+access to `instana/instana-issues`.
 
 ```bash
 # Dry run — lists matching open issues without modifying anything (default)
@@ -250,9 +290,9 @@ them once the underlying problem is fixed.
 ./bin/close-matched-prs.sh "CVE-2025-14505" false
 ```
 
-The first argument is a **title substring** matched against all open issues in `instana/instana-issues`.
-The second argument is `true` (dry run, default) or `false` (live). Always do a dry run first to
-confirm the match set before closing.
+The first argument is a **title substring** matched against all open issues in
+`instana/instana-issues`. The second argument is `true` (dry run, default) or `false`
+(live). Always do a dry run first to confirm the match set before closing.
 
 ## References
 
@@ -260,3 +300,4 @@ confirm the match set before closing.
 - [Pipeline-config v2 customization options](https://pages.github.ibm.com/secure-pipelines-service/sps-docs/optimize/optimize/#pipeline-config-v2-customization-options)
 - [SPS Task-level options](https://pages.github.ibm.com/secure-pipelines-service/sps-docs/optimize/optimize/#task-level-options)
 - [SPS Multi-arch workers](https://pages.github.ibm.com/secure-pipelines-service/sps-docs/optimize/optimize/#multi-arch-workers-v11-only)
+- [IBM Cloud DevSecOps — Configure GitHub (branch protection)](https://test.cloud.ibm.com/docs/devsecops?topic=devsecops-cd-devsecops-config-github)
