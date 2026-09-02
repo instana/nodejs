@@ -38,7 +38,6 @@
     {
       "name": "oracledb",
       "image": "mirror.gcr.io/gvenzl/oracle-free:23-slim",
-      "preStart": true,
       "env": [
         {
           "name": "ORACLE_PASSWORD",

@@ -103,7 +103,6 @@ tasks:
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
           npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
 
           # start localstack
           docker run -d --network host --name localstack \
@@ -111,6 +110,8 @@ tasks:
             "mirror.gcr.io/localstack/localstack:4.5"
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
+
+          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -198,7 +199,6 @@ tasks:
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
           npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
 
           # start localstack
           docker run -d --network host --name localstack \
@@ -206,6 +206,8 @@ tasks:
             "mirror.gcr.io/localstack/localstack:4.5"
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
+
+          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -293,7 +295,6 @@ tasks:
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
           npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
 
           # start localstack
           docker run -d --network host --name localstack \
@@ -301,6 +302,8 @@ tasks:
             "mirror.gcr.io/localstack/localstack:4.5"
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
+
+          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -388,7 +391,6 @@ tasks:
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
           npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
 
           # start localstack
           docker run -d --network host --name localstack \
@@ -396,6 +398,8 @@ tasks:
             "mirror.gcr.io/localstack/localstack:4.5"
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
+
+          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -483,7 +487,6 @@ tasks:
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
           npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
 
           # start localstack
           docker run -d --network host --name localstack \
@@ -491,6 +494,8 @@ tasks:
             "mirror.gcr.io/localstack/localstack:4.5"
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
+
+          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -578,7 +583,6 @@ tasks:
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
           npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
 
           # start localstack
           docker run -d --network host --name localstack \
@@ -586,6 +590,8 @@ tasks:
             "mirror.gcr.io/localstack/localstack:4.5"
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
+
+          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -673,7 +679,6 @@ tasks:
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
           npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
 
           # start azurite
           docker run -d --network host --name azurite \
@@ -681,6 +686,8 @@ tasks:
             "mcr.microsoft.com/azure-storage/azurite:3.37.0" "azurite" "--blobHost" "0.0.0.0" "--queueHost" "0.0.0.0" "--tableHost" "0.0.0.0" "--loose" "--inMemoryPersistence"
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 10000 2>/dev/null; do sleep 2; done'
+
+          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -768,7 +775,6 @@ tasks:
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
           npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
 
           # start pubsub-emulator
           docker run -d --network host --name pubsub-emulator \
@@ -776,6 +782,8 @@ tasks:
             "gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators" "beta" "emulators" "pubsub" "start" "--host-port=0.0.0.0:8085" "--project=test-project"
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 8085 2>/dev/null; do sleep 2; done'
+
+          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -864,13 +872,14 @@ tasks:
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
           npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
 
           # start fake-gcs-server
           docker run -d --network host --name fake-gcs-server \
             "mirror.gcr.io/fsouza/fake-gcs-server:1.52.2" "-scheme" "http" "-port" "4443" "-public-host" "127.0.0.1:4443"
           timeout 30 bash -c \
             'until curl -sf http://127.0.0.1:4443/storage/v1/b >/dev/null; do sleep 2; done'
+
+          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -960,7 +969,6 @@ tasks:
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
           npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
 
           # start localstack
           docker run -d --network host --name localstack \
@@ -968,6 +976,8 @@ tasks:
             "mirror.gcr.io/localstack/localstack:4.5"
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
+
+          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \

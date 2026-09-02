@@ -88,6 +88,7 @@ tasks:
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
+
           node bin/create-version-test-folders.js
 
           # collect test files
@@ -160,6 +161,7 @@ tasks:
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
+
           node bin/create-version-test-folders.js
 
           # collect test files
@@ -232,6 +234,7 @@ tasks:
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
+
           node bin/create-version-test-folders.js
 
           # collect test files
@@ -304,6 +307,7 @@ tasks:
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
+
           node bin/create-version-test-folders.js
 
           # collect test files
@@ -376,6 +380,7 @@ tasks:
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
+
           node bin/create-version-test-folders.js
 
           # collect test files
@@ -448,6 +453,7 @@ tasks:
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
+
           node bin/create-version-test-folders.js
 
           # collect test files
@@ -535,7 +541,6 @@ tasks:
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
           npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
 
           # start postgres
           docker run -d --network host --name postgres \
@@ -545,6 +550,8 @@ tasks:
             "mirror.gcr.io/library/postgres:15.15"
           timeout 60 bash -c \
             'until docker exec postgres pg_isready -h 127.0.0.1 -U node 2>/dev/null; do sleep 2; done'
+
+          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -616,6 +623,7 @@ tasks:
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
+
           node bin/create-version-test-folders.js
 
           # collect test files
@@ -703,7 +711,6 @@ tasks:
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
           npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
 
           # start postgres
           docker run -d --network host --name postgres \
@@ -713,6 +720,8 @@ tasks:
             "mirror.gcr.io/library/postgres:15.15"
           timeout 60 bash -c \
             'until docker exec postgres pg_isready -h 127.0.0.1 -U node 2>/dev/null; do sleep 2; done'
+
+          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \

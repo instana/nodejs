@@ -266,11 +266,6 @@ function buildCurrencyTask(pkgName, folder, group) {
   const needs = readNeeds(folder);
   const relFolder = path.relative(REPO_ROOT, folder).replace(/\\/g, '/');
 
-  // Services marked preStart in docker-services.json must be started before npm install
-  // so they have time to initialise (e.g. Oracle Free takes up to 2 min to register FREEPDB1).
-  const preStartNeeds = needs.filter(n => sidecar(n)?.preStart);
-  const normalNeeds = needs.filter(n => !sidecar(n)?.preStart);
-
   const scriptLines = ['#!/usr/bin/env bash', 'set -eo pipefail', ''];
   scriptLines.push(nodeVersionSwitchScript());
   scriptLines.push('');
@@ -282,33 +277,30 @@ function buildCurrencyTask(pkgName, folder, group) {
     scriptLines.push('');
   }
 
-  // Start slow-to-initialise services early so they boot during npm install
-  if (preStartNeeds.length > 0) {
-    for (const need of preStartNeeds) {
-      scriptLines.push(`# start ${need} early — initialises during npm install`);
-      scriptLines.push(dockerRunScript(need));
-      scriptLines.push('');
-    }
+  if (needs.includes('oracledb')) {
+    scriptLines.push('# start oracledb early — initialises during npm install');
+    scriptLines.push(dockerRunScript('oracledb'));
+    scriptLines.push('');
   }
 
   scriptLines.push('npm install --loglevel warn --foreground-scripts');
   scriptLines.push('');
 
   if (needs.length > 0) {
-    // Wait for pre-start services now that npm install has given them time to boot
-    for (const need of preStartNeeds) {
-      const wait = readinessScript(need);
-      if (wait) {
-        scriptLines.push(wait);
+    for (const need of needs) {
+      if (need === 'oracledb') {
+        const wait = readinessScript(need);
+        if (wait) {
+          scriptLines.push(wait);
+          scriptLines.push('');
+        }
+      } else {
+        scriptLines.push(`# start ${need}`);
+        scriptLines.push(dockerRunScript(need));
+        const wait = readinessScript(need);
+        if (wait) scriptLines.push(wait);
         scriptLines.push('');
       }
-    }
-    for (const need of normalNeeds) {
-      scriptLines.push(`# start ${need}`);
-      scriptLines.push(dockerRunScript(need));
-      const wait = readinessScript(need);
-      if (wait) scriptLines.push(wait);
-      scriptLines.push('');
     }
   }
 
@@ -331,7 +323,7 @@ function buildCurrencyTask(pkgName, folder, group) {
     extraEnvLines.push('INSTANA_CONNECT_ELASTICSEARCH="127.0.0.1:9200" \\');
     extraEnvLines.push('INSTANA_CONNECT_ELASTICSEARCH_ALTERNATIVE="localhost:9200" \\');
   }
-  if (needs.includes('oracledb')) extraEnvLines.push('INSTANA_CONNECT_ORACLEDB="127.0.0.1:1521" \\');
+  if (needs.includes('oracledb')) extraEnvLines.push('INSTANA_CONNECT_ORACLEDB="localhost:1521" \\');
   if (needs.includes('localstack')) extraEnvLines.push('INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \\');
   if (needs.includes('azurite'))
     extraEnvLines.push('INSTANA_CONNECT_AZURE_BLOB_ENDPOINT="http://127.0.0.1:10000/devstoreaccount1" \\');

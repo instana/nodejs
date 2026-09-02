@@ -88,6 +88,7 @@ tasks:
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
+
           node bin/create-version-test-folders.js
 
           # collect test files
@@ -160,6 +161,7 @@ tasks:
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
+
           node bin/create-version-test-folders.js
 
           # collect test files
@@ -232,6 +234,7 @@ tasks:
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
+
           node bin/create-version-test-folders.js
 
           # collect test files
@@ -319,13 +322,14 @@ tasks:
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
           npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
 
           # start rabbitmq
           docker run -d --network host --name rabbitmq \
             "mirror.gcr.io/library/rabbitmq:3.13.0"
           timeout 120 bash -c \
             'until nc -z 127.0.0.1 5672 2>/dev/null; do sleep 2; done'
+
+          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -397,6 +401,7 @@ tasks:
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
+
           node bin/create-version-test-folders.js
 
           # collect test files
@@ -469,6 +474,7 @@ tasks:
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
+
           node bin/create-version-test-folders.js
 
           # collect test files
@@ -541,6 +547,7 @@ tasks:
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
+
           node bin/create-version-test-folders.js
 
           # collect test files

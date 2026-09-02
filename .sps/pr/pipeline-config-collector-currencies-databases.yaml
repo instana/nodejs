@@ -1236,7 +1236,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
-              INSTANA_CONNECT_ORACLEDB="127.0.0.1:1521" \
+              INSTANA_CONNECT_ORACLEDB="localhost:1521" \
               TEST_FILES="$TEST_FILES" \
               npm run test:ci:collector || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
