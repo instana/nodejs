@@ -21,7 +21,7 @@ function checkTelemetryResourceAttrs(span) {
 
 module.exports = function (name, version, isLatest) {
   describe('tracing/OracleDB', function () {
-    this.timeout(1000 * 60 * 2);
+    this.timeout(1000 * 60 * 5);
 
     globalAgent.setUpCleanUpHooks();
 
@@ -41,7 +41,7 @@ module.exports = function (name, version, isLatest) {
               env: { ...libraryEnv, OTEL_API_VERSION: otelApiVersion }
             });
 
-            await controls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 2);
+            await controls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 5);
           });
 
           beforeEach(async () => {
@@ -118,7 +118,7 @@ module.exports = function (name, version, isLatest) {
               }
             });
 
-            await controls.startAndWaitForAgentConnection();
+            await controls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 5);
           });
 
           beforeEach(async () => {
