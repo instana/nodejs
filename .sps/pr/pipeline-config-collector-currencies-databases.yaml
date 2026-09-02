@@ -87,9 +87,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -100,6 +97,9 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
 
           # start elasticsearch
           docker run -d --network host --name elasticsearch \
@@ -185,9 +185,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -198,6 +195,9 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
 
           # start redis
           docker run -d --network host --name redis \
@@ -288,9 +288,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -301,6 +298,9 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
 
           # start couchbase
           docker run -d --network host --name couchbase \
@@ -381,9 +381,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -394,6 +391,9 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
 
           # start ibm_db
           docker run -d --network host --name ibm_db \
@@ -490,9 +490,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -503,6 +500,9 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
 
           # start redis
           docker run -d --network host --name redis \
@@ -593,9 +593,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -606,6 +603,9 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
 
           # start memcached
           docker run -d --network host --name memcached \
@@ -685,9 +685,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -698,6 +695,9 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
 
           # start mongodb
           docker run -d --network host --name mongodb \
@@ -778,9 +778,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -791,6 +788,9 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
 
           # start mongodb
           docker run -d --network host --name mongodb \
@@ -943,9 +943,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -956,6 +953,9 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
 
           # start mysql
           docker run -d --network host --name mysql \
@@ -1041,9 +1041,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -1054,6 +1051,9 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
 
           # start mysql
           docker run -d --network host --name mysql \
@@ -1139,9 +1139,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -1153,14 +1150,13 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
           # start oracledb
           docker run -d --network host --name oracledb \
             -e ORACLE_PWD="teamnodejspassword" \
             "container-registry.oracle.com/database/free:23.6.0.0-lite"
-          echo "Waiting for OracleDB to be ready..."
-          timeout 600 bash -c \
-            'until docker exec oracledb /opt/oracle/checkDBStatus.sh 2>/dev/null; do sleep 5; done'
-          echo "OracleDB is ready."
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -1235,9 +1231,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -1248,6 +1241,9 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
 
           # start postgres
           docker run -d --network host --name postgres \
@@ -1331,9 +1327,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -1344,6 +1337,9 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
 
           # start postgres
           docker run -d --network host --name postgres \
@@ -1427,9 +1423,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -1440,6 +1433,9 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
 
           # start postgres
           docker run -d --network host --name postgres \
@@ -1534,9 +1530,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -1547,6 +1540,9 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
 
           # start redis
           docker run -d --network host --name redis \
@@ -1637,9 +1633,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -1650,6 +1643,9 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
 
           # start postgres
           docker run -d --network host --name postgres \

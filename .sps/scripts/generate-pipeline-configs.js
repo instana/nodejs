@@ -107,12 +107,10 @@ function readinessScript(name) {
         "echo \"Elasticsearch is ready.\""
       );
     case 'oracledb':
-      return (
-        "echo \"Waiting for OracleDB to be ready...\"\n" +
-        "timeout 600 bash -c \\\n" +
-        "  'until docker exec oracledb /opt/oracle/checkDBStatus.sh 2>/dev/null; do sleep 5; done'\n" +
-        "echo \"OracleDB is ready.\""
-      );
+      // No shell-level readiness wait needed: oracle-app.js retries the DB connection
+      // every 5 s indefinitely, matching the Tekton sidecar behaviour where the step
+      // script started without any explicit DB readiness check.
+      return '';
     case 'rabbitmq':
       return (
         "timeout 120 bash -c \\\n" +
@@ -283,14 +281,18 @@ function buildCurrencyTask(pkgName, folder, group) {
   scriptLines.push(nodeVersionSwitchScript());
   scriptLines.push('');
   scriptLines.push('cd "$WORKSPACE/$(load_repo app-repo path)"');
-  scriptLines.push('npm install --loglevel warn --foreground-scripts');
-  scriptLines.push('node bin/create-version-test-folders.js');
-  scriptLines.push('');
 
   if (needs.length > 0) {
     scriptLines.push('# install docker client');
     scriptLines.push(dockerClientInstallScript());
     scriptLines.push('');
+  }
+
+  scriptLines.push('npm install --loglevel warn --foreground-scripts');
+  scriptLines.push('node bin/create-version-test-folders.js');
+  scriptLines.push('');
+
+  if (needs.length > 0) {
     for (const need of needs) {
       scriptLines.push(`# start ${need}`);
       scriptLines.push(dockerRunScript(need));

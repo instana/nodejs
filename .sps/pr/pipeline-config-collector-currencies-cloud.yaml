@@ -87,9 +87,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -100,6 +97,9 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
 
           # start localstack
           docker run -d --network host --name localstack \
@@ -182,9 +182,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -195,6 +192,9 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
 
           # start localstack
           docker run -d --network host --name localstack \
@@ -277,9 +277,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -290,6 +287,9 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
 
           # start localstack
           docker run -d --network host --name localstack \
@@ -372,9 +372,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -385,6 +382,9 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
 
           # start localstack
           docker run -d --network host --name localstack \
@@ -467,9 +467,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -480,6 +477,9 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
 
           # start localstack
           docker run -d --network host --name localstack \
@@ -562,9 +562,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -575,6 +572,9 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
 
           # start localstack
           docker run -d --network host --name localstack \
@@ -657,9 +657,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -670,6 +667,9 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
 
           # start azurite
           docker run -d --network host --name azurite \
@@ -752,9 +752,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -765,6 +762,9 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
 
           # start pubsub-emulator
           docker run -d --network host --name pubsub-emulator \
@@ -848,9 +848,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -861,6 +858,9 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
 
           # start fake-gcs-server
           docker run -d --network host --name fake-gcs-server \
@@ -944,9 +944,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -957,6 +954,9 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
 
           # start localstack
           docker run -d --network host --name localstack \
