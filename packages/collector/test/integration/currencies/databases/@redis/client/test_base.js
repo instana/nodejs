@@ -371,8 +371,10 @@ module.exports = function (name, version, isLatest, mode) {
 
               verifyHttpExit(controls, spans, writeEntrySpan);
 
-              // TODO: Why do we have less spans with the cluster?
-              if (mode === 'cluster') {
+              // In cluster mode, v5+ correctly creates a Redis exit span even for fire-and-forget calls,
+              // matching the behaviour of default mode (3 spans).
+              // Older cluster versions (v4 / v1.x) did not trace these calls (2 spans).
+              if (isCluster && !greaterThanV4) {
                 expect(spans.length).to.be.eql(2);
               } else {
                 expect(spans.length).to.be.eql(3);
