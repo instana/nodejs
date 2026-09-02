@@ -37,11 +37,11 @@
     },
     {
       "name": "oracledb",
-      "image": "container-registry.oracle.com/database/free:23.6.0.0-lite",
+      "image": "mirror.gcr.io/gvenzl/oracle-free:23-slim",
       "preStart": true,
       "env": [
         {
-          "name": "ORACLE_PWD",
+          "name": "ORACLE_PASSWORD",
           "value": "teamnodejspassword"
         }
       ]
