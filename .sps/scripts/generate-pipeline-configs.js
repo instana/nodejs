@@ -294,8 +294,8 @@ function buildCurrencyTask(pkgName, folder, group) {
 
   if (needs.length > 0) {
     for (const need of needs) {
-      scriptLines.push(`# start ${need}`);
-      scriptLines.push(dockerRunScript(need));
+        scriptLines.push(`# start ${need}`);
+        scriptLines.push(dockerRunScript(need));
       const wait = readinessScript(need);
       if (wait) scriptLines.push(wait);
       scriptLines.push('');
@@ -449,6 +449,7 @@ function baseConfig(fanOutTasks, rootTask = 'pr-code-checks') {
           { name: 'scan-artifact',  when: 'false' }
         ]
       },
+      'code-pr-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
       'code-ci-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
       'deploy-checks':  { when: false },
       'deploy-release': { when: false },

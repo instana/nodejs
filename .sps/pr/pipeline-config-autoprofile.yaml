@@ -40,6 +40,10 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
+  code-pr-finish:
+    steps:
+      - name: run-stage
+        when: 'false'
   code-ci-finish:
     steps:
       - name: run-stage
