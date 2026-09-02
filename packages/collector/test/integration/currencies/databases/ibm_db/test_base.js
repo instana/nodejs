@@ -9,6 +9,7 @@ const expect = require('chai').expect;
 
 const { supportedVersion, constants } = require('@_local/core').tracing;
 const testUtils = require('@_local/core/test/test_util');
+const isCI = testUtils.isCI;
 const config = require('@_local/core/test/config');
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 const globalAgent = require('@_local/collector/test/globalAgent');
