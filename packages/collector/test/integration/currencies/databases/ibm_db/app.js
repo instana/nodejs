@@ -15,7 +15,6 @@ process.on('SIGTERM', () => {
 require('@instana/collector')();
 
 const { promisify } = require('util');
-const { execSync } = require('child_process');
 const bodyParser = require('body-parser');
 const express = require('express');
 const fs = require('fs');
@@ -34,7 +33,8 @@ const connStr1 = `HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=${DB2_PORT};PROTOC
 const connStr2 = `HOSTNAME=127.0.0.1;UID=node;PWD=nodepw;PORT=${DB2_PORT};PROTOCOL=TCPIP`;
 
 /**
- * TODO: enable db2 container on Tekton
+ * NOTE: We currently do not use remove ibm db. Only local container.
+ * Still keeping docs here:
  *
  * We are currently using the IBM DB2 cloud service, because we had trouble on Circleci.
  *
@@ -94,18 +94,6 @@ let stmtObjectFromStart;
 
 const db2OpenPromisified = promisify(ibmdb.open);
 
-function logDb2Container() {
-  try {
-    const cmd = tries <= 1
-      ? 'docker logs ibm_db 2>&1 | head -80'
-      : 'docker logs ibm_db 2>&1 | tail -5';
-    const logs = execSync(cmd, { encoding: 'utf8' });
-    console.log(`[DB2 container logs]\n${logs}`); // eslint-disable-line no-console
-  } catch (_) {
-    // ignore — container may not exist locally
-  }
-}
-
 async function connect(connectionStr) {
   /* eslint-disable no-console */
   console.log(`Trying to connect to DB2, attempt ${tries} of ${MAX_TRIES}`);
@@ -118,9 +106,7 @@ async function connect(connectionStr) {
     console.log('A client has successfully connected.');
     return conn;
   } catch (err) {
-    console.log(err.message);
     tries += 1;
-    logDb2Container();
     if (tries > MAX_TRIES) {
       throw new Error(`DB2 did not become ready after ${MAX_TRIES} attempts.`);
     }
