@@ -14,7 +14,11 @@ const subscriptionName = process.env.GCP_PUBSUB_SUBSCRIPTION || 'nodejs-test-sub
 exports.createTopic = async function createTopic(log) {
   try {
     const options = { projectId };
-    log(`Connecting to PubSub (project: ${projectId}, emulator: ${process.env.PUBSUB_EMULATOR_HOST || 'none'})`);
+    log(
+      `Connecting to PubSub (project: ${projectId}, emulator: ${
+        process.env.INSTANA_CONNECT_PUBSUB_EMULATOR_HOST || 'none'
+      })`
+    );
     const pubsub = new PubSub(options);
 
     log('connecting to Google Cloud PubSub');

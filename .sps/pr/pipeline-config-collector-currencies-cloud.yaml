@@ -796,7 +796,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
-              PUBSUB_EMULATOR_HOST="127.0.0.1:8085" \
+              INSTANA_CONNECT_PUBSUB_EMULATOR_HOST="127.0.0.1:8085" \
               GCP_PROJECT="test-project" \
               TEST_FILES="$TEST_FILES" \
               npm run test:ci:collector || LAST_EXIT=$?
@@ -891,7 +891,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
-              GCS_EMULATOR_HOST="http://127.0.0.1:4443" \
+              INSTANA_CONNECT_GCS_EMULATOR_HOST="http://127.0.0.1:4443" \
               GCP_PROJECT="test-project" \
               GCS_SERVICE_ACCOUNT_EMAIL="test-service-account@test-project.iam.gserviceaccount.com" \
               TEST_FILES="$TEST_FILES" \

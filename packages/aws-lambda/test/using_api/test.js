@@ -478,7 +478,9 @@ describe('Using the API', function () {
           });
 
           expect(body.logs.debug).to.satisfy(logs => {
-            return logs.some(log => /\[instana_\w+\] The data have been successfully sent to Instana for Lambda/.test(log));
+            return logs.some(log =>
+              /\[instana_\w+\] The data have been successfully sent to Instana for Lambda/.test(log)
+            );
           });
 
           // We run http by default in the tests. No need to set INSTANA_DISABLE_CA_CHECK

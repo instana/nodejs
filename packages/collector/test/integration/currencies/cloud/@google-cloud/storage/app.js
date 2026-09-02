@@ -23,10 +23,10 @@ const { Storage } = require('@google-cloud/storage');
 const { v4: uuid } = require('uuid');
 const logPrefix = `Google Cloud Storage Client (${process.pid}):\t`;
 
-// GCS_EMULATOR_HOST points the Storage client at fake-gcs-server (e.g. http://127.0.0.1:4443).
-const emulatorHost = process.env.GCS_EMULATOR_HOST;
+// INSTANA_CONNECT_GCS_EMULATOR_HOST points the Storage client at fake-gcs-server (e.g. http://127.0.0.1:4443).
+const emulatorHost = process.env.INSTANA_CONNECT_GCS_EMULATOR_HOST;
 if (!emulatorHost) {
-  throw new Error('GCS_EMULATOR_HOST is required. Start fake-gcs-server and set this env var.');
+  throw new Error('INSTANA_CONNECT_GCS_EMULATOR_HOST is required. Start fake-gcs-server and set this env var.');
 }
 const options = {
   projectId: process.env.GCP_PROJECT || 'test-project',
