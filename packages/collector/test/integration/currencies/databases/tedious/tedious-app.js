@@ -22,7 +22,7 @@ const expectedLocalPath = path.resolve(__dirname, 'node_modules', 'tedious');
 if (!tediousPath.includes(expectedLocalPath)) {
   throw new Error(
     // eslint-disable-next-line max-len
-    `tedious must be loaded from local node_modules. Expected path containing: ${expectedLocalPath}, but got: ${tediousPath}`
+    `Tediius must be loaded from local node_modules. Expected path containing: ${expectedLocalPath}, but got: ${tediousPath}`
   );
 }
 
