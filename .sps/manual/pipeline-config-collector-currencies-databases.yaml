@@ -136,7 +136,7 @@ tasks:
               HOME="$HOME" \
               CI=true \
               INSTANA_CONNECT_ELASTICSEARCH="127.0.0.1:9200" \
-              INSTANA_CONNECT_ELASTICSEARCH_ALTERNATIVE="127.0.0.2:9200" \
+              INSTANA_CONNECT_ELASTICSEARCH_ALTERNATIVE="localhost:9200" \
               TEST_FILES="$TEST_FILES" \
               npm run test:ci:collector || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then

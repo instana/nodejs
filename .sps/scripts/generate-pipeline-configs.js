@@ -329,7 +329,7 @@ function buildCurrencyTask(pkgName, folder, group) {
   const extraEnvLines = [];
   if (needs.includes('elasticsearch')) {
     extraEnvLines.push('INSTANA_CONNECT_ELASTICSEARCH="127.0.0.1:9200" \\');
-    extraEnvLines.push('INSTANA_CONNECT_ELASTICSEARCH_ALTERNATIVE="127.0.0.2:9200" \\');
+    extraEnvLines.push('INSTANA_CONNECT_ELASTICSEARCH_ALTERNATIVE="localhost:9200" \\');
   }
   if (needs.includes('oracledb')) extraEnvLines.push('INSTANA_CONNECT_ORACLEDB="127.0.0.1:1521" \\');
   if (needs.includes('localstack')) extraEnvLines.push('INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \\');
