@@ -25,3 +25,31 @@ tasks:
     steps:
       - name: run-stage
         when: 'false'
+
+  dind-network-check:
+    from: code-build
+    displayName: dind-network-check
+    runtimeClassName: small
+    include:
+      - dind
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: dind-network-check
+        image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
+        script: |-
+          #!/usr/bin/env bash
+          echo "=== DinD internet access check ==="
+          apt-get update -qq && apt-get install -y -qq curl 2>&1 | tail -1
+          if curl -sf --max-time 10 https://github.com > /dev/null; then
+            echo "RESULT: internet access OPEN (github.com reachable)"
+          else
+            echo "RESULT: internet access BLOCKED (github.com unreachable)"
+          fi
