@@ -369,6 +369,20 @@
           "value": "restoreIfNotExists"
         }
       ]
+    },
+    {
+      "name": "mssql",
+      "image": "mcr.microsoft.com/azure-sql-edge:1.0.7",
+      "env": [
+        {
+          "name": "ACCEPT_EULA",
+          "value": "Y"
+        },
+        {
+          "name": "MSSQL_SA_PASSWORD",
+          "value": "stanCanHazMsSQL1"
+        }
+      ]
     }
   ]
 }
