@@ -147,6 +147,11 @@ function readinessScript(name) {
         'timeout 30 bash -c \\\n' +
         "  'until docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 1; done'"
       );
+    case 'redis-cluster':
+      return (
+        'timeout 30 bash -c \\\n' +
+        "  'until docker exec redis-cluster redis-cli -p 7000 cluster info 2>/dev/null | grep -q cluster_state:ok; do sleep 1; done'"
+      );
     case 'localstack':
       return 'timeout 60 bash -c \\\n' + "  'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'";
     case 'pubsub-emulator':

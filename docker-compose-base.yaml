@@ -11,14 +11,14 @@ services:
       ORACLE_PWD: teamnodejspassword
 
   redis:
-    image: public.ecr.aws/docker/library/redis:7.4.3
+    image: mirror.gcr.io/library/redis:7.4.3
     pull_policy: if_not_present
     ports:
       - 6379:6379
 
  # sentinel test setup
   redis-slave:
-    image: public.ecr.aws/docker/library/redis:7.4.3
+    image: mirror.gcr.io/library/redis:7.4.3
     pull_policy: if_not_present
     network_mode: host
     command:
@@ -32,7 +32,7 @@ services:
       ]
 
   redis-sentinel:
-    image: public.ecr.aws/docker/library/redis:7.4.3
+    image: mirror.gcr.io/library/redis:7.4.3
     pull_policy: if_not_present
     network_mode: host
     command: >
@@ -42,6 +42,18 @@ services:
             echo "sentinel parallel-syncs mymaster 1" >> /etc/sentinel.conf &&
             echo "sentinel resolve-hostnames no" >> /etc/sentinel.conf &&
             redis-server /etc/sentinel.conf --sentinel'
+
+  redis-cluster:
+    image: mirror.gcr.io/library/redis:7.4.3
+    pull_policy: if_not_present
+    network_mode: host
+    command: >
+      sh -c 'redis-server --port 7000 --cluster-enabled yes --cluster-config-file nodes-7000.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes &&
+            redis-server --port 7001 --cluster-enabled yes --cluster-config-file nodes-7001.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes &&
+            redis-server --port 7002 --cluster-enabled yes --cluster-config-file nodes-7002.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes &&
+            sleep 1 &&
+            echo "yes" | redis-cli --cluster create 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 --cluster-replicas 0 &&
+            tail -f /dev/null'
 
   mongo:
     image: public.ecr.aws/docker/library/mongo:8.0.8

@@ -176,6 +176,23 @@
       ]
     },
     {
+      "name": "redis-cluster",
+      "image": "mirror.gcr.io/library/redis:7.4.3",
+      "command": ["sh"],
+      "args": [
+        "-c",
+        "redis-server --port 7000 --cluster-enabled yes --cluster-config-file nodes-7000.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && redis-server --port 7001 --cluster-enabled yes --cluster-config-file nodes-7001.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && redis-server --port 7002 --cluster-enabled yes --cluster-config-file nodes-7002.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && sleep 1 && echo 'yes' | redis-cli --cluster create 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 --cluster-replicas 0 && tail -f /dev/null"
+      ],
+      "readinessProbe": {
+        "exec": {
+          "command": ["sh", "-c", "redis-cli -p 7000 cluster info | grep -q 'cluster_state:ok'"]
+        },
+        "initialDelaySeconds": 2,
+        "periodSeconds": 1,
+        "timeoutSeconds": 30
+      }
+    },
+    {
       "name": "localstack",
       "image": "mirror.gcr.io/localstack/localstack:4.5",
       "volumes": ["/var/run/docker.sock:/var/run/docker.sock"]

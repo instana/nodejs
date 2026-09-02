@@ -4,44 +4,29 @@
 
 'use strict';
 
-// NOTE: We run the tests locally and on CI against azure redis cluster.
-// NOTE: We cannot run redis cluster on Tekton https://github.com/bitnami/charts/issues/28894
-// NOTE: We cannot use a docker based redis cluster at the moment!
-//       See https://github.com/redis/node-redis/issues/2815
-// NOTE: The Docker-based Redis cluster(image:bitnami/redis-cluster) was removed from Docker Compose,
-//       as it was no longer used locally and will require a paid subscription after Aug 28, 2025:
-//       https://bitnami.com/announcements/bitnami-docker-image-changes
-// NOTE: If a local Docker setup is needed in the future, we can explore
-//       alternative images or solutions.
-
 module.exports = async function connect(ioredis, log) {
-  if (!process.env.AZURE_REDIS_CLUSTER || !process.env.AZURE_REDIS_CLUSTER_PWD) {
-    log(
-      'Please set the environment variables AZURE_REDIS_CLUSTER and AZURE_REDIS_CLUSTER_PWD ' +
-        'to connect to the cloud redis cluster.'
-    );
+  const clusterAddress = process.env.INSTANA_CONNECT_REDIS_CLUSTER || '127.0.0.1:7000';
+  const hostAndPort = clusterAddress.split(':');
 
-    process.exit(1);
+  const redisOptions = {
+    connectTimeout: 10000
+  };
+
+  if (process.env.AZURE_REDIS_CLUSTER_PWD) {
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+    redisOptions.tls = true;
+    redisOptions.password = process.env.AZURE_REDIS_CLUSTER_PWD;
   }
-
-  const hostAndPort = process.env.AZURE_REDIS_CLUSTER.split(':');
-
-  // See https://github.com/redis/ioredis/issues/1786
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
   const cluster = new ioredis.Cluster(
     [
       {
         host: hostAndPort[0],
-        port: hostAndPort[1]
+        port: parseInt(hostAndPort[1], 10) || 7000
       }
     ],
     {
-      redisOptions: {
-        tls: true,
-        password: process.env.AZURE_REDIS_CLUSTER_PWD,
-        connectTimeout: 10000
-      },
+      redisOptions,
       retryDelayOnFailover: 1000,
       maxRetriesPerRequest: 10
     }
