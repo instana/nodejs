@@ -107,10 +107,14 @@ function readinessScript(name) {
         "echo \"Elasticsearch is ready.\""
       );
     case 'oracledb':
-      // No shell-level readiness wait needed: oracle-app.js retries the DB connection
-      // every 5 s indefinitely, matching the Tekton sidecar behaviour where the step
-      // script started without any explicit DB readiness check.
-      return '';
+      // Oracle Free takes 60-120 s to register FREEPDB1 with the listener.
+      // Use the bundled health script and allow up to 3 minutes.
+      return (
+        "echo \"Waiting for OracleDB to be ready...\"\n" +
+        "timeout 180 bash -c \\\n" +
+        "  'until docker exec oracledb /opt/oracle/checkDBStatus.sh 2>/dev/null; do sleep 5; done'\n" +
+        "echo \"OracleDB is ready.\""
+      );
     case 'rabbitmq':
       return (
         "timeout 120 bash -c \\\n" +
@@ -277,6 +281,11 @@ function buildCurrencyTask(pkgName, folder, group) {
   const needs = readNeeds(folder);
   const relFolder = path.relative(REPO_ROOT, folder).replace(/\\/g, '/');
 
+  // Services marked preStart in docker-services.json must be started before npm install
+  // so they have time to initialise (e.g. Oracle Free takes up to 2 min to register FREEPDB1).
+  const preStartNeeds = needs.filter(n => sidecar(n)?.preStart);
+  const normalNeeds   = needs.filter(n => !sidecar(n)?.preStart);
+
   const scriptLines = ['#!/usr/bin/env bash', 'set -eo pipefail', ''];
   scriptLines.push(nodeVersionSwitchScript());
   scriptLines.push('');
@@ -288,14 +297,31 @@ function buildCurrencyTask(pkgName, folder, group) {
     scriptLines.push('');
   }
 
+  // Start slow-to-initialise services early so they boot during npm install
+  if (preStartNeeds.length > 0) {
+    for (const need of preStartNeeds) {
+      scriptLines.push(`# start ${need} early — initialises during npm install`);
+      scriptLines.push(dockerRunScript(need));
+      scriptLines.push('');
+    }
+  }
+
   scriptLines.push('npm install --loglevel warn --foreground-scripts');
   scriptLines.push('node bin/create-version-test-folders.js');
   scriptLines.push('');
 
   if (needs.length > 0) {
-    for (const need of needs) {
-        scriptLines.push(`# start ${need}`);
-        scriptLines.push(dockerRunScript(need));
+    // Wait for pre-start services now that npm install has given them time to boot
+    for (const need of preStartNeeds) {
+      const wait = readinessScript(need);
+      if (wait) {
+        scriptLines.push(wait);
+        scriptLines.push('');
+      }
+    }
+    for (const need of normalNeeds) {
+      scriptLines.push(`# start ${need}`);
+      scriptLines.push(dockerRunScript(need));
       const wait = readinessScript(need);
       if (wait) scriptLines.push(wait);
       scriptLines.push('');

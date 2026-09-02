@@ -38,6 +38,7 @@
     {
       "name": "oracledb",
       "image": "container-registry.oracle.com/database/free:23.6.0.0-lite",
+      "preStart": true,
       "env": [
         {
           "name": "ORACLE_PWD",

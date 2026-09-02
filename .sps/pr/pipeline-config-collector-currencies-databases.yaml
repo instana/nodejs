@@ -1154,13 +1154,18 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
-          # start oracledb
+          # start oracledb early — initialises during npm install
           docker run -d --network host --name oracledb \
             -e ORACLE_PWD="teamnodejspassword" \
             "container-registry.oracle.com/database/free:23.6.0.0-lite"
+
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
+          echo "Waiting for OracleDB to be ready..."
+          timeout 180 bash -c \
+            'until docker exec oracledb /opt/oracle/checkDBStatus.sh 2>/dev/null; do sleep 5; done'
+          echo "OracleDB is ready."
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
