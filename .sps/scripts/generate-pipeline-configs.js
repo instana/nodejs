@@ -113,14 +113,11 @@ function readinessScript(name) {
         "grep -qxF '127.0.0.1 localhost' /etc/hosts || echo '127.0.0.1 localhost' >> /etc/hosts"
       );
     case 'oracledb':
-      // Oracle Free takes 60-120 s to register FREEPDB1 with the listener.
-      // Use the bundled health script and allow up to 3 minutes.
-      return (
-        'echo "Waiting for OracleDB to be ready..."\n' +
-        'timeout 180 bash -c \\\n' +
-        "  'until docker exec oracledb /opt/oracle/checkDBStatus.sh 2>/dev/null; do sleep 5; done'\n" +
-        'echo "OracleDB is ready."'
-      );
+      // No shell-level readiness wait: oracle-app.js retries the connection every 5 s
+      // indefinitely. The container is started before npm install (preStart) so it has
+      // ~60-120 s to boot before the test runner reaches the app startup phase.
+      // INSTANA_CONNECT_ORACLEDB is injected via extraEnvLines so the app knows the host.
+      return '';
     case 'rabbitmq':
       return 'timeout 120 bash -c \\\n' + "  'until nc -z 127.0.0.1 5672 2>/dev/null; do sleep 2; done'";
     case 'kafka':
@@ -332,6 +329,7 @@ function buildCurrencyTask(pkgName, folder, group) {
   scriptLines.push('fi');
   scriptLines.push('');
   const extraEnvLines = [];
+  if (needs.includes('oracledb')) extraEnvLines.push('INSTANA_CONNECT_ORACLEDB="127.0.0.1:1521" \\');
   if (needs.includes('localstack')) extraEnvLines.push('INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \\');
   if (needs.includes('azurite'))
     extraEnvLines.push('INSTANA_CONNECT_AZURE_BLOB_ENDPOINT="http://127.0.0.1:10000/devstoreaccount1" \\');

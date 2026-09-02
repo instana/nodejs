@@ -1186,11 +1186,6 @@ tasks:
           npm install --loglevel warn --foreground-scripts
           node bin/create-version-test-folders.js
 
-          echo "Waiting for OracleDB to be ready..."
-          timeout 180 bash -c \
-            'until docker exec oracledb /opt/oracle/checkDBStatus.sh 2>/dev/null; do sleep 5; done'
-          echo "OracleDB is ready."
-
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
             test/integration/currencies/databases/oracledb \
@@ -1210,6 +1205,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
+              INSTANA_CONNECT_ORACLEDB="127.0.0.1:1521" \
               TEST_FILES="$TEST_FILES" \
               npm run test:ci:collector || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
