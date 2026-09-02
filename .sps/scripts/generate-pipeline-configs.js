@@ -307,7 +307,6 @@ function buildCurrencyTask(pkgName, folder, group) {
   }
 
   scriptLines.push('npm install --loglevel warn --foreground-scripts');
-  scriptLines.push('node bin/create-version-test-folders.js');
   scriptLines.push('');
 
   if (needs.length > 0) {
@@ -328,6 +327,8 @@ function buildCurrencyTask(pkgName, folder, group) {
     }
   }
 
+  scriptLines.push('node bin/create-version-test-folders.js');
+  scriptLines.push('');
   scriptLines.push('# collect test files');
   scriptLines.push(`TEST_FILES=$(cd packages/collector && find \\`);
   scriptLines.push(`  ${relFolder.replace('packages/collector/', '')} \\`);
