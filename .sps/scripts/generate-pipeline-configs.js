@@ -108,9 +108,7 @@ function readinessScript(name) {
         'echo "Waiting for Elasticsearch to be ready..."\n' +
         'timeout 120 bash -c \\\n' +
         '  \'until curl -sf http://127.0.0.1:9200/_cluster/health | grep -q \'\\\'\'"status":"green"\\|"status":"yellow"\'\\\'\' ; do sleep 3; done\'\n' +
-        'echo "Elasticsearch is ready."\n' +
-        "# Ensure 'localhost' resolves to 127.0.0.1 so the two-hosts test can connect\n" +
-        "grep -qxF '127.0.0.1 localhost' /etc/hosts || echo '127.0.0.1 localhost' >> /etc/hosts"
+        'echo "Elasticsearch is ready."'
       );
     case 'oracledb':
       // No shell-level readiness wait: oracle-app.js retries the connection every 5 s
@@ -329,6 +327,10 @@ function buildCurrencyTask(pkgName, folder, group) {
   scriptLines.push('fi');
   scriptLines.push('');
   const extraEnvLines = [];
+  if (needs.includes('elasticsearch')) {
+    extraEnvLines.push('INSTANA_CONNECT_ELASTICSEARCH="127.0.0.1:9200" \\');
+    extraEnvLines.push('INSTANA_CONNECT_ELASTICSEARCH_ALTERNATIVE="127.0.0.2:9200" \\');
+  }
   if (needs.includes('oracledb')) extraEnvLines.push('INSTANA_CONNECT_ORACLEDB="127.0.0.1:1521" \\');
   if (needs.includes('localstack')) extraEnvLines.push('INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \\');
   if (needs.includes('azurite'))

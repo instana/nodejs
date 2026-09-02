@@ -115,8 +115,6 @@ tasks:
           timeout 120 bash -c \
             'until curl -sf http://127.0.0.1:9200/_cluster/health | grep -q '\''"status":"green"\|"status":"yellow"'\'' ; do sleep 3; done'
           echo "Elasticsearch is ready."
-          # Ensure 'localhost' resolves to 127.0.0.1 so the two-hosts test can connect
-          grep -qxF '127.0.0.1 localhost' /etc/hosts || echo '127.0.0.1 localhost' >> /etc/hosts
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -137,6 +135,8 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
+              INSTANA_CONNECT_ELASTICSEARCH="127.0.0.1:9200" \
+              INSTANA_CONNECT_ELASTICSEARCH_ALTERNATIVE="127.0.0.2:9200" \
               TEST_FILES="$TEST_FILES" \
               npm run test:ci:collector || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
