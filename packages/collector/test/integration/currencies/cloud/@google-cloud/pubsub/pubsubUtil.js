@@ -11,6 +11,10 @@ const projectId = process.env.GCP_PROJECT || 'test-project';
 const topicName = process.env.GCP_PUBSUB_TOPIC || 'nodejs-test-topic';
 const subscriptionName = process.env.GCP_PUBSUB_SUBSCRIPTION || 'nodejs-test-subscription';
 
+if (process.env.INSTANA_CONNECT_PUBSUB_EMULATOR_HOST) {
+  process.env.PUBSUB_EMULATOR_HOST = process.env.INSTANA_CONNECT_PUBSUB_EMULATOR_HOST;
+}
+
 exports.createTopic = async function createTopic(log) {
   try {
     const options = { projectId };
