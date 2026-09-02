@@ -221,6 +221,13 @@ tasks:
             "mirror.gcr.io/library/redis:7.4.3" "sh" "-c" "echo \"sentinel monitor mymaster 127.0.0.1 6379 2\" > /etc/sentinel.conf && echo \"sentinel down-after-milliseconds mymaster 1000\" >> /etc/sentinel.conf && echo \"sentinel failover-timeout mymaster 5000\" >> /etc/sentinel.conf && echo \"sentinel parallel-syncs mymaster 1\" >> /etc/sentinel.conf && echo \"sentinel resolve-hostnames no\" >> /etc/sentinel.conf && redis-server /etc/sentinel.conf --sentinel --port 26379"
           sleep 60
 
+          # start redis-cluster
+          docker run -d --network host --name redis-cluster \
+            --entrypoint "sh" \
+            "mirror.gcr.io/library/redis:7.4.3" "-c" "redis-server --port 7000 --cluster-enabled yes --cluster-config-file nodes-7000.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && redis-server --port 7001 --cluster-enabled yes --cluster-config-file nodes-7001.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && redis-server --port 7002 --cluster-enabled yes --cluster-config-file nodes-7002.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && sleep 1 && echo 'yes' | redis-cli --cluster create 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 --cluster-replicas 0 && tail -f /dev/null"
+          timeout 30 bash -c \
+            'until docker exec redis-cluster redis-cli -p 7000 cluster info 2>/dev/null | grep -q cluster_state:ok; do sleep 1; done'
+
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
             test/integration/currencies/databases/@redis/client \
@@ -525,6 +532,13 @@ tasks:
           docker run -d --network host --name redis-sentinel \
             "mirror.gcr.io/library/redis:7.4.3" "sh" "-c" "echo \"sentinel monitor mymaster 127.0.0.1 6379 2\" > /etc/sentinel.conf && echo \"sentinel down-after-milliseconds mymaster 1000\" >> /etc/sentinel.conf && echo \"sentinel failover-timeout mymaster 5000\" >> /etc/sentinel.conf && echo \"sentinel parallel-syncs mymaster 1\" >> /etc/sentinel.conf && echo \"sentinel resolve-hostnames no\" >> /etc/sentinel.conf && redis-server /etc/sentinel.conf --sentinel --port 26379"
           sleep 60
+
+          # start redis-cluster
+          docker run -d --network host --name redis-cluster \
+            --entrypoint "sh" \
+            "mirror.gcr.io/library/redis:7.4.3" "-c" "redis-server --port 7000 --cluster-enabled yes --cluster-config-file nodes-7000.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && redis-server --port 7001 --cluster-enabled yes --cluster-config-file nodes-7001.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && redis-server --port 7002 --cluster-enabled yes --cluster-config-file nodes-7002.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && sleep 1 && echo 'yes' | redis-cli --cluster create 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 --cluster-replicas 0 && tail -f /dev/null"
+          timeout 30 bash -c \
+            'until docker exec redis-cluster redis-cli -p 7000 cluster info 2>/dev/null | grep -q cluster_state:ok; do sleep 1; done'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -1588,6 +1602,13 @@ tasks:
           docker run -d --network host --name redis-sentinel \
             "mirror.gcr.io/library/redis:7.4.3" "sh" "-c" "echo \"sentinel monitor mymaster 127.0.0.1 6379 2\" > /etc/sentinel.conf && echo \"sentinel down-after-milliseconds mymaster 1000\" >> /etc/sentinel.conf && echo \"sentinel failover-timeout mymaster 5000\" >> /etc/sentinel.conf && echo \"sentinel parallel-syncs mymaster 1\" >> /etc/sentinel.conf && echo \"sentinel resolve-hostnames no\" >> /etc/sentinel.conf && redis-server /etc/sentinel.conf --sentinel --port 26379"
           sleep 60
+
+          # start redis-cluster
+          docker run -d --network host --name redis-cluster \
+            --entrypoint "sh" \
+            "mirror.gcr.io/library/redis:7.4.3" "-c" "redis-server --port 7000 --cluster-enabled yes --cluster-config-file nodes-7000.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && redis-server --port 7001 --cluster-enabled yes --cluster-config-file nodes-7001.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && redis-server --port 7002 --cluster-enabled yes --cluster-config-file nodes-7002.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && sleep 1 && echo 'yes' | redis-cli --cluster create 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 --cluster-replicas 0 && tail -f /dev/null"
+          timeout 30 bash -c \
+            'until docker exec redis-cluster redis-cli -p 7000 cluster info 2>/dev/null | grep -q cluster_state:ok; do sleep 1; done'
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
