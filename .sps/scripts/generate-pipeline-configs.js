@@ -111,8 +111,8 @@ function readinessScript(name) {
       // grep -qi: case-insensitive — gvenzl image reports "freepdb1" (lowercase).
       return [
         'echo "Waiting for Oracle FREEPDB1..."',
-        "timeout 180 bash -c \\",
-        "  'until docker exec oracledb lsnrctl status 2>/dev/null | grep -qi \"FREEPDB1\"; do sleep 5; done'",
+        'timeout 180 bash -c \\',
+        '  \'until docker exec oracledb lsnrctl status 2>/dev/null | grep -qi "FREEPDB1"; do sleep 5; done\'',
         'echo "Oracle FREEPDB1 is ready."'
       ].join('\n');
     case 'rabbitmq':
@@ -190,46 +190,169 @@ function readNeeds(folder) {
 }
 
 /**
- * Read an optional `.split` marker from a test folder.
+ * Generic collector task builder.
  *
- * When `.split` exists the generator fans the package out into one parallel
- * pipeline task per mode instead of a single combined task.
+ * Produces the shell script and SPS task object for one pipeline step that
+ * runs a subset of collector integration tests.
  *
- * File content — two supported forms:
- *
- *   true              Simplest opt-in.  The mode list is sourced automatically
- *   (or empty)        from the sibling modes.json, so there is no duplication
- *                     to maintain.  This is the recommended form.
- *
- *   JSON array        Explicit custom grouping — use when you want to merge
- *                     a few modes into one task while splitting others apart.
- *                     Each element is either:
- *                       string    → one dedicated task for that single mode
- *                       string[]  → one task for all listed modes combined
- *                     Example: [["modeA","modeB"], "modeC", "modeD"]
- *
- * Returns null when no .split file exists (single-task behaviour preserved).
- * Returns string[][] (normalised groups) when splitting is active.
+ * @param {string}   taskSlug    - Unique slug appended to the task name prefix
+ *                                 (e.g. "collector-metrics", "misc-1", "messaging-node-rdkafka-other")
+ * @param {string}   displayName - Human-readable label shown in the SPS UI
+ * @param {string[]} paths       - One or more paths relative to packages/collector that are
+ *                                 passed as roots to `find … -name '*.test.js'`
+ * @param {string[]} needs       - Sidecar names required by this task (from .needs)
  */
-function readSplit(folder) {
+function buildCollectorTask(taskSlug, displayName, paths, needs) {
+  const scriptLines = ['#!/usr/bin/env bash', 'set -eo pipefail', ''];
+  scriptLines.push(nodeVersionSwitchScript());
+  scriptLines.push('');
+  scriptLines.push('cd "$WORKSPACE/$(load_repo app-repo path)"');
+
+  if (needs.length > 0) {
+    scriptLines.push('# install docker client');
+    scriptLines.push(dockerClientInstallScript());
+    scriptLines.push('');
+  }
+
+  if (needs.includes('oracledb')) {
+    scriptLines.push('# start oracledb early — initialises during npm install');
+    scriptLines.push(dockerRunScript('oracledb'));
+    scriptLines.push('');
+  }
+
+  scriptLines.push('npm install --loglevel warn --foreground-scripts');
+  scriptLines.push('');
+
+  if (needs.length > 0) {
+    for (const need of needs) {
+      if (need === 'oracledb') {
+        const wait = readinessScript(need);
+        if (wait) {
+          scriptLines.push(wait);
+          scriptLines.push('');
+        }
+      } else {
+        scriptLines.push(`# start ${need}`);
+        scriptLines.push(dockerRunScript(need));
+        const wait = readinessScript(need);
+        if (wait) scriptLines.push(wait);
+        scriptLines.push('');
+      }
+    }
+  }
+
+  scriptLines.push('node bin/create-version-test-folders.js');
+  scriptLines.push('');
+  scriptLines.push('# collect test files');
+  scriptLines.push(`TEST_FILES=$(cd packages/collector && find \\`);
+  for (const p of paths) scriptLines.push(`  ${p} \\`);
+  scriptLines.push(`  -name '*.test.js' \\`);
+  scriptLines.push(`  -not -path '*/node_modules/*' \\`);
+  scriptLines.push(`  | sort | tr '\\n' ' ')`);
+  scriptLines.push('');
+  scriptLines.push('if [ -z "$TEST_FILES" ]; then');
+  scriptLines.push(`  echo 'WARNING: No test files found for ${displayName} — skipping.'`);
+  scriptLines.push('  exit 0');
+  scriptLines.push('fi');
+  scriptLines.push('');
+
+  const extraEnvLines = [];
+  if (needs.includes('elasticsearch')) {
+    extraEnvLines.push('INSTANA_CONNECT_ELASTICSEARCH="127.0.0.1:9200" \\');
+    extraEnvLines.push('INSTANA_CONNECT_ELASTICSEARCH_ALTERNATIVE="localhost:9200" \\');
+  }
+  if (needs.includes('oracledb')) extraEnvLines.push('INSTANA_CONNECT_ORACLEDB="localhost:1521" \\');
+  if (needs.includes('localstack')) extraEnvLines.push('INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \\');
+  if (needs.includes('azurite'))
+    extraEnvLines.push('INSTANA_CONNECT_AZURE_BLOB_ENDPOINT="http://127.0.0.1:10000/devstoreaccount1" \\');
+  if (needs.includes('pubsub-emulator')) {
+    extraEnvLines.push('INSTANA_CONNECT_PUBSUB_EMULATOR_HOST="127.0.0.1:8085" \\');
+    extraEnvLines.push('GCP_PROJECT="test-project" \\');
+  }
+  if (needs.includes('fake-gcs-server')) {
+    extraEnvLines.push('INSTANA_CONNECT_GCS_EMULATOR_HOST="http://127.0.0.1:4443" \\');
+    extraEnvLines.push('GCP_PROJECT="test-project" \\');
+    extraEnvLines.push('GCS_SERVICE_ACCOUNT_EMAIL="test-service-account@test-project.iam.gserviceaccount.com" \\');
+  }
+  extraEnvLines.push('TEST_FILES="$TEST_FILES" \\');
+  scriptLines.push(...runWithRetryLines('test:ci:collector', extraEnvLines));
+
+  const prefix = MODE === 'main' ? 'code-build' : 'pr-code-checks';
+  // RFC 1123: lowercase only.
+  const normalizedSlug = taskSlug.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+  const taskName = `${prefix}-${normalizedSlug}`;
+
+  return {
+    taskName,
+    task: {
+      from: MODE === 'main' ? 'code-build' : 'pr-code-checks',
+      displayName,
+      runtimeClassName: 'large',
+      ...(needs.length > 0 ? { include: ['dind'] } : {}),
+      steps: [
+        { name: 'peer-review', when: 'false' },
+        { name: 'detect-secrets', when: 'false' },
+        { name: 'compliance-checks', when: 'false' },
+        {
+          name: 'unit-test',
+          displayName,
+          image: NODE_IMAGE,
+          ...(needs.length > 0 ? { include: ['docker-socket'] } : {}),
+          script: scriptLines.join('\n')
+        },
+        { name: 'sign-artifact', when: 'false' },
+        { name: 'build-artifact', when: 'false' },
+        { name: 'scan-artifact', when: 'false' }
+      ]
+    }
+  };
+}
+
+/**
+ * Read an optional `.split` marker from a currency package folder.
+ *
+ * Supported file contents:
+ *
+ *   <number>   Partition modes.json into that many roughly-equal groups.
+ *              The simplest form — just write "4" to get 4 parallel tasks.
+ *              If the number >= mode count each mode gets its own task.
+ *
+ *   true       One task per mode (all modes from modes.json, one each).
+ *   (empty)    Same as true.
+ *
+ * Returns null       → no .split file; single task preserving original behaviour.
+ * Returns string[][] → normalised groups of mode names to run per task.
+ */
+function readModeSplit(folder) {
   const splitPath = path.join(folder, '.split');
   if (!fs.existsSync(splitPath)) return null;
 
+  const modesPath = path.join(folder, 'modes.json');
+  if (!fs.existsSync(modesPath)) return null;
+  const modes = JSON.parse(fs.readFileSync(modesPath, 'utf-8'));
+  if (!Array.isArray(modes) || modes.length === 0) return null;
+
   const raw = fs.readFileSync(splitPath, 'utf-8').trim();
 
-  // Boolean / empty — source groups from the sibling modes.json
+  // Numeric: partition modes into N roughly-equal groups
+  const n = Number(raw);
+  if (!isNaN(n) && n > 0) {
+    const count = Math.min(Math.round(n), modes.length);
+    const groups = [];
+    const size = Math.ceil(modes.length / count);
+    for (let i = 0; i < modes.length; i += size) {
+      groups.push(modes.slice(i, i + size));
+    }
+    return groups;
+  }
+
+  // true / empty: one task per mode
   if (raw === '' || raw === 'true') {
-    const modesPath = path.join(folder, 'modes.json');
-    if (!fs.existsSync(modesPath)) return null;
-    const modes = JSON.parse(fs.readFileSync(modesPath, 'utf-8'));
-    if (!Array.isArray(modes) || modes.length === 0) return null;
     return modes.map(m => [m]);
   }
 
-  // JSON array — explicit grouping defined inside the file
-  const parsed = JSON.parse(raw);
-  if (!Array.isArray(parsed) || parsed.length === 0) return null;
-  return parsed.map(entry => (Array.isArray(entry) ? entry : [entry]));
+  console.error(`${splitPath}: unrecognised content "${raw}". Use a number (e.g. "4") or "true".`);
+  process.exit(1);
 }
 
 function nodeVersionSwitchScript() {
@@ -306,167 +429,43 @@ function findTestFolders(groupDir) {
 }
 
 /**
- * Build the shell script and SPS task definition for a single currency task.
+ * Build one or more collector task entries for a currency package.
  *
- * @param {string}   pkgName      - Package display name (e.g. "node-rdkafka" or "node-rdkafka/withDeliveryCbAndStandardProducer")
- * @param {string}   folder       - Absolute path to the currency package folder
- * @param {string[]} needs        - Sidecar dependencies (from .needs)
- * @param {string[]} modeFilters  - When non-empty, restrict TEST_FILES to paths matching any of these mode subdir names.
- *                                  Empty array means "collect all test files under the package folder" (original behaviour).
- */
-function buildCurrencyTaskEntry(pkgName, folder, group, needs, modeFilters) {
-  const relFolder = path.relative(REPO_ROOT, folder).replace(/\\/g, '/');
-  const relCollectorFolder = relFolder.replace('packages/collector/', '');
-
-  const scriptLines = ['#!/usr/bin/env bash', 'set -eo pipefail', ''];
-  scriptLines.push(nodeVersionSwitchScript());
-  scriptLines.push('');
-  scriptLines.push('cd "$WORKSPACE/$(load_repo app-repo path)"');
-
-  if (needs.length > 0) {
-    scriptLines.push('# install docker client');
-    scriptLines.push(dockerClientInstallScript());
-    scriptLines.push('');
-  }
-
-  if (needs.includes('oracledb')) {
-    scriptLines.push('# start oracledb early — initialises during npm install');
-    scriptLines.push(dockerRunScript('oracledb'));
-    scriptLines.push('');
-  }
-
-  scriptLines.push('npm install --loglevel warn --foreground-scripts');
-  scriptLines.push('');
-
-  if (needs.length > 0) {
-    for (const need of needs) {
-      if (need === 'oracledb') {
-        const wait = readinessScript(need);
-        if (wait) {
-          scriptLines.push(wait);
-          scriptLines.push('');
-        }
-      } else {
-        scriptLines.push(`# start ${need}`);
-        scriptLines.push(dockerRunScript(need));
-        const wait = readinessScript(need);
-        if (wait) scriptLines.push(wait);
-        scriptLines.push('');
-      }
-    }
-  }
-
-  scriptLines.push('node bin/create-version-test-folders.js');
-  scriptLines.push('');
-  scriptLines.push('# collect test files');
-
-  if (modeFilters.length === 0) {
-    // No split — collect everything under the package folder (original behaviour)
-    scriptLines.push(`TEST_FILES=$(cd packages/collector && find \\`);
-    scriptLines.push(`  ${relCollectorFolder} \\`);
-    scriptLines.push(`  -name '*.test.js' \\`);
-    scriptLines.push(`  -not -path '*/node_modules/*' \\`);
-    scriptLines.push(`  | sort | tr '\\n' ' ')`);
-  } else {
-    // Split — collect only test files whose path contains one of the mode subdirectory names.
-    // The generated test filenames match the mode name (e.g. withDeliveryCbAndStandardProducer.test.js),
-    // so we use -name patterns for precision.
-    const namePatterns = modeFilters.map(m => `-name '${m}.test.js'`);
-    const orExpr =
-      namePatterns.length === 1
-        ? namePatterns[0]
-        : `\\( ${namePatterns.join(' -o ')} \\)`;
-    scriptLines.push(`TEST_FILES=$(cd packages/collector && find \\`);
-    scriptLines.push(`  ${relCollectorFolder} \\`);
-    scriptLines.push(`  ${orExpr} \\`);
-    scriptLines.push(`  -not -path '*/node_modules/*' \\`);
-    scriptLines.push(`  | sort | tr '\\n' ' ')`);
-  }
-
-  scriptLines.push('');
-  scriptLines.push('if [ -z "$TEST_FILES" ]; then');
-  scriptLines.push(`  echo 'WARNING: No test files found for ${pkgName} — skipping.'`);
-  scriptLines.push('  exit 0');
-  scriptLines.push('fi');
-  scriptLines.push('');
-
-  const extraEnvLines = [];
-  if (needs.includes('elasticsearch')) {
-    extraEnvLines.push('INSTANA_CONNECT_ELASTICSEARCH="127.0.0.1:9200" \\');
-    extraEnvLines.push('INSTANA_CONNECT_ELASTICSEARCH_ALTERNATIVE="localhost:9200" \\');
-  }
-  if (needs.includes('oracledb')) extraEnvLines.push('INSTANA_CONNECT_ORACLEDB="localhost:1521" \\');
-  if (needs.includes('localstack')) extraEnvLines.push('INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \\');
-  if (needs.includes('azurite'))
-    extraEnvLines.push('INSTANA_CONNECT_AZURE_BLOB_ENDPOINT="http://127.0.0.1:10000/devstoreaccount1" \\');
-  if (needs.includes('pubsub-emulator')) {
-    extraEnvLines.push('INSTANA_CONNECT_PUBSUB_EMULATOR_HOST="127.0.0.1:8085" \\');
-    extraEnvLines.push('GCP_PROJECT="test-project" \\');
-  }
-  if (needs.includes('fake-gcs-server')) {
-    extraEnvLines.push('INSTANA_CONNECT_GCS_EMULATOR_HOST="http://127.0.0.1:4443" \\');
-    extraEnvLines.push('GCP_PROJECT="test-project" \\');
-    extraEnvLines.push('GCS_SERVICE_ACCOUNT_EMAIL="test-service-account@test-project.iam.gserviceaccount.com" \\');
-  }
-  extraEnvLines.push('TEST_FILES="$TEST_FILES" \\');
-  scriptLines.push(...runWithRetryLines('test:ci:collector', extraEnvLines));
-
-  const prefix = MODE === 'main' ? 'code-build' : 'pr-code-checks';
-  // Replace path separators with '-', strip '@', then normalise dots/underscores
-  const slug = pkgName.replace(/\//g, '-').replace(/@/g, '').replace(/[._]/g, '-');
-  const taskName = `${prefix}-collector-${group}-${slug}`;
-
-  return {
-    taskName,
-    taskNameMain: taskName.replace('pr-code-checks', 'code-build'),
-    task: {
-      from: MODE === 'main' ? 'code-build' : 'pr-code-checks',
-      displayName: pkgName,
-      runtimeClassName: 'large',
-      ...(needs.length > 0 ? { include: ['dind'] } : {}),
-      steps: [
-        { name: 'peer-review', when: 'false' },
-        { name: 'detect-secrets', when: 'false' },
-        { name: 'compliance-checks', when: 'false' },
-        {
-          name: 'unit-test',
-          displayName: pkgName,
-          image: NODE_IMAGE,
-          ...(needs.length > 0 ? { include: ['docker-socket'] } : {}),
-          script: scriptLines.join('\n')
-        },
-        { name: 'sign-artifact', when: 'false' },
-        { name: 'build-artifact', when: 'false' },
-        { name: 'scan-artifact', when: 'false' }
-      ]
-    }
-  };
-}
-
-/**
- * Build one or more SPS task entries for a currency package.
+ * Without .split → one task, find roots at the package folder.
+ * With .split    → one task per mode group; find roots are the per-mode
+ *                  subdirectory paths derived from the mode name
+ *                  (create-version-test-folders.js generates _v<ver>/<mode>/<mode>.test.js).
  *
- * When the folder contains a `.split` file the package is fanned out into
- * multiple parallel pipeline tasks — one per split group.  Without `.split`
- * the original single-task behaviour is preserved.
- *
- * Returns an array of { taskName, taskNameMain, task } objects.
+ * Returns an array of { taskName, task } objects.
  */
 function buildCurrencyTasks(pkgName, folder, group) {
   const needs = readNeeds(folder);
-  const splitGroups = readSplit(folder); // null when no .split file
+  const relFolder = path.relative(REPO_ROOT, folder).replace(/\\/g, '/');
+  const relCollectorFolder = relFolder.replace('packages/collector/', '');
+  // slug: strip @, replace / and ._ with -
+  const pkgSlug = pkgName.replace(/\//g, '-').replace(/@/g, '').replace(/[._]/g, '-');
 
-  if (!splitGroups) {
-    // Original behaviour — single task, all test files
-    return [buildCurrencyTaskEntry(pkgName, folder, group, needs, [])];
+  const modeGroups = readModeSplit(folder); // null when no .split
+
+  if (!modeGroups) {
+    // Single task — all test files under the package folder
+    return [buildCollectorTask(`collector-${group}-${pkgSlug}`, pkgName, [relCollectorFolder], needs)];
   }
 
-  // Fan-out — one task per split group
-  return splitGroups.map(modes => {
-    // Use the first mode as the label when it's a singleton group, otherwise join
-    const groupLabel = modes.length === 1 ? modes[0] : modes.join('+');
-    const splitPkgName = `${pkgName}/${groupLabel}`;
-    return buildCurrencyTaskEntry(splitPkgName, folder, group, needs, modes);
+  // Fan-out — one task per mode group, numbered 1..N.
+  // Mode test files live at _v<ver>/<mode>/ — pass those dirs as find roots
+  // so -name '*.test.js' picks up exactly the right tests with no extra filters.
+  return modeGroups.map((modes, i) => {
+    const index = i + 1;
+    const displayName = `${pkgName}-${index}`;
+    const modeDirs = fs.existsSync(folder)
+      ? fs
+          .readdirSync(folder)
+          .filter(e => e.startsWith('_v'))
+          .flatMap(v => modes.map(m => `${relCollectorFolder}/${v}/${m}`))
+      : [relCollectorFolder];
+
+    return buildCollectorTask(`collector-${group}-${pkgSlug}-${index}`, displayName, modeDirs, needs);
   });
 }
 
@@ -684,221 +683,93 @@ function generateOne(t) {
     const prConfig = baseConfig(fanOutTasks);
     writeConfig(t, prConfig, toMainConfig(prConfig));
   } else if (t === 'collector-metrics') {
-    const relDir = 'test/integration/metrics';
-    const scriptLines = [
-      '#!/usr/bin/env bash',
-      'set -eo pipefail',
-      '',
-      nodeVersionSwitchScript(),
-      '',
-      'cd "$WORKSPACE/$(load_repo app-repo path)"',
-      'npm install --loglevel warn --foreground-scripts',
-      'node bin/create-version-test-folders.js',
-      '',
-      '# collect test files',
-      `TEST_FILES=$(cd packages/collector && find \\`,
-      `  ${relDir} \\`,
-      `  -name '*.test.js' \\`,
-      `  -not -path '*/node_modules/*' \\`,
-      `  | sort | tr '\\n' ' ')`,
-      '',
-      'if [ -z "$TEST_FILES" ]; then',
-      `  echo 'WARNING: No test files found for collector-metrics — skipping.'`,
-      '  exit 0',
-      'fi',
-      '',
-      ...runWithRetryLines('test:ci:collector', ['TEST_FILES="$TEST_FILES" \\'])
-    ].join('\n');
-    const fanOutTasks = {
-      'pr-code-checks-collector-metrics': {
-        from: 'pr-code-checks',
-        displayName: 'collector-metrics',
-        runtimeClassName: 'large',
-        steps: [
-          { name: 'peer-review', when: 'false' },
-          { name: 'detect-secrets', when: 'false' },
-          { name: 'compliance-checks', when: 'false' },
-          { name: 'unit-test', displayName: 'collector-metrics', image: NODE_IMAGE, script: scriptLines }
-        ]
-      }
-    };
-    const prConfig = baseConfig(fanOutTasks);
+    const { taskName, task } = buildCollectorTask(
+      'collector-metrics',
+      'collector-metrics',
+      ['test/integration/metrics'],
+      []
+    );
+    const prConfig = baseConfig({ [taskName]: task });
     writeConfig(t, prConfig, toMainConfig(prConfig));
   } else if (t === 'collector-misc') {
-    // Split into 4 parallel fan-out tasks to reduce per-task run time.
-    //
-    // misc-1:    sdk, actions, tracing/otel  (15 tests)
-    // misc-2:    esm/cjs, typescript, module format, context  (15 tests)
-    // misc-3:    agent behaviour, lifecycle  (13 tests)
-    // misc-dind: directories with a .needs file (require Docker / DinD)
+    // Groups are defined in packages/collector/test/integration/misc/.split
+    // (JSON object: { "group-name": ["subdir", ...], ... }).
+    // Folders with a .needs file are auto-detected → misc-dind task (no .split entry needed).
+    // Every non-dind folder MUST be listed in .split — the generator fails hard otherwise.
     const miscDir = path.join(REPO_ROOT, 'packages/collector/test/integration/misc');
+
+    // Auto-detect dind folders by presence of .needs
     const dindFolders = fs.existsSync(miscDir)
       ? fs
           .readdirSync(miscDir, { withFileTypes: true })
           .filter(e => e.isDirectory() && fs.existsSync(path.join(miscDir, e.name, '.needs')))
           .map(e => e.name)
       : [];
-    const dindExcludes = dindFolders;
+    const dindSet = new Set(dindFolders);
 
-    const splits = [
-      {
-        name: 'misc-1',
-        displayName: 'collector-misc-1',
-        dirs: [
-          'test/integration/misc/sdk',
-          'test/integration/misc/actions',
-          'test/integration/misc/open_tracing',
-          'test/integration/misc/otel_sdk_and_instana',
-          'test/integration/misc/otlp-exporter',
-          'test/integration/misc/tracing_metrics',
-          'test/integration/misc/w3c_trace_context',
-          'test/integration/misc/specification_compliance'
-        ]
-      },
-      {
-        name: 'misc-2',
-        displayName: 'collector-misc-2',
-        dirs: [
-          'test/integration/misc/native_esm',
-          'test/integration/misc/require-esm',
-          'test/integration/misc/cjs-via-esm',
-          'test/integration/misc/require_hook',
-          'test/integration/misc/babel_typescript',
-          'test/integration/misc/typescript',
-          'test/integration/misc/native_module_retry',
-          'test/integration/misc/cls-hooked-conflict',
-          'test/integration/misc/common',
-          'test/integration/misc/secrets',
-          'test/integration/misc/stack_trace',
-          'test/integration/misc/restore_context',
-          'test/integration/misc/reinit_setLogger',
-          'test/integration/misc/logger_spans'
-        ]
-      },
-      {
-        name: 'misc-3',
-        displayName: 'collector-misc-3',
-        dirs: [
-          'test/integration/misc/activate_immediately',
-          'test/integration/misc/agent-logs',
-          'test/integration/misc/agent_connection',
-          'test/integration/misc/disabled',
-          'test/integration/misc/immediate',
-          'test/integration/misc/invalid_app',
-          'test/integration/misc/long_agent_communication',
-          'test/integration/misc/long_profiling',
-          'test/integration/misc/pre_init',
-          'test/integration/misc/prevent_instrumenting_multiple_times',
-          'test/integration/misc/too_late',
-          'test/integration/misc/uncaught'
-        ]
+    // Load group definitions
+    const miscSplitPath = path.join(miscDir, '.split');
+    if (!fs.existsSync(miscSplitPath)) {
+      console.error(`collector-misc: missing ${miscSplitPath}. Create it to define groups.`);
+      process.exit(1);
+    }
+
+    // All non-dind dirs, sorted — used for both numeric and object forms
+    const allDirs = fs.existsSync(miscDir)
+      ? fs
+          .readdirSync(miscDir, { withFileTypes: true })
+          .filter(e => e.isDirectory())
+          .map(e => e.name)
+          .sort()
+      : [];
+    const nonDindDirs = allDirs.filter(d => !dindSet.has(d));
+
+    const splitRaw = fs.readFileSync(miscSplitPath, 'utf-8').trim();
+    const splitN = Number(splitRaw);
+
+    // Build { groupName → subdir[] } — supports two forms:
+    //   number  → auto-partition non-dind dirs into N roughly-equal groups (misc-1..N)
+    //   object  → explicit named groups; every non-dind dir must be listed
+    let splitDef; // Record<string, string[]>
+    if (!isNaN(splitN) && splitN > 0) {
+      // Numeric: auto-distribute into N groups, no manual curation needed
+      const count = Math.min(Math.round(splitN), nonDindDirs.length);
+      const size = Math.ceil(nonDindDirs.length / count);
+      splitDef = {};
+      for (let i = 0; i < nonDindDirs.length; i += size) {
+        const groupIndex = Math.floor(i / size) + 1;
+        splitDef[`misc-${groupIndex}`] = nonDindDirs.slice(i, i + size);
       }
-    ];
+    } else {
+      // Object: explicit groups — fail if any non-dind dir is unlisted
+      splitDef = JSON.parse(splitRaw);
+      const allListed = new Set(Object.values(splitDef).flat());
+      const unlisted = nonDindDirs.filter(d => !allListed.has(d));
+      if (unlisted.length > 0) {
+        console.error(
+          `collector-misc: unlisted folders (not in .split, no .needs):\n` +
+            unlisted.map(d => `  - ${d}`).join('\n') +
+            `\nAdd them to a group in misc/.split and re-run the generator.`
+        );
+        process.exit(1);
+      }
+    }
 
     const fanOutTasks = {};
 
-    // misc-1 / misc-2 / misc-3 — no Docker needed
-    for (const split of splits) {
-      // Filter out any dirs that turned out to have .needs (dind) — keep splits stable
-      const dirs = split.dirs.filter(d => !dindExcludes.some(ex => d.endsWith(`/misc/${ex}`)));
-      const findLines = dirs.map(d => `  ${d} \\`);
-      const scriptLines = [
-        '#!/usr/bin/env bash',
-        'set -eo pipefail',
-        '',
-        nodeVersionSwitchScript(),
-        '',
-        'cd "$WORKSPACE/$(load_repo app-repo path)"',
-        'npm install --loglevel warn --foreground-scripts',
-        'node bin/create-version-test-folders.js',
-        '',
-        '# collect test files',
-        'TEST_FILES=$(cd packages/collector && find \\',
-        ...findLines,
-        "  -name '*.test.js' \\",
-        "  -not -path '*/node_modules/*' \\",
-        "  | sort | tr '\\n' ' ')",
-        '',
-        'if [ -z "$TEST_FILES" ]; then',
-        `  echo 'WARNING: No test files found for ${split.displayName} — skipping.'`,
-        '  exit 0',
-        'fi',
-        '',
-        ...runWithRetryLines('test:ci:collector', ['TEST_FILES="$TEST_FILES" \\'])
-      ].join('\n');
-      fanOutTasks[`pr-code-checks-${split.name}`] = {
-        from: 'pr-code-checks',
-        displayName: split.displayName,
-        runtimeClassName: 'large',
-        steps: [
-          { name: 'peer-review', when: 'false' },
-          { name: 'detect-secrets', when: 'false' },
-          { name: 'compliance-checks', when: 'false' },
-          { name: 'unit-test', displayName: split.displayName, image: NODE_IMAGE, script: scriptLines }
-        ]
-      };
+    // Non-dind groups — each entry in splitDef becomes one buildCollectorTask call
+    for (const [groupName, subdirs] of Object.entries(splitDef)) {
+      const paths = subdirs.filter(name => !dindSet.has(name)).map(name => `test/integration/misc/${name}`);
+      const { taskName, task } = buildCollectorTask(groupName, `collector-${groupName}`, paths, []);
+      fanOutTasks[taskName] = task;
     }
 
-    // misc-dind — one combined task for all .needs folders (require Docker / DinD)
+    // misc-dind — auto-detected .needs folders, union of all their sidecar requirements
     if (dindFolders.length > 0) {
       const dindNeeds = [...new Set(dindFolders.flatMap(name => readNeeds(path.join(miscDir, name))))];
-      const dindRelDirs = dindFolders.map(name => `test/integration/misc/${name}`);
-      const findLines = dindRelDirs.map(d => `  ${d} \\`);
-
-      const dindScriptLines = [
-        '#!/usr/bin/env bash',
-        'set -eo pipefail',
-        '',
-        nodeVersionSwitchScript(),
-        '',
-        'cd "$WORKSPACE/$(load_repo app-repo path)"',
-        'npm install --loglevel warn --foreground-scripts',
-        'node bin/create-version-test-folders.js',
-        '',
-        '# install docker client',
-        dockerClientInstallScript(),
-        ''
-      ];
-      for (const need of dindNeeds) {
-        dindScriptLines.push(`# start ${need}`);
-        dindScriptLines.push(dockerRunScript(need));
-        const wait = readinessScript(need);
-        if (wait) dindScriptLines.push(wait);
-        dindScriptLines.push('');
-      }
-      dindScriptLines.push(
-        '# collect test files',
-        'TEST_FILES=$(cd packages/collector && find \\',
-        ...findLines,
-        "  -name '*.test.js' \\",
-        "  -not -path '*/node_modules/*' \\",
-        "  | sort | tr '\\n' ' ')",
-        '',
-        'if [ -z "$TEST_FILES" ]; then',
-        "  echo 'WARNING: No test files found for collector-misc-dind — skipping.'",
-        '  exit 0',
-        'fi',
-        '',
-        ...runWithRetryLines('test:ci:collector', ['TEST_FILES="$TEST_FILES" \\'])
-      );
-      fanOutTasks['pr-code-checks-misc-dind'] = {
-        from: 'pr-code-checks',
-        displayName: 'collector-misc-dind',
-        runtimeClassName: 'large',
-        include: ['dind'],
-        steps: [
-          { name: 'peer-review', when: 'false' },
-          { name: 'detect-secrets', when: 'false' },
-          { name: 'compliance-checks', when: 'false' },
-          {
-            name: 'unit-test',
-            displayName: 'collector-misc-dind',
-            image: NODE_IMAGE,
-            include: ['docker-socket'],
-            script: dindScriptLines.join('\n')
-          }
-        ]
-      };
+      const dindPaths = dindFolders.map(name => `test/integration/misc/${name}`);
+      const { taskName, task } = buildCollectorTask('misc-dind', 'collector-misc-dind', dindPaths, dindNeeds);
+      fanOutTasks[taskName] = task;
     }
 
     const prConfig = baseConfig(fanOutTasks);

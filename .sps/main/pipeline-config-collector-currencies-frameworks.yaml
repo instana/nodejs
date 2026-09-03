@@ -52,7 +52,7 @@ tasks:
     when: false
   deploy-release:
     when: false
-  code-build-collector-frameworks-hapihapi:
+  code-build-collector-frameworks-hapi-hapi:
     from: code-build
     displayName: '@hapi/hapi'
     runtimeClassName: large
@@ -125,7 +125,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  code-build-collector-frameworks-koarouter:
+  code-build-collector-frameworks-koa-router:
     from: code-build
     displayName: '@koa/router'
     runtimeClassName: large

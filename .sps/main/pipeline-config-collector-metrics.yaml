@@ -88,6 +88,7 @@ tasks:
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
+
           node bin/create-version-test-folders.js
 
           # collect test files
@@ -118,3 +119,9 @@ tasks:
             retry=$((retry + 1))
           done
           exit $LAST_EXIT
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'

@@ -775,9 +775,9 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  code-build-collector-messaging-node-rdkafka-withDeliveryCbAndStandardProducer:
+  code-build-collector-messaging-node-rdkafka-1:
     from: code-build
-    displayName: node-rdkafka/withDeliveryCbAndStandardProducer
+    displayName: node-rdkafka-1
     runtimeClassName: large
     include:
       - dind
@@ -789,7 +789,7 @@ tasks:
       - name: compliance-checks
         when: 'false'
       - name: unit-test
-        displayName: node-rdkafka/withDeliveryCbAndStandardProducer
+        displayName: node-rdkafka-1
         image: mirror.gcr.io/library/node:24
         include:
           - docker-socket
@@ -857,13 +857,13 @@ tasks:
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
-            test/integration/currencies/messaging/node-rdkafka \
-            -name 'withDeliveryCbAndStandardProducer.test.js' \
+            test/integration/currencies/messaging/node-rdkafka/_v3.6.1/withDeliveryCbAndStandardProducer \
+            -name '*.test.js' \
             -not -path '*/node_modules/*' \
             | sort | tr '\n' ' ')
 
           if [ -z "$TEST_FILES" ]; then
-            echo 'WARNING: No test files found for node-rdkafka/withDeliveryCbAndStandardProducer — skipping.'
+            echo 'WARNING: No test files found for node-rdkafka-1 — skipping.'
             exit 0
           fi
 
@@ -889,9 +889,9 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  code-build-collector-messaging-node-rdkafka-withDeliveryCbAndStreamProducer:
+  code-build-collector-messaging-node-rdkafka-2:
     from: code-build
-    displayName: node-rdkafka/withDeliveryCbAndStreamProducer
+    displayName: node-rdkafka-2
     runtimeClassName: large
     include:
       - dind
@@ -903,7 +903,7 @@ tasks:
       - name: compliance-checks
         when: 'false'
       - name: unit-test
-        displayName: node-rdkafka/withDeliveryCbAndStreamProducer
+        displayName: node-rdkafka-2
         image: mirror.gcr.io/library/node:24
         include:
           - docker-socket
@@ -971,13 +971,13 @@ tasks:
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
-            test/integration/currencies/messaging/node-rdkafka \
-            -name 'withDeliveryCbAndStreamProducer.test.js' \
+            test/integration/currencies/messaging/node-rdkafka/_v3.6.1/withDeliveryCbAndStreamProducer \
+            -name '*.test.js' \
             -not -path '*/node_modules/*' \
             | sort | tr '\n' ' ')
 
           if [ -z "$TEST_FILES" ]; then
-            echo 'WARNING: No test files found for node-rdkafka/withDeliveryCbAndStreamProducer — skipping.'
+            echo 'WARNING: No test files found for node-rdkafka-2 — skipping.'
             exit 0
           fi
 
@@ -1003,9 +1003,9 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  code-build-collector-messaging-node-rdkafka-withoutDeliveryCbAndStandardProducer:
+  code-build-collector-messaging-node-rdkafka-3:
     from: code-build
-    displayName: node-rdkafka/withoutDeliveryCbAndStandardProducer
+    displayName: node-rdkafka-3
     runtimeClassName: large
     include:
       - dind
@@ -1017,7 +1017,7 @@ tasks:
       - name: compliance-checks
         when: 'false'
       - name: unit-test
-        displayName: node-rdkafka/withoutDeliveryCbAndStandardProducer
+        displayName: node-rdkafka-3
         image: mirror.gcr.io/library/node:24
         include:
           - docker-socket
@@ -1085,13 +1085,13 @@ tasks:
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
-            test/integration/currencies/messaging/node-rdkafka \
-            -name 'withoutDeliveryCbAndStandardProducer.test.js' \
+            test/integration/currencies/messaging/node-rdkafka/_v3.6.1/withoutDeliveryCbAndStandardProducer \
+            -name '*.test.js' \
             -not -path '*/node_modules/*' \
             | sort | tr '\n' ' ')
 
           if [ -z "$TEST_FILES" ]; then
-            echo 'WARNING: No test files found for node-rdkafka/withoutDeliveryCbAndStandardProducer — skipping.'
+            echo 'WARNING: No test files found for node-rdkafka-3 — skipping.'
             exit 0
           fi
 
@@ -1117,9 +1117,9 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  code-build-collector-messaging-node-rdkafka-withoutDeliveryCbAndStreamProducer:
+  code-build-collector-messaging-node-rdkafka-4:
     from: code-build
-    displayName: node-rdkafka/withoutDeliveryCbAndStreamProducer
+    displayName: node-rdkafka-4
     runtimeClassName: large
     include:
       - dind
@@ -1131,7 +1131,7 @@ tasks:
       - name: compliance-checks
         when: 'false'
       - name: unit-test
-        displayName: node-rdkafka/withoutDeliveryCbAndStreamProducer
+        displayName: node-rdkafka-4
         image: mirror.gcr.io/library/node:24
         include:
           - docker-socket
@@ -1199,13 +1199,13 @@ tasks:
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
-            test/integration/currencies/messaging/node-rdkafka \
-            -name 'withoutDeliveryCbAndStreamProducer.test.js' \
+            test/integration/currencies/messaging/node-rdkafka/_v3.6.1/withoutDeliveryCbAndStreamProducer \
+            -name '*.test.js' \
             -not -path '*/node_modules/*' \
             | sort | tr '\n' ' ')
 
           if [ -z "$TEST_FILES" ]; then
-            echo 'WARNING: No test files found for node-rdkafka/withoutDeliveryCbAndStreamProducer — skipping.'
+            echo 'WARNING: No test files found for node-rdkafka-4 — skipping.'
             exit 0
           fi
 
@@ -1231,9 +1231,9 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  code-build-collector-messaging-node-rdkafka-other:
+  code-build-collector-messaging-node-rdkafka-5:
     from: code-build
-    displayName: node-rdkafka/other
+    displayName: node-rdkafka-5
     runtimeClassName: large
     include:
       - dind
@@ -1245,7 +1245,7 @@ tasks:
       - name: compliance-checks
         when: 'false'
       - name: unit-test
-        displayName: node-rdkafka/other
+        displayName: node-rdkafka-5
         image: mirror.gcr.io/library/node:24
         include:
           - docker-socket
@@ -1313,13 +1313,13 @@ tasks:
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
-            test/integration/currencies/messaging/node-rdkafka \
-            -name 'other.test.js' \
+            test/integration/currencies/messaging/node-rdkafka/_v3.6.1/other \
+            -name '*.test.js' \
             -not -path '*/node_modules/*' \
             | sort | tr '\n' ' ')
 
           if [ -z "$TEST_FILES" ]; then
-            echo 'WARNING: No test files found for node-rdkafka/other — skipping.'
+            echo 'WARNING: No test files found for node-rdkafka-5 — skipping.'
             exit 0
           fi
 

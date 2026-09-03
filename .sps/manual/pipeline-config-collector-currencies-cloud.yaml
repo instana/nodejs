@@ -52,7 +52,7 @@ tasks:
     when: false
   deploy-release:
     when: false
-  code-build-collector-cloud-aws-sdkclient-dynamodb:
+  code-build-collector-cloud-aws-sdk-client-dynamodb:
     from: code-build
     displayName: '@aws-sdk/client-dynamodb'
     runtimeClassName: large
@@ -148,7 +148,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  code-build-collector-cloud-aws-sdkclient-kinesis:
+  code-build-collector-cloud-aws-sdk-client-kinesis:
     from: code-build
     displayName: '@aws-sdk/client-kinesis'
     runtimeClassName: large
@@ -244,7 +244,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  code-build-collector-cloud-aws-sdkclient-lambda:
+  code-build-collector-cloud-aws-sdk-client-lambda:
     from: code-build
     displayName: '@aws-sdk/client-lambda'
     runtimeClassName: large
@@ -340,7 +340,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  code-build-collector-cloud-aws-sdkclient-s3:
+  code-build-collector-cloud-aws-sdk-client-s3:
     from: code-build
     displayName: '@aws-sdk/client-s3'
     runtimeClassName: large
@@ -436,7 +436,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  code-build-collector-cloud-aws-sdkclient-sns:
+  code-build-collector-cloud-aws-sdk-client-sns:
     from: code-build
     displayName: '@aws-sdk/client-sns'
     runtimeClassName: large
@@ -532,7 +532,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  code-build-collector-cloud-aws-sdkclient-sqs:
+  code-build-collector-cloud-aws-sdk-client-sqs:
     from: code-build
     displayName: '@aws-sdk/client-sqs'
     runtimeClassName: large
@@ -628,7 +628,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  code-build-collector-cloud-azurestorage-blob:
+  code-build-collector-cloud-azure-storage-blob:
     from: code-build
     displayName: '@azure/storage-blob'
     runtimeClassName: large
@@ -724,7 +724,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  code-build-collector-cloud-google-cloudpubsub:
+  code-build-collector-cloud-google-cloud-pubsub:
     from: code-build
     displayName: '@google-cloud/pubsub'
     runtimeClassName: large
@@ -821,7 +821,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  code-build-collector-cloud-google-cloudstorage:
+  code-build-collector-cloud-google-cloud-storage:
     from: code-build
     displayName: '@google-cloud/storage'
     runtimeClassName: large

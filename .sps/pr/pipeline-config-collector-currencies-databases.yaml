@@ -52,7 +52,7 @@ tasks:
     when: false
   deploy-release:
     when: false
-  pr-code-checks-collector-databases-elasticelasticsearch:
+  pr-code-checks-collector-databases-elastic-elasticsearch:
     from: pr-code-checks
     displayName: '@elastic/elasticsearch'
     runtimeClassName: large
@@ -153,7 +153,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  pr-code-checks-collector-databases-redisclient:
+  pr-code-checks-collector-databases-redis-client:
     from: pr-code-checks
     displayName: '@redis/client'
     runtimeClassName: large
