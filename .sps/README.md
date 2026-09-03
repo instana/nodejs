@@ -34,7 +34,8 @@ to select which YAML to load. This keeps runs independent and parallel.
 | `.sps/pipeline-config.yaml` (root) | SCM | `pull_request` | `pr-code-checks` |
 | `.sps/pr/` | SCM | `pull_request` | `pr-code-checks` |
 | `.sps/main/` | SCM | `push` (branch: `main`) | `code-build` |
-| `.sps/manual/` | Manual | n/a | `code-build` |
+| `.sps/manual/` | Manual | on demand | `code-build` |
+| `.sps/dependencies/` | Timer + Manual | daily schedule / on demand | `code-build` |
 
 **Security checks run once** — only the root `pipeline-config.yaml` / `pr/pipeline-config.yaml`
 carry live `detect-secrets`, `compliance-checks`, and `peer-review` steps. All test-group
@@ -58,6 +59,7 @@ group-specific file (e.g. `.sps/pr/pipeline-config-core-group.yaml`).
 | [`.sps/pr/`](.sps/pr/) | PR configs — one file per test group. |
 | [`.sps/main/`](.sps/main/) | Main-commit configs — mirrors of `pr/` with `code-build` task names. |
 | [`.sps/manual/`](.sps/manual/) | Manual-run configs — identical to `main/`. |
+| [`.sps/dependencies/`](.sps/dependencies/) | Bot configs — currency-bot and prod-dependency-bot. Timer-triggered, not generated. |
 | [`.sps/assets/docker-services.json`](.sps/assets/docker-services.json) | Service definitions used by DinD tasks (image, env, args for each Docker service). |
 | [`.sps/scripts/generate-pipeline-configs.js`](.sps/scripts/generate-pipeline-configs.js) | Generator — produces all YAML under `pr/`, `main/`, `manual/`. |
 | [`.sps/scripts/create-triggers.sh`](.sps/scripts/create-triggers.sh) | Registers all triggers in the IBM Cloud Toolchain via API. |
@@ -175,18 +177,24 @@ Available `--what` targets:
 
 ## Registering triggers
 
-After generating configs, register all triggers in the toolchain once:
+Requires `ibmcloud` CLI logged in and `jq`. Existing triggers are skipped (idempotent).
 
 ```bash
-# Dry run first — no API calls
-.sps/scripts/create-triggers.sh --dry-run
-
-# Live run
-.sps/scripts/create-triggers.sh
+.sps/scripts/create-triggers.sh --dry-run                                    # preview
+.sps/scripts/create-triggers.sh                                               # all types
+.sps/scripts/create-triggers.sh --type=dependencies                           # bots only
+.sps/scripts/create-triggers.sh --type=dependencies --name=manual-dep-currency-bot  # one trigger
 ```
 
-Requires `ibmcloud` CLI logged in and `jq` installed. Existing triggers are skipped
-(idempotent).
+| `--type` | Kind | Configs | Trigger names |
+|---|---|---|---|
+| `pr` | SCM `pull_request` | `.sps/pr/` | `pr-<name>` |
+| `main` | SCM `push` | `.sps/main/` | `main-<name>` |
+| `manual` | Manual | `.sps/manual/` | `manual-<name>` |
+| `dependencies` | Timer + Manual | `.sps/dependencies/` | `timer-<name>`, `manual-dep-<name>` |
+
+Bot schedules: `timer-currency-bot` → daily 06:00 UTC · `timer-prod-dependency-bot` → Mondays 07:00 UTC.
+Use the `manual-dep-*` trigger to run a bot immediately on demand.
 
 ## Running a pipeline manually
 

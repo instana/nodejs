@@ -729,7 +729,7 @@ function generateOne(t) {
     // .split supports two forms:
     //   number → auto-partition non-dind dirs into N roughly-equal groups (misc-1..N)
     //   JSON object → explicit named groups; every non-dind dir must be listed exactly once
-    let splitDef; // Record<string, string[]>
+    let splitDef;
     if (!isNaN(splitN) && splitN > 0) {
       const count = Math.min(Math.round(splitN), nonDindDirs.length);
       const size = Math.ceil(nonDindDirs.length / count);
