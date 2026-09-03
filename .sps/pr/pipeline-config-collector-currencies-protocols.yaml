@@ -52,7 +52,7 @@ tasks:
     when: false
   deploy-release:
     when: false
-  pr-code-checks-collector-protocols-apollo-server:
+  pr-code-checks-collector-protocols-server:
     from: pr-code-checks
     displayName: '@apollo/server'
     runtimeClassName: large
@@ -125,7 +125,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  pr-code-checks-collector-protocols-apollo-subgraph:
+  pr-code-checks-collector-protocols-subgraph:
     from: pr-code-checks
     displayName: '@apollo/subgraph'
     runtimeClassName: large
@@ -198,7 +198,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  pr-code-checks-collector-protocols-grpc-grpc-js:
+  pr-code-checks-collector-protocols-grpc-js:
     from: pr-code-checks
     displayName: '@grpc/grpc-js'
     runtimeClassName: large

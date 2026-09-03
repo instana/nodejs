@@ -333,8 +333,6 @@ function readModeSplit(folder) {
   if (!Array.isArray(modes) || modes.length === 0) return null;
 
   const raw = fs.readFileSync(splitPath, 'utf-8').trim();
-
-  // Numeric: partition modes into N roughly-equal groups
   const n = Number(raw);
   if (!isNaN(n) && n > 0) {
     const count = Math.min(Math.round(n), modes.length);
@@ -346,12 +344,7 @@ function readModeSplit(folder) {
     return groups;
   }
 
-  // true / empty: one task per mode
-  if (raw === '' || raw === 'true') {
-    return modes.map(m => [m]);
-  }
-
-  console.error(`${splitPath}: unrecognised content "${raw}". Use a number (e.g. "4") or "true".`);
+  console.error(`${splitPath}: unrecognised content "${raw}". Use a positive number (e.g. "4").`);
   process.exit(1);
 }
 
@@ -718,7 +711,7 @@ function generateOne(t) {
       process.exit(1);
     }
 
-    // All non-dind dirs, sorted — used for both numeric and object forms
+    // All non-dind dirs, sorted alphabetically
     const allDirs = fs.existsSync(miscDir)
       ? fs
           .readdirSync(miscDir, { withFileTypes: true })
@@ -731,12 +724,11 @@ function generateOne(t) {
     const splitRaw = fs.readFileSync(miscSplitPath, 'utf-8').trim();
     const splitN = Number(splitRaw);
 
-    // Build { groupName → subdir[] } — supports two forms:
-    //   number  → auto-partition non-dind dirs into N roughly-equal groups (misc-1..N)
-    //   object  → explicit named groups; every non-dind dir must be listed
+    // .split supports two forms:
+    //   number → auto-partition non-dind dirs into N roughly-equal groups (misc-1..N)
+    //   JSON object → explicit named groups; every non-dind dir must be listed exactly once
     let splitDef; // Record<string, string[]>
     if (!isNaN(splitN) && splitN > 0) {
-      // Numeric: auto-distribute into N groups, no manual curation needed
       const count = Math.min(Math.round(splitN), nonDindDirs.length);
       const size = Math.ceil(nonDindDirs.length / count);
       splitDef = {};
@@ -745,8 +737,18 @@ function generateOne(t) {
         splitDef[`misc-${groupIndex}`] = nonDindDirs.slice(i, i + size);
       }
     } else {
-      // Object: explicit groups — fail if any non-dind dir is unlisted
-      splitDef = JSON.parse(splitRaw);
+      let parsed;
+      try {
+        parsed = JSON.parse(splitRaw);
+      } catch {
+        console.error(`${miscSplitPath}: unrecognised content "${splitRaw}". Use a positive number (e.g. "3") or a JSON object.`);
+        process.exit(1);
+      }
+      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+        console.error(`${miscSplitPath}: JSON value must be an object mapping group names to subdirectory arrays.`);
+        process.exit(1);
+      }
+      splitDef = parsed;
       const allListed = new Set(Object.values(splitDef).flat());
       const unlisted = nonDindDirs.filter(d => !allListed.has(d));
       if (unlisted.length > 0) {

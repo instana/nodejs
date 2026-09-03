@@ -52,7 +52,7 @@ tasks:
     when: false
   deploy-release:
     when: false
-  pr-code-checks-collector-frameworks-hapi-hapi:
+  pr-code-checks-collector-frameworks-hapi:
     from: pr-code-checks
     displayName: '@hapi/hapi'
     runtimeClassName: large
@@ -125,7 +125,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  pr-code-checks-collector-frameworks-koa-router:
+  pr-code-checks-collector-frameworks-router:
     from: pr-code-checks
     displayName: '@koa/router'
     runtimeClassName: large

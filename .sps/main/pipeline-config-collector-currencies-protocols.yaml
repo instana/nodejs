@@ -52,7 +52,7 @@ tasks:
     when: false
   deploy-release:
     when: false
-  code-build-collector-protocols-apollo-server:
+  code-build-collector-protocols-server:
     from: code-build
     displayName: '@apollo/server'
     runtimeClassName: large
@@ -125,7 +125,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  code-build-collector-protocols-apollo-subgraph:
+  code-build-collector-protocols-subgraph:
     from: code-build
     displayName: '@apollo/subgraph'
     runtimeClassName: large
@@ -198,7 +198,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  code-build-collector-protocols-grpc-grpc-js:
+  code-build-collector-protocols-grpc-js:
     from: code-build
     displayName: '@grpc/grpc-js'
     runtimeClassName: large

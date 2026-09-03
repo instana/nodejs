@@ -52,7 +52,7 @@ tasks:
     when: false
   deploy-release:
     when: false
-  code-build-collector-databases-elastic-elasticsearch:
+  code-build-collector-databases-elasticsearch:
     from: code-build
     displayName: '@elastic/elasticsearch'
     runtimeClassName: large
@@ -153,7 +153,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  code-build-collector-databases-redis-client:
+  code-build-collector-databases-client:
     from: code-build
     displayName: '@redis/client'
     runtimeClassName: large

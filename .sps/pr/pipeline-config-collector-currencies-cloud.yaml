@@ -52,7 +52,7 @@ tasks:
     when: false
   deploy-release:
     when: false
-  pr-code-checks-collector-cloud-aws-sdk-client-dynamodb:
+  pr-code-checks-collector-cloud-client-dynamodb:
     from: pr-code-checks
     displayName: '@aws-sdk/client-dynamodb'
     runtimeClassName: large
@@ -148,7 +148,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  pr-code-checks-collector-cloud-aws-sdk-client-kinesis:
+  pr-code-checks-collector-cloud-client-kinesis:
     from: pr-code-checks
     displayName: '@aws-sdk/client-kinesis'
     runtimeClassName: large
@@ -244,7 +244,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  pr-code-checks-collector-cloud-aws-sdk-client-lambda:
+  pr-code-checks-collector-cloud-client-lambda:
     from: pr-code-checks
     displayName: '@aws-sdk/client-lambda'
     runtimeClassName: large
@@ -340,7 +340,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  pr-code-checks-collector-cloud-aws-sdk-client-s3:
+  pr-code-checks-collector-cloud-client-s3:
     from: pr-code-checks
     displayName: '@aws-sdk/client-s3'
     runtimeClassName: large
@@ -436,7 +436,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  pr-code-checks-collector-cloud-aws-sdk-client-sns:
+  pr-code-checks-collector-cloud-client-sns:
     from: pr-code-checks
     displayName: '@aws-sdk/client-sns'
     runtimeClassName: large
@@ -532,7 +532,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  pr-code-checks-collector-cloud-aws-sdk-client-sqs:
+  pr-code-checks-collector-cloud-client-sqs:
     from: pr-code-checks
     displayName: '@aws-sdk/client-sqs'
     runtimeClassName: large
@@ -628,7 +628,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  pr-code-checks-collector-cloud-azure-storage-blob:
+  pr-code-checks-collector-cloud-storage-blob:
     from: pr-code-checks
     displayName: '@azure/storage-blob'
     runtimeClassName: large
@@ -724,7 +724,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  pr-code-checks-collector-cloud-google-cloud-pubsub:
+  pr-code-checks-collector-cloud-pubsub:
     from: pr-code-checks
     displayName: '@google-cloud/pubsub'
     runtimeClassName: large
@@ -821,7 +821,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  pr-code-checks-collector-cloud-google-cloud-storage:
+  pr-code-checks-collector-cloud-storage:
     from: pr-code-checks
     displayName: '@google-cloud/storage'
     runtimeClassName: large

@@ -102,9 +102,9 @@ tasks:
             test/integration/misc/cls-hooked-conflict \
             test/integration/misc/common \
             test/integration/misc/disabled \
-            test/integration/misc/http_header_capture_precedence \
             test/integration/misc/immediate \
             test/integration/misc/invalid_app \
+            test/integration/misc/logger_spans \
             -name '*.test.js' \
             -not -path '*/node_modules/*' \
             | sort | tr '\n' ' ')
@@ -177,18 +177,18 @@ tasks:
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
-            test/integration/misc/logger_spans \
             test/integration/misc/long_agent_communication \
             test/integration/misc/long_profiling \
             test/integration/misc/native_esm \
             test/integration/misc/native_module_retry \
             test/integration/misc/open_tracing \
             test/integration/misc/otel_sdk_and_instana \
-            test/integration/misc/otlp \
             test/integration/misc/otlp-exporter \
             test/integration/misc/pre_init \
             test/integration/misc/prevent_instrumenting_multiple_times \
             test/integration/misc/reinit_setLogger \
+            test/integration/misc/require-esm \
+            test/integration/misc/require_hook \
             -name '*.test.js' \
             -not -path '*/node_modules/*' \
             | sort | tr '\n' ' ')
@@ -261,8 +261,6 @@ tasks:
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
-            test/integration/misc/require-esm \
-            test/integration/misc/require_hook \
             test/integration/misc/restore_context \
             test/integration/misc/sdk \
             test/integration/misc/secrets \
