@@ -99,9 +99,7 @@ function socatForwardScript(name) {
   const s = sidecar(name);
   if (!s || !s.ports || s.ports.length === 0) return '';
   const varName = `SIDECAR_IP`;
-  const lines = [
-    `${varName}=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${name})`
-  ];
+  const lines = [`${varName}=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${name})`];
   for (const p of s.ports) {
     const [hostPort, containerPort] = p.split(':');
     lines.push(`socat TCP-LISTEN:${hostPort},fork,reuseaddr,bind=127.0.0.1 TCP:$${varName}:${containerPort} &`);
@@ -206,7 +204,6 @@ function readNeeds(folder) {
 
 /**
  * Generic collector task builder.
- *
  * Produces the shell script and SPS task object for one pipeline step that
  * runs a subset of collector integration tests.
  *
