@@ -526,6 +526,7 @@ function buildSimpleTask(displayName, testScript, needs = [], extraEnv = null) {
 function baseConfig(fanOutTasks, rootTask = 'pr-code-checks') {
   return {
     version: '2',
+    pipelineRunName: '$(params.pipeline-run-base-name)-node$(params.node-version)',
     tasks: {
       [rootTask]: {
         runtimeClassName: 'large',
@@ -629,6 +630,7 @@ function generateOne(t) {
   if (t === 'default') {
     const prConfig = {
       version: '2',
+      pipelineRunName: '$(params.pipeline-run-base-name)-node$(params.node-version)',
       tasks: {
         'pr-code-checks': {
           steps: [
@@ -646,6 +648,7 @@ function generateOne(t) {
 
     const mainConfig = {
       version: '2',
+      pipelineRunName: '$(params.pipeline-run-base-name)-node$(params.node-version)',
       tasks: {
         'code-build': {
           steps: [
