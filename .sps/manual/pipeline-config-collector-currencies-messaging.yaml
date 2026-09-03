@@ -52,7 +52,7 @@ tasks:
     when: false
   deploy-release:
     when: false
-  code-build-collector-messaging-confluentinckafka-javascript:
+  code-build-collector-messaging-confluentinc-kafka-javascript:
     from: code-build
     displayName: '@confluentinc/kafka-javascript'
     runtimeClassName: large
@@ -775,9 +775,9 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  code-build-collector-messaging-node-rdkafka:
+  code-build-collector-messaging-node-rdkafka-withDeliveryCbAndStandardProducer:
     from: code-build
-    displayName: node-rdkafka
+    displayName: node-rdkafka/withDeliveryCbAndStandardProducer
     runtimeClassName: large
     include:
       - dind
@@ -789,7 +789,7 @@ tasks:
       - name: compliance-checks
         when: 'false'
       - name: unit-test
-        displayName: node-rdkafka
+        displayName: node-rdkafka/withDeliveryCbAndStandardProducer
         image: mirror.gcr.io/library/node:24
         include:
           - docker-socket
@@ -858,12 +858,468 @@ tasks:
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
             test/integration/currencies/messaging/node-rdkafka \
-            -name '*.test.js' \
+            -name 'withDeliveryCbAndStandardProducer.test.js' \
             -not -path '*/node_modules/*' \
             | sort | tr '\n' ' ')
 
           if [ -z "$TEST_FILES" ]; then
-            echo 'WARNING: No test files found for node-rdkafka — skipping.'
+            echo 'WARNING: No test files found for node-rdkafka/withDeliveryCbAndStandardProducer — skipping.'
+            exit 0
+          fi
+
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
+  code-build-collector-messaging-node-rdkafka-withDeliveryCbAndStreamProducer:
+    from: code-build
+    displayName: node-rdkafka/withDeliveryCbAndStreamProducer
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: node-rdkafka/withDeliveryCbAndStreamProducer
+        image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          node_version="$(get_env node-version 2>/dev/null || true)"
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version" --no-progress
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
+              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
+              exit 1
+            fi
+          fi
+          echo "Node.js: $(node --version)"
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+
+          # start zookeeper
+          docker run -d --network host --name zookeeper \
+            -e ZOOKEEPER_CLIENT_PORT="2181" \
+            "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
+          timeout 60 bash -c \
+            'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'
+
+          # start kafka
+          docker run -d --network host --name kafka \
+            -e KAFKA_BROKER_ID="1" \
+            -e KAFKA_ZOOKEEPER_CONNECT="localhost:2181" \
+            -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
+            -e KAFKA_LISTENERS="EXTERNAL://:9092,PLAINTEXT://:29092" \
+            -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR="1" \
+            -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
+            -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
+            "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
+          timeout 120 bash -c \
+            'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'
+
+          # start kafka-topics
+          docker run -d --network host --name kafka-topics \
+            --entrypoint "/bin/bash" \
+            "mirror.gcr.io/confluentinc/cp-kafka:7.9.4" "-lc" "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
+          sleep 120
+
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/messaging/node-rdkafka \
+            -name 'withDeliveryCbAndStreamProducer.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for node-rdkafka/withDeliveryCbAndStreamProducer — skipping.'
+            exit 0
+          fi
+
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
+  code-build-collector-messaging-node-rdkafka-withoutDeliveryCbAndStandardProducer:
+    from: code-build
+    displayName: node-rdkafka/withoutDeliveryCbAndStandardProducer
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: node-rdkafka/withoutDeliveryCbAndStandardProducer
+        image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          node_version="$(get_env node-version 2>/dev/null || true)"
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version" --no-progress
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
+              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
+              exit 1
+            fi
+          fi
+          echo "Node.js: $(node --version)"
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+
+          # start zookeeper
+          docker run -d --network host --name zookeeper \
+            -e ZOOKEEPER_CLIENT_PORT="2181" \
+            "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
+          timeout 60 bash -c \
+            'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'
+
+          # start kafka
+          docker run -d --network host --name kafka \
+            -e KAFKA_BROKER_ID="1" \
+            -e KAFKA_ZOOKEEPER_CONNECT="localhost:2181" \
+            -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
+            -e KAFKA_LISTENERS="EXTERNAL://:9092,PLAINTEXT://:29092" \
+            -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR="1" \
+            -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
+            -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
+            "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
+          timeout 120 bash -c \
+            'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'
+
+          # start kafka-topics
+          docker run -d --network host --name kafka-topics \
+            --entrypoint "/bin/bash" \
+            "mirror.gcr.io/confluentinc/cp-kafka:7.9.4" "-lc" "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
+          sleep 120
+
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/messaging/node-rdkafka \
+            -name 'withoutDeliveryCbAndStandardProducer.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for node-rdkafka/withoutDeliveryCbAndStandardProducer — skipping.'
+            exit 0
+          fi
+
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
+  code-build-collector-messaging-node-rdkafka-withoutDeliveryCbAndStreamProducer:
+    from: code-build
+    displayName: node-rdkafka/withoutDeliveryCbAndStreamProducer
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: node-rdkafka/withoutDeliveryCbAndStreamProducer
+        image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          node_version="$(get_env node-version 2>/dev/null || true)"
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version" --no-progress
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
+              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
+              exit 1
+            fi
+          fi
+          echo "Node.js: $(node --version)"
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+
+          # start zookeeper
+          docker run -d --network host --name zookeeper \
+            -e ZOOKEEPER_CLIENT_PORT="2181" \
+            "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
+          timeout 60 bash -c \
+            'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'
+
+          # start kafka
+          docker run -d --network host --name kafka \
+            -e KAFKA_BROKER_ID="1" \
+            -e KAFKA_ZOOKEEPER_CONNECT="localhost:2181" \
+            -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
+            -e KAFKA_LISTENERS="EXTERNAL://:9092,PLAINTEXT://:29092" \
+            -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR="1" \
+            -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
+            -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
+            "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
+          timeout 120 bash -c \
+            'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'
+
+          # start kafka-topics
+          docker run -d --network host --name kafka-topics \
+            --entrypoint "/bin/bash" \
+            "mirror.gcr.io/confluentinc/cp-kafka:7.9.4" "-lc" "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
+          sleep 120
+
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/messaging/node-rdkafka \
+            -name 'withoutDeliveryCbAndStreamProducer.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for node-rdkafka/withoutDeliveryCbAndStreamProducer — skipping.'
+            exit 0
+          fi
+
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
+  code-build-collector-messaging-node-rdkafka-other:
+    from: code-build
+    displayName: node-rdkafka/other
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: node-rdkafka/other
+        image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          node_version="$(get_env node-version 2>/dev/null || true)"
+          if [ -n "${node_version:-}" ]; then
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            # shellcheck source=/dev/null
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$node_version" --no-progress
+            nvm use "$node_version"
+            ACTUAL=$(node --version)
+            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
+              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
+              exit 1
+            fi
+          fi
+          echo "Node.js: $(node --version)"
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          npm install --loglevel warn --foreground-scripts
+
+          # start zookeeper
+          docker run -d --network host --name zookeeper \
+            -e ZOOKEEPER_CLIENT_PORT="2181" \
+            "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
+          timeout 60 bash -c \
+            'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'
+
+          # start kafka
+          docker run -d --network host --name kafka \
+            -e KAFKA_BROKER_ID="1" \
+            -e KAFKA_ZOOKEEPER_CONNECT="localhost:2181" \
+            -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
+            -e KAFKA_LISTENERS="EXTERNAL://:9092,PLAINTEXT://:29092" \
+            -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR="1" \
+            -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
+            -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
+            "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
+          timeout 120 bash -c \
+            'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'
+
+          # start kafka-topics
+          docker run -d --network host --name kafka-topics \
+            --entrypoint "/bin/bash" \
+            "mirror.gcr.io/confluentinc/cp-kafka:7.9.4" "-lc" "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
+          sleep 120
+
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/messaging/node-rdkafka \
+            -name 'other.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for node-rdkafka/other — skipping.'
             exit 0
           fi
 

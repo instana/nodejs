@@ -189,6 +189,49 @@ function readNeeds(folder) {
     .filter(Boolean);
 }
 
+/**
+ * Read an optional `.split` marker from a test folder.
+ *
+ * When `.split` exists the generator fans the package out into one parallel
+ * pipeline task per mode instead of a single combined task.
+ *
+ * File content — two supported forms:
+ *
+ *   true              Simplest opt-in.  The mode list is sourced automatically
+ *   (or empty)        from the sibling modes.json, so there is no duplication
+ *                     to maintain.  This is the recommended form.
+ *
+ *   JSON array        Explicit custom grouping — use when you want to merge
+ *                     a few modes into one task while splitting others apart.
+ *                     Each element is either:
+ *                       string    → one dedicated task for that single mode
+ *                       string[]  → one task for all listed modes combined
+ *                     Example: [["modeA","modeB"], "modeC", "modeD"]
+ *
+ * Returns null when no .split file exists (single-task behaviour preserved).
+ * Returns string[][] (normalised groups) when splitting is active.
+ */
+function readSplit(folder) {
+  const splitPath = path.join(folder, '.split');
+  if (!fs.existsSync(splitPath)) return null;
+
+  const raw = fs.readFileSync(splitPath, 'utf-8').trim();
+
+  // Boolean / empty — source groups from the sibling modes.json
+  if (raw === '' || raw === 'true') {
+    const modesPath = path.join(folder, 'modes.json');
+    if (!fs.existsSync(modesPath)) return null;
+    const modes = JSON.parse(fs.readFileSync(modesPath, 'utf-8'));
+    if (!Array.isArray(modes) || modes.length === 0) return null;
+    return modes.map(m => [m]);
+  }
+
+  // JSON array — explicit grouping defined inside the file
+  const parsed = JSON.parse(raw);
+  if (!Array.isArray(parsed) || parsed.length === 0) return null;
+  return parsed.map(entry => (Array.isArray(entry) ? entry : [entry]));
+}
+
 function nodeVersionSwitchScript() {
   return [
     'node_version="$(get_env node-version 2>/dev/null || true)"',
@@ -262,9 +305,18 @@ function findTestFolders(groupDir) {
   return folders;
 }
 
-function buildCurrencyTask(pkgName, folder, group) {
-  const needs = readNeeds(folder);
+/**
+ * Build the shell script and SPS task definition for a single currency task.
+ *
+ * @param {string}   pkgName      - Package display name (e.g. "node-rdkafka" or "node-rdkafka/withDeliveryCbAndStandardProducer")
+ * @param {string}   folder       - Absolute path to the currency package folder
+ * @param {string[]} needs        - Sidecar dependencies (from .needs)
+ * @param {string[]} modeFilters  - When non-empty, restrict TEST_FILES to paths matching any of these mode subdir names.
+ *                                  Empty array means "collect all test files under the package folder" (original behaviour).
+ */
+function buildCurrencyTaskEntry(pkgName, folder, group, needs, modeFilters) {
   const relFolder = path.relative(REPO_ROOT, folder).replace(/\\/g, '/');
+  const relCollectorFolder = relFolder.replace('packages/collector/', '');
 
   const scriptLines = ['#!/usr/bin/env bash', 'set -eo pipefail', ''];
   scriptLines.push(nodeVersionSwitchScript());
@@ -307,17 +359,37 @@ function buildCurrencyTask(pkgName, folder, group) {
   scriptLines.push('node bin/create-version-test-folders.js');
   scriptLines.push('');
   scriptLines.push('# collect test files');
-  scriptLines.push(`TEST_FILES=$(cd packages/collector && find \\`);
-  scriptLines.push(`  ${relFolder.replace('packages/collector/', '')} \\`);
-  scriptLines.push(`  -name '*.test.js' \\`);
-  scriptLines.push(`  -not -path '*/node_modules/*' \\`);
-  scriptLines.push(`  | sort | tr '\\n' ' ')`);
+
+  if (modeFilters.length === 0) {
+    // No split — collect everything under the package folder (original behaviour)
+    scriptLines.push(`TEST_FILES=$(cd packages/collector && find \\`);
+    scriptLines.push(`  ${relCollectorFolder} \\`);
+    scriptLines.push(`  -name '*.test.js' \\`);
+    scriptLines.push(`  -not -path '*/node_modules/*' \\`);
+    scriptLines.push(`  | sort | tr '\\n' ' ')`);
+  } else {
+    // Split — collect only test files whose path contains one of the mode subdirectory names.
+    // The generated test filenames match the mode name (e.g. withDeliveryCbAndStandardProducer.test.js),
+    // so we use -name patterns for precision.
+    const namePatterns = modeFilters.map(m => `-name '${m}.test.js'`);
+    const orExpr =
+      namePatterns.length === 1
+        ? namePatterns[0]
+        : `\\( ${namePatterns.join(' -o ')} \\)`;
+    scriptLines.push(`TEST_FILES=$(cd packages/collector && find \\`);
+    scriptLines.push(`  ${relCollectorFolder} \\`);
+    scriptLines.push(`  ${orExpr} \\`);
+    scriptLines.push(`  -not -path '*/node_modules/*' \\`);
+    scriptLines.push(`  | sort | tr '\\n' ' ')`);
+  }
+
   scriptLines.push('');
   scriptLines.push('if [ -z "$TEST_FILES" ]; then');
   scriptLines.push(`  echo 'WARNING: No test files found for ${pkgName} — skipping.'`);
   scriptLines.push('  exit 0');
   scriptLines.push('fi');
   scriptLines.push('');
+
   const extraEnvLines = [];
   if (needs.includes('elasticsearch')) {
     extraEnvLines.push('INSTANA_CONNECT_ELASTICSEARCH="127.0.0.1:9200" \\');
@@ -340,7 +412,9 @@ function buildCurrencyTask(pkgName, folder, group) {
   scriptLines.push(...runWithRetryLines('test:ci:collector', extraEnvLines));
 
   const prefix = MODE === 'main' ? 'code-build' : 'pr-code-checks';
-  const taskName = `${prefix}-collector-${group}-${pkgName.replace(/[@/]/g, '').replace(/[._]/g, '-')}`;
+  // Replace path separators with '-', strip '@', then normalise dots/underscores
+  const slug = pkgName.replace(/\//g, '-').replace(/@/g, '').replace(/[._]/g, '-');
+  const taskName = `${prefix}-collector-${group}-${slug}`;
 
   return {
     taskName,
@@ -367,6 +441,33 @@ function buildCurrencyTask(pkgName, folder, group) {
       ]
     }
   };
+}
+
+/**
+ * Build one or more SPS task entries for a currency package.
+ *
+ * When the folder contains a `.split` file the package is fanned out into
+ * multiple parallel pipeline tasks — one per split group.  Without `.split`
+ * the original single-task behaviour is preserved.
+ *
+ * Returns an array of { taskName, taskNameMain, task } objects.
+ */
+function buildCurrencyTasks(pkgName, folder, group) {
+  const needs = readNeeds(folder);
+  const splitGroups = readSplit(folder); // null when no .split file
+
+  if (!splitGroups) {
+    // Original behaviour — single task, all test files
+    return [buildCurrencyTaskEntry(pkgName, folder, group, needs, [])];
+  }
+
+  // Fan-out — one task per split group
+  return splitGroups.map(modes => {
+    // Use the first mode as the label when it's a singleton group, otherwise join
+    const groupLabel = modes.length === 1 ? modes[0] : modes.join('+');
+    const splitPkgName = `${pkgName}/${groupLabel}`;
+    return buildCurrencyTaskEntry(splitPkgName, folder, group, needs, modes);
+  });
 }
 
 function buildSimpleTask(displayName, testScript, needs = [], extraEnv = null) {
@@ -574,11 +675,12 @@ function generateOne(t) {
       process.exit(1);
     }
     const folders = findTestFolders(groupDir);
-    const tasks = folders.map(({ pkgName, folder }) => buildCurrencyTask(pkgName, folder, group));
     const fanOutTasks = {};
-    tasks.forEach(({ taskName, task }) => {
-      fanOutTasks[taskName] = task;
-    });
+    for (const { pkgName, folder } of folders) {
+      for (const { taskName, task } of buildCurrencyTasks(pkgName, folder, group)) {
+        fanOutTasks[taskName] = task;
+      }
+    }
     const prConfig = baseConfig(fanOutTasks);
     writeConfig(t, prConfig, toMainConfig(prConfig));
   } else if (t === 'collector-metrics') {
