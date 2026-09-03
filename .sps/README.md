@@ -8,6 +8,7 @@
 - [Pipeline structure](#pipeline-structure)
   - [Task name convention](#task-name-convention)
   - [Docker services](#docker-services-databases-message-brokers)
+  - [Splitting long-running suites](#splitting-long-running-suites)
 - [Generating pipeline configs](#generating-pipeline-configs)
 - [Registering triggers](#registering-triggers)
 - [Running a pipeline manually](#running-a-pipeline-manually)
@@ -128,6 +129,18 @@ The generator reads `.needs` files automatically and adds `include: [dind]`,
 `include: [docker-socket]`, and the appropriate `docker run` calls to the generated
 task. **If a test folder needs a sidecar, add a `.needs` file — do not edit the
 generated YAML.**
+
+## Splitting long-running suites
+
+Drop a `.split` file containing a positive integer next to the tests. The
+generator fans the suite out into that many parallel tasks automatically.
+
+- **Currency packages** (with `modes.json`): modes are partitioned into N groups.
+  Capped at the mode count.
+- **`collector-misc`**: Subdirectories are distributed alphabetically
+  into N groups. Folders with a `.needs` file always go into `misc-dind` instead.
+
+Re-run the generator after adding folders — no `.split` edit needed.
 
 ## Generating pipeline configs
 
