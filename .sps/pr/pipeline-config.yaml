@@ -1,5 +1,4 @@
 version: '2'
-pipelineRunName: $(context.pipelineRun.name)-node$(params.node-version)
 tasks:
   pr-code-checks:
     steps:
