@@ -4,7 +4,7 @@
 
 'use strict';
 
-const { validStackTraceModes, LOG_LEVEL } = require('../util/constants');
+const { validStackTraceModes, LOG_LEVEL, allowedTransmissionDelayValues } = require('../util/constants');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -190,4 +190,27 @@ exports.logLevelValidator = function logLevelValidator(value) {
   }
 
   return normalized;
+};
+
+/**
+ * Validates a metrics transmissionDelay value (ms) against the allowed set.
+ * If the value is not in the allowed list, warns and returns the nearest allowed value.
+ *
+ * @param {number} value - The transmissionDelay value in milliseconds to validate
+ * @returns {number} The validated (or snapped) transmissionDelay in ms
+ */
+exports.validateTransmissionDelay = function validateTransmissionDelay(value) {
+  if (allowedTransmissionDelayValues.includes(value)) {
+    return value;
+  }
+
+  const nearest = allowedTransmissionDelayValues.reduce((prev, curr) =>
+    Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev
+  );
+  logger.warn(
+    `The value of config.metrics.transmissionDelay (or INSTANA_METRICS_TRANSMISSION_DELAY) (${value}) is not one of ` +
+      `the allowed values (${allowedTransmissionDelayValues.join(', ')} ms). ` +
+      `Assuming the nearest allowed value ${nearest} ms.`
+  );
+  return nearest;
 };
