@@ -52,7 +52,7 @@ tasks:
     when: false
   deploy-release:
     when: false
-  pr-code-checks-collector-messaging-confluentinc-kafka-javascript:
+  pr-code-checks-collector-messaging-kafka-javascript:
     from: pr-code-checks
     displayName: '@confluentinc/kafka-javascript'
     runtimeClassName: large

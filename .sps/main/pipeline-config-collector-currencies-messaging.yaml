@@ -52,7 +52,7 @@ tasks:
     when: false
   deploy-release:
     when: false
-  code-build-collector-messaging-confluentinc-kafka-javascript:
+  code-build-collector-messaging-kafka-javascript:
     from: code-build
     displayName: '@confluentinc/kafka-javascript'
     runtimeClassName: large

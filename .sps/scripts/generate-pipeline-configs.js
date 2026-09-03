@@ -442,8 +442,12 @@ function buildCurrencyTasks(pkgName, folder, group) {
   const needs = readNeeds(folder);
   const relFolder = path.relative(REPO_ROOT, folder).replace(/\\/g, '/');
   const relCollectorFolder = relFolder.replace('packages/collector/', '');
-  // slug: strip @, replace / and ._ with -
-  const pkgSlug = pkgName.replace(/\//g, '-').replace(/@/g, '').replace(/[._]/g, '-');
+  // slug: for scoped packages (@scope/name) use only the package name part to keep slugs short;
+  // for unscoped, use the full name. Then normalise dots/underscores to hyphens.
+  const baseName = pkgName.includes('/') && pkgName.startsWith('@')
+    ? pkgName.split('/')[1]
+    : pkgName.replace(/@/g, '');
+  const pkgSlug = baseName.replace(/[./_]/g, '-');
 
   const modeGroups = readModeSplit(folder); // null when no .split
 
