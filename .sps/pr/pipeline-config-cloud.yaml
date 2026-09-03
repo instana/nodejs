@@ -104,8 +104,12 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # create isolated network (no internet access)
+          docker network create --internal offline-net
+
           # start localstack
-          docker run -d --network host --name localstack \
+          docker run -d --network offline-net --name localstack \
+            -p 127.0.0.1:4566:4566 \
             -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
           timeout 60 bash -c \

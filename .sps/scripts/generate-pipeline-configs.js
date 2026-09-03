@@ -41,6 +41,7 @@ const ALL_TARGETS = ['default', ...ALL_CURRENCY_GROUPS, ...ALL_SIMPLE_TARGETS];
 
 const TARGET = whatArg ? whatArg.split('=')[1] : null;
 const NODE_IMAGE = 'mirror.gcr.io/library/node:24';
+const SIDECAR_NETWORK = 'offline-net';
 
 function sidecar(name) {
   return sidecarsData.sidecars.find(s => s.name === name);
@@ -50,7 +51,14 @@ function dockerRunScript(name) {
   const s = sidecar(name);
   if (!s) throw new Error(`Unknown sidecar: ${name}`);
 
-  const lines = [`docker run -d --network host --name ${name}`];
+  const lines = [`docker run -d --network ${SIDECAR_NETWORK} --name ${name}`];
+
+  if (s.ports) {
+    for (const p of s.ports) {
+      const [hostPort, containerPort] = p.split(':');
+      lines.push(`  -p 127.0.0.1:${hostPort}:${containerPort}`);
+    }
+  }
 
   if (s.platform) {
     lines.push(`  --platform ${s.platform}`);
@@ -211,6 +219,9 @@ function buildCollectorTask(taskSlug, displayName, paths, needs) {
   if (needs.length > 0) {
     scriptLines.push('# install docker client');
     scriptLines.push(dockerClientInstallScript());
+    scriptLines.push('');
+    scriptLines.push('# create isolated network');
+    scriptLines.push(`docker network create --internal ${SIDECAR_NETWORK}`);
     scriptLines.push('');
   }
 
@@ -437,9 +448,7 @@ function buildCurrencyTasks(pkgName, folder, group) {
   const relCollectorFolder = relFolder.replace('packages/collector/', '');
   // slug: for scoped packages (@scope/name) use only the package name part to keep slugs short;
   // for unscoped, use the full name. Then normalise dots/underscores to hyphens.
-  const baseName = pkgName.includes('/') && pkgName.startsWith('@')
-    ? pkgName.split('/')[1]
-    : pkgName.replace(/@/g, '');
+  const baseName = pkgName.includes('/') && pkgName.startsWith('@') ? pkgName.split('/')[1] : pkgName.replace(/@/g, '');
   const pkgSlug = baseName.replace(/[./_]/g, '-');
 
   const modeGroups = readModeSplit(folder); // null when no .split
@@ -477,6 +486,9 @@ function buildSimpleTask(displayName, testScript, needs = [], extraEnv = null) {
   if (needs.length > 0) {
     scriptLines.push('# install docker client');
     scriptLines.push(dockerClientInstallScript());
+    scriptLines.push('');
+    scriptLines.push('# create isolated network (no internet access)');
+    scriptLines.push(`docker network create --internal ${SIDECAR_NETWORK}`);
     scriptLines.push('');
     for (const need of needs) {
       scriptLines.push(`# start ${need}`);
@@ -741,7 +753,9 @@ function generateOne(t) {
       try {
         parsed = JSON.parse(splitRaw);
       } catch {
-        console.error(`${miscSplitPath}: unrecognised content "${splitRaw}". Use a positive number (e.g. "3") or a JSON object.`);
+        console.error(
+          `${miscSplitPath}: unrecognised content "${splitRaw}". Use a positive number (e.g. "3") or a JSON object.`
+        );
         process.exit(1);
       }
       if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {

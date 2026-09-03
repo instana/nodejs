@@ -352,10 +352,14 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # create isolated network
+          docker network create --internal offline-net
+
           npm install --loglevel warn --foreground-scripts
 
           # start redis
-          docker run -d --network host --name redis \
+          docker run -d --network offline-net --name redis \
+            -p 127.0.0.1:6379:6379 \
             "mirror.gcr.io/library/redis:7.4.3"
           timeout 30 bash -c \
             'until docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 1; done'
