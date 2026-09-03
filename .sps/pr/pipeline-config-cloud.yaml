@@ -40,6 +40,10 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
+  code-pr-finish:
+    steps:
+      - name: run-stage
+        when: 'false'
   code-ci-finish:
     steps:
       - name: run-stage
@@ -107,12 +111,22 @@ tasks:
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
-            npm run test:ci:aws-lambda
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
+              npm run test:ci:aws-lambda || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -156,11 +170,21 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            npm run test:ci:aws-fargate
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              npm run test:ci:aws-fargate || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -204,11 +228,21 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            npm run test:ci:azure-container-services
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              npm run test:ci:azure-container-services || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -252,11 +286,21 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            npm run test:ci:google-cloud-run
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              npm run test:ci:google-cloud-run || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact

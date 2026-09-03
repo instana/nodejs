@@ -32,13 +32,13 @@ let libraryEnv;
  * Local testing:
  * node bin/start-test-containers.js --gcs-server
  */
-const emulatorHost = process.env.GCS_EMULATOR_HOST;
+const emulatorHost = process.env.INSTANA_CONNECT_GCS_EMULATOR_HOST;
 
 function start() {
   if (!emulatorHost) {
     describe('tracing/cloud/gcp/storage', function () {
-      it('skipped — GCS_EMULATOR_HOST is not set', () => {
-        fail('Please set GCS_EMULATOR_HOST (e.g. http://127.0.0.1:4443) to run Storage tests.');
+      it('skipped — INSTANA_CONNECT_GCS_EMULATOR_HOST is not set', () => {
+        fail('Please set INSTANA_CONNECT_GCS_EMULATOR_HOST (e.g. http://127.0.0.1:4443) to run Storage tests.');
       });
     });
     return;
@@ -59,7 +59,7 @@ function start() {
       dirname: __dirname,
       useGlobalAgent: true,
       env: {
-        GCS_EMULATOR_HOST: emulatorHost,
+        INSTANA_CONNECT_GCS_EMULATOR_HOST: emulatorHost,
         GCP_PROJECT: 'test-project',
         GCS_SERVICE_ACCOUNT_EMAIL: 'test-service-account@test-project.iam.gserviceaccount.com',
         ...libraryEnv

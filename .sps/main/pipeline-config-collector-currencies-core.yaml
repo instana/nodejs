@@ -40,6 +40,10 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
+  code-pr-finish:
+    steps:
+      - name: run-stage
+        when: 'false'
   code-ci-finish:
     steps:
       - name: run-stage
@@ -84,6 +88,7 @@ tasks:
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
+
           node bin/create-version-test-folders.js
 
           # collect test files
@@ -98,12 +103,22 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact

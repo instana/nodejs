@@ -33,8 +33,11 @@ const accountKey = process.env.AZURE_STORAGE_ACCOUNT_KEY;
 // Well-known Azurite test account — public, not a real secret:
 // https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite#well-known-storage-account-and-key
 const azuriteAccount = 'devstoreaccount1';
-const azuriteKey = ['Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OceiPiBeEEiypt', 'RI7k9g4Vm0J8SeBLMYxPTLr8GlFocl2qSA1dV5w=='].join('/');
-const azuriteBlobEndpoint = process.env.INSTANA_CONNECT_AZURE_BLOB_ENDPOINT || `http://localhost:10000/${azuriteAccount}`;
+const azuriteKey = ['Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OceiPiBeEEiypt', 'RI7k9g4Vm0J8SeBLMYxPTLr8GlFocl2qSA1dV5w=='].join(
+  '/'
+);
+const azuriteBlobEndpoint =
+  process.env.INSTANA_CONNECT_AZURE_BLOB_ENDPOINT || `http://localhost:10000/${azuriteAccount}`;
 const azuriteConnectionString =
   process.env.INSTANA_CONNECT_AZURE_CONNECTION_STRING ||
   `DefaultEndpointsProtocol=http;AccountName=${azuriteAccount};AccountKey=${azuriteKey};BlobEndpoint=${azuriteBlobEndpoint};`;
@@ -52,7 +55,11 @@ function start() {
     // Azurite emulator
     connStr = azuriteConnectionString;
     const parts = Object.fromEntries(
-      connStr.split(';').filter(Boolean).map(p => p.split(/=(.+)/)).map(([k, v]) => [k, v])
+      connStr
+        .split(';')
+        .filter(Boolean)
+        .map(p => p.split(/=(.+)/))
+        .map(([k, v]) => [k, v])
     );
     effectiveStorageAccount = parts.AccountName;
     effectiveAccountKey = parts.AccountKey;

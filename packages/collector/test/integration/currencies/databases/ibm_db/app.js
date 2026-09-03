@@ -28,12 +28,13 @@ const port = require('@_local/collector/test/test_util/app-port')();
 const logPrefix = `DB2 App (${process.pid}):\t`;
 
 const DB2_DATABASE_NAME = process.env.DB2_DATABASE_NAME || 'nodedb';
-const connStr1 = process.env.DB2_CONN_STR || 'HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP';
-const connStr2 =
-  process.env.DB2_CONN_STR_ALTERNATIVE || 'HOSTNAME=127.0.0.1;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP';
+const DB2_PORT = process.env.DB2_PORT || '58885';
+const connStr1 = `HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=${DB2_PORT};PROTOCOL=TCPIP`;
+const connStr2 = `HOSTNAME=127.0.0.1;UID=node;PWD=nodepw;PORT=${DB2_PORT};PROTOCOL=TCPIP`;
 
 /**
- * TODO: enable db2 container on Tekton
+ * NOTE: We currently do not use remove ibm db. Only local container.
+ * Still keeping docs here:
  *
  * We are currently using the IBM DB2 cloud service, because we had trouble on Circleci.
  *
@@ -87,8 +88,8 @@ const DB2_TABLE_NAME_3 = process.env.DB2_TABLE_NAME_3 || 'table3';
  * Furthermore the connection creation is sometimes slow too.
  */
 let tries = 0;
-const MAX_TRIES = 10;
-const CONNECT_TIMEOUT_IN_MS = 2000;
+const MAX_TRIES = 50;
+const CONNECT_TIMEOUT_IN_MS = 5000;
 let stmtObjectFromStart;
 
 const db2OpenPromisified = promisify(ibmdb.open);
@@ -97,22 +98,22 @@ async function connect(connectionStr) {
   /* eslint-disable no-console */
   console.log(`Trying to connect to DB2, attempt ${tries} of ${MAX_TRIES}`);
 
-  let conn;
   try {
-    conn = await db2OpenPromisified(connectionStr);
+    const conn = await Promise.race([
+      db2OpenPromisified(connectionStr),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('DB2 connect timeout')), CONNECT_TIMEOUT_IN_MS))
+    ]);
+    console.log('A client has successfully connected.');
+    return conn;
   } catch (err) {
-    console.log(err);
-    if (tries > MAX_TRIES) {
-      throw err;
-    }
-
     tries += 1;
+    if (tries > MAX_TRIES) {
+      throw new Error(`DB2 did not become ready after ${MAX_TRIES} attempts.`);
+    }
     console.log(`Trying to connect to DB2 again in ${CONNECT_TIMEOUT_IN_MS} milliseconds.`);
     await delay(CONNECT_TIMEOUT_IN_MS);
     return connect(connectionStr);
   }
-  console.log('A client has successfully connected.');
-  return conn;
   /* eslint-enable no-console */
 }
 

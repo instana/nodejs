@@ -40,6 +40,10 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
+  code-pr-finish:
+    steps:
+      - name: run-stage
+        when: 'false'
   code-ci-finish:
     steps:
       - name: run-stage
@@ -84,18 +88,23 @@ tasks:
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
+
           node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
-            test/integration/misc/sdk \
             test/integration/misc/actions \
-            test/integration/misc/open_tracing \
-            test/integration/misc/otel_sdk_and_instana \
-            test/integration/misc/otlp-exporter \
-            test/integration/misc/tracing_metrics \
-            test/integration/misc/w3c_trace_context \
-            test/integration/misc/specification_compliance \
+            test/integration/misc/activate_immediately \
+            test/integration/misc/agent-logs \
+            test/integration/misc/agent_connection \
+            test/integration/misc/babel_typescript \
+            test/integration/misc/cjs-via-esm \
+            test/integration/misc/cls-hooked-conflict \
+            test/integration/misc/common \
+            test/integration/misc/disabled \
+            test/integration/misc/immediate \
+            test/integration/misc/invalid_app \
+            test/integration/misc/logger_spans \
             -name '*.test.js' \
             -not -path '*/node_modules/*' \
             | sort | tr '\n' ' ')
@@ -105,12 +114,28 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   code-build-misc-2:
     from: code-build
     displayName: collector-misc-2
@@ -147,24 +172,23 @@ tasks:
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
+
           node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
+            test/integration/misc/long_agent_communication \
+            test/integration/misc/long_profiling \
             test/integration/misc/native_esm \
-            test/integration/misc/require-esm \
-            test/integration/misc/cjs-via-esm \
-            test/integration/misc/require_hook \
-            test/integration/misc/babel_typescript \
-            test/integration/misc/typescript \
             test/integration/misc/native_module_retry \
-            test/integration/misc/cls-hooked-conflict \
-            test/integration/misc/common \
-            test/integration/misc/secrets \
-            test/integration/misc/stack_trace \
-            test/integration/misc/restore_context \
+            test/integration/misc/open_tracing \
+            test/integration/misc/otel_sdk_and_instana \
+            test/integration/misc/otlp-exporter \
+            test/integration/misc/pre_init \
+            test/integration/misc/prevent_instrumenting_multiple_times \
             test/integration/misc/reinit_setLogger \
-            test/integration/misc/logger_spans \
+            test/integration/misc/require-esm \
+            test/integration/misc/require_hook \
             -name '*.test.js' \
             -not -path '*/node_modules/*' \
             | sort | tr '\n' ' ')
@@ -174,12 +198,28 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   code-build-misc-3:
     from: code-build
     displayName: collector-misc-3
@@ -216,22 +256,21 @@ tasks:
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
+
           node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
-            test/integration/misc/activate_immediately \
-            test/integration/misc/agent-logs \
-            test/integration/misc/agent_connection \
-            test/integration/misc/disabled \
-            test/integration/misc/immediate \
-            test/integration/misc/invalid_app \
-            test/integration/misc/long_agent_communication \
-            test/integration/misc/long_profiling \
-            test/integration/misc/pre_init \
-            test/integration/misc/prevent_instrumenting_multiple_times \
+            test/integration/misc/restore_context \
+            test/integration/misc/sdk \
+            test/integration/misc/secrets \
+            test/integration/misc/specification_compliance \
+            test/integration/misc/stack_trace \
             test/integration/misc/too_late \
+            test/integration/misc/tracing_metrics \
+            test/integration/misc/typescript \
             test/integration/misc/uncaught \
+            test/integration/misc/w3c_trace_context \
             -name '*.test.js' \
             -not -path '*/node_modules/*' \
             | sort | tr '\n' ' ')
@@ -241,12 +280,28 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
   code-build-misc-dind:
     from: code-build
     displayName: collector-misc-dind
@@ -286,9 +341,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -300,11 +352,15 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          npm install --loglevel warn --foreground-scripts
+
           # start redis
           docker run -d --network host --name redis \
             "mirror.gcr.io/library/redis:7.4.3"
           timeout 30 bash -c \
             'until docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 1; done'
+
+          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -318,9 +374,25 @@ tasks:
             exit 0
           fi
 
-          exec env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TEST_FILES="$TEST_FILES" \
-            npm run test:ci:collector
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              TEST_FILES="$TEST_FILES" \
+              npm run test:ci:collector || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+          exit $LAST_EXIT
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'

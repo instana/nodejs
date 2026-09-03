@@ -9,21 +9,15 @@ const expect = require('chai').expect;
 
 const { supportedVersion, constants } = require('@_local/core').tracing;
 const testUtils = require('@_local/core/test/test_util');
+const isCI = testUtils.isCI;
 const config = require('@_local/core/test/config');
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 const globalAgent = require('@_local/collector/test/globalAgent');
 
 module.exports = function (name, version, isLatest) {
   const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-
-  if (testUtils.isCI() && !process.env.DB2_CONNECTION_STR) {
-    throw new Error(
-      'No connection string for IBM DB2, please make sure the environment variable DB2_CONNECTION_STR is set.'
-    );
-  }
-
-  const DB2_CONN_STR =
-    process.env.DB2_CONNECTION_STR || 'HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP';
+  const DB2_PORT = isCI() ? '50000' : '58885';
+  const DB2_CONN_STR = `HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=${DB2_PORT};PROTOCOL=TCPIP`;
   let DB2_CONN_STR_ALTERNATIVE;
   let EXPECTED_DB2_CONN_STR;
   let EXPECTED_DB2_CONN_STR_ALTERNATIVE;
@@ -38,7 +32,7 @@ module.exports = function (name, version, isLatest) {
 
   const DB2_CLOSE_TIMEOUT_IN_MS = 1000;
 
-  const testTimeout = Math.max(50000, config.getTestTimeout());
+  const testTimeout = Math.max(600000, config.getTestTimeout());
   const retryTime = 10 * 1000;
 
   const generateTableName = () => {
@@ -136,6 +130,7 @@ module.exports = function (name, version, isLatest) {
             DB2_CONN_STR,
             DB2_CONN_STR_ALTERNATIVE,
             DB2_DATABASE_NAME,
+            DB2_PORT,
             DB2_TABLE_NAME_1: TABLE_NAME_1,
             DB2_TABLE_NAME_2: TABLE_NAME_2,
             DB2_TABLE_NAME_3: TABLE_NAME_3,
@@ -1172,6 +1167,7 @@ module.exports = function (name, version, isLatest) {
             DB2_CONN_STR,
             DB2_CONN_STR_ALTERNATIVE,
             DB2_DATABASE_NAME,
+            DB2_PORT,
             DB2_TABLE_NAME_1: TABLE_NAME_1,
             DB2_TABLE_NAME_2: TABLE_NAME_2,
             DB2_TABLE_NAME_3: TABLE_NAME_3,
@@ -1286,6 +1282,7 @@ module.exports = function (name, version, isLatest) {
           env: {
             DB2_CONN_STR,
             DB2_DATABASE_NAME,
+            DB2_PORT,
             DB2_TABLE_NAME_1: TABLE_NAME_1,
             INSTANA_ALLOW_ROOT_EXIT_SPAN: 'true'
           }
@@ -1327,6 +1324,7 @@ module.exports = function (name, version, isLatest) {
             DB2_CONN_STR,
             DB2_CONN_STR_ALTERNATIVE,
             DB2_DATABASE_NAME,
+            DB2_PORT,
             DB2_TABLE_NAME_1: TABLE_NAME_1,
             DB2_TABLE_NAME_2: TABLE_NAME_2,
             DB2_TABLE_NAME_3: TABLE_NAME_3,

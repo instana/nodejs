@@ -31,12 +31,12 @@ sql.on('error', err => {
   log(err);
 });
 
-const dbHost = process.env.AZURE_SQL_SERVER || process.env.INSTANA_CONNECT_MSSQL_HOST;
-const dbUser = process.env.AZURE_SQL_USERNAME || process.env.INSTANA_CONNECT_MSSQL_USER;
-const dbPassword = process.env.AZURE_SQL_PWD || process.env.INSTANA_CONNECT_MSSQL_PW;
-const userTable = process.env.AZURE_USER_TABLE || process.env.MSSQL_USER_TABLE;
-const procedureName = process.env.AZURE_PROCEDURE_NAME || process.env.MSSQL_PROCEDURE_NAME;
-const database = process.env.AZURE_SQL_DATABASE || process.env.MSSQL_DB;
+const dbHost = process.env.INSTANA_CONNECT_MSSQL_HOST;
+const dbUser = process.env.INSTANA_CONNECT_MSSQL_USER;
+const dbPassword = process.env.INSTANA_CONNECT_MSSQL_PW;
+const userTable = process.env.AZURE_USER_TABLE;
+const procedureName = process.env.AZURE_PROCEDURE_NAME;
+const database = process.env.AZURE_SQL_DATABASE;
 
 const isLocalHost = dbHost === 'localhost' || dbHost === '127.0.0.1';
 const connectConfigBase = {

@@ -1,3 +1,4 @@
 redis
 redis-slave
 redis-sentinel
+redis-cluster

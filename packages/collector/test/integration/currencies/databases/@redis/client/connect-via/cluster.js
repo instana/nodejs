@@ -18,33 +18,23 @@ const { delay } = require('@_local/core/test/test_util');
 //       alternative images or solutions.
 
 module.exports = async function connect(redis, log, tries = 0) {
-  if (!process.env.AZURE_REDIS_CLUSTER || !process.env.AZURE_REDIS_CLUSTER_PWD) {
-    log(
-      'Please set the environment variables AZURE_REDIS_CLUSTER and AZURE_REDIS_CLUSTER_PWD ' +
-        'to connect to the cloud redis cluster.'
-    );
-
-    process.exit(1);
-  }
+  const clusterAddress = process.env.INSTANA_CONNECT_REDIS_CLUSTER || '127.0.0.1:7000';
+  const hasPassword = Boolean(process.env.AZURE_REDIS_CLUSTER_PWD);
+  const protocol = hasPassword ? 'rediss' : 'redis';
 
   const nodes = [
     {
-      url: `rediss://${process.env.AZURE_REDIS_CLUSTER}`
+      url: `${protocol}://${clusterAddress}`
     }
   ];
 
-  const defaults = {
-    socket: {
-      tls: true
-    },
-    password: process.env.AZURE_REDIS_CLUSTER_PWD
-  };
+  const defaults = {};
+  if (hasPassword) {
+    defaults.socket = { tls: true };
+    defaults.password = process.env.AZURE_REDIS_CLUSTER_PWD;
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+  }
 
-  // See https://github.com/redis/ioredis/issues/1786
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
-  // node bin/start-test-containers.js --redis-node-0 --redis-node-1 --redis-node-2
-  // docker exec -it 2aaaac7b9112 redis-cli -p 6379 cluster info
   const cluster = redis.createCluster({
     rootNodes: nodes,
     useReplicas: false,

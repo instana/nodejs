@@ -263,15 +263,13 @@ app.post('/index', (req, res) => {
 app.post('/two-different-target-hosts', async (req, res) => {
   try {
     const response = {};
-    const esResponse1 = await client.index({
-      index: req.query.index || 'modern_index',
-      body: req.body
-    });
+    const indexTarget = req.query.index || 'modern_index';
+    // req.body may be undefined when the POST has no JSON body (test sends only query params)
+    const doc = (req.body && Object.keys(req.body).length > 0) ? req.body : { key: req.query.key || 'value' };
+    const indexParams = isLatest ? { index: indexTarget, document: doc } : { index: indexTarget, body: doc };
+    const esResponse1 = await client.index(indexParams);
     response.response1 = esResponse1.result || esResponse1.statusCode;
-    const esResponse2 = await client2.index({
-      index: req.query.index || 'modern_index',
-      body: req.body
-    });
+    const esResponse2 = await client2.index(indexParams);
     response.response2 = esResponse2.result || esResponse2.statusCode;
     res.json(response);
   } catch (e) {

@@ -157,16 +157,18 @@ function runHandler(handler, error, { context, event, eventOpts } = {}) {
         }
         handlerHasFinished = true;
         unregisterErrorHandling();
-        log(`Lambda ${definitionPath} handler has returned successfully, result: ${JSON.stringify(result)}.`);
-        sendToParent({
-          type: 'lambda-result',
-          error: false,
-          payload: result
-        });
-        sendToParent({
-          type: 'lambda-context',
-          error: false,
-          context: getContext()
+        waitForFinalLogs(result, () => {
+          log(`Lambda ${definitionPath} handler has returned successfully, result: ${JSON.stringify(result)}.`);
+          sendToParent({
+            type: 'lambda-result',
+            error: false,
+            payload: result
+          });
+          sendToParent({
+            type: 'lambda-context',
+            error: false,
+            context: getContext()
+          });
         });
       },
       err => {
@@ -770,6 +772,19 @@ function onUncaughtException(error) {
 
 function unregisterErrorHandling() {
   process.removeListener(uncaughtExceptionEventName, onUncaughtException);
+}
+
+function waitForFinalLogs(result, done, deadline) {
+  const EXPECTED_LOG = 'The data have been successfully sent to Instana for Lambda';
+  const MAX_WAIT_MS = 500;
+  if (!deadline) deadline = Date.now() + MAX_WAIT_MS;
+
+  const logs = result && result.body && result.body.logs && result.body.logs.debug;
+  if (!logs || logs.some(entry => entry.indexOf(EXPECTED_LOG) >= 0) || Date.now() >= deadline) {
+    done();
+  } else {
+    setTimeout(() => waitForFinalLogs(result, done, deadline), 10).unref();
+  }
 }
 
 function terminate(error) {

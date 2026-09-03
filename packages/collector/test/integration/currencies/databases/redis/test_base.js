@@ -388,8 +388,10 @@ module.exports = function (name, version, isLatest, mode) {
 
               verifyHttpExit(controls, spans, writeEntrySpan);
 
-              // TODO: Why do we have less spans with the cluster?
-              if (mode === 'cluster') {
+              // In cluster mode, v4+ correctly creates a Redis exit span even for fire-and-forget calls,
+              // matching the behaviour of default mode (3 spans).
+              // Only the legacy v3 cluster (unsupported / skipped) would have 2 spans.
+              if (isCluster && semver.major(version) < 4) {
                 expect(spans.length).to.be.eql(2);
               } else {
                 expect(spans.length).to.be.eql(3);
@@ -1335,7 +1337,8 @@ module.exports = function (name, version, isLatest, mode) {
 
   function verifyConnection(type, span) {
     if (type === 'cluster') {
-      expect(span.data.redis.connection).to.contain(process.env.AZURE_REDIS_CLUSTER);
+      const expectedCluster = process.env.AZURE_REDIS_CLUSTER || process.env.INSTANA_CONNECT_REDIS_CLUSTER || '127.0.0.1';
+      expect(span.data.redis.connection).to.contain(expectedCluster.split(':')[0]);
     } else if (type === 'sentinel') {
       expect(span.data.redis.connection).to.contain(process.env.INSTANA_CONNECT_REDIS_SENTINEL_HOST);
     } else {

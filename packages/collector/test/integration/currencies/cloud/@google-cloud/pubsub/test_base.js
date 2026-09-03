@@ -24,14 +24,14 @@ let libraryEnv;
  * Local testing:
  * node bin/start-test-containers.js --pubsub-emulator
  */
-const emulatorHost = process.env.PUBSUB_EMULATOR_HOST;
+const emulatorHost = process.env.INSTANA_CONNECT_PUBSUB_EMULATOR_HOST;
 const projectId = process.env.GCP_PROJECT || 'test-project';
 
 function start() {
   if (!emulatorHost) {
     describe('tracing/cloud/gcp/pubsub', function () {
-      it('skipped — PUBSUB_EMULATOR_HOST is not set', () => {
-        fail('Please set PUBSUB_EMULATOR_HOST (e.g. 127.0.0.1:8085) to run PubSub tests.');
+      it('skipped — INSTANA_CONNECT_PUBSUB_EMULATOR_HOST is not set', () => {
+        fail('Please set INSTANA_CONNECT_PUBSUB_EMULATOR_HOST (e.g. 127.0.0.1:8085) to run PubSub tests.');
       });
     });
     return;
@@ -57,7 +57,7 @@ function start() {
         appName: 'publisher',
         useGlobalAgent: true,
         env: {
-          PUBSUB_EMULATOR_HOST: emulatorHost,
+          INSTANA_CONNECT_PUBSUB_EMULATOR_HOST: emulatorHost,
           GCP_PROJECT: 'test-project',
           GCP_PUBSUB_TOPIC: topicName,
           GCP_PUBSUB_SUBSCRIPTION: subscriptionName,
@@ -69,7 +69,7 @@ function start() {
         appName: 'subscriber',
         useGlobalAgent: true,
         env: {
-          PUBSUB_EMULATOR_HOST: emulatorHost,
+          INSTANA_CONNECT_PUBSUB_EMULATOR_HOST: emulatorHost,
           GCP_PUBSUB_TOPIC: topicName,
           GCP_PUBSUB_SUBSCRIPTION: subscriptionName,
           ...libraryEnv
@@ -215,7 +215,7 @@ function start() {
         appName: 'publisher',
         useGlobalAgent: true,
         env: {
-          PUBSUB_EMULATOR_HOST: emulatorHost,
+          INSTANA_CONNECT_PUBSUB_EMULATOR_HOST: emulatorHost,
           GCP_PUBSUB_TOPIC: topicName,
           GCP_PUBSUB_SUBSCRIPTION: subscriptionName,
           ...libraryEnv
@@ -226,7 +226,7 @@ function start() {
         appName: 'subscriber',
         useGlobalAgent: true,
         env: {
-          PUBSUB_EMULATOR_HOST: emulatorHost,
+          INSTANA_CONNECT_PUBSUB_EMULATOR_HOST: emulatorHost,
           GCP_PUBSUB_TOPIC: topicName,
           GCP_PUBSUB_SUBSCRIPTION: subscriptionName,
           ...libraryEnv
@@ -288,7 +288,7 @@ function start() {
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {
-          PUBSUB_EMULATOR_HOST: emulatorHost,
+          INSTANA_CONNECT_PUBSUB_EMULATOR_HOST: emulatorHost,
           GCP_PUBSUB_TOPIC: topicName,
           GCP_PUBSUB_SUBSCRIPTION: subscriptionName,
           ...libraryEnv
@@ -300,7 +300,7 @@ function start() {
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {
-          PUBSUB_EMULATOR_HOST: emulatorHost,
+          INSTANA_CONNECT_PUBSUB_EMULATOR_HOST: emulatorHost,
           GCP_PUBSUB_TOPIC: topicName,
           GCP_PUBSUB_SUBSCRIPTION: subscriptionName,
           ...libraryEnv
