@@ -109,16 +109,15 @@ tasks:
 
           # start zookeeper
           docker run -d --network offline-net --name zookeeper \
-            -p 2181:2181 \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' zookeeper)
+          socat TCP-LISTEN:2181,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:2181 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'
 
           # start kafka
           docker run -d --network offline-net --name kafka \
-            -p 9092:9092 \
-            -p 29092:29092 \
             -e KAFKA_BROKER_ID="1" \
             -e KAFKA_ZOOKEEPER_CONNECT="zookeeper:2181" \
             -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
@@ -127,6 +126,9 @@ tasks:
             -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
             -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' kafka)
+          socat TCP-LISTEN:9092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:9092 &
+          socat TCP-LISTEN:29092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:29092 &
           timeout 120 bash -c \
             'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'
 
@@ -229,9 +231,10 @@ tasks:
 
           # start rabbitmq
           docker run -d --network offline-net --name rabbitmq \
-            -p 5671:5671 \
-            -p 5672:5672 \
             "mirror.gcr.io/library/rabbitmq:3.13.0"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' rabbitmq)
+          socat TCP-LISTEN:5671,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5671 &
+          socat TCP-LISTEN:5672,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5672 &
           timeout 120 bash -c \
             'until nc -z 127.0.0.1 5672 2>/dev/null; do sleep 2; done'
 
@@ -328,8 +331,9 @@ tasks:
 
           # start redis
           docker run -d --network offline-net --name redis \
-            -p 6379:6379 \
             "mirror.gcr.io/library/redis:7.4.3"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis)
+          socat TCP-LISTEN:6379,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:6379 &
           timeout 30 bash -c \
             'until docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 1; done'
 
@@ -426,16 +430,15 @@ tasks:
 
           # start zookeeper
           docker run -d --network offline-net --name zookeeper \
-            -p 2181:2181 \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' zookeeper)
+          socat TCP-LISTEN:2181,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:2181 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'
 
           # start kafka
           docker run -d --network offline-net --name kafka \
-            -p 9092:9092 \
-            -p 29092:29092 \
             -e KAFKA_BROKER_ID="1" \
             -e KAFKA_ZOOKEEPER_CONNECT="zookeeper:2181" \
             -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
@@ -444,6 +447,9 @@ tasks:
             -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
             -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' kafka)
+          socat TCP-LISTEN:9092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:9092 &
+          socat TCP-LISTEN:29092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:29092 &
           timeout 120 bash -c \
             'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'
 
@@ -546,16 +552,15 @@ tasks:
 
           # start zookeeper
           docker run -d --network offline-net --name zookeeper \
-            -p 2181:2181 \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' zookeeper)
+          socat TCP-LISTEN:2181,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:2181 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'
 
           # start kafka
           docker run -d --network offline-net --name kafka \
-            -p 9092:9092 \
-            -p 29092:29092 \
             -e KAFKA_BROKER_ID="1" \
             -e KAFKA_ZOOKEEPER_CONNECT="zookeeper:2181" \
             -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
@@ -564,6 +569,9 @@ tasks:
             -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
             -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' kafka)
+          socat TCP-LISTEN:9092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:9092 &
+          socat TCP-LISTEN:29092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:29092 &
           timeout 120 bash -c \
             'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'
 
@@ -666,10 +674,11 @@ tasks:
 
           # start nats
           docker run -d --network offline-net --name nats \
-            -p 4222:4222 \
-            -p 6222:6222 \
-            -p 8222:8222 \
             "mirror.gcr.io/library/nats:2.9.14-linux"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nats)
+          socat TCP-LISTEN:4222,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4222 &
+          socat TCP-LISTEN:6222,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:6222 &
+          socat TCP-LISTEN:8222,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8222 &
           sleep 60
 
           node bin/create-version-test-folders.js
@@ -765,17 +774,19 @@ tasks:
 
           # start nats-streaming
           docker run -d --network offline-net --name nats-streaming \
-            -p 4223:4223 \
-            -p 8223:8223 \
             "mirror.gcr.io/library/nats-streaming:0.25.3-linux" "-p" "4223" "-m" "8223"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nats-streaming)
+          socat TCP-LISTEN:4223,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4223 &
+          socat TCP-LISTEN:8223,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8223 &
           timeout 60 bash -c \
             'until curl -sf http://127.0.0.1:8223/healthz >/dev/null; do sleep 2; done'
 
           # start nats-streaming-2
           docker run -d --network offline-net --name nats-streaming-2 \
-            -p 4224:4224 \
-            -p 8224:8224 \
             "mirror.gcr.io/library/nats-streaming:0.25.3-linux" "-p" "4224" "-m" "8224"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nats-streaming-2)
+          socat TCP-LISTEN:4224,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4224 &
+          socat TCP-LISTEN:8224,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8224 &
           timeout 60 bash -c \
             'until curl -sf http://127.0.0.1:8224/healthz >/dev/null; do sleep 2; done'
 
@@ -872,16 +883,15 @@ tasks:
 
           # start zookeeper
           docker run -d --network offline-net --name zookeeper \
-            -p 2181:2181 \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' zookeeper)
+          socat TCP-LISTEN:2181,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:2181 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'
 
           # start kafka
           docker run -d --network offline-net --name kafka \
-            -p 9092:9092 \
-            -p 29092:29092 \
             -e KAFKA_BROKER_ID="1" \
             -e KAFKA_ZOOKEEPER_CONNECT="zookeeper:2181" \
             -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
@@ -890,6 +900,9 @@ tasks:
             -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
             -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' kafka)
+          socat TCP-LISTEN:9092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:9092 &
+          socat TCP-LISTEN:29092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:29092 &
           timeout 120 bash -c \
             'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'
 
@@ -992,16 +1005,15 @@ tasks:
 
           # start zookeeper
           docker run -d --network offline-net --name zookeeper \
-            -p 2181:2181 \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' zookeeper)
+          socat TCP-LISTEN:2181,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:2181 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'
 
           # start kafka
           docker run -d --network offline-net --name kafka \
-            -p 9092:9092 \
-            -p 29092:29092 \
             -e KAFKA_BROKER_ID="1" \
             -e KAFKA_ZOOKEEPER_CONNECT="zookeeper:2181" \
             -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
@@ -1010,6 +1022,9 @@ tasks:
             -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
             -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' kafka)
+          socat TCP-LISTEN:9092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:9092 &
+          socat TCP-LISTEN:29092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:29092 &
           timeout 120 bash -c \
             'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'
 
@@ -1112,16 +1127,15 @@ tasks:
 
           # start zookeeper
           docker run -d --network offline-net --name zookeeper \
-            -p 2181:2181 \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' zookeeper)
+          socat TCP-LISTEN:2181,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:2181 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'
 
           # start kafka
           docker run -d --network offline-net --name kafka \
-            -p 9092:9092 \
-            -p 29092:29092 \
             -e KAFKA_BROKER_ID="1" \
             -e KAFKA_ZOOKEEPER_CONNECT="zookeeper:2181" \
             -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
@@ -1130,6 +1144,9 @@ tasks:
             -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
             -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' kafka)
+          socat TCP-LISTEN:9092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:9092 &
+          socat TCP-LISTEN:29092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:29092 &
           timeout 120 bash -c \
             'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'
 
@@ -1232,16 +1249,15 @@ tasks:
 
           # start zookeeper
           docker run -d --network offline-net --name zookeeper \
-            -p 2181:2181 \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' zookeeper)
+          socat TCP-LISTEN:2181,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:2181 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'
 
           # start kafka
           docker run -d --network offline-net --name kafka \
-            -p 9092:9092 \
-            -p 29092:29092 \
             -e KAFKA_BROKER_ID="1" \
             -e KAFKA_ZOOKEEPER_CONNECT="zookeeper:2181" \
             -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
@@ -1250,6 +1266,9 @@ tasks:
             -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
             -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' kafka)
+          socat TCP-LISTEN:9092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:9092 &
+          socat TCP-LISTEN:29092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:29092 &
           timeout 120 bash -c \
             'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'
 
@@ -1352,16 +1371,15 @@ tasks:
 
           # start zookeeper
           docker run -d --network offline-net --name zookeeper \
-            -p 2181:2181 \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' zookeeper)
+          socat TCP-LISTEN:2181,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:2181 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'
 
           # start kafka
           docker run -d --network offline-net --name kafka \
-            -p 9092:9092 \
-            -p 29092:29092 \
             -e KAFKA_BROKER_ID="1" \
             -e KAFKA_ZOOKEEPER_CONNECT="zookeeper:2181" \
             -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
@@ -1370,6 +1388,9 @@ tasks:
             -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
             -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' kafka)
+          socat TCP-LISTEN:9092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:9092 &
+          socat TCP-LISTEN:29092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:29092 &
           timeout 120 bash -c \
             'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'
 

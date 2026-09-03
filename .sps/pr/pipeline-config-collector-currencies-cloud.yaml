@@ -109,9 +109,10 @@ tasks:
 
           # start localstack
           docker run -d --network offline-net --name localstack \
-            -p 4566:4566 \
             -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack)
+          socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
 
@@ -209,9 +210,10 @@ tasks:
 
           # start localstack
           docker run -d --network offline-net --name localstack \
-            -p 4566:4566 \
             -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack)
+          socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
 
@@ -309,9 +311,10 @@ tasks:
 
           # start localstack
           docker run -d --network offline-net --name localstack \
-            -p 4566:4566 \
             -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack)
+          socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
 
@@ -409,9 +412,10 @@ tasks:
 
           # start localstack
           docker run -d --network offline-net --name localstack \
-            -p 4566:4566 \
             -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack)
+          socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
 
@@ -509,9 +513,10 @@ tasks:
 
           # start localstack
           docker run -d --network offline-net --name localstack \
-            -p 4566:4566 \
             -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack)
+          socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
 
@@ -609,9 +614,10 @@ tasks:
 
           # start localstack
           docker run -d --network offline-net --name localstack \
-            -p 4566:4566 \
             -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack)
+          socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
 
@@ -709,11 +715,12 @@ tasks:
 
           # start azurite
           docker run -d --network offline-net --name azurite \
-            -p 10000:10000 \
-            -p 10001:10001 \
-            -p 10002:10002 \
             -e AZURITE_ACCOUNTS="devstoreaccount1:Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OceiPiBeEEiypt/RI7k9g4Vm0J8SeBLMYxPTLr8GlFocl2qSA1dV5w==" \
             "mcr.microsoft.com/azure-storage/azurite:3.37.0" "azurite" "--blobHost" "0.0.0.0" "--queueHost" "0.0.0.0" "--tableHost" "0.0.0.0" "--loose" "--inMemoryPersistence"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' azurite)
+          socat TCP-LISTEN:10000,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10000 &
+          socat TCP-LISTEN:10001,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10001 &
+          socat TCP-LISTEN:10002,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10002 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 10000 2>/dev/null; do sleep 2; done'
 
@@ -811,9 +818,10 @@ tasks:
 
           # start pubsub-emulator
           docker run -d --network offline-net --name pubsub-emulator \
-            -p 8085:8085 \
             --entrypoint "gcloud" \
             "gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators" "beta" "emulators" "pubsub" "start" "--host-port=0.0.0.0:8085" "--project=test-project"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' pubsub-emulator)
+          socat TCP-LISTEN:8085,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8085 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 8085 2>/dev/null; do sleep 2; done'
 
@@ -912,8 +920,9 @@ tasks:
 
           # start fake-gcs-server
           docker run -d --network offline-net --name fake-gcs-server \
-            -p 4443:4443 \
             "mirror.gcr.io/fsouza/fake-gcs-server:1.52.2" "-scheme" "http" "-port" "4443" "-public-host" "127.0.0.1:4443"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' fake-gcs-server)
+          socat TCP-LISTEN:4443,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4443 &
           timeout 30 bash -c \
             'until curl -sf http://127.0.0.1:4443/storage/v1/b >/dev/null; do sleep 2; done'
 
@@ -1013,9 +1022,10 @@ tasks:
 
           # start localstack
           docker run -d --network offline-net --name localstack \
-            -p 4566:4566 \
             -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack)
+          socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
 

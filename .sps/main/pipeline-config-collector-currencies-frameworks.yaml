@@ -547,11 +547,12 @@ tasks:
 
           # start postgres
           docker run -d --network offline-net --name postgres \
-            -p 5432:5432 \
             -e POSTGRES_USER="node" \
             -e POSTGRES_PASSWORD="nodepw" \
             -e POSTGRES_DB="nodedb" \
             "mirror.gcr.io/library/postgres:15.15"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' postgres)
+          socat TCP-LISTEN:5432,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5432 &
           timeout 60 bash -c \
             'until docker exec postgres pg_isready -h 127.0.0.1 -U node 2>/dev/null; do sleep 2; done'
 
@@ -721,11 +722,12 @@ tasks:
 
           # start postgres
           docker run -d --network offline-net --name postgres \
-            -p 5432:5432 \
             -e POSTGRES_USER="node" \
             -e POSTGRES_PASSWORD="nodepw" \
             -e POSTGRES_DB="nodedb" \
             "mirror.gcr.io/library/postgres:15.15"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' postgres)
+          socat TCP-LISTEN:5432,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5432 &
           timeout 60 bash -c \
             'until docker exec postgres pg_isready -h 127.0.0.1 -U node 2>/dev/null; do sleep 2; done'
 

@@ -53,12 +53,6 @@ function dockerRunScript(name) {
 
   const lines = [`docker run -d --network ${SIDECAR_NETWORK} --name ${name}`];
 
-  if (s.ports) {
-    for (const p of s.ports) {
-      lines.push(`  -p ${p}`);
-    }
-  }
-
   if (s.platform) {
     lines.push(`  --platform ${s.platform}`);
   }
@@ -99,6 +93,20 @@ function dockerRunScript(name) {
   }
 
   return lines.map((l, i) => (i < lines.length - 1 ? l + ' \\' : l)).join('\n');
+}
+
+function socatForwardScript(name) {
+  const s = sidecar(name);
+  if (!s || !s.ports || s.ports.length === 0) return '';
+  const varName = `SIDECAR_IP`;
+  const lines = [
+    `${varName}=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${name})`
+  ];
+  for (const p of s.ports) {
+    const [hostPort, containerPort] = p.split(':');
+    lines.push(`socat TCP-LISTEN:${hostPort},fork,reuseaddr,bind=127.0.0.1 TCP:$${varName}:${containerPort} &`);
+  }
+  return lines.join('\n');
 }
 
 function readinessScript(name) {
@@ -227,6 +235,8 @@ function buildCollectorTask(taskSlug, displayName, paths, needs) {
   if (needs.includes('oracledb')) {
     scriptLines.push('# start oracledb early — initialises during npm install');
     scriptLines.push(dockerRunScript('oracledb'));
+    const socatOracle = socatForwardScript('oracledb');
+    if (socatOracle) scriptLines.push(socatOracle);
     scriptLines.push('');
   }
 
@@ -244,6 +254,8 @@ function buildCollectorTask(taskSlug, displayName, paths, needs) {
       } else {
         scriptLines.push(`# start ${need}`);
         scriptLines.push(dockerRunScript(need));
+        const socat = socatForwardScript(need);
+        if (socat) scriptLines.push(socat);
         const wait = readinessScript(need);
         if (wait) scriptLines.push(wait);
         scriptLines.push('');
@@ -492,6 +504,8 @@ function buildSimpleTask(displayName, testScript, needs = [], extraEnv = null) {
     for (const need of needs) {
       scriptLines.push(`# start ${need}`);
       scriptLines.push(dockerRunScript(need));
+      const socat = socatForwardScript(need);
+      if (socat) scriptLines.push(socat);
       const wait = readinessScript(need);
       if (wait) scriptLines.push(wait);
       scriptLines.push('');

@@ -359,8 +359,9 @@ tasks:
 
           # start redis
           docker run -d --network offline-net --name redis \
-            -p 6379:6379 \
             "mirror.gcr.io/library/redis:7.4.3"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis)
+          socat TCP-LISTEN:6379,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:6379 &
           timeout 30 bash -c \
             'until docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 1; done'
 
