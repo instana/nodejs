@@ -149,6 +149,8 @@ function readinessScript(name) {
       return 'timeout 30 bash -c \\\n' + "  'until nc -z 127.0.0.1 6379 2>/dev/null; do sleep 1; done'";
     case 'redis-cluster':
       return 'timeout 30 bash -c \\\n' + "  'until nc -z 127.0.0.1 7000 2>/dev/null; do sleep 1; done'";
+    case 'ibm_db':
+      return 'timeout 300 bash -c \\\n' + "  'until nc -z 127.0.0.1 50000 2>/dev/null; do sleep 5; done'";
     case 'localstack':
       return 'timeout 60 bash -c \\\n' + "  'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'";
     case 'pubsub-emulator':

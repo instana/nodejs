@@ -427,8 +427,10 @@ tasks:
             -e STARTUP_MODE="restoreIfNotExists" \
             "icr.io/db2_community/db2:12.1.5.0"
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ibm_db)
+          socat TCP-LISTEN:50000,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:50000 &
           socat TCP-LISTEN:58885,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:50000 &
-          sleep 60
+          timeout 300 bash -c \
+            'until nc -z 127.0.0.1 50000 2>/dev/null; do sleep 5; done'
 
           node bin/create-version-test-folders.js
 

@@ -346,7 +346,7 @@
       "platform": "linux/amd64",
       "privileged": true,
       "tmpfs": ["/database:uid=1000,gid=1000"],
-      "ports": ["58885:50000"],
+      "ports": ["50000:50000", "58885:50000"],
       "env": [
         {
           "name": "PERSISTENT_HOME",
