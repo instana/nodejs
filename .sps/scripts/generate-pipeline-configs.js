@@ -354,20 +354,13 @@ function readModeSplit(folder) {
 
 function nodeVersionSwitchScript() {
   return [
-    'node_version="$(get_env node-version 2>/dev/null || true)"',
-    'if [ -n "${node_version:-}" ]; then',
-    '  curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash',
-    '  export NVM_DIR="$HOME/.nvm"',
-    '  # shellcheck source=/dev/null',
-    '  . "$NVM_DIR/nvm.sh"',
-    '  nvm install "$node_version" --no-progress',
-    '  nvm use "$node_version"',
-    '  ACTUAL=$(node --version)',
-    '  if [[ "$ACTUAL" != "v${node_version}"* ]]; then',
-    '    echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"',
-    '    exit 1',
-    '  fi',
-    'fi',
+    'node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"',
+    'curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash',
+    'export NVM_DIR="$HOME/.nvm"',
+    '# shellcheck source=/dev/null',
+    '. "$NVM_DIR/nvm.sh"',
+    'nvm install "$node_version" --no-progress',
+    'nvm use "$node_version"',
     'echo "Node.js: $(node --version)"'
   ].join('\n');
 }
