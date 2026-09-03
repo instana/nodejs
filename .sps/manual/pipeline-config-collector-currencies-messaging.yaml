@@ -109,7 +109,7 @@ tasks:
 
           # start zookeeper
           docker run -d --network offline-net --name zookeeper \
-            -p 127.0.0.1:2181:2181 \
+            -p 2181:2181 \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
           timeout 60 bash -c \
@@ -117,8 +117,8 @@ tasks:
 
           # start kafka
           docker run -d --network offline-net --name kafka \
-            -p 127.0.0.1:9092:9092 \
-            -p 127.0.0.1:29092:29092 \
+            -p 9092:9092 \
+            -p 29092:29092 \
             -e KAFKA_BROKER_ID="1" \
             -e KAFKA_ZOOKEEPER_CONNECT="zookeeper:2181" \
             -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
@@ -229,8 +229,8 @@ tasks:
 
           # start rabbitmq
           docker run -d --network offline-net --name rabbitmq \
-            -p 127.0.0.1:5671:5671 \
-            -p 127.0.0.1:5672:5672 \
+            -p 5671:5671 \
+            -p 5672:5672 \
             "mirror.gcr.io/library/rabbitmq:3.13.0"
           timeout 120 bash -c \
             'until nc -z 127.0.0.1 5672 2>/dev/null; do sleep 2; done'
@@ -328,7 +328,7 @@ tasks:
 
           # start redis
           docker run -d --network offline-net --name redis \
-            -p 127.0.0.1:6379:6379 \
+            -p 6379:6379 \
             "mirror.gcr.io/library/redis:7.4.3"
           timeout 30 bash -c \
             'until docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 1; done'
@@ -426,7 +426,7 @@ tasks:
 
           # start zookeeper
           docker run -d --network offline-net --name zookeeper \
-            -p 127.0.0.1:2181:2181 \
+            -p 2181:2181 \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
           timeout 60 bash -c \
@@ -434,8 +434,8 @@ tasks:
 
           # start kafka
           docker run -d --network offline-net --name kafka \
-            -p 127.0.0.1:9092:9092 \
-            -p 127.0.0.1:29092:29092 \
+            -p 9092:9092 \
+            -p 29092:29092 \
             -e KAFKA_BROKER_ID="1" \
             -e KAFKA_ZOOKEEPER_CONNECT="zookeeper:2181" \
             -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
@@ -546,7 +546,7 @@ tasks:
 
           # start zookeeper
           docker run -d --network offline-net --name zookeeper \
-            -p 127.0.0.1:2181:2181 \
+            -p 2181:2181 \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
           timeout 60 bash -c \
@@ -554,8 +554,8 @@ tasks:
 
           # start kafka
           docker run -d --network offline-net --name kafka \
-            -p 127.0.0.1:9092:9092 \
-            -p 127.0.0.1:29092:29092 \
+            -p 9092:9092 \
+            -p 29092:29092 \
             -e KAFKA_BROKER_ID="1" \
             -e KAFKA_ZOOKEEPER_CONNECT="zookeeper:2181" \
             -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
@@ -666,9 +666,9 @@ tasks:
 
           # start nats
           docker run -d --network offline-net --name nats \
-            -p 127.0.0.1:4222:4222 \
-            -p 127.0.0.1:6222:6222 \
-            -p 127.0.0.1:8222:8222 \
+            -p 4222:4222 \
+            -p 6222:6222 \
+            -p 8222:8222 \
             "mirror.gcr.io/library/nats:2.9.14-linux"
           sleep 60
 
@@ -765,16 +765,16 @@ tasks:
 
           # start nats-streaming
           docker run -d --network offline-net --name nats-streaming \
-            -p 127.0.0.1:4223:4223 \
-            -p 127.0.0.1:8223:8223 \
+            -p 4223:4223 \
+            -p 8223:8223 \
             "mirror.gcr.io/library/nats-streaming:0.25.3-linux" "-p" "4223" "-m" "8223"
           timeout 60 bash -c \
             'until curl -sf http://127.0.0.1:8223/healthz >/dev/null; do sleep 2; done'
 
           # start nats-streaming-2
           docker run -d --network offline-net --name nats-streaming-2 \
-            -p 127.0.0.1:4224:4224 \
-            -p 127.0.0.1:8224:8224 \
+            -p 4224:4224 \
+            -p 8224:8224 \
             "mirror.gcr.io/library/nats-streaming:0.25.3-linux" "-p" "4224" "-m" "8224"
           timeout 60 bash -c \
             'until curl -sf http://127.0.0.1:8224/healthz >/dev/null; do sleep 2; done'
@@ -872,7 +872,7 @@ tasks:
 
           # start zookeeper
           docker run -d --network offline-net --name zookeeper \
-            -p 127.0.0.1:2181:2181 \
+            -p 2181:2181 \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
           timeout 60 bash -c \
@@ -880,8 +880,8 @@ tasks:
 
           # start kafka
           docker run -d --network offline-net --name kafka \
-            -p 127.0.0.1:9092:9092 \
-            -p 127.0.0.1:29092:29092 \
+            -p 9092:9092 \
+            -p 29092:29092 \
             -e KAFKA_BROKER_ID="1" \
             -e KAFKA_ZOOKEEPER_CONNECT="zookeeper:2181" \
             -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
@@ -992,7 +992,7 @@ tasks:
 
           # start zookeeper
           docker run -d --network offline-net --name zookeeper \
-            -p 127.0.0.1:2181:2181 \
+            -p 2181:2181 \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
           timeout 60 bash -c \
@@ -1000,8 +1000,8 @@ tasks:
 
           # start kafka
           docker run -d --network offline-net --name kafka \
-            -p 127.0.0.1:9092:9092 \
-            -p 127.0.0.1:29092:29092 \
+            -p 9092:9092 \
+            -p 29092:29092 \
             -e KAFKA_BROKER_ID="1" \
             -e KAFKA_ZOOKEEPER_CONNECT="zookeeper:2181" \
             -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
@@ -1112,7 +1112,7 @@ tasks:
 
           # start zookeeper
           docker run -d --network offline-net --name zookeeper \
-            -p 127.0.0.1:2181:2181 \
+            -p 2181:2181 \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
           timeout 60 bash -c \
@@ -1120,8 +1120,8 @@ tasks:
 
           # start kafka
           docker run -d --network offline-net --name kafka \
-            -p 127.0.0.1:9092:9092 \
-            -p 127.0.0.1:29092:29092 \
+            -p 9092:9092 \
+            -p 29092:29092 \
             -e KAFKA_BROKER_ID="1" \
             -e KAFKA_ZOOKEEPER_CONNECT="zookeeper:2181" \
             -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
@@ -1232,7 +1232,7 @@ tasks:
 
           # start zookeeper
           docker run -d --network offline-net --name zookeeper \
-            -p 127.0.0.1:2181:2181 \
+            -p 2181:2181 \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
           timeout 60 bash -c \
@@ -1240,8 +1240,8 @@ tasks:
 
           # start kafka
           docker run -d --network offline-net --name kafka \
-            -p 127.0.0.1:9092:9092 \
-            -p 127.0.0.1:29092:29092 \
+            -p 9092:9092 \
+            -p 29092:29092 \
             -e KAFKA_BROKER_ID="1" \
             -e KAFKA_ZOOKEEPER_CONNECT="zookeeper:2181" \
             -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
@@ -1352,7 +1352,7 @@ tasks:
 
           # start zookeeper
           docker run -d --network offline-net --name zookeeper \
-            -p 127.0.0.1:2181:2181 \
+            -p 2181:2181 \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
           timeout 60 bash -c \
@@ -1360,8 +1360,8 @@ tasks:
 
           # start kafka
           docker run -d --network offline-net --name kafka \
-            -p 127.0.0.1:9092:9092 \
-            -p 127.0.0.1:29092:29092 \
+            -p 9092:9092 \
+            -p 29092:29092 \
             -e KAFKA_BROKER_ID="1" \
             -e KAFKA_ZOOKEEPER_CONNECT="zookeeper:2181" \
             -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \

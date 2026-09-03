@@ -109,7 +109,7 @@ tasks:
 
           # start elasticsearch
           docker run -d --network offline-net --name elasticsearch \
-            -p 127.0.0.1:9200:9200 \
+            -p 9200:9200 \
             -e discovery.type="single-node" \
             -e ES_JAVA_OPTS="-Xms500m -Xmx500m" \
             -e xpack.security.enabled="false" \
@@ -214,7 +214,7 @@ tasks:
 
           # start redis
           docker run -d --network offline-net --name redis \
-            -p 127.0.0.1:6379:6379 \
+            -p 6379:6379 \
             "mirror.gcr.io/library/redis:7.4.3"
           timeout 30 bash -c \
             'until docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 1; done'
@@ -226,15 +226,15 @@ tasks:
 
           # start redis-sentinel
           docker run -d --network offline-net --name redis-sentinel \
-            -p 127.0.0.1:26379:26379 \
+            -p 26379:26379 \
             "mirror.gcr.io/library/redis:7.4.3" "sh" "-c" "echo \"sentinel monitor mymaster redis 6379 2\" > /etc/sentinel.conf && echo \"sentinel down-after-milliseconds mymaster 1000\" >> /etc/sentinel.conf && echo \"sentinel failover-timeout mymaster 5000\" >> /etc/sentinel.conf && echo \"sentinel parallel-syncs mymaster 1\" >> /etc/sentinel.conf && echo \"sentinel resolve-hostnames yes\" >> /etc/sentinel.conf && redis-server /etc/sentinel.conf --sentinel --port 26379"
           sleep 60
 
           # start redis-cluster
           docker run -d --network offline-net --name redis-cluster \
-            -p 127.0.0.1:7000:7000 \
-            -p 127.0.0.1:7001:7001 \
-            -p 127.0.0.1:7002:7002 \
+            -p 7000:7000 \
+            -p 7001:7001 \
+            -p 7002:7002 \
             --entrypoint "sh" \
             "mirror.gcr.io/library/redis:7.4.3" "-c" "redis-server --port 7000 --cluster-enabled yes --cluster-config-file nodes-7000.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && redis-server --port 7001 --cluster-enabled yes --cluster-config-file nodes-7001.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && redis-server --port 7002 --cluster-enabled yes --cluster-config-file nodes-7002.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && sleep 1 && echo 'yes' | redis-cli --cluster create 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 --cluster-replicas 0 && tail -f /dev/null"
           timeout 30 bash -c \
@@ -333,13 +333,13 @@ tasks:
 
           # start couchbase
           docker run -d --network offline-net --name couchbase \
-            -p 127.0.0.1:8091:8091 \
-            -p 127.0.0.1:8092:8092 \
-            -p 127.0.0.1:8093:8093 \
-            -p 127.0.0.1:8094:8094 \
-            -p 127.0.0.1:8095:8095 \
-            -p 127.0.0.1:8096:8096 \
-            -p 127.0.0.1:11210:11210 \
+            -p 8091:8091 \
+            -p 8092:8092 \
+            -p 8093:8093 \
+            -p 8094:8094 \
+            -p 8095:8095 \
+            -p 8096:8096 \
+            -p 11210:11210 \
             "mirror.gcr.io/library/couchbase:7.6.7"
           timeout 60 bash -c \
             'until curl -sf http://127.0.0.1:8091/ >/dev/null; do sleep 2; done'
@@ -437,7 +437,7 @@ tasks:
 
           # start ibm_db
           docker run -d --network offline-net --name ibm_db \
-            -p 127.0.0.1:58885:50000 \
+            -p 58885:50000 \
             --platform linux/amd64 \
             --privileged \
             --tmpfs /database:uid=1000,gid=1000 \
@@ -551,7 +551,7 @@ tasks:
 
           # start redis
           docker run -d --network offline-net --name redis \
-            -p 127.0.0.1:6379:6379 \
+            -p 6379:6379 \
             "mirror.gcr.io/library/redis:7.4.3"
           timeout 30 bash -c \
             'until docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 1; done'
@@ -563,15 +563,15 @@ tasks:
 
           # start redis-sentinel
           docker run -d --network offline-net --name redis-sentinel \
-            -p 127.0.0.1:26379:26379 \
+            -p 26379:26379 \
             "mirror.gcr.io/library/redis:7.4.3" "sh" "-c" "echo \"sentinel monitor mymaster redis 6379 2\" > /etc/sentinel.conf && echo \"sentinel down-after-milliseconds mymaster 1000\" >> /etc/sentinel.conf && echo \"sentinel failover-timeout mymaster 5000\" >> /etc/sentinel.conf && echo \"sentinel parallel-syncs mymaster 1\" >> /etc/sentinel.conf && echo \"sentinel resolve-hostnames yes\" >> /etc/sentinel.conf && redis-server /etc/sentinel.conf --sentinel --port 26379"
           sleep 60
 
           # start redis-cluster
           docker run -d --network offline-net --name redis-cluster \
-            -p 127.0.0.1:7000:7000 \
-            -p 127.0.0.1:7001:7001 \
-            -p 127.0.0.1:7002:7002 \
+            -p 7000:7000 \
+            -p 7001:7001 \
+            -p 7002:7002 \
             --entrypoint "sh" \
             "mirror.gcr.io/library/redis:7.4.3" "-c" "redis-server --port 7000 --cluster-enabled yes --cluster-config-file nodes-7000.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && redis-server --port 7001 --cluster-enabled yes --cluster-config-file nodes-7001.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && redis-server --port 7002 --cluster-enabled yes --cluster-config-file nodes-7002.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && sleep 1 && echo 'yes' | redis-cli --cluster create 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 --cluster-replicas 0 && tail -f /dev/null"
           timeout 30 bash -c \
@@ -670,7 +670,7 @@ tasks:
 
           # start memcached
           docker run -d --network offline-net --name memcached \
-            -p 127.0.0.1:11211:11211 \
+            -p 11211:11211 \
             "mirror.gcr.io/library/memcached:1.6.9"
           sleep 60
 
@@ -767,7 +767,7 @@ tasks:
 
           # start mongodb
           docker run -d --network offline-net --name mongodb \
-            -p 127.0.0.1:27017:27017 \
+            -p 27017:27017 \
             "mirror.gcr.io/library/mongo:8.0.8"
           timeout 60 bash -c \
             'until docker exec mongodb mongosh --quiet --eval "db.runCommand({ ping: 1 })" 2>/dev/null | grep -q ok; do sleep 2; done'
@@ -865,7 +865,7 @@ tasks:
 
           # start mongodb
           docker run -d --network offline-net --name mongodb \
-            -p 127.0.0.1:27017:27017 \
+            -p 27017:27017 \
             "mirror.gcr.io/library/mongo:8.0.8"
           timeout 60 bash -c \
             'until docker exec mongodb mongosh --quiet --eval "db.runCommand({ ping: 1 })" 2>/dev/null | grep -q ok; do sleep 2; done'
@@ -963,7 +963,7 @@ tasks:
 
           # start mssql
           docker run -d --network offline-net --name mssql \
-            -p 127.0.0.1:1433:1433 \
+            -p 1433:1433 \
             -e ACCEPT_EULA="Y" \
             -e MSSQL_SA_PASSWORD="stanCanHazMsSQL1" \
             "mcr.microsoft.com/azure-sql-edge:1.0.7"
@@ -1062,7 +1062,7 @@ tasks:
 
           # start mysql
           docker run -d --network offline-net --name mysql \
-            -p 127.0.0.1:3306:3306 \
+            -p 3306:3306 \
             -e MYSQL_ROOT_PASSWORD="nodepw" \
             -e MYSQL_DATABASE="nodedb" \
             -e MYSQL_USER="node" \
@@ -1165,7 +1165,7 @@ tasks:
 
           # start mysql
           docker run -d --network offline-net --name mysql \
-            -p 127.0.0.1:3306:3306 \
+            -p 3306:3306 \
             -e MYSQL_ROOT_PASSWORD="nodepw" \
             -e MYSQL_DATABASE="nodedb" \
             -e MYSQL_USER="node" \
@@ -1266,7 +1266,7 @@ tasks:
 
           # start oracledb early — initialises during npm install
           docker run -d --network offline-net --name oracledb \
-            -p 127.0.0.1:1521:1521 \
+            -p 1521:1521 \
             -e ORACLE_PASSWORD="teamnodejspassword" \
             "mirror.gcr.io/gvenzl/oracle-free:23-slim"
 
@@ -1371,7 +1371,7 @@ tasks:
 
           # start postgres
           docker run -d --network offline-net --name postgres \
-            -p 127.0.0.1:5432:5432 \
+            -p 5432:5432 \
             -e POSTGRES_USER="node" \
             -e POSTGRES_PASSWORD="nodepw" \
             -e POSTGRES_DB="nodedb" \
@@ -1472,7 +1472,7 @@ tasks:
 
           # start postgres
           docker run -d --network offline-net --name postgres \
-            -p 127.0.0.1:5432:5432 \
+            -p 5432:5432 \
             -e POSTGRES_USER="node" \
             -e POSTGRES_PASSWORD="nodepw" \
             -e POSTGRES_DB="nodedb" \
@@ -1573,7 +1573,7 @@ tasks:
 
           # start postgres
           docker run -d --network offline-net --name postgres \
-            -p 127.0.0.1:5432:5432 \
+            -p 5432:5432 \
             -e POSTGRES_USER="node" \
             -e POSTGRES_PASSWORD="nodepw" \
             -e POSTGRES_DB="nodedb" \
@@ -1583,7 +1583,7 @@ tasks:
 
           # start mysql
           docker run -d --network offline-net --name mysql \
-            -p 127.0.0.1:3306:3306 \
+            -p 3306:3306 \
             -e MYSQL_ROOT_PASSWORD="nodepw" \
             -e MYSQL_DATABASE="nodedb" \
             -e MYSQL_USER="node" \
@@ -1686,7 +1686,7 @@ tasks:
 
           # start redis
           docker run -d --network offline-net --name redis \
-            -p 127.0.0.1:6379:6379 \
+            -p 6379:6379 \
             "mirror.gcr.io/library/redis:7.4.3"
           timeout 30 bash -c \
             'until docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 1; done'
@@ -1698,15 +1698,15 @@ tasks:
 
           # start redis-sentinel
           docker run -d --network offline-net --name redis-sentinel \
-            -p 127.0.0.1:26379:26379 \
+            -p 26379:26379 \
             "mirror.gcr.io/library/redis:7.4.3" "sh" "-c" "echo \"sentinel monitor mymaster redis 6379 2\" > /etc/sentinel.conf && echo \"sentinel down-after-milliseconds mymaster 1000\" >> /etc/sentinel.conf && echo \"sentinel failover-timeout mymaster 5000\" >> /etc/sentinel.conf && echo \"sentinel parallel-syncs mymaster 1\" >> /etc/sentinel.conf && echo \"sentinel resolve-hostnames yes\" >> /etc/sentinel.conf && redis-server /etc/sentinel.conf --sentinel --port 26379"
           sleep 60
 
           # start redis-cluster
           docker run -d --network offline-net --name redis-cluster \
-            -p 127.0.0.1:7000:7000 \
-            -p 127.0.0.1:7001:7001 \
-            -p 127.0.0.1:7002:7002 \
+            -p 7000:7000 \
+            -p 7001:7001 \
+            -p 7002:7002 \
             --entrypoint "sh" \
             "mirror.gcr.io/library/redis:7.4.3" "-c" "redis-server --port 7000 --cluster-enabled yes --cluster-config-file nodes-7000.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && redis-server --port 7001 --cluster-enabled yes --cluster-config-file nodes-7001.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && redis-server --port 7002 --cluster-enabled yes --cluster-config-file nodes-7002.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && sleep 1 && echo 'yes' | redis-cli --cluster create 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 --cluster-replicas 0 && tail -f /dev/null"
           timeout 30 bash -c \
@@ -1805,7 +1805,7 @@ tasks:
 
           # start postgres
           docker run -d --network offline-net --name postgres \
-            -p 127.0.0.1:5432:5432 \
+            -p 5432:5432 \
             -e POSTGRES_USER="node" \
             -e POSTGRES_PASSWORD="nodepw" \
             -e POSTGRES_DB="nodedb" \
@@ -1906,7 +1906,7 @@ tasks:
 
           # start mssql
           docker run -d --network offline-net --name mssql \
-            -p 127.0.0.1:1433:1433 \
+            -p 1433:1433 \
             -e ACCEPT_EULA="Y" \
             -e MSSQL_SA_PASSWORD="stanCanHazMsSQL1" \
             "mcr.microsoft.com/azure-sql-edge:1.0.7"

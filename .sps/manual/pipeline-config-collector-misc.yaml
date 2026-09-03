@@ -359,7 +359,7 @@ tasks:
 
           # start redis
           docker run -d --network offline-net --name redis \
-            -p 127.0.0.1:6379:6379 \
+            -p 6379:6379 \
             "mirror.gcr.io/library/redis:7.4.3"
           timeout 30 bash -c \
             'until docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 1; done'

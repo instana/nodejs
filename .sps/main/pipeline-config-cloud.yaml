@@ -109,7 +109,7 @@ tasks:
 
           # start localstack
           docker run -d --network offline-net --name localstack \
-            -p 127.0.0.1:4566:4566 \
+            -p 4566:4566 \
             -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
           timeout 60 bash -c \

@@ -547,7 +547,7 @@ tasks:
 
           # start postgres
           docker run -d --network offline-net --name postgres \
-            -p 127.0.0.1:5432:5432 \
+            -p 5432:5432 \
             -e POSTGRES_USER="node" \
             -e POSTGRES_PASSWORD="nodepw" \
             -e POSTGRES_DB="nodedb" \
@@ -721,7 +721,7 @@ tasks:
 
           # start postgres
           docker run -d --network offline-net --name postgres \
-            -p 127.0.0.1:5432:5432 \
+            -p 5432:5432 \
             -e POSTGRES_USER="node" \
             -e POSTGRES_PASSWORD="nodepw" \
             -e POSTGRES_DB="nodedb" \

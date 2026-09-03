@@ -55,8 +55,7 @@ function dockerRunScript(name) {
 
   if (s.ports) {
     for (const p of s.ports) {
-      const [hostPort, containerPort] = p.split(':');
-      lines.push(`  -p 127.0.0.1:${hostPort}:${containerPort}`);
+      lines.push(`  -p ${p}`);
     }
   }
 
