@@ -532,7 +532,7 @@ tasks:
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -554,7 +554,7 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' postgres)
           socat TCP-LISTEN:5432,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5432 &
           timeout 60 bash -c \
-            'until docker exec postgres pg_isready -h 127.0.0.1 -U node 2>/dev/null; do sleep 2; done'
+            'until nc -z 127.0.0.1 5432 2>/dev/null; do sleep 2; done'
 
           node bin/create-version-test-folders.js
 
@@ -707,7 +707,7 @@ tasks:
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -729,7 +729,7 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' postgres)
           socat TCP-LISTEN:5432,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5432 &
           timeout 60 bash -c \
-            'until docker exec postgres pg_isready -h 127.0.0.1 -U node 2>/dev/null; do sleep 2; done'
+            'until nc -z 127.0.0.1 5432 2>/dev/null; do sleep 2; done'
 
           node bin/create-version-test-folders.js
 

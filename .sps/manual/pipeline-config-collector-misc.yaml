@@ -344,7 +344,7 @@ tasks:
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -363,7 +363,7 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis)
           socat TCP-LISTEN:6379,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:6379 &
           timeout 30 bash -c \
-            'until docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 1; done'
+            'until nc -z 127.0.0.1 6379 2>/dev/null; do sleep 1; done'
 
           node bin/create-version-test-folders.js
 

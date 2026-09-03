@@ -140,30 +140,15 @@ function readinessScript(name) {
     case 'zookeeper':
       return 'timeout 60 bash -c \\\n' + "  'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'";
     case 'postgres':
-      return (
-        'timeout 60 bash -c \\\n' +
-        "  'until docker exec postgres pg_isready -h 127.0.0.1 -U node 2>/dev/null; do sleep 2; done'"
-      );
+      return 'timeout 60 bash -c \\\n' + "  'until nc -z 127.0.0.1 5432 2>/dev/null; do sleep 2; done'";
     case 'mysql':
-      return (
-        'timeout 60 bash -c \\\n' +
-        '  \'until docker exec mysql mysql -h 127.0.0.1 -u node -pnodepw -e "SELECT 1" 2>/dev/null; do sleep 2; done\''
-      );
+      return 'timeout 60 bash -c \\\n' + "  'until nc -z 127.0.0.1 3306 2>/dev/null; do sleep 2; done'";
     case 'mongodb':
-      return (
-        'timeout 60 bash -c \\\n' +
-        '  \'until docker exec mongodb mongosh --quiet --eval "db.runCommand({ ping: 1 })" 2>/dev/null | grep -q ok; do sleep 2; done\''
-      );
+      return 'timeout 60 bash -c \\\n' + "  'until nc -z 127.0.0.1 27017 2>/dev/null; do sleep 2; done'";
     case 'redis':
-      return (
-        'timeout 30 bash -c \\\n' +
-        "  'until docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 1; done'"
-      );
+      return 'timeout 30 bash -c \\\n' + "  'until nc -z 127.0.0.1 6379 2>/dev/null; do sleep 1; done'";
     case 'redis-cluster':
-      return (
-        'timeout 30 bash -c \\\n' +
-        "  'until docker exec redis-cluster redis-cli -p 7000 cluster info 2>/dev/null | grep -q cluster_state:ok; do sleep 1; done'"
-      );
+      return 'timeout 30 bash -c \\\n' + "  'until nc -z 127.0.0.1 7000 2>/dev/null; do sleep 1; done'";
     case 'localstack':
       return 'timeout 60 bash -c \\\n' + "  'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'";
     case 'pubsub-emulator':
@@ -391,7 +376,7 @@ function dockerClientInstallScript() {
   return [
     'CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")',
     'ARCH=$(dpkg --print-architecture)',
-    'apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd',
+    'apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat',
     'install -m 0755 -d /etc/apt/keyrings',
     'curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg',
     'chmod a+r /etc/apt/keyrings/docker.gpg',

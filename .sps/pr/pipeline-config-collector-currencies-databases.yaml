@@ -94,7 +94,7 @@ tasks:
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -200,7 +200,7 @@ tasks:
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -219,7 +219,7 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis)
           socat TCP-LISTEN:6379,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:6379 &
           timeout 30 bash -c \
-            'until docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 1; done'
+            'until nc -z 127.0.0.1 6379 2>/dev/null; do sleep 1; done'
 
           # start redis-slave
           docker run -d --network offline-net --name redis-slave \
@@ -242,7 +242,7 @@ tasks:
           socat TCP-LISTEN:7001,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:7001 &
           socat TCP-LISTEN:7002,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:7002 &
           timeout 30 bash -c \
-            'until docker exec redis-cluster redis-cli -p 7000 cluster info 2>/dev/null | grep -q cluster_state:ok; do sleep 1; done'
+            'until nc -z 127.0.0.1 7000 2>/dev/null; do sleep 1; done'
 
           node bin/create-version-test-folders.js
 
@@ -322,7 +322,7 @@ tasks:
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -427,7 +427,7 @@ tasks:
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -542,7 +542,7 @@ tasks:
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -561,7 +561,7 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis)
           socat TCP-LISTEN:6379,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:6379 &
           timeout 30 bash -c \
-            'until docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 1; done'
+            'until nc -z 127.0.0.1 6379 2>/dev/null; do sleep 1; done'
 
           # start redis-slave
           docker run -d --network offline-net --name redis-slave \
@@ -584,7 +584,7 @@ tasks:
           socat TCP-LISTEN:7001,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:7001 &
           socat TCP-LISTEN:7002,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:7002 &
           timeout 30 bash -c \
-            'until docker exec redis-cluster redis-cli -p 7000 cluster info 2>/dev/null | grep -q cluster_state:ok; do sleep 1; done'
+            'until nc -z 127.0.0.1 7000 2>/dev/null; do sleep 1; done'
 
           node bin/create-version-test-folders.js
 
@@ -664,7 +664,7 @@ tasks:
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -762,7 +762,7 @@ tasks:
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -781,7 +781,7 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mongodb)
           socat TCP-LISTEN:27017,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:27017 &
           timeout 60 bash -c \
-            'until docker exec mongodb mongosh --quiet --eval "db.runCommand({ ping: 1 })" 2>/dev/null | grep -q ok; do sleep 2; done'
+            'until nc -z 127.0.0.1 27017 2>/dev/null; do sleep 2; done'
 
           node bin/create-version-test-folders.js
 
@@ -861,7 +861,7 @@ tasks:
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -880,7 +880,7 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mongodb)
           socat TCP-LISTEN:27017,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:27017 &
           timeout 60 bash -c \
-            'until docker exec mongodb mongosh --quiet --eval "db.runCommand({ ping: 1 })" 2>/dev/null | grep -q ok; do sleep 2; done'
+            'until nc -z 127.0.0.1 27017 2>/dev/null; do sleep 2; done'
 
           node bin/create-version-test-folders.js
 
@@ -960,7 +960,7 @@ tasks:
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -1060,7 +1060,7 @@ tasks:
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -1084,7 +1084,7 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mysql)
           socat TCP-LISTEN:3306,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:3306 &
           timeout 60 bash -c \
-            'until docker exec mysql mysql -h 127.0.0.1 -u node -pnodepw -e "SELECT 1" 2>/dev/null; do sleep 2; done'
+            'until nc -z 127.0.0.1 3306 2>/dev/null; do sleep 2; done'
 
           node bin/create-version-test-folders.js
 
@@ -1164,7 +1164,7 @@ tasks:
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -1188,7 +1188,7 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mysql)
           socat TCP-LISTEN:3306,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:3306 &
           timeout 60 bash -c \
-            'until docker exec mysql mysql -h 127.0.0.1 -u node -pnodepw -e "SELECT 1" 2>/dev/null; do sleep 2; done'
+            'until nc -z 127.0.0.1 3306 2>/dev/null; do sleep 2; done'
 
           node bin/create-version-test-folders.js
 
@@ -1268,7 +1268,7 @@ tasks:
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -1372,7 +1372,7 @@ tasks:
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -1394,7 +1394,7 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' postgres)
           socat TCP-LISTEN:5432,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5432 &
           timeout 60 bash -c \
-            'until docker exec postgres pg_isready -h 127.0.0.1 -U node 2>/dev/null; do sleep 2; done'
+            'until nc -z 127.0.0.1 5432 2>/dev/null; do sleep 2; done'
 
           node bin/create-version-test-folders.js
 
@@ -1474,7 +1474,7 @@ tasks:
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -1496,7 +1496,7 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' postgres)
           socat TCP-LISTEN:5432,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5432 &
           timeout 60 bash -c \
-            'until docker exec postgres pg_isready -h 127.0.0.1 -U node 2>/dev/null; do sleep 2; done'
+            'until nc -z 127.0.0.1 5432 2>/dev/null; do sleep 2; done'
 
           node bin/create-version-test-folders.js
 
@@ -1576,7 +1576,7 @@ tasks:
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -1598,7 +1598,7 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' postgres)
           socat TCP-LISTEN:5432,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5432 &
           timeout 60 bash -c \
-            'until docker exec postgres pg_isready -h 127.0.0.1 -U node 2>/dev/null; do sleep 2; done'
+            'until nc -z 127.0.0.1 5432 2>/dev/null; do sleep 2; done'
 
           # start mysql
           docker run -d --network offline-net --name mysql \
@@ -1611,7 +1611,7 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mysql)
           socat TCP-LISTEN:3306,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:3306 &
           timeout 60 bash -c \
-            'until docker exec mysql mysql -h 127.0.0.1 -u node -pnodepw -e "SELECT 1" 2>/dev/null; do sleep 2; done'
+            'until nc -z 127.0.0.1 3306 2>/dev/null; do sleep 2; done'
 
           node bin/create-version-test-folders.js
 
@@ -1691,7 +1691,7 @@ tasks:
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -1710,7 +1710,7 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis)
           socat TCP-LISTEN:6379,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:6379 &
           timeout 30 bash -c \
-            'until docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 1; done'
+            'until nc -z 127.0.0.1 6379 2>/dev/null; do sleep 1; done'
 
           # start redis-slave
           docker run -d --network offline-net --name redis-slave \
@@ -1733,7 +1733,7 @@ tasks:
           socat TCP-LISTEN:7001,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:7001 &
           socat TCP-LISTEN:7002,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:7002 &
           timeout 30 bash -c \
-            'until docker exec redis-cluster redis-cli -p 7000 cluster info 2>/dev/null | grep -q cluster_state:ok; do sleep 1; done'
+            'until nc -z 127.0.0.1 7000 2>/dev/null; do sleep 1; done'
 
           node bin/create-version-test-folders.js
 
@@ -1813,7 +1813,7 @@ tasks:
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -1835,7 +1835,7 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' postgres)
           socat TCP-LISTEN:5432,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5432 &
           timeout 60 bash -c \
-            'until docker exec postgres pg_isready -h 127.0.0.1 -U node 2>/dev/null; do sleep 2; done'
+            'until nc -z 127.0.0.1 5432 2>/dev/null; do sleep 2; done'
 
           node bin/create-version-test-folders.js
 
@@ -1915,7 +1915,7 @@ tasks:
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
