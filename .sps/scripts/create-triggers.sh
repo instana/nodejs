@@ -327,17 +327,16 @@ if [[ "$TYPE" == "all" || "$TYPE" == "dependencies" ]]; then
 echo ""
 echo "── Dependencies triggers (ci-listener, timer + manual) ──────────────────"
 
-declare -A DEP_CRONS=(
-  ["pipeline-config-currency-bot.yaml"]="0 6 * * *"
-  ["pipeline-config-prod-dependency-bot.yaml"]="0 7 * * 1"
-)
-
 for yaml_file in "${SPS_DIR}/dependencies"/pipeline-config*.yaml; do
   [[ -f "$yaml_file" ]] || continue
   filename="$(basename "$yaml_file")"
   name="${filename#pipeline-config-}"
   name="${name%.yaml}"
-  cron="${DEP_CRONS[$filename]:-0 6 * * *}"
+  case "$filename" in
+    pipeline-config-currency-bot.yaml)          cron="0 6 * * *" ;;
+    pipeline-config-prod-dependency-bot.yaml)   cron="0 7 * * 1" ;;
+    *)                                           cron="0 6 * * *" ;;
+  esac
   create_timer_trigger  "timer-${name}"      ".sps/dependencies/${filename}" "${cron}" "UTC"
   create_manual_trigger "manual-dep-${name}" ".sps/dependencies/${filename}" "20"
 done
