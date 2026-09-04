@@ -12,7 +12,7 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          GH_TOKEN="$(get_env gh-public-token "")"
+          GH_TOKEN="$(get_secret gh-public-token)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts

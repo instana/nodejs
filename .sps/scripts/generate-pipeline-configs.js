@@ -33,7 +33,8 @@ const ALL_SIMPLE_TARGETS = [
   'cloud',
   'autoprofile',
   'core-group',
-  'opentelemetry'
+  'opentelemetry',
+  'sonar'
 ];
 const ALL_TARGETS = ['default', ...ALL_CURRENCY_GROUPS, ...ALL_SIMPLE_TARGETS];
 
@@ -518,6 +519,88 @@ function buildSimpleTask(displayName, testScript, needs = [], extraEnv = null) {
         ...(needs.length > 0 ? { include: ['docker-socket'] } : {}),
         script: scriptLines.join('\n')
       },
+      { name: 'sign-artifact', when: 'false' },
+      { name: 'build-artifact', when: 'false' },
+      { name: 'scan-artifact', when: 'false' }
+    ]
+  };
+}
+
+function buildSonarTask(rootTask = 'pr-code-checks') {
+  const isPR = rootTask === 'pr-code-checks';
+  const script = isPR
+    ? [
+        '#!/usr/bin/env bash',
+        'set -eo pipefail',
+        '',
+        'SONAR_TOKEN="$(get_secret sonar-token)"',
+        'if [ -z "$SONAR_TOKEN" ]; then',
+        '  echo "ERROR: sonar-token pipeline property is not set — skipping Sonar analysis."',
+        '  exit 1',
+        'fi',
+        '',
+        'PR_NUMBER="$(get_env pr-id "")"',
+        'PR_BRANCH="$(get_env pr-branch "")"',
+        'TARGET_BRANCH="$(get_env target-branch "main")"',
+        'PR_STATE="$(get_env pr-state "")"',
+        '',
+        'cd "$WORKSPACE/$(load_repo app-repo path)"',
+        'npm install --loglevel warn --foreground-scripts',
+        '',
+        'echo "Running ESLint..."',
+        'npx eslint packages/ -f json -o eslint-report.json || true',
+        '',
+        'echo "Installing SonarCloud scanner..."',
+        'npm install -g @sonar/scan@4.4.0',
+        '',
+        'if [ -n "$PR_NUMBER" ]; then',
+        '  if [ "$PR_STATE" = "draft" ]; then',
+        '    echo "PR is draft — skipping Sonar scan."',
+        '  else',
+        '    echo "Running Sonar scan for PR #${PR_NUMBER}..."',
+        '    sonar -Dsonar.token="$SONAR_TOKEN" \\',
+        '          -Dsonar.pullrequest.key="$PR_NUMBER" \\',
+        '          -Dsonar.pullrequest.branch="$PR_BRANCH" \\',
+        '          -Dsonar.pullrequest.base="$TARGET_BRANCH" \\',
+        '          -Dsonar.newCode.referenceBranch="$TARGET_BRANCH"',
+        '  fi',
+        'else',
+        '  echo "No PR context found — running branch analysis..."',
+        '  sonar -Dsonar.token="$SONAR_TOKEN"',
+        'fi'
+      ].join('\n')
+    : [
+        '#!/usr/bin/env bash',
+        'set -eo pipefail',
+        '',
+        'SONAR_TOKEN="$(get_secret sonar-token)"',
+        'if [ -z "$SONAR_TOKEN" ]; then',
+        '  echo "ERROR: sonar-token pipeline property is not set — skipping Sonar analysis."',
+        '  exit 1',
+        'fi',
+        '',
+        'cd "$WORKSPACE/$(load_repo app-repo path)"',
+        'npm install --loglevel warn --foreground-scripts',
+        '',
+        'echo "Running ESLint..."',
+        'npx eslint packages/ -f json -o eslint-report.json || true',
+        '',
+        'echo "Installing SonarCloud scanner..."',
+        'npm install -g @sonar/scan@4.4.0',
+        '',
+        'echo "Running main branch Sonar analysis..."',
+        'sonar -Dsonar.token="$SONAR_TOKEN"'
+      ].join('\n');
+
+  return {
+    from: rootTask,
+    displayName: 'sonar-analysis',
+    runtimeClassName: 'large',
+    steps: [
+      { name: 'peer-review', when: 'false' },
+      { name: 'detect-secrets', when: 'false' },
+      { name: 'compliance-checks', when: 'false' },
+      { name: 'unit-test', displayName: 'sonar-analysis', image: NODE_IMAGE, script },
       { name: 'sign-artifact', when: 'false' },
       { name: 'build-artifact', when: 'false' },
       { name: 'scan-artifact', when: 'false' }
