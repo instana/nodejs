@@ -144,7 +144,7 @@ generator fans the suite out into that many parallel tasks automatically.
 
 Re-run the generator after adding folders — no `.split` edit needed.
 
-## Generating pipeline configs
+## Generating pipeline files
 
 All YAML files under `.sps/pr/`, `.sps/main/`, and `.sps/manual/` are
 **code-generated** — do not edit them by hand. Re-run the generator whenever
