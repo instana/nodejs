@@ -549,6 +549,7 @@ function buildGeneralTask() {
   ].join('\n');
 
   return {
+    from: 'pr-code-checks',
     displayName: 'pr-general',
     runtimeClassName: 'large',
     steps: [
@@ -924,10 +925,10 @@ function generateOne(t) {
     fs.writeFileSync(prPath, output);
     console.log(`Written: ${prPath}`);
   } else if (t === 'pr-general') {
-    const prConfig = baseConfig({ 'pr-general': buildGeneralTask() });
+    const prConfig = baseConfig({ 'pr-code-checks-general': buildGeneralTask() });
     const spsDir = path.join(__dirname, '..');
     const output = yaml.dump(prConfig, { lineWidth: -1, quotingType: "'", forceQuotes: false });
-    const prPath = path.join(spsDir, 'pr', 'pipeline-config-pr-general.yaml');
+    const prPath = path.join(spsDir, 'pr', 'pipeline-config-general.yaml');
     fs.writeFileSync(prPath, output);
     console.log(`Written: ${prPath}`);
   } else if (SIMPLE_TARGETS[t]) {
