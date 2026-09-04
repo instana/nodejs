@@ -19,6 +19,7 @@ tasks:
 
           git config user.name "Instanacd PAT for GitHub Public"
           git config user.email "instanacd@instana.com"
+          git remote set-url origin "https://${GH_TOKEN}@github.com/instana/nodejs.git"
 
           # Install gh CLI and jq
           mkdir -p -m 755 /etc/apt/keyrings
