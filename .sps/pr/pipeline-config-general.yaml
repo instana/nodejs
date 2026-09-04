@@ -45,9 +45,9 @@ tasks:
     when: false
   deploy-release:
     when: false
-  pr-code-checks-opentelemetry-exporter:
+  pr-code-checks-audit:
     from: pr-code-checks
-    displayName: opentelemetry-exporter
+    displayName: audit
     runtimeClassName: large
     steps:
       - name: peer-review
@@ -57,48 +57,25 @@ tasks:
       - name: compliance-checks
         when: 'false'
       - name: unit-test
-        displayName: opentelemetry-exporter
+        displayName: audit
         image: mirror.gcr.io/library/node:24
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
-
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
-          retry=1
-          while [ $retry -le 2 ]; do
-            LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              npm run test:ci:opentelemetry-exporter || LAST_EXIT=$?
-            if [ $LAST_EXIT -eq 0 ]; then
-              break
-            fi
-            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
-            retry=$((retry + 1))
-          done
-          exit $LAST_EXIT
+          npm run audit
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  pr-code-checks-opentelemetry-sampler:
+  pr-code-checks-lint:
     from: pr-code-checks
-    displayName: opentelemetry-sampler
+    displayName: lint
     runtimeClassName: large
     steps:
       - name: peer-review
@@ -108,39 +85,72 @@ tasks:
       - name: compliance-checks
         when: 'false'
       - name: unit-test
-        displayName: opentelemetry-sampler
+        displayName: lint
         image: mirror.gcr.io/library/node:24
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          npm run lint
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
+  pr-code-checks-commitlint:
+    from: pr-code-checks
+    displayName: commitlint
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: commitlint
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
-          retry=1
-          while [ $retry -le 2 ]; do
-            LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              npm run test:ci:opentelemetry-sampler || LAST_EXIT=$?
-            if [ $LAST_EXIT -eq 0 ]; then
-              break
-            fi
-            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
-            retry=$((retry + 1))
-          done
-          exit $LAST_EXIT
+          npm run commitlint
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
+  pr-code-checks-depcheck:
+    from: pr-code-checks
+    displayName: depcheck
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: depcheck
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          npm run depcheck
       - name: sign-artifact
         when: 'false'
       - name: build-artifact

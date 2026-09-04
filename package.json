@@ -38,6 +38,7 @@
   "scripts": {
     "audit": "lerna run audit --stream",
     "commit": "cz",
+    "commitlint": "commitlint --from $(git describe --tags --abbrev=0)",
     "doctoc": "doctoc README.md packages/collector/README.md",
     "format:sh": "find . -name \"*.sh\" -not -path \"*/node_modules/*\" -not -path \"*/dockerfile-examples/*\" -not -path \"*/example-apps/*\" -exec shfmt -w {} +",
     "lint": "eslint .*.js *.js && npm run typecheck && lerna run lint --stream && eslint misc && eslint dockerfile-examples && eslint bin",
@@ -82,8 +83,8 @@
     "@aws-sdk/lib-dynamodb": "3.1116.0",
     "@aws-sdk/middleware-retry": "3.370.0",
     "@azure/storage-blob": "12.30.0",
-    "@commitlint/cli": "14.1.0",
-    "@commitlint/config-conventional": "14.1.0",
+    "@commitlint/cli": "21.2.2",
+    "@commitlint/config-conventional": "21.2.2",
     "@elastic/ecs-pino-format": "^1.5.0",
     "@types/chai": "4.3.0",
     "@types/event-loop-lag": "1.0.30",
@@ -171,7 +172,6 @@
     "admin": {
       "bootstrap": "4.3.1"
     },
-    "ajv": "6.14.0",
     "axios": "1.19.0",
     "body-parser": "2.3.0",
     "braces": "3.0.3",

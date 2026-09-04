@@ -1,6 +1,6 @@
 version: '2'
 tasks:
-  code-build:
+  pr-code-checks:
     runtimeClassName: large
     steps:
       - name: peer-review
@@ -45,9 +45,9 @@ tasks:
     when: false
   deploy-release:
     when: false
-  code-build-autoprofile:
-    from: code-build
-    displayName: autoprofile
+  sonar-analysis:
+    from: pr-code-checks
+    displayName: sonar-analysis
     runtimeClassName: large
     steps:
       - name: peer-review
@@ -57,42 +57,47 @@ tasks:
       - name: compliance-checks
         when: 'false'
       - name: unit-test
-        displayName: autoprofile
+        displayName: sonar-analysis
         image: mirror.gcr.io/library/node:24
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          SONAR_TOKEN="$(get_secret sonar-token)"
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "ERROR: sonar-token pipeline property is not set — skipping Sonar analysis."
+            exit 1
+          fi
+
+          PR_NUMBER="$(get_env pr-id "")"
+          PR_BRANCH="$(get_env pr-branch "")"
+          TARGET_BRANCH="$(get_env target-branch "main")"
+          PR_STATE="$(get_env pr-state "")"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
-          export CI_AUTOPROFILE_TEST_FILES=$(cd packages/autoprofile && find test -name '*.test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
+          echo "Running ESLint..."
+          npx eslint packages/ -f json -o eslint-report.json || true
 
-          retry=1
-          while [ $retry -le 2 ]; do
-            LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              CI_AUTOPROFILE_TEST_FILES="$CI_AUTOPROFILE_TEST_FILES" \
-              npm run test:ci:autoprofile || LAST_EXIT=$?
-            if [ $LAST_EXIT -eq 0 ]; then
-              break
+          echo "Installing Sonar scanner..."
+          npm install -g @sonar/scan@4.4.0
+
+          if [ -n "$PR_NUMBER" ]; then
+            if [ "$PR_STATE" = "draft" ]; then
+              echo "PR is draft — skipping Sonar scan."
+            else
+              echo "Running Sonar scan for PR #${PR_NUMBER}..."
+              sonar -Dsonar.token="$SONAR_TOKEN" \
+                    -Dsonar.pullrequest.key="$PR_NUMBER" \
+                    -Dsonar.pullrequest.branch="$PR_BRANCH" \
+                    -Dsonar.pullrequest.base="$TARGET_BRANCH" \
+                    -Dsonar.newCode.referenceBranch="$TARGET_BRANCH"
             fi
-            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
-            retry=$((retry + 1))
-          done
-          exit $LAST_EXIT
+          else
+            echo "No PR context found — running branch analysis..."
+            sonar -Dsonar.token="$SONAR_TOKEN"
+          fi
       - name: sign-artifact
         when: 'false'
       - name: build-artifact

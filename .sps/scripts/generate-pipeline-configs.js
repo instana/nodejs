@@ -33,7 +33,9 @@ const ALL_SIMPLE_TARGETS = [
   'cloud',
   'autoprofile',
   'core-group',
-  'opentelemetry'
+  'opentelemetry',
+  'sonar',
+  'pr-general'
 ];
 const ALL_TARGETS = ['default', ...ALL_CURRENCY_GROUPS, ...ALL_SIMPLE_TARGETS];
 
@@ -41,6 +43,7 @@ const ALL_TARGETS = ['default', ...ALL_CURRENCY_GROUPS, ...ALL_SIMPLE_TARGETS];
 
 const TARGET = whatArg ? whatArg.split('=')[1] : null;
 const NODE_IMAGE = 'mirror.gcr.io/library/node:24';
+const SIDECAR_NETWORK = 'offline-net';
 
 function sidecar(name) {
   return sidecarsData.sidecars.find(s => s.name === name);
@@ -50,7 +53,7 @@ function dockerRunScript(name) {
   const s = sidecar(name);
   if (!s) throw new Error(`Unknown sidecar: ${name}`);
 
-  const lines = [`docker run -d --network host --name ${name}`];
+  const lines = [`docker run -d --network ${SIDECAR_NETWORK} --name ${name}`];
 
   if (s.platform) {
     lines.push(`  --platform ${s.platform}`);
@@ -94,6 +97,18 @@ function dockerRunScript(name) {
   return lines.map((l, i) => (i < lines.length - 1 ? l + ' \\' : l)).join('\n');
 }
 
+function socatForwardScript(name) {
+  const s = sidecar(name);
+  if (!s || !s.ports || s.ports.length === 0) return '';
+  const varName = `SIDECAR_IP`;
+  const lines = [`${varName}=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${name})`];
+  for (const p of s.ports) {
+    const [hostPort, containerPort] = p.split(':');
+    lines.push(`socat TCP-LISTEN:${hostPort},fork,reuseaddr,bind=127.0.0.1 TCP:$${varName}:${containerPort} &`);
+  }
+  return lines.join('\n');
+}
+
 function readinessScript(name) {
   const s = sidecar(name);
   if (!s) return '';
@@ -127,30 +142,17 @@ function readinessScript(name) {
     case 'zookeeper':
       return 'timeout 60 bash -c \\\n' + "  'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'";
     case 'postgres':
-      return (
-        'timeout 60 bash -c \\\n' +
-        "  'until docker exec postgres pg_isready -h 127.0.0.1 -U node 2>/dev/null; do sleep 2; done'"
-      );
+      return 'timeout 60 bash -c \\\n' + "  'until nc -z 127.0.0.1 5432 2>/dev/null; do sleep 2; done'";
     case 'mysql':
-      return (
-        'timeout 60 bash -c \\\n' +
-        '  \'until docker exec mysql mysql -h 127.0.0.1 -u node -pnodepw -e "SELECT 1" 2>/dev/null; do sleep 2; done\''
-      );
+      return 'timeout 60 bash -c \\\n' + "  'until nc -z 127.0.0.1 3306 2>/dev/null; do sleep 2; done'";
     case 'mongodb':
-      return (
-        'timeout 60 bash -c \\\n' +
-        '  \'until docker exec mongodb mongosh --quiet --eval "db.runCommand({ ping: 1 })" 2>/dev/null | grep -q ok; do sleep 2; done\''
-      );
+      return 'timeout 60 bash -c \\\n' + "  'until nc -z 127.0.0.1 27017 2>/dev/null; do sleep 2; done'";
     case 'redis':
-      return (
-        'timeout 30 bash -c \\\n' +
-        "  'until docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 1; done'"
-      );
+      return 'timeout 30 bash -c \\\n' + "  'until nc -z 127.0.0.1 6379 2>/dev/null; do sleep 1; done'";
     case 'redis-cluster':
-      return (
-        'timeout 30 bash -c \\\n' +
-        "  'until docker exec redis-cluster redis-cli -p 7000 cluster info 2>/dev/null | grep -q cluster_state:ok; do sleep 1; done'"
-      );
+      return 'timeout 30 bash -c \\\n' + "  'until nc -z 127.0.0.1 7000 2>/dev/null; do sleep 1; done'";
+    case 'ibm_db':
+      return 'timeout 300 bash -c \\\n' + "  'until nc -z 127.0.0.1 50000 2>/dev/null; do sleep 5; done'";
     case 'localstack':
       return 'timeout 60 bash -c \\\n' + "  'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'";
     case 'pubsub-emulator':
@@ -191,7 +193,6 @@ function readNeeds(folder) {
 
 /**
  * Generic collector task builder.
- *
  * Produces the shell script and SPS task object for one pipeline step that
  * runs a subset of collector integration tests.
  *
@@ -212,11 +213,16 @@ function buildCollectorTask(taskSlug, displayName, paths, needs) {
     scriptLines.push('# install docker client');
     scriptLines.push(dockerClientInstallScript());
     scriptLines.push('');
+    scriptLines.push('# create isolated network');
+    scriptLines.push(`docker network create --internal ${SIDECAR_NETWORK}`);
+    scriptLines.push('');
   }
 
   if (needs.includes('oracledb')) {
     scriptLines.push('# start oracledb early — initialises during npm install');
     scriptLines.push(dockerRunScript('oracledb'));
+    const socatOracle = socatForwardScript('oracledb');
+    if (socatOracle) scriptLines.push(socatOracle);
     scriptLines.push('');
   }
 
@@ -234,6 +240,8 @@ function buildCollectorTask(taskSlug, displayName, paths, needs) {
       } else {
         scriptLines.push(`# start ${need}`);
         scriptLines.push(dockerRunScript(need));
+        const socat = socatForwardScript(need);
+        if (socat) scriptLines.push(socat);
         const wait = readinessScript(need);
         if (wait) scriptLines.push(wait);
         scriptLines.push('');
@@ -350,20 +358,13 @@ function readModeSplit(folder) {
 
 function nodeVersionSwitchScript() {
   return [
-    'node_version="$(get_env node-version 2>/dev/null || true)"',
-    'if [ -n "${node_version:-}" ]; then',
-    '  curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash',
-    '  export NVM_DIR="$HOME/.nvm"',
-    '  # shellcheck source=/dev/null',
-    '  . "$NVM_DIR/nvm.sh"',
-    '  nvm install "$node_version" --no-progress',
-    '  nvm use "$node_version"',
-    '  ACTUAL=$(node --version)',
-    '  if [[ "$ACTUAL" != "v${node_version}"* ]]; then',
-    '    echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"',
-    '    exit 1',
-    '  fi',
-    'fi',
+    'node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"',
+    'curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash',
+    'export NVM_DIR="$HOME/.nvm"',
+    '# shellcheck source=/dev/null',
+    '. "$NVM_DIR/nvm.sh"',
+    'nvm install "$node_version" --no-progress',
+    'nvm use "$node_version"',
     'echo "Node.js: $(node --version)"'
   ].join('\n');
 }
@@ -372,7 +373,7 @@ function dockerClientInstallScript() {
   return [
     'CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")',
     'ARCH=$(dpkg --print-architecture)',
-    'apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd',
+    'apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat',
     'install -m 0755 -d /etc/apt/keyrings',
     'curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg',
     'chmod a+r /etc/apt/keyrings/docker.gpg',
@@ -437,9 +438,7 @@ function buildCurrencyTasks(pkgName, folder, group) {
   const relCollectorFolder = relFolder.replace('packages/collector/', '');
   // slug: for scoped packages (@scope/name) use only the package name part to keep slugs short;
   // for unscoped, use the full name. Then normalise dots/underscores to hyphens.
-  const baseName = pkgName.includes('/') && pkgName.startsWith('@')
-    ? pkgName.split('/')[1]
-    : pkgName.replace(/@/g, '');
+  const baseName = pkgName.includes('/') && pkgName.startsWith('@') ? pkgName.split('/')[1] : pkgName.replace(/@/g, '');
   const pkgSlug = baseName.replace(/[./_]/g, '-');
 
   const modeGroups = readModeSplit(folder); // null when no .split
@@ -478,9 +477,14 @@ function buildSimpleTask(displayName, testScript, needs = [], extraEnv = null) {
     scriptLines.push('# install docker client');
     scriptLines.push(dockerClientInstallScript());
     scriptLines.push('');
+    scriptLines.push('# create isolated network (no internet access)');
+    scriptLines.push(`docker network create --internal ${SIDECAR_NETWORK}`);
+    scriptLines.push('');
     for (const need of needs) {
       scriptLines.push(`# start ${need}`);
       scriptLines.push(dockerRunScript(need));
+      const socat = socatForwardScript(need);
+      if (socat) scriptLines.push(socat);
       const wait = readinessScript(need);
       if (wait) scriptLines.push(wait);
       scriptLines.push('');
@@ -516,6 +520,124 @@ function buildSimpleTask(displayName, testScript, needs = [], extraEnv = null) {
         ...(needs.length > 0 ? { include: ['docker-socket'] } : {}),
         script: scriptLines.join('\n')
       },
+      { name: 'sign-artifact', when: 'false' },
+      { name: 'build-artifact', when: 'false' },
+      { name: 'scan-artifact', when: 'false' }
+    ]
+  };
+}
+
+function buildGeneralTasks() {
+  function task(displayName, cmd) {
+    const script = [
+      '#!/usr/bin/env bash',
+      'set -eo pipefail',
+      '',
+      'cd "$WORKSPACE/$(load_repo app-repo path)"',
+      'npm install --loglevel warn --foreground-scripts',
+      '',
+      cmd
+    ].join('\n');
+
+    return {
+      from: 'pr-code-checks',
+      displayName,
+      runtimeClassName: 'large',
+      steps: [
+        { name: 'peer-review', when: 'false' },
+        { name: 'detect-secrets', when: 'false' },
+        { name: 'compliance-checks', when: 'false' },
+        { name: 'unit-test', displayName, image: NODE_IMAGE, script },
+        { name: 'sign-artifact', when: 'false' },
+        { name: 'build-artifact', when: 'false' },
+        { name: 'scan-artifact', when: 'false' }
+      ]
+    };
+  }
+
+  return {
+    'pr-code-checks-audit':       task('audit',       'npm run audit'),
+    'pr-code-checks-lint':        task('lint',        'npm run lint'),
+    'pr-code-checks-commitlint':  task('commitlint',  'npm run commitlint'),
+    'pr-code-checks-depcheck':    task('depcheck',    'npm run depcheck')
+  };
+}
+
+function buildSonarTask(rootTask = 'pr-code-checks') {
+  const isPR = rootTask === 'pr-code-checks';
+  const script = isPR
+    ? [
+        '#!/usr/bin/env bash',
+        'set -eo pipefail',
+        '',
+        'SONAR_TOKEN="$(get_secret sonar-token)"',
+        'if [ -z "$SONAR_TOKEN" ]; then',
+        '  echo "ERROR: sonar-token pipeline property is not set — skipping Sonar analysis."',
+        '  exit 1',
+        'fi',
+        '',
+        'PR_NUMBER="$(get_env pr-id "")"',
+        'PR_BRANCH="$(get_env pr-branch "")"',
+        'TARGET_BRANCH="$(get_env target-branch "main")"',
+        'PR_STATE="$(get_env pr-state "")"',
+        '',
+        'cd "$WORKSPACE/$(load_repo app-repo path)"',
+        'npm install --loglevel warn --foreground-scripts',
+        '',
+        'echo "Running ESLint..."',
+        'npx eslint packages/ -f json -o eslint-report.json || true',
+        '',
+        'echo "Installing Sonar scanner..."',
+        'npm install -g @sonar/scan@4.4.0',
+        '',
+        'if [ -n "$PR_NUMBER" ]; then',
+        '  if [ "$PR_STATE" = "draft" ]; then',
+        '    echo "PR is draft — skipping Sonar scan."',
+        '  else',
+        '    echo "Running Sonar scan for PR #${PR_NUMBER}..."',
+        '    sonar -Dsonar.token="$SONAR_TOKEN" \\',
+        '          -Dsonar.pullrequest.key="$PR_NUMBER" \\',
+        '          -Dsonar.pullrequest.branch="$PR_BRANCH" \\',
+        '          -Dsonar.pullrequest.base="$TARGET_BRANCH" \\',
+        '          -Dsonar.newCode.referenceBranch="$TARGET_BRANCH"',
+        '  fi',
+        'else',
+        '  echo "No PR context found — running branch analysis..."',
+        '  sonar -Dsonar.token="$SONAR_TOKEN"',
+        'fi'
+      ].join('\n')
+    : [
+        '#!/usr/bin/env bash',
+        'set -eo pipefail',
+        '',
+        'SONAR_TOKEN="$(get_secret sonar-token)"',
+        'if [ -z "$SONAR_TOKEN" ]; then',
+        '  echo "ERROR: sonar-token pipeline property is not set — skipping Sonar analysis."',
+        '  exit 1',
+        'fi',
+        '',
+        'cd "$WORKSPACE/$(load_repo app-repo path)"',
+        'npm install --loglevel warn --foreground-scripts',
+        '',
+        'echo "Running ESLint..."',
+        'npx eslint packages/ -f json -o eslint-report.json || true',
+        '',
+        'echo "Installing SonarCloud scanner..."',
+        'npm install -g @sonar/scan@4.4.0',
+        '',
+        'echo "Running main branch Sonar analysis..."',
+        'sonar -Dsonar.token="$SONAR_TOKEN"'
+      ].join('\n');
+
+  return {
+    from: rootTask,
+    displayName: 'sonar-analysis',
+    runtimeClassName: 'large',
+    steps: [
+      { name: 'peer-review', when: 'false' },
+      { name: 'detect-secrets', when: 'false' },
+      { name: 'compliance-checks', when: 'false' },
+      { name: 'unit-test', displayName: 'sonar-analysis', image: NODE_IMAGE, script },
       { name: 'sign-artifact', when: 'false' },
       { name: 'build-artifact', when: 'false' },
       { name: 'scan-artifact', when: 'false' }
@@ -663,6 +785,9 @@ function generateOne(t) {
       }
     };
     writeDefaultConfig(prConfig, mainConfig);
+    generateOne('sonar');
+
+    generateOne('pr-general');
   } else if (t.startsWith('collector-currencies-')) {
     const group = t.replace('collector-currencies-', '');
     const groupDir = path.join(CURRENCIES_DIR, group);
@@ -727,7 +852,7 @@ function generateOne(t) {
     // .split supports two forms:
     //   number → auto-partition non-dind dirs into N roughly-equal groups (misc-1..N)
     //   JSON object → explicit named groups; every non-dind dir must be listed exactly once
-    let splitDef; // Record<string, string[]>
+    let splitDef;
     if (!isNaN(splitN) && splitN > 0) {
       const count = Math.min(Math.round(splitN), nonDindDirs.length);
       const size = Math.ceil(nonDindDirs.length / count);
@@ -741,7 +866,9 @@ function generateOne(t) {
       try {
         parsed = JSON.parse(splitRaw);
       } catch {
-        console.error(`${miscSplitPath}: unrecognised content "${splitRaw}". Use a positive number (e.g. "3") or a JSON object.`);
+        console.error(
+          `${miscSplitPath}: unrecognised content "${splitRaw}". Use a positive number (e.g. "3") or a JSON object.`
+        );
         process.exit(1);
       }
       if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
@@ -789,6 +916,20 @@ function generateOne(t) {
     }
     const prConfig = baseConfig(fanOutTasks);
     writeConfig(t, prConfig, toMainConfig(prConfig));
+  } else if (t === 'sonar') {
+    const prConfig = baseConfig({ 'sonar-analysis': buildSonarTask('pr-code-checks') });
+    const spsDir = path.join(__dirname, '..');
+    const output = yaml.dump(prConfig, { lineWidth: -1, quotingType: "'", forceQuotes: false });
+    const prPath = path.join(spsDir, 'pr', 'pipeline-config-sonar.yaml');
+    fs.writeFileSync(prPath, output);
+    console.log(`Written: ${prPath}`);
+  } else if (t === 'pr-general') {
+    const prConfig = baseConfig(buildGeneralTasks());
+    const spsDir = path.join(__dirname, '..');
+    const output = yaml.dump(prConfig, { lineWidth: -1, quotingType: "'", forceQuotes: false });
+    const prPath = path.join(spsDir, 'pr', 'pipeline-config-general.yaml');
+    fs.writeFileSync(prPath, output);
+    console.log(`Written: ${prPath}`);
   } else if (SIMPLE_TARGETS[t]) {
     const { script, displayName, needs = [], extraEnv } = SIMPLE_TARGETS[t];
     const fanOutTasks = { [`pr-code-checks-${t}`]: buildSimpleTask(displayName, script, needs, extraEnv) };
