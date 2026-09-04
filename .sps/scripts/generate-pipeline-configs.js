@@ -528,7 +528,17 @@ function buildSimpleTask(displayName, testScript, needs = [], extraEnv = null) {
 }
 
 function buildGeneralTasks() {
-  function task(displayName, script) {
+  function task(displayName, cmd) {
+    const script = [
+      '#!/usr/bin/env bash',
+      'set -eo pipefail',
+      '',
+      'cd "$WORKSPACE/$(load_repo app-repo path)"',
+      'npm install --loglevel warn --foreground-scripts',
+      '',
+      cmd
+    ].join('\n');
+
     return {
       from: 'pr-code-checks',
       displayName,
@@ -545,22 +555,11 @@ function buildGeneralTasks() {
     };
   }
 
-  const cd = 'cd "$WORKSPACE/$(load_repo app-repo path)"';
-
   return {
-    'pr-code-checks-audit': task('audit', [
-      '#!/usr/bin/env bash', 'set -eo pipefail', '', cd, 'npm run audit'
-    ].join('\n')),
-    'pr-code-checks-lint': task('lint', [
-      '#!/usr/bin/env bash', 'set -eo pipefail', '', cd, 'npm run lint'
-    ].join('\n')),
-    'pr-code-checks-commitlint': task('commitlint', [
-      '#!/usr/bin/env bash', 'set -eo pipefail', '', cd,
-      'node_modules/.bin/commitlint --from $(git describe --tags --abbrev=0)'
-    ].join('\n')),
-    'pr-code-checks-depcheck': task('depcheck', [
-      '#!/usr/bin/env bash', 'set -eo pipefail', '', cd, 'npm run depcheck'
-    ].join('\n'))
+    'pr-code-checks-audit':       task('audit',       'npm run audit'),
+    'pr-code-checks-lint':        task('lint',        'npm run lint'),
+    'pr-code-checks-commitlint':  task('commitlint',  'node_modules/.bin/commitlint --from $(git describe --tags --abbrev=0)'),
+    'pr-code-checks-depcheck':    task('depcheck',    'npm run depcheck')
   };
 }
 

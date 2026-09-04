@@ -64,6 +64,8 @@ tasks:
           set -eo pipefail
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
           npm run audit
       - name: sign-artifact
         when: 'false'
@@ -90,6 +92,8 @@ tasks:
           set -eo pipefail
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
           npm run lint
       - name: sign-artifact
         when: 'false'
@@ -116,6 +120,8 @@ tasks:
           set -eo pipefail
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
           node_modules/.bin/commitlint --from $(git describe --tags --abbrev=0)
       - name: sign-artifact
         when: 'false'
@@ -142,6 +148,8 @@ tasks:
           set -eo pipefail
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
           npm run depcheck
       - name: sign-artifact
         when: 'false'
