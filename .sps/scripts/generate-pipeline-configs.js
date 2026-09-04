@@ -34,7 +34,8 @@ const ALL_SIMPLE_TARGETS = [
   'autoprofile',
   'core-group',
   'opentelemetry',
-  'sonar'
+  'sonar',
+  'pr-general'
 ];
 const ALL_TARGETS = ['default', ...ALL_CURRENCY_GROUPS, ...ALL_SIMPLE_TARGETS];
 
@@ -526,6 +527,42 @@ function buildSimpleTask(displayName, testScript, needs = [], extraEnv = null) {
   };
 }
 
+function buildGeneralTask() {
+  const script = [
+    '#!/usr/bin/env bash',
+    'set -eo pipefail',
+    '',
+    'cd "$WORKSPACE/$(load_repo app-repo path)"',
+    'npm install --loglevel warn --foreground-scripts',
+    '',
+    'echo "--- audit ---"',
+    'npm run audit',
+    '',
+    'echo "--- lint ---"',
+    'npm run lint',
+    '',
+    'echo "--- commitlint ---"',
+    'node_modules/.bin/commitlint --from $(git describe --tags --abbrev=0)',
+    '',
+    'echo "--- depcheck ---"',
+    'npm run depcheck'
+  ].join('\n');
+
+  return {
+    displayName: 'pr-general',
+    runtimeClassName: 'large',
+    steps: [
+      { name: 'peer-review', when: 'false' },
+      { name: 'detect-secrets', when: 'false' },
+      { name: 'compliance-checks', when: 'false' },
+      { name: 'unit-test', displayName: 'pr-general', image: NODE_IMAGE, script },
+      { name: 'sign-artifact', when: 'false' },
+      { name: 'build-artifact', when: 'false' },
+      { name: 'scan-artifact', when: 'false' }
+    ]
+  };
+}
+
 function buildSonarTask(rootTask = 'pr-code-checks') {
   const isPR = rootTask === 'pr-code-checks';
   const script = isPR
@@ -749,6 +786,8 @@ function generateOne(t) {
     };
     writeDefaultConfig(prConfig, mainConfig);
     generateOne('sonar');
+
+    generateOne('pr-general');
   } else if (t.startsWith('collector-currencies-')) {
     const group = t.replace('collector-currencies-', '');
     const groupDir = path.join(CURRENCIES_DIR, group);
@@ -878,23 +917,17 @@ function generateOne(t) {
     const prConfig = baseConfig(fanOutTasks);
     writeConfig(t, prConfig, toMainConfig(prConfig));
   } else if (t === 'sonar') {
-    const sonarTask = buildSonarTask('pr-code-checks');
-    delete sonarTask.from;
-    const prConfig = {
-      version: '2',
-      tasks: {
-        'pr-code-checks': { when: 'false' },
-        'code-pr-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
-        'sign-artifact': { when: 'false' },
-        'deploy-checks': { when: 'false' },
-        'deploy-release': { when: 'false' },
-        'code-ci-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
-        'sonar-analysis': sonarTask
-      }
-    };
+    const prConfig = baseConfig({ 'sonar-analysis': buildSonarTask('pr-code-checks') });
     const spsDir = path.join(__dirname, '..');
     const output = yaml.dump(prConfig, { lineWidth: -1, quotingType: "'", forceQuotes: false });
     const prPath = path.join(spsDir, 'pr', 'pipeline-config-sonar.yaml');
+    fs.writeFileSync(prPath, output);
+    console.log(`Written: ${prPath}`);
+  } else if (t === 'pr-general') {
+    const prConfig = baseConfig({ 'pr-general': buildGeneralTask() });
+    const spsDir = path.join(__dirname, '..');
+    const output = yaml.dump(prConfig, { lineWidth: -1, quotingType: "'", forceQuotes: false });
+    const prPath = path.join(spsDir, 'pr', 'pipeline-config-pr-general.yaml');
     fs.writeFileSync(prPath, output);
     console.log(`Written: ${prPath}`);
   } else if (SIMPLE_TARGETS[t]) {
