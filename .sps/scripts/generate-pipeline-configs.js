@@ -550,7 +550,7 @@ function buildSonarTask(rootTask = 'pr-code-checks') {
         'echo "Running ESLint..."',
         'npx eslint packages/ -f json -o eslint-report.json || true',
         '',
-        'echo "Installing SonarCloud scanner..."',
+        'echo "Installing Sonar scanner..."',
         'npm install -g @sonar/scan@4.4.0',
         '',
         'if [ -n "$PR_NUMBER" ]; then',
