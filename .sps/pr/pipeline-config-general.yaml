@@ -45,9 +45,9 @@ tasks:
     when: false
   deploy-release:
     when: false
-  pr-code-checks-general:
+  pr-code-checks-audit:
     from: pr-code-checks
-    displayName: pr-general
+    displayName: audit
     runtimeClassName: large
     steps:
       - name: peer-review
@@ -57,24 +57,91 @@ tasks:
       - name: compliance-checks
         when: 'false'
       - name: unit-test
-        displayName: pr-general
+        displayName: audit
         image: mirror.gcr.io/library/node:24
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-
-          echo "--- audit ---"
           npm run audit
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
+  pr-code-checks-lint:
+    from: pr-code-checks
+    displayName: lint
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: lint
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
 
-          echo "--- lint ---"
+          cd "$WORKSPACE/$(load_repo app-repo path)"
           npm run lint
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
+  pr-code-checks-commitlint:
+    from: pr-code-checks
+    displayName: commitlint
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: commitlint
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
 
-          echo "--- commitlint ---"
+          cd "$WORKSPACE/$(load_repo app-repo path)"
           node_modules/.bin/commitlint --from $(git describe --tags --abbrev=0)
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
+  pr-code-checks-depcheck:
+    from: pr-code-checks
+    displayName: depcheck
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: depcheck
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
 
-          echo "--- depcheck ---"
+          cd "$WORKSPACE/$(load_repo app-repo path)"
           npm run depcheck
       - name: sign-artifact
         when: 'false'

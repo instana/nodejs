@@ -527,39 +527,40 @@ function buildSimpleTask(displayName, testScript, needs = [], extraEnv = null) {
   };
 }
 
-function buildGeneralTask() {
-  const script = [
-    '#!/usr/bin/env bash',
-    'set -eo pipefail',
-    '',
-    'cd "$WORKSPACE/$(load_repo app-repo path)"',
-    '',
-    'echo "--- audit ---"',
-    'npm run audit',
-    '',
-    'echo "--- lint ---"',
-    'npm run lint',
-    '',
-    'echo "--- commitlint ---"',
-    'node_modules/.bin/commitlint --from $(git describe --tags --abbrev=0)',
-    '',
-    'echo "--- depcheck ---"',
-    'npm run depcheck'
-  ].join('\n');
+function buildGeneralTasks() {
+  function task(displayName, script) {
+    return {
+      from: 'pr-code-checks',
+      displayName,
+      runtimeClassName: 'large',
+      steps: [
+        { name: 'peer-review', when: 'false' },
+        { name: 'detect-secrets', when: 'false' },
+        { name: 'compliance-checks', when: 'false' },
+        { name: 'unit-test', displayName, image: NODE_IMAGE, script },
+        { name: 'sign-artifact', when: 'false' },
+        { name: 'build-artifact', when: 'false' },
+        { name: 'scan-artifact', when: 'false' }
+      ]
+    };
+  }
+
+  const cd = 'cd "$WORKSPACE/$(load_repo app-repo path)"';
 
   return {
-    from: 'pr-code-checks',
-    displayName: 'pr-general',
-    runtimeClassName: 'large',
-    steps: [
-      { name: 'peer-review', when: 'false' },
-      { name: 'detect-secrets', when: 'false' },
-      { name: 'compliance-checks', when: 'false' },
-      { name: 'unit-test', displayName: 'pr-general', image: NODE_IMAGE, script },
-      { name: 'sign-artifact', when: 'false' },
-      { name: 'build-artifact', when: 'false' },
-      { name: 'scan-artifact', when: 'false' }
-    ]
+    'pr-code-checks-audit': task('audit', [
+      '#!/usr/bin/env bash', 'set -eo pipefail', '', cd, 'npm run audit'
+    ].join('\n')),
+    'pr-code-checks-lint': task('lint', [
+      '#!/usr/bin/env bash', 'set -eo pipefail', '', cd, 'npm run lint'
+    ].join('\n')),
+    'pr-code-checks-commitlint': task('commitlint', [
+      '#!/usr/bin/env bash', 'set -eo pipefail', '', cd,
+      'node_modules/.bin/commitlint --from $(git describe --tags --abbrev=0)'
+    ].join('\n')),
+    'pr-code-checks-depcheck': task('depcheck', [
+      '#!/usr/bin/env bash', 'set -eo pipefail', '', cd, 'npm run depcheck'
+    ].join('\n'))
   };
 }
 
@@ -924,7 +925,7 @@ function generateOne(t) {
     fs.writeFileSync(prPath, output);
     console.log(`Written: ${prPath}`);
   } else if (t === 'pr-general') {
-    const prConfig = baseConfig({ 'pr-code-checks-general': buildGeneralTask() });
+    const prConfig = baseConfig(buildGeneralTasks());
     const spsDir = path.join(__dirname, '..');
     const output = yaml.dump(prConfig, { lineWidth: -1, quotingType: "'", forceQuotes: false });
     const prPath = path.join(spsDir, 'pr', 'pipeline-config-general.yaml');
