@@ -12,13 +12,14 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          GH_TOKEN="$(get_secret gh-public-token)"
+          export GH_TOKEN="$(get_secret gh-public-token)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
           git config user.name "Instanacd PAT for GitHub Public"
           git config user.email "instanacd@instana.com"
+          git remote set-url origin "https://${GH_TOKEN}@github.com/instana/nodejs.git"
 
           # Install gh CLI and jq
           mkdir -p -m 755 /etc/apt/keyrings
@@ -29,8 +30,6 @@ tasks:
             https://cli.github.com/packages stable main" \
             | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
           apt-get update -qq && apt-get install -y -qq gh jq
-
-          echo "$GH_TOKEN" | gh auth login --with-token --hostname github.com
 
           echo "Running production dependency updates..."
           PROD_DEPS_PR_LIMIT="$(get_env prod-deps-pr-limit "5")" \
