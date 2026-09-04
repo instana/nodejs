@@ -1044,7 +1044,7 @@
     "core": false,
     "versions": [
       {
-        "v": "11.1.0"
+        "v": "12.0.0"
       }
     ],
     "group": "frameworks"
