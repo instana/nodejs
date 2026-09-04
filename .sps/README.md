@@ -180,9 +180,9 @@ Available `--what` targets:
 Requires `ibmcloud` CLI logged in and `jq`. Existing triggers are skipped (idempotent).
 
 ```bash
-.sps/scripts/create-triggers.sh --dry-run                                    # preview
-.sps/scripts/create-triggers.sh                                               # all types
-.sps/scripts/create-triggers.sh --type=dependencies                           # bots only
+.sps/scripts/create-triggers.sh --dry-run                                      # preview
+.sps/scripts/create-triggers.sh                                             # all types
+.sps/scripts/create-triggers.sh --type=dependencies                            # bots only
 .sps/scripts/create-triggers.sh --type=dependencies --name=manual-dep-currency-bot  # one trigger
 ```
 
