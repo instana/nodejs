@@ -33,8 +33,7 @@ tasks:
 
           OPEN_PRS=$(gh pr list --head currency-bot --base main --state open --json number | jq 'length')
 
-          git ls-remote --exit-code --heads origin currency-bot >/dev/null 2>&1
-          EXIT_CODE=$?
+          git ls-remote --exit-code --heads origin currency-bot >/dev/null 2>&1 && EXIT_CODE=0 || EXIT_CODE=$?
 
           if [[ $EXIT_CODE -eq 0 && $OPEN_PRS -eq 0 ]]; then
             echo "No open PRs found. Deleting branch currency-bot."
