@@ -122,7 +122,7 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
-          node_modules/.bin/commitlint --from $(git describe --tags --abbrev=0)
+          npm run commitlint
       - name: sign-artifact
         when: 'false'
       - name: build-artifact

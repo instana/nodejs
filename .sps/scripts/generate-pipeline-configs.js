@@ -558,7 +558,7 @@ function buildGeneralTasks() {
   return {
     'pr-code-checks-audit':       task('audit',       'npm run audit'),
     'pr-code-checks-lint':        task('lint',        'npm run lint'),
-    'pr-code-checks-commitlint':  task('commitlint',  'node_modules/.bin/commitlint --from $(git describe --tags --abbrev=0)'),
+    'pr-code-checks-commitlint':  task('commitlint',  'npm run commitlint'),
     'pr-code-checks-depcheck':    task('depcheck',    'npm run depcheck')
   };
 }
