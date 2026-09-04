@@ -57,29 +57,34 @@ tasks:
       - name: compliance-checks
         when: 'false'
       - name: unit-test
-        displayName: pr-general
+        displayName: audit
         image: mirror.gcr.io/library/node:24
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
-
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-
-          echo "--- audit ---"
           npm run audit
-
-          echo "--- lint ---"
-          npm run lint
-
-          echo "--- commitlint ---"
-          node_modules/.bin/commitlint --from $(git describe --tags --abbrev=0)
-
-          echo "--- depcheck ---"
-          npm run depcheck
-      - name: sign-artifact
-        when: 'false'
       - name: build-artifact
-        when: 'false'
+        displayName: lint
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm run lint
+      - name: sign-artifact
+        displayName: commitlint
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          node_modules/.bin/commitlint --from $(git describe --tags --abbrev=0)
       - name: scan-artifact
-        when: 'false'
+        displayName: depcheck
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm run depcheck

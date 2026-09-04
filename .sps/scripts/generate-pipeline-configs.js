@@ -528,23 +528,33 @@ function buildSimpleTask(displayName, testScript, needs = [], extraEnv = null) {
 }
 
 function buildGeneralTask() {
-  const script = [
+  const cd = 'cd "$WORKSPACE/$(load_repo app-repo path)"';
+
+  const auditScript = [
     '#!/usr/bin/env bash',
     'set -eo pipefail',
-    '',
-    'cd "$WORKSPACE/$(load_repo app-repo path)"',
-    'npm install --loglevel warn --foreground-scripts',
-    '',
-    'echo "--- audit ---"',
-    'npm run audit',
-    '',
-    'echo "--- lint ---"',
-    'npm run lint',
-    '',
-    'echo "--- commitlint ---"',
-    'node_modules/.bin/commitlint --from $(git describe --tags --abbrev=0)',
-    '',
-    'echo "--- depcheck ---"',
+    cd,
+    'npm run audit'
+  ].join('\n');
+
+  const lintScript = [
+    '#!/usr/bin/env bash',
+    'set -eo pipefail',
+    cd,
+    'npm run lint'
+  ].join('\n');
+
+  const commitlintScript = [
+    '#!/usr/bin/env bash',
+    'set -eo pipefail',
+    cd,
+    'node_modules/.bin/commitlint --from $(git describe --tags --abbrev=0)'
+  ].join('\n');
+
+  const depcheckScript = [
+    '#!/usr/bin/env bash',
+    'set -eo pipefail',
+    cd,
     'npm run depcheck'
   ].join('\n');
 
@@ -556,10 +566,10 @@ function buildGeneralTask() {
       { name: 'peer-review', when: 'false' },
       { name: 'detect-secrets', when: 'false' },
       { name: 'compliance-checks', when: 'false' },
-      { name: 'unit-test', displayName: 'pr-general', image: NODE_IMAGE, script },
-      { name: 'sign-artifact', when: 'false' },
-      { name: 'build-artifact', when: 'false' },
-      { name: 'scan-artifact', when: 'false' }
+      { name: 'unit-test',       displayName: 'audit',       image: NODE_IMAGE, script: auditScript },
+      { name: 'build-artifact',  displayName: 'lint',        image: NODE_IMAGE, script: lintScript },
+      { name: 'sign-artifact',   displayName: 'commitlint',  image: NODE_IMAGE, script: commitlintScript },
+      { name: 'scan-artifact',   displayName: 'depcheck',    image: NODE_IMAGE, script: depcheckScript }
     ]
   };
 }
