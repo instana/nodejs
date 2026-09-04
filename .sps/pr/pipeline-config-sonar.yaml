@@ -1,14 +1,7 @@
 version: '2'
 tasks:
   pr-code-checks:
-    steps:
-      - name: peer-review
-        when: 'false'
-      - name: unit-test
-        image: mirror.gcr.io/library/node:24
-        script: |-
-          #!/usr/bin/env bash
-          echo "Sonar checks passed."
+    when: 'false'
   code-pr-finish:
     steps:
       - name: run-stage
@@ -24,7 +17,6 @@ tasks:
       - name: run-stage
         when: 'false'
   sonar-analysis:
-    from: pr-code-checks
     displayName: sonar-analysis
     runtimeClassName: large
     steps:

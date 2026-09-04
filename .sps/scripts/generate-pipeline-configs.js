@@ -748,6 +748,7 @@ function generateOne(t) {
       }
     };
     writeDefaultConfig(prConfig, mainConfig);
+    generateOne('sonar');
   } else if (t.startsWith('collector-currencies-')) {
     const group = t.replace('collector-currencies-', '');
     const groupDir = path.join(CURRENCIES_DIR, group);
@@ -876,6 +877,26 @@ function generateOne(t) {
     }
     const prConfig = baseConfig(fanOutTasks);
     writeConfig(t, prConfig, toMainConfig(prConfig));
+  } else if (t === 'sonar') {
+    const sonarTask = buildSonarTask('pr-code-checks');
+    delete sonarTask.from;
+    const prConfig = {
+      version: '2',
+      tasks: {
+        'pr-code-checks': { when: 'false' },
+        'code-pr-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
+        'sign-artifact': { when: 'false' },
+        'deploy-checks': { when: 'false' },
+        'deploy-release': { when: 'false' },
+        'code-ci-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
+        'sonar-analysis': sonarTask
+      }
+    };
+    const spsDir = path.join(__dirname, '..');
+    const output = yaml.dump(prConfig, { lineWidth: -1, quotingType: "'", forceQuotes: false });
+    const prPath = path.join(spsDir, 'pr', 'pipeline-config-sonar.yaml');
+    fs.writeFileSync(prPath, output);
+    console.log(`Written: ${prPath}`);
   } else if (SIMPLE_TARGETS[t]) {
     const { script, displayName, needs = [], extraEnv } = SIMPLE_TARGETS[t];
     const fanOutTasks = { [`pr-code-checks-${t}`]: buildSimpleTask(displayName, script, needs, extraEnv) };
