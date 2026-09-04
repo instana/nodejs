@@ -133,7 +133,10 @@ let currentConfig;
 /** @type {String[]} */
 const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'contains-ignore-case', 'regex', 'none'];
 
-const transmissionDelayMaxValue = 5000;
+// Allowed poll rate values in milliseconds
+// (1s, 5s, 10s, 20s, 30s, 60s)
+// Will add support for 120s, 180s, 240s, 300s, 360s, 420s, 480s, 540s, 600s once BE is capable
+const allowedTransmissionDelayValues = [1000, 5000, 10000, 20000, 30000, 60000];
 
 /**
  * @typedef {Object} InstanaConfig
@@ -319,15 +322,20 @@ function normalizeMetricsConfig({ userConfig = {}, defaultConfig = {}, finalConf
     [validators.numberValidator]
   );
 
-  finalConfig.metrics.transmissionDelay = transmissionDelay;
-
-  // Validate max value for transmissionDelay
-  if (finalConfig.metrics.transmissionDelay > transmissionDelayMaxValue) {
+  // Validate that transmissionDelay is one of the allowed values (in ms)
+  if (!allowedTransmissionDelayValues.includes(transmissionDelay)) {
+    const nearest = allowedTransmissionDelayValues.reduce((prev, curr) =>
+      Math.abs(curr - transmissionDelay) < Math.abs(prev - transmissionDelay) ? curr : prev
+    );
     logger.warn(
       // eslint-disable-next-line max-len
-      `The value of config.metrics.transmissionDelay (or INSTANA_METRICS_TRANSMISSION_DELAY) (${finalConfig.metrics.transmissionDelay}) exceeds the maximum allowed value of ${transmissionDelayMaxValue}. Assuming the max value ${transmissionDelayMaxValue}.`
+      `The value of config.metrics.transmissionDelay (or INSTANA_METRICS_TRANSMISSION_DELAY) (${transmissionDelay}) is not one of the allowed values (${allowedTransmissionDelayValues.join(
+        ', '
+      )} ms). Assuming the nearest allowed value ${nearest} ms.`
     );
-    finalConfig.metrics.transmissionDelay = transmissionDelayMaxValue;
+    finalConfig.metrics.transmissionDelay = nearest;
+  } else {
+    finalConfig.metrics.transmissionDelay = transmissionDelay;
   }
 
   configStore.set('config.metrics.transmissionDelay', { source: transmissionDelaySource });
