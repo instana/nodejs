@@ -962,7 +962,7 @@
     "core": false,
     "versions": [
       {
-        "v": "8.22.0"
+        "v": "8.23.0"
       }
     ],
     "group": "databases"
