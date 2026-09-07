@@ -159,7 +159,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -170,7 +170,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-messaging-kafka-javascript" \
+              && echo "Uploaded test coverage for collector-messaging-kafka-javascript → test-results/$GIT_COMMIT/collector-messaging-kafka-javascript.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-messaging-kafka-javascript (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -274,7 +274,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -285,7 +285,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-messaging-amqplib" \
+              && echo "Uploaded test coverage for collector-messaging-amqplib → test-results/$GIT_COMMIT/collector-messaging-amqplib.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-messaging-amqplib (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -388,7 +388,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -399,7 +399,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-messaging-bull" \
+              && echo "Uploaded test coverage for collector-messaging-bull → test-results/$GIT_COMMIT/collector-messaging-bull.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-messaging-bull (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -525,7 +525,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -536,7 +536,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-messaging-kafka-node" \
+              && echo "Uploaded test coverage for collector-messaging-kafka-node → test-results/$GIT_COMMIT/collector-messaging-kafka-node.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-messaging-kafka-node (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -662,7 +662,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -673,7 +673,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-messaging-kafkajs" \
+              && echo "Uploaded test coverage for collector-messaging-kafkajs → test-results/$GIT_COMMIT/collector-messaging-kafkajs.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-messaging-kafkajs (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -777,7 +777,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -788,7 +788,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-messaging-nats" \
+              && echo "Uploaded test coverage for collector-messaging-nats → test-results/$GIT_COMMIT/collector-messaging-nats.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-messaging-nats (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -901,7 +901,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -912,7 +912,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-messaging-node-nats-streaming" \
+              && echo "Uploaded test coverage for collector-messaging-node-nats-streaming → test-results/$GIT_COMMIT/collector-messaging-node-nats-streaming.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-messaging-node-nats-streaming (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -1038,7 +1038,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -1049,7 +1049,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-messaging-node-rdkafka-1" \
+              && echo "Uploaded test coverage for collector-messaging-node-rdkafka-1 → test-results/$GIT_COMMIT/collector-messaging-node-rdkafka-1.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-messaging-node-rdkafka-1 (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -1175,7 +1175,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -1186,7 +1186,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-messaging-node-rdkafka-2" \
+              && echo "Uploaded test coverage for collector-messaging-node-rdkafka-2 → test-results/$GIT_COMMIT/collector-messaging-node-rdkafka-2.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-messaging-node-rdkafka-2 (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -1312,7 +1312,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -1323,7 +1323,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-messaging-node-rdkafka-3" \
+              && echo "Uploaded test coverage for collector-messaging-node-rdkafka-3 → test-results/$GIT_COMMIT/collector-messaging-node-rdkafka-3.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-messaging-node-rdkafka-3 (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -1449,7 +1449,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -1460,7 +1460,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-messaging-node-rdkafka-4" \
+              && echo "Uploaded test coverage for collector-messaging-node-rdkafka-4 → test-results/$GIT_COMMIT/collector-messaging-node-rdkafka-4.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-messaging-node-rdkafka-4 (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -1586,7 +1586,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -1597,7 +1597,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-messaging-node-rdkafka-5" \
+              && echo "Uploaded test coverage for collector-messaging-node-rdkafka-5 → test-results/$GIT_COMMIT/collector-messaging-node-rdkafka-5.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-messaging-node-rdkafka-5 (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -1674,7 +1674,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -1685,7 +1685,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-messaging-socket-io" \
+              && echo "Uploaded test coverage for collector-messaging-socket-io → test-results/$GIT_COMMIT/collector-messaging-socket-io.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-messaging-socket-io (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"

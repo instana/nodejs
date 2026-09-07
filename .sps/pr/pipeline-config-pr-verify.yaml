@@ -41,7 +41,7 @@ tasks:
 
           GH_TOKEN="$(get_secret gh-public-token)"
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           REPO="instana/nodejs"
 
           if [ -z "$GH_TOKEN" ] || [ -z "$COS_API_KEY" ] || [ -z "$GIT_COMMIT" ]; then
@@ -66,12 +66,16 @@ tasks:
           DOWNLOADED_FILE="$TMPDIR/downloaded.txt"   # tracks task slugs already fetched from COS
           touch "$CLAIMED_FILE" "$DOWNLOADED_FILE"
 
-          # Helper: download the COS result file for a single completed check-run name.
+          # Helper: download the COS result file for a single completed status context.
+          # Context format: "tekton/pr-code-checks-<slug>/code-unit-tests"
           # Skips silently if already downloaded or if COS has no file for it.
           download_cos_result() {
-            local check_name="$1"
-            # Derive the task slug: strip leading "pr-code-checks-" if present
-            local slug="${check_name#pr-code-checks-}"
+            local context="$1"
+            # Only handle collector task contexts (must have a slug after "pr-code-checks-")
+            [[ "$context" != tekton/pr-code-checks-*/* ]] && return 0
+            # Derive slug: strip "tekton/pr-code-checks-" prefix and "/code-unit-tests" suffix
+            local slug="${context#tekton/pr-code-checks-}"
+            slug="${slug%/code-unit-tests}"
             grep -qxF "$slug" "$DOWNLOADED_FILE" && return 0
             local key="test-results/$GIT_COMMIT/${slug}.txt"
             local RESPONSE HTTP_CODE BODY
@@ -85,25 +89,52 @@ tasks:
               echo "$BODY" >> "$CLAIMED_FILE"
               echo "" >> "$CLAIMED_FILE"
             elif [ "$HTTP_CODE" = "404" ]; then
-              echo "  – $slug (no COS file — not a collector task)"
+              echo "  – $slug (no COS file found yet)"
             else
               echo "  ✘ $slug HTTP $HTTP_CODE"
             fi
             echo "$slug" >> "$DOWNLOADED_FILE"
           }
 
+          # Helper: fetch all commit statuses (handles pagination)
+          fetch_statuses() {
+            local page=1
+            local accfile pagefile
+            accfile=$(mktemp)
+            pagefile=$(mktemp)
+            echo "[]" > "$accfile"
+            while true; do
+              curl -sf \
+                -H "Authorization: Bearer $GH_TOKEN" \
+                -H "Accept: application/vnd.github+json" \
+                "https://api.github.com/repos/$REPO/commits/$GIT_COMMIT/statuses?per_page=100&page=$page" > "$pagefile"
+              local count
+              count=$(python3 -c "import sys,json; print(len(json.load(open(sys.argv[1]))))" "$pagefile" 2>/dev/null || echo 0)
+              # Append this page to accumulated results
+              python3 - "$accfile" "$pagefile" <<'PYEOF'
+          import sys, json
+          acc = json.load(open(sys.argv[1]))
+          page = json.load(open(sys.argv[2]))
+          acc.extend(page)
+          json.dump(acc, open(sys.argv[1], "w"))
+          PYEOF
+              [ "$count" -lt 100 ] && break
+              page=$((page + 1))
+            done
+            cat "$accfile"
+            rm -f "$accfile" "$pagefile"
+          }
+
           # ── Phase 1: wait until all EXPECTED_CHECKS are registered ──────────────
-          echo "Waiting for all 89 expected checks to be registered on commit $GIT_COMMIT..."
+          echo "Waiting for all 88 expected checks to be registered on commit $GIT_COMMIT..."
           MAX_WAIT=3600
           POLL_INTERVAL=30
           ELAPSED=0
-          EXPECTED_CHECKS=89
+          EXPECTED_CHECKS=88
           while true; do
-            STATUSES=$(curl -sf \
-              -H "Authorization: Bearer $GH_TOKEN" \
-              -H "Accept: application/vnd.github+json" \
-              "https://api.github.com/repos/$REPO/commits/$GIT_COMMIT/check-runs?per_page=100")
-            OTHERS=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); print(sum(1 for r in d.get('check_runs',[]) if r['name']!='pr-verify'))")
+            STATUSES=$(fetch_statuses)
+            # Count unique contexts (deduplicate — statuses API returns history, latest first)
+            OTHERS=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(set(r['context'] for r in d if r['context'].startswith('tekton/pr-code-checks-') and not r['context'].startswith('tekton/pr-code-checks-verify'))))")
             echo "  $OTHERS / $EXPECTED_CHECKS checks registered (${ELAPSED}s elapsed)"
             if [ "$OTHERS" -ge "$EXPECTED_CHECKS" ]; then
               echo "All expected checks are now registered."
@@ -122,15 +153,19 @@ tasks:
           echo ""
           echo "=== Tests that ran ==="
           while true; do
-            STATUSES=$(curl -sf \
-              -H "Authorization: Bearer $GH_TOKEN" \
-              -H "Accept: application/vnd.github+json" \
-              "https://api.github.com/repos/$REPO/commits/$GIT_COMMIT/check-runs?per_page=100")
-            # Download COS file for every check that just became completed
-            while IFS= read -r check_name; do
-              download_cos_result "$check_name"
-            done < <(echo "$STATUSES" | python3 -c 'import sys,json; d=json.load(sys.stdin); [print(r["name"]) for r in d.get("check_runs",[]) if r["status"]=="completed" and r["name"]!="pr-verify"]')
-            PENDING=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); print(sum(1 for r in d.get('check_runs',[]) if r['status']!='completed' and r['name']!='pr-verify'))")
+            STATUSES=$(fetch_statuses)
+            # Download COS file for every completed (success/failure) code-unit-tests status
+            while IFS= read -r context; do
+              download_cos_result "$context"
+            done < <(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); seen=set(); [print(r['context']) or seen.add(r['context']) for r in d if r['context'].endswith('/code-unit-tests') and r['context'] not in seen and r['state'] in ('success','failure') and not r['context'].startswith('tekton/pr-code-checks-verify')]")
+            PENDING=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); seen=set(); pending=0
+          for r in d:
+              c=r['context']
+              if not c.endswith('/code-unit-tests') or c.startswith('tekton/pr-code-checks-verify'): continue
+              if c in seen: continue
+              seen.add(c)
+              if r['state']=='pending': pending+=1
+          print(pending)")
             echo "  $PENDING checks still pending (${ELAPSED}s elapsed)"
             if [ "$PENDING" -eq 0 ]; then
               echo "All checks completed."
@@ -146,11 +181,11 @@ tasks:
 
           # ── Phase 3: compare against all test files in repo ──────────────────────
           REPO_PATH="$WORKSPACE/$(load_repo app-repo path)"
-          ALL_TESTS=$(find "$REPO_PATH/packages/collector/test/integration" \
+          ALL_TESTS=$(find "$REPO_PATH/packages" \
             -name "*.test.js" \
             -not -path "*/node_modules/*" \
             -not -path "*/long_*/*" \
-            | sed "s|.*/packages/collector/||" | sort)
+            | sed "s|$REPO_PATH/packages/[^/]*/||" | sort)
 
           UNCOVERED_LIST=""
           MISSING=0

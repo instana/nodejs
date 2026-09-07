@@ -126,7 +126,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -137,7 +137,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for aws-lambda" \
+              && echo "Uploaded test coverage for aws-lambda → test-results/$GIT_COMMIT/aws-lambda.txt" \
               || echo "WARNING: Failed to upload test coverage for aws-lambda (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -202,7 +202,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -213,7 +213,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for aws-fargate" \
+              && echo "Uploaded test coverage for aws-fargate → test-results/$GIT_COMMIT/aws-fargate.txt" \
               || echo "WARNING: Failed to upload test coverage for aws-fargate (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -278,7 +278,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -289,7 +289,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for azure-container-services" \
+              && echo "Uploaded test coverage for azure-container-services → test-results/$GIT_COMMIT/azure-container-services.txt" \
               || echo "WARNING: Failed to upload test coverage for azure-container-services (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -354,7 +354,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -365,7 +365,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for google-cloud-run" \
+              && echo "Uploaded test coverage for google-cloud-run → test-results/$GIT_COMMIT/google-cloud-run.txt" \
               || echo "WARNING: Failed to upload test coverage for google-cloud-run (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"

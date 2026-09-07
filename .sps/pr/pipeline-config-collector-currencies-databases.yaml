@@ -143,7 +143,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -154,7 +154,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-databases-elasticsearch" \
+              && echo "Uploaded test coverage for collector-databases-elasticsearch → test-results/$GIT_COMMIT/collector-databases-elasticsearch.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-databases-elasticsearch (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -280,7 +280,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -291,7 +291,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-databases-client" \
+              && echo "Uploaded test coverage for collector-databases-client → test-results/$GIT_COMMIT/collector-databases-client.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-databases-client (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -400,7 +400,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -411,7 +411,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-databases-couchbase" \
+              && echo "Uploaded test coverage for collector-databases-couchbase → test-results/$GIT_COMMIT/collector-databases-couchbase.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-databases-couchbase (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -532,7 +532,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -543,7 +543,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-databases-ibm-db" \
+              && echo "Uploaded test coverage for collector-databases-ibm-db → test-results/$GIT_COMMIT/collector-databases-ibm-db.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-databases-ibm-db (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -669,7 +669,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -680,7 +680,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-databases-ioredis" \
+              && echo "Uploaded test coverage for collector-databases-ioredis → test-results/$GIT_COMMIT/collector-databases-ioredis.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-databases-ioredis (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -782,7 +782,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -793,7 +793,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-databases-memcached" \
+              && echo "Uploaded test coverage for collector-databases-memcached → test-results/$GIT_COMMIT/collector-databases-memcached.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-databases-memcached (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -896,7 +896,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -907,7 +907,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-databases-mongodb" \
+              && echo "Uploaded test coverage for collector-databases-mongodb → test-results/$GIT_COMMIT/collector-databases-mongodb.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-databases-mongodb (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -1010,7 +1010,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -1021,7 +1021,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-databases-mongoose" \
+              && echo "Uploaded test coverage for collector-databases-mongoose → test-results/$GIT_COMMIT/collector-databases-mongoose.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-databases-mongoose (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -1125,7 +1125,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -1136,7 +1136,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-databases-mssql" \
+              && echo "Uploaded test coverage for collector-databases-mssql → test-results/$GIT_COMMIT/collector-databases-mssql.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-databases-mssql (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -1244,7 +1244,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -1255,7 +1255,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-databases-mysql" \
+              && echo "Uploaded test coverage for collector-databases-mysql → test-results/$GIT_COMMIT/collector-databases-mysql.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-databases-mysql (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -1363,7 +1363,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -1374,7 +1374,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-databases-mysql2" \
+              && echo "Uploaded test coverage for collector-databases-mysql2 → test-results/$GIT_COMMIT/collector-databases-mysql2.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-databases-mysql2 (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -1482,7 +1482,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -1493,7 +1493,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-databases-oracledb" \
+              && echo "Uploaded test coverage for collector-databases-oracledb → test-results/$GIT_COMMIT/collector-databases-oracledb.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-databases-oracledb (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -1599,7 +1599,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -1610,7 +1610,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-databases-pg" \
+              && echo "Uploaded test coverage for collector-databases-pg → test-results/$GIT_COMMIT/collector-databases-pg.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-databases-pg (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -1716,7 +1716,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -1727,7 +1727,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-databases-pg-native" \
+              && echo "Uploaded test coverage for collector-databases-pg-native → test-results/$GIT_COMMIT/collector-databases-pg-native.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-databases-pg-native (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -1846,7 +1846,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -1857,7 +1857,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-databases-prisma" \
+              && echo "Uploaded test coverage for collector-databases-prisma → test-results/$GIT_COMMIT/collector-databases-prisma.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-databases-prisma (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -1983,7 +1983,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -1994,7 +1994,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-databases-redis" \
+              && echo "Uploaded test coverage for collector-databases-redis → test-results/$GIT_COMMIT/collector-databases-redis.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-databases-redis (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -2100,7 +2100,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -2111,7 +2111,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-databases-sequelize" \
+              && echo "Uploaded test coverage for collector-databases-sequelize → test-results/$GIT_COMMIT/collector-databases-sequelize.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-databases-sequelize (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -2215,7 +2215,7 @@ tasks:
 
           # upload executed test files to COS for coverage verification
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -2226,7 +2226,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-databases-tedious" \
+              && echo "Uploaded test coverage for collector-databases-tedious → test-results/$GIT_COMMIT/collector-databases-tedious.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-databases-tedious (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
