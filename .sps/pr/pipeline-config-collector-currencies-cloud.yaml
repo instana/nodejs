@@ -143,7 +143,7 @@ tasks:
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
               -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
-              | jq -r '.access_token')
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
             curl -sf -X PUT \
               "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-cloud-client-dynamodb.txt" \
               -H "Authorization: Bearer $IAM_TOKEN" \
@@ -259,7 +259,7 @@ tasks:
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
               -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
-              | jq -r '.access_token')
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
             curl -sf -X PUT \
               "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-cloud-client-kinesis.txt" \
               -H "Authorization: Bearer $IAM_TOKEN" \
@@ -375,7 +375,7 @@ tasks:
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
               -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
-              | jq -r '.access_token')
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
             curl -sf -X PUT \
               "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-cloud-client-lambda.txt" \
               -H "Authorization: Bearer $IAM_TOKEN" \
@@ -491,7 +491,7 @@ tasks:
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
               -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
-              | jq -r '.access_token')
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
             curl -sf -X PUT \
               "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-cloud-client-s3.txt" \
               -H "Authorization: Bearer $IAM_TOKEN" \
@@ -607,7 +607,7 @@ tasks:
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
               -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
-              | jq -r '.access_token')
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
             curl -sf -X PUT \
               "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-cloud-client-sns.txt" \
               -H "Authorization: Bearer $IAM_TOKEN" \
@@ -723,7 +723,7 @@ tasks:
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
               -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
-              | jq -r '.access_token')
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
             curl -sf -X PUT \
               "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-cloud-client-sqs.txt" \
               -H "Authorization: Bearer $IAM_TOKEN" \
@@ -841,7 +841,7 @@ tasks:
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
               -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
-              | jq -r '.access_token')
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
             curl -sf -X PUT \
               "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-cloud-storage-blob.txt" \
               -H "Authorization: Bearer $IAM_TOKEN" \
@@ -958,7 +958,7 @@ tasks:
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
               -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
-              | jq -r '.access_token')
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
             curl -sf -X PUT \
               "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-cloud-pubsub.txt" \
               -H "Authorization: Bearer $IAM_TOKEN" \
@@ -1075,7 +1075,7 @@ tasks:
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
               -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
-              | jq -r '.access_token')
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
             curl -sf -X PUT \
               "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-cloud-storage.txt" \
               -H "Authorization: Bearer $IAM_TOKEN" \
@@ -1191,7 +1191,7 @@ tasks:
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
               -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
-              | jq -r '.access_token')
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
             curl -sf -X PUT \
               "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-cloud-aws-sdk.txt" \
               -H "Authorization: Bearer $IAM_TOKEN" \

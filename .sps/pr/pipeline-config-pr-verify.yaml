@@ -60,8 +60,8 @@ tasks:
               -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github+json" \
               "https://api.github.com/repos/$REPO/commits/$GIT_COMMIT/check-runs?per_page=100")
-            TOTAL=$(echo "$STATUSES" | jq '.check_runs | length')
-            PENDING=$(echo "$STATUSES" | jq '[.check_runs[] | select(.status != "completed" and .name != "pr-verify")] | length')
+            TOTAL=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('check_runs', [])))")
+            PENDING=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); print(sum(1 for r in d.get('check_runs',[]) if r['status']!='completed' and r['name']!='pr-verify'))")
             echo "  $((TOTAL)) checks total, $PENDING still pending (${ELAPSED}s elapsed)"
             if [ "$PENDING" -eq 0 ]; then
               echo "All checks completed."
@@ -80,7 +80,7 @@ tasks:
           IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
             -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
-            | jq -r '.access_token')
+            | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
 
           echo "Listing uploaded test files for commit $GIT_COMMIT..."
           OBJECTS=$(curl -sf \
