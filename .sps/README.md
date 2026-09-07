@@ -205,16 +205,21 @@ Use the `manual-dep-*` trigger to run a bot immediately on demand.
 # Run all manual triggers on a branch with Node 20
 .sps/scripts/run-pipeline.sh --branch main --node-version 20
 
+# Run all manual triggers across all Node.js versions (18, 20, 22, 24, 26) with ESM
+.sps/scripts/run-pipeline.sh --branch main --all-node-versions --esm true
+
+# Run across specific Node.js versions (comma-separated list)
+.sps/scripts/run-pipeline.sh --branch main --node-version 18,20,22,24,26 --esm true
+
 # Run a single group
 .sps/scripts/run-pipeline.sh --branch main --node-version 20 \
   --trigger collector-currencies-async
 
 # Run with ESM mode enabled (sets RUN_ESM=true in the pipeline run)
-.sps/scripts/run-pipeline.sh --branch main --node-version 20 \
-  --trigger collector-currencies-async --esm true
+.sps/scripts/run-pipeline.sh --branch main --node-version 24 --esm true
 
 # Dry run — prints the API payload without making calls
-.sps/scripts/run-pipeline.sh --branch main --node-version 20 --dry-run
+.sps/scripts/run-pipeline.sh --branch main --all-node-versions --esm true --dry-run
 ```
 
 ## Stopping all active runs
