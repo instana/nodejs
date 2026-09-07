@@ -93,11 +93,11 @@ tasks:
           }
 
           # ── Phase 1: wait until all EXPECTED_CHECKS are registered ──────────────
-          echo "Waiting for all 137 expected checks to be registered on commit $GIT_COMMIT..."
+          echo "Waiting for all 89 expected checks to be registered on commit $GIT_COMMIT..."
           MAX_WAIT=3600
           POLL_INTERVAL=30
           ELAPSED=0
-          EXPECTED_CHECKS=137
+          EXPECTED_CHECKS=89
           while true; do
             STATUSES=$(curl -sf \
               -H "Authorization: Bearer $GH_TOKEN" \

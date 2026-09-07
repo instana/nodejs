@@ -76,7 +76,10 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
-          export CI_AUTOPROFILE_TEST_FILES=$(cd packages/autoprofile && find test -name '*.test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
+          # collect test files
+          TEST_FILES=$(cd packages/autoprofile && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
+
+          export CI_AUTOPROFILE_TEST_FILES="$TEST_FILES"
 
           RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
@@ -95,6 +98,7 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'

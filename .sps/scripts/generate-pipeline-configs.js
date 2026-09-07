@@ -205,7 +205,7 @@ function readNeeds(folder) {
  *                                 passed as roots to `find … -name '*.test.js'`
  * @param {string[]} needs       - Sidecar names required by this task (from .needs)
  */
-function buildCollectorTask(taskSlug, displayName, paths, needs, { uploadCoverage = false } = {}) {
+function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
   const scriptLines = ['#!/usr/bin/env bash', 'set -eo pipefail', ''];
   scriptLines.push(nodeVersionSwitchScript());
   scriptLines.push('');
@@ -286,9 +286,7 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, { uploadCoverag
   }
   extraEnvLines.push('TEST_FILES="$TEST_FILES" \\');
   scriptLines.push(...runWithRetryLines('test:ci:collector', extraEnvLines));
-  if (uploadCoverage) {
-    scriptLines.push(...uploadTestFilesLines(taskSlug));
-  }
+  scriptLines.push(...uploadTestFilesLines(taskSlug));
   scriptLines.push('exit $LAST_EXIT');
 
   const prefix = MODE === 'main' ? 'code-build' : 'pr-code-checks';
@@ -486,7 +484,7 @@ function buildCurrencyTasks(pkgName, folder, group) {
 
   if (!modeGroups) {
     // Single task — all test files under the package folder
-    return [buildCollectorTask(`collector-${group}-${pkgSlug}`, pkgName, [relCollectorFolder], needs, { uploadCoverage: true })];
+    return [buildCollectorTask(`collector-${group}-${pkgSlug}`, pkgName, [relCollectorFolder], needs)];
   }
 
   // Fan-out — one task per mode group, numbered 1..N.
@@ -502,16 +500,19 @@ function buildCurrencyTasks(pkgName, folder, group) {
           .flatMap(v => modes.map(m => `${relCollectorFolder}/${v}/${m}`))
       : [relCollectorFolder];
 
-    return buildCollectorTask(`collector-${group}-${pkgSlug}-${index}`, displayName, modeDirs, needs, { uploadCoverage: true });
+    return buildCollectorTask(`collector-${group}-${pkgSlug}-${index}`, displayName, modeDirs, needs);
   });
 }
 
-function buildSimpleTask(displayName, testScript, needs = [], extraEnv = null) {
+function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv = null) {
   const scriptLines = ['#!/usr/bin/env bash', 'set -eo pipefail', ''];
   scriptLines.push(nodeVersionSwitchScript());
   scriptLines.push('');
   scriptLines.push('cd "$WORKSPACE/$(load_repo app-repo path)"');
   scriptLines.push('npm install --loglevel warn --foreground-scripts');
+  scriptLines.push('');
+  scriptLines.push('# collect test files');
+  scriptLines.push(`TEST_FILES=$(cd packages/${taskSlug} && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\\n' ' ')`);
   scriptLines.push('');
 
   if (needs.length > 0) {
@@ -544,6 +545,7 @@ function buildSimpleTask(displayName, testScript, needs = [], extraEnv = null) {
     simpleEnvLines.push(`${varName}="$${varName}" \\`);
   }
   scriptLines.push(...runWithRetryLines(testScript, simpleEnvLines));
+  scriptLines.push(...uploadTestFilesLines(taskSlug));
   scriptLines.push('exit $LAST_EXIT');
 
   return {
@@ -837,8 +839,7 @@ const SIMPLE_TARGETS = {
   autoprofile: {
     script: 'test:ci:autoprofile',
     displayName: 'autoprofile',
-    extraEnv:
-      "CI_AUTOPROFILE_TEST_FILES=$(cd packages/autoprofile && find test -name '*.test.js' -not -path '*/node_modules/*' | sort | tr '\\n' ' ')"
+    extraEnv: 'CI_AUTOPROFILE_TEST_FILES="$TEST_FILES"'
   },
   core: { script: 'test:ci:core', displayName: 'core' },
   'metrics-util': { script: 'test:ci:metrics-util', displayName: 'metrics-util' },
@@ -919,7 +920,6 @@ function generateOne(t) {
       'collector-metrics',
       ['test/integration/metrics'],
       [],
-      { uploadCoverage: true }
     );
     const prConfig = baseConfig({ [taskName]: task });
     writeConfig(t, prConfig, toMainConfig(prConfig));
@@ -1003,7 +1003,7 @@ function generateOne(t) {
     // Non-dind groups — each entry in splitDef becomes one buildCollectorTask call
     for (const [groupName, subdirs] of Object.entries(splitDef)) {
       const paths = subdirs.filter(name => !dindSet.has(name)).map(name => `test/integration/misc/${name}`);
-      const { taskName, task } = buildCollectorTask(groupName, `collector-${groupName}`, paths, [], { uploadCoverage: true });
+      const { taskName, task } = buildCollectorTask(groupName, `collector-${groupName}`, paths, []);
       fanOutTasks[taskName] = task;
     }
 
@@ -1011,7 +1011,7 @@ function generateOne(t) {
     if (dindFolders.length > 0) {
       const dindNeeds = [...new Set(dindFolders.flatMap(name => readNeeds(path.join(miscDir, name))))];
       const dindPaths = dindFolders.map(name => `test/integration/misc/${name}`);
-      const { taskName, task } = buildCollectorTask('misc-dind', 'collector-misc-dind', dindPaths, dindNeeds, { uploadCoverage: true });
+      const { taskName, task } = buildCollectorTask('misc-dind', 'collector-misc-dind', dindPaths, dindNeeds);
       fanOutTasks[taskName] = task;
     }
 
@@ -1022,7 +1022,7 @@ function generateOne(t) {
     const fanOutTasks = {};
     for (const member of members) {
       const { script, displayName, needs = [], extraEnv } = SIMPLE_TARGETS[member];
-      fanOutTasks[`pr-code-checks-${member}`] = buildSimpleTask(displayName, script, needs, extraEnv);
+      fanOutTasks[`pr-code-checks-${member}`] = buildSimpleTask(member, displayName, script, needs, extraEnv);
     }
     const prConfig = baseConfig(fanOutTasks);
     writeConfig(t, prConfig, toMainConfig(prConfig));
@@ -1041,23 +1041,30 @@ function generateOne(t) {
     fs.writeFileSync(prPath, output);
     console.log(`Written: ${prPath}`);
   } else if (t === 'pr-verify') {
-    // Count expected check-runs from all other PR pipeline configs that have
-    // already been written in this generator run.  Every task entry that is
-    // not hard-disabled (when: false at task level) becomes one GitHub
-    // check-run.  We exclude the pr-verify pipeline itself and the two
-    // always-disabled tasks (deploy-checks, deploy-release).
+    // Count expected GitHub check-runs from all other PR pipeline configs.
+    // Each task name becomes exactly one check-run on GitHub.
+    // A task produces NO check-run when:
+    //   - it has when:false at task level (e.g. deploy-checks, deploy-release), OR
+    //   - it has no active unit-test step (pure infra tasks: code-pr-finish, code-ci-finish), OR
+    //   - its unit-test step has displayName 'npm-install' (the shared setup task pr-code-checks)
     const spsDir = path.join(__dirname, '..');
     const prDir = path.join(spsDir, 'pr');
-    let expectedChecks = 0;
+    const seenTasks = new Set();
     for (const file of fs.readdirSync(prDir)) {
       if (!file.startsWith('pipeline-config-') || !file.endsWith('.yaml')) continue;
       if (file === 'pipeline-config-pr-verify.yaml') continue;
       const cfg = yaml.load(fs.readFileSync(path.join(prDir, file), 'utf8'));
-      for (const [, taskDef] of Object.entries(cfg.tasks || {})) {
-        if (typeof taskDef === 'object' && taskDef !== null && taskDef.when === false) continue;
-        expectedChecks++;
+      for (const [name, taskDef] of Object.entries(cfg.tasks || {})) {
+        if (typeof taskDef !== 'object' || taskDef === null) continue;
+        if (taskDef.when === false) continue;
+        const steps = taskDef.steps ?? [];
+        const unitTestStep = steps.find(s => s.name === 'unit-test' && s.when !== 'false');
+        if (!unitTestStep) continue;
+        if ((unitTestStep.displayName ?? '') === 'npm-install') continue;
+        seenTasks.add(name);
       }
     }
+    const expectedChecks = seenTasks.size;
 
     const script = [
       '#!/usr/bin/env bash',
@@ -1283,7 +1290,7 @@ function generateOne(t) {
     }
   } else if (SIMPLE_TARGETS[t]) {
     const { script, displayName, needs = [], extraEnv } = SIMPLE_TARGETS[t];
-    const fanOutTasks = { [`pr-code-checks-${t}`]: buildSimpleTask(displayName, script, needs, extraEnv) };
+    const fanOutTasks = { [`pr-code-checks-${t}`]: buildSimpleTask(t, displayName, script, needs, extraEnv) };
     const prConfig = baseConfig(fanOutTasks);
     writeConfig(t, prConfig, toMainConfig(prConfig));
   } else {
