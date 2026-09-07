@@ -649,7 +649,7 @@
     "core": false,
     "versions": [
       {
-        "v": "5.11.1"
+        "v": "6.0.0"
       }
     ],
     "group": "databases"
