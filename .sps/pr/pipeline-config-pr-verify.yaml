@@ -39,23 +39,9 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          echo "=== DEBUG ==="
-          echo "WORKSPACE: $WORKSPACE"
-          REPO_PATH="$WORKSPACE/$(load_repo app-repo path)"
-          echo "REPO_PATH: $REPO_PATH"
-          cd "$REPO_PATH"
-          echo "git log:"
-          git log --oneline -5
-          echo "get_env pr-id: $(get_env pr-id "")"
-          echo "get_env pr-branch: $(get_env pr-branch "")"
-          echo "get_env pr-state: $(get_env pr-state "")"
-          echo "get_env commit-id: $(get_env commit-id "")"
-          echo "get_env GIT_COMMIT: $(get_env GIT_COMMIT "")"
-          echo "============="
-
           GH_TOKEN="$(get_secret gh-public-token)"
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
+          GIT_COMMIT="$(get_env GIT_COMMIT "")"
           REPO="instana/nodejs"
 
           if [ -z "$GH_TOKEN" ] || [ -z "$COS_API_KEY" ] || [ -z "$GIT_COMMIT" ]; then
