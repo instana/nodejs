@@ -1072,7 +1072,7 @@ function generateOne(t) {
       '',
       'GH_TOKEN="$(get_secret gh-public-token)"',
       'COS_API_KEY="$(get_secret ibm-object-storage-api-key)"',
-      'GIT_COMMIT="$(get_env GIT_COMMIT "")"',
+      'GIT_COMMIT="$(get_env HEAD_SHA "")"',
       'REPO="instana/nodejs"',
       '',
       'echo "=== All pipeline env vars (git/commit related) ==="',
