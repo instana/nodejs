@@ -755,6 +755,7 @@ function generateOne(t) {
         'pr-code-checks': {
           steps: [
             { name: 'peer-review', when: 'false' },
+            { name: 'branch-protection', when: 'false' },
             { name: 'unit-test', image: NODE_IMAGE, script: '#!/usr/bin/env bash\necho "General PR checks passed."' }
           ]
         },
