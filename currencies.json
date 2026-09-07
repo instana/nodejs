@@ -47,7 +47,7 @@
     "core": false,
     "versions": [
       {
-        "v": "2.14.3"
+        "v": "2.15.0"
       }
     ],
     "group": "protocols"
