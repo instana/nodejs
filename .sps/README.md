@@ -183,7 +183,7 @@ Requires `ibmcloud` CLI logged in and `jq`. Existing triggers are skipped (idemp
 .sps/scripts/create-triggers.sh --dry-run                                      # preview
 .sps/scripts/create-triggers.sh                                             # all types
 .sps/scripts/create-triggers.sh --type=dependencies                            # bots only
-.sps/scripts/create-triggers.sh --type=dependencies --name=manual-dep-currency-bot  # one trigger
+.sps/scripts/create-triggers.sh --type=dependencies --name=manual-dep-currency-bot                 # one trigger
 ```
 
 | `--type` | Kind | Configs | Trigger names |
