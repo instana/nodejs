@@ -109,7 +109,7 @@ tasks:
             task=$(basename "$key" .txt)
             echo "── $task ──"
             RESPONSE=$(curl -s -w "\n%{http_code}" \
-              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/$key" \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/$key" \
               -H "Authorization: Bearer $IAM_TOKEN")
             HTTP_CODE=$(echo "$RESPONSE" | tail -1)
             BODY=$(echo "$RESPONSE" | sed '$d')
@@ -123,8 +123,8 @@ tasks:
           done <<< "$OBJECTS"
 
           # ── Compare against all test files in repo ───────────────────────────────
-          cd "$WORKSPACE/$(load_repo app-repo path)"
-          ALL_TESTS=$(find packages/collector/test/integration \
+          REPO_PATH="$WORKSPACE/$(load_repo app-repo path)"
+          ALL_TESTS=$(find "$REPO_PATH/packages/collector/test/integration" \
             -name "*.test.js" \
             -not -path "*/node_modules/*" \
             -not -path "*/long_*/*" \
