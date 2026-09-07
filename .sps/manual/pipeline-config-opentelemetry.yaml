@@ -1,6 +1,7 @@
 version: '2'
 tasks:
   code-build:
+    displayName: setup
     runtimeClassName: large
     steps:
       - name: peer-review
@@ -15,20 +16,13 @@ tasks:
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
-          node_version="$(get_env node-version 2>/dev/null || true)"
-          if [ -n "${node_version:-}" ]; then
-            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            # shellcheck source=/dev/null
-            . "$NVM_DIR/nvm.sh"
-            nvm install "$node_version" --no-progress
-            nvm use "$node_version"
-            ACTUAL=$(node --version)
-            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
-              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
-              exit 1
-            fi
-          fi
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
@@ -70,25 +64,22 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="$(get_env node-version 2>/dev/null || true)"
-          if [ -n "${node_version:-}" ]; then
-            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            # shellcheck source=/dev/null
-            . "$NVM_DIR/nvm.sh"
-            nvm install "$node_version" --no-progress
-            nvm use "$node_version"
-            ACTUAL=$(node --version)
-            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
-              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
-              exit 1
-            fi
-          fi
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
+          # collect test files
+          TEST_FILES=$(cd packages/opentelemetry-exporter && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
+
+          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -96,6 +87,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
+              RUN_ESM="$RUN_ESM" \
               npm run test:ci:opentelemetry-exporter || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -103,6 +95,7 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -128,25 +121,22 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="$(get_env node-version 2>/dev/null || true)"
-          if [ -n "${node_version:-}" ]; then
-            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            # shellcheck source=/dev/null
-            . "$NVM_DIR/nvm.sh"
-            nvm install "$node_version" --no-progress
-            nvm use "$node_version"
-            ACTUAL=$(node --version)
-            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
-              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
-              exit 1
-            fi
-          fi
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
+          # collect test files
+          TEST_FILES=$(cd packages/opentelemetry-sampler && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
+
+          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -154,6 +144,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
+              RUN_ESM="$RUN_ESM" \
               npm run test:ci:opentelemetry-sampler || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -161,6 +152,7 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'

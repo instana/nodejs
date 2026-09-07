@@ -55,6 +55,8 @@ module.exports = function (name, version, isLatest) {
 
     beforeEach(async () => {
       await agentControls.clearReceivedTraceData();
+      await publisherControls.clearIpcMessages();
+      await subscriberControls.clearIpcMessages();
     });
 
     after(async () => {

@@ -4,12 +4,6 @@ tasks:
     displayName: setup
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: npm-install
         image: mirror.gcr.io/library/node:24
@@ -46,60 +40,41 @@ tasks:
     when: false
   deploy-release:
     when: false
-  code-build-autoprofile:
+  code-build-upload-currency-report:
     from: code-build
-    displayName: autoprofile
+    displayName: upload-currency-report
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
-        displayName: autoprofile
+        displayName: upload-currency-report
         image: mirror.gcr.io/library/node:24
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          GH_ENTERPRISE_TOKEN="$(get_secret git-token)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
-          # collect test files
-          TEST_FILES=$(cd packages/autoprofile && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
+          echo "Generating report..."
+          node bin/dependencies/currency/generate-currency-report.js
+          echo "Generated report."
 
-          export CI_AUTOPROFILE_TEST_FILES="$TEST_FILES"
+          # Key Name: Tracer Reports 041425
+          git clone https://oauth2:$GH_ENTERPRISE_TOKEN@github.ibm.com/instana/tracer-reports.git tracer-reports
+          cd tracer-reports
 
-          RUN_ESM="$(get_env RUN_ESM "")"
-          retry=1
-          while [ $retry -le 2 ]; do
-            LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              CI_AUTOPROFILE_TEST_FILES="$CI_AUTOPROFILE_TEST_FILES" \
-              npm run test:ci:autoprofile || LAST_EXIT=$?
-            if [ $LAST_EXIT -eq 0 ]; then
-              break
-            fi
-            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
-            retry=$((retry + 1))
-          done
+          git pull origin main
+          cp ../currency-report.md ./automated/currency/nodejs/report.md
 
-          exit $LAST_EXIT
+          git config user.name "Instanacd PAT for GitHub Enterprise"
+          git config user.email instana.ibm.github.enterprise@ibm.com
+
+          git add .
+
+          git commit -m "chore: updated node.js currency report"
+          git push origin main
       - name: sign-artifact
         when: 'false'
       - name: build-artifact

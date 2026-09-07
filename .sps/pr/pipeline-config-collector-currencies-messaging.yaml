@@ -1,6 +1,7 @@
 version: '2'
 tasks:
   pr-code-checks:
+    displayName: setup
     runtimeClassName: large
     steps:
       - name: peer-review
@@ -15,20 +16,13 @@ tasks:
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
-          node_version="$(get_env node-version 2>/dev/null || true)"
-          if [ -n "${node_version:-}" ]; then
-            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            # shellcheck source=/dev/null
-            . "$NVM_DIR/nvm.sh"
-            nvm install "$node_version" --no-progress
-            nvm use "$node_version"
-            ACTUAL=$(node --version)
-            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
-              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
-              exit 1
-            fi
-          fi
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
@@ -74,27 +68,20 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="$(get_env node-version 2>/dev/null || true)"
-          if [ -n "${node_version:-}" ]; then
-            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            # shellcheck source=/dev/null
-            . "$NVM_DIR/nvm.sh"
-            nvm install "$node_version" --no-progress
-            nvm use "$node_version"
-            ACTUAL=$(node --version)
-            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
-              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
-              exit 1
-            fi
-          fi
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -102,30 +89,38 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # create isolated network
+          docker network create --internal offline-net
+
           npm install --loglevel warn --foreground-scripts
 
           # start zookeeper
-          docker run -d --network host --name zookeeper \
+          docker run -d --network offline-net --name zookeeper \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' zookeeper)
+          socat TCP-LISTEN:2181,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:2181 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'
 
           # start kafka
-          docker run -d --network host --name kafka \
+          docker run -d --network offline-net --name kafka \
             -e KAFKA_BROKER_ID="1" \
-            -e KAFKA_ZOOKEEPER_CONNECT="localhost:2181" \
+            -e KAFKA_ZOOKEEPER_CONNECT="zookeeper:2181" \
             -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
             -e KAFKA_LISTENERS="EXTERNAL://:9092,PLAINTEXT://:29092" \
             -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR="1" \
             -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
             -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' kafka)
+          socat TCP-LISTEN:9092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:9092 &
+          socat TCP-LISTEN:29092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:29092 &
           timeout 120 bash -c \
             'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'
 
           # start kafka-topics
-          docker run -d --network host --name kafka-topics \
+          docker run -d --network offline-net --name kafka-topics \
             --entrypoint "/bin/bash" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4" "-lc" "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
           sleep 120
@@ -144,6 +139,7 @@ tasks:
             exit 0
           fi
 
+          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -151,6 +147,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
+              RUN_ESM="$RUN_ESM" \
               TEST_FILES="$TEST_FILES" \
               npm run test:ci:collector || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
@@ -159,6 +156,26 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-kafka-javascript.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-kafka-javascript" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-kafka-javascript (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -188,27 +205,20 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="$(get_env node-version 2>/dev/null || true)"
-          if [ -n "${node_version:-}" ]; then
-            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            # shellcheck source=/dev/null
-            . "$NVM_DIR/nvm.sh"
-            nvm install "$node_version" --no-progress
-            nvm use "$node_version"
-            ACTUAL=$(node --version)
-            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
-              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
-              exit 1
-            fi
-          fi
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -216,11 +226,17 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # create isolated network
+          docker network create --internal offline-net
+
           npm install --loglevel warn --foreground-scripts
 
           # start rabbitmq
-          docker run -d --network host --name rabbitmq \
+          docker run -d --network offline-net --name rabbitmq \
             "mirror.gcr.io/library/rabbitmq:3.13.0"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' rabbitmq)
+          socat TCP-LISTEN:5671,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5671 &
+          socat TCP-LISTEN:5672,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5672 &
           timeout 120 bash -c \
             'until nc -z 127.0.0.1 5672 2>/dev/null; do sleep 2; done'
 
@@ -238,6 +254,7 @@ tasks:
             exit 0
           fi
 
+          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -245,6 +262,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
+              RUN_ESM="$RUN_ESM" \
               TEST_FILES="$TEST_FILES" \
               npm run test:ci:collector || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
@@ -253,6 +271,26 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-amqplib.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-amqplib" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-amqplib (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -282,27 +320,20 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="$(get_env node-version 2>/dev/null || true)"
-          if [ -n "${node_version:-}" ]; then
-            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            # shellcheck source=/dev/null
-            . "$NVM_DIR/nvm.sh"
-            nvm install "$node_version" --no-progress
-            nvm use "$node_version"
-            ACTUAL=$(node --version)
-            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
-              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
-              exit 1
-            fi
-          fi
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -310,13 +341,18 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # create isolated network
+          docker network create --internal offline-net
+
           npm install --loglevel warn --foreground-scripts
 
           # start redis
-          docker run -d --network host --name redis \
+          docker run -d --network offline-net --name redis \
             "mirror.gcr.io/library/redis:7.4.3"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis)
+          socat TCP-LISTEN:6379,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:6379 &
           timeout 30 bash -c \
-            'until docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 1; done'
+            'until nc -z 127.0.0.1 6379 2>/dev/null; do sleep 1; done'
 
           node bin/create-version-test-folders.js
 
@@ -332,6 +368,7 @@ tasks:
             exit 0
           fi
 
+          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -339,6 +376,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
+              RUN_ESM="$RUN_ESM" \
               TEST_FILES="$TEST_FILES" \
               npm run test:ci:collector || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
@@ -347,6 +385,26 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-bull.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-bull" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-bull (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -376,27 +434,20 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="$(get_env node-version 2>/dev/null || true)"
-          if [ -n "${node_version:-}" ]; then
-            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            # shellcheck source=/dev/null
-            . "$NVM_DIR/nvm.sh"
-            nvm install "$node_version" --no-progress
-            nvm use "$node_version"
-            ACTUAL=$(node --version)
-            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
-              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
-              exit 1
-            fi
-          fi
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -404,30 +455,38 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # create isolated network
+          docker network create --internal offline-net
+
           npm install --loglevel warn --foreground-scripts
 
           # start zookeeper
-          docker run -d --network host --name zookeeper \
+          docker run -d --network offline-net --name zookeeper \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' zookeeper)
+          socat TCP-LISTEN:2181,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:2181 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'
 
           # start kafka
-          docker run -d --network host --name kafka \
+          docker run -d --network offline-net --name kafka \
             -e KAFKA_BROKER_ID="1" \
-            -e KAFKA_ZOOKEEPER_CONNECT="localhost:2181" \
+            -e KAFKA_ZOOKEEPER_CONNECT="zookeeper:2181" \
             -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
             -e KAFKA_LISTENERS="EXTERNAL://:9092,PLAINTEXT://:29092" \
             -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR="1" \
             -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
             -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' kafka)
+          socat TCP-LISTEN:9092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:9092 &
+          socat TCP-LISTEN:29092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:29092 &
           timeout 120 bash -c \
             'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'
 
           # start kafka-topics
-          docker run -d --network host --name kafka-topics \
+          docker run -d --network offline-net --name kafka-topics \
             --entrypoint "/bin/bash" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4" "-lc" "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
           sleep 120
@@ -446,6 +505,7 @@ tasks:
             exit 0
           fi
 
+          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -453,6 +513,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
+              RUN_ESM="$RUN_ESM" \
               TEST_FILES="$TEST_FILES" \
               npm run test:ci:collector || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
@@ -461,6 +522,26 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-kafka-node.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-kafka-node" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-kafka-node (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -490,27 +571,20 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="$(get_env node-version 2>/dev/null || true)"
-          if [ -n "${node_version:-}" ]; then
-            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            # shellcheck source=/dev/null
-            . "$NVM_DIR/nvm.sh"
-            nvm install "$node_version" --no-progress
-            nvm use "$node_version"
-            ACTUAL=$(node --version)
-            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
-              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
-              exit 1
-            fi
-          fi
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -518,30 +592,38 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # create isolated network
+          docker network create --internal offline-net
+
           npm install --loglevel warn --foreground-scripts
 
           # start zookeeper
-          docker run -d --network host --name zookeeper \
+          docker run -d --network offline-net --name zookeeper \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' zookeeper)
+          socat TCP-LISTEN:2181,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:2181 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'
 
           # start kafka
-          docker run -d --network host --name kafka \
+          docker run -d --network offline-net --name kafka \
             -e KAFKA_BROKER_ID="1" \
-            -e KAFKA_ZOOKEEPER_CONNECT="localhost:2181" \
+            -e KAFKA_ZOOKEEPER_CONNECT="zookeeper:2181" \
             -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
             -e KAFKA_LISTENERS="EXTERNAL://:9092,PLAINTEXT://:29092" \
             -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR="1" \
             -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
             -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' kafka)
+          socat TCP-LISTEN:9092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:9092 &
+          socat TCP-LISTEN:29092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:29092 &
           timeout 120 bash -c \
             'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'
 
           # start kafka-topics
-          docker run -d --network host --name kafka-topics \
+          docker run -d --network offline-net --name kafka-topics \
             --entrypoint "/bin/bash" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4" "-lc" "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
           sleep 120
@@ -560,6 +642,7 @@ tasks:
             exit 0
           fi
 
+          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -567,6 +650,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
+              RUN_ESM="$RUN_ESM" \
               TEST_FILES="$TEST_FILES" \
               npm run test:ci:collector || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
@@ -575,6 +659,26 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-kafkajs.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-kafkajs" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-kafkajs (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -604,27 +708,20 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="$(get_env node-version 2>/dev/null || true)"
-          if [ -n "${node_version:-}" ]; then
-            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            # shellcheck source=/dev/null
-            . "$NVM_DIR/nvm.sh"
-            nvm install "$node_version" --no-progress
-            nvm use "$node_version"
-            ACTUAL=$(node --version)
-            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
-              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
-              exit 1
-            fi
-          fi
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -632,11 +729,18 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # create isolated network
+          docker network create --internal offline-net
+
           npm install --loglevel warn --foreground-scripts
 
           # start nats
-          docker run -d --network host --name nats \
+          docker run -d --network offline-net --name nats \
             "mirror.gcr.io/library/nats:2.9.14-linux"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nats)
+          socat TCP-LISTEN:4222,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4222 &
+          socat TCP-LISTEN:6222,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:6222 &
+          socat TCP-LISTEN:8222,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8222 &
           sleep 60
 
           node bin/create-version-test-folders.js
@@ -653,6 +757,7 @@ tasks:
             exit 0
           fi
 
+          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -660,6 +765,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
+              RUN_ESM="$RUN_ESM" \
               TEST_FILES="$TEST_FILES" \
               npm run test:ci:collector || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
@@ -668,6 +774,26 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-nats.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-nats" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-nats (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -697,27 +823,20 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="$(get_env node-version 2>/dev/null || true)"
-          if [ -n "${node_version:-}" ]; then
-            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            # shellcheck source=/dev/null
-            . "$NVM_DIR/nvm.sh"
-            nvm install "$node_version" --no-progress
-            nvm use "$node_version"
-            ACTUAL=$(node --version)
-            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
-              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
-              exit 1
-            fi
-          fi
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -725,17 +844,26 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # create isolated network
+          docker network create --internal offline-net
+
           npm install --loglevel warn --foreground-scripts
 
           # start nats-streaming
-          docker run -d --network host --name nats-streaming \
+          docker run -d --network offline-net --name nats-streaming \
             "mirror.gcr.io/library/nats-streaming:0.25.3-linux" "-p" "4223" "-m" "8223"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nats-streaming)
+          socat TCP-LISTEN:4223,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4223 &
+          socat TCP-LISTEN:8223,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8223 &
           timeout 60 bash -c \
             'until curl -sf http://127.0.0.1:8223/healthz >/dev/null; do sleep 2; done'
 
           # start nats-streaming-2
-          docker run -d --network host --name nats-streaming-2 \
+          docker run -d --network offline-net --name nats-streaming-2 \
             "mirror.gcr.io/library/nats-streaming:0.25.3-linux" "-p" "4224" "-m" "8224"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nats-streaming-2)
+          socat TCP-LISTEN:4224,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4224 &
+          socat TCP-LISTEN:8224,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8224 &
           timeout 60 bash -c \
             'until curl -sf http://127.0.0.1:8224/healthz >/dev/null; do sleep 2; done'
 
@@ -753,6 +881,7 @@ tasks:
             exit 0
           fi
 
+          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -760,6 +889,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
+              RUN_ESM="$RUN_ESM" \
               TEST_FILES="$TEST_FILES" \
               npm run test:ci:collector || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
@@ -768,6 +898,26 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-node-nats-streaming.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-node-nats-streaming" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-node-nats-streaming (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -797,27 +947,20 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="$(get_env node-version 2>/dev/null || true)"
-          if [ -n "${node_version:-}" ]; then
-            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            # shellcheck source=/dev/null
-            . "$NVM_DIR/nvm.sh"
-            nvm install "$node_version" --no-progress
-            nvm use "$node_version"
-            ACTUAL=$(node --version)
-            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
-              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
-              exit 1
-            fi
-          fi
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -825,30 +968,38 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # create isolated network
+          docker network create --internal offline-net
+
           npm install --loglevel warn --foreground-scripts
 
           # start zookeeper
-          docker run -d --network host --name zookeeper \
+          docker run -d --network offline-net --name zookeeper \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' zookeeper)
+          socat TCP-LISTEN:2181,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:2181 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'
 
           # start kafka
-          docker run -d --network host --name kafka \
+          docker run -d --network offline-net --name kafka \
             -e KAFKA_BROKER_ID="1" \
-            -e KAFKA_ZOOKEEPER_CONNECT="localhost:2181" \
+            -e KAFKA_ZOOKEEPER_CONNECT="zookeeper:2181" \
             -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
             -e KAFKA_LISTENERS="EXTERNAL://:9092,PLAINTEXT://:29092" \
             -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR="1" \
             -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
             -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' kafka)
+          socat TCP-LISTEN:9092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:9092 &
+          socat TCP-LISTEN:29092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:29092 &
           timeout 120 bash -c \
             'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'
 
           # start kafka-topics
-          docker run -d --network host --name kafka-topics \
+          docker run -d --network offline-net --name kafka-topics \
             --entrypoint "/bin/bash" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4" "-lc" "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
           sleep 120
@@ -867,6 +1018,7 @@ tasks:
             exit 0
           fi
 
+          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -874,6 +1026,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
+              RUN_ESM="$RUN_ESM" \
               TEST_FILES="$TEST_FILES" \
               npm run test:ci:collector || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
@@ -882,6 +1035,26 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-node-rdkafka-1.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-node-rdkafka-1" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-node-rdkafka-1 (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -911,27 +1084,20 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="$(get_env node-version 2>/dev/null || true)"
-          if [ -n "${node_version:-}" ]; then
-            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            # shellcheck source=/dev/null
-            . "$NVM_DIR/nvm.sh"
-            nvm install "$node_version" --no-progress
-            nvm use "$node_version"
-            ACTUAL=$(node --version)
-            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
-              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
-              exit 1
-            fi
-          fi
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -939,30 +1105,38 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # create isolated network
+          docker network create --internal offline-net
+
           npm install --loglevel warn --foreground-scripts
 
           # start zookeeper
-          docker run -d --network host --name zookeeper \
+          docker run -d --network offline-net --name zookeeper \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' zookeeper)
+          socat TCP-LISTEN:2181,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:2181 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'
 
           # start kafka
-          docker run -d --network host --name kafka \
+          docker run -d --network offline-net --name kafka \
             -e KAFKA_BROKER_ID="1" \
-            -e KAFKA_ZOOKEEPER_CONNECT="localhost:2181" \
+            -e KAFKA_ZOOKEEPER_CONNECT="zookeeper:2181" \
             -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
             -e KAFKA_LISTENERS="EXTERNAL://:9092,PLAINTEXT://:29092" \
             -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR="1" \
             -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
             -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' kafka)
+          socat TCP-LISTEN:9092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:9092 &
+          socat TCP-LISTEN:29092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:29092 &
           timeout 120 bash -c \
             'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'
 
           # start kafka-topics
-          docker run -d --network host --name kafka-topics \
+          docker run -d --network offline-net --name kafka-topics \
             --entrypoint "/bin/bash" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4" "-lc" "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
           sleep 120
@@ -981,6 +1155,7 @@ tasks:
             exit 0
           fi
 
+          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -988,6 +1163,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
+              RUN_ESM="$RUN_ESM" \
               TEST_FILES="$TEST_FILES" \
               npm run test:ci:collector || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
@@ -996,6 +1172,26 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-node-rdkafka-2.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-node-rdkafka-2" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-node-rdkafka-2 (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -1025,27 +1221,20 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="$(get_env node-version 2>/dev/null || true)"
-          if [ -n "${node_version:-}" ]; then
-            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            # shellcheck source=/dev/null
-            . "$NVM_DIR/nvm.sh"
-            nvm install "$node_version" --no-progress
-            nvm use "$node_version"
-            ACTUAL=$(node --version)
-            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
-              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
-              exit 1
-            fi
-          fi
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -1053,30 +1242,38 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # create isolated network
+          docker network create --internal offline-net
+
           npm install --loglevel warn --foreground-scripts
 
           # start zookeeper
-          docker run -d --network host --name zookeeper \
+          docker run -d --network offline-net --name zookeeper \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' zookeeper)
+          socat TCP-LISTEN:2181,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:2181 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'
 
           # start kafka
-          docker run -d --network host --name kafka \
+          docker run -d --network offline-net --name kafka \
             -e KAFKA_BROKER_ID="1" \
-            -e KAFKA_ZOOKEEPER_CONNECT="localhost:2181" \
+            -e KAFKA_ZOOKEEPER_CONNECT="zookeeper:2181" \
             -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
             -e KAFKA_LISTENERS="EXTERNAL://:9092,PLAINTEXT://:29092" \
             -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR="1" \
             -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
             -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' kafka)
+          socat TCP-LISTEN:9092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:9092 &
+          socat TCP-LISTEN:29092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:29092 &
           timeout 120 bash -c \
             'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'
 
           # start kafka-topics
-          docker run -d --network host --name kafka-topics \
+          docker run -d --network offline-net --name kafka-topics \
             --entrypoint "/bin/bash" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4" "-lc" "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
           sleep 120
@@ -1095,6 +1292,7 @@ tasks:
             exit 0
           fi
 
+          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -1102,6 +1300,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
+              RUN_ESM="$RUN_ESM" \
               TEST_FILES="$TEST_FILES" \
               npm run test:ci:collector || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
@@ -1110,6 +1309,26 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-node-rdkafka-3.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-node-rdkafka-3" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-node-rdkafka-3 (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -1139,27 +1358,20 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="$(get_env node-version 2>/dev/null || true)"
-          if [ -n "${node_version:-}" ]; then
-            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            # shellcheck source=/dev/null
-            . "$NVM_DIR/nvm.sh"
-            nvm install "$node_version" --no-progress
-            nvm use "$node_version"
-            ACTUAL=$(node --version)
-            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
-              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
-              exit 1
-            fi
-          fi
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -1167,30 +1379,38 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # create isolated network
+          docker network create --internal offline-net
+
           npm install --loglevel warn --foreground-scripts
 
           # start zookeeper
-          docker run -d --network host --name zookeeper \
+          docker run -d --network offline-net --name zookeeper \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' zookeeper)
+          socat TCP-LISTEN:2181,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:2181 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'
 
           # start kafka
-          docker run -d --network host --name kafka \
+          docker run -d --network offline-net --name kafka \
             -e KAFKA_BROKER_ID="1" \
-            -e KAFKA_ZOOKEEPER_CONNECT="localhost:2181" \
+            -e KAFKA_ZOOKEEPER_CONNECT="zookeeper:2181" \
             -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
             -e KAFKA_LISTENERS="EXTERNAL://:9092,PLAINTEXT://:29092" \
             -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR="1" \
             -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
             -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' kafka)
+          socat TCP-LISTEN:9092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:9092 &
+          socat TCP-LISTEN:29092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:29092 &
           timeout 120 bash -c \
             'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'
 
           # start kafka-topics
-          docker run -d --network host --name kafka-topics \
+          docker run -d --network offline-net --name kafka-topics \
             --entrypoint "/bin/bash" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4" "-lc" "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
           sleep 120
@@ -1209,6 +1429,7 @@ tasks:
             exit 0
           fi
 
+          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -1216,6 +1437,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
+              RUN_ESM="$RUN_ESM" \
               TEST_FILES="$TEST_FILES" \
               npm run test:ci:collector || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
@@ -1224,6 +1446,26 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-node-rdkafka-4.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-node-rdkafka-4" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-node-rdkafka-4 (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -1253,27 +1495,20 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="$(get_env node-version 2>/dev/null || true)"
-          if [ -n "${node_version:-}" ]; then
-            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            # shellcheck source=/dev/null
-            . "$NVM_DIR/nvm.sh"
-            nvm install "$node_version" --no-progress
-            nvm use "$node_version"
-            ACTUAL=$(node --version)
-            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
-              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
-              exit 1
-            fi
-          fi
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -1281,30 +1516,38 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # create isolated network
+          docker network create --internal offline-net
+
           npm install --loglevel warn --foreground-scripts
 
           # start zookeeper
-          docker run -d --network host --name zookeeper \
+          docker run -d --network offline-net --name zookeeper \
             -e ZOOKEEPER_CLIENT_PORT="2181" \
             "mirror.gcr.io/confluentinc/cp-zookeeper:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' zookeeper)
+          socat TCP-LISTEN:2181,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:2181 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 2181 2>/dev/null; do sleep 2; done'
 
           # start kafka
-          docker run -d --network host --name kafka \
+          docker run -d --network offline-net --name kafka \
             -e KAFKA_BROKER_ID="1" \
-            -e KAFKA_ZOOKEEPER_CONNECT="localhost:2181" \
+            -e KAFKA_ZOOKEEPER_CONNECT="zookeeper:2181" \
             -e KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" \
             -e KAFKA_LISTENERS="EXTERNAL://:9092,PLAINTEXT://:29092" \
             -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR="1" \
             -e KAFKA_DEFAULT_REPLICATION_FACTOR="1" \
             -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' kafka)
+          socat TCP-LISTEN:9092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:9092 &
+          socat TCP-LISTEN:29092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:29092 &
           timeout 120 bash -c \
             'until nc -z 127.0.0.1 9092 2>/dev/null; do sleep 3; done'
 
           # start kafka-topics
-          docker run -d --network host --name kafka-topics \
+          docker run -d --network offline-net --name kafka-topics \
             --entrypoint "/bin/bash" \
             "mirror.gcr.io/confluentinc/cp-kafka:7.9.4" "-lc" "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
           sleep 120
@@ -1323,6 +1566,7 @@ tasks:
             exit 0
           fi
 
+          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -1330,6 +1574,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
+              RUN_ESM="$RUN_ESM" \
               TEST_FILES="$TEST_FILES" \
               npm run test:ci:collector || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
@@ -1338,6 +1583,26 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-node-rdkafka-5.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-node-rdkafka-5" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-node-rdkafka-5 (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -1363,20 +1628,13 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="$(get_env node-version 2>/dev/null || true)"
-          if [ -n "${node_version:-}" ]; then
-            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            # shellcheck source=/dev/null
-            . "$NVM_DIR/nvm.sh"
-            nvm install "$node_version" --no-progress
-            nvm use "$node_version"
-            ACTUAL=$(node --version)
-            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
-              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
-              exit 1
-            fi
-          fi
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
@@ -1396,6 +1654,7 @@ tasks:
             exit 0
           fi
 
+          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -1403,6 +1662,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
+              RUN_ESM="$RUN_ESM" \
               TEST_FILES="$TEST_FILES" \
               npm run test:ci:collector || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
@@ -1411,6 +1671,26 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-socket-io.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-socket-io" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-socket-io (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'

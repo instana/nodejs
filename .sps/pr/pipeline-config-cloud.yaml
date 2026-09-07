@@ -1,6 +1,7 @@
 version: '2'
 tasks:
   pr-code-checks:
+    displayName: setup
     runtimeClassName: large
     steps:
       - name: peer-review
@@ -15,20 +16,13 @@ tasks:
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
-          node_version="$(get_env node-version 2>/dev/null || true)"
-          if [ -n "${node_version:-}" ]; then
-            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            # shellcheck source=/dev/null
-            . "$NVM_DIR/nvm.sh"
-            nvm install "$node_version" --no-progress
-            nvm use "$node_version"
-            ACTUAL=$(node --version)
-            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
-              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
-              exit 1
-            fi
-          fi
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
@@ -74,29 +68,25 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="$(get_env node-version 2>/dev/null || true)"
-          if [ -n "${node_version:-}" ]; then
-            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            # shellcheck source=/dev/null
-            . "$NVM_DIR/nvm.sh"
-            nvm install "$node_version" --no-progress
-            nvm use "$node_version"
-            ACTUAL=$(node --version)
-            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
-              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
-              exit 1
-            fi
-          fi
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
+          # collect test files
+          TEST_FILES=$(cd packages/aws-lambda && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
+
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -104,13 +94,19 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # create isolated network (no internet access)
+          docker network create --internal offline-net
+
           # start localstack
-          docker run -d --network host --name localstack \
+          docker run -d --network offline-net --name localstack \
             -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack)
+          socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
 
+          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -118,6 +114,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
+              RUN_ESM="$RUN_ESM" \
               INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
               npm run test:ci:aws-lambda || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
@@ -126,6 +123,26 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/aws-lambda.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for aws-lambda" \
+              || echo "WARNING: Failed to upload test coverage for aws-lambda (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -151,25 +168,22 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="$(get_env node-version 2>/dev/null || true)"
-          if [ -n "${node_version:-}" ]; then
-            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            # shellcheck source=/dev/null
-            . "$NVM_DIR/nvm.sh"
-            nvm install "$node_version" --no-progress
-            nvm use "$node_version"
-            ACTUAL=$(node --version)
-            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
-              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
-              exit 1
-            fi
-          fi
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
+          # collect test files
+          TEST_FILES=$(cd packages/aws-fargate && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
+
+          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -177,6 +191,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
+              RUN_ESM="$RUN_ESM" \
               npm run test:ci:aws-fargate || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -184,6 +199,26 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/aws-fargate.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for aws-fargate" \
+              || echo "WARNING: Failed to upload test coverage for aws-fargate (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -209,25 +244,22 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="$(get_env node-version 2>/dev/null || true)"
-          if [ -n "${node_version:-}" ]; then
-            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            # shellcheck source=/dev/null
-            . "$NVM_DIR/nvm.sh"
-            nvm install "$node_version" --no-progress
-            nvm use "$node_version"
-            ACTUAL=$(node --version)
-            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
-              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
-              exit 1
-            fi
-          fi
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
+          # collect test files
+          TEST_FILES=$(cd packages/azure-container-services && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
+
+          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -235,6 +267,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
+              RUN_ESM="$RUN_ESM" \
               npm run test:ci:azure-container-services || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -242,6 +275,26 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/azure-container-services.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for azure-container-services" \
+              || echo "WARNING: Failed to upload test coverage for azure-container-services (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -267,25 +320,22 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="$(get_env node-version 2>/dev/null || true)"
-          if [ -n "${node_version:-}" ]; then
-            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            # shellcheck source=/dev/null
-            . "$NVM_DIR/nvm.sh"
-            nvm install "$node_version" --no-progress
-            nvm use "$node_version"
-            ACTUAL=$(node --version)
-            if [[ "$ACTUAL" != "v${node_version}"* ]]; then
-              echo "ERROR: expected Node.js v${node_version} but got ${ACTUAL}"
-              exit 1
-            fi
-          fi
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
+          # collect test files
+          TEST_FILES=$(cd packages/google-cloud-run && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
+
+          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -293,6 +343,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
+              RUN_ESM="$RUN_ESM" \
               npm run test:ci:google-cloud-run || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -300,6 +351,26 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/google-cloud-run.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for google-cloud-run" \
+              || echo "WARNING: Failed to upload test coverage for google-cloud-run (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'

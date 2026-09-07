@@ -6,17 +6,20 @@
 # with the given branch and node-version as trigger_properties overrides.
 #
 # Usage:
-#   .sps/scripts/run-pipeline.sh --branch <branch> --node-version <version> \
-#       [--trigger <name>] [--dry-run] [--list]
+#   .sps/scripts/run-pipeline.sh --branch <branch> [--node-version <version> | --all-node-versions] \
+#       [--trigger <name>] [--esm true] [--dry-run] [--list]
 #
 # Options:
-#   --branch        Git branch to run against (e.g. my-feature-branch)
-#   --node-version  Node.js version to use (e.g. 20, 22, 24)
-#   --trigger       Trigger name suffix (e.g. "collector-currencies-async").
-#                   The script looks for a trigger called "manual-<name>".
-#                   Without it, ALL manual triggers are run.
-#   --list          List all available manual triggers and exit
-#   --dry-run       Print the API payload without making any calls
+#   --branch            Git branch to run against (e.g. my-feature-branch)
+#   --node-version      Node.js version to use (e.g. 18, 20, 22, 24, 26).
+#                       Can also be comma-separated list (e.g. 18,20,22,24,26).
+#   --all-node-versions Runs across all Node.js versions: 18, 20, 22, 24, 26.
+#   --trigger           Trigger name suffix (e.g. "collector-currencies-async").
+#                       The script looks for a trigger called "manual-<name>".
+#                       Without it, ALL manual triggers are run.
+#   --esm               Set to "true" to run tests with RUN_ESM=true
+#   --list              List all available manual triggers and exit
+#   --dry-run           Print the API payload without making any calls
 #
 # Prerequisites:
 #   - ibmcloud CLI installed and logged in (ibmcloud login)
@@ -26,25 +29,30 @@ set -euo pipefail
 
 PIPELINE_ID="579d9c4d-163d-4171-be94-9535ff3f68c4"
 REGION="us-south"
+SUPPORTED_NODE_VERSIONS=(18 20 22 24 26)
 
 # ── parse args ───────────────────────────────────────────────────────────────
 
 TRIGGER_SUFFIX=""
 BRANCH=""
 NODE_VERSION=""
+ALL_NODE_VERSIONS=false
+ESM=""
 DRY_RUN=false
 LIST=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --trigger)      TRIGGER_SUFFIX="$2"; shift 2 ;;
-    --branch)       BRANCH="$2";         shift 2 ;;
-    --node-version) NODE_VERSION="$2";   shift 2 ;;
-    --dry-run)      DRY_RUN=true;        shift   ;;
-    --list)         LIST=true;           shift   ;;
+    --trigger)            TRIGGER_SUFFIX="$2"; shift 2 ;;
+    --branch)             BRANCH="$2";         shift 2 ;;
+    --node-version)       NODE_VERSION="$2";   shift 2 ;;
+    --all-node-versions)  ALL_NODE_VERSIONS=true; shift ;;
+    --esm)                ESM="$2";            shift 2 ;;
+    --dry-run)            DRY_RUN=true;        shift   ;;
+    --list)               LIST=true;           shift   ;;
     *)
       echo "Unknown option: $1"
-      echo "Usage: $0 --branch <branch> --node-version <version> [--trigger <name>] [--dry-run]"
+      echo "Usage: $0 --branch <branch> [--node-version <version> | --all-node-versions] [--trigger <name>] [--esm true] [--dry-run]"
       exit 1
       ;;
   esac
@@ -87,10 +95,22 @@ fi
 
 # ── validate required args ───────────────────────────────────────────────────
 
-if [[ -z "$BRANCH" || -z "$NODE_VERSION" ]]; then
-  echo "ERROR: --branch and --node-version are required."
+if [[ -z "$BRANCH" ]]; then
+  echo "ERROR: --branch is required."
   echo ""
-  echo "Usage: $0 --branch <branch> --node-version <version> [--trigger <name>] [--dry-run]"
+  echo "Usage: $0 --branch <branch> [--node-version <version> | --all-node-versions] [--trigger <name>] [--dry-run]"
+  echo "       $0 --list"
+  exit 1
+fi
+
+if [[ "$ALL_NODE_VERSIONS" == "true" ]]; then
+  NODE_VERSIONS=("${SUPPORTED_NODE_VERSIONS[@]}")
+elif [[ -n "$NODE_VERSION" ]]; then
+  IFS=',' read -ra NODE_VERSIONS <<< "$NODE_VERSION"
+else
+  echo "ERROR: Either --node-version or --all-node-versions is required."
+  echo ""
+  echo "Usage: $0 --branch <branch> [--node-version <version> | --all-node-versions] [--trigger <name>] [--dry-run]"
   echo "       $0 --list"
   exit 1
 fi
@@ -107,28 +127,35 @@ config_for_trigger() {
 # ── build list of manual trigger names to run ────────────────────────────────
 
 if [[ -n "$TRIGGER_SUFFIX" ]]; then
-  # Accept either "manual-foo" or just "foo"
+  # Accept "manual-dep-foo", "dep-foo", "manual-foo", or just "foo"
   if [[ "$TRIGGER_SUFFIX" == manual-* ]]; then
     MANUAL_TRIGGERS="$TRIGGER_SUFFIX"
+  elif [[ "$TRIGGER_SUFFIX" == dep-* ]]; then
+    MANUAL_TRIGGERS="manual-${TRIGGER_SUFFIX}"
   else
     MANUAL_TRIGGERS="manual-${TRIGGER_SUFFIX}"
   fi
 else
+  # Default run: strictly exclude dependency bot triggers (manual-dep-*)
   MANUAL_TRIGGERS=$(echo "$TRIGGERS_RESP" | \
-    jq -r '.triggers[]? | select(.type=="manual") | .name' | sort)
+    jq -r '.triggers[]? | select(.type=="manual" and (.name | startswith("manual-dep-") | not)) | .name' | sort)
 fi
 
-TOTAL=$(echo "$MANUAL_TRIGGERS" | grep -c . || true)
+TOTAL_TRIGGERS=$(echo "$MANUAL_TRIGGERS" | grep -c . || true)
+TOTAL_RUNS=$(( TOTAL_TRIGGERS * ${#NODE_VERSIONS[@]} ))
 echo ""
-echo "Branch:       ${BRANCH}"
-echo "node-version: ${NODE_VERSION}"
-echo "Configs:      ${TOTAL}"
+echo "Branch:        ${BRANCH}"
+echo "Node versions: ${NODE_VERSIONS[*]}"
+[[ -n "$ESM" ]] && echo "RUN_ESM:       ${ESM}"
+echo "Triggers:      ${TOTAL_TRIGGERS}"
+echo "Total runs:    ${TOTAL_RUNS}"
 echo ""
 
 # ── helper: fire one run ─────────────────────────────────────────────────────
 
 fire_run() {
   local trigger_name="$1"
+  local node_ver="$2"
 
   # Verify the trigger exists
   local exists
@@ -146,16 +173,31 @@ fire_run() {
   # Build trigger_properties — always override branch and node-version.
   # pipeline-config is included only when the trigger has it as a property
   # (so the run uses the right config file).
+  # RUN_ESM is only added when --esm true is passed.
   local props_jq
-  props_jq=$(jq -n \
-    --arg branch   "$BRANCH" \
-    --arg node_ver "$NODE_VERSION" \
-    --arg config   "$config" \
-    '{
-      "branch":          $branch,
-      "node-version":    $node_ver,
-      "pipeline-config": $config
-    }')
+  if [[ -n "$ESM" ]]; then
+    props_jq=$(jq -n \
+      --arg branch   "$BRANCH" \
+      --arg node_ver "$node_ver" \
+      --arg config   "$config" \
+      --arg run_esm  "$ESM" \
+      '{
+        "branch":          $branch,
+        "node-version":    $node_ver,
+        "pipeline-config": $config,
+        "RUN_ESM":         $run_esm
+      }')
+  else
+    props_jq=$(jq -n \
+      --arg branch   "$BRANCH" \
+      --arg node_ver "$node_ver" \
+      --arg config   "$config" \
+      '{
+        "branch":          $branch,
+        "node-version":    $node_ver,
+        "pipeline-config": $config
+      }')
+  fi
 
   local PAYLOAD
   PAYLOAD=$(jq -n \
@@ -167,7 +209,7 @@ fire_run() {
     }')
 
   if [[ "$DRY_RUN" == "true" ]]; then
-    echo "  DRY RUN  ${trigger_name}"
+    echo "  DRY RUN  ${trigger_name} (node ${node_ver})"
     echo "$PAYLOAD" | jq .
     return
   fi
@@ -182,22 +224,25 @@ fire_run() {
   BODY=$(echo "$RESP" | sed '$d')
 
   if [[ "$HTTP_CODE" != "201" && "$HTTP_CODE" != "200" ]]; then
-    echo "  ERROR  ${trigger_name} (HTTP ${HTTP_CODE}): $(echo "$BODY" | jq -r '.errors[0].message // .message // .' 2>/dev/null || echo "$BODY")"
+    echo "  ERROR  ${trigger_name} [node ${node_ver}] (HTTP ${HTTP_CODE}): $(echo "$BODY" | jq -r '.errors[0].message // .message // .' 2>/dev/null || echo "$BODY")"
     return
   fi
 
   RUN_ID=$(echo "$BODY" | jq -r '.id // "?"')
-  echo "  OK  ${trigger_name}  →  run ${RUN_ID}"
+  echo "  OK  ${trigger_name} [node ${node_ver}]  →  run ${RUN_ID}"
 }
 
 # ── fire runs ─────────────────────────────────────────────────────────────────
 
 STARTED=0
-while IFS= read -r t; do
-  [[ -z "$t" ]] && continue
-  fire_run "$t"
-  STARTED=$((STARTED + 1))
-done <<< "$MANUAL_TRIGGERS"
+for n_ver in "${NODE_VERSIONS[@]}"; do
+  echo "── Running for Node ${n_ver} ──────────────────────────────────────"
+  while IFS= read -r t; do
+    [[ -z "$t" ]] && continue
+    fire_run "$t" "$n_ver"
+    STARTED=$((STARTED + 1))
+  done <<< "$MANUAL_TRIGGERS"
+done
 
 echo ""
 if [[ "$DRY_RUN" == "true" ]]; then

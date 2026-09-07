@@ -27,6 +27,7 @@
   "overrides": {
     "webpack": "^5.104.1",
     "serialize-javascript": "^7.0.5",
-    "ajv": "^6.14.0"
+    "ajv": "^6.14.0",
+    "fast-uri": "^4.1.3"
   }
 }

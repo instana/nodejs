@@ -1,0 +1,189 @@
+version: '2'
+tasks:
+  pr-code-checks:
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: unit-test
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          echo "pr-verify starting..."
+  code-pr-finish:
+    steps:
+      - name: run-stage
+        when: 'false'
+  code-ci-finish:
+    steps:
+      - name: run-stage
+        when: 'false'
+  deploy-checks:
+    when: false
+  deploy-release:
+    when: false
+  pr-code-checks-verify:
+    from: pr-code-checks
+    displayName: pr-verify
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: pr-verify
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          GH_TOKEN="$(get_secret gh-public-token)"
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env GIT_COMMIT "")"
+          REPO="instana/nodejs"
+
+          if [ -z "$GH_TOKEN" ] || [ -z "$COS_API_KEY" ] || [ -z "$GIT_COMMIT" ]; then
+            echo "ERROR: Missing required credentials or git commit — aborting"
+            exit 1
+          fi
+
+          # ── Fetch IAM token up-front (needed for progressive COS downloads) ─────
+          echo "Fetching IAM token..."
+          IAM_TOKEN=$(curl -s -X POST "https://iam.cloud.ibm.com/identity/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+            | python3 -c "import sys,json; print(json.load(sys.stdin).get('access_token',''))")
+          if [ -z "$IAM_TOKEN" ]; then
+            echo "ERROR: Failed to obtain IAM token — check ibm-object-storage-api-key secret"
+            exit 1
+          fi
+          echo "IAM token obtained."
+
+          TMPDIR=$(mktemp -d)
+          CLAIMED_FILE="$TMPDIR/all-claimed.txt"
+          DOWNLOADED_FILE="$TMPDIR/downloaded.txt"   # tracks task slugs already fetched from COS
+          touch "$CLAIMED_FILE" "$DOWNLOADED_FILE"
+
+          # Helper: download the COS result file for a single completed check-run name.
+          # Skips silently if already downloaded or if COS has no file for it.
+          download_cos_result() {
+            local check_name="$1"
+            # Derive the task slug: strip leading "pr-code-checks-" if present
+            local slug="${check_name#pr-code-checks-}"
+            grep -qxF "$slug" "$DOWNLOADED_FILE" && return 0
+            local key="test-results/$GIT_COMMIT/${slug}.txt"
+            local RESPONSE HTTP_CODE BODY
+            RESPONSE=$(curl -s -w "\n%{http_code}" \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/$key" \
+              -H "Authorization: Bearer $IAM_TOKEN")
+            HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+            BODY=$(echo "$RESPONSE" | sed '$d')
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "  ✔ $slug"
+              echo "$BODY" >> "$CLAIMED_FILE"
+              echo "" >> "$CLAIMED_FILE"
+            elif [ "$HTTP_CODE" = "404" ]; then
+              echo "  – $slug (no COS file — not a collector task)"
+            else
+              echo "  ✘ $slug HTTP $HTTP_CODE"
+            fi
+            echo "$slug" >> "$DOWNLOADED_FILE"
+          }
+
+          # ── Phase 1: wait until all EXPECTED_CHECKS are registered ──────────────
+          echo "Waiting for all 89 expected checks to be registered on commit $GIT_COMMIT..."
+          MAX_WAIT=3600
+          POLL_INTERVAL=30
+          ELAPSED=0
+          EXPECTED_CHECKS=89
+          while true; do
+            STATUSES=$(curl -sf \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$REPO/commits/$GIT_COMMIT/check-runs?per_page=100")
+            OTHERS=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); print(sum(1 for r in d.get('check_runs',[]) if r['name']!='pr-verify'))")
+            echo "  $OTHERS / $EXPECTED_CHECKS checks registered (${ELAPSED}s elapsed)"
+            if [ "$OTHERS" -ge "$EXPECTED_CHECKS" ]; then
+              echo "All expected checks are now registered."
+              break
+            fi
+            if [ "$ELAPSED" -ge "$MAX_WAIT" ]; then
+              echo "ERROR: Timed out after ${MAX_WAIT}s waiting for checks to be registered"
+              exit 1
+            fi
+            sleep $POLL_INTERVAL
+            ELAPSED=$((ELAPSED + POLL_INTERVAL))
+          done
+
+          # ── Phase 2: poll until all checks complete, download COS files eagerly ──
+          echo "Polling for completions — downloading COS results as each check finishes..."
+          echo ""
+          echo "=== Tests that ran ==="
+          while true; do
+            STATUSES=$(curl -sf \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$REPO/commits/$GIT_COMMIT/check-runs?per_page=100")
+            # Download COS file for every check that just became completed
+            while IFS= read -r check_name; do
+              download_cos_result "$check_name"
+            done < <(echo "$STATUSES" | python3 -c 'import sys,json; d=json.load(sys.stdin); [print(r["name"]) for r in d.get("check_runs",[]) if r["status"]=="completed" and r["name"]!="pr-verify"]')
+            PENDING=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); print(sum(1 for r in d.get('check_runs',[]) if r['status']!='completed' and r['name']!='pr-verify'))")
+            echo "  $PENDING checks still pending (${ELAPSED}s elapsed)"
+            if [ "$PENDING" -eq 0 ]; then
+              echo "All checks completed."
+              break
+            fi
+            if [ "$ELAPSED" -ge "$MAX_WAIT" ]; then
+              echo "ERROR: Timed out after ${MAX_WAIT}s waiting for checks to complete"
+              exit 1
+            fi
+            sleep $POLL_INTERVAL
+            ELAPSED=$((ELAPSED + POLL_INTERVAL))
+          done
+
+          # ── Phase 3: compare against all test files in repo ──────────────────────
+          REPO_PATH="$WORKSPACE/$(load_repo app-repo path)"
+          ALL_TESTS=$(find "$REPO_PATH/packages/collector/test/integration" \
+            -name "*.test.js" \
+            -not -path "*/node_modules/*" \
+            -not -path "*/long_*/*" \
+            | sed "s|.*/packages/collector/||" | sort)
+
+          UNCOVERED_LIST=""
+          MISSING=0
+          while IFS= read -r test_file; do
+            [ -z "$test_file" ] && continue
+            if ! grep -qF "$test_file" "$CLAIMED_FILE"; then
+              UNCOVERED_LIST="$UNCOVERED_LIST\n  $test_file"
+              MISSING=$((MISSING + 1))
+            fi
+          done <<< "$ALL_TESTS"
+
+          TOTAL=$(echo "$ALL_TESTS" | wc -l | tr -d " ")
+          CLAIMED_COUNT=$(sort -u "$CLAIMED_FILE" | grep -c "\.test\.js" || true)
+
+          echo ""
+          echo "=== Coverage Report ==="
+          echo "Total test files in repo: $TOTAL"
+          echo "Covered by tasks:         $CLAIMED_COUNT"
+          echo "Not covered:              $MISSING"
+
+          if [ "$MISSING" -gt 0 ]; then
+            echo ""
+            echo "=== Uncovered test files ==="
+            printf "%b\n" "$UNCOVERED_LIST"
+            echo ""
+            echo "❌ $MISSING test file(s) not covered by any pipeline task"
+            exit 1
+          else
+            echo "✅ All $TOTAL collector tests are covered"
+          fi
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'

@@ -1,13 +1,20 @@
 #!/usr/bin/env bash
 # (c) Copyright IBM Corp. 2026
 #
-# Creates SCM triggers for PR and main-commit pipelines.
+# Creates SCM / timer / manual triggers for all SPS pipelines.
 #
-# PR triggers    → .sps/pr/pipeline-config-*.yaml   → pr-listener   → pull_request event
-# Main triggers  → .sps/main/pipeline-config-*.yaml → ci-listener   → push event (branch: main)
+# PR triggers           → .sps/pr/pipeline-config-*.yaml          → pr-listener   → pull_request event
+# Main triggers         → .sps/main/pipeline-config-*.yaml        → ci-listener   → push event (branch: main)
+# Manual triggers       → .sps/manual/pipeline-config-*.yaml      → ci-listener   → manual
+# Dependencies triggers → .sps/dependencies/pipeline-config-*.yaml → ci-listener  → timer + manual
 #
 # Usage:
-#   .sps/scripts/create-triggers.sh [--dry-run]
+#   .sps/scripts/create-triggers.sh [--dry-run] [--type=pr|main|manual|dependencies]
+#
+# Examples:
+#   .sps/scripts/create-triggers.sh                          # create all
+#   .sps/scripts/create-triggers.sh --type=dependencies      # only bot timer triggers
+#   .sps/scripts/create-triggers.sh --dry-run --type=dependencies
 #
 # Prerequisites:
 #   - ibmcloud CLI installed and logged in
@@ -21,10 +28,25 @@ REPO_URL="https://github.com/instana/nodejs.git"
 SPS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 DRY_RUN=false
-if [[ "${1:-}" == "--dry-run" ]]; then
-  DRY_RUN=true
+TYPE="all"   # all | pr | main | manual | dependencies
+NAME_FILTER=""  # optional: only create triggers whose name contains this string
+
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run)  DRY_RUN=true ;;
+    --type=*)   TYPE="${arg#--type=}" ;;
+    --name=*)   NAME_FILTER="${arg#--name=}" ;;
+  esac
+done
+
+if [[ "$DRY_RUN" == "true" ]]; then
   echo ">>> DRY RUN — no API calls will be made <<<"
   echo ""
+fi
+
+if [[ ! "$TYPE" =~ ^(all|pr|main|manual|dependencies)$ ]]; then
+  echo "ERROR: unknown --type '${TYPE}'. Use: all | pr | main | manual | dependencies"
+  exit 1
 fi
 
 # ── auth ─────────────────────────────────────────────────────────────────────
@@ -68,10 +90,76 @@ SKIPPED=0
 
 # ── helpers ───────────────────────────────────────────────────────────────────
 
+create_timer_trigger() {
+  local trigger_name="$1"
+  local config_path="$2"
+  local cron="$3"          # e.g. "0 6 * * *" (06:00 UTC daily)
+  local timezone="$4"      # e.g. "UTC"
+
+  # apply --name filter
+  if [[ -n "$NAME_FILTER" && "$trigger_name" != *"$NAME_FILTER"* ]]; then
+    return
+  fi
+
+  local exists
+  exists=$(echo "$EXISTING" | jq -r --arg n "$trigger_name" \
+    '.triggers[]? | select(.name == $n) | .name' 2>/dev/null || true)
+  if [[ -n "$exists" ]]; then
+    echo "  SKIP  ${trigger_name} (already exists)"
+    SKIPPED=$((SKIPPED + 1))
+    return
+  fi
+
+  local PAYLOAD
+  PAYLOAD=$(jq -n \
+    --arg name     "$trigger_name" \
+    --arg config   "$config_path" \
+    --arg cron     "$cron" \
+    --arg timezone "$timezone" \
+    '{
+      type: "timer",
+      name: $name,
+      event_listener: "ci-listener",
+      cron: $cron,
+      timezone: $timezone,
+      properties: [
+        { name: "pipeline-config",       value: $config, type: "text" },
+        { name: "skip-merge-pr-to-base", value: "true",  type: "text" },
+        { name: "opt-in-pr-updates",     value: "0",     type: "text" }
+      ]
+    }')
+
+  echo "  CREATE ${trigger_name}  ->  ${config_path}  (cron: ${cron} ${timezone})"
+
+  if [[ "$DRY_RUN" == "false" ]]; then
+    RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+      -H "Authorization: ${IAM_TOKEN}" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d "$PAYLOAD" \
+      "${API_BASE}/tekton_pipelines/${PIPELINE_ID}/triggers")
+    HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+    RESPONSE=$(echo "$RESPONSE" | sed '$d')
+    if [[ "$HTTP_CODE" != "201" && "$HTTP_CODE" != "200" ]]; then
+      echo "    ERROR (HTTP ${HTTP_CODE}): $(echo "$RESPONSE" | jq -r '.message // .' 2>/dev/null || echo "$RESPONSE")"
+      return
+    fi
+    echo "    OK  id=$(echo "$RESPONSE" | jq -r '.id // "?"')"
+  fi
+
+  CREATED=$((CREATED + 1))
+}
+
+
 create_manual_trigger() {
   local trigger_name="$1"
   local config_path="$2"
   local node_version="$3"
+
+  # apply --name filter
+  if [[ -n "$NAME_FILTER" && "$trigger_name" != *"$NAME_FILTER"* ]]; then
+    return
+  fi
 
   local exists
   exists=$(echo "$EXISTING" | jq -r --arg n "$trigger_name" \
@@ -183,6 +271,7 @@ create_trigger() {
 
 # ── PR triggers (.sps/pr/) ────────────────────────────────────────────────────
 
+if [[ "$TYPE" == "all" || "$TYPE" == "pr" ]]; then
 echo ""
 echo "── PR triggers (pr-listener, pull_request) ──────────────────────────────"
 
@@ -195,9 +284,11 @@ for yaml_file in "${SPS_DIR}/pr"/pipeline-config*.yaml; do
   [[ "$name" == "pipeline-config" || "$name" == "" ]] && name="security-checks"
   create_trigger "pr-${name}" ".sps/pr/${filename}" "pr-listener" '["pull_request"]'
 done
+fi
 
 # ── Main triggers (.sps/main/) ────────────────────────────────────────────────
 
+if [[ "$TYPE" == "all" || "$TYPE" == "main" ]]; then
 echo ""
 echo "── Main triggers (ci-listener, push) ────────────────────────────────────"
 
@@ -209,9 +300,11 @@ for yaml_file in "${SPS_DIR}/main"/pipeline-config*.yaml; do
   [[ "$name" == "pipeline-config" || "$name" == "" ]] && name="security-checks"
   create_trigger "main-${name}" ".sps/main/${filename}" "ci-listener" '["push"]'
 done
+fi
 
 # ── Manual triggers (.sps/manual/) ───────────────────────────────────────────
 
+if [[ "$TYPE" == "all" || "$TYPE" == "manual" ]]; then
 echo ""
 echo "── Manual triggers (ci-listener, type: manual) ──────────────────────────"
 
@@ -224,6 +317,30 @@ for yaml_file in "${SPS_DIR}/manual"/pipeline-config*.yaml; do
   # Default node-version for the trigger property (can be overridden at run time)
   create_manual_trigger "manual-${name}" ".sps/manual/${filename}" "20"
 done
+fi
+
+# ── Dependencies / bot triggers (.sps/dependencies/) ─────────────────────────
+# Timer triggers run daily at UTC. Each config also gets a manual trigger for
+# on-demand reruns without waiting for the schedule.
+
+if [[ "$TYPE" == "all" || "$TYPE" == "dependencies" ]]; then
+echo ""
+echo "── Dependencies triggers (ci-listener, timer + manual) ──────────────────"
+
+for yaml_file in "${SPS_DIR}/dependencies"/pipeline-config*.yaml; do
+  [[ -f "$yaml_file" ]] || continue
+  filename="$(basename "$yaml_file")"
+  name="${filename#pipeline-config-}"
+  name="${name%.yaml}"
+  case "$filename" in
+    pipeline-config-currency-bot.yaml)          cron="0 6 * * *" ;;
+    pipeline-config-prod-dependency-bot.yaml)   cron="0 7 * * 1" ;;
+    *)                                           cron="0 6 * * *" ;;
+  esac
+  create_timer_trigger  "timer-${name}"      ".sps/dependencies/${filename}" "${cron}" "UTC"
+  create_manual_trigger "manual-dep-${name}" ".sps/dependencies/${filename}" "20"
+done
+fi
 
 echo ""
 echo "Done. Created: ${CREATED}  Skipped (already exist): ${SKIPPED}"
