@@ -36,7 +36,8 @@ const ALL_SIMPLE_TARGETS = [
   'opentelemetry',
   'sonar',
   'pr-general',
-  'pr-verify'
+  'pr-verify',
+  'upload-currency-report'
 ];
 const ALL_TARGETS = ['default', ...ALL_CURRENCY_GROUPS, ...ALL_SIMPLE_TARGETS];
 
@@ -686,6 +687,49 @@ function buildSonarTask(rootTask = 'pr-code-checks') {
   };
 }
 
+function buildUploadCurrencyReportTask() {
+  const script = [
+    '#!/usr/bin/env bash',
+    'set -eo pipefail',
+    '',
+    'GH_ENTERPRISE_TOKEN="$(get_secret git-token)"',
+    '',
+    'cd "$WORKSPACE/$(load_repo app-repo path)"',
+    'npm install --loglevel warn --foreground-scripts',
+    '',
+    'echo "Generating report..."',
+    'node bin/dependencies/currency/generate-currency-report.js',
+    'echo "Generated report."',
+    '',
+    '# Key Name: Tracer Reports 041425',
+    'git clone https://oauth2:$GH_ENTERPRISE_TOKEN@github.ibm.com/instana/tracer-reports.git tracer-reports',
+    'cd tracer-reports',
+    '',
+    'git pull origin main',
+    'cp ../currency-report.md ./automated/currency/nodejs/report.md',
+    '',
+    'git config user.name "Instanacd PAT for GitHub Enterprise"',
+    'git config user.email instana.ibm.github.enterprise@ibm.com',
+    '',
+    'git add .',
+    '',
+    'git commit -m "chore: updated node.js currency report"',
+    'git push origin main'
+  ].join('\n');
+
+  return {
+    from: 'code-build',
+    displayName: 'upload-currency-report',
+    runtimeClassName: 'large',
+    steps: [
+      { name: 'unit-test', displayName: 'upload-currency-report', image: NODE_IMAGE, script },
+      { name: 'sign-artifact', when: 'false' },
+      { name: 'build-artifact', when: 'false' },
+      { name: 'scan-artifact', when: 'false' }
+    ]
+  };
+}
+
 function baseConfig(fanOutTasks, rootTask = 'pr-code-checks') {
   return {
     version: '2',
@@ -1157,6 +1201,47 @@ function generateOne(t) {
     const prPath = path.join(spsDir, 'pr', 'pipeline-config-pr-verify.yaml');
     fs.writeFileSync(prPath, output);
     console.log(`Written: ${prPath}`);
+  } else if (t === 'upload-currency-report') {
+    const mainConfig = {
+      version: '2',
+      tasks: {
+        'code-build': {
+          displayName: 'setup',
+          runtimeClassName: 'large',
+          steps: [
+            {
+              name: 'unit-test',
+              displayName: 'npm-install',
+              image: NODE_IMAGE,
+              script: [
+                '#!/usr/bin/env bash',
+                'set -eo pipefail',
+                nodeVersionSwitchScript(),
+                '',
+                'cd "$WORKSPACE/$(load_repo app-repo path)"',
+                'npm install --loglevel warn --foreground-scripts',
+                'node bin/create-version-test-folders.js'
+              ].join('\n')
+            },
+            { name: 'sign-artifact', when: 'false' },
+            { name: 'build-artifact', when: 'false' },
+            { name: 'scan-artifact', when: 'false' }
+          ]
+        },
+        'code-pr-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
+        'code-ci-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
+        'deploy-checks': { when: false },
+        'deploy-release': { when: false },
+        'code-build-upload-currency-report': buildUploadCurrencyReportTask()
+      }
+    };
+    const spsDir = path.join(__dirname, '..');
+    const output = yaml.dump(mainConfig, { lineWidth: -1, quotingType: "'", forceQuotes: false });
+    if (MODE === 'all' || MODE === 'main') {
+      const mainPath = path.join(spsDir, 'main', 'pipeline-config-upload-currency-report.yaml');
+      fs.writeFileSync(mainPath, output);
+      console.log(`Written: ${mainPath}`);
+    }
   } else if (SIMPLE_TARGETS[t]) {
     const { script, displayName, needs = [], extraEnv } = SIMPLE_TARGETS[t];
     const fanOutTasks = { [`pr-code-checks-${t}`]: buildSimpleTask(displayName, script, needs, extraEnv) };

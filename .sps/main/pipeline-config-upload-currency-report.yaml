@@ -1,0 +1,83 @@
+version: '2'
+tasks:
+  code-build:
+    displayName: setup
+    runtimeClassName: large
+    steps:
+      - name: unit-test
+        displayName: npm-install
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
+          echo "Node.js: $(node --version)"
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
+  code-pr-finish:
+    steps:
+      - name: run-stage
+        when: 'false'
+  code-ci-finish:
+    steps:
+      - name: run-stage
+        when: 'false'
+  deploy-checks:
+    when: false
+  deploy-release:
+    when: false
+  code-build-upload-currency-report:
+    from: code-build
+    displayName: upload-currency-report
+    runtimeClassName: large
+    steps:
+      - name: unit-test
+        displayName: upload-currency-report
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          GH_ENTERPRISE_TOKEN="$(get_secret git-token)"
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          echo "Generating report..."
+          node bin/dependencies/currency/generate-currency-report.js
+          echo "Generated report."
+
+          # Key Name: Tracer Reports 041425
+          git clone https://oauth2:$GH_ENTERPRISE_TOKEN@github.ibm.com/instana/tracer-reports.git tracer-reports
+          cd tracer-reports
+
+          git pull origin main
+          cp ../currency-report.md ./automated/currency/nodejs/report.md
+
+          git config user.name "Instanacd PAT for GitHub Enterprise"
+          git config user.email instana.ibm.github.enterprise@ibm.com
+
+          git add .
+
+          git commit -m "chore: updated node.js currency report"
+          git push origin main
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
