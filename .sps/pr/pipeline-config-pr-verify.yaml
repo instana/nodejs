@@ -41,7 +41,8 @@ tasks:
 
           GH_TOKEN="$(get_secret gh-public-token)"
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
+          # SPS merges the PR into base — HEAD^2 is the PR branch tip (the commit GitHub tracks checks on)
+          GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD^2 2>/dev/null || git rev-parse HEAD)"
           REPO="instana/nodejs"
 
           if [ -z "$GH_TOKEN" ] || [ -z "$COS_API_KEY" ] || [ -z "$GIT_COMMIT" ]; then
