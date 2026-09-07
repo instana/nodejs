@@ -650,9 +650,11 @@ function baseConfig(fanOutTasks, rootTask = 'pr-code-checks') {
     version: '2',
     tasks: {
       [rootTask]: {
+        displayName: 'setup',
         runtimeClassName: 'large',
         steps: [
           { name: 'peer-review', when: 'false' },
+          { name: 'branch-protection', when: 'false' },
           { name: 'detect-secrets', when: 'false' },
           { name: 'compliance-checks', when: 'false' },
           {

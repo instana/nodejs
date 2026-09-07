@@ -1,9 +1,12 @@
 version: '2'
 tasks:
   pr-code-checks:
+    displayName: setup
     runtimeClassName: large
     steps:
       - name: peer-review
+        when: 'false'
+      - name: branch-protection
         when: 'false'
       - name: detect-secrets
         when: 'false'
