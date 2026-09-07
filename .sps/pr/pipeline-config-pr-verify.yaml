@@ -108,9 +108,17 @@ tasks:
             [ -z "$key" ] && continue
             task=$(basename "$key" .txt)
             echo "── $task ──"
-            curl -sf \
+            RESPONSE=$(curl -s -w "\n%{http_code}" \
               "https://s3.eu-de.cloud-object-storage.appdomain.cloud/$key" \
-              -H "Authorization: Bearer $IAM_TOKEN" | tee -a "$CLAIMED_FILE"
+              -H "Authorization: Bearer $IAM_TOKEN")
+            HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+            BODY=$(echo "$RESPONSE" | sed '$d')
+            echo "  HTTP $HTTP_CODE"
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "$BODY" | tee -a "$CLAIMED_FILE"
+            else
+              echo "  ERROR downloading $key: $BODY"
+            fi
             echo "" >> "$CLAIMED_FILE"
           done <<< "$OBJECTS"
 
