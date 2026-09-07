@@ -6,8 +6,6 @@ tasks:
     steps:
       - name: peer-review
         when: 'false'
-      - name: branch-protection
-        when: 'false'
       - name: detect-secrets
         when: 'false'
       - name: compliance-checks
