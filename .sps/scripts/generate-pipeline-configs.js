@@ -35,7 +35,8 @@ const ALL_SIMPLE_TARGETS = [
   'core-group',
   'opentelemetry',
   'sonar',
-  'pr-general'
+  'pr-general',
+  'pr-verify'
 ];
 const ALL_TARGETS = ['default', ...ALL_CURRENCY_GROUPS, ...ALL_SIMPLE_TARGETS];
 
@@ -203,7 +204,7 @@ function readNeeds(folder) {
  *                                 passed as roots to `find … -name '*.test.js'`
  * @param {string[]} needs       - Sidecar names required by this task (from .needs)
  */
-function buildCollectorTask(taskSlug, displayName, paths, needs) {
+function buildCollectorTask(taskSlug, displayName, paths, needs, { uploadCoverage = false } = {}) {
   const scriptLines = ['#!/usr/bin/env bash', 'set -eo pipefail', ''];
   scriptLines.push(nodeVersionSwitchScript());
   scriptLines.push('');
@@ -284,6 +285,10 @@ function buildCollectorTask(taskSlug, displayName, paths, needs) {
   }
   extraEnvLines.push('TEST_FILES="$TEST_FILES" \\');
   scriptLines.push(...runWithRetryLines('test:ci:collector', extraEnvLines));
+  if (uploadCoverage) {
+    scriptLines.push(...uploadTestFilesLines(taskSlug));
+  }
+  scriptLines.push('exit $LAST_EXIT');
 
   const prefix = MODE === 'main' ? 'code-build' : 'pr-code-checks';
   // RFC 1123: lowercase only.
@@ -399,8 +404,36 @@ function runWithRetryLines(npmScript, envLines = []) {
     '  fi',
     '  echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."',
     '  retry=$((retry + 1))',
-    'done',
-    'exit $LAST_EXIT'
+    'done'
+  ];
+}
+
+const COS_BUCKET = 'itp-nodejs-tracer-sps';
+const COS_ENDPOINT = 'https://s3.eu-de.cloud-object-storage.appdomain.cloud';
+
+function uploadTestFilesLines(taskSlug) {
+  return [
+    '',
+    '# upload executed test files to COS for coverage verification',
+    'COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"',
+    'GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"',
+    'if [ -n "$COS_CREDENTIALS" ] && [ -n "$GIT_COMMIT" ]; then',
+    '  COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r \'.apikey // .\')"',
+    '  IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \\',
+    '    -H "Content-Type: application/x-www-form-urlencoded" \\',
+    '    -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \\',
+    '    | jq -r \'.access_token\')',
+    `  curl -sf -X PUT \\`,
+    `    "${COS_ENDPOINT}/${COS_BUCKET}/test-results/\$GIT_COMMIT/${taskSlug}.txt" \\`,
+    '    -H "Authorization: Bearer $IAM_TOKEN" \\',
+    '    -H "Content-Type: text/plain" \\',
+    '    --data-binary "$(echo "$TEST_FILES" | tr \' \' \'\\n\' | sort)" \\',
+    '    && echo "Uploaded test coverage for ' + taskSlug + '" \\',
+    '    || echo "WARNING: Failed to upload test coverage for ' + taskSlug + ' (non-fatal)"',
+    'else',
+    '  echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"',
+    'fi',
+    ''
   ];
 }
 
@@ -445,7 +478,7 @@ function buildCurrencyTasks(pkgName, folder, group) {
 
   if (!modeGroups) {
     // Single task — all test files under the package folder
-    return [buildCollectorTask(`collector-${group}-${pkgSlug}`, pkgName, [relCollectorFolder], needs)];
+    return [buildCollectorTask(`collector-${group}-${pkgSlug}`, pkgName, [relCollectorFolder], needs, { uploadCoverage: true })];
   }
 
   // Fan-out — one task per mode group, numbered 1..N.
@@ -461,7 +494,7 @@ function buildCurrencyTasks(pkgName, folder, group) {
           .flatMap(v => modes.map(m => `${relCollectorFolder}/${v}/${m}`))
       : [relCollectorFolder];
 
-    return buildCollectorTask(`collector-${group}-${pkgSlug}-${index}`, displayName, modeDirs, needs);
+    return buildCollectorTask(`collector-${group}-${pkgSlug}-${index}`, displayName, modeDirs, needs, { uploadCoverage: true });
   });
 }
 
@@ -503,6 +536,7 @@ function buildSimpleTask(displayName, testScript, needs = [], extraEnv = null) {
     simpleEnvLines.push(`${varName}="$${varName}" \\`);
   }
   scriptLines.push(...runWithRetryLines(testScript, simpleEnvLines));
+  scriptLines.push('exit $LAST_EXIT');
 
   return {
     from: 'pr-code-checks',
@@ -714,11 +748,34 @@ function writeDefaultConfig(prConfig, mainConfig) {
   if (MODE === 'all') write(path.join(spsDir, 'pipeline-config.yaml'), prConfig);
 }
 
-// Convert a pr config to a main config by swapping pr-code-checks → code-build task names
+// Convert a pr config to a main config by swapping pr-code-checks → code-build task names.
+// Strips the COS upload block from all task scripts — coverage upload is PR-only.
 function toMainConfig(prConfig) {
+  const UPLOAD_MARKER = '# upload executed test files to COS for coverage verification';
+  const EXIT_MARKER = 'exit $LAST_EXIT';
+
+  function stripUploadBlock(script) {
+    if (typeof script !== 'string' || !script.includes(UPLOAD_MARKER)) return script;
+    const lines = script.split('\n');
+    const start = lines.findIndex(l => l.trimStart().startsWith(UPLOAD_MARKER));
+    const end = lines.findIndex((l, i) => i > start && l.trimStart() === EXIT_MARKER);
+    if (start === -1 || end === -1) return script;
+    // Remove the upload block (start..end-1), keep exit $LAST_EXIT
+    return [...lines.slice(0, start), ...lines.slice(end)].join('\n');
+  }
+
+  // Deep-clone via YAML round-trip then patch task name prefix
   const raw = yaml.dump(prConfig, { lineWidth: -1 });
-  const main = raw.replace(/\bpr-code-checks\b/g, 'code-build');
-  return yaml.load(main);
+  const main = yaml.load(raw.replace(/\bpr-code-checks\b/g, 'code-build'));
+
+  // Strip upload block from every step script
+  for (const task of Object.values(main.tasks ?? {})) {
+    for (const step of task.steps ?? []) {
+      if (step.script) step.script = stripUploadBlock(step.script);
+    }
+  }
+
+  return main;
 }
 
 const SIMPLE_TARGETS = {
@@ -810,7 +867,8 @@ function generateOne(t) {
       'collector-metrics',
       'collector-metrics',
       ['test/integration/metrics'],
-      []
+      [],
+      { uploadCoverage: true }
     );
     const prConfig = baseConfig({ [taskName]: task });
     writeConfig(t, prConfig, toMainConfig(prConfig));
@@ -894,7 +952,7 @@ function generateOne(t) {
     // Non-dind groups — each entry in splitDef becomes one buildCollectorTask call
     for (const [groupName, subdirs] of Object.entries(splitDef)) {
       const paths = subdirs.filter(name => !dindSet.has(name)).map(name => `test/integration/misc/${name}`);
-      const { taskName, task } = buildCollectorTask(groupName, `collector-${groupName}`, paths, []);
+      const { taskName, task } = buildCollectorTask(groupName, `collector-${groupName}`, paths, [], { uploadCoverage: true });
       fanOutTasks[taskName] = task;
     }
 
@@ -902,7 +960,7 @@ function generateOne(t) {
     if (dindFolders.length > 0) {
       const dindNeeds = [...new Set(dindFolders.flatMap(name => readNeeds(path.join(miscDir, name))))];
       const dindPaths = dindFolders.map(name => `test/integration/misc/${name}`);
-      const { taskName, task } = buildCollectorTask('misc-dind', 'collector-misc-dind', dindPaths, dindNeeds);
+      const { taskName, task } = buildCollectorTask('misc-dind', 'collector-misc-dind', dindPaths, dindNeeds, { uploadCoverage: true });
       fanOutTasks[taskName] = task;
     }
 
@@ -929,6 +987,155 @@ function generateOne(t) {
     const spsDir = path.join(__dirname, '..');
     const output = yaml.dump(prConfig, { lineWidth: -1, quotingType: "'", forceQuotes: false });
     const prPath = path.join(spsDir, 'pr', 'pipeline-config-general.yaml');
+    fs.writeFileSync(prPath, output);
+    console.log(`Written: ${prPath}`);
+  } else if (t === 'pr-verify') {
+    const script = [
+      '#!/usr/bin/env bash',
+      'set -eo pipefail',
+      '',
+      'GH_TOKEN="$(get_secret tracer-gh-token-public)"',
+      'COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"',
+      'GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"',
+      'REPO="instana/nodejs"',
+      '',
+      'if [ -z "$GH_TOKEN" ] || [ -z "$COS_CREDENTIALS" ] || [ -z "$GIT_COMMIT" ]; then',
+      '  echo "ERROR: Missing required credentials or git commit — aborting"',
+      '  exit 1',
+      'fi',
+      '',
+      `COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r '.apikey // .')"`,
+      '',
+      '# ── Wait for all other checks to complete ────────────────────────────────',
+      'echo "Waiting for all checks on commit $GIT_COMMIT to complete..."',
+      'MAX_WAIT=3600',
+      'POLL_INTERVAL=30',
+      'ELAPSED=0',
+      'while true; do',
+      '  STATUSES=$(curl -sf \\',
+      '    -H "Authorization: Bearer $GH_TOKEN" \\',
+      '    -H "Accept: application/vnd.github+json" \\',
+      '    "https://api.github.com/repos/$REPO/commits/$GIT_COMMIT/check-runs?per_page=100")',
+      '  TOTAL=$(echo "$STATUSES" | jq \'.check_runs | length\')',
+      '  PENDING=$(echo "$STATUSES" | jq \'[.check_runs[] | select(.status != "completed" and .name != "pr-verify")] | length\')',
+      '  echo "  $((TOTAL)) checks total, $PENDING still pending (${ELAPSED}s elapsed)"',
+      '  if [ "$PENDING" -eq 0 ]; then',
+      '    echo "All checks completed."',
+      '    break',
+      '  fi',
+      '  if [ "$ELAPSED" -ge "$MAX_WAIT" ]; then',
+      '    echo "ERROR: Timed out after ${MAX_WAIT}s waiting for checks"',
+      '    exit 1',
+      '  fi',
+      `  sleep $POLL_INTERVAL`,
+      '  ELAPSED=$((ELAPSED + POLL_INTERVAL))',
+      'done',
+      '',
+      '# ── Download all test-results from COS ───────────────────────────────────',
+      'echo "Fetching IAM token..."',
+      'IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \\',
+      '  -H "Content-Type: application/x-www-form-urlencoded" \\',
+      '  -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \\',
+      '  | jq -r \'.access_token\')',
+      '',
+      'echo "Listing uploaded test files for commit $GIT_COMMIT..."',
+      `OBJECTS=$(curl -sf \\`,
+      `  "https://s3.eu-de.cloud-object-storage.appdomain.cloud/${COS_BUCKET}?prefix=test-results/$GIT_COMMIT/&list-type=2" \\`,
+      '  -H "Authorization: Bearer $IAM_TOKEN" \\',
+      '  | grep -o \'<Key>[^<]*</Key>\' | sed \'s/<Key>//;s/<\\/Key>//\')',
+      '',
+      'if [ -z "$OBJECTS" ]; then',
+      '  echo "WARNING: No test result files found in COS for commit $GIT_COMMIT — skipping coverage check"',
+      '  exit 0',
+      'fi',
+      '',
+      'TMPDIR=$(mktemp -d)',
+      'CLAIMED_FILE="$TMPDIR/all-claimed.txt"',
+      'touch "$CLAIMED_FILE"',
+      '',
+      'echo ""',
+      'echo "=== Tests that ran ==="',
+      'while IFS= read -r key; do',
+      '  [ -z "$key" ] && continue',
+      '  task=$(basename "$key" .txt)',
+      '  echo "── $task ──"',
+      `  curl -sf \\`,
+      `    "https://s3.eu-de.cloud-object-storage.appdomain.cloud/$key" \\`,
+      '    -H "Authorization: Bearer $IAM_TOKEN" | tee -a "$CLAIMED_FILE"',
+      '  echo "" >> "$CLAIMED_FILE"',
+      'done <<< "$OBJECTS"',
+      '',
+      '# ── Compare against all test files in repo ───────────────────────────────',
+      'cd "$WORKSPACE/$(load_repo app-repo path)"',
+      'ALL_TESTS=$(find packages/collector/test/integration \\',
+      '  -name "*.test.js" \\',
+      '  -not -path "*/node_modules/*" \\',
+      '  -not -path "*/long_*/*" \\',
+      '  | sed "s|.*/packages/collector/||" | sort)',
+      '',
+      'UNCOVERED_LIST=""',
+      'MISSING=0',
+      'while IFS= read -r test_file; do',
+      '  [ -z "$test_file" ] && continue',
+      '  if ! grep -qF "$test_file" "$CLAIMED_FILE"; then',
+      '    UNCOVERED_LIST="$UNCOVERED_LIST\\n  $test_file"',
+      '    MISSING=$((MISSING + 1))',
+      '  fi',
+      'done <<< "$ALL_TESTS"',
+      '',
+      'TOTAL=$(echo "$ALL_TESTS" | wc -l | tr -d " ")',
+      'CLAIMED_COUNT=$(sort -u "$CLAIMED_FILE" | grep -c "\\.test\\.js" || true)',
+      '',
+      'echo ""',
+      'echo "=== Coverage Report ==="',
+      'echo "Total test files in repo: $TOTAL"',
+      'echo "Covered by tasks:         $CLAIMED_COUNT"',
+      'echo "Not covered:              $MISSING"',
+      '',
+      'if [ "$MISSING" -gt 0 ]; then',
+      '  echo ""',
+      '  echo "=== Uncovered test files ==="',
+      '  printf "%b\\n" "$UNCOVERED_LIST"',
+      '  echo ""',
+      '  echo "❌ $MISSING test file(s) not covered by any pipeline task"',
+      '  exit 1',
+      'else',
+      '  echo "✅ All $TOTAL collector tests are covered"',
+      'fi'
+    ].join('\n');
+
+    const prConfig = {
+      version: '2',
+      tasks: {
+        'pr-code-checks': {
+          steps: [
+            { name: 'peer-review', when: 'false' },
+            { name: 'unit-test', image: NODE_IMAGE, script: '#!/usr/bin/env bash\necho "pr-verify starting..."' }
+          ]
+        },
+        'code-pr-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
+        'code-ci-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
+        'deploy-checks': { when: false },
+        'deploy-release': { when: false },
+        'pr-code-checks-verify': {
+          from: 'pr-code-checks',
+          displayName: 'pr-verify',
+          runtimeClassName: 'large',
+          steps: [
+            { name: 'peer-review', when: 'false' },
+            { name: 'detect-secrets', when: 'false' },
+            { name: 'compliance-checks', when: 'false' },
+            { name: 'unit-test', displayName: 'pr-verify', image: NODE_IMAGE, script },
+            { name: 'sign-artifact', when: 'false' },
+            { name: 'build-artifact', when: 'false' },
+            { name: 'scan-artifact', when: 'false' }
+          ]
+        }
+      }
+    };
+    const spsDir = path.join(__dirname, '..');
+    const output = yaml.dump(prConfig, { lineWidth: -1, quotingType: "'", forceQuotes: false });
+    const prPath = path.join(spsDir, 'pr', 'pipeline-config-pr-verify.yaml');
     fs.writeFileSync(prPath, output);
     console.log(`Written: ${prPath}`);
   } else if (SIMPLE_TARGETS[t]) {

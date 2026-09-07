@@ -154,6 +154,27 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"
+          GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
+          if [ -n "$COS_CREDENTIALS" ] && [ -n "$GIT_COMMIT" ]; then
+            COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r '.apikey // .')"
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | jq -r '.access_token')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-kafka-javascript.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-kafka-javascript" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-kafka-javascript (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -247,6 +268,27 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"
+          GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
+          if [ -n "$COS_CREDENTIALS" ] && [ -n "$GIT_COMMIT" ]; then
+            COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r '.apikey // .')"
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | jq -r '.access_token')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-amqplib.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-amqplib" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-amqplib (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -339,6 +381,27 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"
+          GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
+          if [ -n "$COS_CREDENTIALS" ] && [ -n "$GIT_COMMIT" ]; then
+            COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r '.apikey // .')"
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | jq -r '.access_token')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-bull.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-bull" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-bull (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -454,6 +517,27 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"
+          GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
+          if [ -n "$COS_CREDENTIALS" ] && [ -n "$GIT_COMMIT" ]; then
+            COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r '.apikey // .')"
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | jq -r '.access_token')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-kafka-node.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-kafka-node" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-kafka-node (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -569,6 +653,27 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"
+          GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
+          if [ -n "$COS_CREDENTIALS" ] && [ -n "$GIT_COMMIT" ]; then
+            COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r '.apikey // .')"
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | jq -r '.access_token')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-kafkajs.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-kafkajs" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-kafkajs (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -662,6 +767,27 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"
+          GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
+          if [ -n "$COS_CREDENTIALS" ] && [ -n "$GIT_COMMIT" ]; then
+            COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r '.apikey // .')"
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | jq -r '.access_token')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-nats.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-nats" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-nats (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -764,6 +890,27 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"
+          GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
+          if [ -n "$COS_CREDENTIALS" ] && [ -n "$GIT_COMMIT" ]; then
+            COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r '.apikey // .')"
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | jq -r '.access_token')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-node-nats-streaming.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-node-nats-streaming" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-node-nats-streaming (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -879,6 +1026,27 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"
+          GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
+          if [ -n "$COS_CREDENTIALS" ] && [ -n "$GIT_COMMIT" ]; then
+            COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r '.apikey // .')"
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | jq -r '.access_token')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-node-rdkafka-1.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-node-rdkafka-1" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-node-rdkafka-1 (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -994,6 +1162,27 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"
+          GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
+          if [ -n "$COS_CREDENTIALS" ] && [ -n "$GIT_COMMIT" ]; then
+            COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r '.apikey // .')"
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | jq -r '.access_token')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-node-rdkafka-2.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-node-rdkafka-2" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-node-rdkafka-2 (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -1109,6 +1298,27 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"
+          GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
+          if [ -n "$COS_CREDENTIALS" ] && [ -n "$GIT_COMMIT" ]; then
+            COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r '.apikey // .')"
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | jq -r '.access_token')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-node-rdkafka-3.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-node-rdkafka-3" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-node-rdkafka-3 (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -1224,6 +1434,27 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"
+          GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
+          if [ -n "$COS_CREDENTIALS" ] && [ -n "$GIT_COMMIT" ]; then
+            COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r '.apikey // .')"
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | jq -r '.access_token')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-node-rdkafka-4.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-node-rdkafka-4" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-node-rdkafka-4 (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -1339,6 +1570,27 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"
+          GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
+          if [ -n "$COS_CREDENTIALS" ] && [ -n "$GIT_COMMIT" ]; then
+            COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r '.apikey // .')"
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | jq -r '.access_token')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-node-rdkafka-5.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-node-rdkafka-5" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-node-rdkafka-5 (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -1405,6 +1657,27 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files to COS for coverage verification
+          COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"
+          GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
+          if [ -n "$COS_CREDENTIALS" ] && [ -n "$GIT_COMMIT" ]; then
+            COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r '.apikey // .')"
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | jq -r '.access_token')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-messaging-socket-io.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test coverage for collector-messaging-socket-io" \
+              || echo "WARNING: Failed to upload test coverage for collector-messaging-socket-io (non-fatal)"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+          fi
+
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
