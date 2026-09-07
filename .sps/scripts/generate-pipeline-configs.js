@@ -388,8 +388,15 @@ function dockerClientInstallScript() {
   ].join('\n');
 }
 
+function runEsmReadLines() {
+  // Read RUN_ESM from the pipeline trigger property (injected by run-pipeline.sh --esm true).
+  // Falls back to empty string if not set, so tests run normally by default.
+  return ['RUN_ESM="$(get_env RUN_ESM "")"'];
+}
+
 function runWithRetryLines(npmScript, envLines = []) {
   return [
+    ...runEsmReadLines(),
     'retry=1',
     'while [ $retry -le 2 ]; do',
     '  LAST_EXIT=0',
@@ -397,6 +404,7 @@ function runWithRetryLines(npmScript, envLines = []) {
     '    PATH="$PATH" \\',
     '    HOME="$HOME" \\',
     '    CI=true \\',
+    '    RUN_ESM="$RUN_ESM" \\',
     ...envLines.map(l => `    ${l}`),
     `    npm run ${npmScript} || LAST_EXIT=$?`,
     '  if [ $LAST_EXIT -eq 0 ]; then',

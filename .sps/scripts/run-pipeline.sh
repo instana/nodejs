@@ -7,7 +7,7 @@
 #
 # Usage:
 #   .sps/scripts/run-pipeline.sh --branch <branch> --node-version <version> \
-#       [--trigger <name>] [--dry-run] [--list]
+#       [--trigger <name>] [--esm true] [--dry-run] [--list]
 #
 # Options:
 #   --branch        Git branch to run against (e.g. my-feature-branch)
@@ -15,6 +15,7 @@
 #   --trigger       Trigger name suffix (e.g. "collector-currencies-async").
 #                   The script looks for a trigger called "manual-<name>".
 #                   Without it, ALL manual triggers are run.
+#   --esm           Set to "true" to run tests with RUN_ESM=true
 #   --list          List all available manual triggers and exit
 #   --dry-run       Print the API payload without making any calls
 #
@@ -32,6 +33,7 @@ REGION="us-south"
 TRIGGER_SUFFIX=""
 BRANCH=""
 NODE_VERSION=""
+ESM=""
 DRY_RUN=false
 LIST=false
 
@@ -40,6 +42,7 @@ while [[ $# -gt 0 ]]; do
     --trigger)      TRIGGER_SUFFIX="$2"; shift 2 ;;
     --branch)       BRANCH="$2";         shift 2 ;;
     --node-version) NODE_VERSION="$2";   shift 2 ;;
+    --esm)          ESM="$2";            shift 2 ;;
     --dry-run)      DRY_RUN=true;        shift   ;;
     --list)         LIST=true;           shift   ;;
     *)
@@ -122,6 +125,7 @@ TOTAL=$(echo "$MANUAL_TRIGGERS" | grep -c . || true)
 echo ""
 echo "Branch:       ${BRANCH}"
 echo "node-version: ${NODE_VERSION}"
+[[ -n "$ESM" ]] && echo "RUN_ESM:      ${ESM}"
 echo "Configs:      ${TOTAL}"
 echo ""
 
@@ -146,16 +150,31 @@ fire_run() {
   # Build trigger_properties — always override branch and node-version.
   # pipeline-config is included only when the trigger has it as a property
   # (so the run uses the right config file).
+  # RUN_ESM is only added when --esm true is passed.
   local props_jq
-  props_jq=$(jq -n \
-    --arg branch   "$BRANCH" \
-    --arg node_ver "$NODE_VERSION" \
-    --arg config   "$config" \
-    '{
-      "branch":          $branch,
-      "node-version":    $node_ver,
-      "pipeline-config": $config
-    }')
+  if [[ -n "$ESM" ]]; then
+    props_jq=$(jq -n \
+      --arg branch   "$BRANCH" \
+      --arg node_ver "$NODE_VERSION" \
+      --arg config   "$config" \
+      --arg run_esm  "$ESM" \
+      '{
+        "branch":          $branch,
+        "node-version":    $node_ver,
+        "pipeline-config": $config,
+        "RUN_ESM":         $run_esm
+      }')
+  else
+    props_jq=$(jq -n \
+      --arg branch   "$BRANCH" \
+      --arg node_ver "$NODE_VERSION" \
+      --arg config   "$config" \
+      '{
+        "branch":          $branch,
+        "node-version":    $node_ver,
+        "pipeline-config": $config
+      }')
+  fi
 
   local PAYLOAD
   PAYLOAD=$(jq -n \

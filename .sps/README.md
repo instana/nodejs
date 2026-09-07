@@ -209,6 +209,10 @@ Use the `manual-dep-*` trigger to run a bot immediately on demand.
 .sps/scripts/run-pipeline.sh --branch main --node-version 20 \
   --trigger collector-currencies-async
 
+# Run with ESM mode enabled (sets RUN_ESM=true in the pipeline run)
+.sps/scripts/run-pipeline.sh --branch main --node-version 20 \
+  --trigger collector-currencies-async --esm true
+
 # Dry run — prints the API payload without making calls
 .sps/scripts/run-pipeline.sh --branch main --node-version 20 --dry-run
 ```
