@@ -77,10 +77,15 @@ tasks:
 
           # ── Download all test-results from COS ───────────────────────────────────
           echo "Fetching IAM token..."
-          IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+          IAM_TOKEN=$(curl -s -X POST "https://iam.cloud.ibm.com/identity/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
             -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
             | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+          if [ -z "$IAM_TOKEN" ]; then
+            echo "ERROR: Failed to obtain IAM token — check ibm-object-storage-api-key secret"
+            exit 1
+          fi
+          echo "IAM token obtained."
 
           echo "Listing uploaded test files for commit $GIT_COMMIT..."
           OBJECTS=$(curl -sf \
