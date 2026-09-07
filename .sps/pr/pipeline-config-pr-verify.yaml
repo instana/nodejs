@@ -40,16 +40,15 @@ tasks:
           set -eo pipefail
 
           GH_TOKEN="$(get_secret gh-public-token)"
-          COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
           REPO="instana/nodejs"
 
-          if [ -z "$GH_TOKEN" ] || [ -z "$COS_CREDENTIALS" ] || [ -z "$GIT_COMMIT" ]; then
+          if [ -z "$GH_TOKEN" ] || [ -z "$COS_API_KEY" ] || [ -z "$GIT_COMMIT" ]; then
             echo "ERROR: Missing required credentials or git commit — aborting"
             exit 1
           fi
 
-          COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r '.apikey // .')"
 
           # ── Wait for all other checks to complete ────────────────────────────────
           echo "Waiting for all checks on commit $GIT_COMMIT to complete..."

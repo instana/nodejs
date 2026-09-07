@@ -137,10 +137,9 @@ tasks:
           done
 
           # upload executed test files to COS for coverage verification
-          COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
-          if [ -n "$COS_CREDENTIALS" ] && [ -n "$GIT_COMMIT" ]; then
-            COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r '.apikey // .')"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
               -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
@@ -254,10 +253,9 @@ tasks:
           done
 
           # upload executed test files to COS for coverage verification
-          COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
-          if [ -n "$COS_CREDENTIALS" ] && [ -n "$GIT_COMMIT" ]; then
-            COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r '.apikey // .')"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
               -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
@@ -371,10 +369,9 @@ tasks:
           done
 
           # upload executed test files to COS for coverage verification
-          COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
-          if [ -n "$COS_CREDENTIALS" ] && [ -n "$GIT_COMMIT" ]; then
-            COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r '.apikey // .')"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
               -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
@@ -488,10 +485,9 @@ tasks:
           done
 
           # upload executed test files to COS for coverage verification
-          COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
-          if [ -n "$COS_CREDENTIALS" ] && [ -n "$GIT_COMMIT" ]; then
-            COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r '.apikey // .')"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
               -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
@@ -605,10 +601,9 @@ tasks:
           done
 
           # upload executed test files to COS for coverage verification
-          COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
-          if [ -n "$COS_CREDENTIALS" ] && [ -n "$GIT_COMMIT" ]; then
-            COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r '.apikey // .')"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
               -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
@@ -722,10 +717,9 @@ tasks:
           done
 
           # upload executed test files to COS for coverage verification
-          COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
-          if [ -n "$COS_CREDENTIALS" ] && [ -n "$GIT_COMMIT" ]; then
-            COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r '.apikey // .')"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
               -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
@@ -841,10 +835,9 @@ tasks:
           done
 
           # upload executed test files to COS for coverage verification
-          COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
-          if [ -n "$COS_CREDENTIALS" ] && [ -n "$GIT_COMMIT" ]; then
-            COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r '.apikey // .')"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
               -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
@@ -959,10 +952,9 @@ tasks:
           done
 
           # upload executed test files to COS for coverage verification
-          COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
-          if [ -n "$COS_CREDENTIALS" ] && [ -n "$GIT_COMMIT" ]; then
-            COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r '.apikey // .')"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
               -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
@@ -1077,10 +1069,9 @@ tasks:
           done
 
           # upload executed test files to COS for coverage verification
-          COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
-          if [ -n "$COS_CREDENTIALS" ] && [ -n "$GIT_COMMIT" ]; then
-            COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r '.apikey // .')"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
               -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
@@ -1194,10 +1185,9 @@ tasks:
           done
 
           # upload executed test files to COS for coverage verification
-          COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
-          if [ -n "$COS_CREDENTIALS" ] && [ -n "$GIT_COMMIT" ]; then
-            COS_API_KEY="$(echo "$COS_CREDENTIALS" | jq -r '.apikey // .')"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
               -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
