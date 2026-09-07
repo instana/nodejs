@@ -434,7 +434,7 @@ function uploadTestFilesLines(taskSlug) {
     '    -H "Authorization: Bearer $IAM_TOKEN" \\',
     '    -H "Content-Type: text/plain" \\',
     '    --data-binary "$(echo "$TEST_FILES" | tr \' \' \'\\n\' | sort)" \\',
-    '    && echo "Uploaded test coverage for ' + taskSlug + '" \\',
+    `    && echo "Uploaded test coverage for ${taskSlug} → test-results/\$GIT_COMMIT/${taskSlug}.txt" \\`,
     '    || echo "WARNING: Failed to upload test coverage for ' + taskSlug + ' (non-fatal)"',
     'else',
     '  echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"',

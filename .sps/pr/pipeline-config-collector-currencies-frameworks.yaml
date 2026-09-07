@@ -121,7 +121,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-frameworks-hapi" \
+              && echo "Uploaded test coverage for collector-frameworks-hapi → test-results/$GIT_COMMIT/collector-frameworks-hapi.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-frameworks-hapi (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -209,7 +209,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-frameworks-router" \
+              && echo "Uploaded test coverage for collector-frameworks-router → test-results/$GIT_COMMIT/collector-frameworks-router.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-frameworks-router (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -297,7 +297,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-frameworks-express" \
+              && echo "Uploaded test coverage for collector-frameworks-express → test-results/$GIT_COMMIT/collector-frameworks-express.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-frameworks-express (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -385,7 +385,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-frameworks-fastify" \
+              && echo "Uploaded test coverage for collector-frameworks-fastify → test-results/$GIT_COMMIT/collector-frameworks-fastify.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-frameworks-fastify (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -473,7 +473,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-frameworks-got" \
+              && echo "Uploaded test coverage for collector-frameworks-got → test-results/$GIT_COMMIT/collector-frameworks-got.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-frameworks-got (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -561,7 +561,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-frameworks-restify" \
+              && echo "Uploaded test coverage for collector-frameworks-restify → test-results/$GIT_COMMIT/collector-frameworks-restify.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-frameworks-restify (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -678,7 +678,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-frameworks-sequelize" \
+              && echo "Uploaded test coverage for collector-frameworks-sequelize → test-results/$GIT_COMMIT/collector-frameworks-sequelize.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-frameworks-sequelize (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -766,7 +766,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-frameworks-tsoa" \
+              && echo "Uploaded test coverage for collector-frameworks-tsoa → test-results/$GIT_COMMIT/collector-frameworks-tsoa.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-frameworks-tsoa (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -883,7 +883,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-frameworks-typeorm" \
+              && echo "Uploaded test coverage for collector-frameworks-typeorm → test-results/$GIT_COMMIT/collector-frameworks-typeorm.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-frameworks-typeorm (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"

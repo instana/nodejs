@@ -149,7 +149,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-cloud-client-dynamodb" \
+              && echo "Uploaded test coverage for collector-cloud-client-dynamodb → test-results/$GIT_COMMIT/collector-cloud-client-dynamodb.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-cloud-client-dynamodb (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -265,7 +265,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-cloud-client-kinesis" \
+              && echo "Uploaded test coverage for collector-cloud-client-kinesis → test-results/$GIT_COMMIT/collector-cloud-client-kinesis.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-cloud-client-kinesis (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -381,7 +381,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-cloud-client-lambda" \
+              && echo "Uploaded test coverage for collector-cloud-client-lambda → test-results/$GIT_COMMIT/collector-cloud-client-lambda.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-cloud-client-lambda (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -497,7 +497,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-cloud-client-s3" \
+              && echo "Uploaded test coverage for collector-cloud-client-s3 → test-results/$GIT_COMMIT/collector-cloud-client-s3.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-cloud-client-s3 (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -613,7 +613,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-cloud-client-sns" \
+              && echo "Uploaded test coverage for collector-cloud-client-sns → test-results/$GIT_COMMIT/collector-cloud-client-sns.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-cloud-client-sns (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -729,7 +729,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-cloud-client-sqs" \
+              && echo "Uploaded test coverage for collector-cloud-client-sqs → test-results/$GIT_COMMIT/collector-cloud-client-sqs.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-cloud-client-sqs (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -847,7 +847,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-cloud-storage-blob" \
+              && echo "Uploaded test coverage for collector-cloud-storage-blob → test-results/$GIT_COMMIT/collector-cloud-storage-blob.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-cloud-storage-blob (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -964,7 +964,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-cloud-pubsub" \
+              && echo "Uploaded test coverage for collector-cloud-pubsub → test-results/$GIT_COMMIT/collector-cloud-pubsub.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-cloud-pubsub (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -1081,7 +1081,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-cloud-storage" \
+              && echo "Uploaded test coverage for collector-cloud-storage → test-results/$GIT_COMMIT/collector-cloud-storage.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-cloud-storage (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -1197,7 +1197,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-cloud-aws-sdk" \
+              && echo "Uploaded test coverage for collector-cloud-aws-sdk → test-results/$GIT_COMMIT/collector-cloud-aws-sdk.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-cloud-aws-sdk (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"

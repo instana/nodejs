@@ -109,7 +109,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for core" \
+              && echo "Uploaded test coverage for core → test-results/$GIT_COMMIT/core.txt" \
               || echo "WARNING: Failed to upload test coverage for core (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -185,7 +185,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for metrics-util" \
+              && echo "Uploaded test coverage for metrics-util → test-results/$GIT_COMMIT/metrics-util.txt" \
               || echo "WARNING: Failed to upload test coverage for metrics-util (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -261,7 +261,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for serverless" \
+              && echo "Uploaded test coverage for serverless → test-results/$GIT_COMMIT/serverless.txt" \
               || echo "WARNING: Failed to upload test coverage for serverless (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -337,7 +337,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for serverless-collector" \
+              && echo "Uploaded test coverage for serverless-collector → test-results/$GIT_COMMIT/serverless-collector.txt" \
               || echo "WARNING: Failed to upload test coverage for serverless-collector (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -413,7 +413,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for shared-metrics" \
+              && echo "Uploaded test coverage for shared-metrics → test-results/$GIT_COMMIT/shared-metrics.txt" \
               || echo "WARNING: Failed to upload test coverage for shared-metrics (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"

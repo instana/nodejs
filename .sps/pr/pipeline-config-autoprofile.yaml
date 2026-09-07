@@ -112,7 +112,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for autoprofile" \
+              && echo "Uploaded test coverage for autoprofile → test-results/$GIT_COMMIT/autoprofile.txt" \
               || echo "WARNING: Failed to upload test coverage for autoprofile (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"

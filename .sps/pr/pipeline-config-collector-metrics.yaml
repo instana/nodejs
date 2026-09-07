@@ -121,7 +121,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-metrics" \
+              && echo "Uploaded test coverage for collector-metrics → test-results/$GIT_COMMIT/collector-metrics.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-metrics (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"

@@ -132,7 +132,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for misc-1" \
+              && echo "Uploaded test coverage for misc-1 → test-results/$GIT_COMMIT/misc-1.txt" \
               || echo "WARNING: Failed to upload test coverage for misc-1 (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -231,7 +231,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for misc-2" \
+              && echo "Uploaded test coverage for misc-2 → test-results/$GIT_COMMIT/misc-2.txt" \
               || echo "WARNING: Failed to upload test coverage for misc-2 (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -328,7 +328,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for misc-3" \
+              && echo "Uploaded test coverage for misc-3 → test-results/$GIT_COMMIT/misc-3.txt" \
               || echo "WARNING: Failed to upload test coverage for misc-3 (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -442,7 +442,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for misc-dind" \
+              && echo "Uploaded test coverage for misc-dind → test-results/$GIT_COMMIT/misc-dind.txt" \
               || echo "WARNING: Failed to upload test coverage for misc-dind (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"

@@ -109,7 +109,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for opentelemetry-exporter" \
+              && echo "Uploaded test coverage for opentelemetry-exporter → test-results/$GIT_COMMIT/opentelemetry-exporter.txt" \
               || echo "WARNING: Failed to upload test coverage for opentelemetry-exporter (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -185,7 +185,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for opentelemetry-sampler" \
+              && echo "Uploaded test coverage for opentelemetry-sampler → test-results/$GIT_COMMIT/opentelemetry-sampler.txt" \
               || echo "WARNING: Failed to upload test coverage for opentelemetry-sampler (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"

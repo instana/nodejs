@@ -121,7 +121,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-protocols-server" \
+              && echo "Uploaded test coverage for collector-protocols-server → test-results/$GIT_COMMIT/collector-protocols-server.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-protocols-server (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -209,7 +209,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-protocols-subgraph" \
+              && echo "Uploaded test coverage for collector-protocols-subgraph → test-results/$GIT_COMMIT/collector-protocols-subgraph.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-protocols-subgraph (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -297,7 +297,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-protocols-grpc-js" \
+              && echo "Uploaded test coverage for collector-protocols-grpc-js → test-results/$GIT_COMMIT/collector-protocols-grpc-js.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-protocols-grpc-js (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -412,7 +412,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-protocols-graphql" \
+              && echo "Uploaded test coverage for collector-protocols-graphql → test-results/$GIT_COMMIT/collector-protocols-graphql.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-protocols-graphql (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -500,7 +500,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-protocols-graphql-subscriptions" \
+              && echo "Uploaded test coverage for collector-protocols-graphql-subscriptions → test-results/$GIT_COMMIT/collector-protocols-graphql-subscriptions.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-protocols-graphql-subscriptions (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -588,7 +588,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-protocols-http" \
+              && echo "Uploaded test coverage for collector-protocols-http → test-results/$GIT_COMMIT/collector-protocols-http.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-protocols-http (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -676,7 +676,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-protocols-http2" \
+              && echo "Uploaded test coverage for collector-protocols-http2 → test-results/$GIT_COMMIT/collector-protocols-http2.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-protocols-http2 (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"

@@ -121,7 +121,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-logging-bunyan" \
+              && echo "Uploaded test coverage for collector-logging-bunyan → test-results/$GIT_COMMIT/collector-logging-bunyan.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-logging-bunyan (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -209,7 +209,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-logging-console" \
+              && echo "Uploaded test coverage for collector-logging-console → test-results/$GIT_COMMIT/collector-logging-console.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-logging-console (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -297,7 +297,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-logging-express-winston" \
+              && echo "Uploaded test coverage for collector-logging-express-winston → test-results/$GIT_COMMIT/collector-logging-express-winston.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-logging-express-winston (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -385,7 +385,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-logging-log4js" \
+              && echo "Uploaded test coverage for collector-logging-log4js → test-results/$GIT_COMMIT/collector-logging-log4js.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-logging-log4js (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -473,7 +473,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-logging-pino" \
+              && echo "Uploaded test coverage for collector-logging-pino → test-results/$GIT_COMMIT/collector-logging-pino.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-logging-pino (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
@@ -561,7 +561,7 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-logging-winston" \
+              && echo "Uploaded test coverage for collector-logging-winston → test-results/$GIT_COMMIT/collector-logging-winston.txt" \
               || echo "WARNING: Failed to upload test coverage for collector-logging-winston (non-fatal)"
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
