@@ -1120,7 +1120,7 @@ function generateOne(t) {
       '    echo "$BODY" >> "$CLAIMED_FILE"',
       '    echo "" >> "$CLAIMED_FILE"',
       '  elif [ "$HTTP_CODE" = "404" ]; then',
-      '    echo "  – $slug (no COS file — not a collector task)"',
+      '    echo "  – $slug (no COS file found yet)"',
       '  else',
       '    echo "  ✘ $slug HTTP $HTTP_CODE"',
       '  fi',
