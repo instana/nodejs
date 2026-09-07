@@ -734,6 +734,11 @@ function buildUploadCurrencyReportTask() {
     '',
     'git add .',
     '',
+    'if git diff --cached --quiet; then',
+    '  echo "No changes to commit. Currency report is already up to date."',
+    '  exit 0',
+    'fi',
+    '',
     'git commit -m "chore: updated node.js currency report"',
     'git push origin main'
   ].join('\n');
