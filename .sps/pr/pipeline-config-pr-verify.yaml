@@ -39,7 +39,7 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          GH_TOKEN="$(get_secret tracer-gh-token-public)"
+          GH_TOKEN="$(get_secret gh-public-token)"
           COS_CREDENTIALS="$(get_secret nodejs-tracer-object-storage)"
           GIT_COMMIT="$(cd "$WORKSPACE/$(load_repo app-repo path)" && git rev-parse HEAD)"
           REPO="instana/nodejs"
