@@ -233,7 +233,7 @@
     },
     "prismjs": "1.30.0",
     "protobufjs": "8.6.6",
-    "qs": "6.15.2",
+    "qs": "6.16.0",
     "sha.js": "2.4.12",
     "sigstore": "4.1.1",
     "stream-shift": "1.0.2",

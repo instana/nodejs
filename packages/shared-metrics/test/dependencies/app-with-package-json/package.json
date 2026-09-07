@@ -19,7 +19,11 @@
   "license": "MIT",
   "dependencies": {
     "express": "^4.22.2",
-    "fastify": "^5.12.1",
+    "fastify": "^5.12.2",
     "koa": "^3.2.1"
+  },
+  "overrides": {
+    "qs": "6.16.0",
+    "fast-uri": "4.1.3"
   }
 }
