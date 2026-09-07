@@ -423,7 +423,7 @@ function uploadTestFilesLines(taskSlug) {
     '',
     '# upload executed test files to COS for coverage verification',
     'COS_API_KEY="$(get_secret ibm-object-storage-api-key)"',
-    'GIT_COMMIT="$(get_env GIT_COMMIT "")"',
+    'GIT_COMMIT="$(get_env HEAD_SHA "")"',
     'if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then',
     '  IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \\',
     '    -H "Content-Type: application/x-www-form-urlencoded" \\',
