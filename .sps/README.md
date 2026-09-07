@@ -166,7 +166,7 @@ Available `--what` targets:
 
 | Target | Description |
 |---|---|
-| `default` | Root `pipeline-config.yaml` (security-checks only) |
+| `default` | Root `pipeline-config.yaml` (security checks only) |
 | `collector-currencies-<group>` | One fan-out task per package in `currencies/<group>/` |
 | `collector-metrics` | Tests under `test/integration/metrics/` |
 | `collector-misc` | Tests under `test/integration/misc/` |
