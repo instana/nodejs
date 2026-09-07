@@ -681,10 +681,10 @@ function buildSonarTask(rootTask = 'pr-code-checks') {
       { name: 'peer-review', when: 'false' },
       { name: 'detect-secrets', when: 'false' },
       { name: 'compliance-checks', when: 'false' },
-      { name: 'unit-test', displayName: 'sonar-analysis', image: NODE_IMAGE, script },
+      { name: 'unit-test', when: 'false' },
       { name: 'sign-artifact', when: 'false' },
       { name: 'build-artifact', when: 'false' },
-      { name: 'scan-artifact', when: 'false' }
+      { name: 'scan-artifact', displayName: 'sonar-analysis', image: NODE_IMAGE, script }
     ]
   };
 }
