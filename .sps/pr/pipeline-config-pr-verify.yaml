@@ -71,6 +71,8 @@ tasks:
           # Skips silently if already downloaded or if COS has no file for it.
           download_cos_result() {
             local context="$1"
+            # Only handle collector task contexts (must have a slug after "pr-code-checks-")
+            [[ "$context" != tekton/pr-code-checks-*/* ]] && return 0
             # Derive slug: strip "tekton/pr-code-checks-" prefix and "/code-unit-tests" suffix
             local slug="${context#tekton/pr-code-checks-}"
             slug="${slug%/code-unit-tests}"
@@ -96,7 +98,10 @@ tasks:
 
           # Helper: fetch all commit statuses (handles pagination)
           fetch_statuses() {
-            local page=1 all=""
+            local page=1
+            local tmpfile
+            tmpfile=$(mktemp)
+            echo "[]" > "$tmpfile"
             while true; do
               local batch
               batch=$(curl -sf \
@@ -104,24 +109,20 @@ tasks:
                 -H "Accept: application/vnd.github+json" \
                 "https://api.github.com/repos/$REPO/commits/$GIT_COMMIT/statuses?per_page=100&page=$page")
               local count
-              count=$(echo "$batch" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))")
-              all="$all$batch"
+              count=$(echo "$batch" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo 0)
+              # Append this page to accumulated results
+              python3 -c "
+          import sys, json
+          existing = json.load(open(sys.argv[1]))
+          page = json.loads(sys.argv[2])
+          existing.extend(page)
+          json.dump(existing, open(sys.argv[1], "w"))
+          " "$tmpfile" "$batch"
               [ "$count" -lt 100 ] && break
               page=$((page + 1))
             done
-            # Merge all pages into one flat JSON array
-            echo "$all" | python3 -c "
-          import sys
-          data = sys.stdin.read()
-          # Each page is a separate JSON array — parse and merge
-          import re, json
-          arrays = re.findall(r'\[.*?\]', data, re.DOTALL)
-          merged = []
-          for a in arrays:
-              try: merged.extend(json.loads(a))
-              except: pass
-          print(json.dumps(merged))
-          "
+            cat "$tmpfile"
+            rm -f "$tmpfile"
           }
 
           # ── Phase 1: wait until all EXPECTED_CHECKS are registered ──────────────
@@ -133,7 +134,7 @@ tasks:
           while true; do
             STATUSES=$(fetch_statuses)
             # Count unique contexts (deduplicate — statuses API returns history, latest first)
-            OTHERS=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(set(r['context'] for r in d if not r['context'].startswith('tekton/pr-code-checks-verify'))))")
+            OTHERS=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(set(r['context'] for r in d if r['context'].startswith('tekton/pr-code-checks-') and not r['context'].startswith('tekton/pr-code-checks-verify'))))")
             echo "  $OTHERS / $EXPECTED_CHECKS checks registered (${ELAPSED}s elapsed)"
             if [ "$OTHERS" -ge "$EXPECTED_CHECKS" ]; then
               echo "All expected checks are now registered."
