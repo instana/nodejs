@@ -1140,7 +1140,6 @@ function generateOne(t) {
     // Groups are defined in packages/collector/test/integration/misc/.split
     // (JSON object: { "group-name": ["subdir", ...], ... }).
     // Folders with a .needs file are auto-detected → misc-dind task (no .split entry needed).
-    // Every non-dind folder MUST be listed in .split — the generator fails hard otherwise.
     const miscDir = path.join(REPO_ROOT, 'packages/collector/test/integration/misc');
 
     // Auto-detect dind folders by presence of .needs
@@ -1172,9 +1171,6 @@ function generateOne(t) {
     const splitRaw = fs.readFileSync(miscSplitPath, 'utf-8').trim();
     const splitN = Number(splitRaw);
 
-    // .split supports two forms:
-    //   number → auto-partition non-dind dirs into N roughly-equal groups (misc-1..N)
-    //   JSON object → explicit named groups; every non-dind dir must be listed exactly once
     let splitDef;
     if (!isNaN(splitN) && splitN > 0) {
       const count = Math.min(Math.round(splitN), nonDindDirs.length);
