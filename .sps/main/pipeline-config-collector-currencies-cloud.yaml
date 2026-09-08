@@ -128,13 +128,44 @@ tasks:
               RUN_ESM="$RUN_ESM" \
               INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
               TEST_FILES="$TEST_FILES" \
-              npm run test:ci:collector || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-client-dynamodb" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files + lcov coverage report to COS
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-cloud-client-dynamodb.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test list for collector-cloud-client-dynamodb → test-results/$GIT_COMMIT/collector-cloud-client-dynamodb.txt" \
+              || echo "WARNING: Failed to upload test list for collector-cloud-client-dynamodb (non-fatal)"
+            LCOV_FILE="coverage/collector-cloud-client-dynamodb/lcov.info"
+            if [ -f "$LCOV_FILE" ]; then
+              curl -sf -X PUT \
+                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/collector-cloud-client-dynamodb/lcov.info" \
+                -H "Authorization: Bearer $IAM_TOKEN" \
+                -H "Content-Type: text/plain" \
+                --data-binary @"$LCOV_FILE" \
+                && echo "Uploaded lcov for collector-cloud-client-dynamodb → test-results/$GIT_COMMIT/coverage/collector-cloud-client-dynamodb/lcov.info" \
+                || echo "WARNING: Failed to upload lcov for collector-cloud-client-dynamodb (non-fatal)"
+            else
+              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+            fi
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
+          fi
 
           exit $LAST_EXIT
       - name: sign-artifact
@@ -231,13 +262,44 @@ tasks:
               RUN_ESM="$RUN_ESM" \
               INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
               TEST_FILES="$TEST_FILES" \
-              npm run test:ci:collector || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-client-kinesis" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files + lcov coverage report to COS
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-cloud-client-kinesis.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test list for collector-cloud-client-kinesis → test-results/$GIT_COMMIT/collector-cloud-client-kinesis.txt" \
+              || echo "WARNING: Failed to upload test list for collector-cloud-client-kinesis (non-fatal)"
+            LCOV_FILE="coverage/collector-cloud-client-kinesis/lcov.info"
+            if [ -f "$LCOV_FILE" ]; then
+              curl -sf -X PUT \
+                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/collector-cloud-client-kinesis/lcov.info" \
+                -H "Authorization: Bearer $IAM_TOKEN" \
+                -H "Content-Type: text/plain" \
+                --data-binary @"$LCOV_FILE" \
+                && echo "Uploaded lcov for collector-cloud-client-kinesis → test-results/$GIT_COMMIT/coverage/collector-cloud-client-kinesis/lcov.info" \
+                || echo "WARNING: Failed to upload lcov for collector-cloud-client-kinesis (non-fatal)"
+            else
+              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+            fi
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
+          fi
 
           exit $LAST_EXIT
       - name: sign-artifact
@@ -328,13 +390,44 @@ tasks:
               RUN_ESM="$RUN_ESM" \
               INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
               TEST_FILES="$TEST_FILES" \
-              npm run test:ci:collector || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-client-lambda" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files + lcov coverage report to COS
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-cloud-client-lambda.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test list for collector-cloud-client-lambda → test-results/$GIT_COMMIT/collector-cloud-client-lambda.txt" \
+              || echo "WARNING: Failed to upload test list for collector-cloud-client-lambda (non-fatal)"
+            LCOV_FILE="coverage/collector-cloud-client-lambda/lcov.info"
+            if [ -f "$LCOV_FILE" ]; then
+              curl -sf -X PUT \
+                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/collector-cloud-client-lambda/lcov.info" \
+                -H "Authorization: Bearer $IAM_TOKEN" \
+                -H "Content-Type: text/plain" \
+                --data-binary @"$LCOV_FILE" \
+                && echo "Uploaded lcov for collector-cloud-client-lambda → test-results/$GIT_COMMIT/coverage/collector-cloud-client-lambda/lcov.info" \
+                || echo "WARNING: Failed to upload lcov for collector-cloud-client-lambda (non-fatal)"
+            else
+              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+            fi
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
+          fi
 
           exit $LAST_EXIT
       - name: sign-artifact
@@ -425,13 +518,44 @@ tasks:
               RUN_ESM="$RUN_ESM" \
               INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
               TEST_FILES="$TEST_FILES" \
-              npm run test:ci:collector || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-client-s3" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files + lcov coverage report to COS
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-cloud-client-s3.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test list for collector-cloud-client-s3 → test-results/$GIT_COMMIT/collector-cloud-client-s3.txt" \
+              || echo "WARNING: Failed to upload test list for collector-cloud-client-s3 (non-fatal)"
+            LCOV_FILE="coverage/collector-cloud-client-s3/lcov.info"
+            if [ -f "$LCOV_FILE" ]; then
+              curl -sf -X PUT \
+                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/collector-cloud-client-s3/lcov.info" \
+                -H "Authorization: Bearer $IAM_TOKEN" \
+                -H "Content-Type: text/plain" \
+                --data-binary @"$LCOV_FILE" \
+                && echo "Uploaded lcov for collector-cloud-client-s3 → test-results/$GIT_COMMIT/coverage/collector-cloud-client-s3/lcov.info" \
+                || echo "WARNING: Failed to upload lcov for collector-cloud-client-s3 (non-fatal)"
+            else
+              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+            fi
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
+          fi
 
           exit $LAST_EXIT
       - name: sign-artifact
@@ -522,13 +646,44 @@ tasks:
               RUN_ESM="$RUN_ESM" \
               INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
               TEST_FILES="$TEST_FILES" \
-              npm run test:ci:collector || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-client-sns" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files + lcov coverage report to COS
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-cloud-client-sns.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test list for collector-cloud-client-sns → test-results/$GIT_COMMIT/collector-cloud-client-sns.txt" \
+              || echo "WARNING: Failed to upload test list for collector-cloud-client-sns (non-fatal)"
+            LCOV_FILE="coverage/collector-cloud-client-sns/lcov.info"
+            if [ -f "$LCOV_FILE" ]; then
+              curl -sf -X PUT \
+                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/collector-cloud-client-sns/lcov.info" \
+                -H "Authorization: Bearer $IAM_TOKEN" \
+                -H "Content-Type: text/plain" \
+                --data-binary @"$LCOV_FILE" \
+                && echo "Uploaded lcov for collector-cloud-client-sns → test-results/$GIT_COMMIT/coverage/collector-cloud-client-sns/lcov.info" \
+                || echo "WARNING: Failed to upload lcov for collector-cloud-client-sns (non-fatal)"
+            else
+              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+            fi
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
+          fi
 
           exit $LAST_EXIT
       - name: sign-artifact
@@ -619,13 +774,44 @@ tasks:
               RUN_ESM="$RUN_ESM" \
               INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
               TEST_FILES="$TEST_FILES" \
-              npm run test:ci:collector || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-client-sqs" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files + lcov coverage report to COS
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-cloud-client-sqs.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test list for collector-cloud-client-sqs → test-results/$GIT_COMMIT/collector-cloud-client-sqs.txt" \
+              || echo "WARNING: Failed to upload test list for collector-cloud-client-sqs (non-fatal)"
+            LCOV_FILE="coverage/collector-cloud-client-sqs/lcov.info"
+            if [ -f "$LCOV_FILE" ]; then
+              curl -sf -X PUT \
+                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/collector-cloud-client-sqs/lcov.info" \
+                -H "Authorization: Bearer $IAM_TOKEN" \
+                -H "Content-Type: text/plain" \
+                --data-binary @"$LCOV_FILE" \
+                && echo "Uploaded lcov for collector-cloud-client-sqs → test-results/$GIT_COMMIT/coverage/collector-cloud-client-sqs/lcov.info" \
+                || echo "WARNING: Failed to upload lcov for collector-cloud-client-sqs (non-fatal)"
+            else
+              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+            fi
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
+          fi
 
           exit $LAST_EXIT
       - name: sign-artifact
@@ -718,13 +904,44 @@ tasks:
               RUN_ESM="$RUN_ESM" \
               INSTANA_CONNECT_AZURE_BLOB_ENDPOINT="http://127.0.0.1:10000/devstoreaccount1" \
               TEST_FILES="$TEST_FILES" \
-              npm run test:ci:collector || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-storage-blob" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files + lcov coverage report to COS
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-cloud-storage-blob.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test list for collector-cloud-storage-blob → test-results/$GIT_COMMIT/collector-cloud-storage-blob.txt" \
+              || echo "WARNING: Failed to upload test list for collector-cloud-storage-blob (non-fatal)"
+            LCOV_FILE="coverage/collector-cloud-storage-blob/lcov.info"
+            if [ -f "$LCOV_FILE" ]; then
+              curl -sf -X PUT \
+                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/collector-cloud-storage-blob/lcov.info" \
+                -H "Authorization: Bearer $IAM_TOKEN" \
+                -H "Content-Type: text/plain" \
+                --data-binary @"$LCOV_FILE" \
+                && echo "Uploaded lcov for collector-cloud-storage-blob → test-results/$GIT_COMMIT/coverage/collector-cloud-storage-blob/lcov.info" \
+                || echo "WARNING: Failed to upload lcov for collector-cloud-storage-blob (non-fatal)"
+            else
+              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+            fi
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
+          fi
 
           exit $LAST_EXIT
       - name: sign-artifact
@@ -816,13 +1033,44 @@ tasks:
               INSTANA_CONNECT_PUBSUB_EMULATOR_HOST="127.0.0.1:8085" \
               GCP_PROJECT="test-project" \
               TEST_FILES="$TEST_FILES" \
-              npm run test:ci:collector || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-pubsub" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files + lcov coverage report to COS
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-cloud-pubsub.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test list for collector-cloud-pubsub → test-results/$GIT_COMMIT/collector-cloud-pubsub.txt" \
+              || echo "WARNING: Failed to upload test list for collector-cloud-pubsub (non-fatal)"
+            LCOV_FILE="coverage/collector-cloud-pubsub/lcov.info"
+            if [ -f "$LCOV_FILE" ]; then
+              curl -sf -X PUT \
+                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/collector-cloud-pubsub/lcov.info" \
+                -H "Authorization: Bearer $IAM_TOKEN" \
+                -H "Content-Type: text/plain" \
+                --data-binary @"$LCOV_FILE" \
+                && echo "Uploaded lcov for collector-cloud-pubsub → test-results/$GIT_COMMIT/coverage/collector-cloud-pubsub/lcov.info" \
+                || echo "WARNING: Failed to upload lcov for collector-cloud-pubsub (non-fatal)"
+            else
+              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+            fi
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
+          fi
 
           exit $LAST_EXIT
       - name: sign-artifact
@@ -914,13 +1162,44 @@ tasks:
               GCP_PROJECT="test-project" \
               GCS_SERVICE_ACCOUNT_EMAIL="test-service-account@test-project.iam.gserviceaccount.com" \
               TEST_FILES="$TEST_FILES" \
-              npm run test:ci:collector || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-storage" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files + lcov coverage report to COS
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-cloud-storage.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test list for collector-cloud-storage → test-results/$GIT_COMMIT/collector-cloud-storage.txt" \
+              || echo "WARNING: Failed to upload test list for collector-cloud-storage (non-fatal)"
+            LCOV_FILE="coverage/collector-cloud-storage/lcov.info"
+            if [ -f "$LCOV_FILE" ]; then
+              curl -sf -X PUT \
+                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/collector-cloud-storage/lcov.info" \
+                -H "Authorization: Bearer $IAM_TOKEN" \
+                -H "Content-Type: text/plain" \
+                --data-binary @"$LCOV_FILE" \
+                && echo "Uploaded lcov for collector-cloud-storage → test-results/$GIT_COMMIT/coverage/collector-cloud-storage/lcov.info" \
+                || echo "WARNING: Failed to upload lcov for collector-cloud-storage (non-fatal)"
+            else
+              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+            fi
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
+          fi
 
           exit $LAST_EXIT
       - name: sign-artifact
@@ -1017,13 +1296,44 @@ tasks:
               RUN_ESM="$RUN_ESM" \
               INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
               TEST_FILES="$TEST_FILES" \
-              npm run test:ci:collector || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-aws-sdk" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # upload executed test files + lcov coverage report to COS
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-cloud-aws-sdk.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test list for collector-cloud-aws-sdk → test-results/$GIT_COMMIT/collector-cloud-aws-sdk.txt" \
+              || echo "WARNING: Failed to upload test list for collector-cloud-aws-sdk (non-fatal)"
+            LCOV_FILE="coverage/collector-cloud-aws-sdk/lcov.info"
+            if [ -f "$LCOV_FILE" ]; then
+              curl -sf -X PUT \
+                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/collector-cloud-aws-sdk/lcov.info" \
+                -H "Authorization: Bearer $IAM_TOKEN" \
+                -H "Content-Type: text/plain" \
+                --data-binary @"$LCOV_FILE" \
+                && echo "Uploaded lcov for collector-cloud-aws-sdk → test-results/$GIT_COMMIT/coverage/collector-cloud-aws-sdk/lcov.info" \
+                || echo "WARNING: Failed to upload lcov for collector-cloud-aws-sdk (non-fatal)"
+            else
+              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+            fi
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
+          fi
 
           exit $LAST_EXIT
       - name: sign-artifact

@@ -34,7 +34,6 @@ const ALL_SIMPLE_TARGETS = [
   'autoprofile',
   'core-group',
   'opentelemetry',
-  'sonar',
   'pr-general',
   'pr-verify',
   'upload-currency-report'
@@ -302,7 +301,7 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
     extraEnvLines.push('GCS_SERVICE_ACCOUNT_EMAIL="test-service-account@test-project.iam.gserviceaccount.com" \\');
   }
   extraEnvLines.push('TEST_FILES="$TEST_FILES" \\');
-  scriptLines.push(...runWithRetryLines('test:ci:collector', extraEnvLines));
+  scriptLines.push(...runWithRetryLines(`coverage-ci --npm_command="test:ci:collector" --report_dir="${taskSlug}"`, extraEnvLines));
   scriptLines.push(...uploadTestFilesLines(taskSlug));
   scriptLines.push('exit $LAST_EXIT');
 
@@ -432,13 +431,33 @@ function runWithRetryLines(npmScript, envLines = [], withEsm = true) {
   ];
 }
 
+function uploadLcovLines(taskSlug) {
+  return [
+    '',
+    '# upload lcov coverage report to COS',
+    `LCOV_FILE="coverage/${taskSlug}/lcov.info"`,
+    'if [ -f "$LCOV_FILE" ] && [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then',
+    `  curl -sf -X PUT \\`,
+    `    "${COS_ENDPOINT}/${COS_BUCKET}/test-results/\$GIT_COMMIT/coverage/${taskSlug}/lcov.info" \\`,
+    '    -H "Authorization: Bearer $IAM_TOKEN" \\',
+    '    -H "Content-Type: text/plain" \\',
+    `    --data-binary @"\$LCOV_FILE" \\`,
+    `    && echo "Uploaded lcov for ${taskSlug} → test-results/\$GIT_COMMIT/coverage/${taskSlug}/lcov.info" \\`,
+    `    || echo "WARNING: Failed to upload lcov for ${taskSlug} (non-fatal)"`,
+    'else',
+    '  echo "WARNING: lcov file not found or credentials unavailable — skipping lcov upload"',
+    'fi',
+    ''
+  ];
+}
+
 const COS_BUCKET = 'itp-nodejs-tracer-sps';
 const COS_ENDPOINT = 'https://s3.eu-de.cloud-object-storage.appdomain.cloud';
 
 function uploadTestFilesLines(taskSlug) {
   return [
     '',
-    '# upload executed test files to COS for coverage verification',
+    '# upload executed test files + lcov coverage report to COS',
     'COS_API_KEY="$(get_secret ibm-object-storage-api-key)"',
     'GIT_COMMIT="$(get_env HEAD_SHA "")"',
     'if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then',
@@ -451,10 +470,22 @@ function uploadTestFilesLines(taskSlug) {
     '    -H "Authorization: Bearer $IAM_TOKEN" \\',
     '    -H "Content-Type: text/plain" \\',
     '    --data-binary "$(echo "$TEST_FILES" | tr \' \' \'\\n\' | sort)" \\',
-    `    && echo "Uploaded test coverage for ${taskSlug} → test-results/\$GIT_COMMIT/${taskSlug}.txt" \\`,
-    '    || echo "WARNING: Failed to upload test coverage for ' + taskSlug + ' (non-fatal)"',
+    `    && echo "Uploaded test list for ${taskSlug} → test-results/\$GIT_COMMIT/${taskSlug}.txt" \\`,
+    '    || echo "WARNING: Failed to upload test list for ' + taskSlug + ' (non-fatal)"',
+    `  LCOV_FILE="coverage/${taskSlug}/lcov.info"`,
+    '  if [ -f "$LCOV_FILE" ]; then',
+    `    curl -sf -X PUT \\`,
+    `      "${COS_ENDPOINT}/${COS_BUCKET}/test-results/\$GIT_COMMIT/coverage/${taskSlug}/lcov.info" \\`,
+    '      -H "Authorization: Bearer $IAM_TOKEN" \\',
+    '      -H "Content-Type: text/plain" \\',
+    `      --data-binary @"\$LCOV_FILE" \\`,
+    `      && echo "Uploaded lcov for ${taskSlug} → test-results/\$GIT_COMMIT/coverage/${taskSlug}/lcov.info" \\`,
+    `      || echo "WARNING: Failed to upload lcov for ${taskSlug} (non-fatal)"`,
+    '  else',
+    `    echo "WARNING: lcov not found at \$LCOV_FILE — skipping lcov upload"`,
+    '  fi',
     'else',
-    '  echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"',
+    '  echo "WARNING: COS credentials or git commit unavailable — skipping uploads"',
     'fi',
     ''
   ];
@@ -567,7 +598,7 @@ function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv
   // packages/collector/test/hooks.js with checkESMApp). Simple-target packages
   // have no such hook and would run all tests unconditionally regardless of the
   // flag, producing incorrect results when RUN_ESM is set.
-  scriptLines.push(...runWithRetryLines(testScript, simpleEnvLines, supportsEsm));
+  scriptLines.push(...runWithRetryLines(`coverage-ci --npm_command="${testScript}" --report_dir="${taskSlug}"`, simpleEnvLines, supportsEsm));
   scriptLines.push(...uploadTestFilesLines(taskSlug));
   scriptLines.push('exit $LAST_EXIT');
 
@@ -632,6 +663,43 @@ function buildGeneralTasks() {
 
 function buildSonarTask(rootTask = 'pr-code-checks') {
   const isPR = rootTask === 'pr-code-checks';
+
+  // Lines shared between PR and main: fetch IAM token + download all lcov reports from COS
+  const downloadLcovLines = [
+    '# ── Download lcov coverage reports from COS ──────────────────────────────',
+    'COS_API_KEY="$(get_secret ibm-object-storage-api-key)"',
+    'GIT_COMMIT="$(get_env HEAD_SHA "")"',
+    'LCOV_PATHS=""',
+    'if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then',
+    '  IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \\',
+    '    -H "Content-Type: application/x-www-form-urlencoded" \\',
+    '    -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \\',
+    '    | grep -o \'"access_token":"[^"]*"\' | sed \'s/"access_token":"//;s/"//\')',
+    `  PREFIX="test-results/\$GIT_COMMIT/coverage"`,
+    `  SLUGS=$(curl -sf \\`,
+    `    "${COS_ENDPOINT}/${COS_BUCKET}?prefix=\$PREFIX/&delimiter=/" \\`,
+    '    -H "Authorization: Bearer $IAM_TOKEN" \\',
+    '    | grep -oP \'(?<=<Prefix>)[^<]+(?=</Prefix>)\' \\',
+    '    | grep -v "^$PREFIX/$" \\',
+    '    | sed "s|$PREFIX/||;s|/||")',
+    '  mkdir -p coverage',
+    '  for SLUG in $SLUGS; do',
+    '    mkdir -p "coverage/$SLUG"',
+    `    curl -sf \\`,
+    `      "${COS_ENDPOINT}/${COS_BUCKET}/\$PREFIX/\$SLUG/lcov.info" \\`,
+    '      -H "Authorization: Bearer $IAM_TOKEN" \\',
+    '      -o "coverage/$SLUG/lcov.info" \\',
+    '      && echo "  ✔ downloaded lcov for $SLUG" \\',
+    '      || echo "  – no lcov for $SLUG (skipping)"',
+    '  done',
+    '  LCOV_PATHS=$(find coverage -name "lcov.info" | tr \'\\n\' \',\' | sed \'s/,$//\')',
+    '  echo "LCOV_PATHS=$LCOV_PATHS"',
+    'else',
+    '  echo "WARNING: COS credentials or git commit unavailable — skipping lcov download"',
+    'fi',
+    '',
+  ].join('\n');
+
   const script = isPR
     ? [
         '#!/usr/bin/env bash',
@@ -654,6 +722,7 @@ function buildSonarTask(rootTask = 'pr-code-checks') {
         'echo "Running ESLint..."',
         'npx eslint packages/ -f json -o eslint-report.json || true',
         '',
+        downloadLcovLines,
         'echo "Installing Sonar scanner..."',
         'npm install -g @sonar/scan@4.4.0',
         '',
@@ -662,15 +731,20 @@ function buildSonarTask(rootTask = 'pr-code-checks') {
         '    echo "PR is draft — skipping Sonar scan."',
         '  else',
         '    echo "Running Sonar scan for PR #${PR_NUMBER}..."',
+        '    LCOV_ARGS=""',
+        '    [ -n "$LCOV_PATHS" ] && LCOV_ARGS="-Dsonar.javascript.lcov.reportPaths=$LCOV_PATHS"',
         '    sonar -Dsonar.token="$SONAR_TOKEN" \\',
         '          -Dsonar.pullrequest.key="$PR_NUMBER" \\',
         '          -Dsonar.pullrequest.branch="$PR_BRANCH" \\',
         '          -Dsonar.pullrequest.base="$TARGET_BRANCH" \\',
-        '          -Dsonar.newCode.referenceBranch="$TARGET_BRANCH"',
+        '          -Dsonar.newCode.referenceBranch="$TARGET_BRANCH" \\',
+        '          $LCOV_ARGS',
         '  fi',
         'else',
         '  echo "No PR context found — running branch analysis..."',
-        '  sonar -Dsonar.token="$SONAR_TOKEN"',
+        '  LCOV_ARGS=""',
+        '  [ -n "$LCOV_PATHS" ] && LCOV_ARGS="-Dsonar.javascript.lcov.reportPaths=$LCOV_PATHS"',
+        '  sonar -Dsonar.token="$SONAR_TOKEN" $LCOV_ARGS',
         'fi'
       ].join('\n')
     : [
@@ -689,11 +763,14 @@ function buildSonarTask(rootTask = 'pr-code-checks') {
         'echo "Running ESLint..."',
         'npx eslint packages/ -f json -o eslint-report.json || true',
         '',
+        downloadLcovLines,
         'echo "Installing SonarCloud scanner..."',
         'npm install -g @sonar/scan@4.4.0',
         '',
         'echo "Running main branch Sonar analysis..."',
-        'sonar -Dsonar.token="$SONAR_TOKEN"'
+        'LCOV_ARGS=""',
+        '[ -n "$LCOV_PATHS" ] && LCOV_ARGS="-Dsonar.javascript.lcov.reportPaths=$LCOV_PATHS"',
+        'sonar -Dsonar.token="$SONAR_TOKEN" $LCOV_ARGS'
       ].join('\n');
 
   return {
@@ -926,7 +1003,6 @@ function generateOne(t) {
       }
     };
     writeDefaultConfig(prConfig, mainConfig);
-    generateOne('sonar');
 
     generateOne('pr-general');
   } else if (t.startsWith('collector-currencies-')) {
@@ -1063,13 +1139,6 @@ function generateOne(t) {
     }
     const prConfig = baseConfig(fanOutTasks);
     writeConfig(t, prConfig, toMainConfig(prConfig));
-  } else if (t === 'sonar') {
-    const prConfig = baseConfig({ 'sonar-analysis': buildSonarTask('pr-code-checks') });
-    const spsDir = path.join(__dirname, '..');
-    const output = yaml.dump(prConfig, { lineWidth: -1, quotingType: "'", forceQuotes: false });
-    const prPath = path.join(spsDir, 'pr', 'pipeline-config-sonar.yaml');
-    fs.writeFileSync(prPath, output);
-    console.log(`Written: ${prPath}`);
   } else if (t === 'pr-general') {
     const prConfig = baseConfig(buildGeneralTasks());
     const spsDir = path.join(__dirname, '..');
@@ -1312,7 +1381,8 @@ function generateOne(t) {
             { name: 'build-artifact', when: 'false' },
             { name: 'scan-artifact', when: 'false' }
           ]
-        }
+        },
+        'sonar-analysis': buildSonarTask('pr-code-checks')
       }
     };
     const output = yaml.dump(prConfig, { lineWidth: -1, quotingType: "'", forceQuotes: false });

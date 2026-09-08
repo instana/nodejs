@@ -222,3 +222,99 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
+  sonar-analysis:
+    from: pr-code-checks
+    displayName: sonar-analysis
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        when: 'false'
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        displayName: sonar-analysis
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          SONAR_TOKEN="$(get_secret sonar-token)"
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "ERROR: sonar-token pipeline property is not set — skipping Sonar analysis."
+            exit 1
+          fi
+
+          PR_NUMBER="$(get_env pr-id "")"
+          PR_BRANCH="$(get_env pr-branch "")"
+          TARGET_BRANCH="$(get_env target-branch "main")"
+          PR_STATE="$(get_env pr-state "")"
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          echo "Running ESLint..."
+          npx eslint packages/ -f json -o eslint-report.json || true
+
+          # ── Download lcov coverage reports from COS ──────────────────────────────
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          LCOV_PATHS=""
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            PREFIX="test-results/$GIT_COMMIT/coverage"
+            SLUGS=$(curl -sf \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps?prefix=$PREFIX/&delimiter=/" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              | grep -oP '(?<=<Prefix>)[^<]+(?=</Prefix>)' \
+              | grep -v "^$PREFIX/$" \
+              | sed "s|$PREFIX/||;s|/||")
+            mkdir -p coverage
+            for SLUG in $SLUGS; do
+              mkdir -p "coverage/$SLUG"
+              curl -sf \
+                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/$PREFIX/$SLUG/lcov.info" \
+                -H "Authorization: Bearer $IAM_TOKEN" \
+                -o "coverage/$SLUG/lcov.info" \
+                && echo "  ✔ downloaded lcov for $SLUG" \
+                || echo "  – no lcov for $SLUG (skipping)"
+            done
+            LCOV_PATHS=$(find coverage -name "lcov.info" | tr '\n' ',' | sed 's/,$//')
+            echo "LCOV_PATHS=$LCOV_PATHS"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping lcov download"
+          fi
+
+          echo "Installing Sonar scanner..."
+          npm install -g @sonar/scan@4.4.0
+
+          if [ -n "$PR_NUMBER" ]; then
+            if [ "$PR_STATE" = "draft" ]; then
+              echo "PR is draft — skipping Sonar scan."
+            else
+              echo "Running Sonar scan for PR #${PR_NUMBER}..."
+              LCOV_ARGS=""
+              [ -n "$LCOV_PATHS" ] && LCOV_ARGS="-Dsonar.javascript.lcov.reportPaths=$LCOV_PATHS"
+              sonar -Dsonar.token="$SONAR_TOKEN" \
+                    -Dsonar.pullrequest.key="$PR_NUMBER" \
+                    -Dsonar.pullrequest.branch="$PR_BRANCH" \
+                    -Dsonar.pullrequest.base="$TARGET_BRANCH" \
+                    -Dsonar.newCode.referenceBranch="$TARGET_BRANCH" \
+                    $LCOV_ARGS
+            fi
+          else
+            echo "No PR context found — running branch analysis..."
+            LCOV_ARGS=""
+            [ -n "$LCOV_PATHS" ] && LCOV_ARGS="-Dsonar.javascript.lcov.reportPaths=$LCOV_PATHS"
+            sonar -Dsonar.token="$SONAR_TOKEN" $LCOV_ARGS
+          fi

@@ -111,7 +111,7 @@ tasks:
               CI=true \
               RUN_ESM="$RUN_ESM" \
               TEST_FILES="$TEST_FILES" \
-              npm run test:ci:collector || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="misc-1" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
@@ -119,7 +119,7 @@ tasks:
             retry=$((retry + 1))
           done
 
-          # upload executed test files to COS for coverage verification
+          # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
@@ -132,10 +132,22 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for misc-1 → test-results/$GIT_COMMIT/misc-1.txt" \
-              || echo "WARNING: Failed to upload test coverage for misc-1 (non-fatal)"
+              && echo "Uploaded test list for misc-1 → test-results/$GIT_COMMIT/misc-1.txt" \
+              || echo "WARNING: Failed to upload test list for misc-1 (non-fatal)"
+            LCOV_FILE="coverage/misc-1/lcov.info"
+            if [ -f "$LCOV_FILE" ]; then
+              curl -sf -X PUT \
+                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/misc-1/lcov.info" \
+                -H "Authorization: Bearer $IAM_TOKEN" \
+                -H "Content-Type: text/plain" \
+                --data-binary @"$LCOV_FILE" \
+                && echo "Uploaded lcov for misc-1 → test-results/$GIT_COMMIT/coverage/misc-1/lcov.info" \
+                || echo "WARNING: Failed to upload lcov for misc-1 (non-fatal)"
+            else
+              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+            fi
           else
-            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+            echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
           exit $LAST_EXIT
@@ -210,7 +222,7 @@ tasks:
               CI=true \
               RUN_ESM="$RUN_ESM" \
               TEST_FILES="$TEST_FILES" \
-              npm run test:ci:collector || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="misc-2" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
@@ -218,7 +230,7 @@ tasks:
             retry=$((retry + 1))
           done
 
-          # upload executed test files to COS for coverage verification
+          # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
@@ -231,10 +243,22 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for misc-2 → test-results/$GIT_COMMIT/misc-2.txt" \
-              || echo "WARNING: Failed to upload test coverage for misc-2 (non-fatal)"
+              && echo "Uploaded test list for misc-2 → test-results/$GIT_COMMIT/misc-2.txt" \
+              || echo "WARNING: Failed to upload test list for misc-2 (non-fatal)"
+            LCOV_FILE="coverage/misc-2/lcov.info"
+            if [ -f "$LCOV_FILE" ]; then
+              curl -sf -X PUT \
+                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/misc-2/lcov.info" \
+                -H "Authorization: Bearer $IAM_TOKEN" \
+                -H "Content-Type: text/plain" \
+                --data-binary @"$LCOV_FILE" \
+                && echo "Uploaded lcov for misc-2 → test-results/$GIT_COMMIT/coverage/misc-2/lcov.info" \
+                || echo "WARNING: Failed to upload lcov for misc-2 (non-fatal)"
+            else
+              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+            fi
           else
-            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+            echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
           exit $LAST_EXIT
@@ -307,7 +331,7 @@ tasks:
               CI=true \
               RUN_ESM="$RUN_ESM" \
               TEST_FILES="$TEST_FILES" \
-              npm run test:ci:collector || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="misc-3" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
@@ -315,7 +339,7 @@ tasks:
             retry=$((retry + 1))
           done
 
-          # upload executed test files to COS for coverage verification
+          # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
@@ -328,10 +352,22 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for misc-3 → test-results/$GIT_COMMIT/misc-3.txt" \
-              || echo "WARNING: Failed to upload test coverage for misc-3 (non-fatal)"
+              && echo "Uploaded test list for misc-3 → test-results/$GIT_COMMIT/misc-3.txt" \
+              || echo "WARNING: Failed to upload test list for misc-3 (non-fatal)"
+            LCOV_FILE="coverage/misc-3/lcov.info"
+            if [ -f "$LCOV_FILE" ]; then
+              curl -sf -X PUT \
+                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/misc-3/lcov.info" \
+                -H "Authorization: Bearer $IAM_TOKEN" \
+                -H "Content-Type: text/plain" \
+                --data-binary @"$LCOV_FILE" \
+                && echo "Uploaded lcov for misc-3 → test-results/$GIT_COMMIT/coverage/misc-3/lcov.info" \
+                || echo "WARNING: Failed to upload lcov for misc-3 (non-fatal)"
+            else
+              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+            fi
           else
-            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+            echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
           exit $LAST_EXIT
@@ -395,7 +431,7 @@ tasks:
               CI=true \
               RUN_ESM="$RUN_ESM" \
               TEST_FILES="$TEST_FILES" \
-              npm run test:ci:collector || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-unit" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
@@ -403,7 +439,7 @@ tasks:
             retry=$((retry + 1))
           done
 
-          # upload executed test files to COS for coverage verification
+          # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
@@ -416,10 +452,22 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for collector-unit → test-results/$GIT_COMMIT/collector-unit.txt" \
-              || echo "WARNING: Failed to upload test coverage for collector-unit (non-fatal)"
+              && echo "Uploaded test list for collector-unit → test-results/$GIT_COMMIT/collector-unit.txt" \
+              || echo "WARNING: Failed to upload test list for collector-unit (non-fatal)"
+            LCOV_FILE="coverage/collector-unit/lcov.info"
+            if [ -f "$LCOV_FILE" ]; then
+              curl -sf -X PUT \
+                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/collector-unit/lcov.info" \
+                -H "Authorization: Bearer $IAM_TOKEN" \
+                -H "Content-Type: text/plain" \
+                --data-binary @"$LCOV_FILE" \
+                && echo "Uploaded lcov for collector-unit → test-results/$GIT_COMMIT/coverage/collector-unit/lcov.info" \
+                || echo "WARNING: Failed to upload lcov for collector-unit (non-fatal)"
+            else
+              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+            fi
           else
-            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+            echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
           exit $LAST_EXIT
@@ -509,7 +557,7 @@ tasks:
               CI=true \
               RUN_ESM="$RUN_ESM" \
               TEST_FILES="$TEST_FILES" \
-              npm run test:ci:collector || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="misc-dind" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
@@ -517,7 +565,7 @@ tasks:
             retry=$((retry + 1))
           done
 
-          # upload executed test files to COS for coverage verification
+          # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
@@ -530,10 +578,22 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for misc-dind → test-results/$GIT_COMMIT/misc-dind.txt" \
-              || echo "WARNING: Failed to upload test coverage for misc-dind (non-fatal)"
+              && echo "Uploaded test list for misc-dind → test-results/$GIT_COMMIT/misc-dind.txt" \
+              || echo "WARNING: Failed to upload test list for misc-dind (non-fatal)"
+            LCOV_FILE="coverage/misc-dind/lcov.info"
+            if [ -f "$LCOV_FILE" ]; then
+              curl -sf -X PUT \
+                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/misc-dind/lcov.info" \
+                -H "Authorization: Bearer $IAM_TOKEN" \
+                -H "Content-Type: text/plain" \
+                --data-binary @"$LCOV_FILE" \
+                && echo "Uploaded lcov for misc-dind → test-results/$GIT_COMMIT/coverage/misc-dind/lcov.info" \
+                || echo "WARNING: Failed to upload lcov for misc-dind (non-fatal)"
+            else
+              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+            fi
           else
-            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+            echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
           exit $LAST_EXIT

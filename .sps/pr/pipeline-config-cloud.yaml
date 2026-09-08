@@ -114,7 +114,7 @@ tasks:
               HOME="$HOME" \
               CI=true \
               INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
-              npm run test:ci:aws-lambda || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:aws-lambda" --report_dir="aws-lambda" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
@@ -122,7 +122,7 @@ tasks:
             retry=$((retry + 1))
           done
 
-          # upload executed test files to COS for coverage verification
+          # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
@@ -135,10 +135,22 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for aws-lambda → test-results/$GIT_COMMIT/aws-lambda.txt" \
-              || echo "WARNING: Failed to upload test coverage for aws-lambda (non-fatal)"
+              && echo "Uploaded test list for aws-lambda → test-results/$GIT_COMMIT/aws-lambda.txt" \
+              || echo "WARNING: Failed to upload test list for aws-lambda (non-fatal)"
+            LCOV_FILE="coverage/aws-lambda/lcov.info"
+            if [ -f "$LCOV_FILE" ]; then
+              curl -sf -X PUT \
+                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/aws-lambda/lcov.info" \
+                -H "Authorization: Bearer $IAM_TOKEN" \
+                -H "Content-Type: text/plain" \
+                --data-binary @"$LCOV_FILE" \
+                && echo "Uploaded lcov for aws-lambda → test-results/$GIT_COMMIT/coverage/aws-lambda/lcov.info" \
+                || echo "WARNING: Failed to upload lcov for aws-lambda (non-fatal)"
+            else
+              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+            fi
           else
-            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+            echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
           exit $LAST_EXIT
@@ -188,7 +200,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
-              npm run test:ci:aws-fargate || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:aws-fargate" --report_dir="aws-fargate" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
@@ -196,7 +208,7 @@ tasks:
             retry=$((retry + 1))
           done
 
-          # upload executed test files to COS for coverage verification
+          # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
@@ -209,10 +221,22 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for aws-fargate → test-results/$GIT_COMMIT/aws-fargate.txt" \
-              || echo "WARNING: Failed to upload test coverage for aws-fargate (non-fatal)"
+              && echo "Uploaded test list for aws-fargate → test-results/$GIT_COMMIT/aws-fargate.txt" \
+              || echo "WARNING: Failed to upload test list for aws-fargate (non-fatal)"
+            LCOV_FILE="coverage/aws-fargate/lcov.info"
+            if [ -f "$LCOV_FILE" ]; then
+              curl -sf -X PUT \
+                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/aws-fargate/lcov.info" \
+                -H "Authorization: Bearer $IAM_TOKEN" \
+                -H "Content-Type: text/plain" \
+                --data-binary @"$LCOV_FILE" \
+                && echo "Uploaded lcov for aws-fargate → test-results/$GIT_COMMIT/coverage/aws-fargate/lcov.info" \
+                || echo "WARNING: Failed to upload lcov for aws-fargate (non-fatal)"
+            else
+              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+            fi
           else
-            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+            echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
           exit $LAST_EXIT
@@ -262,7 +286,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
-              npm run test:ci:azure-container-services || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:azure-container-services" --report_dir="azure-container-services" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
@@ -270,7 +294,7 @@ tasks:
             retry=$((retry + 1))
           done
 
-          # upload executed test files to COS for coverage verification
+          # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
@@ -283,10 +307,22 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for azure-container-services → test-results/$GIT_COMMIT/azure-container-services.txt" \
-              || echo "WARNING: Failed to upload test coverage for azure-container-services (non-fatal)"
+              && echo "Uploaded test list for azure-container-services → test-results/$GIT_COMMIT/azure-container-services.txt" \
+              || echo "WARNING: Failed to upload test list for azure-container-services (non-fatal)"
+            LCOV_FILE="coverage/azure-container-services/lcov.info"
+            if [ -f "$LCOV_FILE" ]; then
+              curl -sf -X PUT \
+                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/azure-container-services/lcov.info" \
+                -H "Authorization: Bearer $IAM_TOKEN" \
+                -H "Content-Type: text/plain" \
+                --data-binary @"$LCOV_FILE" \
+                && echo "Uploaded lcov for azure-container-services → test-results/$GIT_COMMIT/coverage/azure-container-services/lcov.info" \
+                || echo "WARNING: Failed to upload lcov for azure-container-services (non-fatal)"
+            else
+              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+            fi
           else
-            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+            echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
           exit $LAST_EXIT
@@ -336,7 +372,7 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
-              npm run test:ci:google-cloud-run || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:google-cloud-run" --report_dir="google-cloud-run" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
@@ -344,7 +380,7 @@ tasks:
             retry=$((retry + 1))
           done
 
-          # upload executed test files to COS for coverage verification
+          # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(get_env HEAD_SHA "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
@@ -357,10 +393,22 @@ tasks:
               -H "Authorization: Bearer $IAM_TOKEN" \
               -H "Content-Type: text/plain" \
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
-              && echo "Uploaded test coverage for google-cloud-run → test-results/$GIT_COMMIT/google-cloud-run.txt" \
-              || echo "WARNING: Failed to upload test coverage for google-cloud-run (non-fatal)"
+              && echo "Uploaded test list for google-cloud-run → test-results/$GIT_COMMIT/google-cloud-run.txt" \
+              || echo "WARNING: Failed to upload test list for google-cloud-run (non-fatal)"
+            LCOV_FILE="coverage/google-cloud-run/lcov.info"
+            if [ -f "$LCOV_FILE" ]; then
+              curl -sf -X PUT \
+                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/google-cloud-run/lcov.info" \
+                -H "Authorization: Bearer $IAM_TOKEN" \
+                -H "Content-Type: text/plain" \
+                --data-binary @"$LCOV_FILE" \
+                && echo "Uploaded lcov for google-cloud-run → test-results/$GIT_COMMIT/coverage/google-cloud-run/lcov.info" \
+                || echo "WARNING: Failed to upload lcov for google-cloud-run (non-fatal)"
+            else
+              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+            fi
           else
-            echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"
+            echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
           exit $LAST_EXIT
