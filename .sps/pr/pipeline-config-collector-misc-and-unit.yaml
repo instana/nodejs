@@ -91,7 +91,6 @@ tasks:
             test/integration/misc/disabled \
             test/integration/misc/immediate \
             test/integration/misc/invalid_app \
-            test/integration/misc/logger_spans \
             -name '*.test.js' \
             -not -path '*/node_modules/*' \
             | sort | tr '\n' ' ')
@@ -191,8 +190,7 @@ tasks:
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
-            test/integration/misc/long_agent_communication \
-            test/integration/misc/long_profiling \
+            test/integration/misc/logger_spans \
             test/integration/misc/native_esm \
             test/integration/misc/native_module_retry \
             test/integration/misc/open_tracing \

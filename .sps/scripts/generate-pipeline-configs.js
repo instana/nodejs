@@ -30,6 +30,7 @@ const ALL_CURRENCY_GROUPS = fs.readdirSync(CURRENCIES_DIR).map(g => `collector-c
 const ALL_SIMPLE_TARGETS = [
   'collector-metrics',
   'collector-misc-and-unit',
+  'long-running',
   'cloud',
   'autoprofile',
   'core-group',
@@ -1053,7 +1054,8 @@ function generateOne(t) {
       process.exit(1);
     }
 
-    // All non-dind dirs, sorted alphabetically
+    // All non-dind dirs, sorted alphabetically.
+    // long_* folders are excluded here — they run in the dedicated long-running pipeline
     const allDirs = fs.existsSync(miscDir)
       ? fs
           .readdirSync(miscDir, { withFileTypes: true })
@@ -1061,7 +1063,7 @@ function generateOne(t) {
           .map(e => e.name)
           .sort()
       : [];
-    const nonDindDirs = allDirs.filter(d => !dindSet.has(d));
+    const nonDindDirs = allDirs.filter(d => !dindSet.has(d) && !d.startsWith('long_'));
 
     const splitRaw = fs.readFileSync(miscSplitPath, 'utf-8').trim();
     const splitN = Number(splitRaw);
@@ -1389,6 +1391,85 @@ function generateOne(t) {
     const prPath = path.join(spsDir, 'pr', 'pipeline-config-pr-verify.yaml');
     fs.writeFileSync(prPath, output);
     console.log(`Written: ${prPath}`);
+  } else if (t === 'long-running') {
+    // Dedicated pipeline for test:ci:long-running.
+    // Runs collector tests under test/integration/misc/long_*/ with CI_LONG_RUNNING=true.
+    const scriptLines = [
+      '#!/usr/bin/env bash',
+      'set -eo pipefail',
+      '',
+      nodeVersionSwitchScript(),
+      '',
+      'cd "$WORKSPACE/$(load_repo app-repo path)"',
+      'npm install --loglevel warn --foreground-scripts',
+      'node bin/create-version-test-folders.js',
+      '',
+      ...runWithRetryLines('test:ci:long-running', ['CI_LONG_RUNNING=true \\'], false)
+    ];
+    scriptLines.push('exit $LAST_EXIT');
+
+    const mainConfig = {
+      version: '2',
+      tasks: {
+        'code-build': {
+          displayName: 'setup',
+          runtimeClassName: 'large',
+          steps: [
+            { name: 'peer-review', when: 'false' },
+            { name: 'detect-secrets', when: 'false' },
+            { name: 'compliance-checks', when: 'false' },
+            {
+              name: 'unit-test',
+              displayName: 'npm-install',
+              image: NODE_IMAGE,
+              script: [
+                '#!/usr/bin/env bash',
+                'set -eo pipefail',
+                nodeVersionSwitchScript(),
+                '',
+                'cd "$WORKSPACE/$(load_repo app-repo path)"',
+                'npm install --loglevel warn --foreground-scripts',
+                'node bin/create-version-test-folders.js'
+              ].join('\n')
+            },
+            { name: 'sign-artifact', when: 'false' },
+            { name: 'build-artifact', when: 'false' },
+            { name: 'scan-artifact', when: 'false' }
+          ]
+        },
+        'code-pr-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
+        'code-ci-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
+        'deploy-checks': { when: false },
+        'deploy-release': { when: false },
+        'code-build-long-running': {
+          from: 'code-build',
+          displayName: 'long-running',
+          runtimeClassName: 'large',
+          steps: [
+            { name: 'peer-review', when: 'false' },
+            { name: 'detect-secrets', when: 'false' },
+            { name: 'compliance-checks', when: 'false' },
+            { name: 'unit-test', displayName: 'long-running', image: NODE_IMAGE, script: scriptLines.join('\n') },
+            { name: 'sign-artifact', when: 'false' },
+            { name: 'build-artifact', when: 'false' },
+            { name: 'scan-artifact', when: 'false' }
+          ]
+        }
+      }
+    };
+
+    const spsDir = path.join(__dirname, '..');
+    const output = yaml.dump(mainConfig, { lineWidth: -1, quotingType: "'", forceQuotes: false });
+    if (MODE === 'all' || MODE === 'main') {
+      const mainPath = path.join(spsDir, 'main', 'pipeline-config-long-running.yaml');
+      fs.writeFileSync(mainPath, output);
+      console.log(`Written: ${mainPath}`);
+    }
+    if (MODE === 'all' || MODE === 'manual') {
+      const manualPath = path.join(spsDir, 'manual', 'pipeline-config-long-running.yaml');
+      fs.writeFileSync(manualPath, output);
+      console.log(`Written: ${manualPath}`);
+    }
   } else if (t === 'upload-currency-report') {
     const mainConfig = {
       version: '2',
