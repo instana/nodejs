@@ -1,13 +1,11 @@
 version: '2'
-properties:
-  - name: branch-protection-rules-path
-    value: .sps/assets/.branch-protection.json
-    type: text
 tasks:
   pr-code-checks:
     steps:
       - name: peer-review
         when: 'false'
+      - name: detect-secrets
+      - name: compliance-checks
       - name: unit-test
         image: mirror.gcr.io/library/node:24
         script: |-

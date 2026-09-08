@@ -1032,7 +1032,10 @@ function toMainConfig(prConfig) {
   const raw = yaml.dump(prConfig, { lineWidth: -1 });
   const main = yaml.load(raw.replace(/\bpr-code-checks\b/g, 'code-build'));
 
-  // Strip upload block from every step script
+  // Strip upload block from every step script.
+  // detect-secrets and compliance-checks remain with when:'false' (same as PR)
+  // so SPS explicitly skips them in test-group tasks; only the root
+  // pipeline-config.yaml runs them live.
   for (const task of Object.values(main.tasks ?? {})) {
     for (const step of task.steps ?? []) {
       if (step.script) step.script = stripUploadBlock(step.script);
@@ -1072,13 +1075,12 @@ function generateOne(t) {
   if (t === 'default') {
     const prConfig = {
       version: '2',
-      properties: [
-        { name: 'branch-protection-rules-path', value: '.sps/assets/.branch-protection.json', type: 'text' }
-      ],
       tasks: {
         'pr-code-checks': {
           steps: [
             { name: 'peer-review', when: 'false' },
+            { name: 'detect-secrets' },
+            { name: 'compliance-checks' },
             { name: 'unit-test', image: NODE_IMAGE, script: '#!/usr/bin/env bash\necho "General PR checks passed."' }
           ]
         },
@@ -1096,6 +1098,8 @@ function generateOne(t) {
         'code-build': {
           steps: [
             { name: 'peer-review', when: 'false' },
+            { name: 'detect-secrets', when: 'false' },
+            { name: 'compliance-checks', when: 'false' },
             { name: 'unit-test', image: NODE_IMAGE, script: '#!/usr/bin/env bash\necho "General PR checks passed."' },
             { name: 'sign-artifact', when: 'false' },
             { name: 'build-artifact', when: 'false' },
