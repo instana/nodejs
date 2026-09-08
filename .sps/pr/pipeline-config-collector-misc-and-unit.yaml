@@ -468,17 +468,22 @@ tasks:
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
               && echo "Uploaded test list for misc-4 → test-results/$GIT_COMMIT/misc-4.txt" \
               || echo "WARNING: Failed to upload test list for misc-4 (non-fatal)"
-            LCOV_FILE="coverage/misc-4/lcov.info"
-            if [ -f "$LCOV_FILE" ]; then
-              curl -sf -X PUT \
-                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/misc-4/lcov.info" \
-                -H "Authorization: Bearer $IAM_TOKEN" \
-                -H "Content-Type: text/plain" \
-                --data-binary @"$LCOV_FILE" \
-                && echo "Uploaded lcov for misc-4 → test-results/$GIT_COMMIT/coverage/misc-4/lcov.info" \
-                || echo "WARNING: Failed to upload lcov for misc-4 (non-fatal)"
+            NODE_MAJOR="${node_version%%.*}"
+            if [ "$NODE_MAJOR" != "24" ]; then
+              echo "Skip: lcov upload — not the development node major version ($NODE_MAJOR != 24)"
             else
-              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+              LCOV_FILE="coverage/misc-4/lcov.info"
+              if [ -f "$LCOV_FILE" ]; then
+                curl -sf -X PUT \
+                  "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/misc-4/lcov.info" \
+                  -H "Authorization: Bearer $IAM_TOKEN" \
+                  -H "Content-Type: text/plain" \
+                  --data-binary @"$LCOV_FILE" \
+                  && echo "Uploaded lcov for misc-4 → test-results/$GIT_COMMIT/coverage/misc-4/lcov.info" \
+                  || echo "WARNING: Failed to upload lcov for misc-4 (non-fatal)"
+              else
+                echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+              fi
             fi
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
