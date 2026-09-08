@@ -32,7 +32,6 @@ const ALL_CURRENCY_GROUPS = fs.readdirSync(CURRENCIES_DIR).map(g => `collector-c
 const ALL_SIMPLE_TARGETS = [
   'collector-metrics',
   'collector-misc-and-unit',
-  'long-running',
   'cloud',
   'autoprofile',
   'core-group',
@@ -1094,9 +1093,7 @@ function generateOne(t) {
       process.exit(1);
     }
 
-    // All non-dind dirs, sorted alphabetically.
-    // long_* folders are excluded here — they run in the dedicated long-running pipeline
-    const LONG_RUNNING_ONLY_DIRS = new Set(['long_profiling']);
+    // All non-dind dirs, sorted alphabetically (includes long_* — treated as regular misc tests).
     const allDirs = fs.existsSync(miscDir)
       ? fs
           .readdirSync(miscDir, { withFileTypes: true })
@@ -1104,7 +1101,7 @@ function generateOne(t) {
           .map(e => e.name)
           .sort()
       : [];
-    const nonDindDirs = allDirs.filter(d => !dindSet.has(d) && !LONG_RUNNING_ONLY_DIRS.has(d));
+    const nonDindDirs = allDirs.filter(d => !dindSet.has(d));
 
     const splitRaw = fs.readFileSync(miscSplitPath, 'utf-8').trim();
     const splitN = Number(splitRaw);
@@ -1170,7 +1167,6 @@ function generateOne(t) {
       const { taskName, task } = buildCollectorTask('misc-dind', 'collector-misc-dind', dindPaths, dindNeeds);
       fanOutTasks[taskName] = task;
     }
-
     const prConfig = baseConfig(fanOutTasks);
     writeConfig(t, prConfig, toMainConfig(prConfig));
   } else if (GROUP_TARGETS[t]) {
@@ -1364,7 +1360,6 @@ function generateOne(t) {
       'ALL_TESTS=$(find "$REPO_PATH/packages" \\',
       '  -name "*.test.js" \\',
       '  -not -path "*/node_modules/*" \\',
-      '  -not -path "*/long_*/*" \\',
       `  | sed "s|$REPO_PATH/packages/[^/]*/||" | sort)`,
       '',
       'UNCOVERED_LIST=""',
@@ -1432,122 +1427,6 @@ function generateOne(t) {
     const prPath = path.join(spsDir, 'pr', 'pipeline-config-pr-verify.yaml');
     fs.writeFileSync(prPath, output);
     console.log(`Written: ${prPath}`);
-  } else if (t === 'long-running') {
-    function buildLongRunningFanOut(fromTask, withLongRunning) {
-      const envLines = withLongRunning ? ['CI_LONG_RUNNING=true \\'] : [];
-      const script = [
-        '#!/usr/bin/env bash',
-        'set -eo pipefail',
-        '',
-        nodeVersionSwitchScript(),
-        '',
-        'cd "$WORKSPACE/$(load_repo app-repo path)"',
-        'npm install --loglevel warn --foreground-scripts',
-        'node bin/create-version-test-folders.js',
-        '',
-        ...runWithRetryLines('test:ci:long-running', envLines, false),
-        'exit $LAST_EXIT'
-      ].join('\n');
-
-      const taskName = `${fromTask}-long-running`;
-      return {
-        taskName,
-        task: {
-          from: fromTask,
-          displayName: 'long-running',
-          runtimeClassName: 'large',
-          steps: [
-            { name: 'peer-review', when: 'false' },
-            { name: 'detect-secrets', when: 'false' },
-            { name: 'compliance-checks', when: 'false' },
-            { name: 'unit-test', displayName: 'long-running', image: NODE_IMAGE, script },
-            { name: 'sign-artifact', when: 'false' },
-            { name: 'build-artifact', when: 'false' },
-            { name: 'scan-artifact', when: 'false' }
-          ]
-        }
-      };
-    }
-
-    const { taskName: prTaskName, task: prTask } = buildLongRunningFanOut('pr-code-checks', false);
-    const { taskName: mainTaskName, task: mainTask } = buildLongRunningFanOut('code-build', true);
-
-    const prConfig = {
-      version: '2',
-      tasks: {
-        'pr-code-checks': {
-          displayName: 'setup',
-          runtimeClassName: 'large',
-          steps: [
-            { name: 'peer-review', when: 'false' },
-            { name: 'detect-secrets', when: 'false' },
-            { name: 'compliance-checks', when: 'false' },
-            {
-              name: 'unit-test',
-              displayName: 'npm-install',
-              image: NODE_IMAGE,
-              script: [
-                '#!/usr/bin/env bash',
-                'set -eo pipefail',
-                nodeVersionSwitchScript(),
-                '',
-                'cd "$WORKSPACE/$(load_repo app-repo path)"',
-                'npm install --loglevel warn --foreground-scripts',
-                'node bin/create-version-test-folders.js'
-              ].join('\n')
-            },
-            { name: 'sign-artifact', when: 'false' },
-            { name: 'build-artifact', when: 'false' },
-            { name: 'scan-artifact', when: 'false' }
-          ]
-        },
-        'code-pr-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
-        'code-ci-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
-        'deploy-checks': { when: false },
-        'deploy-release': { when: false },
-        [prTaskName]: prTask
-      }
-    };
-
-    const mainConfig = {
-      version: '2',
-      tasks: {
-        'code-build': {
-          displayName: 'setup',
-          runtimeClassName: 'large',
-          steps: [
-            { name: 'peer-review', when: 'false' },
-            { name: 'detect-secrets', when: 'false' },
-            { name: 'compliance-checks', when: 'false' },
-            {
-              name: 'unit-test',
-              displayName: 'npm-install',
-              image: NODE_IMAGE,
-              script: [
-                '#!/usr/bin/env bash',
-                'set -eo pipefail',
-                nodeVersionSwitchScript(),
-                '',
-                'cd "$WORKSPACE/$(load_repo app-repo path)"',
-                'npm install --loglevel warn --foreground-scripts',
-                'node bin/create-version-test-folders.js'
-              ].join('\n')
-            },
-            { name: 'sign-artifact', when: 'false' },
-            { name: 'build-artifact', when: 'false' },
-            { name: 'scan-artifact', when: 'false' }
-          ]
-        },
-        'code-pr-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
-        'code-ci-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
-        'deploy-checks': { when: false },
-        'deploy-release': { when: false },
-        [mainTaskName]: mainTask
-      }
-    };
-
-    writeConfig('long-running', prConfig, mainConfig);
-
   } else if (t === 'upload-currency-report') {
     const mainConfig = {
       version: '2',

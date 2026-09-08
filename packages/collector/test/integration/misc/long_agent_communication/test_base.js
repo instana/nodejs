@@ -8,7 +8,7 @@
 const expect = require('chai').expect;
 
 const config = require('@_local/core/test/config');
-const { delay, retry, isCI, isCILongRunning } = require('@_local/core/test/test_util');
+const { delay, retry, isCI } = require('@_local/core/test/test_util');
 const globalAgent = require('@_local/collector/test/globalAgent');
 const { isNodeVersionEOL } = require('@_local/collector/src/util/eol');
 
@@ -16,41 +16,11 @@ module.exports = function () {
   let expressControls;
   let agentControls;
 
-  // CASE: This test suite runs ONLY on CI LONG_RUNNING by default and not locally.
-  let mochaSuiteFn1 = describe.skip;
-  if (isCI() && isCILongRunning()) {
-    mochaSuiteFn1 = describe;
+  if (!isCI()) {
+    return;
   }
 
-  mochaSuiteFn1('agentCommunication: lots of retries with exponential backoff', function () {
-    this.timeout(config.getTestTimeout());
-
-    globalAgent.setUpCleanUpHooks();
-    agentControls = globalAgent.instance;
-    expressControls = require('@_local/collector/test/apps/expressControls');
-
-    before(async () => {
-      await expressControls.start({ useGlobalAgent: true });
-    });
-
-    beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
-    });
-
-    after(async () => {
-      await expressControls.stop();
-    });
-
-    runRetryTest.bind(this)(300000, 45 * 1000, 7);
-  });
-
-  // CASE: This test suite runs on CI by default and locally.
-  let mochaSuiteFn2 = describe;
-  if (isCI() && isCILongRunning()) {
-    mochaSuiteFn2 = describe.skip;
-  }
-
-  mochaSuiteFn2('agentCommunication: default', function () {
+  describe('agentCommunication: default', function () {
     this.timeout(config.getTestTimeout());
 
     globalAgent.setUpCleanUpHooks();

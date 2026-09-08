@@ -89,8 +89,6 @@ tasks:
             test/integration/misc/cls-hooked-conflict \
             test/integration/misc/common \
             test/integration/misc/disabled \
-            test/integration/misc/immediate \
-            test/integration/misc/invalid_app \
             -name '*.test.js' \
             -not -path '*/node_modules/*' \
             | sort | tr '\n' ' ')
@@ -195,17 +193,15 @@ tasks:
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
+            test/integration/misc/immediate \
+            test/integration/misc/invalid_app \
             test/integration/misc/logger_spans \
             test/integration/misc/long_agent_communication \
+            test/integration/misc/long_profiling \
             test/integration/misc/native_esm \
             test/integration/misc/native_module_retry \
             test/integration/misc/open_tracing \
             test/integration/misc/otel_sdk_and_instana \
-            test/integration/misc/otlp-exporter \
-            test/integration/misc/pre_init \
-            test/integration/misc/prevent_instrumenting_multiple_times \
-            test/integration/misc/reinit_setLogger \
-            test/integration/misc/require-esm \
             -name '*.test.js' \
             -not -path '*/node_modules/*' \
             | sort | tr '\n' ' ')
@@ -310,17 +306,15 @@ tasks:
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
+            test/integration/misc/otlp-exporter \
+            test/integration/misc/pre_init \
+            test/integration/misc/prevent_instrumenting_multiple_times \
+            test/integration/misc/reinit_setLogger \
+            test/integration/misc/require-esm \
             test/integration/misc/require_hook \
             test/integration/misc/restore_context \
             test/integration/misc/sdk \
             test/integration/misc/secrets \
-            test/integration/misc/specification_compliance \
-            test/integration/misc/stack_trace \
-            test/integration/misc/too_late \
-            test/integration/misc/tracing_metrics \
-            test/integration/misc/typescript \
-            test/integration/misc/uncaught \
-            test/integration/misc/w3c_trace_context \
             -name '*.test.js' \
             -not -path '*/node_modules/*' \
             | sort | tr '\n' ' ')
@@ -379,6 +373,112 @@ tasks:
               else
                 echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
               fi
+            fi
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
+          fi
+
+          exit $LAST_EXIT
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
+  code-build-misc-4:
+    from: code-build
+    displayName: collector-misc-4
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: collector-misc-4
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
+          echo "Node.js: $(node --version)"
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          node bin/create-version-test-folders.js
+
+          # collect test files
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/misc/specification_compliance \
+            test/integration/misc/stack_trace \
+            test/integration/misc/too_late \
+            test/integration/misc/tracing_metrics \
+            test/integration/misc/typescript \
+            test/integration/misc/uncaught \
+            test/integration/misc/w3c_trace_context \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
+
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for collector-misc-4 — skipping.'
+            exit 0
+          fi
+
+          RUN_ESM="$(get_env RUN_ESM "")"
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            env -i \
+              PATH="$PATH" \
+              HOME="$HOME" \
+              CI=true \
+              RUN_ESM="$RUN_ESM" \
+              TEST_FILES="$TEST_FILES" \
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="misc-4" || LAST_EXIT=$?
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+
+          # upload executed test files + lcov coverage report to COS
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/misc-4.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test list for misc-4 → test-results/$GIT_COMMIT/misc-4.txt" \
+              || echo "WARNING: Failed to upload test list for misc-4 (non-fatal)"
+            LCOV_FILE="coverage/misc-4/lcov.info"
+            if [ -f "$LCOV_FILE" ]; then
+              curl -sf -X PUT \
+                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/misc-4/lcov.info" \
+                -H "Authorization: Bearer $IAM_TOKEN" \
+                -H "Content-Type: text/plain" \
+                --data-binary @"$LCOV_FILE" \
+                && echo "Uploaded lcov for misc-4 → test-results/$GIT_COMMIT/coverage/misc-4/lcov.info" \
+                || echo "WARNING: Failed to upload lcov for misc-4 (non-fatal)"
+            else
+              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
             fi
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"

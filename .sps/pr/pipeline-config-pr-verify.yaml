@@ -184,7 +184,6 @@ tasks:
           ALL_TESTS=$(find "$REPO_PATH/packages" \
             -name "*.test.js" \
             -not -path "*/node_modules/*" \
-            -not -path "*/long_*/*" \
             | sed "s|$REPO_PATH/packages/[^/]*/||" | sort)
 
           UNCOVERED_LIST=""
