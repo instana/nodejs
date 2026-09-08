@@ -1360,7 +1360,7 @@ function generateOne(t) {
       'ALL_TESTS=$(find "$REPO_PATH/packages" \\',
       '  -name "*.test.js" \\',
       '  -not -path "*/node_modules/*" \\',
-      `  | sed "s|$REPO_PATH/packages/[^/]*/||" | sort)`,
+      '  | sed "s|$REPO_PATH/packages/[^/]*/||" | sort)',
       '',
       'UNCOVERED_LIST=""',
       'MISSING=0',
@@ -1389,7 +1389,7 @@ function generateOne(t) {
       '  echo "❌ $MISSING test file(s) not covered by any pipeline task"',
       '  exit 1',
       'else',
-      '  echo "✅ All $TOTAL collector tests are covered"',
+      '  echo "✅ All $TOTAL test files are covered"',
       'fi'
     ].join('\n');
 
