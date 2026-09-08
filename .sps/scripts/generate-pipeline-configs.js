@@ -154,7 +154,10 @@ function readinessScript(name) {
     case 'redis-cluster':
       return 'timeout 30 bash -c \\\n' + "  'until nc -z 127.0.0.1 7000 2>/dev/null; do sleep 1; done'";
     case 'ibm_db':
-      return 'timeout 300 bash -c \\\n' + "  'until nc -z 127.0.0.1 50000 2>/dev/null; do sleep 5; done'";
+      return (
+        'timeout 300 bash -c \\\n' +
+        '  \'until docker exec ibm_db bash -c "su - node -c \\"db2 connect to nodedb && db2 \\\\\\"select 1 from sysibm.sysdummy1\\\\\\"\\"" > /dev/null 2>&1; do sleep 5; done\''
+      );
     case 'localstack':
       return 'timeout 60 bash -c \\\n' + "  'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'";
     case 'pubsub-emulator':
@@ -526,7 +529,9 @@ function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv
   scriptLines.push('npm install --loglevel warn --foreground-scripts');
   scriptLines.push('');
   scriptLines.push('# collect test files');
-  scriptLines.push(`TEST_FILES=$(cd packages/${taskSlug} && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\\n' ' ')`);
+  scriptLines.push(
+    `TEST_FILES=$(cd packages/${taskSlug} && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\\n' ' ')`
+  );
   scriptLines.push('');
 
   if (needs.length > 0) {
@@ -614,10 +619,10 @@ function buildGeneralTasks() {
   }
 
   return {
-    'pr-code-checks-audit':       task('audit',       'npm run audit'),
-    'pr-code-checks-lint':        task('lint',        'npm run lint'),
-    'pr-code-checks-commitlint':  task('commitlint',  'npm run commitlint'),
-    'pr-code-checks-depcheck':    task('depcheck',    'npm run depcheck')
+    'pr-code-checks-audit': task('audit', 'npm run audit'),
+    'pr-code-checks-lint': task('lint', 'npm run lint'),
+    'pr-code-checks-commitlint': task('commitlint', 'npm run commitlint'),
+    'pr-code-checks-depcheck': task('depcheck', 'npm run depcheck')
   };
 }
 
@@ -933,7 +938,7 @@ function generateOne(t) {
       'collector-metrics',
       'collector-metrics',
       ['test/integration/metrics'],
-      [],
+      []
     );
     const prConfig = baseConfig({ [taskName]: task });
     writeConfig(t, prConfig, toMainConfig(prConfig));
@@ -1099,7 +1104,7 @@ function generateOne(t) {
       'IAM_TOKEN=$(curl -s -X POST "https://iam.cloud.ibm.com/identity/token" \\',
       '  -H "Content-Type: application/x-www-form-urlencoded" \\',
       '  -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \\',
-      '  | python3 -c "import sys,json; print(json.load(sys.stdin).get(\'access_token\',\'\'))")',
+      "  | python3 -c \"import sys,json; print(json.load(sys.stdin).get('access_token',''))\")",
       'if [ -z "$IAM_TOKEN" ]; then',
       '  echo "ERROR: Failed to obtain IAM token — check ibm-object-storage-api-key secret"',
       '  exit 1',
@@ -1179,7 +1184,7 @@ function generateOne(t) {
       'while true; do',
       '  STATUSES=$(fetch_statuses)',
       '  # Count unique contexts (deduplicate — statuses API returns history, latest first)',
-      '  OTHERS=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(set(r[\'context\'] for r in d if r[\'context\'].startswith(\'tekton/pr-code-checks-\') and not r[\'context\'].startswith(\'tekton/pr-code-checks-verify\'))))")',
+      "  OTHERS=$(echo \"$STATUSES\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(len(set(r['context'] for r in d if r['context'].startswith('tekton/pr-code-checks-') and not r['context'].startswith('tekton/pr-code-checks-verify'))))\")",
       '  echo "  $OTHERS / $EXPECTED_CHECKS checks registered (${ELAPSED}s elapsed)"',
       '  if [ "$OTHERS" -ge "$EXPECTED_CHECKS" ]; then',
       '    echo "All expected checks are now registered."',
@@ -1205,11 +1210,11 @@ function generateOne(t) {
       "  done < <(echo \"$STATUSES\" | python3 -c \"import sys,json; d=json.load(sys.stdin); seen=set(); [print(r['context']) or seen.add(r['context']) for r in d if r['context'].endswith('/code-unit-tests') and r['context'] not in seen and r['state'] in ('success','failure') and not r['context'].startswith('tekton/pr-code-checks-verify')]\")",
       '  PENDING=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); seen=set(); pending=0',
       'for r in d:',
-      '    c=r[\'context\']',
-      '    if not c.endswith(\'/code-unit-tests\') or c.startswith(\'tekton/pr-code-checks-verify\'): continue',
+      "    c=r['context']",
+      "    if not c.endswith('/code-unit-tests') or c.startswith('tekton/pr-code-checks-verify'): continue",
       '    if c in seen: continue',
       '    seen.add(c)',
-      '    if r[\'state\']==\'pending\': pending+=1',
+      "    if r['state']=='pending': pending+=1",
       'print(pending)")',
       '  echo "  $PENDING checks still pending (${ELAPSED}s elapsed)"',
       '  if [ "$PENDING" -eq 0 ]; then',
