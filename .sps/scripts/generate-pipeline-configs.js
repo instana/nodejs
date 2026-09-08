@@ -1081,10 +1081,23 @@ function generateOne(t) {
             { name: 'peer-review', when: 'false' },
             { name: 'detect-secrets' },
             { name: 'compliance-checks' },
-            { name: 'unit-test', image: NODE_IMAGE, script: '#!/usr/bin/env bash\necho "General PR checks passed."' }
+            {
+              name: 'unit-test',
+              image: NODE_IMAGE,
+              script: [
+                '#!/usr/bin/env bash',
+                'set-commit-status \\',
+                '  --repository "$(load_repo app-repo url)" \\',
+                '  --commit-sha "$(get_env HEAD_SHA "")" \\',
+                '  --state "success" \\',
+                '  --description "General PR checks passed." \\',
+                '  --context "tekton/pr-code-checks/code-unit-tests" \\',
+                '  --task-name "pr-code-checks" \\',
+                '  --step-name "unit-test"'
+              ].join('\n')
+            }
           ]
         },
-        'code-pr-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
         'sign-artifact': { when: 'false' },
         'deploy-checks': { when: 'false' },
         'deploy-release': { when: 'false' },

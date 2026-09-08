@@ -10,11 +10,14 @@ tasks:
         image: mirror.gcr.io/library/node:24
         script: |-
           #!/usr/bin/env bash
-          echo "General PR checks passed."
-  code-pr-finish:
-    steps:
-      - name: run-stage
-        when: 'false'
+          set-commit-status \
+            --repository "$(load_repo app-repo url)" \
+            --commit-sha "$(get_env HEAD_SHA "")" \
+            --state "success" \
+            --description "General PR checks passed." \
+            --context "tekton/pr-code-checks/code-unit-tests" \
+            --task-name "pr-code-checks" \
+            --step-name "unit-test"
   sign-artifact:
     when: 'false'
   deploy-checks:
