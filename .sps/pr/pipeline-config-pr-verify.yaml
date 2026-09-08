@@ -223,7 +223,7 @@ tasks:
       - name: scan-artifact
         when: 'false'
   sonar-analysis:
-    from: pr-code-checks
+    from: pr-code-checks-verify
     displayName: sonar-analysis
     runtimeClassName: large
     steps:

@@ -775,7 +775,7 @@ function buildSonarTask(rootTask = 'pr-code-checks') {
       ].join('\n');
 
   return {
-    from: rootTask,
+    from: isPR ? 'pr-code-checks-verify' : rootTask,
     displayName: 'sonar-analysis',
     runtimeClassName: 'large',
     steps: [
