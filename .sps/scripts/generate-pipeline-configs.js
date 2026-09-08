@@ -739,6 +739,7 @@ function buildSonarTask(rootTask = 'pr-code-checks') {
   // Lines shared between PR and main: fetch IAM token + download all lcov reports from COS
   const downloadLcovLines = [
     '# ── Download lcov coverage reports from COS ──────────────────────────────',
+    'node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"',
     `NODE_MAJOR="\${node_version%%.*}"`,
     `if [ "\$NODE_MAJOR" != "${DEFAULT_NODE_MAJOR}" ]; then`,
     `  echo "Skip: sonar lcov download — not the development node major version (\$NODE_MAJOR != ${DEFAULT_NODE_MAJOR})"`,
@@ -1302,6 +1303,8 @@ function generateOne(t) {
       'CLAIMED_FILE="$TMPDIR/all-claimed.txt"',
       'DOWNLOADED_FILE="$TMPDIR/downloaded.txt"   # tracks task slugs already fetched from COS',
       'touch "$CLAIMED_FILE" "$DOWNLOADED_FILE"',
+      '',
+      'node bin/create-version-test-folders.js',
       '',
       '# Helper: download the COS result file for a single completed status context.',
       '# Context format: "tekton/pr-code-checks-<slug>/code-unit-tests"',

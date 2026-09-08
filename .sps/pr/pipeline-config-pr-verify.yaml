@@ -66,6 +66,8 @@ tasks:
           DOWNLOADED_FILE="$TMPDIR/downloaded.txt"   # tracks task slugs already fetched from COS
           touch "$CLAIMED_FILE" "$DOWNLOADED_FILE"
 
+          node bin/create-version-test-folders.js
+
           # Helper: download the COS result file for a single completed status context.
           # Context format: "tekton/pr-code-checks-<slug>/code-unit-tests"
           # Skips silently if already downloaded or if COS has no file for it.
@@ -285,6 +287,7 @@ tasks:
           npx eslint packages/ -f json -o eslint-report.json || true
 
           # ── Download lcov coverage reports from COS ──────────────────────────────
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
           NODE_MAJOR="${node_version%%.*}"
           if [ "$NODE_MAJOR" != "24" ]; then
             echo "Skip: sonar lcov download — not the development node major version ($NODE_MAJOR != 24)"
