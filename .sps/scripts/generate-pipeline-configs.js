@@ -633,10 +633,15 @@ function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv
 }
 
 function buildGeneralTasks() {
-  function task(displayName, cmd) {
+  const prefix = MODE === 'main' ? 'code-build' : 'pr-code-checks';
+  const rootTask = prefix;
+
+  function task(displayName, cmd, fromTask = rootTask) {
     const script = [
       '#!/usr/bin/env bash',
       'set -eo pipefail',
+      '',
+      nodeVersionSwitchScript(),
       '',
       'cd "$WORKSPACE/$(load_repo app-repo path)"',
       'npm install --loglevel warn --foreground-scripts',
@@ -645,7 +650,7 @@ function buildGeneralTasks() {
     ].join('\n');
 
     return {
-      from: 'pr-code-checks',
+      from: fromTask,
       displayName,
       runtimeClassName: 'large',
       steps: [
@@ -660,11 +665,71 @@ function buildGeneralTasks() {
     };
   }
 
+  const echoEnvScript = [
+    '#!/usr/bin/env bash',
+    'set -eo pipefail',
+    '',
+    '# ── Read trigger parameters ───────────────────────────────────────────────',
+    'node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"',
+    'RUN_ESM="$(get_env RUN_ESM "")"',
+    '',
+    'echo "Trigger params:"',
+    'echo "  node-version = ${node_version}"',
+    'echo "  RUN_ESM      = ${RUN_ESM:-<not set>}"',
+    'echo ""',
+    '',
+    '# ── Switch to the requested Node version via nvm ──────────────────────────',
+    'curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash',
+    'export NVM_DIR="$HOME/.nvm"',
+    '# shellcheck source=/dev/null',
+    '. "$NVM_DIR/nvm.sh"',
+    'nvm install "$node_version" --no-progress',
+    'nvm use "$node_version"',
+    '',
+    'cd "$WORKSPACE/$(load_repo app-repo path)"',
+    '',
+    '# ── Runtime versions ──────────────────────────────────────────────────────',
+    'echo "Using node:    $(node --version 2>/dev/null || echo \'Node.js not found\')"',
+    'echo "Using npm:     $(npm --version 2>/dev/null || echo \'NPM not found\')"',
+    'echo "Architecture:  $(node -p \'process.arch\' 2>/dev/null || echo \'Unknown\')"',
+    '',
+    '# ── ESM support ───────────────────────────────────────────────────────────',
+    'if [ -n "$RUN_ESM" ] && [ "$RUN_ESM" = "true" ]; then',
+    '  echo "ESM mode:      enabled (RUN_ESM=true)"',
+    'else',
+    '  echo "ESM mode:      disabled (RUN_ESM not set)"',
+    'fi',
+    '',
+    'echo "Python3 version: $(python3 --version 2>/dev/null | head -n 1 || echo \'Python3 not found\')"',
+    'echo "Make version:    $(make --version 2>/dev/null | head -n 1 || echo \'Make not found\')"',
+    'echo "GCC version:     $(gcc --version 2>/dev/null | head -n 1 || echo \'GCC not found\')"',
+    'echo "Node-gyp:        $(node-gyp --version 2>/dev/null || echo \'Node-gyp not found\')"',
+    'echo ""',
+    'echo "NPM config list:"',
+    'npm config list'
+  ].join('\n');
+
+  const echoEnvTaskName = `${prefix}-echo-env`;
+
   return {
-    'pr-code-checks-audit': task('audit', 'npm run audit'),
-    'pr-code-checks-lint': task('lint', 'npm run lint'),
-    'pr-code-checks-commitlint': task('commitlint', 'npm run commitlint'),
-    'pr-code-checks-depcheck': task('depcheck', 'npm run depcheck')
+    [echoEnvTaskName]: {
+      from: rootTask,
+      displayName: 'echo-env',
+      runtimeClassName: 'large',
+      steps: [
+        { name: 'peer-review', when: 'false' },
+        { name: 'detect-secrets', when: 'false' },
+        { name: 'compliance-checks', when: 'false' },
+        { name: 'unit-test', displayName: 'echo-env', image: NODE_IMAGE, script: echoEnvScript },
+        { name: 'sign-artifact', when: 'false' },
+        { name: 'build-artifact', when: 'false' },
+        { name: 'scan-artifact', when: 'false' }
+      ]
+    },
+    [`${prefix}-audit`]:       task('audit',       'npm run audit'),
+    [`${prefix}-lint`]:        task('lint',        'npm run lint'),
+    [`${prefix}-commitlint`]:  task('commitlint',  'npm run commitlint', echoEnvTaskName),
+    [`${prefix}-depcheck`]:    task('depcheck',    'npm run depcheck')
   };
 }
 
@@ -1180,11 +1245,7 @@ function generateOne(t) {
     writeConfig(t, prConfig, toMainConfig(prConfig));
   } else if (t === 'pr-general') {
     const prConfig = baseConfig(buildGeneralTasks());
-    const spsDir = path.join(__dirname, '..');
-    const output = yaml.dump(prConfig, { lineWidth: -1, quotingType: "'", forceQuotes: false });
-    const prPath = path.join(spsDir, 'pr', 'pipeline-config-general.yaml');
-    fs.writeFileSync(prPath, output);
-    console.log(`Written: ${prPath}`);
+    writeConfig('general', prConfig, toMainConfig(prConfig));
   } else if (t === 'pr-verify') {
     // Count expected GitHub check-runs from all other PR pipeline configs.
     // Each task name becomes exactly one check-run on GitHub.

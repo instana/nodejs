@@ -126,11 +126,11 @@ tasks:
           }
 
           # ── Phase 1: wait until all EXPECTED_CHECKS are registered ──────────────
-          echo "Waiting for all 90 expected checks to be registered on commit $GIT_COMMIT..."
+          echo "Waiting for all 91 expected checks to be registered on commit $GIT_COMMIT..."
           MAX_WAIT=3600
           POLL_INTERVAL=30
           ELAPSED=0
-          EXPECTED_CHECKS=90
+          EXPECTED_CHECKS=91
           while true; do
             STATUSES=$(fetch_statuses)
             # Count unique contexts (deduplicate — statuses API returns history, latest first)
