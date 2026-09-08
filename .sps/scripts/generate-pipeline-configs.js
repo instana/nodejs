@@ -889,6 +889,9 @@ function generateOne(t) {
   if (t === 'default') {
     const prConfig = {
       version: '2',
+      properties: [
+        { name: 'branch-protection-rules-path', value: '.sps/assets/.branch-protection.json', type: 'text' }
+      ],
       tasks: {
         'pr-code-checks': {
           steps: [
