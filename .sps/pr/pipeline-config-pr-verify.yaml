@@ -234,12 +234,6 @@ tasks:
       - name: compliance-checks
         when: 'false'
       - name: unit-test
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         displayName: sonar-analysis
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -318,3 +312,9 @@ tasks:
             [ -n "$LCOV_PATHS" ] && LCOV_ARGS="-Dsonar.javascript.lcov.reportPaths=$LCOV_PATHS"
             sonar -Dsonar.token="$SONAR_TOKEN" $LCOV_ARGS
           fi
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'

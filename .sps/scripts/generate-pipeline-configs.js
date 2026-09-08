@@ -1056,6 +1056,7 @@ function generateOne(t) {
 
     // All non-dind dirs, sorted alphabetically.
     // long_* folders are excluded here — they run in the dedicated long-running pipeline
+    const LONG_RUNNING_ONLY_DIRS = new Set(['long_profiling']);
     const allDirs = fs.existsSync(miscDir)
       ? fs
           .readdirSync(miscDir, { withFileTypes: true })
@@ -1063,7 +1064,7 @@ function generateOne(t) {
           .map(e => e.name)
           .sort()
       : [];
-    const nonDindDirs = allDirs.filter(d => !dindSet.has(d) && !d.startsWith('long_'));
+    const nonDindDirs = allDirs.filter(d => !dindSet.has(d) && !LONG_RUNNING_ONLY_DIRS.has(d));
 
     const splitRaw = fs.readFileSync(miscSplitPath, 'utf-8').trim();
     const splitN = Number(splitRaw);
@@ -1392,21 +1393,81 @@ function generateOne(t) {
     fs.writeFileSync(prPath, output);
     console.log(`Written: ${prPath}`);
   } else if (t === 'long-running') {
-    // Dedicated pipeline for test:ci:long-running.
-    // Runs collector tests under test/integration/misc/long_*/ with CI_LONG_RUNNING=true.
-    const scriptLines = [
-      '#!/usr/bin/env bash',
-      'set -eo pipefail',
-      '',
-      nodeVersionSwitchScript(),
-      '',
-      'cd "$WORKSPACE/$(load_repo app-repo path)"',
-      'npm install --loglevel warn --foreground-scripts',
-      'node bin/create-version-test-folders.js',
-      '',
-      ...runWithRetryLines('test:ci:long-running', ['CI_LONG_RUNNING=true \\'], false)
-    ];
-    scriptLines.push('exit $LAST_EXIT');
+    function buildLongRunningFanOut(fromTask, withLongRunning) {
+      const envLines = withLongRunning ? ['CI_LONG_RUNNING=true \\'] : [];
+      const script = [
+        '#!/usr/bin/env bash',
+        'set -eo pipefail',
+        '',
+        nodeVersionSwitchScript(),
+        '',
+        'cd "$WORKSPACE/$(load_repo app-repo path)"',
+        'npm install --loglevel warn --foreground-scripts',
+        'node bin/create-version-test-folders.js',
+        '',
+        ...runWithRetryLines('test:ci:long-running', envLines, false),
+        'exit $LAST_EXIT'
+      ].join('\n');
+
+      const taskName = `${fromTask}-long-running`;
+      return {
+        taskName,
+        task: {
+          from: fromTask,
+          displayName: 'long-running',
+          runtimeClassName: 'large',
+          steps: [
+            { name: 'peer-review', when: 'false' },
+            { name: 'detect-secrets', when: 'false' },
+            { name: 'compliance-checks', when: 'false' },
+            { name: 'unit-test', displayName: 'long-running', image: NODE_IMAGE, script },
+            { name: 'sign-artifact', when: 'false' },
+            { name: 'build-artifact', when: 'false' },
+            { name: 'scan-artifact', when: 'false' }
+          ]
+        }
+      };
+    }
+
+    const { taskName: prTaskName, task: prTask } = buildLongRunningFanOut('pr-code-checks', false);
+    const { taskName: mainTaskName, task: mainTask } = buildLongRunningFanOut('code-build', true);
+
+    const prConfig = {
+      version: '2',
+      tasks: {
+        'pr-code-checks': {
+          displayName: 'setup',
+          runtimeClassName: 'large',
+          steps: [
+            { name: 'peer-review', when: 'false' },
+            { name: 'detect-secrets', when: 'false' },
+            { name: 'compliance-checks', when: 'false' },
+            {
+              name: 'unit-test',
+              displayName: 'npm-install',
+              image: NODE_IMAGE,
+              script: [
+                '#!/usr/bin/env bash',
+                'set -eo pipefail',
+                nodeVersionSwitchScript(),
+                '',
+                'cd "$WORKSPACE/$(load_repo app-repo path)"',
+                'npm install --loglevel warn --foreground-scripts',
+                'node bin/create-version-test-folders.js'
+              ].join('\n')
+            },
+            { name: 'sign-artifact', when: 'false' },
+            { name: 'build-artifact', when: 'false' },
+            { name: 'scan-artifact', when: 'false' }
+          ]
+        },
+        'code-pr-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
+        'code-ci-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
+        'deploy-checks': { when: false },
+        'deploy-release': { when: false },
+        [prTaskName]: prTask
+      }
+    };
 
     const mainConfig = {
       version: '2',
@@ -1441,35 +1502,12 @@ function generateOne(t) {
         'code-ci-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
         'deploy-checks': { when: false },
         'deploy-release': { when: false },
-        'code-build-long-running': {
-          from: 'code-build',
-          displayName: 'long-running',
-          runtimeClassName: 'large',
-          steps: [
-            { name: 'peer-review', when: 'false' },
-            { name: 'detect-secrets', when: 'false' },
-            { name: 'compliance-checks', when: 'false' },
-            { name: 'unit-test', displayName: 'long-running', image: NODE_IMAGE, script: scriptLines.join('\n') },
-            { name: 'sign-artifact', when: 'false' },
-            { name: 'build-artifact', when: 'false' },
-            { name: 'scan-artifact', when: 'false' }
-          ]
-        }
+        [mainTaskName]: mainTask
       }
     };
 
-    const spsDir = path.join(__dirname, '..');
-    const output = yaml.dump(mainConfig, { lineWidth: -1, quotingType: "'", forceQuotes: false });
-    if (MODE === 'all' || MODE === 'main') {
-      const mainPath = path.join(spsDir, 'main', 'pipeline-config-long-running.yaml');
-      fs.writeFileSync(mainPath, output);
-      console.log(`Written: ${mainPath}`);
-    }
-    if (MODE === 'all' || MODE === 'manual') {
-      const manualPath = path.join(spsDir, 'manual', 'pipeline-config-long-running.yaml');
-      fs.writeFileSync(manualPath, output);
-      console.log(`Written: ${manualPath}`);
-    }
+    writeConfig('long-running', prConfig, mainConfig);
+
   } else if (t === 'upload-currency-report') {
     const mainConfig = {
       version: '2',
