@@ -109,17 +109,22 @@ tasks:
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
               && echo "Uploaded test list for core → test-results/$GIT_COMMIT/core.txt" \
               || echo "WARNING: Failed to upload test list for core (non-fatal)"
-            LCOV_FILE="coverage/core/lcov.info"
-            if [ -f "$LCOV_FILE" ]; then
-              curl -sf -X PUT \
-                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/core/lcov.info" \
-                -H "Authorization: Bearer $IAM_TOKEN" \
-                -H "Content-Type: text/plain" \
-                --data-binary @"$LCOV_FILE" \
-                && echo "Uploaded lcov for core → test-results/$GIT_COMMIT/coverage/core/lcov.info" \
-                || echo "WARNING: Failed to upload lcov for core (non-fatal)"
+            NODE_MAJOR="${node_version%%.*}"
+            if [ "$NODE_MAJOR" != "24" ]; then
+              echo "Skip: lcov upload — not the development node major version ($NODE_MAJOR != 24)"
             else
-              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+              LCOV_FILE="coverage/core/lcov.info"
+              if [ -f "$LCOV_FILE" ]; then
+                curl -sf -X PUT \
+                  "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/core/lcov.info" \
+                  -H "Authorization: Bearer $IAM_TOKEN" \
+                  -H "Content-Type: text/plain" \
+                  --data-binary @"$LCOV_FILE" \
+                  && echo "Uploaded lcov for core → test-results/$GIT_COMMIT/coverage/core/lcov.info" \
+                  || echo "WARNING: Failed to upload lcov for core (non-fatal)"
+              else
+                echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+              fi
             fi
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
@@ -195,17 +200,22 @@ tasks:
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
               && echo "Uploaded test list for metrics-util → test-results/$GIT_COMMIT/metrics-util.txt" \
               || echo "WARNING: Failed to upload test list for metrics-util (non-fatal)"
-            LCOV_FILE="coverage/metrics-util/lcov.info"
-            if [ -f "$LCOV_FILE" ]; then
-              curl -sf -X PUT \
-                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/metrics-util/lcov.info" \
-                -H "Authorization: Bearer $IAM_TOKEN" \
-                -H "Content-Type: text/plain" \
-                --data-binary @"$LCOV_FILE" \
-                && echo "Uploaded lcov for metrics-util → test-results/$GIT_COMMIT/coverage/metrics-util/lcov.info" \
-                || echo "WARNING: Failed to upload lcov for metrics-util (non-fatal)"
+            NODE_MAJOR="${node_version%%.*}"
+            if [ "$NODE_MAJOR" != "24" ]; then
+              echo "Skip: lcov upload — not the development node major version ($NODE_MAJOR != 24)"
             else
-              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+              LCOV_FILE="coverage/metrics-util/lcov.info"
+              if [ -f "$LCOV_FILE" ]; then
+                curl -sf -X PUT \
+                  "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/metrics-util/lcov.info" \
+                  -H "Authorization: Bearer $IAM_TOKEN" \
+                  -H "Content-Type: text/plain" \
+                  --data-binary @"$LCOV_FILE" \
+                  && echo "Uploaded lcov for metrics-util → test-results/$GIT_COMMIT/coverage/metrics-util/lcov.info" \
+                  || echo "WARNING: Failed to upload lcov for metrics-util (non-fatal)"
+              else
+                echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+              fi
             fi
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
@@ -281,17 +291,22 @@ tasks:
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
               && echo "Uploaded test list for serverless → test-results/$GIT_COMMIT/serverless.txt" \
               || echo "WARNING: Failed to upload test list for serverless (non-fatal)"
-            LCOV_FILE="coverage/serverless/lcov.info"
-            if [ -f "$LCOV_FILE" ]; then
-              curl -sf -X PUT \
-                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/serverless/lcov.info" \
-                -H "Authorization: Bearer $IAM_TOKEN" \
-                -H "Content-Type: text/plain" \
-                --data-binary @"$LCOV_FILE" \
-                && echo "Uploaded lcov for serverless → test-results/$GIT_COMMIT/coverage/serverless/lcov.info" \
-                || echo "WARNING: Failed to upload lcov for serverless (non-fatal)"
+            NODE_MAJOR="${node_version%%.*}"
+            if [ "$NODE_MAJOR" != "24" ]; then
+              echo "Skip: lcov upload — not the development node major version ($NODE_MAJOR != 24)"
             else
-              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+              LCOV_FILE="coverage/serverless/lcov.info"
+              if [ -f "$LCOV_FILE" ]; then
+                curl -sf -X PUT \
+                  "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/serverless/lcov.info" \
+                  -H "Authorization: Bearer $IAM_TOKEN" \
+                  -H "Content-Type: text/plain" \
+                  --data-binary @"$LCOV_FILE" \
+                  && echo "Uploaded lcov for serverless → test-results/$GIT_COMMIT/coverage/serverless/lcov.info" \
+                  || echo "WARNING: Failed to upload lcov for serverless (non-fatal)"
+              else
+                echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+              fi
             fi
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
@@ -367,17 +382,22 @@ tasks:
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
               && echo "Uploaded test list for serverless-collector → test-results/$GIT_COMMIT/serverless-collector.txt" \
               || echo "WARNING: Failed to upload test list for serverless-collector (non-fatal)"
-            LCOV_FILE="coverage/serverless-collector/lcov.info"
-            if [ -f "$LCOV_FILE" ]; then
-              curl -sf -X PUT \
-                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/serverless-collector/lcov.info" \
-                -H "Authorization: Bearer $IAM_TOKEN" \
-                -H "Content-Type: text/plain" \
-                --data-binary @"$LCOV_FILE" \
-                && echo "Uploaded lcov for serverless-collector → test-results/$GIT_COMMIT/coverage/serverless-collector/lcov.info" \
-                || echo "WARNING: Failed to upload lcov for serverless-collector (non-fatal)"
+            NODE_MAJOR="${node_version%%.*}"
+            if [ "$NODE_MAJOR" != "24" ]; then
+              echo "Skip: lcov upload — not the development node major version ($NODE_MAJOR != 24)"
             else
-              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+              LCOV_FILE="coverage/serverless-collector/lcov.info"
+              if [ -f "$LCOV_FILE" ]; then
+                curl -sf -X PUT \
+                  "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/serverless-collector/lcov.info" \
+                  -H "Authorization: Bearer $IAM_TOKEN" \
+                  -H "Content-Type: text/plain" \
+                  --data-binary @"$LCOV_FILE" \
+                  && echo "Uploaded lcov for serverless-collector → test-results/$GIT_COMMIT/coverage/serverless-collector/lcov.info" \
+                  || echo "WARNING: Failed to upload lcov for serverless-collector (non-fatal)"
+              else
+                echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+              fi
             fi
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
@@ -453,17 +473,22 @@ tasks:
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
               && echo "Uploaded test list for shared-metrics → test-results/$GIT_COMMIT/shared-metrics.txt" \
               || echo "WARNING: Failed to upload test list for shared-metrics (non-fatal)"
-            LCOV_FILE="coverage/shared-metrics/lcov.info"
-            if [ -f "$LCOV_FILE" ]; then
-              curl -sf -X PUT \
-                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/shared-metrics/lcov.info" \
-                -H "Authorization: Bearer $IAM_TOKEN" \
-                -H "Content-Type: text/plain" \
-                --data-binary @"$LCOV_FILE" \
-                && echo "Uploaded lcov for shared-metrics → test-results/$GIT_COMMIT/coverage/shared-metrics/lcov.info" \
-                || echo "WARNING: Failed to upload lcov for shared-metrics (non-fatal)"
+            NODE_MAJOR="${node_version%%.*}"
+            if [ "$NODE_MAJOR" != "24" ]; then
+              echo "Skip: lcov upload — not the development node major version ($NODE_MAJOR != 24)"
             else
-              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+              LCOV_FILE="coverage/shared-metrics/lcov.info"
+              if [ -f "$LCOV_FILE" ]; then
+                curl -sf -X PUT \
+                  "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/shared-metrics/lcov.info" \
+                  -H "Authorization: Bearer $IAM_TOKEN" \
+                  -H "Content-Type: text/plain" \
+                  --data-binary @"$LCOV_FILE" \
+                  && echo "Uploaded lcov for shared-metrics → test-results/$GIT_COMMIT/coverage/shared-metrics/lcov.info" \
+                  || echo "WARNING: Failed to upload lcov for shared-metrics (non-fatal)"
+              else
+                echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+              fi
             fi
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"

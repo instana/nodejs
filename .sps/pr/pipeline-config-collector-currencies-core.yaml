@@ -123,17 +123,22 @@ tasks:
               --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
               && echo "Uploaded test list for collector-core-fs → test-results/$GIT_COMMIT/collector-core-fs.txt" \
               || echo "WARNING: Failed to upload test list for collector-core-fs (non-fatal)"
-            LCOV_FILE="coverage/collector-core-fs/lcov.info"
-            if [ -f "$LCOV_FILE" ]; then
-              curl -sf -X PUT \
-                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/collector-core-fs/lcov.info" \
-                -H "Authorization: Bearer $IAM_TOKEN" \
-                -H "Content-Type: text/plain" \
-                --data-binary @"$LCOV_FILE" \
-                && echo "Uploaded lcov for collector-core-fs → test-results/$GIT_COMMIT/coverage/collector-core-fs/lcov.info" \
-                || echo "WARNING: Failed to upload lcov for collector-core-fs (non-fatal)"
+            NODE_MAJOR="${node_version%%.*}"
+            if [ "$NODE_MAJOR" != "24" ]; then
+              echo "Skip: lcov upload — not the development node major version ($NODE_MAJOR != 24)"
             else
-              echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+              LCOV_FILE="coverage/collector-core-fs/lcov.info"
+              if [ -f "$LCOV_FILE" ]; then
+                curl -sf -X PUT \
+                  "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/collector-core-fs/lcov.info" \
+                  -H "Authorization: Bearer $IAM_TOKEN" \
+                  -H "Content-Type: text/plain" \
+                  --data-binary @"$LCOV_FILE" \
+                  && echo "Uploaded lcov for collector-core-fs → test-results/$GIT_COMMIT/coverage/collector-core-fs/lcov.info" \
+                  || echo "WARNING: Failed to upload lcov for collector-core-fs (non-fatal)"
+              else
+                echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+              fi
             fi
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"

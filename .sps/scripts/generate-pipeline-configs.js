@@ -12,6 +12,8 @@ const yaml = require('js-yaml');
 
 const REPO_ROOT = path.join(__dirname, '../..');
 const CURRENCIES_DIR = path.join(REPO_ROOT, 'packages/collector/test/integration/currencies');
+const DEFAULT_NODE_VERSION = fs.readFileSync(path.join(REPO_ROOT, '.nvmrc'), 'utf-8').trim();
+const DEFAULT_NODE_MAJOR = DEFAULT_NODE_VERSION.split('.')[0];
 
 const sidecarsData = require('../assets/docker-services.json');
 
@@ -473,17 +475,22 @@ function uploadTestFilesLines(taskSlug) {
     '    --data-binary "$(echo "$TEST_FILES" | tr \' \' \'\\n\' | sort)" \\',
     `    && echo "Uploaded test list for ${taskSlug} → test-results/\$GIT_COMMIT/${taskSlug}.txt" \\`,
     '    || echo "WARNING: Failed to upload test list for ' + taskSlug + ' (non-fatal)"',
-    `  LCOV_FILE="coverage/${taskSlug}/lcov.info"`,
-    '  if [ -f "$LCOV_FILE" ]; then',
-    `    curl -sf -X PUT \\`,
-    `      "${COS_ENDPOINT}/${COS_BUCKET}/test-results/\$GIT_COMMIT/coverage/${taskSlug}/lcov.info" \\`,
-    '      -H "Authorization: Bearer $IAM_TOKEN" \\',
-    '      -H "Content-Type: text/plain" \\',
-    `      --data-binary @"\$LCOV_FILE" \\`,
-    `      && echo "Uploaded lcov for ${taskSlug} → test-results/\$GIT_COMMIT/coverage/${taskSlug}/lcov.info" \\`,
-    `      || echo "WARNING: Failed to upload lcov for ${taskSlug} (non-fatal)"`,
-    '  else',
-    `    echo "WARNING: lcov not found at \$LCOV_FILE — skipping lcov upload"`,
+    `  NODE_MAJOR="\${node_version%%.*}"`,
+    `  if [ "\$NODE_MAJOR" != "${DEFAULT_NODE_MAJOR}" ]; then`,
+    `    echo "Skip: lcov upload — not the development node major version (\$NODE_MAJOR != ${DEFAULT_NODE_MAJOR})"`,
+    `  else`,
+    `    LCOV_FILE="coverage/${taskSlug}/lcov.info"`,
+    '    if [ -f "$LCOV_FILE" ]; then',
+    `      curl -sf -X PUT \\`,
+    `        "${COS_ENDPOINT}/${COS_BUCKET}/test-results/\$GIT_COMMIT/coverage/${taskSlug}/lcov.info" \\`,
+    '        -H "Authorization: Bearer $IAM_TOKEN" \\',
+    '        -H "Content-Type: text/plain" \\',
+    `        --data-binary @"\$LCOV_FILE" \\`,
+    `        && echo "Uploaded lcov for ${taskSlug} → test-results/\$GIT_COMMIT/coverage/${taskSlug}/lcov.info" \\`,
+    `        || echo "WARNING: Failed to upload lcov for ${taskSlug} (non-fatal)"`,
+    '    else',
+    `      echo "WARNING: lcov not found at \$LCOV_FILE — skipping lcov upload"`,
+    '    fi',
     '  fi',
     'else',
     '  echo "WARNING: COS credentials or git commit unavailable — skipping uploads"',
@@ -668,6 +675,10 @@ function buildSonarTask(rootTask = 'pr-code-checks') {
   // Lines shared between PR and main: fetch IAM token + download all lcov reports from COS
   const downloadLcovLines = [
     '# ── Download lcov coverage reports from COS ──────────────────────────────',
+    `NODE_MAJOR="\${node_version%%.*}"`,
+    `if [ "\$NODE_MAJOR" != "${DEFAULT_NODE_MAJOR}" ]; then`,
+    `  echo "Skip: sonar lcov download — not the development node major version (\$NODE_MAJOR != ${DEFAULT_NODE_MAJOR})"`,
+    'else',
     'COS_API_KEY="$(get_secret ibm-object-storage-api-key)"',
     'GIT_COMMIT="$(get_env HEAD_SHA "")"',
     'LCOV_PATHS=""',
@@ -697,6 +708,7 @@ function buildSonarTask(rootTask = 'pr-code-checks') {
     '  echo "LCOV_PATHS=$LCOV_PATHS"',
     'else',
     '  echo "WARNING: COS credentials or git commit unavailable — skipping lcov download"',
+    'fi',
     'fi',
     '',
   ].join('\n');
