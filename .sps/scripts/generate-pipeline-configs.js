@@ -51,11 +51,11 @@ function sidecar(name) {
   return sidecarsData.sidecars.find(s => s.name === name);
 }
 
-function dockerRunScript(name) {
+function dockerRunScript(name, options = {}) {
   const s = sidecar(name);
   if (!s) throw new Error(`Unknown sidecar: ${name}`);
 
-  const lines = [`docker run -d --network ${SIDECAR_NETWORK} --name ${name}`];
+  const lines = [`docker run -d --network ${options.network || SIDECAR_NETWORK} --name ${name}`];
 
   if (s.platform) {
     lines.push(`  --platform ${s.platform}`);
@@ -241,7 +241,21 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
         }
       } else {
         scriptLines.push(`# start ${need}`);
-        scriptLines.push(dockerRunScript(need));
+        if (need === 'localstack' && ['@aws-sdk/client-kinesis', 'aws-sdk'].includes(displayName)) {
+          // LocalStack's Kinesis backend is downloaded and started lazily. Bootstrap it with
+          // temporary egress, verify a real Kinesis operation, then isolate it for the tests.
+          scriptLines.push('docker network create kinesis-bootstrap');
+          scriptLines.push(dockerRunScript(need, { network: 'kinesis-bootstrap' }));
+          scriptLines.push(`docker network connect ${SIDECAR_NETWORK} ${need}`);
+          scriptLines.push('timeout 180 bash -c \\');
+          scriptLines.push(
+            `  'until docker exec ${need} awslocal kinesis list-streams >/dev/null 2>&1; do sleep 2; done'`
+          );
+          scriptLines.push(`docker network disconnect kinesis-bootstrap ${need}`);
+          scriptLines.push('docker network rm kinesis-bootstrap');
+        } else {
+          scriptLines.push(dockerRunScript(need));
+        }
         const socat = socatForwardScript(need);
         if (socat) scriptLines.push(socat);
         const wait = readinessScript(need);
