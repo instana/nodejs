@@ -261,7 +261,7 @@ on the target repository. The required settings are:
   checks as required status checks.
 - **Restrict who can push** to `main` directly (no force-push, no deletions).
 
-Configure these rules in **GitHub → Repository Settings → Branches → Branch protection rules**.
+Configure these rules in GitHub → Repository Settings → Rules → Rulesets.
 
 > Full configuration reference: [IBM Cloud DevSecOps — Configure GitHub](https://test.cloud.ibm.com/docs/devsecops?topic=devsecops-cd-devsecops-config-github)
 
