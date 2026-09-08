@@ -106,7 +106,6 @@ tasks:
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
 
-          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -114,7 +113,6 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
-              RUN_ESM="$RUN_ESM" \
               INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
               npm run test:ci:aws-lambda || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
@@ -164,7 +162,6 @@ tasks:
           # collect test files
           TEST_FILES=$(cd packages/aws-fargate && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
 
-          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -172,7 +169,6 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
-              RUN_ESM="$RUN_ESM" \
               npm run test:ci:aws-fargate || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -221,7 +217,6 @@ tasks:
           # collect test files
           TEST_FILES=$(cd packages/azure-container-services && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
 
-          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -229,7 +224,6 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
-              RUN_ESM="$RUN_ESM" \
               npm run test:ci:azure-container-services || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -278,7 +272,6 @@ tasks:
           # collect test files
           TEST_FILES=$(cd packages/google-cloud-run && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
 
-          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -286,7 +279,6 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
-              RUN_ESM="$RUN_ESM" \
               npm run test:ci:google-cloud-run || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break

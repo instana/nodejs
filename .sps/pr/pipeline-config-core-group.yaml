@@ -79,7 +79,6 @@ tasks:
           # collect test files
           TEST_FILES=$(cd packages/core && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
 
-          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -87,7 +86,6 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
-              RUN_ESM="$RUN_ESM" \
               npm run test:ci:core || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -155,7 +153,6 @@ tasks:
           # collect test files
           TEST_FILES=$(cd packages/metrics-util && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
 
-          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -163,7 +160,6 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
-              RUN_ESM="$RUN_ESM" \
               npm run test:ci:metrics-util || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -231,7 +227,6 @@ tasks:
           # collect test files
           TEST_FILES=$(cd packages/serverless && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
 
-          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -239,7 +234,6 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
-              RUN_ESM="$RUN_ESM" \
               npm run test:ci:serverless || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -307,7 +301,6 @@ tasks:
           # collect test files
           TEST_FILES=$(cd packages/serverless-collector && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
 
-          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -315,7 +308,6 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
-              RUN_ESM="$RUN_ESM" \
               npm run test:ci:serverless-collector || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -383,7 +375,6 @@ tasks:
           # collect test files
           TEST_FILES=$(cd packages/shared-metrics && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
 
-          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -391,7 +382,6 @@ tasks:
               PATH="$PATH" \
               HOME="$HOME" \
               CI=true \
-              RUN_ESM="$RUN_ESM" \
               npm run test:ci:shared-metrics || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break

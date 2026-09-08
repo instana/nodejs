@@ -410,9 +410,9 @@ function runEsmReadLines() {
   return ['RUN_ESM="$(get_env RUN_ESM "")"'];
 }
 
-function runWithRetryLines(npmScript, envLines = []) {
+function runWithRetryLines(npmScript, envLines = [], withEsm = true) {
   return [
-    ...runEsmReadLines(),
+    ...(withEsm ? runEsmReadLines() : []),
     'retry=1',
     'while [ $retry -le 2 ]; do',
     '  LAST_EXIT=0',
@@ -420,7 +420,7 @@ function runWithRetryLines(npmScript, envLines = []) {
     '    PATH="$PATH" \\',
     '    HOME="$HOME" \\',
     '    CI=true \\',
-    '    RUN_ESM="$RUN_ESM" \\',
+    ...(withEsm ? ['    RUN_ESM="$RUN_ESM" \\'] : []),
     ...envLines.map(l => `    ${l}`),
     `    npm run ${npmScript} || LAST_EXIT=$?`,
     '  if [ $LAST_EXIT -eq 0 ]; then',
@@ -521,7 +521,7 @@ function buildCurrencyTasks(pkgName, folder, group) {
   });
 }
 
-function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv = null) {
+function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv = null, supportsEsm = false) {
   const scriptLines = ['#!/usr/bin/env bash', 'set -eo pipefail', ''];
   scriptLines.push(nodeVersionSwitchScript());
   scriptLines.push('');
@@ -563,7 +563,11 @@ function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv
     const varName = extraEnv.split('=')[0];
     simpleEnvLines.push(`${varName}="$${varName}" \\`);
   }
-  scriptLines.push(...runWithRetryLines(testScript, simpleEnvLines));
+  // Only forward RUN_ESM for packages whose test hooks understand it (i.e. use
+  // packages/collector/test/hooks.js with checkESMApp). Simple-target packages
+  // have no such hook and would run all tests unconditionally regardless of the
+  // flag, producing incorrect results when RUN_ESM is set.
+  scriptLines.push(...runWithRetryLines(testScript, simpleEnvLines, supportsEsm));
   scriptLines.push(...uploadTestFilesLines(taskSlug));
   scriptLines.push('exit $LAST_EXIT');
 
