@@ -16,8 +16,16 @@ PIPELINE_ID="579d9c4d-163d-4171-be94-9535ff3f68c4"
 REGION="us-south"
 
 DRY_RUN=false
-if [[ "${1:-}" == "--dry-run" ]]; then
-  DRY_RUN=true
+NAME_FILTER=""
+
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run)  DRY_RUN=true ;;
+    --name=*)   NAME_FILTER="${arg#--name=}" ;;
+  esac
+done
+
+if [[ "$DRY_RUN" == "true" ]]; then
   echo ">>> DRY RUN — no API calls will be made <<<"
   echo ""
 fi
@@ -69,6 +77,10 @@ FAILED=0
 while IFS= read -r line; do
   trigger_id=$(echo "$line" | awk '{print $1}')
   trigger_name=$(echo "$line" | awk '{$1=""; print $0}' | xargs)
+
+  if [[ -n "$NAME_FILTER" && "$trigger_name" != *"$NAME_FILTER"* ]]; then
+    continue
+  fi
 
   echo "  DELETE ${trigger_name} (${trigger_id})"
 

@@ -29,7 +29,7 @@ if (!['all', 'pr', 'main', 'manual'].includes(MODE)) {
 const ALL_CURRENCY_GROUPS = fs.readdirSync(CURRENCIES_DIR).map(g => `collector-currencies-${g}`);
 const ALL_SIMPLE_TARGETS = [
   'collector-metrics',
-  'collector-misc',
+  'collector-misc-and-unit',
   'cloud',
   'autoprofile',
   'core-group',
@@ -954,7 +954,7 @@ function generateOne(t) {
     );
     const prConfig = baseConfig({ [taskName]: task });
     writeConfig(t, prConfig, toMainConfig(prConfig));
-  } else if (t === 'collector-misc') {
+  } else if (t === 'collector-misc-and-unit') {
     // Groups are defined in packages/collector/test/integration/misc/.split
     // (JSON object: { "group-name": ["subdir", ...], ... }).
     // Folders with a .needs file are auto-detected → misc-dind task (no .split entry needed).
