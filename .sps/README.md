@@ -235,7 +235,7 @@ actively running pipeline run on the toolchain in one shot.
 .sps/scripts/stop-all-runs.sh
 ```
 
-## Secrets
+## Required Secrets 
 
 SPS secrets are not stored in this repository. Configure them as secure pipeline
 properties in the IBM Cloud toolchain.
