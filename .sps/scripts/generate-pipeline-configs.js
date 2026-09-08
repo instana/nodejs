@@ -636,7 +636,7 @@ function buildGeneralTasks() {
   const prefix = MODE === 'main' ? 'code-build' : 'pr-code-checks';
   const rootTask = prefix;
 
-  function task(displayName, cmd, fromTask = rootTask) {
+  function task(displayName, cmd) {
     const script = [
       '#!/usr/bin/env bash',
       'set -eo pipefail',
@@ -650,7 +650,7 @@ function buildGeneralTasks() {
     ].join('\n');
 
     return {
-      from: fromTask,
+      from: rootTask,
       displayName,
       runtimeClassName: 'large',
       steps: [
@@ -728,7 +728,7 @@ function buildGeneralTasks() {
     },
     [`${prefix}-audit`]:       task('audit',       'npm run audit'),
     [`${prefix}-lint`]:        task('lint',        'npm run lint'),
-    [`${prefix}-commitlint`]:  task('commitlint',  'npm run commitlint', echoEnvTaskName),
+    [`${prefix}-commitlint`]:  task('commitlint',  'npm run commitlint'),
     [`${prefix}-depcheck`]:    task('depcheck',    'npm run depcheck')
   };
 }

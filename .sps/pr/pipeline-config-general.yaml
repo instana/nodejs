@@ -183,7 +183,7 @@ tasks:
       - name: scan-artifact
         when: 'false'
   pr-code-checks-commitlint:
-    from: pr-code-checks-echo-env
+    from: pr-code-checks
     displayName: commitlint
     runtimeClassName: large
     steps:

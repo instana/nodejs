@@ -183,7 +183,7 @@ tasks:
       - name: scan-artifact
         when: 'false'
   code-build-commitlint:
-    from: code-build-echo-env
+    from: code-build
     displayName: commitlint
     runtimeClassName: large
     steps:
