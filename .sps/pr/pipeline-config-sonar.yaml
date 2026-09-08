@@ -58,12 +58,6 @@ tasks:
       - name: compliance-checks
         when: 'false'
       - name: unit-test
-        when: 'false'
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
         displayName: sonar-analysis
         image: mirror.gcr.io/library/node:24
         script: |-
@@ -105,3 +99,9 @@ tasks:
             echo "No PR context found — running branch analysis..."
             sonar -Dsonar.token="$SONAR_TOKEN"
           fi
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
