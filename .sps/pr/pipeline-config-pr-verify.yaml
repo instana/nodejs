@@ -66,6 +66,10 @@ tasks:
           DOWNLOADED_FILE="$TMPDIR/downloaded.txt"   # tracks task slugs already fetched from COS
           touch "$CLAIMED_FILE" "$DOWNLOADED_FILE"
 
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+
           # Helper: download the COS result file for a single completed status context.
           # Context format: "tekton/pr-code-checks-<slug>/code-unit-tests"
           # Skips silently if already downloaded or if COS has no file for it.
@@ -126,15 +130,15 @@ tasks:
           }
 
           # ── Phase 1: wait until all EXPECTED_CHECKS are registered ──────────────
-          echo "Waiting for all 88 expected checks to be registered on commit $GIT_COMMIT..."
+          echo "Waiting for all 93 expected checks to be registered on commit $GIT_COMMIT..."
           MAX_WAIT=3600
           POLL_INTERVAL=30
           ELAPSED=0
-          EXPECTED_CHECKS=88
+          EXPECTED_CHECKS=93
           while true; do
             STATUSES=$(fetch_statuses)
             # Count unique contexts (deduplicate — statuses API returns history, latest first)
-            OTHERS=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(set(r['context'] for r in d if r['context'].startswith('tekton/pr-code-checks-') and not r['context'].startswith('tekton/pr-code-checks-verify'))))")
+            OTHERS=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(set(r['context'] for r in d if r['context'].startswith('tekton/pr-code-checks-') and not r['context'].startswith('tekton/pr-code-checks-verify') and not r['context'].startswith('tekton/pr-code-checks-sonar'))))")
             echo "  $OTHERS / $EXPECTED_CHECKS checks registered (${ELAPSED}s elapsed)"
             if [ "$OTHERS" -ge "$EXPECTED_CHECKS" ]; then
               echo "All expected checks are now registered."
@@ -157,11 +161,11 @@ tasks:
             # Download COS file for every completed (success/failure) code-unit-tests status
             while IFS= read -r context; do
               download_cos_result "$context"
-            done < <(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); seen=set(); [print(r['context']) or seen.add(r['context']) for r in d if r['context'].endswith('/code-unit-tests') and r['context'] not in seen and r['state'] in ('success','failure') and not r['context'].startswith('tekton/pr-code-checks-verify')]")
+            done < <(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); seen=set(); [print(r['context']) or seen.add(r['context']) for r in d if r['context'].endswith('/code-unit-tests') and r['context'] not in seen and r['state'] in ('success','failure') and not r['context'].startswith('tekton/pr-code-checks-verify') and not r['context'].startswith('tekton/sonar-analysis')]")
             PENDING=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); seen=set(); pending=0
           for r in d:
               c=r['context']
-              if not c.endswith('/code-unit-tests') or c.startswith('tekton/pr-code-checks-verify'): continue
+              if not c.endswith('/code-unit-tests') or c.startswith('tekton/pr-code-checks-verify') or c.startswith('tekton/sonar-analysis'): continue
               if c in seen: continue
               seen.add(c)
               if r['state']=='pending': pending+=1
@@ -184,7 +188,6 @@ tasks:
           ALL_TESTS=$(find "$REPO_PATH/packages" \
             -name "*.test.js" \
             -not -path "*/node_modules/*" \
-            -not -path "*/long_*/*" \
             | sed "s|$REPO_PATH/packages/[^/]*/||" | sort)
 
           UNCOVERED_LIST=""
@@ -214,7 +217,137 @@ tasks:
             echo "❌ $MISSING test file(s) not covered by any pipeline task"
             exit 1
           else
-            echo "✅ All $TOTAL collector tests are covered"
+            echo "✅ All $TOTAL test files are covered"
+          fi
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
+  sonar-analysis:
+    from: pr-code-checks
+    displayName: sonar-analysis
+    runtimeClassName: large
+    steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+        when: 'false'
+      - name: compliance-checks
+        when: 'false'
+      - name: unit-test
+        displayName: sonar-analysis
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          SONAR_TOKEN="$(get_secret sonar-token)"
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "ERROR: sonar-token pipeline property is not set — skipping Sonar analysis."
+            exit 1
+          fi
+
+          GH_TOKEN="$(get_secret gh-public-token)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          REPO="instana/nodejs"
+
+          # ── Wait for pr-verify to complete ───────────────────────────────────────
+          echo "Waiting for pr-code-checks-verify to complete..."
+          MAX_WAIT=3600
+          POLL_INTERVAL=30
+          ELAPSED=0
+          while true; do
+            STATE=$(curl -sf \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$REPO/commits/$GIT_COMMIT/statuses?per_page=100" \
+              | python3 -c "import sys,json; d=json.load(sys.stdin); st=[r['state'] for r in d if r['context']=='tekton/pr-code-checks-verify/code-unit-tests']; print(st[0] if st else 'pending')" 2>/dev/null || echo "pending")
+            echo "  pr-verify status: $STATE (${ELAPSED}s elapsed)"
+            if [ "$STATE" = "success" ] || [ "$STATE" = "failure" ]; then
+              echo "pr-verify completed with status: $STATE"
+              break
+            fi
+            if [ "$ELAPSED" -ge "$MAX_WAIT" ]; then
+              echo "ERROR: Timed out waiting for pr-verify"
+              exit 1
+            fi
+            sleep $POLL_INTERVAL
+            ELAPSED=$((ELAPSED + POLL_INTERVAL))
+          done
+
+          PR_NUMBER="$(get_env pr-id "")"
+          PR_BRANCH="$(get_env pr-branch "")"
+          TARGET_BRANCH="$(get_env target-branch "main")"
+          PR_STATE="$(get_env pr-state "")"
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+
+          echo "Running ESLint..."
+          npx eslint packages/ -f json -o eslint-report.json || true
+
+          # ── Download lcov coverage reports from COS ──────────────────────────────
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          NODE_MAJOR="${node_version%%.*}"
+          if [ "$NODE_MAJOR" != "24" ]; then
+            echo "Skip: sonar lcov download — not the development node major version ($NODE_MAJOR != 24)"
+          else
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          LCOV_PATHS=""
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            PREFIX="test-results/$GIT_COMMIT/coverage"
+            SLUGS=$(curl -sf \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps?prefix=$PREFIX/&delimiter=/" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              | grep -oP '(?<=<Prefix>)[^<]+(?=</Prefix>)' \
+              | grep -v "^$PREFIX/$" \
+              | sed "s|$PREFIX/||;s|/||")
+            mkdir -p coverage
+            for SLUG in $SLUGS; do
+              mkdir -p "coverage/$SLUG"
+              curl -sf \
+                "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/$PREFIX/$SLUG/lcov.info" \
+                -H "Authorization: Bearer $IAM_TOKEN" \
+                -o "coverage/$SLUG/lcov.info" \
+                && echo "  ✔ downloaded lcov for $SLUG" \
+                || echo "  – no lcov for $SLUG (skipping)"
+            done
+            LCOV_PATHS=$(find coverage -name "lcov.info" | tr '\n' ',' | sed 's/,$//')
+            echo "LCOV_PATHS=$LCOV_PATHS"
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping lcov download"
+          fi
+          fi
+
+          echo "Installing Sonar scanner..."
+          npm install -g @sonar/scan@4.4.0
+
+          if [ -n "$PR_NUMBER" ]; then
+            if [ "$PR_STATE" = "draft" ]; then
+              echo "PR is draft — skipping Sonar scan."
+            else
+              echo "Running Sonar scan for PR #${PR_NUMBER}..."
+              LCOV_ARGS=""
+              [ -n "$LCOV_PATHS" ] && LCOV_ARGS="-Dsonar.javascript.lcov.reportPaths=$LCOV_PATHS"
+              sonar -Dsonar.token="$SONAR_TOKEN" \
+                    -Dsonar.pullrequest.key="$PR_NUMBER" \
+                    -Dsonar.pullrequest.branch="$PR_BRANCH" \
+                    -Dsonar.pullrequest.base="$TARGET_BRANCH" \
+                    -Dsonar.newCode.referenceBranch="$TARGET_BRANCH" \
+                    $LCOV_ARGS
+            fi
+          else
+            echo "No PR context found — running branch analysis..."
+            LCOV_ARGS=""
+            [ -n "$LCOV_PATHS" ] && LCOV_ARGS="-Dsonar.javascript.lcov.reportPaths=$LCOV_PATHS"
+            sonar -Dsonar.token="$SONAR_TOKEN" $LCOV_ARGS
           fi
       - name: sign-artifact
         when: 'false'

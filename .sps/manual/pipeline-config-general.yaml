@@ -1,6 +1,6 @@
 version: '2'
 tasks:
-  pr-code-checks:
+  code-build:
     displayName: setup
     runtimeClassName: large
     steps:
@@ -46,8 +46,8 @@ tasks:
     when: false
   deploy-release:
     when: false
-  pr-code-checks-echo-env:
-    from: pr-code-checks
+  code-build-echo-env:
+    from: code-build
     displayName: echo-env
     runtimeClassName: large
     steps:
@@ -108,8 +108,8 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  pr-code-checks-audit:
-    from: pr-code-checks
+  code-build-audit:
+    from: code-build
     displayName: audit
     runtimeClassName: large
     steps:
@@ -145,8 +145,8 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  pr-code-checks-lint:
-    from: pr-code-checks
+  code-build-lint:
+    from: code-build
     displayName: lint
     runtimeClassName: large
     steps:
@@ -182,8 +182,8 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  pr-code-checks-commitlint:
-    from: pr-code-checks
+  code-build-commitlint:
+    from: code-build
     displayName: commitlint
     runtimeClassName: large
     steps:
@@ -219,8 +219,8 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-  pr-code-checks-depcheck:
-    from: pr-code-checks
+  code-build-depcheck:
+    from: code-build
     displayName: depcheck
     runtimeClassName: large
     steps:

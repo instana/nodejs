@@ -7,7 +7,7 @@
 
 const { expect } = require('chai');
 
-const { delay, isCI, isCILongRunning, retry } = require('@_local/core/test/test_util');
+const { delay, isCI, retry } = require('@_local/core/test/test_util');
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 const { AgentStubControls } = require('@_local/collector/test/apps/agentStubControls');
 
@@ -18,14 +18,13 @@ module.exports = function () {
 
   this.timeout(testTimeout);
 
-  let mochaSuiteFn = describe;
-  if (isCI() && !isCILongRunning()) {
-    mochaSuiteFn = describe.skip;
+  if (!isCI()) {
+    return;
   }
 
   let keepTriggeringHttpRequests;
 
-  mochaSuiteFn('agent is up to date', function () {
+  describe('agent is up to date', function () {
     const agentControls = new AgentStubControls();
     let controls;
 
@@ -81,7 +80,7 @@ module.exports = function () {
     });
   });
 
-  mochaSuiteFn('agent is outdated', function () {
+  describe('agent is outdated', function () {
     const agentControls = new AgentStubControls();
     let controls;
 

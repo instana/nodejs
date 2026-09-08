@@ -27,9 +27,6 @@ module.exports = {
       trace: () => {}
     };
   },
-  isCILongRunning: () => {
-    return process.env.CI_LONG_RUNNING;
-  },
   isCI,
   retry: require('./retry'),
   retryUntilSpansMatch: require('./retryUntilSpansMatch'),

@@ -12,6 +12,8 @@ const yaml = require('js-yaml');
 
 const REPO_ROOT = path.join(__dirname, '../..');
 const CURRENCIES_DIR = path.join(REPO_ROOT, 'packages/collector/test/integration/currencies');
+const DEFAULT_NODE_VERSION = fs.readFileSync(path.join(REPO_ROOT, '.nvmrc'), 'utf-8').trim();
+const DEFAULT_NODE_MAJOR = DEFAULT_NODE_VERSION.split('.')[0];
 
 const sidecarsData = require('../assets/docker-services.json');
 
@@ -29,12 +31,11 @@ if (!['all', 'pr', 'main', 'manual'].includes(MODE)) {
 const ALL_CURRENCY_GROUPS = fs.readdirSync(CURRENCIES_DIR).map(g => `collector-currencies-${g}`);
 const ALL_SIMPLE_TARGETS = [
   'collector-metrics',
-  'collector-misc',
+  'collector-misc-and-unit',
   'cloud',
   'autoprofile',
   'core-group',
   'opentelemetry',
-  'sonar',
   'pr-general',
   'pr-verify',
   'upload-currency-report'
@@ -302,7 +303,7 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
     extraEnvLines.push('GCS_SERVICE_ACCOUNT_EMAIL="test-service-account@test-project.iam.gserviceaccount.com" \\');
   }
   extraEnvLines.push('TEST_FILES="$TEST_FILES" \\');
-  scriptLines.push(...runWithRetryLines('test:ci:collector', extraEnvLines));
+  scriptLines.push(...runWithRetryLines(`coverage-ci --npm_command="test:ci:collector" --report_dir="${taskSlug}"`, extraEnvLines));
   scriptLines.push(...uploadTestFilesLines(taskSlug));
   scriptLines.push('exit $LAST_EXIT');
 
@@ -410,9 +411,9 @@ function runEsmReadLines() {
   return ['RUN_ESM="$(get_env RUN_ESM "")"'];
 }
 
-function runWithRetryLines(npmScript, envLines = []) {
+function runWithRetryLines(npmScript, envLines = [], withEsm = true) {
   return [
-    ...runEsmReadLines(),
+    ...(withEsm ? runEsmReadLines() : []),
     'retry=1',
     'while [ $retry -le 2 ]; do',
     '  LAST_EXIT=0',
@@ -420,7 +421,7 @@ function runWithRetryLines(npmScript, envLines = []) {
     '    PATH="$PATH" \\',
     '    HOME="$HOME" \\',
     '    CI=true \\',
-    '    RUN_ESM="$RUN_ESM" \\',
+    ...(withEsm ? ['    RUN_ESM="$RUN_ESM" \\'] : []),
     ...envLines.map(l => `    ${l}`),
     `    npm run ${npmScript} || LAST_EXIT=$?`,
     '  if [ $LAST_EXIT -eq 0 ]; then',
@@ -432,13 +433,33 @@ function runWithRetryLines(npmScript, envLines = []) {
   ];
 }
 
+function uploadLcovLines(taskSlug) {
+  return [
+    '',
+    '# upload lcov coverage report to COS',
+    `LCOV_FILE="coverage/${taskSlug}/lcov.info"`,
+    'if [ -f "$LCOV_FILE" ] && [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then',
+    `  curl -sf -X PUT \\`,
+    `    "${COS_ENDPOINT}/${COS_BUCKET}/test-results/\$GIT_COMMIT/coverage/${taskSlug}/lcov.info" \\`,
+    '    -H "Authorization: Bearer $IAM_TOKEN" \\',
+    '    -H "Content-Type: text/plain" \\',
+    `    --data-binary @"\$LCOV_FILE" \\`,
+    `    && echo "Uploaded lcov for ${taskSlug} → test-results/\$GIT_COMMIT/coverage/${taskSlug}/lcov.info" \\`,
+    `    || echo "WARNING: Failed to upload lcov for ${taskSlug} (non-fatal)"`,
+    'else',
+    '  echo "WARNING: lcov file not found or credentials unavailable — skipping lcov upload"',
+    'fi',
+    ''
+  ];
+}
+
 const COS_BUCKET = 'itp-nodejs-tracer-sps';
 const COS_ENDPOINT = 'https://s3.eu-de.cloud-object-storage.appdomain.cloud';
 
 function uploadTestFilesLines(taskSlug) {
   return [
     '',
-    '# upload executed test files to COS for coverage verification',
+    '# upload executed test files + lcov coverage report to COS',
     'COS_API_KEY="$(get_secret ibm-object-storage-api-key)"',
     'GIT_COMMIT="$(get_env HEAD_SHA "")"',
     'if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then',
@@ -451,10 +472,27 @@ function uploadTestFilesLines(taskSlug) {
     '    -H "Authorization: Bearer $IAM_TOKEN" \\',
     '    -H "Content-Type: text/plain" \\',
     '    --data-binary "$(echo "$TEST_FILES" | tr \' \' \'\\n\' | sort)" \\',
-    `    && echo "Uploaded test coverage for ${taskSlug} → test-results/\$GIT_COMMIT/${taskSlug}.txt" \\`,
-    '    || echo "WARNING: Failed to upload test coverage for ' + taskSlug + ' (non-fatal)"',
+    `    && echo "Uploaded test list for ${taskSlug} → test-results/\$GIT_COMMIT/${taskSlug}.txt" \\`,
+    '    || echo "WARNING: Failed to upload test list for ' + taskSlug + ' (non-fatal)"',
+    `  NODE_MAJOR="\${node_version%%.*}"`,
+    `  if [ "\$NODE_MAJOR" != "${DEFAULT_NODE_MAJOR}" ]; then`,
+    `    echo "Skip: lcov upload — not the development node major version (\$NODE_MAJOR != ${DEFAULT_NODE_MAJOR})"`,
+    `  else`,
+    `    LCOV_FILE="coverage/${taskSlug}/lcov.info"`,
+    '    if [ -f "$LCOV_FILE" ]; then',
+    `      curl -sf -X PUT \\`,
+    `        "${COS_ENDPOINT}/${COS_BUCKET}/test-results/\$GIT_COMMIT/coverage/${taskSlug}/lcov.info" \\`,
+    '        -H "Authorization: Bearer $IAM_TOKEN" \\',
+    '        -H "Content-Type: text/plain" \\',
+    `        --data-binary @"\$LCOV_FILE" \\`,
+    `        && echo "Uploaded lcov for ${taskSlug} → test-results/\$GIT_COMMIT/coverage/${taskSlug}/lcov.info" \\`,
+    `        || echo "WARNING: Failed to upload lcov for ${taskSlug} (non-fatal)"`,
+    '    else',
+    `      echo "WARNING: lcov not found at \$LCOV_FILE — skipping lcov upload"`,
+    '    fi',
+    '  fi',
     'else',
-    '  echo "WARNING: COS credentials or git commit unavailable — skipping coverage upload"',
+    '  echo "WARNING: COS credentials or git commit unavailable — skipping uploads"',
     'fi',
     ''
   ];
@@ -521,7 +559,7 @@ function buildCurrencyTasks(pkgName, folder, group) {
   });
 }
 
-function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv = null) {
+function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv = null, supportsEsm = false) {
   const scriptLines = ['#!/usr/bin/env bash', 'set -eo pipefail', ''];
   scriptLines.push(nodeVersionSwitchScript());
   scriptLines.push('');
@@ -563,7 +601,11 @@ function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv
     const varName = extraEnv.split('=')[0];
     simpleEnvLines.push(`${varName}="$${varName}" \\`);
   }
-  scriptLines.push(...runWithRetryLines(testScript, simpleEnvLines));
+  // Only forward RUN_ESM for packages whose test hooks understand it (i.e. use
+  // packages/collector/test/hooks.js with checkESMApp). Simple-target packages
+  // have no such hook and would run all tests unconditionally regardless of the
+  // flag, producing incorrect results when RUN_ESM is set.
+  scriptLines.push(...runWithRetryLines(`coverage-ci --npm_command="${testScript}" --report_dir="${taskSlug}"`, simpleEnvLines, supportsEsm));
   scriptLines.push(...uploadTestFilesLines(taskSlug));
   scriptLines.push('exit $LAST_EXIT');
 
@@ -591,10 +633,15 @@ function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv
 }
 
 function buildGeneralTasks() {
+  const prefix = MODE === 'main' ? 'code-build' : 'pr-code-checks';
+  const rootTask = prefix;
+
   function task(displayName, cmd) {
     const script = [
       '#!/usr/bin/env bash',
       'set -eo pipefail',
+      '',
+      nodeVersionSwitchScript(),
       '',
       'cd "$WORKSPACE/$(load_repo app-repo path)"',
       'npm install --loglevel warn --foreground-scripts',
@@ -603,7 +650,7 @@ function buildGeneralTasks() {
     ].join('\n');
 
     return {
-      from: 'pr-code-checks',
+      from: rootTask,
       displayName,
       runtimeClassName: 'large',
       steps: [
@@ -618,16 +665,119 @@ function buildGeneralTasks() {
     };
   }
 
+  const echoEnvScript = [
+    '#!/usr/bin/env bash',
+    'set -eo pipefail',
+    '',
+    '# ── Read trigger parameters ───────────────────────────────────────────────',
+    'node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"',
+    'RUN_ESM="$(get_env RUN_ESM "")"',
+    '',
+    'echo "Trigger params:"',
+    'echo "  node-version = ${node_version}"',
+    'echo "  RUN_ESM      = ${RUN_ESM:-<not set>}"',
+    'echo ""',
+    '',
+    '# ── Switch to the requested Node version via nvm ──────────────────────────',
+    'curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash',
+    'export NVM_DIR="$HOME/.nvm"',
+    '# shellcheck source=/dev/null',
+    '. "$NVM_DIR/nvm.sh"',
+    'nvm install "$node_version" --no-progress',
+    'nvm use "$node_version"',
+    '',
+    'cd "$WORKSPACE/$(load_repo app-repo path)"',
+    '',
+    '# ── Runtime versions ──────────────────────────────────────────────────────',
+    'echo "Using node:    $(node --version 2>/dev/null || echo \'Node.js not found\')"',
+    'echo "Using npm:     $(npm --version 2>/dev/null || echo \'NPM not found\')"',
+    'echo "Architecture:  $(node -p \'process.arch\' 2>/dev/null || echo \'Unknown\')"',
+    '',
+    '# ── ESM support ───────────────────────────────────────────────────────────',
+    'if [ -n "$RUN_ESM" ] && [ "$RUN_ESM" = "true" ]; then',
+    '  echo "ESM mode:      enabled (RUN_ESM=true)"',
+    'else',
+    '  echo "ESM mode:      disabled (RUN_ESM not set)"',
+    'fi',
+    '',
+    'echo "Python3 version: $(python3 --version 2>/dev/null | head -n 1 || echo \'Python3 not found\')"',
+    'echo "Make version:    $(make --version 2>/dev/null | head -n 1 || echo \'Make not found\')"',
+    'echo "GCC version:     $(gcc --version 2>/dev/null | head -n 1 || echo \'GCC not found\')"',
+    'echo "Node-gyp:        $(node-gyp --version 2>/dev/null || echo \'Node-gyp not found\')"',
+    'echo ""',
+    'echo "NPM config list:"',
+    'npm config list'
+  ].join('\n');
+
+  const echoEnvTaskName = `${prefix}-echo-env`;
+
   return {
-    'pr-code-checks-audit': task('audit', 'npm run audit'),
-    'pr-code-checks-lint': task('lint', 'npm run lint'),
-    'pr-code-checks-commitlint': task('commitlint', 'npm run commitlint'),
-    'pr-code-checks-depcheck': task('depcheck', 'npm run depcheck')
+    [echoEnvTaskName]: {
+      from: rootTask,
+      displayName: 'echo-env',
+      runtimeClassName: 'large',
+      steps: [
+        { name: 'peer-review', when: 'false' },
+        { name: 'detect-secrets', when: 'false' },
+        { name: 'compliance-checks', when: 'false' },
+        { name: 'unit-test', displayName: 'echo-env', image: NODE_IMAGE, script: echoEnvScript },
+        { name: 'sign-artifact', when: 'false' },
+        { name: 'build-artifact', when: 'false' },
+        { name: 'scan-artifact', when: 'false' }
+      ]
+    },
+    [`${prefix}-audit`]:       task('audit',       'npm run audit'),
+    [`${prefix}-lint`]:        task('lint',        'npm run lint'),
+    [`${prefix}-commitlint`]:  task('commitlint',  'npm run commitlint'),
+    [`${prefix}-depcheck`]:    task('depcheck',    'npm run depcheck')
   };
 }
 
 function buildSonarTask(rootTask = 'pr-code-checks') {
   const isPR = rootTask === 'pr-code-checks';
+
+  // Lines shared between PR and main: fetch IAM token + download all lcov reports from COS
+  const downloadLcovLines = [
+    '# ── Download lcov coverage reports from COS ──────────────────────────────',
+    'node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"',
+    `NODE_MAJOR="\${node_version%%.*}"`,
+    `if [ "\$NODE_MAJOR" != "${DEFAULT_NODE_MAJOR}" ]; then`,
+    `  echo "Skip: sonar lcov download — not the development node major version (\$NODE_MAJOR != ${DEFAULT_NODE_MAJOR})"`,
+    'else',
+    'COS_API_KEY="$(get_secret ibm-object-storage-api-key)"',
+    'GIT_COMMIT="$(get_env HEAD_SHA "")"',
+    'LCOV_PATHS=""',
+    'if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then',
+    '  IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \\',
+    '    -H "Content-Type: application/x-www-form-urlencoded" \\',
+    '    -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \\',
+    '    | grep -o \'"access_token":"[^"]*"\' | sed \'s/"access_token":"//;s/"//\')',
+    `  PREFIX="test-results/\$GIT_COMMIT/coverage"`,
+    `  SLUGS=$(curl -sf \\`,
+    `    "${COS_ENDPOINT}/${COS_BUCKET}?prefix=\$PREFIX/&delimiter=/" \\`,
+    '    -H "Authorization: Bearer $IAM_TOKEN" \\',
+    '    | grep -oP \'(?<=<Prefix>)[^<]+(?=</Prefix>)\' \\',
+    '    | grep -v "^$PREFIX/$" \\',
+    '    | sed "s|$PREFIX/||;s|/||")',
+    '  mkdir -p coverage',
+    '  for SLUG in $SLUGS; do',
+    '    mkdir -p "coverage/$SLUG"',
+    `    curl -sf \\`,
+    `      "${COS_ENDPOINT}/${COS_BUCKET}/\$PREFIX/\$SLUG/lcov.info" \\`,
+    '      -H "Authorization: Bearer $IAM_TOKEN" \\',
+    '      -o "coverage/$SLUG/lcov.info" \\',
+    '      && echo "  ✔ downloaded lcov for $SLUG" \\',
+    '      || echo "  – no lcov for $SLUG (skipping)"',
+    '  done',
+    '  LCOV_PATHS=$(find coverage -name "lcov.info" | tr \'\\n\' \',\' | sed \'s/,$//\')',
+    '  echo "LCOV_PATHS=$LCOV_PATHS"',
+    'else',
+    '  echo "WARNING: COS credentials or git commit unavailable — skipping lcov download"',
+    'fi',
+    'fi',
+    '',
+  ].join('\n');
+
   const script = isPR
     ? [
         '#!/usr/bin/env bash',
@@ -638,6 +788,34 @@ function buildSonarTask(rootTask = 'pr-code-checks') {
         '  echo "ERROR: sonar-token pipeline property is not set — skipping Sonar analysis."',
         '  exit 1',
         'fi',
+        '',
+        'GH_TOKEN="$(get_secret gh-public-token)"',
+        'GIT_COMMIT="$(get_env HEAD_SHA "")"',
+        'REPO="instana/nodejs"',
+        '',
+        '# ── Wait for pr-verify to complete ───────────────────────────────────────',
+        'echo "Waiting for pr-code-checks-verify to complete..."',
+        'MAX_WAIT=3600',
+        'POLL_INTERVAL=30',
+        'ELAPSED=0',
+        'while true; do',
+        '  STATE=$(curl -sf \\',
+        '    -H "Authorization: Bearer $GH_TOKEN" \\',
+        '    -H "Accept: application/vnd.github+json" \\',
+        '    "https://api.github.com/repos/$REPO/commits/$GIT_COMMIT/statuses?per_page=100" \\',
+        '    | python3 -c "import sys,json; d=json.load(sys.stdin); st=[r[\'state\'] for r in d if r[\'context\']==\'tekton/pr-code-checks-verify/code-unit-tests\']; print(st[0] if st else \'pending\')" 2>/dev/null || echo "pending")',
+        '  echo "  pr-verify status: $STATE (${ELAPSED}s elapsed)"',
+        '  if [ "$STATE" = "success" ] || [ "$STATE" = "failure" ]; then',
+        '    echo "pr-verify completed with status: $STATE"',
+        '    break',
+        '  fi',
+        '  if [ "$ELAPSED" -ge "$MAX_WAIT" ]; then',
+        '    echo "ERROR: Timed out waiting for pr-verify"',
+        '    exit 1',
+        '  fi',
+        '  sleep $POLL_INTERVAL',
+        '  ELAPSED=$((ELAPSED + POLL_INTERVAL))',
+        'done',
         '',
         'PR_NUMBER="$(get_env pr-id "")"',
         'PR_BRANCH="$(get_env pr-branch "")"',
@@ -650,6 +828,7 @@ function buildSonarTask(rootTask = 'pr-code-checks') {
         'echo "Running ESLint..."',
         'npx eslint packages/ -f json -o eslint-report.json || true',
         '',
+        downloadLcovLines,
         'echo "Installing Sonar scanner..."',
         'npm install -g @sonar/scan@4.4.0',
         '',
@@ -658,15 +837,20 @@ function buildSonarTask(rootTask = 'pr-code-checks') {
         '    echo "PR is draft — skipping Sonar scan."',
         '  else',
         '    echo "Running Sonar scan for PR #${PR_NUMBER}..."',
+        '    LCOV_ARGS=""',
+        '    [ -n "$LCOV_PATHS" ] && LCOV_ARGS="-Dsonar.javascript.lcov.reportPaths=$LCOV_PATHS"',
         '    sonar -Dsonar.token="$SONAR_TOKEN" \\',
         '          -Dsonar.pullrequest.key="$PR_NUMBER" \\',
         '          -Dsonar.pullrequest.branch="$PR_BRANCH" \\',
         '          -Dsonar.pullrequest.base="$TARGET_BRANCH" \\',
-        '          -Dsonar.newCode.referenceBranch="$TARGET_BRANCH"',
+        '          -Dsonar.newCode.referenceBranch="$TARGET_BRANCH" \\',
+        '          $LCOV_ARGS',
         '  fi',
         'else',
         '  echo "No PR context found — running branch analysis..."',
-        '  sonar -Dsonar.token="$SONAR_TOKEN"',
+        '  LCOV_ARGS=""',
+        '  [ -n "$LCOV_PATHS" ] && LCOV_ARGS="-Dsonar.javascript.lcov.reportPaths=$LCOV_PATHS"',
+        '  sonar -Dsonar.token="$SONAR_TOKEN" $LCOV_ARGS',
         'fi'
       ].join('\n')
     : [
@@ -685,11 +869,14 @@ function buildSonarTask(rootTask = 'pr-code-checks') {
         'echo "Running ESLint..."',
         'npx eslint packages/ -f json -o eslint-report.json || true',
         '',
+        downloadLcovLines,
         'echo "Installing SonarCloud scanner..."',
         'npm install -g @sonar/scan@4.4.0',
         '',
         'echo "Running main branch Sonar analysis..."',
-        'sonar -Dsonar.token="$SONAR_TOKEN"'
+        'LCOV_ARGS=""',
+        '[ -n "$LCOV_PATHS" ] && LCOV_ARGS="-Dsonar.javascript.lcov.reportPaths=$LCOV_PATHS"',
+        'sonar -Dsonar.token="$SONAR_TOKEN" $LCOV_ARGS'
       ].join('\n');
 
   return {
@@ -700,10 +887,10 @@ function buildSonarTask(rootTask = 'pr-code-checks') {
       { name: 'peer-review', when: 'false' },
       { name: 'detect-secrets', when: 'false' },
       { name: 'compliance-checks', when: 'false' },
-      { name: 'unit-test', when: 'false' },
+      { name: 'unit-test', displayName: 'sonar-analysis', image: NODE_IMAGE, script },
       { name: 'sign-artifact', when: 'false' },
       { name: 'build-artifact', when: 'false' },
-      { name: 'scan-artifact', displayName: 'sonar-analysis', image: NODE_IMAGE, script }
+      { name: 'scan-artifact', when: 'false' }
     ]
   };
 }
@@ -733,6 +920,11 @@ function buildUploadCurrencyReportTask() {
     'git config user.email instana.ibm.github.enterprise@ibm.com',
     '',
     'git add .',
+    '',
+    'if git diff --cached --quiet; then',
+    '  echo "No changes to commit. Currency report is already up to date."',
+    '  exit 0',
+    'fi',
     '',
     'git commit -m "chore: updated node.js currency report"',
     'git push origin main'
@@ -840,7 +1032,10 @@ function toMainConfig(prConfig) {
   const raw = yaml.dump(prConfig, { lineWidth: -1 });
   const main = yaml.load(raw.replace(/\bpr-code-checks\b/g, 'code-build'));
 
-  // Strip upload block from every step script
+  // Strip upload block from every step script.
+  // detect-secrets and compliance-checks remain with when:'false' (same as PR)
+  // so SPS explicitly skips them in test-group tasks; only the root
+  // pipeline-config.yaml runs them live.
   for (const task of Object.values(main.tasks ?? {})) {
     for (const step of task.steps ?? []) {
       if (step.script) step.script = stripUploadBlock(step.script);
@@ -884,6 +1079,8 @@ function generateOne(t) {
         'pr-code-checks': {
           steps: [
             { name: 'peer-review', when: 'false' },
+            { name: 'detect-secrets' },
+            { name: 'compliance-checks' },
             { name: 'unit-test', image: NODE_IMAGE, script: '#!/usr/bin/env bash\necho "General PR checks passed."' }
           ]
         },
@@ -901,6 +1098,8 @@ function generateOne(t) {
         'code-build': {
           steps: [
             { name: 'peer-review', when: 'false' },
+            { name: 'detect-secrets', when: 'false' },
+            { name: 'compliance-checks', when: 'false' },
             { name: 'unit-test', image: NODE_IMAGE, script: '#!/usr/bin/env bash\necho "General PR checks passed."' },
             { name: 'sign-artifact', when: 'false' },
             { name: 'build-artifact', when: 'false' },
@@ -914,7 +1113,6 @@ function generateOne(t) {
       }
     };
     writeDefaultConfig(prConfig, mainConfig);
-    generateOne('sonar');
 
     generateOne('pr-general');
   } else if (t.startsWith('collector-currencies-')) {
@@ -942,11 +1140,10 @@ function generateOne(t) {
     );
     const prConfig = baseConfig({ [taskName]: task });
     writeConfig(t, prConfig, toMainConfig(prConfig));
-  } else if (t === 'collector-misc') {
+  } else if (t === 'collector-misc-and-unit') {
     // Groups are defined in packages/collector/test/integration/misc/.split
     // (JSON object: { "group-name": ["subdir", ...], ... }).
     // Folders with a .needs file are auto-detected → misc-dind task (no .split entry needed).
-    // Every non-dind folder MUST be listed in .split — the generator fails hard otherwise.
     const miscDir = path.join(REPO_ROOT, 'packages/collector/test/integration/misc');
 
     // Auto-detect dind folders by presence of .needs
@@ -965,7 +1162,7 @@ function generateOne(t) {
       process.exit(1);
     }
 
-    // All non-dind dirs, sorted alphabetically
+    // All non-dind dirs, sorted alphabetically (includes long_* — treated as regular misc tests).
     const allDirs = fs.existsSync(miscDir)
       ? fs
           .readdirSync(miscDir, { withFileTypes: true })
@@ -978,9 +1175,6 @@ function generateOne(t) {
     const splitRaw = fs.readFileSync(miscSplitPath, 'utf-8').trim();
     const splitN = Number(splitRaw);
 
-    // .split supports two forms:
-    //   number → auto-partition non-dind dirs into N roughly-equal groups (misc-1..N)
-    //   JSON object → explicit named groups; every non-dind dir must be listed exactly once
     let splitDef;
     if (!isNaN(splitN) && splitN > 0) {
       const count = Math.min(Math.round(splitN), nonDindDirs.length);
@@ -1026,6 +1220,12 @@ function generateOne(t) {
       fanOutTasks[taskName] = task;
     }
 
+    // unit — collector unit tests (test/unit), no external deps needed
+    {
+      const { taskName, task } = buildCollectorTask('collector-unit', 'collector-unit', ['test/unit'], []);
+      fanOutTasks[taskName] = task;
+    }
+
     // misc-dind — auto-detected .needs folders, union of all their sidecar requirements
     if (dindFolders.length > 0) {
       const dindNeeds = [...new Set(dindFolders.flatMap(name => readNeeds(path.join(miscDir, name))))];
@@ -1033,7 +1233,6 @@ function generateOne(t) {
       const { taskName, task } = buildCollectorTask('misc-dind', 'collector-misc-dind', dindPaths, dindNeeds);
       fanOutTasks[taskName] = task;
     }
-
     const prConfig = baseConfig(fanOutTasks);
     writeConfig(t, prConfig, toMainConfig(prConfig));
   } else if (GROUP_TARGETS[t]) {
@@ -1045,20 +1244,9 @@ function generateOne(t) {
     }
     const prConfig = baseConfig(fanOutTasks);
     writeConfig(t, prConfig, toMainConfig(prConfig));
-  } else if (t === 'sonar') {
-    const prConfig = baseConfig({ 'sonar-analysis': buildSonarTask('pr-code-checks') });
-    const spsDir = path.join(__dirname, '..');
-    const output = yaml.dump(prConfig, { lineWidth: -1, quotingType: "'", forceQuotes: false });
-    const prPath = path.join(spsDir, 'pr', 'pipeline-config-sonar.yaml');
-    fs.writeFileSync(prPath, output);
-    console.log(`Written: ${prPath}`);
   } else if (t === 'pr-general') {
     const prConfig = baseConfig(buildGeneralTasks());
-    const spsDir = path.join(__dirname, '..');
-    const output = yaml.dump(prConfig, { lineWidth: -1, quotingType: "'", forceQuotes: false });
-    const prPath = path.join(spsDir, 'pr', 'pipeline-config-general.yaml');
-    fs.writeFileSync(prPath, output);
-    console.log(`Written: ${prPath}`);
+    writeConfig('general', prConfig, toMainConfig(prConfig));
   } else if (t === 'pr-verify') {
     // Count expected GitHub check-runs from all other PR pipeline configs.
     // Each task name becomes exactly one check-run on GitHub.
@@ -1115,6 +1303,10 @@ function generateOne(t) {
       'CLAIMED_FILE="$TMPDIR/all-claimed.txt"',
       'DOWNLOADED_FILE="$TMPDIR/downloaded.txt"   # tracks task slugs already fetched from COS',
       'touch "$CLAIMED_FILE" "$DOWNLOADED_FILE"',
+      '',
+      'cd "$WORKSPACE/$(load_repo app-repo path)"',
+      'npm install --loglevel warn --foreground-scripts',
+      'node bin/create-version-test-folders.js',
       '',
       '# Helper: download the COS result file for a single completed status context.',
       '# Context format: "tekton/pr-code-checks-<slug>/code-unit-tests"',
@@ -1184,7 +1376,7 @@ function generateOne(t) {
       'while true; do',
       '  STATUSES=$(fetch_statuses)',
       '  # Count unique contexts (deduplicate — statuses API returns history, latest first)',
-      "  OTHERS=$(echo \"$STATUSES\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(len(set(r['context'] for r in d if r['context'].startswith('tekton/pr-code-checks-') and not r['context'].startswith('tekton/pr-code-checks-verify'))))\")",
+      '  OTHERS=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(set(r[\'context\'] for r in d if r[\'context\'].startswith(\'tekton/pr-code-checks-\') and not r[\'context\'].startswith(\'tekton/pr-code-checks-verify\') and not r[\'context\'].startswith(\'tekton/pr-code-checks-sonar\'))))")',
       '  echo "  $OTHERS / $EXPECTED_CHECKS checks registered (${ELAPSED}s elapsed)"',
       '  if [ "$OTHERS" -ge "$EXPECTED_CHECKS" ]; then',
       '    echo "All expected checks are now registered."',
@@ -1207,11 +1399,11 @@ function generateOne(t) {
       '  # Download COS file for every completed (success/failure) code-unit-tests status',
       '  while IFS= read -r context; do',
       '    download_cos_result "$context"',
-      "  done < <(echo \"$STATUSES\" | python3 -c \"import sys,json; d=json.load(sys.stdin); seen=set(); [print(r['context']) or seen.add(r['context']) for r in d if r['context'].endswith('/code-unit-tests') and r['context'] not in seen and r['state'] in ('success','failure') and not r['context'].startswith('tekton/pr-code-checks-verify')]\")",
+      "  done < <(echo \"$STATUSES\" | python3 -c \"import sys,json; d=json.load(sys.stdin); seen=set(); [print(r['context']) or seen.add(r['context']) for r in d if r['context'].endswith('/code-unit-tests') and r['context'] not in seen and r['state'] in ('success','failure') and not r['context'].startswith('tekton/pr-code-checks-verify') and not r['context'].startswith('tekton/sonar-analysis')]\")",
       '  PENDING=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); seen=set(); pending=0',
       'for r in d:',
-      "    c=r['context']",
-      "    if not c.endswith('/code-unit-tests') or c.startswith('tekton/pr-code-checks-verify'): continue",
+      '    c=r[\'context\']',
+      '    if not c.endswith(\'/code-unit-tests\') or c.startswith(\'tekton/pr-code-checks-verify\') or c.startswith(\'tekton/sonar-analysis\'): continue',
       '    if c in seen: continue',
       '    seen.add(c)',
       "    if r['state']=='pending': pending+=1",
@@ -1234,8 +1426,7 @@ function generateOne(t) {
       'ALL_TESTS=$(find "$REPO_PATH/packages" \\',
       '  -name "*.test.js" \\',
       '  -not -path "*/node_modules/*" \\',
-      '  -not -path "*/long_*/*" \\',
-      `  | sed "s|$REPO_PATH/packages/[^/]*/||" | sort)`,
+      '  | sed "s|$REPO_PATH/packages/[^/]*/||" | sort)',
       '',
       'UNCOVERED_LIST=""',
       'MISSING=0',
@@ -1264,7 +1455,7 @@ function generateOne(t) {
       '  echo "❌ $MISSING test file(s) not covered by any pipeline task"',
       '  exit 1',
       'else',
-      '  echo "✅ All $TOTAL collector tests are covered"',
+      '  echo "✅ All $TOTAL test files are covered"',
       'fi'
     ].join('\n');
 
@@ -1294,7 +1485,8 @@ function generateOne(t) {
             { name: 'build-artifact', when: 'false' },
             { name: 'scan-artifact', when: 'false' }
           ]
-        }
+        },
+        'sonar-analysis': buildSonarTask('pr-code-checks')
       }
     };
     const output = yaml.dump(prConfig, { lineWidth: -1, quotingType: "'", forceQuotes: false });
