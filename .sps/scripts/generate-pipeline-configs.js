@@ -1304,6 +1304,8 @@ function generateOne(t) {
       'DOWNLOADED_FILE="$TMPDIR/downloaded.txt"   # tracks task slugs already fetched from COS',
       'touch "$CLAIMED_FILE" "$DOWNLOADED_FILE"',
       '',
+      'cd "$WORKSPACE/$(load_repo app-repo path)"',
+      'npm install --loglevel warn --foreground-scripts',
       'node bin/create-version-test-folders.js',
       '',
       '# Helper: download the COS result file for a single completed status context.',
