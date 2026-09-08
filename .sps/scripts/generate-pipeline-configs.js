@@ -1038,6 +1038,12 @@ function generateOne(t) {
       fanOutTasks[taskName] = task;
     }
 
+    // unit — collector unit tests (test/unit), no external deps needed
+    {
+      const { taskName, task } = buildCollectorTask('collector-unit', 'collector-unit', ['test/unit'], []);
+      fanOutTasks[taskName] = task;
+    }
+
     // misc-dind — auto-detected .needs folders, union of all their sidecar requirements
     if (dindFolders.length > 0) {
       const dindNeeds = [...new Set(dindFolders.flatMap(name => readNeeds(path.join(miscDir, name))))];
