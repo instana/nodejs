@@ -12,7 +12,7 @@ tasks:
           #!/usr/bin/env bash
           set-commit-status \
             --repository "$(load_repo app-repo url)" \
-            --commit-sha "$(get_env HEAD_SHA "")" \
+            --commit-sha "$(load_repo app-repo commit)" \
             --state "success" \
             --description "General PR checks passed." \
             --context "tekton/pr-code-checks/code-unit-tests" \
