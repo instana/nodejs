@@ -1,0 +1,16 @@
+{
+  "name": "platformatic-kafka-esm-example",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Example ESM app using @platformatic/kafka instrumented via @instana/collector esm-register",
+  "scripts": {
+    "start:producer": "node --import ../../packages/collector/esm-register.mjs producer.mjs",
+    "start:consumer": "node --import ../../packages/collector/esm-register.mjs consumer.mjs",
+    "start:producer:iitm": "node --import ./iitm-register.mjs producer.mjs"
+  },
+  "dependencies": {
+    "@platformatic/kafka": "^2.11.0",
+    "express": "^4.21.2",
+    "import-in-the-middle": "^3.3.3"
+  }
+}
