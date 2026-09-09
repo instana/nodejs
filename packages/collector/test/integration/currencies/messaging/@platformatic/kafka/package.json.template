@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@opentelemetry/api": "1.9.0",
+    "@platformatic/kafka-opentelemetry": "^0.2.0"
+  }
+}
