@@ -4,8 +4,8 @@
 
 'use strict';
 
-import { ENTRY, EXIT, w3cTraceParent } from '../constants';
-import { fromOtelIds, fromInstanaIds } from '../w3c_trace_context/W3cTraceContext';
+const constants = require('../constants');
+const W3cTraceContext = require('../w3c_trace_context/W3cTraceContext');
 
 let KafkaInstrumentation;
 
@@ -13,11 +13,11 @@ function initInstrumentation() {
   KafkaInstrumentation = KafkaInstrumentation || require('@platformatic/kafka-opentelemetry').KafkaInstrumentation;
 }
 
-export function preInit() {
+module.exports.preInit = () => {
   initInstrumentation();
-}
+};
 
-export function init() {
+module.exports.init = () => {
   initInstrumentation();
 
   const instrumentation = new KafkaInstrumentation({});
@@ -25,16 +25,16 @@ export function init() {
   if (!instrumentation.getConfig().enabled) {
     instrumentation.enable();
   }
-}
+};
 
-export function getKind(otelSpan) {
+module.exports.getKind = otelSpan => {
   // @platformatic/kafka-opentelemetry uses 'process' for consumer spans
   if (otelSpan.attributes?.['messaging.operation.type'] === 'process') {
-    return ENTRY;
+    return constants.ENTRY;
   }
 
-  return EXIT;
-}
+  return constants.EXIT;
+};
 
 /**
  * The Otel instrumentations are part of our tracing pipeline.
@@ -49,8 +49,8 @@ export function getKind(otelSpan) {
  * - manipulate the returned context of `setSpan` with our ids
  * - the Otel span will be cleaned up automatically from Otel SDK
  */
-export function setW3CTraceContext(api, preparedData, otelSpan, instanaSpan, originalCtx) {
-  if (preparedData.kind !== EXIT) {
+module.exports.setW3CTraceContext = (api, preparedData, otelSpan, instanaSpan, originalCtx) => {
+  if (preparedData.kind !== constants.EXIT) {
     return originalCtx;
   }
 
@@ -61,29 +61,33 @@ export function setW3CTraceContext(api, preparedData, otelSpan, instanaSpan, ori
   //         We take the original Otel ids and forward the suppression state. The entry span will follow the decision.
   // CASE 2: Instana Tracing is active, we push the Instana ids into the Otel context.
   if (!instanaSpan) {
-    w3cTraceContext = fromOtelIds(otelSpanContext.traceId, otelSpanContext.spanId, preparedData.isSuppressed === false);
+    w3cTraceContext = W3cTraceContext.fromOtelIds(
+      otelSpanContext.traceId,
+      otelSpanContext.spanId,
+      preparedData.isSuppressed === false
+    );
   } else {
-    w3cTraceContext = fromInstanaIds(instanaSpan.t, instanaSpan.s, preparedData.isSuppressed === false);
+    w3cTraceContext = W3cTraceContext.fromInstanaIds(instanaSpan.t, instanaSpan.s, preparedData.isSuppressed === false);
   }
 
   const carrier = {};
-  carrier[w3cTraceParent] = w3cTraceContext.renderTraceParent();
+  carrier[constants.w3cTraceParent] = w3cTraceContext.renderTraceParent();
 
   return api.propagation.extract(originalCtx, carrier);
-}
+};
 
 /**
  * We have to extract the w3c information from the otel span, because
  * the entry otel span will contain our Instana trace and parent information, which we have to
  * extract and connect to our Instana spans to keep the correlation.
  */
-export function extractW3CTraceContext(preparedData, otelSpan) {
+module.exports.extractW3CTraceContext = (preparedData, otelSpan) => {
   const result = {
     traceId: null,
     parentSpanId: null
   };
 
-  if (preparedData.kind !== ENTRY) {
+  if (preparedData.kind !== constants.ENTRY) {
     return result;
   }
 
@@ -98,4 +102,4 @@ export function extractW3CTraceContext(preparedData, otelSpan) {
   }
 
   return result;
-}
+};
