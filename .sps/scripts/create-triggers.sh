@@ -214,6 +214,11 @@ create_trigger() {
   local listener="$3"   # pr-listener | ci-listener
   local events="$4"     # JSON array string, e.g. '["pull_request"]'
 
+  # apply --name filter
+  if [[ -n "$NAME_FILTER" && "$trigger_name" != *"$NAME_FILTER"* ]]; then
+    return
+  fi
+
   local exists
   exists=$(echo "$EXISTING" | jq -r --arg n "$trigger_name" \
     '.triggers[]? | select(.name == $n) | .name' 2>/dev/null || true)

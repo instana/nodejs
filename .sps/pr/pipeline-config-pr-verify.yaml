@@ -11,6 +11,8 @@ tasks:
           echo "pr-verify starting..."
   code-pr-finish:
     steps:
+      - name: evaluate
+        when: 'false'
       - name: run-stage
         when: 'false'
   code-ci-finish:

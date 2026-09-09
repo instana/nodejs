@@ -13,6 +13,8 @@ tasks:
           echo "General PR checks passed."
   code-pr-finish:
     steps:
+      - name: evaluate
+        when: 'false'
       - name: run-stage
         when: 'false'
   sign-artifact:
