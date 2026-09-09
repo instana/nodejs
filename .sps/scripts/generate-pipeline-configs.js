@@ -948,12 +948,9 @@ function baseConfig(fanOutTasks, rootTask = 'pr-code-checks') {
     version: '2',
     tasks: {
       [rootTask]: {
-        displayName: 'setup',
         runtimeClassName: 'large',
         steps: [
           { name: 'peer-review', when: 'false' },
-          { name: 'detect-secrets', when: 'false' },
-          { name: 'compliance-checks', when: 'false' },
           {
             name: 'unit-test',
             displayName: 'npm-install',
@@ -1498,7 +1495,6 @@ function generateOne(t) {
       version: '2',
       tasks: {
         'code-build': {
-          displayName: 'setup',
           runtimeClassName: 'large',
           steps: [
             {

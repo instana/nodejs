@@ -1,7 +1,6 @@
 version: '2'
 tasks:
   code-build:
-    displayName: setup
     runtimeClassName: large
     steps:
       - name: unit-test
