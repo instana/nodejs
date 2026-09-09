@@ -1402,5 +1402,22 @@
         "node": "<25"
       }
     ]
+  },
+  {
+    "name": "@platformatic/kafka",
+    "policy": "45-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": false,
+    "note": "",
+    "core": false,
+    "group": "messaging",
+    "versions": [
+      {
+        "v": "1.6.0"
+      }
+    ]
   }
 ]
