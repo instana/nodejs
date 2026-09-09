@@ -16,5 +16,8 @@
     "@instana/aws-lambda": "file:../../instana-aws-lambda.tgz",
     "@instana/serverless": "file:../../../serverless/instana-serverless.tgz",
     "instana-aws-lambda-auto-wrap": "file:../../../aws-lambda-auto-wrap/instana-aws-lambda-auto-wrap.tgz"
+  },
+  "overrides": {
+    "js-yaml": "4.3.2"
   }
 }

@@ -136,7 +136,7 @@
     "mocha-junit-reporter": "2.0.2",
     "mocha-multi-reporters": "1.5.1",
     "moment": "2.30.1",
-    "morgan": "1.11.0",
+    "morgan": "1.12.0",
     "nan": "2.27.0",
     "node-gyp": "11.2.0",
     "opentracing": "0.14.7",
@@ -214,7 +214,7 @@
       "serialize-javascript": "7.0.5",
       "yargs": "17.7.3"
     },
-    "morgan": "1.11.0",
+    "morgan": "1.12.0",
     "nanoid": "3.3.18",
     "pacote": "21.5.1",
     "path-to-regexp": "8.4.0",
