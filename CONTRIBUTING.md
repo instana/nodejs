@@ -382,7 +382,7 @@ Use the following command to enable ESM support:
 node --import  /path/to/instana/node_modules/@instana/collector/esm-register.mjs entry-point
 ```
 
-## Node.js prereleases
+## Node.js prerelease
 
 We have added support for a prerelease [pipeline on Tekton](https://cloud.ibm.com/devops/pipelines/tekton/c2cd6a8d-ea5a-47b0-913e-cd172d63833f?env_id=ibm:yp:eu-de).
 
