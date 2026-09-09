@@ -126,7 +126,7 @@
     "get-caller-file": "2.0.5",
     "graphql-tag": "2.12.6",
     "husky": "7.0.4",
-    "js-yaml": "4.3.1",
+    "js-yaml": "4.3.2",
     "koa-bodyparser": "4.4.1",
     "koa-morgan": "1.0.1",
     "lerna": "8.1.8",
@@ -193,7 +193,7 @@
     "handlebars": "4.7.9",
     "immutable": "5.1.8",
     "ip-address": "10.3.1",
-    "js-yaml": "4.3.1",
+    "js-yaml": "4.3.2",
     "jsonwebtoken": "9.0.2",
     "lerna": {
       "@octokit/plugin-paginate-rest": "9.2.2",
