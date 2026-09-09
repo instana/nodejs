@@ -1081,23 +1081,10 @@ function generateOne(t) {
             { name: 'peer-review', when: 'false' },
             { name: 'detect-secrets' },
             { name: 'compliance-checks' },
-            {
-              name: 'unit-test',
-              image: NODE_IMAGE,
-              script: [
-                '#!/usr/bin/env bash',
-                'set-commit-status \\',
-                '  --repository "$(load_repo app-repo url)" \\',
-                '  --commit-sha "$(load_repo app-repo commit)" \\',
-                '  --state "success" \\',
-                '  --description "General PR checks passed." \\',
-                '  --context "tekton/pr-code-checks/code-unit-tests" \\',
-                '  --task-name "pr-code-checks" \\',
-                '  --step-name "unit-test"'
-              ].join('\n')
-            }
+            { name: 'unit-test', image: NODE_IMAGE, script: '#!/usr/bin/env bash\necho "General PR checks passed."' }
           ]
         },
+        'code-pr-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
         'sign-artifact': { when: 'false' },
         'deploy-checks': { when: 'false' },
         'deploy-release': { when: 'false' },
@@ -1478,23 +1465,10 @@ function generateOne(t) {
         'pr-code-checks': {
           steps: [
             { name: 'peer-review', when: 'false' },
-            {
-              name: 'unit-test',
-              image: NODE_IMAGE,
-              script: [
-                '#!/usr/bin/env bash',
-                'set-commit-status \\',
-                '  --repository "$(load_repo app-repo url)" \\',
-                '  --commit-sha "$(load_repo app-repo commit)" \\',
-                '  --state "success" \\',
-                '  --description "PR verify starting." \\',
-                '  --context "tekton/pr-code-checks/code-unit-tests" \\',
-                '  --task-name "pr-code-checks" \\',
-                '  --step-name "unit-test"'
-              ].join('\n')
-            }
+            { name: 'unit-test', image: NODE_IMAGE, script: '#!/usr/bin/env bash\necho "pr-verify starting..."' }
           ]
         },
+        'code-pr-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
         'code-ci-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
         'deploy-checks': { when: false },
         'deploy-release': { when: false },

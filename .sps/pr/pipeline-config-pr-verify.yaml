@@ -8,14 +8,11 @@ tasks:
         image: mirror.gcr.io/library/node:24
         script: |-
           #!/usr/bin/env bash
-          set-commit-status \
-            --repository "$(load_repo app-repo url)" \
-            --commit-sha "$(load_repo app-repo commit)" \
-            --state "success" \
-            --description "PR verify starting." \
-            --context "tekton/pr-code-checks/code-unit-tests" \
-            --task-name "pr-code-checks" \
-            --step-name "unit-test"
+          echo "pr-verify starting..."
+  code-pr-finish:
+    steps:
+      - name: run-stage
+        when: 'false'
   code-ci-finish:
     steps:
       - name: run-stage
