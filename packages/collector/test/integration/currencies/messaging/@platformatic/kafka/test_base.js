@@ -54,130 +54,243 @@ module.exports = function (name, version, isLatest) {
     globalAgent.setUpCleanUpHooks();
 
     const libraryEnv = { LIBRARY_VERSION: version, LIBRARY_NAME: name, LIBRARY_LATEST: isLatest };
-    const topic = 'platformatic-kafka-topic';
 
-    let consumerControls;
-    let producerControls;
+    describe('tracing enabled', function () {
+      const topic = 'platformatic-kafka-topic';
 
-    before(async () => {
-      producerControls = new ProcessControls({
-        dirname: __dirname,
-        appName: 'platformatic-kafka-producer-app',
-        useGlobalAgent: true,
-        enableOtelIntegration: true,
-        env: {
-          ...libraryEnv,
-          PLATFORMATIC_KAFKA_TOPIC: topic
-        }
+      let consumerControls;
+      let producerControls;
+
+      before(async () => {
+        producerControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'platformatic-kafka-producer-app',
+          useGlobalAgent: true,
+          enableOtelIntegration: true,
+          env: {
+            ...libraryEnv,
+            PLATFORMATIC_KAFKA_TOPIC: topic
+          }
+        });
+
+        await producerControls.startAndWaitForAgentConnection(1000, Date.now() + 1000 * 90);
+
+        consumerControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'platformatic-kafka-consumer-app',
+          useGlobalAgent: true,
+          enableOtelIntegration: true,
+          env: {
+            ...libraryEnv,
+            PLATFORMATIC_KAFKA_TOPIC: topic
+          }
+        });
+
+        await consumerControls.startAndWaitForAgentConnection(1000, Date.now() + 1000 * 90);
       });
 
-      await producerControls.startAndWaitForAgentConnection();
-
-      consumerControls = new ProcessControls({
-        dirname: __dirname,
-        appName: 'platformatic-kafka-consumer-app',
-        useGlobalAgent: true,
-        enableOtelIntegration: true,
-        env: {
-          ...libraryEnv,
-          PLATFORMATIC_KAFKA_TOPIC: topic
-        }
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
-      await consumerControls.startAndWaitForAgentConnection(1000, Date.now() + 1000 * 90);
-    });
-
-    beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
-    });
-
-    after(async () => {
-      await consumerControls.stop();
-      await producerControls.stop();
-    });
-
-    afterEach(async () => {
-      await consumerControls.clearIpcMessages();
-      await producerControls.clearIpcMessages();
-    });
-
-    const apiPath = '/produce';
-
-    it('produces and consumes a message', async () => {
-      const response = await producerControls.sendRequest({
-        method: 'GET',
-        path: apiPath
+      after(async () => {
+        await consumerControls.stop();
+        await producerControls.stop();
       });
 
-      console.log('[test] response received:', JSON.stringify(response, null, 2));
+      afterEach(async () => {
+        await consumerControls.clearIpcMessages();
+        await producerControls.clearIpcMessages();
+      });
 
-      expect(response.produced).to.equal(true);
+      it('produces and consumes a message', async () => {
+        const response = await producerControls.sendRequest({
+          method: 'GET',
+          path: '/produce'
+        });
 
-      return retry(() => {
-        return agentControls.getSpans().then(spans => {
-          // eslint-disable-next-line no-console
-          console.log('[test] spans received:', JSON.stringify(spans, null, 2));
-          expect(spans.length).to.equal(4);
+        expect(response.produced).to.equal(true);
 
-          const httpEntry = verifyHttpRootEntry({
-            spans,
-            apiPath: '/produce',
-            pid: String(producerControls.getPid())
+        return retry(() => {
+          return agentControls.getSpans().then(spans => {
+            expect(spans.length).to.equal(4);
+
+            const httpEntry = verifyHttpRootEntry({
+              spans,
+              apiPath: '/produce',
+              pid: String(producerControls.getPid())
+            });
+
+            const producerExit = verifyExitSpan({
+              spanName: 'otel',
+              spans,
+              parent: httpEntry,
+              withError: false,
+              pid: String(producerControls.getPid()),
+              dataProperty: 'tags',
+              extraTests: span => {
+                expect(span.t).to.equal(httpEntry.t);
+                expect(span.data.tags.name).to.match(/send to /);
+                expect(span.data.tags['messaging.system']).to.equal('kafka');
+                expect(span.data.tags['messaging.operation.type']).to.equal('send');
+                expect(span.d).to.be.greaterThan(2);
+                checkTelemetryResourceAttrs(span);
+              }
+            });
+
+            const consumerEntry = verifyEntrySpan({
+              spanName: 'otel',
+              spans,
+              withError: false,
+              pid: String(consumerControls.getPid()),
+              dataProperty: 'tags',
+              extraTests: span => {
+                expect(span.t).to.equal(httpEntry.t);
+                expect(span.p).to.equal(producerExit.s);
+                expect(span.data.tags.name).to.match(/process message from /);
+                expect(span.data.tags['messaging.system']).to.equal('kafka');
+                expect(span.data.tags['messaging.operation.type']).to.equal('process');
+                expect(span.d).to.be.greaterThan(2);
+                checkTelemetryResourceAttrs(span);
+              }
+            });
+
+            verifyHttpExit(spans, consumerEntry);
           });
-
-          const producerExit = verifyExitSpan({
-            spanName: 'otel',
-            spans,
-            parent: httpEntry,
-            withError: false,
-            pid: String(producerControls.getPid()),
-            dataProperty: 'tags',
-            extraTests: span => {
-              expect(span.t).to.equal(httpEntry.t);
-              expect(span.data.tags.name).to.match(/send to /);
-              expect(span.data.tags['messaging.system']).to.equal('kafka');
-              expect(span.data.tags['messaging.operation.type']).to.equal('send');
-              expect(span.d).to.be.greaterThan(2);
-              checkTelemetryResourceAttrs(span);
-            }
-          });
-
-          const consumerEntry = verifyEntrySpan({
-            spanName: 'otel',
-            spans,
-            withError: false,
-            pid: String(consumerControls.getPid()),
-            dataProperty: 'tags',
-            extraTests: span => {
-              expect(span.t).to.equal(httpEntry.t);
-              expect(span.p).to.equal(producerExit.s);
-              expect(span.data.tags.name).to.match(/process message from /);
-              expect(span.data.tags['messaging.system']).to.equal('kafka');
-              expect(span.data.tags['messaging.operation.type']).to.equal('process');
-              expect(span.d).to.be.greaterThan(2);
-              checkTelemetryResourceAttrs(span);
-            }
-          });
-
-          verifyHttpExit(spans, consumerEntry);
         });
       });
     });
 
-    it('[suppressed] must not trace', async () => {
-      const response = await producerControls.sendRequest({
-        method: 'GET',
-        path: apiPath,
-        suppressTracing: true
+    describe('tracing suppressed', function () {
+      const topic = 'platformatic-kafka-topic';
+
+      let consumerControls;
+      let producerControls;
+
+      before(async () => {
+        producerControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'platformatic-kafka-producer-app',
+          useGlobalAgent: true,
+          enableOtelIntegration: true,
+          env: {
+            ...libraryEnv,
+            PLATFORMATIC_KAFKA_TOPIC: topic
+          }
+        });
+
+        await producerControls.startAndWaitForAgentConnection(1000, Date.now() + 1000 * 90);
+
+        consumerControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'platformatic-kafka-consumer-app',
+          useGlobalAgent: true,
+          enableOtelIntegration: true,
+          env: {
+            ...libraryEnv,
+            PLATFORMATIC_KAFKA_TOPIC: topic
+          }
+        });
+
+        await consumerControls.startAndWaitForAgentConnection(1000, Date.now() + 1000 * 90);
       });
 
-      expect(response.produced).to.equal(true);
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
 
-      await delay(1000 * 5);
+      after(async () => {
+        await consumerControls.stop();
+        await producerControls.stop();
+      });
 
-      return retry(async () => {
-        const spans = await agentControls.getSpans();
-        expect(spans).to.have.lengthOf(0);
+      afterEach(async () => {
+        await consumerControls.clearIpcMessages();
+        await producerControls.clearIpcMessages();
+      });
+
+      it('[suppressed] must not trace when suppression header is set', async () => {
+        const response = await producerControls.sendRequest({
+          method: 'GET',
+          path: '/produce',
+          suppressTracing: true
+        });
+
+        expect(response.produced).to.equal(true);
+
+        await delay(1000 * 5);
+
+        return retry(async () => {
+          const spans = await agentControls.getSpans();
+          expect(spans).to.have.lengthOf(0);
+        });
+      });
+    });
+
+    describe('tracing disabled', function () {
+      const topic = 'platformatic-kafka-topic';
+
+      let consumerControls;
+      let producerControls;
+
+      before(async () => {
+        producerControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'platformatic-kafka-producer-app',
+          useGlobalAgent: true,
+          enableOtelIntegration: true,
+          tracingEnabled: false,
+          env: {
+            ...libraryEnv,
+            PLATFORMATIC_KAFKA_TOPIC: topic
+          }
+        });
+
+        await producerControls.startAndWaitForAgentConnection(1000, Date.now() + 1000 * 90);
+
+        consumerControls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'platformatic-kafka-consumer-app',
+          useGlobalAgent: true,
+          enableOtelIntegration: true,
+          tracingEnabled: false,
+          env: {
+            ...libraryEnv,
+            PLATFORMATIC_KAFKA_TOPIC: topic
+          }
+        });
+
+        await consumerControls.startAndWaitForAgentConnection(1000, Date.now() + 1000 * 90);
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await consumerControls.stop();
+        await producerControls.stop();
+      });
+
+      afterEach(async () => {
+        await consumerControls.clearIpcMessages();
+        await producerControls.clearIpcMessages();
+      });
+
+      it('[disabled] must not trace when tracing is disabled', async () => {
+        const response = await producerControls.sendRequest({
+          method: 'GET',
+          path: '/produce'
+        });
+
+        expect(response.produced).to.equal(true);
+
+        await delay(1000 * 5);
+
+        return retry(async () => {
+          const spans = await agentControls.getSpans();
+          expect(spans).to.have.lengthOf(0);
+        });
       });
     });
   });
