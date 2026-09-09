@@ -9,10 +9,11 @@
   - [Task name convention](#task-name-convention)
   - [Docker services](#docker-services-databases-message-brokers)
   - [Splitting long-running suites](#splitting-long-running-suites)
-- [Generating pipeline configs](#generating-pipeline-configs)
+- [Generating pipeline files](#generating-pipeline-files)
 - [Registering triggers](#registering-triggers)
 - [Running a pipeline manually](#running-a-pipeline-manually)
 - [Stopping all active runs](#stopping-all-active-runs)
+- [Removing triggers](#removing-triggers)
 - [Secrets](#secrets)
 - [Compliance](#compliance)
   - [Branch protection](#branch-protection)
@@ -160,6 +161,9 @@ node .sps/scripts/generate-pipeline-configs.js --what=collector-currencies-datab
 
 # Regenerate only pr configs for one group
 node .sps/scripts/generate-pipeline-configs.js --what=core-group --mode=pr
+
+# Regenerate with a specific Node.js version (overrides .nvmrc)
+node .sps/scripts/generate-pipeline-configs.js --node-version=22
 ```
 
 Available `--what` targets:
@@ -169,21 +173,24 @@ Available `--what` targets:
 | `default` | Root `pipeline-config.yaml` (security checks only) |
 | `collector-currencies-<group>` | One fan-out task per package in `currencies/<group>/` |
 | `collector-metrics` | Tests under `test/integration/metrics/` |
-| `collector-misc` | Tests under `test/integration/misc/` |
+| `collector-misc-and-unit` | Tests under `test/integration/misc/` plus unit tests |
 | `core-group` | core, metrics-util, serverless, serverless-collector, shared-metrics |
 | `cloud` | aws-lambda, aws-fargate, azure-container-services, google-cloud-run |
 | `opentelemetry` | opentelemetry-exporter, opentelemetry-sampler |
 | `autoprofile` | autoprofile package tests |
+| `pr-general` | General PR checks (lint, format, build) |
+| `pr-verify` | PR verification tasks |
+| `upload-currency-report` | Uploads currency report artifact |
 
 ## Registering triggers
 
 Requires `ibmcloud` CLI logged in and `jq`. Existing triggers are skipped (idempotent).
 
 ```bash
-.sps/scripts/create-triggers.sh --dry-run                                      # preview
-.sps/scripts/create-triggers.sh                                             # all types
-.sps/scripts/create-triggers.sh --type=dependencies                            # bots only
-.sps/scripts/create-triggers.sh --type=dependencies --name=manual-dep-currency-bot                 # one trigger
+.sps/scripts/create-triggers.sh --dry-run                                          # preview
+.sps/scripts/create-triggers.sh                                                    # all types
+.sps/scripts/create-triggers.sh --type=dependencies                                # bots only
+.sps/scripts/create-triggers.sh --type=dependencies --name=manual-dep-currency-bot # one trigger
 ```
 
 | `--type` | Kind | Configs | Trigger names |
@@ -235,6 +242,26 @@ actively running pipeline run on the toolchain in one shot.
 # Live run — cancels all active runs
 .sps/scripts/stop-all-runs.sh
 ```
+
+## Removing triggers
+
+Use [`.sps/scripts/remove-all-triggers.sh`](.sps/scripts/remove-all-triggers.sh) to
+delete triggers from the toolchain — useful when resetting or rebuilding triggers from
+scratch.
+
+```bash
+# Dry run — lists triggers that would be removed without making any API calls
+.sps/scripts/remove-all-triggers.sh --dry-run
+
+# Remove all triggers
+.sps/scripts/remove-all-triggers.sh
+
+# Remove only triggers whose name contains a substring
+.sps/scripts/remove-all-triggers.sh --name=manual-dep-currency-bot
+```
+
+> Requires `ibmcloud` CLI logged in and `jq`. After removing triggers, use
+> `create-triggers.sh` to recreate them.
 
 ## Secrets
 
