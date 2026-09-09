@@ -215,6 +215,7 @@ Use the `manual-dep-*` trigger to run a bot immediately on demand.
 .sps/scripts/run-pipeline.sh --branch main --node-version 20 \
   --trigger collector-currencies-async
 
+
 # Run with ESM mode enabled (sets RUN_ESM=true in the pipeline run)
 .sps/scripts/run-pipeline.sh --branch main --node-version 24 --esm true
 
@@ -261,7 +262,7 @@ on the target repository. The required settings are:
   checks as required status checks.
 - **Restrict who can push** to `main` directly (no force-push, no deletions).
 
-Configure these rules in **GitHub → Repository Settings → Branches → Branch protection rules**.
+Configure these rules in GitHub → Repository Settings → Rules → Rulesets.
 
 > Full configuration reference: [IBM Cloud DevSecOps — Configure GitHub](https://test.cloud.ibm.com/docs/devsecops?topic=devsecops-cd-devsecops-config-github)
 
@@ -324,7 +325,7 @@ The first argument is a **title substring** matched against all open issues in
 `instana/instana-issues`. The second argument is `true` (dry run, default) or `false`
 (live). Always do a dry run first to confirm the match set before closing.
 
-## References
+## References links
 
 - [SPS PR pipeline structure](https://pages.github.ibm.com/secure-pipelines-service/sps-docs/optimize/optimize/#pr-pipeline-structure)
 - [Pipeline-config v2 customization options](https://pages.github.ibm.com/secure-pipelines-service/sps-docs/optimize/optimize/#pipeline-config-v2-customization-options)
