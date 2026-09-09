@@ -407,4 +407,3 @@ To revert back to stable versions, unset the environment variable NVM_NODEJS_ORG
 ```sh
 unset NVM_NODEJS_ORG_MIRROR
 ```
- 
