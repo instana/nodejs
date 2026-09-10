@@ -30,14 +30,21 @@ SPS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DRY_RUN=false
 TYPE="all"   # all | pr | main | manual | dependencies
 NAME_FILTER=""  # optional: only create triggers whose name contains this string
+NODE_VERSION=""  # optional: override node version (default: read from .nvmrc)
 
 for arg in "$@"; do
   case "$arg" in
-    --dry-run)  DRY_RUN=true ;;
-    --type=*)   TYPE="${arg#--type=}" ;;
-    --name=*)   NAME_FILTER="${arg#--name=}" ;;
+    --dry-run)        DRY_RUN=true ;;
+    --type=*)         TYPE="${arg#--type=}" ;;
+    --name=*)         NAME_FILTER="${arg#--name=}" ;;
+    --node-version=*) NODE_VERSION="${arg#--node-version=}" ;;
   esac
 done
+
+if [[ -z "$NODE_VERSION" ]]; then
+  NODE_VERSION="$(cat "${SPS_DIR}/../.nvmrc" | tr -d '[:space:]')"
+  echo "Node version not specified; using version from .nvmrc: ${NODE_VERSION}"
+fi
 
 if [[ "$DRY_RUN" == "true" ]]; then
   echo ">>> DRY RUN — no API calls will be made <<<"
@@ -320,7 +327,7 @@ for yaml_file in "${SPS_DIR}/manual"/pipeline-config*.yaml; do
   name="${name%.yaml}"
   [[ "$name" == "pipeline-config" || "$name" == "" ]] && name="security-checks"
   # Default node-version for the trigger property (can be overridden at run time)
-  create_manual_trigger "manual-${name}" ".sps/manual/${filename}" "20"
+  create_manual_trigger "manual-${name}" ".sps/manual/${filename}" "${NODE_VERSION}"
 done
 fi
 
@@ -343,7 +350,7 @@ for yaml_file in "${SPS_DIR}/dependencies"/pipeline-config*.yaml; do
     *)                                           cron="0 6 * * *" ;;
   esac
   create_timer_trigger  "timer-${name}"      ".sps/dependencies/${filename}" "${cron}" "UTC"
-  create_manual_trigger "manual-dep-${name}" ".sps/dependencies/${filename}" "20"
+  create_manual_trigger "manual-dep-${name}" ".sps/dependencies/${filename}" "${NODE_VERSION}"
 done
 fi
 
