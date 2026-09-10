@@ -154,7 +154,7 @@ function addTraceLevelHeader(headers, level, w3cTraceContext) {
   headers[constants.traceLevelHeaderName] = level;
   tracingHeaders.addW3cHeaders((name, value) => {
     headers[name] = value;
-  }, w3cTraceContext);
+  }, w3cTraceContext, cls);
 }
 
 function addHeaders(headers, span, w3cTraceContext) {
@@ -171,5 +171,5 @@ function addHeaders(headers, span, w3cTraceContext) {
   headers[constants.traceLevelHeaderName] = '1';
   tracingHeaders.addW3cHeaders((name, value) => {
     headers[name] = value;
-  }, w3cTraceContext);
+  }, w3cTraceContext, cls);
 }

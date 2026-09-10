@@ -16,6 +16,7 @@ let logger;
 
 let disableW3cCorrelation = false;
 let disableW3cPropagation = false;
+let disableW3cBaggage = false;
 
 /**
  * @param {import('../config').InstanaConfig} config
@@ -26,6 +27,7 @@ exports.init = function (config) {
   w3c.init(config);
   disableW3cCorrelation = config.tracing.disableW3cCorrelation;
   disableW3cPropagation = config.tracing.disableW3cPropagation;
+  disableW3cBaggage = config.tracing.disableW3cBaggage;
 };
 
 /**
@@ -34,6 +36,7 @@ exports.init = function (config) {
 exports.activate = function (config) {
   disableW3cCorrelation = config.tracing.disableW3cCorrelation;
   disableW3cPropagation = config.tracing.disableW3cPropagation;
+  disableW3cBaggage = config.tracing.disableW3cBaggage;
 };
 
 /**
@@ -59,6 +62,10 @@ exports.activate = function (config) {
  *     - the tracing level, either '1' (tracing) or '0' (suppressing/not creating spans)
  *     - progated downstream as the first component of X-INSTANA-L
  *     - propagted downstream as the sampled flag in traceparent
+ * @property {string} [baggage]
+ *     - the raw W3C baggage header value read from the incoming request
+ *     - will be propagated downstream as-is (including properties)
+ *     - null if baggage support is disabled or the header violates size/count limits
  * @property {string} [correlationType]
  *     - the correlation type parsed from X-INSTANA-L
  *     - will be used for span.crtp
@@ -127,6 +134,7 @@ exports.fromHeaders = function fromHeaders(headers) {
   let correlationId = levelAndCorrelation.correlationId;
   const synthetic = readSyntheticMarker(headers);
   let w3cTraceContext = readW3cTraceContext(headers);
+  const baggage = readBaggage(headers);
 
   if (isSuppressed(level)) {
     // Ignore X-INSTANA-T/-S if X-INSTANA-L: 0 is also present.
@@ -154,7 +162,8 @@ exports.fromHeaders = function fromHeaders(headers) {
       correlationType,
       correlationId,
       synthetic,
-      w3cTraceContext
+      w3cTraceContext,
+      baggage
     };
     return exports.limitTraceId(result);
   } else if (xInstanaT && xInstanaS) {
@@ -172,7 +181,8 @@ exports.fromHeaders = function fromHeaders(headers) {
         /** @type {string} */ (xInstanaT),
         /** @type {string} */ (xInstanaS),
         !isSuppressed(level)
-      )
+      ),
+      baggage
     });
   } else if (w3cTraceContext && !disableW3cCorrelation) {
     // There are no X-INSTANA- headers, but there are W3C trace context headers. As of 2021-02, we use the IDs from
@@ -204,7 +214,8 @@ exports.fromHeaders = function fromHeaders(headers) {
       correlationId,
       synthetic,
       w3cTraceContext,
-      instanaAncestor
+      instanaAncestor,
+      baggage
     });
   } else if (w3cTraceContext) {
     // There are no X-INSTANA- headers, but there are W3C trace context headers. But picking up the trace context from
@@ -231,7 +242,8 @@ exports.fromHeaders = function fromHeaders(headers) {
       correlationType,
       correlationId,
       synthetic,
-      w3cTraceContext
+      w3cTraceContext,
+      baggage
     });
   } else {
     // Neither X-INSTANA- headers nor W3C trace context headers are present.
@@ -245,7 +257,8 @@ exports.fromHeaders = function fromHeaders(headers) {
         usedTraceParent: false,
         level,
         synthetic,
-        w3cTraceContext: w3c.createEmptyUnsampled(generateRandomTraceId(), generateRandomSpanId())
+        w3cTraceContext: w3c.createEmptyUnsampled(generateRandomTraceId(), generateRandomSpanId()),
+        baggage
       });
     } else {
       // Neither X-INSTANA- headers nor W3C trace context headers are present and tracing is not suppressed
@@ -264,7 +277,8 @@ exports.fromHeaders = function fromHeaders(headers) {
         correlationType,
         correlationId,
         synthetic,
-        w3cTraceContext
+        w3cTraceContext,
+        baggage
       });
     }
   }
@@ -367,6 +381,37 @@ function traceStateHasInstanaKeyValuePair(w3cTraceContext) {
 /**
  * @param {import('http').IncomingHttpHeaders} headers
  */
+/**
+ * Reads and validates the W3C baggage header from the incoming request headers.
+ * Returns the raw header string if valid, or null if baggage support is disabled
+ * or the header exceeds the allowed size (8192 bytes) or entry count (64 pairs).
+ * @param {import('http').IncomingHttpHeaders} headers
+ * @returns {string | null}
+ */
+function readBaggage(headers) {
+  if (disableW3cBaggage) {
+    return null;
+  }
+  const raw = /** @type {string} */ (readAttribCaseInsensitive(headers, constants.w3cBaggage));
+  if (!raw) {
+    return null;
+  }
+  // Drop the header if it exceeds the byte size limit.
+  if (Buffer.byteLength(raw, 'utf8') > 8192) {
+    return null;
+  }
+  // Drop the header if it contains more than 64 list-members.
+  // A list-member is a key=value pair (properties attached via ';' belong to the same member).
+  const memberCount = raw.split(',').length;
+  if (memberCount > 64) {
+    return null;
+  }
+  return raw;
+}
+
+/**
+ * @param {import('http').IncomingHttpHeaders} headers
+ */
 function readW3cTraceContext(headers) {
   const traceParent = /** @type {string} */ (readAttribCaseInsensitive(headers, constants.w3cTraceParent));
   // The spec mandates that multiple tracestate headers should be treated by concatenating them. Node.js' http core
@@ -429,8 +474,9 @@ exports.setSpanAttributes = function (span, tracingHeaders) {
  * Writes traceparent, tracestate and baggage headers using the provided setter function.
  * @param {(key: string, value: string) => void} set
  * @param {import('./w3c_trace_context/W3cTraceContext')} w3cTraceContext
+ * @param {{ getBaggage: () => string | null }} [cls]
  */
-exports.addW3cHeaders = function addW3cHeaders(set, w3cTraceContext) {
+exports.addW3cHeaders = function addW3cHeaders(set, w3cTraceContext, cls) {
   if (disableW3cPropagation) {
     return;
   }
@@ -438,6 +484,12 @@ exports.addW3cHeaders = function addW3cHeaders(set, w3cTraceContext) {
     set(constants.w3cTraceParent, w3cTraceContext.renderTraceParent());
     if (w3cTraceContext.hasTraceState()) {
       set(constants.w3cTraceState, w3cTraceContext.renderTraceState());
+    }
+  }
+  if (!disableW3cBaggage && cls && typeof cls.getBaggage === 'function') {
+    const baggage = cls.getBaggage();
+    if (baggage) {
+      set(constants.w3cBaggage, baggage);
     }
   }
 };
