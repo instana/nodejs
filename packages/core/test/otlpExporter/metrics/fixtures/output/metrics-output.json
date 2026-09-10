@@ -11,7 +11,170 @@
           { "key": "host.name", "value": { "stringValue": "test-hostname" } }
         ]
       },
-      "scopeMetrics": [{ "scope": { "name": "@instana/collector", "version": "6.0.0" }, "metrics": [] }]
+      "scopeMetrics": [
+        {
+          "scope": { "name": "@instana/collector", "version": "6.0.0" },
+          "metrics": [
+            {
+              "name": "v8js.memory.heap.space.available_size",
+              "unit": "By",
+              "sum": {
+                "aggregationTemporality": 2,
+                "isMonotonic": false,
+                "dataPoints": [
+                  {
+                    "asInt": 6153600,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "new_space" } }]
+                  },
+                  {
+                    "asInt": 522192,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "old_space" } }]
+                  },
+                  {
+                    "asInt": 345536,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "code_space" } }]
+                  },
+                  {
+                    "asInt": 370768,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "trusted_space" } }]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "v8js.memory.heap.space.physical_size",
+              "unit": "By",
+              "sum": {
+                "aggregationTemporality": 2,
+                "isMonotonic": false,
+                "dataPoints": [
+                  {
+                    "asInt": 27901952,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "new_space" } }]
+                  },
+                  {
+                    "asInt": 17039360,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "old_space" } }]
+                  },
+                  {
+                    "asInt": 1572864,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "code_space" } }]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "v8js.memory.heap.space.size",
+              "unit": "By",
+              "sum": {
+                "aggregationTemporality": 2,
+                "isMonotonic": false,
+                "dataPoints": [
+                  {
+                    "asInt": 16859136,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "old_space" } }]
+                  },
+                  {
+                    "asInt": 1572864,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "code_space" } }]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "v8js.memory.heap.used",
+              "unit": "By",
+              "sum": {
+                "aggregationTemporality": 2,
+                "isMonotonic": false,
+                "dataPoints": [
+                  {
+                    "asInt": 10622592,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "new_space" } }]
+                  },
+                  {
+                    "asInt": 16309064,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "old_space" } }]
+                  },
+                  {
+                    "asInt": 1227136,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "code_space" } }]
+                  },
+                  {
+                    "asInt": 2659888,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.heap.space.name", "value": { "stringValue": "trusted_space" } }]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "v8js.resource.active",
+              "unit": "{resource}",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "asInt": 3,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.resource.type", "value": { "stringValue": "all" } }]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "nodejs.eventloop.delay.min",
+              "unit": "s",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "asInt": 0,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": []
+                  }
+                ]
+              }
+            },
+            {
+              "name": "nodejs.eventloop.delay.max",
+              "unit": "s",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "asDouble": 0.496,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": []
+                  }
+                ]
+              }
+            },
+            {
+              "name": "nodejs.eventloop.delay.mean",
+              "unit": "s",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "asDouble": 0.004161825726141079,
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": []
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

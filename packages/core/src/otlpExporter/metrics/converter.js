@@ -7,6 +7,7 @@
 const otlpCtx = require('../common/context');
 const { normalizeMetrics } = require('./util');
 const transformers = require('./transformers');
+const mappers = require('./mappers');
 
 const { INSTRUMENTATION_SCOPE } = transformers.resource;
 
@@ -54,8 +55,7 @@ function convert(metrics) {
           scopeMetrics: [
             {
               scope: INSTRUMENTATION_SCOPE,
-              // TODO: implement metrics transformation later in phase2
-              metrics: []
+              metrics: transformers.extractMetrics(metrics, mappers.allMappings)
             }
           ]
         }
