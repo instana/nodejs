@@ -239,6 +239,30 @@ app.post('/pipelineKeepTracing', (req, res) => {
     });
 });
 
+app.post('/lmove', async (req, res) => {
+  try {
+    await client.del('lmoveSource', 'lmoveDest');
+    await client.rpush('lmoveSource', 'element1', 'element2');
+    const result = await client.lmove('lmoveSource', 'lmoveDest', 'LEFT', 'RIGHT');
+    res.json({ element: result });
+  } catch (err) {
+    log('lmove failed', err);
+    res.sendStatus(500);
+  }
+});
+
+app.post('/blmove', async (req, res) => {
+  try {
+    await client.del('blmoveSource', 'blmoveDest');
+    await client.rpush('blmoveSource', 'element1', 'element2');
+    const result = await client.blmove('blmoveSource', 'blmoveDest', 'LEFT', 'RIGHT', 0);
+    res.json({ element: result });
+  } catch (err) {
+    log('blmove failed', err);
+    res.sendStatus(500);
+  }
+});
+
 app.post('/two-different-target-hosts', (req, res) => {
   const response = {};
   client.set(req.query.key, req.query.value1, (err, result) => {

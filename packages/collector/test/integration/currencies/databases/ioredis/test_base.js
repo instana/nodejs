@@ -799,6 +799,106 @@ module.exports = function (name, version, isLatest, setupType) {
           ]);
         });
       });
+
+      if (isLatest) {
+        it('must trace lmove calls', async () => {
+          const response = await controls.sendRequest({
+            method: 'POST',
+            path: '/lmove'
+          });
+
+          expect(response.element).to.equal('element1');
+
+          await retry(async () => {
+            const spans = await agentControls.getSpans();
+            const entrySpan = expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.data.http.method).to.equal('POST')
+            ]);
+
+            expect(spans).to.have.lengthOf(4);
+
+            expectExactlyOneMatching(spans, [
+              span => expect(span.t).to.equal(entrySpan.t),
+              span => expect(span.p).to.equal(entrySpan.s),
+              span => expect(span.n).to.equal('redis'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.ec).to.equal(0),
+              span => checkConnection(span, setupType),
+              span => expect(span.data.redis.command).to.equal('del')
+            ]);
+
+            expectExactlyOneMatching(spans, [
+              span => expect(span.t).to.equal(entrySpan.t),
+              span => expect(span.p).to.equal(entrySpan.s),
+              span => expect(span.n).to.equal('redis'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.ec).to.equal(0),
+              span => checkConnection(span, setupType),
+              span => expect(span.data.redis.command).to.equal('rpush')
+            ]);
+
+            expectExactlyOneMatching(spans, [
+              span => expect(span.t).to.equal(entrySpan.t),
+              span => expect(span.p).to.equal(entrySpan.s),
+              span => expect(span.n).to.equal('redis'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.ec).to.equal(0),
+              span => checkConnection(span, setupType),
+              span => expect(span.data.redis.command).to.equal('lmove')
+            ]);
+          });
+        });
+
+        it('must trace blmove calls', async () => {
+          const response = await controls.sendRequest({
+            method: 'POST',
+            path: '/blmove'
+          });
+
+          expect(response.element).to.equal('element1');
+
+          await retry(async () => {
+            const spans = await agentControls.getSpans();
+            const entrySpan = expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.data.http.method).to.equal('POST')
+            ]);
+
+            expect(spans).to.have.lengthOf(4);
+
+            expectExactlyOneMatching(spans, [
+              span => expect(span.t).to.equal(entrySpan.t),
+              span => expect(span.p).to.equal(entrySpan.s),
+              span => expect(span.n).to.equal('redis'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.ec).to.equal(0),
+              span => checkConnection(span, setupType),
+              span => expect(span.data.redis.command).to.equal('del')
+            ]);
+
+            expectExactlyOneMatching(spans, [
+              span => expect(span.t).to.equal(entrySpan.t),
+              span => expect(span.p).to.equal(entrySpan.s),
+              span => expect(span.n).to.equal('redis'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.ec).to.equal(0),
+              span => checkConnection(span, setupType),
+              span => expect(span.data.redis.command).to.equal('rpush')
+            ]);
+
+            expectExactlyOneMatching(spans, [
+              span => expect(span.t).to.equal(entrySpan.t),
+              span => expect(span.p).to.equal(entrySpan.s),
+              span => expect(span.n).to.equal('redis'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.ec).to.equal(0),
+              span => checkConnection(span, setupType),
+              span => expect(span.data.redis.command).to.equal('blmove')
+            ]);
+          });
+        });
+      }
     }
   });
 
