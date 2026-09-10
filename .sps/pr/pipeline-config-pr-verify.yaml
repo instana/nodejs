@@ -10,15 +10,9 @@ tasks:
           #!/usr/bin/env bash
           echo "pr-verify starting..."
   code-pr-finish:
-    steps:
-      - name: evaluate
-        when: 'false'
-      - name: run-stage
-        when: 'false'
+    when: 'false'
   code-ci-finish:
-    steps:
-      - name: run-stage
-        when: 'false'
+    when: 'false'
   deploy-checks:
     when: false
   deploy-release:

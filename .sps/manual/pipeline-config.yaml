@@ -26,6 +26,4 @@ tasks:
   deploy-release:
     when: 'false'
   code-ci-finish:
-    steps:
-      - name: run-stage
-        when: 'false'
+    when: 'false'
