@@ -209,7 +209,7 @@ function injectTraceCorrelationHeaders(originalArgs, span, w3cTraceContext) {
   };
   tracingHeaders.addW3cHeaders((name, value) => {
     headersToAdd[name] = value;
-  }, w3cTraceContext);
+  }, w3cTraceContext, cls);
   injectHeaders(originalArgs, headersToAdd);
 }
 
@@ -219,7 +219,7 @@ function injectSuppressionHeader(originalArgs, w3cTraceContext) {
   };
   tracingHeaders.addW3cHeaders((name, value) => {
     headersToAdd[name] = value;
-  }, w3cTraceContext);
+  }, w3cTraceContext, cls);
   injectHeaders(originalArgs, headersToAdd);
 }
 

@@ -59,6 +59,8 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @property {boolean} [disable-w3c-correlation]
  * @property {boolean} [disable-w3c-propagation]
  * @property {boolean} [disable-w3c]
+ * @property {boolean} [disable-w3c-baggage]
+ * @property {string} [capture-w3c-baggage]
  */
 
 /**
@@ -361,6 +363,23 @@ function applyW3cDisableConfiguration(agentResponse) {
   if (disableW3cPropagation) {
     ensureNestedObjectExists(agentOpts.config, ['tracing']);
     agentOpts.config.tracing.disableW3cPropagation = true;
+  }
+
+  if (globalConfig['disable-w3c-baggage'] === true) {
+    ensureNestedObjectExists(agentOpts.config, ['tracing']);
+    agentOpts.config.tracing.disableW3cBaggage = true;
+  }
+
+  const captureRaw = globalConfig['capture-w3c-baggage'];
+  if (typeof captureRaw === 'string' && captureRaw.trim() !== '') {
+    const keys = captureRaw
+      .split(',')
+      .map(k => k.trim())
+      .filter(k => k !== '');
+    if (keys.length > 0) {
+      ensureNestedObjectExists(agentOpts.config, ['tracing']);
+      agentOpts.config.tracing.captureW3cBaggage = keys;
+    }
   }
 }
 

@@ -399,7 +399,7 @@ function tryToAddHeadersToOpts(options, span, w3cTraceContext) {
     options.headers[constants.traceLevelHeaderName] = '1';
     tracingHeaders.addW3cHeaders((name, value) => {
       options.headers[name] = value;
-    }, w3cTraceContext);
+    }, w3cTraceContext, cls);
     return true;
   }
 
@@ -411,7 +411,7 @@ function tryToAddTraceLevelAddHeaderToOpts(options, level, w3cTraceContext) {
     options.headers[constants.traceLevelHeaderName] = level;
     tracingHeaders.addW3cHeaders((name, value) => {
       options.headers[name] = value;
-    }, w3cTraceContext);
+    }, w3cTraceContext, cls);
     return true;
   }
   return false;
@@ -431,6 +431,7 @@ function removeInstanaHeadersFromOpts(options) {
   delete options.headers[constants.traceLevelHeaderName];
   delete options.headers[constants.w3cTraceParent];
   delete options.headers[constants.w3cTraceState];
+  delete options.headers[constants.w3cBaggage];
 }
 
 function setHeadersOnRequest(clientRequest, span, w3cTraceContext) {
@@ -439,7 +440,7 @@ function setHeadersOnRequest(clientRequest, span, w3cTraceContext) {
     clientRequest.setHeader(constants.traceLevelHeaderName, '0');
     tracingHeaders.addW3cHeaders((name, value) => {
       clientRequest.setHeader(name, value);
-    }, w3cTraceContext);
+    }, w3cTraceContext, cls);
     return;
   }
 
@@ -448,7 +449,7 @@ function setHeadersOnRequest(clientRequest, span, w3cTraceContext) {
   clientRequest.setHeader(constants.traceLevelHeaderName, '1');
   tracingHeaders.addW3cHeaders((name, value) => {
     clientRequest.setHeader(name, value);
-  }, w3cTraceContext);
+  }, w3cTraceContext, cls);
 }
 
 function captureRequestHeaders(options, clientRequest, response) {
