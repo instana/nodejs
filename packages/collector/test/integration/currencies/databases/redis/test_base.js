@@ -1337,7 +1337,8 @@ module.exports = function (name, version, isLatest, mode) {
 
   function verifyConnection(type, span) {
     if (type === 'cluster') {
-      const expectedCluster = process.env.AZURE_REDIS_CLUSTER || process.env.INSTANA_CONNECT_REDIS_CLUSTER || '127.0.0.1';
+      const expectedCluster =
+        process.env.AZURE_REDIS_CLUSTER || process.env.INSTANA_CONNECT_REDIS_CLUSTER || '127.0.0.1';
       expect(span.data.redis.connection).to.contain(expectedCluster.split(':')[0]);
     } else if (type === 'sentinel') {
       expect(span.data.redis.connection).to.contain(process.env.INSTANA_CONNECT_REDIS_SENTINEL_HOST);
