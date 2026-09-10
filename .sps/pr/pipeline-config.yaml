@@ -12,11 +12,7 @@ tasks:
           #!/usr/bin/env bash
           echo "General PR checks passed."
   code-pr-finish:
-    steps:
-      - name: evaluate
-        when: 'false'
-      - name: run-stage
-        when: 'false'
+    when: 'false'
   sign-artifact:
     when: 'false'
   deploy-checks:

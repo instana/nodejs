@@ -30,11 +30,7 @@ tasks:
       - name: scan-artifact
         when: 'false'
   code-pr-finish:
-    steps:
-      - name: evaluate
-        when: 'false'
-      - name: run-stage
-        when: 'false'
+    when: 'false'
   code-ci-finish:
     steps:
       - name: run-stage

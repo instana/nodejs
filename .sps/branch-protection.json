@@ -4,7 +4,6 @@
     "name": "code-review",
     "params": {
       "checks": [
-        "tekton/pr-code-checks/checks-setup",
         "tekton/pr-code-checks/code-bom-check",
         "tekton/pr-code-checks/code-detect-secrets",
         "tekton/pr-code-checks/code-cis-check",
