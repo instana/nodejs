@@ -368,16 +368,10 @@ function applyW3cDisableConfiguration(agentResponse) {
     agentOpts.config.tracing.disableW3cBaggage = true;
   }
 
-  const captureRaw = globalConfig['capture-w3c-baggage'];
-  if (typeof captureRaw === 'string' && captureRaw.trim() !== '') {
-    const keys = captureRaw
-      .split(',')
-      .map(k => k.trim())
-      .filter(k => k !== '');
-    if (keys.length > 0) {
-      ensureNestedObjectExists(agentOpts.config, ['tracing']);
-      agentOpts.config.tracing.captureW3cBaggage = keys;
-    }
+  const keys = coreConfig.validators.captureW3cBaggageValidator(globalConfig['capture-w3c-baggage']);
+  if (keys) {
+    ensureNestedObjectExists(agentOpts.config, ['tracing']);
+    agentOpts.config.tracing.captureW3cBaggage = keys;
   }
 }
 

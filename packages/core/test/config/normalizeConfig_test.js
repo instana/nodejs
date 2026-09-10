@@ -40,6 +40,7 @@ describe('config.normalizeConfig', () => {
     delete process.env.INSTANA_TRACING_DISABLE_W3C_CORRELATION;
     delete process.env.INSTANA_DISABLE_W3C_TRACE_CORRELATION;
     delete process.env.INSTANA_TRACING_DISABLE_W3C_PROPAGATION;
+    delete process.env.INSTANA_TRACING_CAPTURE_W3C_BAGGAGE;
     delete process.env.INSTANA_TRACING_DISABLE_W3C;
     delete process.env.INSTANA_DISABLE_USE_OPENTELEMETRY;
     delete process.env.INSTANA_KAFKA_TRACE_CORRELATION;

@@ -973,34 +973,23 @@ function normalizeDisableW3cBaggage({ userConfig = {}, defaultConfig = {}, final
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
 function normalizeCaptureW3cBaggage({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
-  const envRaw = process.env.INSTANA_TRACING_CAPTURE_W3C_BAGGAGE;
+  const { value, source } = util.resolve(
+    {
+      envValue: 'INSTANA_TRACING_CAPTURE_W3C_BAGGAGE',
+      inCodeValue: userConfig.tracing.captureW3cBaggage,
+      defaultValue: defaultConfig.tracing.captureW3cBaggage
+    },
+    [validators.captureW3cBaggageValidator]
+  );
 
-  if (envRaw !== undefined) {
-    const keys = envRaw
-      .split(',')
-      .map(k => k.trim())
-      .filter(k => k !== '');
-    finalConfig.tracing.captureW3cBaggage = keys;
-    configStore.set('config.tracing.captureW3cBaggage', { source: CONFIG_SOURCES.ENV });
-    util.log({
-      configPath: 'config.tracing.captureW3cBaggage',
-      source: CONFIG_SOURCES.ENV,
-      value: keys,
-      envVarName: 'INSTANA_TRACING_CAPTURE_W3C_BAGGAGE'
-    });
-    return;
-  }
-
-  const inCode = userConfig.tracing.captureW3cBaggage;
-  if (Array.isArray(inCode)) {
-    finalConfig.tracing.captureW3cBaggage = inCode;
-    configStore.set('config.tracing.captureW3cBaggage', { source: CONFIG_SOURCES.INCODE });
-    util.log({ configPath: 'config.tracing.captureW3cBaggage', source: CONFIG_SOURCES.INCODE, value: inCode });
-    return;
-  }
-
-  finalConfig.tracing.captureW3cBaggage = defaultConfig.tracing.captureW3cBaggage;
-  configStore.set('config.tracing.captureW3cBaggage', { source: CONFIG_SOURCES.DEFAULT });
+  configStore.set('config.tracing.captureW3cBaggage', { source });
+  finalConfig.tracing.captureW3cBaggage = value;
+  util.log({
+    configPath: 'config.tracing.captureW3cBaggage',
+    source,
+    value,
+    envVarName: 'INSTANA_TRACING_CAPTURE_W3C_BAGGAGE'
+  });
 }
 
 /**
