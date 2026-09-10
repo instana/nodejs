@@ -971,7 +971,7 @@ function baseConfig(fanOutTasks, rootTask = 'pr-code-checks') {
         ]
       },
       'code-pr-finish': { when: 'false' },
-      'code-ci-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
+      'code-ci-finish': { when: 'false' },
       'deploy-checks': { when: false },
       'deploy-release': { when: false },
       ...fanOutTasks
@@ -1085,7 +1085,7 @@ function generateOne(t) {
         'sign-artifact': { when: 'false' },
         'deploy-checks': { when: 'false' },
         'deploy-release': { when: 'false' },
-        'code-ci-finish': { steps: [{ name: 'run-stage', when: 'false' }] }
+        'code-ci-finish': { when: 'false' }
       }
     };
 
@@ -1466,7 +1466,7 @@ function generateOne(t) {
           ]
         },
         'code-pr-finish': { when: 'false' },
-        'code-ci-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
+        'code-ci-finish': { when: 'false' },
         'deploy-checks': { when: false },
         'deploy-release': { when: false },
         'pr-code-checks-verify': {
@@ -1517,7 +1517,7 @@ function generateOne(t) {
           ]
         },
         'code-pr-finish': { when: 'false' },
-        'code-ci-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
+        'code-ci-finish': { when: 'false' },
         'deploy-checks': { when: false },
         'deploy-release': { when: false },
         'code-build-upload-currency-report': buildUploadCurrencyReportTask()
