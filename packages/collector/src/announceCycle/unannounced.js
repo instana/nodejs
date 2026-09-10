@@ -31,6 +31,7 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @property {TracingConfig} [tracing]
  * @property {Array.<string>} [extraHeaders]
  * @property {boolean|string} [spanBatchingEnabled]
+ * @property {number} [pollRate] - Metrics poll rate in seconds; mapped to metrics.transmissionDelay (ms)
  */
 
 /**
@@ -156,6 +157,7 @@ function applyAgentConfiguration(agentResponse) {
   applyStackTraceConfiguration(agentResponse);
   applyDisableConfiguration(agentResponse);
   applyW3cDisableConfiguration(agentResponse);
+  applyPollRateConfiguration(agentResponse);
 }
 
 /**
@@ -378,6 +380,19 @@ function applyDisableConfiguration(agentResponse) {
   agentOpts.config.tracing.disable = coreConfig.normalizers.disable.normalizeExternalConfig({
     tracing: { disable: disablingConfig }
   }).value;
+}
+
+/**
+ * Maps agent `pollRate` (seconds) to `metrics.transmissionDelay` (ms).
+ *
+ * @param {AgentAnnounceResponse} agentResponse
+ */
+function applyPollRateConfiguration(agentResponse) {
+  if (agentResponse.pollRate == null) return;
+
+  const pollRateMs = agentResponse.pollRate * 1000;
+  ensureNestedObjectExists(agentOpts.config, ['metrics']);
+  agentOpts.config.metrics.transmissionDelay = coreConfig.validators.validateTransmissionDelay(pollRateMs);
 }
 
 /**

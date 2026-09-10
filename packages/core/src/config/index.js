@@ -133,8 +133,6 @@ let currentConfig;
 /** @type {String[]} */
 const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'contains-ignore-case', 'regex', 'none'];
 
-const transmissionDelayMaxValue = 5000;
-
 /**
  * @typedef {Object} InstanaConfig
  * @property {string} [serviceName]
@@ -156,7 +154,7 @@ let defaults = {
   packageJsonPath: null,
 
   metrics: {
-    transmissionDelay: 1000,
+    transmissionDelay: 30000,
     timeBetweenHealthcheckCalls: 3000
   },
 
@@ -319,16 +317,7 @@ function normalizeMetricsConfig({ userConfig = {}, defaultConfig = {}, finalConf
     [validators.numberValidator]
   );
 
-  finalConfig.metrics.transmissionDelay = transmissionDelay;
-
-  // Validate max value for transmissionDelay
-  if (finalConfig.metrics.transmissionDelay > transmissionDelayMaxValue) {
-    logger.warn(
-      // eslint-disable-next-line max-len
-      `The value of config.metrics.transmissionDelay (or INSTANA_METRICS_TRANSMISSION_DELAY) (${finalConfig.metrics.transmissionDelay}) exceeds the maximum allowed value of ${transmissionDelayMaxValue}. Assuming the max value ${transmissionDelayMaxValue}.`
-    );
-    finalConfig.metrics.transmissionDelay = transmissionDelayMaxValue;
-  }
+  finalConfig.metrics.transmissionDelay = validators.validateTransmissionDelay(transmissionDelay);
 
   configStore.set('config.metrics.transmissionDelay', { source: transmissionDelaySource });
   util.log({
