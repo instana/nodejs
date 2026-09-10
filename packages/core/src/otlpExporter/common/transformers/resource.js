@@ -7,6 +7,9 @@
 const os = require('os');
 const ctx = require('../context');
 const { INSTRUMENTATION_SCOPE_NAME } = require('../constants');
+const { MAPPINGS } = require('../semconv/base/mappings');
+
+const RESOURCE = MAPPINGS.resource;
 
 let SDK_VERSION = '1.0.0';
 try {
@@ -31,6 +34,19 @@ const INSTRUMENTATION_SCOPE = {
  * @property {Record<string, any>} [f]
  */
 
+/**
+ * Extracts faas.name from provider-specific span data fields.
+ *
+ * @param {RawPayload} rawPayload
+ * @returns {string | undefined}
+ */
+function getFaasNameFromSpanData(rawPayload) {
+  return (
+    // AWS Lambda
+    rawPayload.data?.lambda?.functionName
+  );
+}
+
 const resourceMapper = {
   /**
    * @param {RawPayload} rawPayload
@@ -38,7 +54,7 @@ const resourceMapper = {
    */
   serviceName(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
-    return resource['service.name'] || ctx.serviceName;
+    return resource[RESOURCE.SERVICE_NAME] || ctx.serviceName;
   },
 
   /**
@@ -47,7 +63,7 @@ const resourceMapper = {
    */
   sdkLanguage(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
-    return resource['telemetry.sdk.language'] || SDK_LANGUAGE;
+    return resource[RESOURCE.SDK_LANGUAGE] || SDK_LANGUAGE;
   },
 
   /**
@@ -56,7 +72,7 @@ const resourceMapper = {
    */
   sdkName(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
-    return resource['telemetry.sdk.name'] || SDK_NAME;
+    return resource[RESOURCE.SDK_NAME] || SDK_NAME;
   },
 
   /**
@@ -65,7 +81,7 @@ const resourceMapper = {
    */
   sdkVersion(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
-    return resource['telemetry.sdk.version'] || SDK_VERSION;
+    return resource[RESOURCE.SDK_VERSION] || SDK_VERSION;
   },
 
   /**
@@ -76,7 +92,7 @@ const resourceMapper = {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
     const metadata = rawPayload.f || {};
 
-    const pid = resource['process.pid'] || metadata.e || ctx._pid;
+    const pid = resource[RESOURCE.PROCESS_PID] || metadata.e || ctx._pid;
 
     if (pid === null || pid === undefined) {
       return undefined;
@@ -92,7 +108,7 @@ const resourceMapper = {
    */
   hostName(rawPayload) {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
-    let hostName = resource['host.name'];
+    let hostName = resource[RESOURCE.HOST_NAME];
 
     if (!hostName) {
       try {
@@ -114,9 +130,30 @@ const resourceMapper = {
     const resource = rawPayload.data?.resource || rawPayload.resource || {};
     const metadata = rawPayload.f || {};
 
-    const hostId = resource['host.id'] || metadata.h || ctx._hostId;
+    return resource[RESOURCE.HOST_ID] || metadata.h;
+  },
 
-    return typeof hostId === 'string' ? hostId : undefined;
+  /**
+   * @param {RawPayload} rawPayload
+   * @returns {string | undefined}
+   */
+  faasName(rawPayload) {
+    const resource = rawPayload.data?.resource || rawPayload.resource || {};
+    return resource[RESOURCE.FAAS_NAME] || getFaasNameFromSpanData(rawPayload) || undefined;
+  },
+
+  /**
+   * @param {RawPayload} rawPayload
+   * @returns {string | undefined}
+   */
+  osType(rawPayload) {
+    const resource = rawPayload.data?.resource || rawPayload.resource || {};
+
+    if (resource[RESOURCE.OS_TYPE]) {
+      return resource[RESOURCE.OS_TYPE];
+    }
+
+    return normalizeOsType(os.platform());
   }
 };
 
@@ -158,8 +195,18 @@ function extractResourceAttributes(rawPayload) {
       valueType: 'int'
     },
     {
+      otlp: OTLP.resource.OS_TYPE,
+      transform: resourceMapper.osType,
+      valueType: 'string'
+    },
+    {
       otlp: OTLP.resource.HOST_NAME,
       transform: resourceMapper.hostName,
+      valueType: 'string'
+    },
+    {
+      otlp: OTLP.resource.FAAS_NAME,
+      transform: resourceMapper.faasName,
       valueType: 'string'
     }
   ];
@@ -180,6 +227,20 @@ function extractResourceAttributes(rawPayload) {
   }, /** @type {Array<{ key: string, value: { intValue?: number, stringValue?: string } }>} */ ([]));
 
   return { attributes };
+}
+
+/**
+ * @param {string} nodePlatform
+ */
+function normalizeOsType(nodePlatform) {
+  switch (nodePlatform) {
+    case 'win32':
+      return 'windows';
+    case 'sunos':
+      return 'solaris';
+    default:
+      return nodePlatform;
+  }
 }
 
 module.exports = {
