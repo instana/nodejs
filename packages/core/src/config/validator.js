@@ -204,8 +204,8 @@ exports.validateTransmissionDelay = function validateTransmissionDelay(value) {
     return value;
   }
 
-  const nearest = allowedTransmissionDelayValues.reduce((prev, curr) =>
-    Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev,
+  const nearest = allowedTransmissionDelayValues.reduce(
+    (prev, curr) => (Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev),
     allowedTransmissionDelayValues[0]
   );
   logger.warn(
@@ -214,4 +214,27 @@ exports.validateTransmissionDelay = function validateTransmissionDelay(value) {
       `Assuming the nearest allowed value ${nearest} ms.`
   );
   return nearest;
+};
+
+/**
+ * Accepts a comma-separated string or an array of strings.
+ * Returns a trimmed, non-empty string array or undefined if the input is invalid.
+ * @param {any} value
+ * @returns {string[] | undefined}
+ */
+exports.captureW3cBaggageValidator = function captureW3cBaggageValidator(value) {
+  if (Array.isArray(value)) {
+    const keys = value.map(k => (typeof k === 'string' ? k.trim() : '')).filter(k => k !== '');
+    return keys.length > 0 ? keys : undefined;
+  }
+
+  if (typeof value === 'string') {
+    const keys = value
+      .split(',')
+      .map(k => k.trim())
+      .filter(k => k !== '');
+    return keys.length > 0 ? keys : undefined;
+  }
+
+  return undefined;
 };
