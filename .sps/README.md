@@ -352,7 +352,7 @@ The first argument is a **title substring** matched against all open issues in
 `instana/instana-issues`. The second argument is `true` (dry run, default) or `false`
 (live). Always do a dry run first to confirm the match set before closing.
 
-## References links
+## References
 
 - [SPS PR pipeline structure](https://pages.github.ibm.com/secure-pipelines-service/sps-docs/optimize/optimize/#pr-pipeline-structure)
 - [Pipeline-config v2 customization options](https://pages.github.ibm.com/secure-pipelines-service/sps-docs/optimize/optimize/#pipeline-config-v2-customization-options)
