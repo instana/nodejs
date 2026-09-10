@@ -16,9 +16,7 @@ tasks:
       - name: run-stage
         when: 'false'
   code-ci-finish:
-    steps:
-      - name: run-stage
-        when: 'false'
+    when: false
   deploy-checks:
     when: false
   deploy-release:

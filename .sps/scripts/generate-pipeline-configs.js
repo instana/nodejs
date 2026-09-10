@@ -970,8 +970,13 @@ function baseConfig(fanOutTasks, rootTask = 'pr-code-checks') {
           { name: 'scan-artifact', when: 'false' }
         ]
       },
-      'code-pr-finish': { steps: [{ name: 'evaluate', when: 'false' }, { name: 'run-stage', when: 'false' }] },
-      'code-ci-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
+      'code-pr-finish': {
+        steps: [
+          { name: 'evaluate', when: 'false' },
+          { name: 'run-stage', when: 'false' }
+        ]
+      },
+      'code-ci-finish': { when: false },
       'deploy-checks': { when: false },
       'deploy-release': { when: false },
       ...fanOutTasks
@@ -1081,11 +1086,16 @@ function generateOne(t) {
             { name: 'unit-test', image: NODE_IMAGE, script: '#!/usr/bin/env bash\necho "General PR checks passed."' }
           ]
         },
-        'code-pr-finish': { steps: [{ name: 'evaluate', when: 'false' }, { name: 'run-stage', when: 'false' }] },
+        'code-pr-finish': {
+          steps: [
+            { name: 'evaluate', when: 'false' },
+            { name: 'run-stage', when: 'false' }
+          ]
+        },
         'sign-artifact': { when: 'false' },
         'deploy-checks': { when: 'false' },
         'deploy-release': { when: 'false' },
-        'code-ci-finish': { steps: [{ name: 'run-stage', when: 'false' }] }
+        'code-ci-finish': { when: false }
       }
     };
 
@@ -1106,7 +1116,7 @@ function generateOne(t) {
         'sign-artifact': { when: 'false' },
         'deploy-checks': { when: 'false' },
         'deploy-release': { when: 'false' },
-        'code-ci-finish': { steps: [{ name: 'run-stage', when: 'false' }] }
+        'code-ci-finish': { when: 'false' }
       }
     };
     writeDefaultConfig(prConfig, mainConfig);
@@ -1465,8 +1475,13 @@ function generateOne(t) {
             { name: 'unit-test', image: NODE_IMAGE, script: '#!/usr/bin/env bash\necho "pr-verify starting..."' }
           ]
         },
-        'code-pr-finish': { steps: [{ name: 'evaluate', when: 'false' }, { name: 'run-stage', when: 'false' }] },
-        'code-ci-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
+        'code-pr-finish': {
+          steps: [
+            { name: 'evaluate', when: 'false' },
+            { name: 'run-stage', when: 'false' }
+          ]
+        },
+        'code-ci-finish': { when: false },
         'deploy-checks': { when: false },
         'deploy-release': { when: false },
         'pr-code-checks-verify': {
@@ -1516,8 +1531,13 @@ function generateOne(t) {
             { name: 'scan-artifact', when: 'false' }
           ]
         },
-        'code-pr-finish': { steps: [{ name: 'evaluate', when: 'false' }, { name: 'run-stage', when: 'false' }] },
-        'code-ci-finish': { steps: [{ name: 'run-stage', when: 'false' }] },
+        'code-pr-finish': {
+          steps: [
+            { name: 'evaluate', when: 'false' },
+            { name: 'run-stage', when: 'false' }
+          ]
+        },
+        'code-ci-finish': { when: false },
         'deploy-checks': { when: false },
         'deploy-release': { when: false },
         'code-build-upload-currency-report': buildUploadCurrencyReportTask()
