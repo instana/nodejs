@@ -12,6 +12,7 @@ const { ENTRY, EXIT, INTERMEDIATE, isExitSpan } = require('./constants');
 const hooked = require('./clsHooked');
 const tracingMetrics = require('./metrics');
 const { applyFilter } = require('../util/spanFilter');
+const baggageUtil = require('./baggage');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -21,6 +22,7 @@ const currentSpanKey = 'com.instana.span';
 const reducedSpanKey = 'com.instana.reduced';
 const tracingLevelKey = 'com.instana.tl';
 const w3cTraceContextKey = 'com.instana.w3ctc';
+const baggageKey = 'com.instana.baggage';
 
 // eslint-disable-next-line no-undef-init
 /** @type {String} */
@@ -31,6 +33,8 @@ let processIdentityProvider = null;
 let allowRootExitSpan;
 /** @type {Boolean} */
 let ignoreEndpointsDisableDownStreamSuppression;
+/** @type {string[]} */
+let captureW3cBaggage = [];
 
 /*
  * Access the Instana namespace in continuation local storage.
@@ -55,6 +59,7 @@ function init(config, _processIdentityProvider) {
   processIdentityProvider = _processIdentityProvider;
   allowRootExitSpan = config?.tracing?.allowRootExitSpan;
   ignoreEndpointsDisableDownStreamSuppression = config?.tracing?.ignoreEndpointsDisableSuppression;
+  captureW3cBaggage = config?.tracing?.captureW3cBaggage || [];
 }
 
 class InstanaSpan {
@@ -371,6 +376,16 @@ function startSpan(spanAttributes = {}) {
     span.addCleanup(ns.set(currentEntrySpanKey, span));
   }
 
+  if (captureW3cBaggage.length > 0) {
+    const rawBaggage = ns.get(baggageKey);
+    if (rawBaggage) {
+      if (!span.data.sdk) span.data.sdk = {};
+      if (!span.data.sdk.custom) span.data.sdk.custom = {};
+      if (!span.data.sdk.custom.tags) span.data.sdk.custom.tags = {};
+      baggageUtil.applyCaptureTags(rawBaggage, captureW3cBaggage, span.data.sdk.custom.tags);
+    }
+  }
+
   // Set the span object as the currently active span in the active CLS context and also add a cleanup hook for when
   // this span is transmitted.
   span.addCleanup(ns.set(currentSpanKey, span));
@@ -513,6 +528,22 @@ function setW3cTraceContext(traceContext) {
  */
 function getW3cTraceContext() {
   return ns.get(w3cTraceContextKey);
+}
+
+/**
+ * Stores the raw W3C baggage header value in CLS so it is available across async boundaries.
+ * @param {string | null} baggage
+ */
+function setBaggage(baggage) {
+  ns.set(baggageKey, baggage);
+}
+
+/**
+ * Returns the raw W3C baggage header value from CLS.
+ * @returns {string | null}
+ */
+function getBaggage() {
+  return ns.get(baggageKey);
 }
 
 /*
@@ -731,6 +762,7 @@ module.exports = {
   reducedSpanKey,
   tracingLevelKey,
   w3cTraceContextKey,
+  baggageKey,
   ns,
   init,
   startSpan,
@@ -741,6 +773,8 @@ module.exports = {
   getReducedSpan,
   setW3cTraceContext,
   getW3cTraceContext,
+  setBaggage,
+  getBaggage,
   isTracing,
   setTracingLevel,
   tracingLevel,

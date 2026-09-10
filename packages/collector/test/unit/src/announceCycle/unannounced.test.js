@@ -1423,6 +1423,129 @@ describe('unannounced state', () => {
           }
         });
       });
+
+      it('should apply disable-w3c-baggage from agent response', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'disable-w3c-baggage': true
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                disableW3cBaggage: true,
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should not apply disable-w3c-baggage when value is false', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'disable-w3c-baggage': false
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should apply capture-w3c-baggage as parsed key array', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'capture-w3c-baggage': 'userId,isPremium'
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                captureW3cBaggage: ['userId', 'isPremium'],
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should trim whitespace in capture-w3c-baggage keys', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'capture-w3c-baggage': ' userId , isPremium '
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                captureW3cBaggage: ['userId', 'isPremium'],
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should not apply capture-w3c-baggage when value is empty string', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'capture-w3c-baggage': ''
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should not apply capture-w3c-baggage when value is not a string', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'capture-w3c-baggage': 42
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
     });
 
     describe('OTLP exporter configuration', () => {
