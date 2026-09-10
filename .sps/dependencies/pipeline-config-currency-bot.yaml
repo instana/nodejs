@@ -63,6 +63,6 @@ tasks:
   deploy-release:
     when: false
   code-ci-finish:
-  when: 'false'
+    when: 'false'
   code-checks:
     when: false
