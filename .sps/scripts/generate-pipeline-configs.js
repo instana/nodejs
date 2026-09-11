@@ -1078,7 +1078,19 @@ function generateOne(t) {
             { name: 'peer-review', when: 'false' },
             { name: 'detect-secrets' },
             { name: 'compliance-checks' },
-            { name: 'unit-test', image: NODE_IMAGE, script: '#!/usr/bin/env bash\necho "General PR checks passed."' }
+            {
+              name: 'unit-test',
+              image: NODE_IMAGE,
+              script: [
+                '#!/usr/bin/env bash',
+                'set -eo pipefail',
+                nodeVersionSwitchScript(),
+                '',
+                'cd "$WORKSPACE/$(load_repo app-repo path)"',
+                'npm install --loglevel warn --foreground-scripts',
+                'node bin/create-version-test-folders.js'
+              ].join('\n')
+            }
           ]
         },
         'code-pr-finish': { when: 'false' },
