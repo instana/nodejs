@@ -107,7 +107,10 @@ function socatForwardScript(name) {
   const lines = [`${varName}=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${name})`];
   for (const p of s.ports) {
     const [hostPort, containerPort] = p.split(':');
+    // IPv4: handles 127.0.0.1 connections (all Node versions)
     lines.push(`socat TCP-LISTEN:${hostPort},fork,reuseaddr,bind=127.0.0.1 TCP:$${varName}:${containerPort} &`);
+    // IPv6: handles ::1 connections (Node.js v18 resolves "localhost" to ::1 by default)
+    lines.push(`socat TCP6-LISTEN:${hostPort},fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$${varName}:${containerPort} &`);
   }
   return lines.join('\n');
 }
