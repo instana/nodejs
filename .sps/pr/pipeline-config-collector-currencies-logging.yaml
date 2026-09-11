@@ -42,12 +42,6 @@ tasks:
     displayName: bunyan
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: bunyan
         image: mirror.gcr.io/library/node:24
@@ -136,23 +130,11 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-collector-logging-console:
     from: pr-code-checks
     displayName: console
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: console
         image: mirror.gcr.io/library/node:24
@@ -241,23 +223,11 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-collector-logging-express-winston:
     from: pr-code-checks
     displayName: express-winston
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: express-winston
         image: mirror.gcr.io/library/node:24
@@ -346,23 +316,11 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-collector-logging-log4js:
     from: pr-code-checks
     displayName: log4js
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: log4js
         image: mirror.gcr.io/library/node:24
@@ -451,23 +409,11 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-collector-logging-pino:
     from: pr-code-checks
     displayName: pino
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: pino
         image: mirror.gcr.io/library/node:24
@@ -556,23 +502,11 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-collector-logging-winston:
     from: pr-code-checks
     displayName: winston
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: winston
         image: mirror.gcr.io/library/node:24
@@ -661,9 +595,3 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'

@@ -44,12 +44,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: '@aws-sdk/client-dynamodb'
         image: mirror.gcr.io/library/node:24
@@ -164,12 +158,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-cloud-client-kinesis:
     from: code-build
     displayName: '@aws-sdk/client-kinesis'
@@ -177,12 +165,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: '@aws-sdk/client-kinesis'
         image: mirror.gcr.io/library/node:24
@@ -303,12 +285,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-cloud-client-lambda:
     from: code-build
     displayName: '@aws-sdk/client-lambda'
@@ -316,12 +292,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: '@aws-sdk/client-lambda'
         image: mirror.gcr.io/library/node:24
@@ -436,12 +406,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-cloud-client-s3:
     from: code-build
     displayName: '@aws-sdk/client-s3'
@@ -449,12 +413,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: '@aws-sdk/client-s3'
         image: mirror.gcr.io/library/node:24
@@ -569,12 +527,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-cloud-client-sns:
     from: code-build
     displayName: '@aws-sdk/client-sns'
@@ -582,12 +534,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: '@aws-sdk/client-sns'
         image: mirror.gcr.io/library/node:24
@@ -702,12 +648,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-cloud-client-sqs:
     from: code-build
     displayName: '@aws-sdk/client-sqs'
@@ -715,12 +655,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: '@aws-sdk/client-sqs'
         image: mirror.gcr.io/library/node:24
@@ -835,12 +769,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-cloud-storage-blob:
     from: code-build
     displayName: '@azure/storage-blob'
@@ -848,12 +776,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: '@azure/storage-blob'
         image: mirror.gcr.io/library/node:24
@@ -970,12 +892,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-cloud-pubsub:
     from: code-build
     displayName: '@google-cloud/pubsub'
@@ -983,12 +899,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: '@google-cloud/pubsub'
         image: mirror.gcr.io/library/node:24
@@ -1104,12 +1014,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-cloud-storage:
     from: code-build
     displayName: '@google-cloud/storage'
@@ -1117,12 +1021,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: '@google-cloud/storage'
         image: mirror.gcr.io/library/node:24
@@ -1238,12 +1136,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-cloud-aws-sdk:
     from: code-build
     displayName: aws-sdk
@@ -1251,12 +1143,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: aws-sdk
         image: mirror.gcr.io/library/node:24
@@ -1377,9 +1263,3 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'

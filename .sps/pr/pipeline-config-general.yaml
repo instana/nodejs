@@ -42,12 +42,6 @@ tasks:
     displayName: echo-env
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: echo-env
         image: mirror.gcr.io/library/node:24
@@ -93,23 +87,11 @@ tasks:
           echo ""
           echo "NPM config list:"
           npm config list
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-audit:
     from: pr-code-checks
     displayName: audit
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: audit
         image: mirror.gcr.io/library/node:24
@@ -130,23 +112,11 @@ tasks:
           npm install --loglevel warn --foreground-scripts
 
           npm run audit
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-lint:
     from: pr-code-checks
     displayName: lint
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: lint
         image: mirror.gcr.io/library/node:24
@@ -167,23 +137,11 @@ tasks:
           npm install --loglevel warn --foreground-scripts
 
           npm run lint
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-commitlint:
     from: pr-code-checks
     displayName: commitlint
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: commitlint
         image: mirror.gcr.io/library/node:24
@@ -204,23 +162,11 @@ tasks:
           npm install --loglevel warn --foreground-scripts
 
           npm run commitlint
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-depcheck:
     from: pr-code-checks
     displayName: depcheck
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: depcheck
         image: mirror.gcr.io/library/node:24
@@ -241,9 +187,3 @@ tasks:
           npm install --loglevel warn --foreground-scripts
 
           npm run depcheck
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'

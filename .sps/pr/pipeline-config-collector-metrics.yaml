@@ -42,12 +42,6 @@ tasks:
     displayName: collector-metrics
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: collector-metrics
         image: mirror.gcr.io/library/node:24
@@ -136,9 +130,3 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'

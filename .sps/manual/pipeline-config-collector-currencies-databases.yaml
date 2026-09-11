@@ -44,12 +44,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: '@elastic/elasticsearch'
         image: mirror.gcr.io/library/node:24
@@ -169,12 +163,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-databases-client:
     from: code-build
     displayName: '@redis/client'
@@ -182,12 +170,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: '@redis/client'
         image: mirror.gcr.io/library/node:24
@@ -323,12 +305,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-databases-couchbase:
     from: code-build
     displayName: couchbase
@@ -336,12 +312,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: couchbase
         image: mirror.gcr.io/library/node:24
@@ -460,12 +430,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-databases-ibm-db:
     from: code-build
     displayName: ibm_db
@@ -473,12 +437,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: ibm_db
         image: mirror.gcr.io/library/node:24
@@ -609,12 +567,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-databases-ioredis:
     from: code-build
     displayName: ioredis
@@ -622,12 +574,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: ioredis
         image: mirror.gcr.io/library/node:24
@@ -763,12 +709,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-databases-memcached:
     from: code-build
     displayName: memcached
@@ -776,12 +716,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: memcached
         image: mirror.gcr.io/library/node:24
@@ -893,12 +827,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-databases-mongodb:
     from: code-build
     displayName: mongodb
@@ -906,12 +834,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: mongodb
         image: mirror.gcr.io/library/node:24
@@ -1024,12 +946,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-databases-mongoose:
     from: code-build
     displayName: mongoose
@@ -1037,12 +953,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: mongoose
         image: mirror.gcr.io/library/node:24
@@ -1155,12 +1065,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-databases-mssql:
     from: code-build
     displayName: mssql
@@ -1168,12 +1072,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: mssql
         image: mirror.gcr.io/library/node:24
@@ -1287,12 +1185,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-databases-mysql:
     from: code-build
     displayName: mysql
@@ -1300,12 +1192,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: mysql
         image: mirror.gcr.io/library/node:24
@@ -1423,12 +1309,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-databases-mysql2:
     from: code-build
     displayName: mysql2
@@ -1436,12 +1316,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: mysql2
         image: mirror.gcr.io/library/node:24
@@ -1559,12 +1433,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-databases-oracledb:
     from: code-build
     displayName: oracledb
@@ -1572,12 +1440,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: oracledb
         image: mirror.gcr.io/library/node:24
@@ -1695,12 +1557,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-databases-pg:
     from: code-build
     displayName: pg
@@ -1708,12 +1564,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: pg
         image: mirror.gcr.io/library/node:24
@@ -1829,12 +1679,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-databases-pg-native:
     from: code-build
     displayName: pg-native
@@ -1842,12 +1686,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: pg-native
         image: mirror.gcr.io/library/node:24
@@ -1963,12 +1801,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-databases-prisma:
     from: code-build
     displayName: prisma
@@ -1976,12 +1808,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: prisma
         image: mirror.gcr.io/library/node:24
@@ -2110,12 +1936,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-databases-redis:
     from: code-build
     displayName: redis
@@ -2123,12 +1943,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: redis
         image: mirror.gcr.io/library/node:24
@@ -2264,12 +2078,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-databases-sequelize:
     from: code-build
     displayName: sequelize
@@ -2277,12 +2085,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: sequelize
         image: mirror.gcr.io/library/node:24
@@ -2398,12 +2200,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   code-build-collector-databases-tedious:
     from: code-build
     displayName: tedious
@@ -2411,12 +2207,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: tedious
         image: mirror.gcr.io/library/node:24
@@ -2530,9 +2320,3 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'

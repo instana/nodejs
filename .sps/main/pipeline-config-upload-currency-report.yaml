@@ -75,9 +75,3 @@ tasks:
 
           git commit -m "chore: updated node.js currency report"
           git push origin main
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'

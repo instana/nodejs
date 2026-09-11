@@ -320,19 +320,13 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
       runtimeClassName: 'large',
       ...(needs.length > 0 ? { include: ['dind'] } : {}),
       steps: [
-        { name: 'peer-review', when: 'false' },
-        { name: 'detect-secrets', when: 'false' },
-        { name: 'compliance-checks', when: 'false' },
         {
           name: 'unit-test',
           displayName,
           image: NODE_IMAGE,
           ...(needs.length > 0 ? { include: ['docker-socket'] } : {}),
           script: scriptLines.join('\n')
-        },
-        { name: 'sign-artifact', when: 'false' },
-        { name: 'build-artifact', when: 'false' },
-        { name: 'scan-artifact', when: 'false' }
+        }
       ]
     }
   };
@@ -615,19 +609,13 @@ function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv
     runtimeClassName: 'large',
     ...(needs.length > 0 ? { include: ['dind'] } : {}),
     steps: [
-      { name: 'peer-review', when: 'false' },
-      { name: 'detect-secrets', when: 'false' },
-      { name: 'compliance-checks', when: 'false' },
       {
         name: 'unit-test',
         displayName,
         image: NODE_IMAGE,
         ...(needs.length > 0 ? { include: ['docker-socket'] } : {}),
         script: scriptLines.join('\n')
-      },
-      { name: 'sign-artifact', when: 'false' },
-      { name: 'build-artifact', when: 'false' },
-      { name: 'scan-artifact', when: 'false' }
+      }
     ]
   };
 }
@@ -654,13 +642,7 @@ function buildGeneralTasks() {
       displayName,
       runtimeClassName: 'large',
       steps: [
-        { name: 'peer-review', when: 'false' },
-        { name: 'detect-secrets', when: 'false' },
-        { name: 'compliance-checks', when: 'false' },
-        { name: 'unit-test', displayName, image: NODE_IMAGE, script },
-        { name: 'sign-artifact', when: 'false' },
-        { name: 'build-artifact', when: 'false' },
-        { name: 'scan-artifact', when: 'false' }
+        { name: 'unit-test', displayName, image: NODE_IMAGE, script }
       ]
     };
   }
@@ -717,13 +699,7 @@ function buildGeneralTasks() {
       displayName: 'echo-env',
       runtimeClassName: 'large',
       steps: [
-        { name: 'peer-review', when: 'false' },
-        { name: 'detect-secrets', when: 'false' },
-        { name: 'compliance-checks', when: 'false' },
-        { name: 'unit-test', displayName: 'echo-env', image: NODE_IMAGE, script: echoEnvScript },
-        { name: 'sign-artifact', when: 'false' },
-        { name: 'build-artifact', when: 'false' },
-        { name: 'scan-artifact', when: 'false' }
+        { name: 'unit-test', displayName: 'echo-env', image: NODE_IMAGE, script: echoEnvScript }
       ]
     },
     [`${prefix}-audit`]:       task('audit',       'npm run audit'),
@@ -884,13 +860,7 @@ function buildSonarTask(rootTask = 'pr-code-checks') {
     displayName: 'sonar-analysis',
     runtimeClassName: 'large',
     steps: [
-      { name: 'peer-review', when: 'false' },
-      { name: 'detect-secrets', when: 'false' },
-      { name: 'compliance-checks', when: 'false' },
-      { name: 'unit-test', displayName: 'sonar-analysis', image: NODE_IMAGE, script },
-      { name: 'sign-artifact', when: 'false' },
-      { name: 'build-artifact', when: 'false' },
-      { name: 'scan-artifact', when: 'false' }
+      { name: 'unit-test', displayName: 'sonar-analysis', image: NODE_IMAGE, script }
     ]
   };
 }
@@ -935,10 +905,7 @@ function buildUploadCurrencyReportTask() {
     displayName: 'upload-currency-report',
     runtimeClassName: 'large',
     steps: [
-      { name: 'unit-test', displayName: 'upload-currency-report', image: NODE_IMAGE, script },
-      { name: 'sign-artifact', when: 'false' },
-      { name: 'build-artifact', when: 'false' },
-      { name: 'scan-artifact', when: 'false' }
+      { name: 'unit-test', displayName: 'upload-currency-report', image: NODE_IMAGE, script }
     ]
   };
 }
@@ -1474,13 +1441,7 @@ function generateOne(t) {
           displayName: 'pr-verify',
           runtimeClassName: 'large',
           steps: [
-            { name: 'peer-review', when: 'false' },
-            { name: 'detect-secrets', when: 'false' },
-            { name: 'compliance-checks', when: 'false' },
-            { name: 'unit-test', displayName: 'pr-verify', image: NODE_IMAGE, script },
-            { name: 'sign-artifact', when: 'false' },
-            { name: 'build-artifact', when: 'false' },
-            { name: 'scan-artifact', when: 'false' }
+            { name: 'unit-test', displayName: 'pr-verify', image: NODE_IMAGE, script }
           ]
         },
         'sonar-analysis': buildSonarTask('pr-code-checks')

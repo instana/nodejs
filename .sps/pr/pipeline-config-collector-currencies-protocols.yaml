@@ -42,12 +42,6 @@ tasks:
     displayName: '@apollo/server'
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: '@apollo/server'
         image: mirror.gcr.io/library/node:24
@@ -136,23 +130,11 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-collector-protocols-subgraph:
     from: pr-code-checks
     displayName: '@apollo/subgraph'
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: '@apollo/subgraph'
         image: mirror.gcr.io/library/node:24
@@ -241,23 +223,11 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-collector-protocols-grpc-js:
     from: pr-code-checks
     displayName: '@grpc/grpc-js'
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: '@grpc/grpc-js'
         image: mirror.gcr.io/library/node:24
@@ -346,12 +316,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-collector-protocols-graphql:
     from: pr-code-checks
     displayName: graphql
@@ -359,12 +323,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: graphql
         image: mirror.gcr.io/library/node:24
@@ -478,23 +436,11 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-collector-protocols-graphql-subscriptions:
     from: pr-code-checks
     displayName: graphql-subscriptions
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: graphql-subscriptions
         image: mirror.gcr.io/library/node:24
@@ -583,23 +529,11 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-collector-protocols-http:
     from: pr-code-checks
     displayName: http
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: http
         image: mirror.gcr.io/library/node:24
@@ -688,23 +622,11 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-collector-protocols-http2:
     from: pr-code-checks
     displayName: http2
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: http2
         image: mirror.gcr.io/library/node:24
@@ -793,9 +715,3 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'

@@ -44,12 +44,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: '@confluentinc/kafka-javascript'
         image: mirror.gcr.io/library/node:24
@@ -185,12 +179,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-collector-messaging-amqplib:
     from: pr-code-checks
     displayName: amqplib
@@ -198,12 +186,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: amqplib
         image: mirror.gcr.io/library/node:24
@@ -317,12 +299,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-collector-messaging-bull:
     from: pr-code-checks
     displayName: bull
@@ -330,12 +306,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: bull
         image: mirror.gcr.io/library/node:24
@@ -448,12 +418,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-collector-messaging-kafka-node:
     from: pr-code-checks
     displayName: kafka-node
@@ -461,12 +425,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: kafka-node
         image: mirror.gcr.io/library/node:24
@@ -602,12 +560,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-collector-messaging-kafkajs:
     from: pr-code-checks
     displayName: kafkajs
@@ -615,12 +567,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: kafkajs
         image: mirror.gcr.io/library/node:24
@@ -756,12 +702,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-collector-messaging-nats:
     from: pr-code-checks
     displayName: nats
@@ -769,12 +709,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: nats
         image: mirror.gcr.io/library/node:24
@@ -888,12 +822,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-collector-messaging-node-nats-streaming:
     from: pr-code-checks
     displayName: node-nats-streaming
@@ -901,12 +829,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: node-nats-streaming
         image: mirror.gcr.io/library/node:24
@@ -1029,12 +951,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-collector-messaging-node-rdkafka-1:
     from: pr-code-checks
     displayName: node-rdkafka-1
@@ -1042,12 +958,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: node-rdkafka-1
         image: mirror.gcr.io/library/node:24
@@ -1183,12 +1093,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-collector-messaging-node-rdkafka-2:
     from: pr-code-checks
     displayName: node-rdkafka-2
@@ -1196,12 +1100,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: node-rdkafka-2
         image: mirror.gcr.io/library/node:24
@@ -1337,12 +1235,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-collector-messaging-node-rdkafka-3:
     from: pr-code-checks
     displayName: node-rdkafka-3
@@ -1350,12 +1242,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: node-rdkafka-3
         image: mirror.gcr.io/library/node:24
@@ -1491,12 +1377,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-collector-messaging-node-rdkafka-4:
     from: pr-code-checks
     displayName: node-rdkafka-4
@@ -1504,12 +1384,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: node-rdkafka-4
         image: mirror.gcr.io/library/node:24
@@ -1645,12 +1519,6 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-collector-messaging-node-rdkafka-5:
     from: pr-code-checks
     displayName: node-rdkafka-5
@@ -1658,12 +1526,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: node-rdkafka-5
         image: mirror.gcr.io/library/node:24
@@ -1799,23 +1661,11 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
   pr-code-checks-collector-messaging-socket-io:
     from: pr-code-checks
     displayName: socket.io
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: socket.io
         image: mirror.gcr.io/library/node:24
@@ -1904,9 +1754,3 @@ tasks:
           fi
 
           exit $LAST_EXIT
-      - name: sign-artifact
-        when: 'false'
-      - name: build-artifact
-        when: 'false'
-      - name: scan-artifact
-        when: 'false'
