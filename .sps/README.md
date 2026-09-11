@@ -205,29 +205,65 @@ Use the `manual-dep-*` trigger to run a bot immediately on demand.
 
 ## Running a pipeline manually
 
+> **Node version** — `--node-version` defaults to the version in the root
+> [`.nvmrc`](../.nvmrc) if omitted. Pass a comma-separated list to run multiple
+> versions in one call (e.g. `--node-version 18,20,22`). For a full multi-version
+> release run use `--release` flag (see [Release build](#release-build)).
+
 ```bash
 # List all available manual triggers
 .sps/scripts/run-pipeline.sh --list
 
-# Run all manual triggers on a branch with Node 20
+# Run all manual triggers — Node version taken from .nvmrc
+.sps/scripts/run-pipeline.sh --branch main
+
+# Run with a specific Node version
 .sps/scripts/run-pipeline.sh --branch main --node-version 20
 
-# Run all manual triggers across all Node.js versions (18, 20, 22, 24, 26) with ESM
-.sps/scripts/run-pipeline.sh --branch main --all-node-versions --esm true
+# Run across multiple Node versions (comma-separated)
+.sps/scripts/run-pipeline.sh --branch main --node-version 18,20,22,24,26
 
-# Run across specific Node.js versions (comma-separated list)
-.sps/scripts/run-pipeline.sh --branch main --node-version 18,20,22,24,26 --esm true
-
-# Run a single group
+# Run a single trigger group
 .sps/scripts/run-pipeline.sh --branch main --node-version 20 \
   --trigger collector-currencies-async
-
 
 # Run with ESM mode enabled (sets RUN_ESM=true in the pipeline run)
 .sps/scripts/run-pipeline.sh --branch main --node-version 24 --esm true
 
 # Dry run — prints the API payload without making calls
-.sps/scripts/run-pipeline.sh --branch main --all-node-versions --esm true --dry-run
+.sps/scripts/run-pipeline.sh --branch main --node-version 20 --dry-run
+```
+
+## Release build
+
+Pass `--release` to [`run-pipeline.sh`](.sps/scripts/run-pipeline.sh) to fire a full
+release build across all configured Node.js versions. Each step starts independently
+after a delay so the pipeline is not flooded all at once.
+
+**Steps** (edit the `RELEASE_STEPS` array at the top of `run-pipeline.sh` to add, remove, or reorder):
+
+| Step | Node version | ESM |
+|------|-------------|-----|
+| 1 | 18 | — |
+| 2 | 20 | — |
+| 3 | 22 | — |
+| 4 | 25 | — |
+| 5 | 26 | — |
+| 6 | 24 | ✓ |
+
+The script prompts interactively for:
+- **Delay** — minutes to wait between steps (default: 2)
+- **Skip** — step numbers to skip (press Enter to run all)
+
+```bash
+# Interactive — prompts for delay and skip list
+.sps/scripts/run-pipeline.sh  --release
+
+# Non-interactive — 3 minute delay
+.sps/scripts/run-pipeline.sh  --release --delay 3
+
+# Dry run — prints each API call without executing
+.sps/scripts/run-pipeline.sh --branch main --release --dry-run
 ```
 
 ## Stopping all active runs
@@ -333,24 +369,29 @@ permanently suppress the finding across all scans.
 
 ## Closing compliance issues
 
-When a pipeline run raises issues in `instana/instana-issues` (e.g. branch-protection
-or CRA BOM failures), use [`bin/close-matched-prs.sh`](bin/close-matched-prs.sh) to
-bulk-comment and close them once the underlying problem is fixed.
+SPS reports compliance failures (e.g. branch-protection or CRA BOM violations) as
+issues in the IBM GitHub [`instana/instana-issues`](https://github.ibm.com/instana/instana-issues)
+repository. Once the underlying problem is fixed, use
+[`.sps/scripts/close-compliance-reports.sh`](.sps/scripts/close-compliance-reports.sh) to
+bulk-comment and close all matching issues in one shot.
 
 **Requires** the [GitHub CLI (`gh`)](https://cli.github.com/) authenticated with
 access to `instana/instana-issues`.
 
 ```bash
-# Dry run — lists matching open issues without modifying anything (default)
-./bin/close-matched-prs.sh "CVE-2025-14505"
+# Dry run — lists matching open issues without modifying anything
+.sps/scripts/close-compliance-reports.sh --pattern "CVE-2025-14505" --dry-run
 
-# Live run — prompts for confirmation, then comments "fixed the case" and closes each issue
-./bin/close-matched-prs.sh "CVE-2025-14505" false
+# Live run — prompts for a comment (Enter to accept default), then closes each issue
+.sps/scripts/close-compliance-reports.sh --pattern "CVE-2025-14505"
+
+# Live run with an explicit comment
+.sps/scripts/close-compliance-reports.sh --pattern "CVE-2025-14505" --comment "Fixed in PR #1234"
 ```
 
-The first argument is a **title substring** matched against all open issues in
-`instana/instana-issues`. The second argument is `true` (dry run, default) or `false`
-(live). Always do a dry run first to confirm the match set before closing.
+`--comment` is optional. When omitted on a live run the script prompts for input;
+pressing Enter uses the default `"fixed the case"`. Always do a dry run first to
+confirm the match set before closing.
 
 ## References
 
