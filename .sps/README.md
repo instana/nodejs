@@ -1,6 +1,6 @@
 # SPS Pipeline
 
-## Table of contents
+## TOC
 
 - [Overview](#overview)
   - [Pipeline flavours](#pipeline-flavours)
