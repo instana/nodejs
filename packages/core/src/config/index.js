@@ -325,7 +325,8 @@ function normalizeMetricsConfig({ userConfig = {}, defaultConfig = {}, finalConf
   // Validate that transmissionDelay is one of the allowed values (in ms)
   if (!allowedTransmissionDelayValues.includes(transmissionDelay)) {
     const nearest = allowedTransmissionDelayValues.reduce((prev, curr) =>
-      Math.abs(curr - transmissionDelay) < Math.abs(prev - transmissionDelay) ? curr : prev
+      Math.abs(curr - transmissionDelay) < Math.abs(prev - transmissionDelay) ? curr : prev,
+      allowedTransmissionDelayValues[0]
     );
     logger.warn(
       // eslint-disable-next-line max-len
