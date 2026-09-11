@@ -1,6 +1,6 @@
 # SPS Pipeline
 
-## Table of contents
+## TOC
 
 - [Overview](#overview)
   - [Pipeline flavours](#pipeline-flavours)
@@ -111,7 +111,7 @@ SPS does not support native Tekton sidecars. Tests that need an external service
 3. The step script installs `docker-ce-cli` via apt, then starts each service:
    ```bash
    docker run -d --network host --name <service> <image> ...
-   sleep 60  
+   sleep 60
    ```
 
 Service definitions (image, environment variables, startup arguments) live in
