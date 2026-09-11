@@ -28,3 +28,4 @@ packages/collector/test/integration/currencies/cloud/@google-cloud/storage/_v7.2
 packages/collector/test/integration/currencies/cloud/aws-sdk/_v2.1693.0
 packages/collector/test/integration/misc/otel_sdk_and_instana/_v1.0.0
 packages/collector/test/integration/misc/secrets/_v1.0.0
+packages/collector/test/integration/currencies/frameworks/@koa/router/_v14.0.0
