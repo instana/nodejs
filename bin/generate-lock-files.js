@@ -75,7 +75,7 @@ function findTestDirectories(baseDir, name) {
   return results;
 }
 
-function generateLockFile(currencyName, version, testDir, instanaVersion, baseLockFile) {
+function generateLockFile(currencyName, version, testDir, instanaVersion, baseLockFile, overrides) {
   const safeName = currencyName.replace(/\//g, '-').replace(/^@/, '');
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), `instana-lock-${safeName}-${version}-`));
 
@@ -90,6 +90,10 @@ function generateLockFile(currencyName, version, testDir, instanaVersion, baseLo
       name: `lock-gen-${safeName}-v${version}`,
       dependencies
     };
+    if (overrides && Object.keys(overrides).length > 0) {
+      pkgJson.overrides = overrides;
+      console.log(`  Applying overrides: ${JSON.stringify(overrides)}`);
+    }
     fs.writeFileSync(path.join(tmpDir, 'package.json'), `${JSON.stringify(pkgJson, null, 2)}\n`);
 
     if (baseLockFile && fs.existsSync(baseLockFile)) {
@@ -217,7 +221,7 @@ function main() {
         allVersions.forEach(version => {
           if (versionFilter && version !== versionFilter) return;
           const baseLockFile = fromVersion ? path.join(testDir, `package-lock.json.v${fromVersion}`) : null;
-          generateLockFile(currency.name, version, testDir, instanaVersion, baseLockFile);
+          generateLockFile(currency.name, version, testDir, instanaVersion, baseLockFile, currency.overrides);
         });
         removeOldLockFiles(testDir, allVersions);
       });
