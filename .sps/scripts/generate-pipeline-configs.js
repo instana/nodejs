@@ -951,6 +951,8 @@ function baseConfig(fanOutTasks, rootTask = 'pr-code-checks') {
         runtimeClassName: 'large',
         steps: [
           { name: 'peer-review', when: 'false' },
+          { name: 'detect-secrets' },
+          { name: 'compliance-checks' },
           {
             name: 'unit-test',
             displayName: 'npm-install',
@@ -1474,6 +1476,8 @@ function generateOne(t) {
         'pr-code-checks': {
           steps: [
             { name: 'peer-review', when: 'false' },
+            { name: 'detect-secrets' },
+            { name: 'compliance-checks' },
             { name: 'unit-test', image: NODE_IMAGE, script: '#!/usr/bin/env bash\necho "pr-verify starting..."' }
           ]
         },
@@ -1509,6 +1513,9 @@ function generateOne(t) {
         'code-build': {
           runtimeClassName: 'large',
           steps: [
+            { name: 'peer-review', when: 'false' },
+            { name: 'detect-secrets' },
+            { name: 'compliance-checks' },
             {
               name: 'unit-test',
               displayName: 'npm-install',

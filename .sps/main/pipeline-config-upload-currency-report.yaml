@@ -3,6 +3,10 @@ tasks:
   code-build:
     runtimeClassName: large
     steps:
+      - name: peer-review
+        when: 'false'
+      - name: detect-secrets
+      - name: compliance-checks
       - name: unit-test
         displayName: npm-install
         image: mirror.gcr.io/library/node:24
