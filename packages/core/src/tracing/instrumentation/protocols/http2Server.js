@@ -93,6 +93,10 @@ function shimEmit(realEmit) {
         cls.setW3cTraceContext(w3cTraceContext);
       }
 
+      if (processedHeaders.baggage != null) {
+        cls.setBaggage(processedHeaders.baggage);
+      }
+
       if (cls.tracingSuppressed()) {
         // We still need to forward X-INSTANA-L and the W3C trace context; this happens in exit instrumentations
         // (like httpClient.js).

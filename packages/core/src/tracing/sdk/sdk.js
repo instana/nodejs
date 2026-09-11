@@ -8,6 +8,7 @@
 const deepMerge = require('../../util/deepMerge');
 const tracingUtil = require('../tracingUtil');
 const constants = require('../constants');
+const baggage = require('../baggage');
 
 /** @typedef {import('../../core').InstanaBaseSpan} InstanaBaseSpan */
 
@@ -372,6 +373,20 @@ exports.generate = function (isCallbackApi) {
     isActive = true;
   }
 
+  /**
+   * @param {string} key
+   * @param {string} value
+   */
+  function setBaggage(key, value) {
+    if (!cls) {
+      return;
+    }
+    const current = cls.getBaggage();
+    const parsed = baggage.parseBaggageHeader(current || '');
+    parsed[key] = value;
+    cls.setBaggage(baggage.renderBaggageHeader(parsed));
+  }
+
   return {
     startEntrySpan,
     completeEntrySpan,
@@ -379,6 +394,7 @@ exports.generate = function (isCallbackApi) {
     completeIntermediateSpan,
     startExitSpan,
     completeExitSpan,
+    setBaggage,
     bindEmitter,
     init,
     activate,
