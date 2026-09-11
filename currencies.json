@@ -252,7 +252,7 @@
     "core": false,
     "versions": [
       {
-        "v": "5.3.1"
+        "v": "6.0.1"
       }
     ],
     "group": "cloud"
