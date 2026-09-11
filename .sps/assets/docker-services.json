@@ -86,7 +86,7 @@
         },
         {
           "name": "KAFKA_ADVERTISED_LISTENERS",
-          "value": "PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092"
+          "value": "PLAINTEXT://127.0.0.1:29092,EXTERNAL://127.0.0.1:9092"
         },
         {
           "name": "KAFKA_LISTENERS",
