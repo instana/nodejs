@@ -566,7 +566,7 @@
     "core": false,
     "versions": [
       {
-        "v": "15.1.0",
+        "v": "16.0.0",
         "esmOnly": true,
         "node": ">=22"
       },
