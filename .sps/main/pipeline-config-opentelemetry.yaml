@@ -134,13 +134,19 @@ tasks:
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
             if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
-            curl -sf -o /dev/null \
+            echo "DEBUG: GIT_COMMIT=$GIT_COMMIT STATUS=$STATUS"
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
               -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \
               -H "Authorization: token $GH_TOKEN" \
               -H "Content-Type: application/json" \
-              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}" \
-              && echo "Commit status set to '$STATUS' for $GIT_COMMIT." \
-              || echo "WARNING: Failed to set commit status (non-fatal)."
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
           else
             echo "WARNING: commit-id not set — skipping commit status."
           fi
@@ -244,13 +250,19 @@ tasks:
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
             if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
-            curl -sf -o /dev/null \
+            echo "DEBUG: GIT_COMMIT=$GIT_COMMIT STATUS=$STATUS"
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
               -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \
               -H "Authorization: token $GH_TOKEN" \
               -H "Content-Type: application/json" \
-              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}" \
-              && echo "Commit status set to '$STATUS' for $GIT_COMMIT." \
-              || echo "WARNING: Failed to set commit status (non-fatal)."
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
           else
             echo "WARNING: commit-id not set — skipping commit status."
           fi
