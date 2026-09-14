@@ -231,17 +231,17 @@ tasks:
 
           npm install --loglevel warn --foreground-scripts
 
-          # start localstack
+          # start localstack-kinesis
           docker network create kinesis-bootstrap
-          docker run -d --network kinesis-bootstrap --name localstack \
+          docker run -d --network kinesis-bootstrap --name localstack-kinesis \
             -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
-          docker network connect offline-net localstack
+          docker network connect offline-net localstack-kinesis
           timeout 180 bash -c \
-            'until docker exec localstack awslocal kinesis list-streams >/dev/null 2>&1; do sleep 2; done'
-          docker network disconnect kinesis-bootstrap localstack
+            'until docker exec localstack-kinesis awslocal kinesis list-streams >/dev/null 2>&1; do sleep 2; done'
+          docker network disconnect kinesis-bootstrap localstack-kinesis
           docker network rm kinesis-bootstrap
-          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack)
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack-kinesis)
           socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
           socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
           timeout 60 bash -c \
@@ -270,7 +270,6 @@ tasks:
               HOME="$HOME" \
               CI=true \
               RUN_ESM="$RUN_ESM" \
-              INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
               TEST_FILES="$TEST_FILES" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-client-kinesis" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
@@ -1459,17 +1458,17 @@ tasks:
 
           npm install --loglevel warn --foreground-scripts
 
-          # start localstack
+          # start localstack-kinesis
           docker network create kinesis-bootstrap
-          docker run -d --network kinesis-bootstrap --name localstack \
+          docker run -d --network kinesis-bootstrap --name localstack-kinesis \
             -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
-          docker network connect offline-net localstack
+          docker network connect offline-net localstack-kinesis
           timeout 180 bash -c \
-            'until docker exec localstack awslocal kinesis list-streams >/dev/null 2>&1; do sleep 2; done'
-          docker network disconnect kinesis-bootstrap localstack
+            'until docker exec localstack-kinesis awslocal kinesis list-streams >/dev/null 2>&1; do sleep 2; done'
+          docker network disconnect kinesis-bootstrap localstack-kinesis
           docker network rm kinesis-bootstrap
-          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack)
+          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack-kinesis)
           socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
           socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
           timeout 60 bash -c \
@@ -1498,7 +1497,6 @@ tasks:
               HOME="$HOME" \
               CI=true \
               RUN_ESM="$RUN_ESM" \
-              INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
               TEST_FILES="$TEST_FILES" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-aws-sdk" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then

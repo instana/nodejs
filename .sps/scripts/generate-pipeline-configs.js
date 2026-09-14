@@ -163,6 +163,7 @@ function readinessScript(name) {
         '  \'until docker exec ibm_db bash -c "su - node -c \\"db2 connect to nodedb && db2 \\\\\\"select 1 from sysibm.sysdummy1\\\\\\"\\"" > /dev/null 2>&1; do sleep 5; done\''
       );
     case 'localstack':
+    case 'localstack-kinesis':
       return 'timeout 60 bash -c \\\n' + "  'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'";
     case 'pubsub-emulator':
       return 'timeout 60 bash -c \\\n' + "  'until nc -z 127.0.0.1 8085 2>/dev/null; do sleep 2; done'";
@@ -247,19 +248,21 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
           scriptLines.push('');
         }
       } else {
+        const s = sidecar(need);
         scriptLines.push(`# start ${need}`);
-        if (need === 'localstack' && ['@aws-sdk/client-kinesis', 'aws-sdk'].includes(displayName)) {
-          // LocalStack's Kinesis backend is downloaded and started lazily. Bootstrap it with
-          // temporary egress, verify a real Kinesis operation, then isolate it for the tests.
-          scriptLines.push('docker network create kinesis-bootstrap');
-          scriptLines.push(dockerRunScript(need, { network: 'kinesis-bootstrap' }));
+        if (s && s.bootstrap) {
+          const { network: bootstrapNetwork, readinessCommand, timeoutSeconds } = s.bootstrap;
+          // Some services require temporary egress at startup to lazily download backends.
+          // Bootstrap on an external network, verify readiness, then isolate for tests.
+          scriptLines.push(`docker network create ${bootstrapNetwork}`);
+          scriptLines.push(dockerRunScript(need, { network: bootstrapNetwork }));
           scriptLines.push(`docker network connect ${SIDECAR_NETWORK} ${need}`);
-          scriptLines.push('timeout 180 bash -c \\');
+          scriptLines.push(`timeout ${timeoutSeconds} bash -c \\`);
           scriptLines.push(
-            `  'until docker exec ${need} awslocal kinesis list-streams >/dev/null 2>&1; do sleep 2; done'`
+            `  'until docker exec ${need} ${readinessCommand} >/dev/null 2>&1; do sleep 2; done'`
           );
-          scriptLines.push(`docker network disconnect kinesis-bootstrap ${need}`);
-          scriptLines.push('docker network rm kinesis-bootstrap');
+          scriptLines.push(`docker network disconnect ${bootstrapNetwork} ${need}`);
+          scriptLines.push(`docker network rm ${bootstrapNetwork}`);
         } else {
           scriptLines.push(dockerRunScript(need));
         }
