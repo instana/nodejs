@@ -1,14 +1,10 @@
 version: '2'
 tasks:
+  code-checks:
+    when: false
   code-build:
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: npm-install
         image: mirror.gcr.io/library/node:24
@@ -48,12 +44,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: '@confluentinc/kafka-javascript'
         image: mirror.gcr.io/library/node:24
@@ -229,12 +219,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: amqplib
         image: mirror.gcr.io/library/node:24
@@ -387,12 +371,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: bull
         image: mirror.gcr.io/library/node:24
@@ -543,12 +521,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: kafka-node
         image: mirror.gcr.io/library/node:24
@@ -724,12 +696,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: kafkajs
         image: mirror.gcr.io/library/node:24
@@ -905,12 +871,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: nats
         image: mirror.gcr.io/library/node:24
@@ -1064,12 +1024,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: node-nats-streaming
         image: mirror.gcr.io/library/node:24
@@ -1233,12 +1187,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: node-rdkafka-1
         image: mirror.gcr.io/library/node:24
@@ -1414,12 +1362,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: node-rdkafka-2
         image: mirror.gcr.io/library/node:24
@@ -1595,12 +1537,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: node-rdkafka-3
         image: mirror.gcr.io/library/node:24
@@ -1776,12 +1712,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: node-rdkafka-4
         image: mirror.gcr.io/library/node:24
@@ -1957,12 +1887,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: node-rdkafka-5
         image: mirror.gcr.io/library/node:24
@@ -2136,12 +2060,6 @@ tasks:
     displayName: socket.io
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: socket.io
         image: mirror.gcr.io/library/node:24

@@ -1,14 +1,10 @@
 version: '2'
 tasks:
+  code-checks:
+    when: false
   code-build:
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: npm-install
         image: mirror.gcr.io/library/node:24
@@ -46,12 +42,6 @@ tasks:
     displayName: echo-env
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: echo-env
         image: mirror.gcr.io/library/node:24
@@ -134,12 +124,6 @@ tasks:
     displayName: audit
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: audit
         image: mirror.gcr.io/library/node:24
@@ -197,12 +181,6 @@ tasks:
     displayName: lint
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: lint
         image: mirror.gcr.io/library/node:24
@@ -260,12 +238,6 @@ tasks:
     displayName: commitlint
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: commitlint
         image: mirror.gcr.io/library/node:24
@@ -323,12 +295,6 @@ tasks:
     displayName: depcheck
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: depcheck
         image: mirror.gcr.io/library/node:24

@@ -1,14 +1,10 @@
 version: '2'
 tasks:
+  code-checks:
+    when: false
   code-build:
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: npm-install
         image: mirror.gcr.io/library/node:24
@@ -46,12 +42,6 @@ tasks:
     displayName: collector-misc-1
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: collector-misc-1
         image: mirror.gcr.io/library/node:24
@@ -180,12 +170,6 @@ tasks:
     displayName: collector-misc-2
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: collector-misc-2
         image: mirror.gcr.io/library/node:24
@@ -314,12 +298,6 @@ tasks:
     displayName: collector-misc-3
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: collector-misc-3
         image: mirror.gcr.io/library/node:24
@@ -448,12 +426,6 @@ tasks:
     displayName: collector-misc-4
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: collector-misc-4
         image: mirror.gcr.io/library/node:24
@@ -582,12 +554,6 @@ tasks:
     displayName: collector-misc-5
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: collector-misc-5
         image: mirror.gcr.io/library/node:24
@@ -716,12 +682,6 @@ tasks:
     displayName: collector-misc-6
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: collector-misc-6
         image: mirror.gcr.io/library/node:24
@@ -848,12 +808,6 @@ tasks:
     displayName: collector-unit
     runtimeClassName: large
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: collector-unit
         image: mirror.gcr.io/library/node:24
@@ -979,12 +933,6 @@ tasks:
     include:
       - dind
     steps:
-      - name: peer-review
-        when: 'false'
-      - name: detect-secrets
-        when: 'false'
-      - name: compliance-checks
-        when: 'false'
       - name: unit-test
         displayName: collector-misc-dind
         image: mirror.gcr.io/library/node:24

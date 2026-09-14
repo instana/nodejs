@@ -1075,8 +1075,14 @@ function toMainConfig(prConfig) {
   const raw = yaml.dump(prConfig, { lineWidth: -1 });
   const main = yaml.load(raw.replace(/\bpr-code-checks\b/g, 'code-build'));
 
+  const CODE_CHECK_STEPS = new Set(['peer-review', 'detect-secrets', 'compliance-checks']);
+
   // Strip upload block and append commit status to every step script.
+  // Remove code-check steps from all tasks — they are PR-only.
   for (const task of Object.values(main.tasks ?? {})) {
+    if (Array.isArray(task.steps)) {
+      task.steps = task.steps.filter(s => !CODE_CHECK_STEPS.has(s.name));
+    }
     for (const step of task.steps ?? []) {
       if (step.script) {
         step.script = stripUploadBlock(step.script);
@@ -1085,6 +1091,8 @@ function toMainConfig(prConfig) {
       }
     }
   }
+
+  main.tasks = { 'code-checks': { when: false }, ...main.tasks };
 
   return main;
 }
@@ -1151,11 +1159,9 @@ function generateOne(t) {
     const mainConfig = {
       version: '2',
       tasks: {
+        'code-checks': { when: false },
         'code-build': {
           steps: [
-            { name: 'peer-review', when: 'false' },
-            { name: 'detect-secrets', when: 'false' },
-            { name: 'compliance-checks', when: 'false' },
             { name: 'unit-test', image: NODE_IMAGE, script: '#!/usr/bin/env bash\necho "General PR checks passed."' },
             { name: 'sign-artifact', when: 'false' },
             { name: 'build-artifact', when: 'false' },
