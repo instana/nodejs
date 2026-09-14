@@ -1603,7 +1603,10 @@ function generateOne(t) {
       console.log(`Written: ${prPath}`);
     }
 
-    // ── Count expected main checks from main pipeline configs (same logic as pr-verify) ──
+    // ── Count expected main checks from main pipeline configs ──────────────────────────
+    // Mirror the runtime filter: count tasks that post a sps/main/* commit status,
+    // excluding the verify task itself and sonar — same as the PR side excludes
+    // tekton/pr-code-checks-verify and tekton/pr-code-checks-sonar at runtime.
     const mainDir = path.join(spsDir, 'main');
     const expectedMainTasks = new Set();
     for (const file of fs.readdirSync(mainDir)) {
@@ -1612,6 +1615,7 @@ function generateOne(t) {
       for (const [name, taskDef] of Object.entries(cfg.tasks || {})) {
         if (typeof taskDef !== 'object' || taskDef === null) continue;
         if (taskDef.when === false || taskDef.when === 'false') continue;
+        if (name.endsWith('-verify') || name.endsWith('-sonar')) continue;
         const steps = taskDef.steps ?? [];
         const unitTestStep = steps.find(s => s.name === 'unit-test' && s.when !== 'false');
         if (!unitTestStep) continue;
