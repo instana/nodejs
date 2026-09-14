@@ -269,9 +269,16 @@
     "core": false,
     "versions": [
       {
+        "v": "8.0.1",
+        "node": ">=22"
+      },
+      {
         "v": "7.22.0"
       }
     ],
+    "overrides": {
+      "uuid": "11.1.1"
+    },
     "group": "cloud"
   },
   {
