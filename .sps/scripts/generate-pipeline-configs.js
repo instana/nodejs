@@ -307,7 +307,7 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
   }
   extraEnvLines.push('TEST_FILES="$TEST_FILES" \\');
   scriptLines.push(...runWithRetryLines(`coverage-ci --npm_command="test:ci:collector" --report_dir="${taskSlug}"`, extraEnvLines));
-  scriptLines.push(...uploadTestFilesLines(taskSlug, { gitShaFallback: MODE === 'main' }));
+  scriptLines.push(...uploadTestFilesLines(taskSlug));
   scriptLines.push('exit $LAST_EXIT');
 
   const prefix = MODE === 'main' ? 'code-build' : 'pr-code-checks';
@@ -614,7 +614,7 @@ function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv
   // have no such hook and would run all tests unconditionally regardless of the
   // flag, producing incorrect results when RUN_ESM is set.
   scriptLines.push(...runWithRetryLines(`coverage-ci --npm_command="${testScript}" --report_dir="${taskSlug}"`, simpleEnvLines, supportsEsm));
-  scriptLines.push(...uploadTestFilesLines(taskSlug, { gitShaFallback: MODE === 'main' }));
+  scriptLines.push(...uploadTestFilesLines(taskSlug));
   scriptLines.push('exit $LAST_EXIT');
 
   return {
@@ -1070,6 +1070,7 @@ function toMainConfig(prConfig) {
     for (const step of task.steps ?? []) {
       if (step.script) {
         step.script = stripUploadBlock(step.script);
+        step.script = step.script.replace(/get_env HEAD_SHA/g, 'get_env commit_id');
         step.script = appendCommitStatus(step.script);
       }
     }
