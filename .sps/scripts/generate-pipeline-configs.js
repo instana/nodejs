@@ -1043,7 +1043,7 @@ function toMainConfig(prConfig) {
       '# report commit status to GitHub',
       'echo "DEBUG: all pipeline envs:"; env | cut -d= -f1 | sort',
       'GH_TOKEN="$(get_secret git-token)"',
-      'GIT_COMMIT="$(get_env commit-id "")"',
+      'GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"',
       'PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"',
       'if [ -n "$GIT_COMMIT" ]; then',
       '  STATUS="success"',
