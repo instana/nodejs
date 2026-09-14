@@ -171,7 +171,7 @@ tasks:
 
           # report commit status to GitHub
           GH_TOKEN="$(get_secret git-token)"
-          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          GIT_COMMIT="$(get_env commit_id "")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
@@ -184,7 +184,7 @@ tasks:
               && echo "Commit status set to '$STATUS' for $GIT_COMMIT." \
               || echo "WARNING: Failed to set commit status (non-fatal)."
           else
-            echo "WARNING: HEAD_SHA not set — skipping commit status."
+            echo "WARNING: commit_id not set — skipping commit status."
           fi
           exit $LAST_EXIT
       - name: sign-artifact
@@ -329,7 +329,7 @@ tasks:
 
           # report commit status to GitHub
           GH_TOKEN="$(get_secret git-token)"
-          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          GIT_COMMIT="$(get_env commit_id "")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
@@ -342,7 +342,7 @@ tasks:
               && echo "Commit status set to '$STATUS' for $GIT_COMMIT." \
               || echo "WARNING: Failed to set commit status (non-fatal)."
           else
-            echo "WARNING: HEAD_SHA not set — skipping commit status."
+            echo "WARNING: commit_id not set — skipping commit status."
           fi
           exit $LAST_EXIT
       - name: sign-artifact
@@ -481,7 +481,7 @@ tasks:
 
           # report commit status to GitHub
           GH_TOKEN="$(get_secret git-token)"
-          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          GIT_COMMIT="$(get_env commit_id "")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
@@ -494,7 +494,7 @@ tasks:
               && echo "Commit status set to '$STATUS' for $GIT_COMMIT." \
               || echo "WARNING: Failed to set commit status (non-fatal)."
           else
-            echo "WARNING: HEAD_SHA not set — skipping commit status."
+            echo "WARNING: commit_id not set — skipping commit status."
           fi
           exit $LAST_EXIT
       - name: sign-artifact
@@ -633,7 +633,7 @@ tasks:
 
           # report commit status to GitHub
           GH_TOKEN="$(get_secret git-token)"
-          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          GIT_COMMIT="$(get_env commit_id "")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
@@ -646,7 +646,7 @@ tasks:
               && echo "Commit status set to '$STATUS' for $GIT_COMMIT." \
               || echo "WARNING: Failed to set commit status (non-fatal)."
           else
-            echo "WARNING: HEAD_SHA not set — skipping commit status."
+            echo "WARNING: commit_id not set — skipping commit status."
           fi
           exit $LAST_EXIT
       - name: sign-artifact
@@ -785,7 +785,7 @@ tasks:
 
           # report commit status to GitHub
           GH_TOKEN="$(get_secret git-token)"
-          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          GIT_COMMIT="$(get_env commit_id "")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
@@ -798,7 +798,7 @@ tasks:
               && echo "Commit status set to '$STATUS' for $GIT_COMMIT." \
               || echo "WARNING: Failed to set commit status (non-fatal)."
           else
-            echo "WARNING: HEAD_SHA not set — skipping commit status."
+            echo "WARNING: commit_id not set — skipping commit status."
           fi
           exit $LAST_EXIT
       - name: sign-artifact
@@ -937,7 +937,7 @@ tasks:
 
           # report commit status to GitHub
           GH_TOKEN="$(get_secret git-token)"
-          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          GIT_COMMIT="$(get_env commit_id "")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
@@ -950,7 +950,7 @@ tasks:
               && echo "Commit status set to '$STATUS' for $GIT_COMMIT." \
               || echo "WARNING: Failed to set commit status (non-fatal)."
           else
-            echo "WARNING: HEAD_SHA not set — skipping commit status."
+            echo "WARNING: commit_id not set — skipping commit status."
           fi
           exit $LAST_EXIT
       - name: sign-artifact
@@ -1093,7 +1093,7 @@ tasks:
 
           # report commit status to GitHub
           GH_TOKEN="$(get_secret git-token)"
-          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          GIT_COMMIT="$(get_env commit_id "")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
@@ -1106,7 +1106,7 @@ tasks:
               && echo "Commit status set to '$STATUS' for $GIT_COMMIT." \
               || echo "WARNING: Failed to set commit status (non-fatal)."
           else
-            echo "WARNING: HEAD_SHA not set — skipping commit status."
+            echo "WARNING: commit_id not set — skipping commit status."
           fi
           exit $LAST_EXIT
       - name: sign-artifact
@@ -1246,7 +1246,7 @@ tasks:
 
           # report commit status to GitHub
           GH_TOKEN="$(get_secret git-token)"
-          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          GIT_COMMIT="$(get_env commit_id "")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
@@ -1259,7 +1259,7 @@ tasks:
               && echo "Commit status set to '$STATUS' for $GIT_COMMIT." \
               || echo "WARNING: Failed to set commit status (non-fatal)."
           else
-            echo "WARNING: HEAD_SHA not set — skipping commit status."
+            echo "WARNING: commit_id not set — skipping commit status."
           fi
           exit $LAST_EXIT
       - name: sign-artifact
@@ -1399,7 +1399,7 @@ tasks:
 
           # report commit status to GitHub
           GH_TOKEN="$(get_secret git-token)"
-          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          GIT_COMMIT="$(get_env commit_id "")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
@@ -1412,7 +1412,7 @@ tasks:
               && echo "Commit status set to '$STATUS' for $GIT_COMMIT." \
               || echo "WARNING: Failed to set commit status (non-fatal)."
           else
-            echo "WARNING: HEAD_SHA not set — skipping commit status."
+            echo "WARNING: commit_id not set — skipping commit status."
           fi
           exit $LAST_EXIT
       - name: sign-artifact
@@ -1557,7 +1557,7 @@ tasks:
 
           # report commit status to GitHub
           GH_TOKEN="$(get_secret git-token)"
-          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          GIT_COMMIT="$(get_env commit_id "")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
@@ -1570,7 +1570,7 @@ tasks:
               && echo "Commit status set to '$STATUS' for $GIT_COMMIT." \
               || echo "WARNING: Failed to set commit status (non-fatal)."
           else
-            echo "WARNING: HEAD_SHA not set — skipping commit status."
+            echo "WARNING: commit_id not set — skipping commit status."
           fi
           exit $LAST_EXIT
       - name: sign-artifact

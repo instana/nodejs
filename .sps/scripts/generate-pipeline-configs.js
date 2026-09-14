@@ -307,7 +307,7 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
   }
   extraEnvLines.push('TEST_FILES="$TEST_FILES" \\');
   scriptLines.push(...runWithRetryLines(`coverage-ci --npm_command="test:ci:collector" --report_dir="${taskSlug}"`, extraEnvLines));
-  scriptLines.push(...uploadTestFilesLines(taskSlug));
+  scriptLines.push(...uploadTestFilesLines(taskSlug, { gitShaFallback: MODE === 'main' }));
   scriptLines.push('exit $LAST_EXIT');
 
   const prefix = MODE === 'main' ? 'code-build' : 'pr-code-checks';
@@ -459,12 +459,17 @@ function uploadLcovLines(taskSlug) {
 const COS_BUCKET = 'itp-nodejs-tracer-sps';
 const COS_ENDPOINT = 'https://s3.eu-de.cloud-object-storage.appdomain.cloud';
 
-function uploadTestFilesLines(taskSlug) {
+function uploadTestFilesLines(taskSlug, { gitShaFallback = false } = {}) {
   return [
     '',
     '# upload executed test files + lcov coverage report to COS',
     'COS_API_KEY="$(get_secret ibm-object-storage-api-key)"',
-    'GIT_COMMIT="$(get_env HEAD_SHA "")"',
+    ...(gitShaFallback ? [
+
+      'GIT_COMMIT="$(get_env commit_id "")"',
+    ] : [
+      'GIT_COMMIT="$(get_env HEAD_SHA "")"',
+    ]),
     'if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then',
     '  IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \\',
     '    -H "Content-Type: application/x-www-form-urlencoded" \\',
@@ -609,7 +614,7 @@ function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv
   // have no such hook and would run all tests unconditionally regardless of the
   // flag, producing incorrect results when RUN_ESM is set.
   scriptLines.push(...runWithRetryLines(`coverage-ci --npm_command="${testScript}" --report_dir="${taskSlug}"`, simpleEnvLines, supportsEsm));
-  scriptLines.push(...uploadTestFilesLines(taskSlug));
+  scriptLines.push(...uploadTestFilesLines(taskSlug, { gitShaFallback: MODE === 'main' }));
   scriptLines.push('exit $LAST_EXIT');
 
   return {
@@ -1037,7 +1042,7 @@ function toMainConfig(prConfig) {
       '',
       '# report commit status to GitHub',
       'GH_TOKEN="$(get_secret git-token)"',
-      'GIT_COMMIT="$(get_env HEAD_SHA "")"',
+      'GIT_COMMIT="$(get_env commit_id "")"',
       'PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"',
       'if [ -n "$GIT_COMMIT" ]; then',
       '  STATUS="success"',
@@ -1050,7 +1055,7 @@ function toMainConfig(prConfig) {
       '    && echo "Commit status set to \'$STATUS\' for $GIT_COMMIT." \\',
       '    || echo "WARNING: Failed to set commit status (non-fatal)."',
       'else',
-      '  echo "WARNING: HEAD_SHA not set — skipping commit status."',
+      '  echo "WARNING: commit_id not set — skipping commit status."',
       'fi',
     ];
     return script.replace(EXIT_MARKER, statusLines.join('\n') + '\n' + EXIT_MARKER);
