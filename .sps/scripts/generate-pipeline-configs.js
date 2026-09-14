@@ -1604,7 +1604,6 @@ function generateOne(t) {
     const expectedMainTasks = new Set();
     for (const file of fs.readdirSync(mainDir)) {
       if (!file.startsWith('pipeline-config-') || !file.endsWith('.yaml')) continue;
-      if (file === 'pipeline-config-upload-currency-report.yaml') continue;
       const cfg = yaml.load(fs.readFileSync(path.join(mainDir, file), 'utf8'));
       for (const [name, taskDef] of Object.entries(cfg.tasks || {})) {
         if (typeof taskDef !== 'object' || taskDef === null) continue;
@@ -1613,6 +1612,8 @@ function generateOne(t) {
         const unitTestStep = steps.find(s => s.name === 'unit-test' && s.when !== 'false');
         if (!unitTestStep) continue;
         if ((unitTestStep.displayName ?? '') === 'npm-install') continue;
+        // Only count tasks whose script actually posts a sps/main/* GitHub commit status
+        if (!(unitTestStep.script ?? '').includes('sps/main/')) continue;
         expectedMainTasks.add(name);
       }
     }
