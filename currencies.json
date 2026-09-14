@@ -233,9 +233,6 @@
       },
       {
         "v": "7.17.14"
-      },
-      {
-        "v": "7.17.14"
       }
     ],
     "group": "databases"
@@ -285,9 +282,6 @@
     "note": "",
     "core": false,
     "versions": [
-      {
-        "v": "1.14.4"
-      },
       {
         "v": "1.14.4"
       }
@@ -433,10 +427,6 @@
     "note": "",
     "core": false,
     "versions": [
-      {
-        "v": "4.7.1",
-        "node": "24"
-      },
       {
         "v": "4.7.1",
         "node": "24"
@@ -879,9 +869,6 @@
     "versions": [
       {
         "v": "3.24.4"
-      },
-      {
-        "v": "3.24.4"
       }
     ],
     "group": "databases"
@@ -1241,11 +1228,6 @@
         "v": "4.16.2",
         "node": "<26",
         "skipValidation": true
-      },
-      {
-        "v": "4.16.2",
-        "node": "<26",
-        "skipValidation": true
       }
     ],
     "group": "databases"
@@ -1311,10 +1293,6 @@
     "note": "",
     "core": false,
     "versions": [
-      {
-        "v": "12.33.0",
-        "node": ">=20"
-      },
       {
         "v": "12.33.0",
         "node": ">=20"
