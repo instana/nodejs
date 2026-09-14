@@ -1041,6 +1041,7 @@ function toMainConfig(prConfig) {
     const statusLines = [
       '',
       '# report commit status to GitHub',
+      'echo "DEBUG: all pipeline envs:"; env | cut -d= -f1 | sort',
       'GH_TOKEN="$(get_secret git-token)"',
       'GIT_COMMIT="$(get_env commit-id "")"',
       'PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"',
@@ -1055,7 +1056,7 @@ function toMainConfig(prConfig) {
       '    && echo "Commit status set to \'$STATUS\' for $GIT_COMMIT." \\',
       '    || echo "WARNING: Failed to set commit status (non-fatal)."',
       'else',
-      '  echo "WARNING: commit_id not set — skipping commit status."',
+      '  echo "WARNING: commit-id not set — skipping commit status."',
       'fi',
     ];
     return script.replace(EXIT_MARKER, statusLines.join('\n') + '\n' + EXIT_MARKER);
