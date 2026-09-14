@@ -654,7 +654,9 @@ function buildGeneralTasks() {
       'cd "$WORKSPACE/$(load_repo app-repo path)"',
       'npm install --loglevel warn --foreground-scripts',
       '',
-      cmd
+      'LAST_EXIT=0',
+      `${cmd} || LAST_EXIT=$?`,
+      'exit $LAST_EXIT'
     ].join('\n');
 
     return {
@@ -714,7 +716,9 @@ function buildGeneralTasks() {
     'echo "Node-gyp:        $(node-gyp --version 2>/dev/null || echo \'Node-gyp not found\')"',
     'echo ""',
     'echo "NPM config list:"',
-    'npm config list'
+    'LAST_EXIT=0',
+    'npm config list || LAST_EXIT=$?',
+    'exit $LAST_EXIT'
   ].join('\n');
 
   const echoEnvTaskName = `${prefix}-echo-env`;
@@ -1505,10 +1509,59 @@ function generateOne(t) {
       '  printf "%b\\n" "$UNCOVERED_LIST"',
       '  echo ""',
       '  echo "❌ $MISSING test file(s) not covered by any pipeline task"',
-      '  exit 1',
+      '  FINAL_EXIT=1',
       'else',
       '  echo "✅ All $TOTAL test files are covered"',
-      'fi'
+      '  FINAL_EXIT=0',
+      'fi',
+      '',
+      '# ── Phase 4: check all checks passed + post tekton/devsecops status ─────────',
+      'echo ""',
+      'echo "=== Final Status Check ==="',
+      'STATUSES=$(fetch_statuses)',
+      'FAILED_CHECKS=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); seen=set(); failed=[]',
+      'for r in d:',
+      '    c=r[\'context\']',
+      '    if not c.startswith(\'tekton/pr-code-checks-\'): continue',
+      '    if c.startswith(\'tekton/pr-code-checks-verify\'): continue',
+      '    if c.startswith(\'tekton/pr-code-checks-sonar\'): continue',
+      '    if c in seen: continue',
+      '    seen.add(c)',
+      '    if r[\'state\'] == \'failure\': failed.append(c)',
+      'print(\'\\n\'.join(failed))")',
+      'if [ -n "$FAILED_CHECKS" ]; then',
+      '  echo "❌ The following pipeline checks failed:"',
+      '  echo "$FAILED_CHECKS" | sed \'s/^/  /\'',
+      '  FINAL_EXIT=1',
+      'else',
+      '  echo "✅ All pipeline checks passed"',
+      'fi',
+      '',
+      '# ── Post tekton/devsecops commit status to GitHub ────────────────────────────',
+      'PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"',
+      'if [ "$FINAL_EXIT" -eq 0 ]; then',
+      '  DEVSECOPS_STATE="success"',
+      '  DEVSECOPS_DESC="All PR checks passed"',
+      'else',
+      '  DEVSECOPS_STATE="failure"',
+      '  DEVSECOPS_DESC="One or more PR checks failed"',
+      'fi',
+      'echo "Posting tekton/devsecops status: $DEVSECOPS_STATE"',
+      'CURL_RESPONSE=$(curl -s -w "\\n%{http_code}" \\',
+      '  -X POST "https://api.github.com/repos/$REPO/statuses/$GIT_COMMIT" \\',
+      '  -H "Authorization: Bearer $GH_TOKEN" \\',
+      '  -H "Accept: application/vnd.github+json" \\',
+      '  -H "Content-Type: application/json" \\',
+      '  -d "{\\"state\\":\\"$DEVSECOPS_STATE\\",\\"target_url\\":\\"$PIPELINE_RUN_URL\\",\\"description\\":\\"$DEVSECOPS_DESC\\",\\"context\\":\\"tekton/devsecops\\"}")',
+      'CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)',
+      'CURL_BODY=$(echo "$CURL_RESPONSE" | sed \'$d\')',
+      'if [ "$CURL_HTTP" = "201" ]; then',
+      '  echo "tekton/devsecops status posted: $DEVSECOPS_STATE"',
+      'else',
+      '  echo "WARNING: Failed to post tekton/devsecops status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"',
+      'fi',
+      '',
+      'exit $FINAL_EXIT'
     ].join('\n');
 
     const prConfig = {
@@ -1543,10 +1596,215 @@ function generateOne(t) {
         'sonar-analysis': buildSonarTask('pr-code-checks')
       }
     };
-    const output = yaml.dump(prConfig, { lineWidth: -1, quotingType: "'", forceQuotes: false });
-    const prPath = path.join(spsDir, 'pr', 'pipeline-config-pr-verify.yaml');
-    fs.writeFileSync(prPath, output);
-    console.log(`Written: ${prPath}`);
+    if (MODE === 'all' || MODE === 'pr') {
+      const output = yaml.dump(prConfig, { lineWidth: -1, quotingType: "'", forceQuotes: false });
+      const prPath = path.join(spsDir, 'pr', 'pipeline-config-pr-verify.yaml');
+      fs.writeFileSync(prPath, output);
+      console.log(`Written: ${prPath}`);
+    }
+
+    const mainDir = path.join(spsDir, 'main');
+    const expectedMainTasks = new Set();
+    for (const file of fs.readdirSync(mainDir)) {
+      if (!file.startsWith('pipeline-config-') || !file.endsWith('.yaml')) continue;
+      const cfg = yaml.load(fs.readFileSync(path.join(mainDir, file), 'utf8'));
+      for (const [name, taskDef] of Object.entries(cfg.tasks || {})) {
+        if (typeof taskDef !== 'object' || taskDef === null) continue;
+        if (taskDef.when === false || taskDef.when === 'false') continue;
+        if (name.endsWith('-verify') || name.endsWith('-sonar')) continue;
+        const steps = taskDef.steps ?? [];
+        const unitTestStep = steps.find(s => s.name === 'unit-test' && s.when !== 'false');
+        if (!unitTestStep) continue;
+        if ((unitTestStep.displayName ?? '') === 'npm-install') continue;
+        // Only count tasks whose script actually posts a sps/main/* GitHub commit status
+        if (!(unitTestStep.script ?? '').includes('sps/main/')) continue;
+        expectedMainTasks.add(name);
+      }
+    }
+    const expectedMainChecks = expectedMainTasks.size;
+
+    const mainVerifyScript = [
+      '#!/usr/bin/env bash',
+      'set -eo pipefail',
+      '',
+      'GH_TOKEN="$(get_secret gh-public-token)"',
+      'GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"',
+      'PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"',
+      'REPO="instana/nodejs"',
+      '',
+      'if [ -z "$GH_TOKEN" ] || [ -z "$GIT_COMMIT" ]; then',
+      '  echo "ERROR: Missing gh-public-token or commit-id — aborting"',
+      '  exit 1',
+      'fi',
+      '',
+      '# Helper: fetch all commit statuses (handles pagination)',
+      'fetch_statuses() {',
+      '  local page=1',
+      '  local accfile pagefile',
+      '  accfile=$(mktemp)',
+      '  pagefile=$(mktemp)',
+      '  echo "[]" > "$accfile"',
+      '  while true; do',
+      '    curl -sf \\',
+      '      -H "Authorization: Bearer $GH_TOKEN" \\',
+      '      -H "Accept: application/vnd.github+json" \\',
+      '      "https://api.github.com/repos/$REPO/commits/$GIT_COMMIT/statuses?per_page=100&page=$page" > "$pagefile"',
+      '    local count',
+      '    count=$(python3 -c "import sys,json; print(len(json.load(open(sys.argv[1]))))" "$pagefile" 2>/dev/null || echo 0)',
+      '    python3 - "$accfile" "$pagefile" <<\'PYEOF\'',
+      'import sys, json',
+      'acc = json.load(open(sys.argv[1]))',
+      'page = json.load(open(sys.argv[2]))',
+      'acc.extend(page)',
+      'json.dump(acc, open(sys.argv[1], "w"))',
+      'PYEOF',
+      '    [ "$count" -lt 100 ] && break',
+      '    page=$((page + 1))',
+      '  done',
+      '  cat "$accfile"',
+      '  rm -f "$accfile" "$pagefile"',
+      '}',
+      '',
+      '# ── Phase 1: wait until all expected sps/main/* checks are registered ───────',
+      `echo "Waiting for all ${expectedMainChecks} expected checks to be registered on commit $GIT_COMMIT..."`,
+      'MAX_WAIT=7200',
+      'POLL_INTERVAL=60',
+      'ELAPSED=0',
+      `EXPECTED_CHECKS=${expectedMainChecks}`,
+      'while true; do',
+      '  STATUSES=$(fetch_statuses)',
+      '  REGISTERED=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(set(r[\'context\'] for r in d if r[\'context\'].startswith(\'sps/main/\'))))")',
+      '  echo "  $REGISTERED / $EXPECTED_CHECKS checks registered (${ELAPSED}s elapsed)"',
+      '  if [ "$REGISTERED" -ge "$EXPECTED_CHECKS" ]; then',
+      '    echo "All expected checks are now registered."',
+      '    break',
+      '  fi',
+      '  if [ "$ELAPSED" -ge "$MAX_WAIT" ]; then',
+      '    echo "ERROR: Timed out after ${MAX_WAIT}s waiting for checks to be registered"',
+      '    exit 1',
+      '  fi',
+      '  sleep $POLL_INTERVAL',
+      '  ELAPSED=$((ELAPSED + POLL_INTERVAL))',
+      'done',
+      '',
+      '# ── Phase 2: poll until all checks complete ──────────────────────────────────',
+      'echo "Polling until all sps/main/* and security checks complete..."',
+      'while true; do',
+      '  STATUSES=$(fetch_statuses)',
+      '  PENDING=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); seen=set(); pending=0',
+      'for r in d:',
+      '    c=r[\'context\']',
+      '    if not c.startswith(\'sps/main/\') and not c.startswith(\'tekton/code-build/\'): continue',
+      '    if c in seen: continue',
+      '    seen.add(c)',
+      '    if r[\'state\'] == \'pending\': pending+=1',
+      'print(pending)")',
+      '  echo "  $PENDING checks still pending (${ELAPSED}s elapsed)"',
+      '  if [ "$PENDING" -eq 0 ]; then',
+      '    echo "All checks completed."',
+      '    break',
+      '  fi',
+      '  if [ "$ELAPSED" -ge "$MAX_WAIT" ]; then',
+      '    echo "ERROR: Timed out after ${MAX_WAIT}s waiting for checks to complete"',
+      '    exit 1',
+      '  fi',
+      '  sleep $POLL_INTERVAL',
+      '  ELAPSED=$((ELAPSED + POLL_INTERVAL))',
+      'done',
+      '',
+      '# ── Phase 3: check for any failures ─────────────────────────────────────────',
+      'echo ""',
+      'echo "=== Final Status Check ==="',
+      'STATUSES=$(fetch_statuses)',
+      'FAILED_CHECKS=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); seen=set(); failed=[]',
+      'for r in d:',
+      '    c=r[\'context\']',
+      '    if not c.startswith(\'sps/main/\'): continue',
+      '    if c in seen: continue',
+      '    seen.add(c)',
+      '    if r[\'state\'] == \'failure\': failed.append(c)',
+      'print(\'\\n\'.join(failed))")',
+      'FINAL_EXIT=0',
+      'if [ -n "$FAILED_CHECKS" ]; then',
+      '  echo "❌ The following main pipeline checks failed:"',
+      '  echo "$FAILED_CHECKS" | sed \'s/^/  /\'',
+      '  FINAL_EXIT=1',
+      'else',
+      '  echo "✅ All sps/main/* checks passed"',
+      'fi',
+      '',
+      '# ── Post tekton/devsecops commit status to GitHub ────────────────────────────',
+      'if [ "$FINAL_EXIT" -eq 0 ]; then',
+      '  DEVSECOPS_STATE="success"',
+      '  DEVSECOPS_DESC="All main pipeline checks passed"',
+      'else',
+      '  DEVSECOPS_STATE="failure"',
+      '  DEVSECOPS_DESC="One or more main pipeline checks failed"',
+      'fi',
+      'echo "Posting tekton/devsecops status: $DEVSECOPS_STATE"',
+      'CURL_RESPONSE=$(curl -s -w "\\n%{http_code}" \\',
+      '  -X POST "https://api.github.com/repos/$REPO/statuses/$GIT_COMMIT" \\',
+      '  -H "Authorization: Bearer $GH_TOKEN" \\',
+      '  -H "Accept: application/vnd.github+json" \\',
+      '  -H "Content-Type: application/json" \\',
+      '  -d "{\\"state\\":\\"$DEVSECOPS_STATE\\",\\"target_url\\":\\"$PIPELINE_RUN_URL\\",\\"description\\":\\"$DEVSECOPS_DESC\\",\\"context\\":\\"tekton/devsecops\\"}")',
+      'CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)',
+      'CURL_BODY=$(echo "$CURL_RESPONSE" | sed \'$d\')',
+      'if [ "$CURL_HTTP" = "201" ]; then',
+      '  echo "tekton/devsecops status posted: $DEVSECOPS_STATE"',
+      'else',
+      '  echo "WARNING: Failed to post tekton/devsecops status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"',
+      'fi',
+      '',
+      'exit $FINAL_EXIT'
+    ].join('\n');
+
+    const mainVerifyConfig = {
+      version: '2',
+      tasks: {
+        'code-build': {
+          steps: [
+            { name: 'peer-review', when: 'false' },
+            { name: 'detect-secrets', when: 'false' },
+            { name: 'compliance-checks', when: 'false' },
+            { name: 'unit-test', image: NODE_IMAGE, script: '#!/usr/bin/env bash\necho "verify starting..."' },
+            { name: 'sign-artifact', when: 'false' },
+            { name: 'build-artifact', when: 'false' },
+            { name: 'scan-artifact', when: 'false' }
+          ]
+        },
+        'code-pr-finish': { when: 'false' },
+        'code-ci-finish': { when: 'false' },
+        'deploy-checks': { when: false },
+        'deploy-release': { when: false },
+        'code-build-verify': {
+          from: 'code-build',
+          displayName: 'verify',
+          runtimeClassName: 'large',
+          steps: [
+            { name: 'peer-review', when: 'false' },
+            { name: 'detect-secrets', when: 'false' },
+            { name: 'compliance-checks', when: 'false' },
+            { name: 'unit-test', displayName: 'verify', image: NODE_IMAGE, script: mainVerifyScript },
+            { name: 'sign-artifact', when: 'false' },
+            { name: 'build-artifact', when: 'false' },
+            { name: 'scan-artifact', when: 'false' }
+          ]
+        },
+        'sonar-analysis': { when: 'false' }
+      }
+    };
+    const mainOutput = yaml.dump(mainVerifyConfig, { lineWidth: -1, quotingType: "'", forceQuotes: false });
+    if (MODE === 'all' || MODE === 'main') {
+      const mainPath = path.join(spsDir, 'main', 'pipeline-config-verify.yaml');
+      fs.writeFileSync(mainPath, mainOutput);
+      console.log(`Written: ${mainPath}`);
+    }
+    if (MODE === 'all' || MODE === 'manual') {
+      const manualPath = path.join(spsDir, 'manual', 'pipeline-config-verify.yaml');
+      fs.writeFileSync(manualPath, mainOutput);
+      console.log(`Written: ${manualPath}`);
+    }
   } else if (t === 'upload-currency-report') {
     const mainConfig = {
       version: '2',

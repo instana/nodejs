@@ -96,7 +96,9 @@ tasks:
           echo "Node-gyp:        $(node-gyp --version 2>/dev/null || echo 'Node-gyp not found')"
           echo ""
           echo "NPM config list:"
-          npm config list
+          LAST_EXIT=0
+          npm config list || LAST_EXIT=$?
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -133,7 +135,9 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
-          npm run audit
+          LAST_EXIT=0
+          npm run audit || LAST_EXIT=$?
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -170,7 +174,9 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
-          npm run lint
+          LAST_EXIT=0
+          npm run lint || LAST_EXIT=$?
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -207,7 +213,9 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
-          npm run commitlint
+          LAST_EXIT=0
+          npm run commitlint || LAST_EXIT=$?
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -244,7 +252,9 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
-          npm run depcheck
+          LAST_EXIT=0
+          npm run depcheck || LAST_EXIT=$?
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
