@@ -1042,7 +1042,7 @@ function toMainConfig(prConfig) {
       '',
       '# report commit status to GitHub',
       'GH_TOKEN="$(get_secret git-token)"',
-      'GIT_COMMIT="$(get_env commit_id "")"',
+      'GIT_COMMIT="$(get_env commit-id "")"',
       'PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"',
       'if [ -n "$GIT_COMMIT" ]; then',
       '  STATUS="success"',
@@ -1070,7 +1070,7 @@ function toMainConfig(prConfig) {
     for (const step of task.steps ?? []) {
       if (step.script) {
         step.script = stripUploadBlock(step.script);
-        step.script = step.script.replace(/get_env HEAD_SHA/g, 'get_env commit_id');
+        step.script = step.script.replace(/get_env HEAD_SHA/g, 'get_env commit-id');
         step.script = appendCommitStatus(step.script);
       }
     }

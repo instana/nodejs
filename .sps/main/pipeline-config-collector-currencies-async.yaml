@@ -105,7 +105,7 @@ tasks:
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env commit_id "")"
+          GIT_COMMIT="$(get_env commit-id "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -142,7 +142,7 @@ tasks:
 
           # report commit status to GitHub
           GH_TOKEN="$(get_secret git-token)"
-          GIT_COMMIT="$(get_env commit_id "")"
+          GIT_COMMIT="$(get_env commit-id "")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
@@ -228,7 +228,7 @@ tasks:
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env commit_id "")"
+          GIT_COMMIT="$(get_env commit-id "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -265,7 +265,7 @@ tasks:
 
           # report commit status to GitHub
           GH_TOKEN="$(get_secret git-token)"
-          GIT_COMMIT="$(get_env commit_id "")"
+          GIT_COMMIT="$(get_env commit-id "")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
@@ -351,7 +351,7 @@ tasks:
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
-          GIT_COMMIT="$(get_env commit_id "")"
+          GIT_COMMIT="$(get_env commit-id "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
             IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -388,7 +388,7 @@ tasks:
 
           # report commit status to GitHub
           GH_TOKEN="$(get_secret git-token)"
-          GIT_COMMIT="$(get_env commit_id "")"
+          GIT_COMMIT="$(get_env commit-id "")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
