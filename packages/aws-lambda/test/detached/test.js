@@ -54,7 +54,7 @@ describe('aws-lambda: detached requests', function () {
     return control
       .runHandler()
       .then(() => {
-        // Tekton CI is really unreliable. We need to be very relaxed with the duration
+        // CI is really unreliable. We need to be very relaxed with the duration
         if (!isCI()) {
           const duration = Date.now() - control.startedAt;
           expect(duration).to.be.at.most(1000 * 3);
