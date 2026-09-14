@@ -32,48 +32,6 @@ const DB2_PORT = process.env.DB2_PORT || '58885';
 const connStr1 = `HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=${DB2_PORT};PROTOCOL=TCPIP`;
 const connStr2 = `HOSTNAME=127.0.0.1;UID=node;PWD=nodepw;PORT=${DB2_PORT};PROTOCOL=TCPIP`;
 
-/**
- * NOTE: We currently do not use remove ibm db. Only local container.
- * Still keeping docs here:
- *
- * We are currently using the IBM DB2 cloud service, because we had trouble on Circleci.
- *
- * The db2 instance is hosted on IBM Cloud. To test the cloud instance locally, you need to enable
- * public endpoint temporarly:
- *
- * - Go to https://cloud.ibm.com/resources. Click on your instance.
- * - Click "Go to UI"
- * - Click on the right panel on "administration"
- * - Click on "Access restriction"
- *
- * Please disable public endpoint after testing.
- *
- * Database, hostname and port:
- *   - Go to https://cloud.ibm.com/resources. Click on your instance.
- *   - Click "Go to UI"
- *   - Click on the right panel on "administration".
- *   - Click on "Connections"
- *   - Copy the public endpoint for local testing, copy the private endpoint for Tekton CI
- *
- * Username and password:
- *   - Go to https://cloud.ibm.com/resources. Click on your instance.
- *   - Click on service credential
- *   - Create service credentials for yourself or choose the existing one for th CI
- *   - Copy User & Pws from the JSON
- *   - Remove after testing
- *
- * Set the local env:
- * export DB2_CONNECTION_STR="DATABASE=bludb;HOSTNAME=*.databases.appdomain.cloud;UID=msv01866;PWD=xxx;PORT=31198;PROTOCOL=TCPIP;SECURITY=SSL"
- *
- * We are unable to create databases.
- * 1. locally with docker: https://github.com/ibmdb/node-ibm_db/issues/848
- * 2. remote on CI: SQL1092N  The requested command or operation failed
- *                  because the user ID does not have the authority to perform
- *                  the requested command or operation.  User ID: "MSV01866".
- *
- * That's why we use random names for tables.
- */
-
 let connection;
 let connection2;
 
