@@ -31,10 +31,6 @@ function checkConnection(span, setupType) {
 module.exports = function (name, version, isLatest, setupType) {
   // Please run this command on the root folder to start the single redis instance (default):
   // node bin/start-test-containers.js --redis
-  //
-  // Please set the environment variables to run the tests against azure redis cluster:
-  //    export AZURE_REDIS_CLUSTER=team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380
-  //    export AZURE_REDIS_CLUSTER_PWD=
 
   // TODO: Add test for cluster mode https://jsw.ibm.com/browse/INSTA-15876
   if (setupType !== 'cluster') {

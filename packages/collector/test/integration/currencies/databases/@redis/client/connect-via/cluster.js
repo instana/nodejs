@@ -19,8 +19,7 @@ const { delay } = require('@_local/core/test/test_util');
 
 module.exports = async function connect(redis, log, tries = 0) {
   const clusterAddress = process.env.INSTANA_CONNECT_REDIS_CLUSTER || '127.0.0.1:7000';
-  const hasPassword = Boolean(process.env.AZURE_REDIS_CLUSTER_PWD);
-  const protocol = hasPassword ? 'rediss' : 'redis';
+  const protocol = 'redis';
 
   const nodes = [
     {
@@ -29,11 +28,6 @@ module.exports = async function connect(redis, log, tries = 0) {
   ];
 
   const defaults = {};
-  if (hasPassword) {
-    defaults.socket = { tls: true };
-    defaults.password = process.env.AZURE_REDIS_CLUSTER_PWD;
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-  }
 
   const cluster = redis.createCluster({
     rootNodes: nodes,
