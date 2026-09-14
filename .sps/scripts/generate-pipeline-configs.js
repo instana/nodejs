@@ -654,7 +654,9 @@ function buildGeneralTasks() {
       'cd "$WORKSPACE/$(load_repo app-repo path)"',
       'npm install --loglevel warn --foreground-scripts',
       '',
-      cmd
+      'LAST_EXIT=0',
+      `${cmd} || LAST_EXIT=$?`,
+      'exit $LAST_EXIT'
     ].join('\n');
 
     return {
@@ -714,7 +716,9 @@ function buildGeneralTasks() {
     'echo "Node-gyp:        $(node-gyp --version 2>/dev/null || echo \'Node-gyp not found\')"',
     'echo ""',
     'echo "NPM config list:"',
-    'npm config list'
+    'LAST_EXIT=0',
+    'npm config list || LAST_EXIT=$?',
+    'exit $LAST_EXIT'
   ].join('\n');
 
   const echoEnvTaskName = `${prefix}-echo-env`;

@@ -96,7 +96,33 @@ tasks:
           echo "Node-gyp:        $(node-gyp --version 2>/dev/null || echo 'Node-gyp not found')"
           echo ""
           echo "NPM config list:"
-          npm config list
+          LAST_EXIT=0
+          npm config list || LAST_EXIT=$?
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret gh-public-token)"
+          GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main/$TASK_NAME\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
+          else
+            echo "WARNING: commit-id not set — skipping commit status."
+          fi
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -133,7 +159,33 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
-          npm run audit
+          LAST_EXIT=0
+          npm run audit || LAST_EXIT=$?
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret gh-public-token)"
+          GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main/$TASK_NAME\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
+          else
+            echo "WARNING: commit-id not set — skipping commit status."
+          fi
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -170,7 +222,33 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
-          npm run lint
+          LAST_EXIT=0
+          npm run lint || LAST_EXIT=$?
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret gh-public-token)"
+          GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main/$TASK_NAME\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
+          else
+            echo "WARNING: commit-id not set — skipping commit status."
+          fi
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -207,7 +285,33 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
-          npm run commitlint
+          LAST_EXIT=0
+          npm run commitlint || LAST_EXIT=$?
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret gh-public-token)"
+          GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main/$TASK_NAME\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
+          else
+            echo "WARNING: commit-id not set — skipping commit status."
+          fi
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
@@ -244,7 +348,33 @@ tasks:
           cd "$WORKSPACE/$(load_repo app-repo path)"
           npm install --loglevel warn --foreground-scripts
 
-          npm run depcheck
+          LAST_EXIT=0
+          npm run depcheck || LAST_EXIT=$?
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret gh-public-token)"
+          GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main/$TASK_NAME\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
+          else
+            echo "WARNING: commit-id not set — skipping commit status."
+          fi
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
