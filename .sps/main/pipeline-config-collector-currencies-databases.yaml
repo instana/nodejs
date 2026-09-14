@@ -175,17 +175,16 @@ tasks:
 
 
           # report commit status to GitHub
-          echo "DEBUG: all pipeline envs:"; env | cut -d= -f1 | sort
-          GH_TOKEN="$(get_secret git-token)"
+          GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
             if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
-            echo "DEBUG: GIT_COMMIT=$GIT_COMMIT STATUS=$STATUS"
             CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
-              -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \
-              -H "Authorization: token $GH_TOKEN" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
               -H "Content-Type: application/json" \
               -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}")
             CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
@@ -359,17 +358,16 @@ tasks:
 
 
           # report commit status to GitHub
-          echo "DEBUG: all pipeline envs:"; env | cut -d= -f1 | sort
-          GH_TOKEN="$(get_secret git-token)"
+          GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
             if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
-            echo "DEBUG: GIT_COMMIT=$GIT_COMMIT STATUS=$STATUS"
             CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
-              -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \
-              -H "Authorization: token $GH_TOKEN" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
               -H "Content-Type: application/json" \
               -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}")
             CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
@@ -528,17 +526,16 @@ tasks:
 
 
           # report commit status to GitHub
-          echo "DEBUG: all pipeline envs:"; env | cut -d= -f1 | sort
-          GH_TOKEN="$(get_secret git-token)"
+          GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
             if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
-            echo "DEBUG: GIT_COMMIT=$GIT_COMMIT STATUS=$STATUS"
             CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
-              -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \
-              -H "Authorization: token $GH_TOKEN" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
               -H "Content-Type: application/json" \
               -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}")
             CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
@@ -704,17 +701,16 @@ tasks:
 
 
           # report commit status to GitHub
-          echo "DEBUG: all pipeline envs:"; env | cut -d= -f1 | sort
-          GH_TOKEN="$(get_secret git-token)"
+          GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
             if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
-            echo "DEBUG: GIT_COMMIT=$GIT_COMMIT STATUS=$STATUS"
             CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
-              -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \
-              -H "Authorization: token $GH_TOKEN" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
               -H "Content-Type: application/json" \
               -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}")
             CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
@@ -888,17 +884,16 @@ tasks:
 
 
           # report commit status to GitHub
-          echo "DEBUG: all pipeline envs:"; env | cut -d= -f1 | sort
-          GH_TOKEN="$(get_secret git-token)"
+          GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
             if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
-            echo "DEBUG: GIT_COMMIT=$GIT_COMMIT STATUS=$STATUS"
             CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
-              -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \
-              -H "Authorization: token $GH_TOKEN" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
               -H "Content-Type: application/json" \
               -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}")
             CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
@@ -1044,17 +1039,16 @@ tasks:
 
 
           # report commit status to GitHub
-          echo "DEBUG: all pipeline envs:"; env | cut -d= -f1 | sort
-          GH_TOKEN="$(get_secret git-token)"
+          GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
             if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
-            echo "DEBUG: GIT_COMMIT=$GIT_COMMIT STATUS=$STATUS"
             CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
-              -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \
-              -H "Authorization: token $GH_TOKEN" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
               -H "Content-Type: application/json" \
               -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}")
             CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
@@ -1201,17 +1195,16 @@ tasks:
 
 
           # report commit status to GitHub
-          echo "DEBUG: all pipeline envs:"; env | cut -d= -f1 | sort
-          GH_TOKEN="$(get_secret git-token)"
+          GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
             if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
-            echo "DEBUG: GIT_COMMIT=$GIT_COMMIT STATUS=$STATUS"
             CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
-              -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \
-              -H "Authorization: token $GH_TOKEN" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
               -H "Content-Type: application/json" \
               -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}")
             CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
@@ -1358,17 +1351,16 @@ tasks:
 
 
           # report commit status to GitHub
-          echo "DEBUG: all pipeline envs:"; env | cut -d= -f1 | sort
-          GH_TOKEN="$(get_secret git-token)"
+          GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
             if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
-            echo "DEBUG: GIT_COMMIT=$GIT_COMMIT STATUS=$STATUS"
             CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
-              -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \
-              -H "Authorization: token $GH_TOKEN" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
               -H "Content-Type: application/json" \
               -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}")
             CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
@@ -1516,17 +1508,16 @@ tasks:
 
 
           # report commit status to GitHub
-          echo "DEBUG: all pipeline envs:"; env | cut -d= -f1 | sort
-          GH_TOKEN="$(get_secret git-token)"
+          GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
             if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
-            echo "DEBUG: GIT_COMMIT=$GIT_COMMIT STATUS=$STATUS"
             CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
-              -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \
-              -H "Authorization: token $GH_TOKEN" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
               -H "Content-Type: application/json" \
               -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}")
             CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
@@ -1678,17 +1669,16 @@ tasks:
 
 
           # report commit status to GitHub
-          echo "DEBUG: all pipeline envs:"; env | cut -d= -f1 | sort
-          GH_TOKEN="$(get_secret git-token)"
+          GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
             if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
-            echo "DEBUG: GIT_COMMIT=$GIT_COMMIT STATUS=$STATUS"
             CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
-              -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \
-              -H "Authorization: token $GH_TOKEN" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
               -H "Content-Type: application/json" \
               -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}")
             CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
@@ -1840,17 +1830,16 @@ tasks:
 
 
           # report commit status to GitHub
-          echo "DEBUG: all pipeline envs:"; env | cut -d= -f1 | sort
-          GH_TOKEN="$(get_secret git-token)"
+          GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
             if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
-            echo "DEBUG: GIT_COMMIT=$GIT_COMMIT STATUS=$STATUS"
             CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
-              -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \
-              -H "Authorization: token $GH_TOKEN" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
               -H "Content-Type: application/json" \
               -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}")
             CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
@@ -2002,17 +1991,16 @@ tasks:
 
 
           # report commit status to GitHub
-          echo "DEBUG: all pipeline envs:"; env | cut -d= -f1 | sort
-          GH_TOKEN="$(get_secret git-token)"
+          GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
             if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
-            echo "DEBUG: GIT_COMMIT=$GIT_COMMIT STATUS=$STATUS"
             CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
-              -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \
-              -H "Authorization: token $GH_TOKEN" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
               -H "Content-Type: application/json" \
               -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}")
             CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
@@ -2162,17 +2150,16 @@ tasks:
 
 
           # report commit status to GitHub
-          echo "DEBUG: all pipeline envs:"; env | cut -d= -f1 | sort
-          GH_TOKEN="$(get_secret git-token)"
+          GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
             if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
-            echo "DEBUG: GIT_COMMIT=$GIT_COMMIT STATUS=$STATUS"
             CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
-              -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \
-              -H "Authorization: token $GH_TOKEN" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
               -H "Content-Type: application/json" \
               -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}")
             CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
@@ -2322,17 +2309,16 @@ tasks:
 
 
           # report commit status to GitHub
-          echo "DEBUG: all pipeline envs:"; env | cut -d= -f1 | sort
-          GH_TOKEN="$(get_secret git-token)"
+          GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
             if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
-            echo "DEBUG: GIT_COMMIT=$GIT_COMMIT STATUS=$STATUS"
             CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
-              -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \
-              -H "Authorization: token $GH_TOKEN" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
               -H "Content-Type: application/json" \
               -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}")
             CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
@@ -2496,17 +2482,16 @@ tasks:
 
 
           # report commit status to GitHub
-          echo "DEBUG: all pipeline envs:"; env | cut -d= -f1 | sort
-          GH_TOKEN="$(get_secret git-token)"
+          GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
             if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
-            echo "DEBUG: GIT_COMMIT=$GIT_COMMIT STATUS=$STATUS"
             CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
-              -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \
-              -H "Authorization: token $GH_TOKEN" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
               -H "Content-Type: application/json" \
               -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}")
             CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
@@ -2680,17 +2665,16 @@ tasks:
 
 
           # report commit status to GitHub
-          echo "DEBUG: all pipeline envs:"; env | cut -d= -f1 | sort
-          GH_TOKEN="$(get_secret git-token)"
+          GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
             if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
-            echo "DEBUG: GIT_COMMIT=$GIT_COMMIT STATUS=$STATUS"
             CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
-              -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \
-              -H "Authorization: token $GH_TOKEN" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
               -H "Content-Type: application/json" \
               -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}")
             CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
@@ -2840,17 +2824,16 @@ tasks:
 
 
           # report commit status to GitHub
-          echo "DEBUG: all pipeline envs:"; env | cut -d= -f1 | sort
-          GH_TOKEN="$(get_secret git-token)"
+          GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
             if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
-            echo "DEBUG: GIT_COMMIT=$GIT_COMMIT STATUS=$STATUS"
             CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
-              -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \
-              -H "Authorization: token $GH_TOKEN" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
               -H "Content-Type: application/json" \
               -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}")
             CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
@@ -2998,17 +2981,16 @@ tasks:
 
 
           # report commit status to GitHub
-          echo "DEBUG: all pipeline envs:"; env | cut -d= -f1 | sort
-          GH_TOKEN="$(get_secret git-token)"
+          GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
           if [ -n "$GIT_COMMIT" ]; then
             STATUS="success"
             if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
-            echo "DEBUG: GIT_COMMIT=$GIT_COMMIT STATUS=$STATUS"
             CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
-              -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \
-              -H "Authorization: token $GH_TOKEN" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
               -H "Content-Type: application/json" \
               -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}")
             CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
