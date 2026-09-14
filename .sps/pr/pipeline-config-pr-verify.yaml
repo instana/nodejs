@@ -215,10 +215,59 @@ tasks:
             printf "%b\n" "$UNCOVERED_LIST"
             echo ""
             echo "❌ $MISSING test file(s) not covered by any pipeline task"
-            exit 1
+            FINAL_EXIT=1
           else
             echo "✅ All $TOTAL test files are covered"
+            FINAL_EXIT=0
           fi
+
+          # ── Phase 4: check all checks passed + post tekton/devsecops status ─────────
+          echo ""
+          echo "=== Final Status Check ==="
+          STATUSES=$(fetch_statuses)
+          FAILED_CHECKS=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); seen=set(); failed=[]
+          for r in d:
+              c=r['context']
+              if not c.startswith('tekton/pr-code-checks-'): continue
+              if c.startswith('tekton/pr-code-checks-verify'): continue
+              if c.startswith('tekton/pr-code-checks-sonar'): continue
+              if c in seen: continue
+              seen.add(c)
+              if r['state'] == 'failure': failed.append(c)
+          print('\n'.join(failed))")
+          if [ -n "$FAILED_CHECKS" ]; then
+            echo "❌ The following pipeline checks failed:"
+            echo "$FAILED_CHECKS" | sed 's/^/  /'
+            FINAL_EXIT=1
+          else
+            echo "✅ All pipeline checks passed"
+          fi
+
+          # ── Post tekton/devsecops commit status to GitHub ────────────────────────────
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ "$FINAL_EXIT" -eq 0 ]; then
+            DEVSECOPS_STATE="success"
+            DEVSECOPS_DESC="All PR checks passed"
+          else
+            DEVSECOPS_STATE="failure"
+            DEVSECOPS_DESC="One or more PR checks failed"
+          fi
+          echo "Posting tekton/devsecops status: $DEVSECOPS_STATE"
+          CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X POST "https://api.github.com/repos/$REPO/statuses/$GIT_COMMIT" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "Content-Type: application/json" \
+            -d "{\"state\":\"$DEVSECOPS_STATE\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"$DEVSECOPS_DESC\",\"context\":\"tekton/devsecops\"}")
+          CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+          CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+          if [ "$CURL_HTTP" = "201" ]; then
+            echo "tekton/devsecops status posted: $DEVSECOPS_STATE"
+          else
+            echo "WARNING: Failed to post tekton/devsecops status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+          fi
+
+          exit $FINAL_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
