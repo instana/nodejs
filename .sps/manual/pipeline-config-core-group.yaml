@@ -125,6 +125,24 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret git-token)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            curl -sf -o /dev/null \
+              -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: token $GH_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}" \
+              && echo "Commit status set to '$STATUS' for $GIT_COMMIT." \
+              || echo "WARNING: Failed to set commit status (non-fatal)."
+          else
+            echo "WARNING: HEAD_SHA not set — skipping commit status."
+          fi
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -216,6 +234,24 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret git-token)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            curl -sf -o /dev/null \
+              -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: token $GH_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}" \
+              && echo "Commit status set to '$STATUS' for $GIT_COMMIT." \
+              || echo "WARNING: Failed to set commit status (non-fatal)."
+          else
+            echo "WARNING: HEAD_SHA not set — skipping commit status."
+          fi
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -307,6 +343,24 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret git-token)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            curl -sf -o /dev/null \
+              -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: token $GH_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}" \
+              && echo "Commit status set to '$STATUS' for $GIT_COMMIT." \
+              || echo "WARNING: Failed to set commit status (non-fatal)."
+          else
+            echo "WARNING: HEAD_SHA not set — skipping commit status."
+          fi
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -398,6 +452,24 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret git-token)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            curl -sf -o /dev/null \
+              -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: token $GH_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}" \
+              && echo "Commit status set to '$STATUS' for $GIT_COMMIT." \
+              || echo "WARNING: Failed to set commit status (non-fatal)."
+          else
+            echo "WARNING: HEAD_SHA not set — skipping commit status."
+          fi
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -489,6 +561,24 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret git-token)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            curl -sf -o /dev/null \
+              -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: token $GH_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main\"}" \
+              && echo "Commit status set to '$STATUS' for $GIT_COMMIT." \
+              || echo "WARNING: Failed to set commit status (non-fatal)."
+          else
+            echo "WARNING: HEAD_SHA not set — skipping commit status."
+          fi
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'

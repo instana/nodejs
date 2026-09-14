@@ -1046,7 +1046,7 @@ function toMainConfig(prConfig) {
       '    -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \\',
       '    -H "Authorization: token $GH_TOKEN" \\',
       '    -H "Content-Type: application/json" \\',
-      '    -d "{\\"state\\":\\"$STATUS\\",\\"target_url\\":\\"$PIPELINE_RUN_URL\\",\\"description\\":\\"Main pipeline $STATUS\\",\\"context\\":\\"sps/main\\"}" \\',
+      '    -d "{\\"state\\":\\"$STATUS\\",\\"target_url\\":\\"$PIPELINE_RUN_URL\\",\\"description\\":\\"Main pipeline $STATUS (Node ${node_version%%.*})\\",\\"context\\":\\"sps/main\\"}" \\',
       '    && echo "Commit status set to \'$STATUS\' for $GIT_COMMIT." \\',
       '    || echo "WARNING: Failed to set commit status (non-fatal)."',
       'else',
