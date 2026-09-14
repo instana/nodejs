@@ -1016,6 +1016,7 @@ function writeDefaultConfig(prConfig, mainConfig) {
 
 // Convert a pr config to a main config by swapping pr-code-checks → code-build task names.
 // Strips the COS upload block from all task scripts — coverage upload is PR-only.
+// Appends a GitHub commit status call after each test script.
 function toMainConfig(prConfig) {
   const UPLOAD_MARKER = '# upload executed test files to COS for coverage verification';
   const EXIT_MARKER = 'exit $LAST_EXIT';
@@ -1030,17 +1031,42 @@ function toMainConfig(prConfig) {
     return [...lines.slice(0, start), ...lines.slice(end)].join('\n');
   }
 
+  function appendCommitStatus(script) {
+    if (typeof script !== 'string' || !script.includes(EXIT_MARKER)) return script;
+    const statusLines = [
+      '',
+      '# report commit status to GitHub',
+      'GH_TOKEN="$(get_secret git-token)"',
+      'GIT_COMMIT="$(get_env HEAD_SHA "")"',
+      'PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"',
+      'if [ -n "$GIT_COMMIT" ]; then',
+      '  STATUS="success"',
+      '  if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi',
+      '  curl -sf -o /dev/null \\',
+      '    -X POST "https://github.ibm.com/api/v3/repos/instana/nodejs/statuses/$GIT_COMMIT" \\',
+      '    -H "Authorization: token $GH_TOKEN" \\',
+      '    -H "Content-Type: application/json" \\',
+      '    -d "{\\"state\\":\\"$STATUS\\",\\"target_url\\":\\"$PIPELINE_RUN_URL\\",\\"description\\":\\"Main pipeline $STATUS\\",\\"context\\":\\"sps/main\\"}" \\',
+      '    && echo "Commit status set to \'$STATUS\' for $GIT_COMMIT." \\',
+      '    || echo "WARNING: Failed to set commit status (non-fatal)."',
+      'else',
+      '  echo "WARNING: HEAD_SHA not set — skipping commit status."',
+      'fi',
+    ];
+    return script.replace(EXIT_MARKER, statusLines.join('\n') + '\n' + EXIT_MARKER);
+  }
+
   // Deep-clone via YAML round-trip then patch task name prefix
   const raw = yaml.dump(prConfig, { lineWidth: -1 });
   const main = yaml.load(raw.replace(/\bpr-code-checks\b/g, 'code-build'));
 
-  // Strip upload block from every step script.
-  // detect-secrets and compliance-checks remain with when:'false' (same as PR)
-  // so SPS explicitly skips them in test-group tasks; only the root
-  // pipeline-config.yaml runs them live.
+  // Strip upload block and append commit status to every step script.
   for (const task of Object.values(main.tasks ?? {})) {
     for (const step of task.steps ?? []) {
-      if (step.script) step.script = stripUploadBlock(step.script);
+      if (step.script) {
+        step.script = stripUploadBlock(step.script);
+        step.script = appendCommitStatus(step.script);
+      }
     }
   }
 
