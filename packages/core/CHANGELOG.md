@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.7.0](https://github.com/instana/nodejs/compare/v6.6.1...v6.7.0) (2026-09-15)
+
+
+### Bug Fixes
+
+* bumped js-yaml from 4.3.0 to 4.3.2 ([#2750](https://github.com/instana/nodejs/issues/2750)) ([070fdce](https://github.com/instana/nodejs/commit/070fdce20ebbd67a144c47d01d73a35ab2699837))
+
+
+### Features
+
+* added support for latest opentelemetry esm instrumentations ([#2679](https://github.com/instana/nodejs/issues/2679)) ([3567cdd](https://github.com/instana/nodejs/commit/3567cddd8267ba801ebcb6d92959b30c8f2b4f3b))
+
+
+
+
+
 ## [6.6.1](https://github.com/instana/nodejs/compare/v6.6.0...v6.6.1) (2026-08-04)
 
 

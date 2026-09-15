@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.7.0](https://github.com/instana/nodejs/compare/v6.6.1...v6.7.0) (2026-09-15)
+
+
+### Features
+
+* added support for ioredis v6 ([#2747](https://github.com/instana/nodejs/issues/2747)) ([9022694](https://github.com/instana/nodejs/commit/90226942c9d9fa539d938f2fb2081e55cd2071cb))
+* added support for latest opentelemetry esm instrumentations ([#2679](https://github.com/instana/nodejs/issues/2679)) ([3567cdd](https://github.com/instana/nodejs/commit/3567cddd8267ba801ebcb6d92959b30c8f2b4f3b))
+
+
+
+
+
 ## [6.6.1](https://github.com/instana/nodejs/compare/v6.6.0...v6.6.1) (2026-08-04)
 
 **Note:** Version bump only for package @instana/collector
