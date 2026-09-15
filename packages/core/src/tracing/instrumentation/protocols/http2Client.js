@@ -20,6 +20,7 @@ const { sanitizeUrl, splitAndFilter } = require('../../../util/url');
 let extraHttpHeadersToCapture;
 let isActive = false;
 let disableW3cPropagation;
+let disableW3cBaggage;
 
 const originS = 'Symbol(origin)';
 const sentHeadersS = 'Symbol(sent-headers)';
@@ -31,16 +32,19 @@ exports.init = function init(config) {
   instrument(http2);
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
   disableW3cPropagation = config.tracing.disableW3cPropagation;
+  disableW3cBaggage = config.tracing.disableW3cBaggage;
 };
 
 exports.updateConfig = config => {
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
   disableW3cPropagation = config.tracing.disableW3cPropagation;
+  disableW3cBaggage = config.tracing.disableW3cBaggage;
 };
 
 exports.activate = function activate(_config) {
   extraHttpHeadersToCapture = _config.tracing.http.extraHttpHeadersToCapture;
   disableW3cPropagation = _config.tracing.disableW3cPropagation;
+  disableW3cBaggage = _config.tracing.disableW3cBaggage;
 
   isActive = true;
 };
@@ -181,6 +185,12 @@ function addW3cHeaders(headers, w3cTraceContext) {
     headers[constants.w3cTraceParent] = w3cTraceContext.renderTraceParent();
     if (w3cTraceContext.hasTraceState()) {
       headers[constants.w3cTraceState] = w3cTraceContext.renderTraceState();
+    }
+  }
+  if (!disableW3cBaggage) {
+    const baggage = cls.getBaggage();
+    if (baggage) {
+      headers[constants.w3cBaggage] = baggage;
     }
   }
 }

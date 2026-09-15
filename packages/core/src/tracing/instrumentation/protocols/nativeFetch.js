@@ -22,6 +22,7 @@ const originalFetch = global.fetch;
 let extraHttpHeadersToCapture;
 let isActive = false;
 let disableW3cPropagation;
+let disableW3cBaggage;
 
 // This determines whether we need to apply a workaround for a bug in Node.js fetch implementation (or rather, the
 // underlying dependency undici).
@@ -49,11 +50,13 @@ exports.init = function init(config) {
   instrument();
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
   disableW3cPropagation = config.tracing.disableW3cPropagation;
+  disableW3cBaggage = config.tracing.disableW3cBaggage;
 };
 
 exports.updateConfig = function updateConfig(config) {
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
   disableW3cPropagation = config.tracing.disableW3cPropagation;
+  disableW3cBaggage = config.tracing.disableW3cBaggage;
 };
 
 exports.activate = function activate(_config) {
@@ -64,6 +67,7 @@ exports.activate = function activate(_config) {
 
   extraHttpHeadersToCapture = _config.tracing.http.extraHttpHeadersToCapture;
   disableW3cPropagation = _config.tracing.disableW3cPropagation;
+  disableW3cBaggage = _config.tracing.disableW3cBaggage;
 
   isActive = true;
 };
@@ -230,6 +234,12 @@ function addW3cTraceContextHeaders(headersToAdd, w3cTraceContext) {
     headersToAdd[constants.w3cTraceParent] = w3cTraceContext.renderTraceParent();
     if (w3cTraceContext.hasTraceState()) {
       headersToAdd[constants.w3cTraceState] = w3cTraceContext.renderTraceState();
+    }
+  }
+  if (!disableW3cBaggage) {
+    const baggage = cls.getBaggage();
+    if (baggage) {
+      headersToAdd[constants.w3cBaggage] = baggage;
     }
   }
 }

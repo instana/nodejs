@@ -191,3 +191,26 @@ exports.logLevelValidator = function logLevelValidator(value) {
 
   return normalized;
 };
+
+/**
+ * Accepts a comma-separated string or an array of strings.
+ * Returns a trimmed, non-empty string array or undefined if the input is invalid.
+ * @param {any} value
+ * @returns {string[] | undefined}
+ */
+exports.captureW3cBaggageValidator = function captureW3cBaggageValidator(value) {
+  if (Array.isArray(value)) {
+    const keys = value.map(k => (typeof k === 'string' ? k.trim() : '')).filter(k => k !== '');
+    return keys.length > 0 ? keys : undefined;
+  }
+
+  if (typeof value === 'string') {
+    const keys = value
+      .split(',')
+      .map(k => k.trim())
+      .filter(k => k !== '');
+    return keys.length > 0 ? keys : undefined;
+  }
+
+  return undefined;
+};
