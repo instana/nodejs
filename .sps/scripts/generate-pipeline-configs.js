@@ -1095,11 +1095,16 @@ function toMainConfig(prConfig) {
   main.tasks = {
     'code-checks': {
       steps: [
+        { name: 'start', when: 'false' },
+        { name: 'checks-setup', when: 'false' },
         { name: 'peer-review', when: 'false' },
         { name: 'detect-secrets', when: 'false' },
         { name: 'compliance-checks', when: 'false' },
+        { name: 'static-scan', when: 'false' },
+        { name: 'collect-evidence', when: 'false' },
         { name: 'unit-test', when: 'false' }
-      ]
+      ],
+      sidecars: [{ name: 'dind', when: 'false' }]
     },
     ...main.tasks
   };
@@ -1189,6 +1194,7 @@ function generateOne(t) {
             { name: 'peer-review', when: 'false' },
             { name: 'detect-secrets' },
             { name: 'compliance-checks' },
+            { name: 'static-scan', when: 'false' },
             { name: 'unit-test', when: 'false' }
           ]
         },

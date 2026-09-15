@@ -6,6 +6,8 @@ tasks:
         when: 'false'
       - name: detect-secrets
       - name: compliance-checks
+      - name: static-scan
+        when: 'false'
       - name: unit-test
         when: 'false'
   code-build:
