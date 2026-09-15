@@ -1628,7 +1628,7 @@ function generateOne(t) {
     }
     const expectedMainChecks = expectedMainTasks.size;
 
-    const mainVerifyScript = [
+    const mainVerifyScriptLines = [
       '#!/usr/bin/env bash',
       'set -eo pipefail',
       '',
@@ -1748,6 +1748,27 @@ function generateOne(t) {
       '  DEVSECOPS_DESC="One or more main pipeline checks failed"',
       'fi',
       'echo "Posting tekton/devsecops status: $DEVSECOPS_STATE"',
+    ];
+
+    const mainVerifyScript = [...mainVerifyScriptLines,
+      'CURL_RESPONSE=$(curl -s -w "\\n%{http_code}" \\',
+      '  -X POST "https://api.github.com/repos/$REPO/statuses/$GIT_COMMIT" \\',
+      '  -H "Authorization: Bearer $GH_TOKEN" \\',
+      '  -H "Accept: application/vnd.github+json" \\',
+      '  -H "Content-Type: application/json" \\',
+      '  -d "{\\"state\\":\\"$DEVSECOPS_STATE\\",\\"target_url\\":\\"$PIPELINE_RUN_URL\\",\\"description\\":\\"$DEVSECOPS_DESC\\",\\"context\\":\\"tekton/devsecops\\"}")',
+      'CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)',
+      'CURL_BODY=$(echo "$CURL_RESPONSE" | sed \'$d\')',
+      'if [ "$CURL_HTTP" = "201" ]; then',
+      '  echo "tekton/devsecops status posted: $DEVSECOPS_STATE"',
+      'else',
+      '  echo "WARNING: Failed to post tekton/devsecops status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"',
+      'fi',
+      '',
+      'exit $FINAL_EXIT'
+    ].join('\n');
+
+    const manualVerifyScript = [...mainVerifyScriptLines,
       'CURL_RESPONSE=$(curl -s -w "\\n%{http_code}" \\',
       '  -X POST "https://api.github.com/repos/$REPO/statuses/$GIT_COMMIT" \\',
       '  -H "Authorization: Bearer $GH_TOKEN" \\',
@@ -1807,8 +1828,13 @@ function generateOne(t) {
       console.log(`Written: ${mainPath}`);
     }
     if (MODE === 'all' || MODE === 'manual') {
+      const manualVerifyConfig = JSON.parse(JSON.stringify(mainVerifyConfig));
+      manualVerifyConfig.tasks['code-build-verify'].steps = manualVerifyConfig.tasks['code-build-verify'].steps.map(
+        s => s.name === 'unit-test' ? { ...s, script: manualVerifyScript } : s
+      );
+      const manualOutput = yaml.dump(manualVerifyConfig, { lineWidth: -1, quotingType: "'", forceQuotes: false });
       const manualPath = path.join(spsDir, 'manual', 'pipeline-config-verify.yaml');
-      fs.writeFileSync(manualPath, mainOutput);
+      fs.writeFileSync(manualPath, manualOutput);
       console.log(`Written: ${manualPath}`);
     }
   } else if (t === 'upload-currency-report') {
