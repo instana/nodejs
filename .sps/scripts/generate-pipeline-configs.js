@@ -1009,7 +1009,7 @@ function writeConfig(name, prConfig, mainConfig) {
     write(path.join(spsDir, 'manual', `pipeline-config-${name}.yaml`), mainConfig);
 }
 
-function writeDefaultConfig(prConfig, mainConfig, mainOnlyConfig) {
+function writeDefaultConfig(prConfig, mainConfig, manualConfig) {
   const spsDir = path.join(__dirname, '..');
   function write(filePath, config) {
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -1018,8 +1018,8 @@ function writeDefaultConfig(prConfig, mainConfig, mainOnlyConfig) {
     console.log(`Written: ${filePath}`);
   }
   if (MODE === 'all' || MODE === 'pr') write(path.join(spsDir, 'pr', 'pipeline-config.yaml'), prConfig);
-  if (MODE === 'all' || MODE === 'main') write(path.join(spsDir, 'main', 'pipeline-config.yaml'), mainOnlyConfig ?? mainConfig);
-  if (MODE === 'all' || MODE === 'manual') write(path.join(spsDir, 'manual', 'pipeline-config.yaml'), mainOnlyConfig ?? mainConfig);
+  if (MODE === 'all' || MODE === 'main') write(path.join(spsDir, 'main', 'pipeline-config.yaml'), mainConfig);
+  if (MODE === 'all' || MODE === 'manual') write(path.join(spsDir, 'manual', 'pipeline-config.yaml'), manualConfig ?? mainConfig);
   if (MODE === 'all') write(path.join(spsDir, 'pipeline-config.yaml'), prConfig);
 }
 
@@ -1092,7 +1092,17 @@ function toMainConfig(prConfig) {
     }
   }
 
-  main.tasks = { 'code-checks': { when: false }, ...main.tasks };
+  main.tasks = {
+    'code-checks': {
+      steps: [
+        { name: 'peer-review', when: 'false' },
+        { name: 'detect-secrets', when: 'false' },
+        { name: 'compliance-checks', when: 'false' },
+        { name: 'unit-test', when: 'false' }
+      ]
+    },
+    ...main.tasks
+  };
 
   return main;
 }
@@ -1156,7 +1166,7 @@ function generateOne(t) {
       }
     };
 
-    const mainConfigTasks = {
+    const sharedTasks = {
       'code-build': {
         steps: [
           { name: 'unit-test', image: NODE_IMAGE, script: '#!/usr/bin/env bash\necho "General PR checks passed."' },
@@ -1170,9 +1180,22 @@ function generateOne(t) {
       'deploy-release': { when: 'false' },
       'code-ci-finish': { when: 'false' }
     };
-    const mainConfig = { version: '2', tasks: { 'code-checks': { when: false }, ...mainConfigTasks } };
-    const mainOnlyConfig = { version: '2', tasks: { ...mainConfigTasks } };
-    writeDefaultConfig(prConfig, mainConfig, mainOnlyConfig);
+
+    const mainConfig = {
+      version: '2',
+      tasks: {
+        'code-checks': {
+          steps: [
+            { name: 'peer-review', when: 'false' },
+            { name: 'detect-secrets' },
+            { name: 'compliance-checks' },
+            { name: 'unit-test', when: 'false' }
+          ]
+        },
+        ...sharedTasks
+      }
+    };
+    writeDefaultConfig(prConfig, mainConfig);
 
     generateOne('pr-general');
   } else if (t.startsWith('collector-currencies-')) {
