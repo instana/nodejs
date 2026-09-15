@@ -1056,7 +1056,7 @@ function toMainConfig(prConfig, context = 'sps/main/$TASK_NAME') {
       '    -H "Authorization: Bearer $GH_TOKEN" \\',
       '    -H "Accept: application/vnd.github+json" \\',
       '    -H "Content-Type: application/json" \\',
-      `    -d "{\\\\"state\\\\":\\\\"$STATUS\\\\",\\\\"target_url\\\\":\\\\"$PIPELINE_RUN_URL\\\\",\\\\"description\\\\":\\\\"Main pipeline $STATUS (Node \${node_version%%.*})\\\\",\\\\"context\\\\":\\\\"${context}\\\\"}")`,
+      '    -d "{\\"state\\":\\"$STATUS\\",\\"target_url\\":\\"$PIPELINE_RUN_URL\\",\\"description\\":\\"Main pipeline $STATUS (Node ${node_version%%.*})\\",\\"context\\":\\"' + context + '\\"}")',
       '  CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)',
       '  CURL_BODY=$(echo "$CURL_RESPONSE" | sed \'$d\')',
       '  if [ "$CURL_HTTP" = "201" ]; then',
