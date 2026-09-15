@@ -34,9 +34,9 @@ sql.on('error', err => {
 const dbHost = process.env.INSTANA_CONNECT_MSSQL_HOST;
 const dbUser = process.env.INSTANA_CONNECT_MSSQL_USER;
 const dbPassword = process.env.INSTANA_CONNECT_MSSQL_PW;
-const userTable = process.env.AZURE_USER_TABLE;
-const procedureName = process.env.AZURE_PROCEDURE_NAME;
-const database = process.env.AZURE_SQL_DATABASE;
+const userTable = process.env.SQL_USER_TABLE;
+const procedureName = process.env.SQL_PROCEDURE_NAME;
+const database = process.env.SQL_DATABASE;
 
 const isLocalHost = dbHost === 'localhost' || dbHost === '127.0.0.1';
 const connectConfigBase = {

@@ -1,25 +1,29 @@
 #!/usr/bin/env bash
 # (c) Copyright IBM Corp. 2026
 #
-# Fires a manual pipeline trigger by name.
-# Looks up a "manual-<name>" trigger in the pipeline and POSTs a pipeline_run
-# with the given branch and node-version as trigger_properties overrides.
+# Fires manual pipeline triggers by name.
 #
 # Usage:
-#   .sps/scripts/run-pipeline.sh --branch <branch> [--node-version <version> | --all-node-versions] \
+#   .sps/scripts/run-pipeline.sh [--branch <branch>] [--node-version <version>] \
 #       [--trigger <name>] [--esm true] [--dry-run] [--list]
+#   .sps/scripts/run-pipeline.sh [--branch <branch>] --release [--delay <minutes>] [--dry-run]
 #
 # Options:
-#   --branch            Git branch to run against (e.g. my-feature-branch)
-#   --node-version      Node.js version to use (e.g. 18, 20, 22, 24, 26).
-#                       Can also be comma-separated list (e.g. 18,20,22,24,26).
-#   --all-node-versions Runs across all Node.js versions: 18, 20, 22, 24, 26.
-#   --trigger           Trigger name suffix (e.g. "collector-currencies-async").
-#                       The script looks for a trigger called "manual-<name>".
-#                       Without it, ALL manual triggers are run.
-#   --esm               Set to "true" to run tests with RUN_ESM=true
-#   --list              List all available manual triggers and exit
-#   --dry-run           Print the API payload without making any calls
+#   --branch        Git branch to run against (default: main)
+#   --node-version  Node.js version to use (e.g. 18, 20, 22, 24, 26).
+#                   Can also be comma-separated (e.g. 18,20,22).
+#                   Defaults to the version in .nvmrc if omitted.
+#   --trigger       Trigger name suffix (e.g. "collector-currencies-async").
+#                   The script looks for a trigger called "manual-<name>".
+#                   Without it, ALL manual triggers are run.
+#   --esm           Set to "true" to run tests with RUN_ESM=true
+#   --release       Fire all release steps (see RELEASE_STEPS below) sequentially
+#                   with a delay between each. Prompts interactively for delay and
+#                   which steps to skip.
+#   --delay         Minutes to wait between release steps (default: 2).
+#                   Only used with --release.
+#   --list          List all available manual triggers and exit
+#   --dry-run       Print the API payload without making any calls
 #
 # Prerequisites:
 #   - ibmcloud CLI installed and logged in (ibmcloud login)
@@ -29,36 +33,47 @@ set -euo pipefail
 
 PIPELINE_ID="579d9c4d-163d-4171-be94-9535ff3f68c4"
 REGION="us-south"
-SUPPORTED_NODE_VERSIONS=(18 20 22 24 26)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+NVMRC_VERSION="$(cat "${SCRIPT_DIR}/../../.nvmrc" | tr -d '[:space:]')"
 
-# ── parse args ───────────────────────────────────────────────────────────────
+# Release step definitions — each entry is "node_version" or "node_version:esm".
+# Edit freely to add, remove, or reorder steps.
+RELEASE_STEPS=(
+  "18"
+  "20"
+  "22"
+  "25"
+  "26"
+  "24:esm"
+)
 
 TRIGGER_SUFFIX=""
 BRANCH=""
 NODE_VERSION=""
-ALL_NODE_VERSIONS=false
 ESM=""
+RELEASE=false
+DELAY=""
 DRY_RUN=false
 LIST=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --trigger)            TRIGGER_SUFFIX="$2"; shift 2 ;;
-    --branch)             BRANCH="$2";         shift 2 ;;
-    --node-version)       NODE_VERSION="$2";   shift 2 ;;
-    --all-node-versions)  ALL_NODE_VERSIONS=true; shift ;;
-    --esm)                ESM="$2";            shift 2 ;;
-    --dry-run)            DRY_RUN=true;        shift   ;;
-    --list)               LIST=true;           shift   ;;
+    --trigger)       TRIGGER_SUFFIX="$2"; shift 2 ;;
+    --branch)        BRANCH="$2";         shift 2 ;;
+    --node-version)  NODE_VERSION="$2";   shift 2 ;;
+    --esm)           ESM="$2";            shift 2 ;;
+    --release)       RELEASE=true;        shift   ;;
+    --delay)         DELAY="$2";          shift 2 ;;
+    --dry-run)       DRY_RUN=true;        shift   ;;
+    --list)          LIST=true;           shift   ;;
     *)
       echo "Unknown option: $1"
-      echo "Usage: $0 --branch <branch> [--node-version <version> | --all-node-versions] [--trigger <name>] [--esm true] [--dry-run]"
+      echo "Usage: $0 [--branch <branch>] [--node-version <version>] [--trigger <name>] [--esm true] [--dry-run]"
+      echo "       $0 [--branch <branch>] --release [--delay <minutes>] [--dry-run]"
       exit 1
       ;;
   esac
 done
-
-# ── auth ─────────────────────────────────────────────────────────────────────
 
 echo "Fetching IBM Cloud IAM token..."
 IAM_TOKEN=$(ibmcloud iam oauth-tokens --output json | jq -r '.iam_token')
@@ -68,8 +83,6 @@ if [[ -z "$IAM_TOKEN" || "$IAM_TOKEN" == "null" ]]; then
 fi
 
 API_BASE="https://api.${REGION}.devops.cloud.ibm.com/pipeline/v2"
-
-# ── fetch all triggers once ───────────────────────────────────────────────────
 
 echo "Fetching triggers for pipeline ${PIPELINE_ID}..."
 TRIGGERS_RESP=$(curl -s -w "\n%{http_code}" \
@@ -84,8 +97,6 @@ if [[ "$HTTP_CODE" != "200" ]]; then
   exit 1
 fi
 
-# ── list mode ────────────────────────────────────────────────────────────────
-
 if [[ "$LIST" == "true" ]]; then
   echo ""
   echo "Available manual triggers:"
@@ -93,29 +104,10 @@ if [[ "$LIST" == "true" ]]; then
   exit 0
 fi
 
-# ── validate required args ───────────────────────────────────────────────────
-
 if [[ -z "$BRANCH" ]]; then
-  echo "ERROR: --branch is required."
-  echo ""
-  echo "Usage: $0 --branch <branch> [--node-version <version> | --all-node-versions] [--trigger <name>] [--dry-run]"
-  echo "       $0 --list"
-  exit 1
+  BRANCH="main"
+  echo "No --branch specified; defaulting to: main"
 fi
-
-if [[ "$ALL_NODE_VERSIONS" == "true" ]]; then
-  NODE_VERSIONS=("${SUPPORTED_NODE_VERSIONS[@]}")
-elif [[ -n "$NODE_VERSION" ]]; then
-  IFS=',' read -ra NODE_VERSIONS <<< "$NODE_VERSION"
-else
-  echo "ERROR: Either --node-version or --all-node-versions is required."
-  echo ""
-  echo "Usage: $0 --branch <branch> [--node-version <version> | --all-node-versions] [--trigger <name>] [--dry-run]"
-  echo "       $0 --list"
-  exit 1
-fi
-
-# ── resolve trigger_id for a manual trigger by name ──────────────────────────
 
 config_for_trigger() {
   local name="$1"
@@ -124,40 +116,11 @@ config_for_trigger() {
     '.triggers[]? | select(.name==$n) | .properties[]? | select(.name=="pipeline-config") | .value // empty'
 }
 
-# ── build list of manual trigger names to run ────────────────────────────────
-
-if [[ -n "$TRIGGER_SUFFIX" ]]; then
-  # Accept "manual-dep-foo", "dep-foo", "manual-foo", or just "foo"
-  if [[ "$TRIGGER_SUFFIX" == manual-* ]]; then
-    MANUAL_TRIGGERS="$TRIGGER_SUFFIX"
-  elif [[ "$TRIGGER_SUFFIX" == dep-* ]]; then
-    MANUAL_TRIGGERS="manual-${TRIGGER_SUFFIX}"
-  else
-    MANUAL_TRIGGERS="manual-${TRIGGER_SUFFIX}"
-  fi
-else
-  # Default run: strictly exclude dependency bot triggers (manual-dep-*)
-  MANUAL_TRIGGERS=$(echo "$TRIGGERS_RESP" | \
-    jq -r '.triggers[]? | select(.type=="manual" and (.name | startswith("manual-dep-") | not)) | .name' | sort)
-fi
-
-TOTAL_TRIGGERS=$(echo "$MANUAL_TRIGGERS" | grep -c . || true)
-TOTAL_RUNS=$(( TOTAL_TRIGGERS * ${#NODE_VERSIONS[@]} ))
-echo ""
-echo "Branch:        ${BRANCH}"
-echo "Node versions: ${NODE_VERSIONS[*]}"
-[[ -n "$ESM" ]] && echo "RUN_ESM:       ${ESM}"
-echo "Triggers:      ${TOTAL_TRIGGERS}"
-echo "Total runs:    ${TOTAL_RUNS}"
-echo ""
-
-# ── helper: fire one run ─────────────────────────────────────────────────────
-
 fire_run() {
   local trigger_name="$1"
   local node_ver="$2"
+  local run_esm="${3:-}"
 
-  # Verify the trigger exists
   local exists
   exists=$(echo "$TRIGGERS_RESP" | jq -r \
     --arg n "$trigger_name" \
@@ -170,17 +133,13 @@ fire_run() {
   local config
   config=$(config_for_trigger "$trigger_name")
 
-  # Build trigger_properties — always override branch and node-version.
-  # pipeline-config is included only when the trigger has it as a property
-  # (so the run uses the right config file).
-  # RUN_ESM is only added when --esm true is passed.
   local props_jq
-  if [[ -n "$ESM" ]]; then
+  if [[ -n "$run_esm" ]]; then
     props_jq=$(jq -n \
       --arg branch   "$BRANCH" \
       --arg node_ver "$node_ver" \
       --arg config   "$config" \
-      --arg run_esm  "$ESM" \
+      --arg run_esm  "$run_esm" \
       '{
         "branch":          $branch,
         "node-version":    $node_ver,
@@ -228,18 +187,128 @@ fire_run() {
     return
   fi
 
-  RUN_ID=$(echo "$BODY" | jq -r '.id // "?"')
-  echo "  OK  ${trigger_name} [node ${node_ver}]  →  run ${RUN_ID}"
+  echo "  OK  ${trigger_name} [node ${node_ver}]  →  run $(echo "$BODY" | jq -r '.id // "?"')"
 }
 
-# ── fire runs ─────────────────────────────────────────────────────────────────
+# ── release mode ──────────────────────────────────────────────────────────────
+
+if [[ "$RELEASE" == "true" ]]; then
+  if [[ -z "$DELAY" ]]; then
+    read -r -p "Delay between steps in minutes [default: 2]: " USER_DELAY
+    DELAY="${USER_DELAY:-2}"
+  fi
+  DELAY_SECS=$(( DELAY * 60 ))
+
+  echo ""
+  echo "Release steps:"
+  for i in "${!RELEASE_STEPS[@]}"; do
+    step="${RELEASE_STEPS[$i]}"
+    node_ver="${step%%:*}"
+    label=""
+    [[ "$step" == *":esm"* ]] && label=" + ESM"
+    echo "  $((i+1)). Node ${node_ver}${label}"
+  done
+  echo ""
+  read -r -p "Skip any steps? Enter numbers to skip (e.g. 1 3), or press Enter to run all: " SKIP_INPUT
+
+  SKIP_INDICES=()
+  [[ -n "$SKIP_INPUT" ]] && read -ra SKIP_INDICES <<< "$SKIP_INPUT"
+
+  should_skip() {
+    local idx="$1"
+    for s in "${SKIP_INDICES[@]}"; do [[ "$s" == "$idx" ]] && return 0; done
+    return 1
+  }
+
+  echo ""
+  echo "Branch:   ${BRANCH}"
+  echo "Delay:    ${DELAY} minute(s) between steps"
+  echo "Dry run:  ${DRY_RUN}"
+  echo "Steps:    $((${#RELEASE_STEPS[@]} - ${#SKIP_INDICES[@]})) of ${#RELEASE_STEPS[@]} will run"
+  echo ""
+
+  MANUAL_TRIGGERS=$(echo "$TRIGGERS_RESP" | \
+    jq -r '.triggers[]? | select(.type=="manual" and (.name | startswith("manual-dep-") | not)) | .name' | sort)
+
+  FIRST=true
+  STARTED=0
+  for i in "${!RELEASE_STEPS[@]}"; do
+    step_num=$((i+1))
+    step="${RELEASE_STEPS[$i]}"
+    node_ver="${step%%:*}"
+    step_esm=""
+    step_label=""
+    [[ "$step" == *":esm"* ]] && { step_esm="true"; step_label=" + ESM"; }
+
+    if should_skip "$step_num"; then
+      echo "── Step ${step_num}: Node ${node_ver}${step_label}  [SKIPPED]"
+      continue
+    fi
+
+    if [[ "$FIRST" == "false" && "$DRY_RUN" == "false" ]]; then
+      echo ""
+      echo "Waiting ${DELAY} minute(s) before next step..."
+      sleep "$DELAY_SECS"
+    fi
+
+    echo ""
+    echo "── Step ${step_num}: Node ${node_ver}${step_label} ──────────────────────────────────"
+
+    while IFS= read -r t; do
+      [[ -z "$t" ]] && continue
+      fire_run "$t" "$node_ver" "$step_esm"
+      STARTED=$((STARTED + 1))
+    done <<< "$MANUAL_TRIGGERS"
+
+    FIRST=false
+  done
+
+  echo ""
+  if [[ "$DRY_RUN" == "true" ]]; then
+    echo "Done (dry run). Would have started: ${STARTED}"
+  else
+    echo "Done. Started: ${STARTED}"
+    echo "https://cloud.ibm.com/devops/pipelines/tekton/${PIPELINE_ID}/runs?env_id=ibm:yp:${REGION}"
+  fi
+  exit 0
+fi
+
+# ── normal mode ───────────────────────────────────────────────────────────────
+
+if [[ -n "$NODE_VERSION" ]]; then
+  IFS=',' read -ra NODE_VERSIONS <<< "$NODE_VERSION"
+else
+  NODE_VERSIONS=("$NVMRC_VERSION")
+  echo "No --node-version specified; using version from .nvmrc: ${NVMRC_VERSION}"
+fi
+
+if [[ -n "$TRIGGER_SUFFIX" ]]; then
+  if [[ "$TRIGGER_SUFFIX" == manual-* ]]; then
+    MANUAL_TRIGGERS="$TRIGGER_SUFFIX"
+  else
+    MANUAL_TRIGGERS="manual-${TRIGGER_SUFFIX}"
+  fi
+else
+  MANUAL_TRIGGERS=$(echo "$TRIGGERS_RESP" | \
+    jq -r '.triggers[]? | select(.type=="manual" and (.name | startswith("manual-dep-") | not)) | .name' | sort)
+fi
+
+TOTAL_TRIGGERS=$(echo "$MANUAL_TRIGGERS" | grep -c . || true)
+TOTAL_RUNS=$(( TOTAL_TRIGGERS * ${#NODE_VERSIONS[@]} ))
+echo ""
+echo "Branch:        ${BRANCH}"
+echo "Node versions: ${NODE_VERSIONS[*]}"
+[[ -n "$ESM" ]] && echo "RUN_ESM:       ${ESM}"
+echo "Triggers:      ${TOTAL_TRIGGERS}"
+echo "Total runs:    ${TOTAL_RUNS}"
+echo ""
 
 STARTED=0
 for n_ver in "${NODE_VERSIONS[@]}"; do
   echo "── Running for Node ${n_ver} ──────────────────────────────────────"
   while IFS= read -r t; do
     [[ -z "$t" ]] && continue
-    fire_run "$t" "$n_ver"
+    fire_run "$t" "$n_ver" "$ESM"
     STARTED=$((STARTED + 1))
   done <<< "$MANUAL_TRIGGERS"
 done

@@ -12,12 +12,6 @@ module.exports = async function connect(ioredis, log) {
     connectTimeout: 10000
   };
 
-  if (process.env.AZURE_REDIS_CLUSTER_PWD) {
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-    redisOptions.tls = true;
-    redisOptions.password = process.env.AZURE_REDIS_CLUSTER_PWD;
-  }
-
   const cluster = new ioredis.Cluster(
     [
       {
