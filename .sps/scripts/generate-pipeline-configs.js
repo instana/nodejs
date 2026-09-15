@@ -993,7 +993,7 @@ function baseConfig(fanOutTasks, rootTask = 'pr-code-checks') {
   };
 }
 
-function writeConfig(name, prConfig, mainConfig) {
+function writeConfig(name, prConfig, mainConfig, manualConfig) {
   function write(filePath, config) {
     const outDir = path.dirname(filePath);
     fs.mkdirSync(outDir, { recursive: true });
@@ -1006,7 +1006,7 @@ function writeConfig(name, prConfig, mainConfig) {
   if (MODE === 'all' || MODE === 'pr') write(path.join(spsDir, 'pr', `pipeline-config-${name}.yaml`), prConfig);
   if (MODE === 'all' || MODE === 'main') write(path.join(spsDir, 'main', `pipeline-config-${name}.yaml`), mainConfig);
   if (MODE === 'all' || MODE === 'manual')
-    write(path.join(spsDir, 'manual', `pipeline-config-${name}.yaml`), mainConfig);
+    write(path.join(spsDir, 'manual', `pipeline-config-${name}.yaml`), manualConfig ?? mainConfig);
 }
 
 function writeDefaultConfig(prConfig, mainConfig, mainOnlyConfig) {
@@ -1026,7 +1026,7 @@ function writeDefaultConfig(prConfig, mainConfig, mainOnlyConfig) {
 // Convert a pr config to a main config by swapping pr-code-checks → code-build task names.
 // Strips the COS upload block from all task scripts — coverage upload is PR-only.
 // Appends a GitHub commit status call after each test script.
-function toMainConfig(prConfig) {
+function toMainConfig(prConfig, context = 'sps/main/$TASK_NAME') {
   const UPLOAD_MARKER = '# upload executed test files to COS for coverage verification';
   const EXIT_MARKER = 'exit $LAST_EXIT';
 
@@ -1056,7 +1056,7 @@ function toMainConfig(prConfig) {
       '    -H "Authorization: Bearer $GH_TOKEN" \\',
       '    -H "Accept: application/vnd.github+json" \\',
       '    -H "Content-Type: application/json" \\',
-      '    -d "{\\"state\\":\\"$STATUS\\",\\"target_url\\":\\"$PIPELINE_RUN_URL\\",\\"description\\":\\"Main pipeline $STATUS (Node ${node_version%%.*})\\",\\"context\\":\\"sps/main/${node_version%%.*}/$TASK_NAME\\"}")',
+      `    -d "{\\\\"state\\\\":\\\\"$STATUS\\\\",\\\\"target_url\\\\":\\\\"$PIPELINE_RUN_URL\\\\",\\\\"description\\\\":\\\\"Main pipeline $STATUS (Node \${node_version%%.*})\\\\",\\\\"context\\\\":\\\\"${context}\\\\"}")`,
       '  CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)',
       '  CURL_BODY=$(echo "$CURL_RESPONSE" | sed \'$d\')',
       '  if [ "$CURL_HTTP" = "201" ]; then',
@@ -1190,7 +1190,7 @@ function generateOne(t) {
       }
     }
     const prConfig = baseConfig(fanOutTasks);
-    writeConfig(t, prConfig, toMainConfig(prConfig));
+    writeConfig(t, prConfig, toMainConfig(prConfig), toMainConfig(prConfig, 'sps/main/${node_version%%.*}/$TASK_NAME'));
   } else if (t === 'collector-metrics') {
     const { taskName, task } = buildCollectorTask(
       'collector-metrics',
@@ -1199,7 +1199,7 @@ function generateOne(t) {
       []
     );
     const prConfig = baseConfig({ [taskName]: task });
-    writeConfig(t, prConfig, toMainConfig(prConfig));
+    writeConfig(t, prConfig, toMainConfig(prConfig), toMainConfig(prConfig, 'sps/main/${node_version%%.*}/$TASK_NAME'));
   } else if (t === 'collector-misc-and-unit') {
     // Groups are defined in packages/collector/test/integration/misc/.split
     // (JSON object: { "group-name": ["subdir", ...], ... }).
@@ -1294,7 +1294,7 @@ function generateOne(t) {
       fanOutTasks[taskName] = task;
     }
     const prConfig = baseConfig(fanOutTasks);
-    writeConfig(t, prConfig, toMainConfig(prConfig));
+    writeConfig(t, prConfig, toMainConfig(prConfig), toMainConfig(prConfig, 'sps/main/${node_version%%.*}/$TASK_NAME'));
   } else if (GROUP_TARGETS[t]) {
     const members = GROUP_TARGETS[t];
     const fanOutTasks = {};
@@ -1303,10 +1303,10 @@ function generateOne(t) {
       fanOutTasks[`pr-code-checks-${member}`] = buildSimpleTask(member, displayName, script, needs, extraEnv);
     }
     const prConfig = baseConfig(fanOutTasks);
-    writeConfig(t, prConfig, toMainConfig(prConfig));
+    writeConfig(t, prConfig, toMainConfig(prConfig), toMainConfig(prConfig, 'sps/main/${node_version%%.*}/$TASK_NAME'));
   } else if (t === 'pr-general') {
     const prConfig = baseConfig(buildGeneralTasks());
-    writeConfig('general', prConfig, toMainConfig(prConfig));
+    writeConfig('general', prConfig, toMainConfig(prConfig), toMainConfig(prConfig, 'sps/main/${node_version%%.*}/$TASK_NAME'));
   } else if (t === 'pr-verify') {
     // Count expected GitHub check-runs from all other PR pipeline configs.
     // Each task name becomes exactly one check-run on GitHub.
@@ -1557,7 +1557,7 @@ function generateOne(t) {
       '  -H "Authorization: Bearer $GH_TOKEN" \\',
       '  -H "Accept: application/vnd.github+json" \\',
       '  -H "Content-Type: application/json" \\',
-      '  -d "{\\"state\\":\\"$DEVSECOPS_STATE\\",\\"target_url\\":\\"$PIPELINE_RUN_URL\\",\\"description\\":\\"$DEVSECOPS_DESC\\",\\"context\\":\\"tekton/devsecops/${node_version%%.*}\\"}")',
+      '  -d "{\\"state\\":\\"$DEVSECOPS_STATE\\",\\"target_url\\":\\"$PIPELINE_RUN_URL\\",\\"description\\":\\"$DEVSECOPS_DESC\\",\\"context\\":\\"tekton/devsecops\\"}")',
       'CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)',
       'CURL_BODY=$(echo "$CURL_RESPONSE" | sed \'$d\')',
       'if [ "$CURL_HTTP" = "201" ]; then',
@@ -1774,7 +1774,7 @@ function generateOne(t) {
       '  -H "Authorization: Bearer $GH_TOKEN" \\',
       '  -H "Accept: application/vnd.github+json" \\',
       '  -H "Content-Type: application/json" \\',
-      '  -d "{\\"state\\":\\"$DEVSECOPS_STATE\\",\\"target_url\\":\\"$PIPELINE_RUN_URL\\",\\"description\\":\\"$DEVSECOPS_DESC\\",\\"context\\":\\"tekton/devsecops/${node_version%%.*}\\"}")',
+      '  -d "{\\"state\\":\\"$DEVSECOPS_STATE\\",\\"target_url\\":\\"$PIPELINE_RUN_URL\\",\\"description\\":\\"$DEVSECOPS_DESC\\",\\"context\\":\\"tekton/devsecops\\"}")',
       'CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)',
       'CURL_BODY=$(echo "$CURL_RESPONSE" | sed \'$d\')',
       'if [ "$CURL_HTTP" = "201" ]; then',
@@ -1884,7 +1884,7 @@ function generateOne(t) {
     const { script, displayName, needs = [], extraEnv } = SIMPLE_TARGETS[t];
     const fanOutTasks = { [`pr-code-checks-${t}`]: buildSimpleTask(t, displayName, script, needs, extraEnv) };
     const prConfig = baseConfig(fanOutTasks);
-    writeConfig(t, prConfig, toMainConfig(prConfig));
+    writeConfig(t, prConfig, toMainConfig(prConfig), toMainConfig(prConfig, 'sps/main/${node_version%%.*}/$TASK_NAME'));
   } else {
     console.error(`Unknown target: ${t}`);
     process.exit(1);
