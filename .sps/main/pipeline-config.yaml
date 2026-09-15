@@ -1,7 +1,5 @@
 version: '2'
 tasks:
-  code-checks:
-    when: false
   code-build:
     steps:
       - name: unit-test
