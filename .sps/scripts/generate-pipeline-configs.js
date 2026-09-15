@@ -1009,7 +1009,7 @@ function writeConfig(name, prConfig, mainConfig) {
     write(path.join(spsDir, 'manual', `pipeline-config-${name}.yaml`), mainConfig);
 }
 
-function writeDefaultConfig(prConfig, mainConfig) {
+function writeDefaultConfig(prConfig, mainConfig, mainOnlyConfig) {
   const spsDir = path.join(__dirname, '..');
   function write(filePath, config) {
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -1018,8 +1018,8 @@ function writeDefaultConfig(prConfig, mainConfig) {
     console.log(`Written: ${filePath}`);
   }
   if (MODE === 'all' || MODE === 'pr') write(path.join(spsDir, 'pr', 'pipeline-config.yaml'), prConfig);
-  if (MODE === 'all' || MODE === 'main') write(path.join(spsDir, 'main', 'pipeline-config.yaml'), mainConfig);
-  if (MODE === 'all' || MODE === 'manual') write(path.join(spsDir, 'manual', 'pipeline-config.yaml'), mainConfig);
+  if (MODE === 'all' || MODE === 'main') write(path.join(spsDir, 'main', 'pipeline-config.yaml'), mainOnlyConfig ?? mainConfig);
+  if (MODE === 'all' || MODE === 'manual') write(path.join(spsDir, 'manual', 'pipeline-config.yaml'), mainOnlyConfig ?? mainConfig);
   if (MODE === 'all') write(path.join(spsDir, 'pipeline-config.yaml'), prConfig);
 }
 
@@ -1075,8 +1075,14 @@ function toMainConfig(prConfig) {
   const raw = yaml.dump(prConfig, { lineWidth: -1 });
   const main = yaml.load(raw.replace(/\bpr-code-checks\b/g, 'code-build'));
 
+  const CODE_CHECK_STEPS = new Set(['peer-review', 'detect-secrets', 'compliance-checks']);
+
   // Strip upload block and append commit status to every step script.
+  // Remove code-check steps from all tasks — they are PR-only.
   for (const task of Object.values(main.tasks ?? {})) {
+    if (Array.isArray(task.steps)) {
+      task.steps = task.steps.filter(s => !CODE_CHECK_STEPS.has(s.name));
+    }
     for (const step of task.steps ?? []) {
       if (step.script) {
         step.script = stripUploadBlock(step.script);
@@ -1085,6 +1091,8 @@ function toMainConfig(prConfig) {
       }
     }
   }
+
+  main.tasks = { 'code-checks': { when: false }, ...main.tasks };
 
   return main;
 }
@@ -1148,27 +1156,23 @@ function generateOne(t) {
       }
     };
 
-    const mainConfig = {
-      version: '2',
-      tasks: {
-        'code-build': {
-          steps: [
-            { name: 'peer-review', when: 'false' },
-            { name: 'detect-secrets', when: 'false' },
-            { name: 'compliance-checks', when: 'false' },
-            { name: 'unit-test', image: NODE_IMAGE, script: '#!/usr/bin/env bash\necho "General PR checks passed."' },
-            { name: 'sign-artifact', when: 'false' },
-            { name: 'build-artifact', when: 'false' },
-            { name: 'scan-artifact', when: 'false' }
-          ]
-        },
-        'sign-artifact': { when: 'false' },
-        'deploy-checks': { when: 'false' },
-        'deploy-release': { when: 'false' },
-        'code-ci-finish': { when: 'false' }
-      }
+    const mainConfigTasks = {
+      'code-build': {
+        steps: [
+          { name: 'unit-test', image: NODE_IMAGE, script: '#!/usr/bin/env bash\necho "General PR checks passed."' },
+          { name: 'sign-artifact', when: 'false' },
+          { name: 'build-artifact', when: 'false' },
+          { name: 'scan-artifact', when: 'false' }
+        ]
+      },
+      'sign-artifact': { when: 'false' },
+      'deploy-checks': { when: 'false' },
+      'deploy-release': { when: 'false' },
+      'code-ci-finish': { when: 'false' }
     };
-    writeDefaultConfig(prConfig, mainConfig);
+    const mainConfig = { version: '2', tasks: { 'code-checks': { when: false }, ...mainConfigTasks } };
+    const mainOnlyConfig = { version: '2', tasks: { ...mainConfigTasks } };
+    writeDefaultConfig(prConfig, mainConfig, mainOnlyConfig);
 
     generateOne('pr-general');
   } else if (t.startsWith('collector-currencies-')) {
