@@ -268,6 +268,23 @@ tasks:
             echo "WARNING: Failed to post tekton/devsecops status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
           fi
 
+          # ── Post pr-verify own check-run status to GitHub ───────────────────────────
+          VERIFY_STATE="$DEVSECOPS_STATE"
+          VERIFY_DESC="$DEVSECOPS_DESC"
+          CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X POST "https://api.github.com/repos/$REPO/statuses/$GIT_COMMIT" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "Content-Type: application/json" \
+            -d "{\"state\":\"$VERIFY_STATE\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"$VERIFY_DESC\",\"context\":\"tekton/pr-code-checks-verify/code-unit-tests\"}")
+          CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+          CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+          if [ "$CURL_HTTP" = "201" ]; then
+            echo "pr-verify status posted: $VERIFY_STATE"
+          else
+            echo "WARNING: Failed to post pr-verify status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+          fi
+
           exit $FINAL_EXIT
       - name: sign-artifact
         when: 'false'
