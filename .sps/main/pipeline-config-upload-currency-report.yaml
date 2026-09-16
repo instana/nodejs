@@ -25,7 +25,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
           node bin/create-version-test-folders.js
       - name: sign-artifact
         when: 'false'
@@ -56,7 +56,7 @@ tasks:
           GH_ENTERPRISE_TOKEN="$(get_secret git-token)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           echo "Generating report..."
           node bin/dependencies/currency/generate-currency-report.js

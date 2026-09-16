@@ -23,7 +23,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
           node bin/create-version-test-folders.js
       - name: sign-artifact
         when: 'false'
@@ -79,7 +79,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start localstack
           docker run -d --network offline-net --name localstack \
@@ -231,7 +231,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start localstack-kinesis
           docker network create kinesis-bootstrap
@@ -388,7 +388,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start localstack
           docker run -d --network offline-net --name localstack \
@@ -540,7 +540,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start localstack
           docker run -d --network offline-net --name localstack \
@@ -692,7 +692,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start localstack
           docker run -d --network offline-net --name localstack \
@@ -844,7 +844,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start localstack
           docker run -d --network offline-net --name localstack \
@@ -996,7 +996,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start azurite
           docker run -d --network offline-net --name azurite \
@@ -1152,7 +1152,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start pubsub-emulator
           docker run -d --network offline-net --name pubsub-emulator \
@@ -1305,7 +1305,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start fake-gcs-server
           docker run -d --network offline-net --name fake-gcs-server \
@@ -1458,7 +1458,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start localstack-kinesis
           docker network create kinesis-bootstrap

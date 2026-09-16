@@ -25,7 +25,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
           node bin/create-version-test-folders.js
       - name: sign-artifact
         when: 'false'
@@ -87,7 +87,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start zookeeper
           docker run -d --network offline-net --name zookeeper \
@@ -268,7 +268,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start rabbitmq
           docker run -d --network offline-net --name rabbitmq \
@@ -426,7 +426,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start redis
           docker run -d --network offline-net --name redis \
@@ -582,7 +582,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start zookeeper
           docker run -d --network offline-net --name zookeeper \
@@ -763,7 +763,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start zookeeper
           docker run -d --network offline-net --name zookeeper \
@@ -944,7 +944,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start nats
           docker run -d --network offline-net --name nats \
@@ -1103,7 +1103,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start nats-streaming
           docker run -d --network offline-net --name nats-streaming \
@@ -1272,7 +1272,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start zookeeper
           docker run -d --network offline-net --name zookeeper \
@@ -1453,7 +1453,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start zookeeper
           docker run -d --network offline-net --name zookeeper \
@@ -1634,7 +1634,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start zookeeper
           docker run -d --network offline-net --name zookeeper \
@@ -1815,7 +1815,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start zookeeper
           docker run -d --network offline-net --name zookeeper \
@@ -1996,7 +1996,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start zookeeper
           docker run -d --network offline-net --name zookeeper \
@@ -2159,7 +2159,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           node bin/create-version-test-folders.js
 

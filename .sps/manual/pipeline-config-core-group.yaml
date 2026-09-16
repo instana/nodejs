@@ -23,7 +23,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
           node bin/create-version-test-folders.js
       - name: sign-artifact
         when: 'false'
@@ -61,7 +61,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # collect test files
           TEST_FILES=$(cd packages/core && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
@@ -170,7 +170,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # collect test files
           TEST_FILES=$(cd packages/metrics-util && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
@@ -279,7 +279,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # collect test files
           TEST_FILES=$(cd packages/serverless && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
@@ -388,7 +388,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # collect test files
           TEST_FILES=$(cd packages/serverless-collector && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
@@ -497,7 +497,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # collect test files
           TEST_FILES=$(cd packages/shared-metrics && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')

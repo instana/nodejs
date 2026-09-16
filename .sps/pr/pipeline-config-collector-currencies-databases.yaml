@@ -25,7 +25,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
           node bin/create-version-test-folders.js
       - name: sign-artifact
         when: 'false'
@@ -87,7 +87,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start elasticsearch
           docker run -d --network offline-net --name elasticsearch \
@@ -250,7 +250,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start redis
           docker run -d --network offline-net --name redis \
@@ -433,7 +433,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start couchbase
           docker run -d --network offline-net --name couchbase \
@@ -601,7 +601,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start ibm_db
           docker run -d --network offline-net --name ibm_db \
@@ -776,7 +776,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start redis
           docker run -d --network offline-net --name redis \
@@ -959,7 +959,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start memcached
           docker run -d --network offline-net --name memcached \
@@ -1114,7 +1114,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start mongodb
           docker run -d --network offline-net --name mongodb \
@@ -1270,7 +1270,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start mongodb
           docker run -d --network offline-net --name mongodb \
@@ -1426,7 +1426,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start mssql
           docker run -d --network offline-net --name mssql \
@@ -1583,7 +1583,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start mysql
           docker run -d --network offline-net --name mysql \
@@ -1744,7 +1744,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start mysql
           docker run -d --network offline-net --name mysql \
@@ -1913,7 +1913,7 @@ tasks:
           socat TCP-LISTEN:1521,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:1521 &
           socat TCP6-LISTEN:1521,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:1521 &
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           echo "Waiting for Oracle FREEPDB1..."
           timeout 180 bash -c \
@@ -2066,7 +2066,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start postgres
           docker run -d --network offline-net --name postgres \
@@ -2225,7 +2225,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start postgres
           docker run -d --network offline-net --name postgres \
@@ -2384,7 +2384,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start postgres
           docker run -d --network offline-net --name postgres \
@@ -2557,7 +2557,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start redis
           docker run -d --network offline-net --name redis \
@@ -2740,7 +2740,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start postgres
           docker run -d --network offline-net --name postgres \
@@ -2899,7 +2899,7 @@ tasks:
           # create isolated network
           docker network create --internal offline-net
 
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # start mssql
           docker run -d --network offline-net --name mssql \

@@ -15,7 +15,7 @@ tasks:
           export GH_TOKEN="$(get_secret gh-public-token)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           git config user.name "Instanacd PAT for GitHub Public"
           git config user.email "instanacd@instana.com"
