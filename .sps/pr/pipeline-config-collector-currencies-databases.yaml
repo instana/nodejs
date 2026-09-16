@@ -173,6 +173,30 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret gh-public-token)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"PR pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"tekton/$TASK_NAME/code-unit-tests\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
+          else
+            echo "WARNING: HEAD_SHA not set — skipping commit status."
+          fi
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -332,6 +356,30 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret gh-public-token)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"PR pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"tekton/$TASK_NAME/code-unit-tests\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
+          else
+            echo "WARNING: HEAD_SHA not set — skipping commit status."
+          fi
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -476,6 +524,30 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret gh-public-token)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"PR pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"tekton/$TASK_NAME/code-unit-tests\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
+          else
+            echo "WARNING: HEAD_SHA not set — skipping commit status."
+          fi
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -627,6 +699,30 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret gh-public-token)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"PR pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"tekton/$TASK_NAME/code-unit-tests\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
+          else
+            echo "WARNING: HEAD_SHA not set — skipping commit status."
+          fi
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -786,6 +882,30 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret gh-public-token)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"PR pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"tekton/$TASK_NAME/code-unit-tests\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
+          else
+            echo "WARNING: HEAD_SHA not set — skipping commit status."
+          fi
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -917,6 +1037,30 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret gh-public-token)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"PR pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"tekton/$TASK_NAME/code-unit-tests\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
+          else
+            echo "WARNING: HEAD_SHA not set — skipping commit status."
+          fi
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -1049,6 +1193,30 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret gh-public-token)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"PR pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"tekton/$TASK_NAME/code-unit-tests\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
+          else
+            echo "WARNING: HEAD_SHA not set — skipping commit status."
+          fi
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -1181,6 +1349,30 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret gh-public-token)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"PR pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"tekton/$TASK_NAME/code-unit-tests\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
+          else
+            echo "WARNING: HEAD_SHA not set — skipping commit status."
+          fi
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -1314,6 +1506,30 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret gh-public-token)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"PR pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"tekton/$TASK_NAME/code-unit-tests\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
+          else
+            echo "WARNING: HEAD_SHA not set — skipping commit status."
+          fi
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -1451,6 +1667,30 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret gh-public-token)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"PR pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"tekton/$TASK_NAME/code-unit-tests\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
+          else
+            echo "WARNING: HEAD_SHA not set — skipping commit status."
+          fi
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -1588,6 +1828,30 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret gh-public-token)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"PR pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"tekton/$TASK_NAME/code-unit-tests\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
+          else
+            echo "WARNING: HEAD_SHA not set — skipping commit status."
+          fi
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -1725,6 +1989,30 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret gh-public-token)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"PR pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"tekton/$TASK_NAME/code-unit-tests\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
+          else
+            echo "WARNING: HEAD_SHA not set — skipping commit status."
+          fi
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -1860,6 +2148,30 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret gh-public-token)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"PR pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"tekton/$TASK_NAME/code-unit-tests\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
+          else
+            echo "WARNING: HEAD_SHA not set — skipping commit status."
+          fi
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -1995,6 +2307,30 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret gh-public-token)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"PR pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"tekton/$TASK_NAME/code-unit-tests\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
+          else
+            echo "WARNING: HEAD_SHA not set — skipping commit status."
+          fi
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -2144,6 +2480,30 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret gh-public-token)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"PR pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"tekton/$TASK_NAME/code-unit-tests\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
+          else
+            echo "WARNING: HEAD_SHA not set — skipping commit status."
+          fi
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -2303,6 +2663,30 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret gh-public-token)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"PR pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"tekton/$TASK_NAME/code-unit-tests\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
+          else
+            echo "WARNING: HEAD_SHA not set — skipping commit status."
+          fi
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -2438,6 +2822,30 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret gh-public-token)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"PR pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"tekton/$TASK_NAME/code-unit-tests\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
+          else
+            echo "WARNING: HEAD_SHA not set — skipping commit status."
+          fi
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
@@ -2571,6 +2979,30 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
+          # report commit status to GitHub
+          GH_TOKEN="$(get_secret gh-public-token)"
+          GIT_COMMIT="$(get_env HEAD_SHA "")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"PR pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"tekton/$TASK_NAME/code-unit-tests\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
+          else
+            echo "WARNING: HEAD_SHA not set — skipping commit status."
+          fi
           exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
