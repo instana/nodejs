@@ -11,7 +11,7 @@ const supportedTracingVersion = require('../../src/tracing/supportedVersion');
 
 describe('supported versions for Node.js auto tracing', () => {
   it('must support various Node.js versions', () => {
-    expect(supportedTracingVersion('14.19.0')).to.equal(true);
+    expect(supportedTracingVersion('18.19.0')).to.equal(true);
     expect(supportedTracingVersion('20.0.0')).to.equal(true);
     expect(supportedTracingVersion('21.2.0')).to.equal(true);
     expect(supportedTracingVersion('22.0.0')).to.equal(true);
