@@ -33,7 +33,6 @@ describe('unannounced state', () => {
       tracingStub = sinon.stub(tracing);
       secretsStub = sinon.stub(secrets);
       pidStoreStub = sinon.stub();
-      coreConfig.validators.init({ warn: () => {}, debug: () => {} });
 
       unannouncedState = proxyquire('../../../../src/announceCycle/unannounced', {
         '@instana/core': {
@@ -45,6 +44,7 @@ describe('unannounced state', () => {
       });
 
       unannouncedState.init({ logger: testUtils.createFakeLogger() }, pidStoreStub);
+      coreConfig.validators.init(testUtils.createFakeLogger());
     });
 
     afterEach(() => {
