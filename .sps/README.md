@@ -85,7 +85,14 @@ Only add entries to `.cra/.cveignore` for false positives or CVEs with no availa
 
 SPS `compliance-checks` validates that GitHub branch-protection rules exist on the
 target repository. The required configuration lives in
-[`.sps/branch-protection.json`](.sps/branch-protection.json).
+[`.sps/assets/branch-protection.json`](.sps/assets/branch-protection.json).
+
+This file is referenced by the toolchain pipeline property `branch-protection-rules-path`:
+
+```text
+branch-protection-rules-path = .sps/assets/branch-protection.json
+```
+
 
 Configure these rules in **GitHub → Repository Settings → Rules → Rulesets** on the `main` branch:
 
@@ -104,7 +111,7 @@ Configure these rules in **GitHub → Repository Settings → Rules → Rulesets
    | `tekton/pr-code-checks/code-vulnerability-scan` |
    | `tekton/pr-code-checks/code-unit-tests` |
 
-   These names come directly from `.sps/branch-protection.json` — update that file if
+   These names come directly from `.sps/assets/branch-protection.json` — update that file if
    the set of required checks changes, then update the ruleset to match.
 
 3. **Restrict push to `main`**
