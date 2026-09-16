@@ -205,7 +205,8 @@ exports.validateTransmissionDelay = function validateTransmissionDelay(value) {
   }
 
   const nearest = allowedTransmissionDelayValues.reduce((prev, curr) =>
-    Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev
+    Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev,
+    allowedTransmissionDelayValues[0]
   );
   logger.warn(
     `The value of config.metrics.transmissionDelay (or INSTANA_METRICS_TRANSMISSION_DELAY) (${value}) is not one of ` +
