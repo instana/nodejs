@@ -7,6 +7,7 @@ Quick-reference guide for working with the IBM SPS CI pipelines in this repo.
   - [detect-secrets](#detect-secrets)
   - [CVE / CRA](#cve--cra)
   - [Branch protection](#branch-protection)
+- [Secrets](#secrets)
 - [Scripts](#scripts)
   - [Generate pipeline configs](#generate-pipeline-configs)
   - [Create triggers](#create-triggers)
@@ -111,6 +112,20 @@ Configure these rules in **GitHub → Repository Settings → Rules → Rulesets
    - Block **branch deletions**
 
 > Reference: [IBM Cloud DevSecOps — Configure GitHub](https://test.cloud.ibm.com/docs/devsecops?topic=devsecops-cd-devsecops-config-github)
+
+---
+
+## Secrets
+
+SPS secrets are not stored in this repository. Configure them as secure pipeline
+properties in the IBM Cloud toolchain.
+
+| Property | Source |
+|---|---|
+| `git-token` | Enterprise Token in 1Password |
+| `cos-api-key` | IBM Cloud Object Storage credentials |
+| `cos-bucket-name` | Target COS bucket |
+| `cos-endpoint` | COS regional endpoint |
 
 ---
 
