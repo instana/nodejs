@@ -995,9 +995,7 @@ function baseConfig(fanOutTasks, rootTask = 'pr-code-checks') {
 
 const CODE_CHECKS_SKIPPED_COMMENT = [
   '# code-checks is skipped intentionally — this checks runs on dedicated security-check pipe only.',
-  '# The following SPS compliance steps are disabled:',
-  '#   start, checks-setup, peer-review, detect-secrets, compliance-checks,',
-  '#   static-scan, collect-evidence, unit-test (sidecar: dind)',
+  '# code-checks includes five steps: setup, detect-secrets, compliance-checks, peer-review, static-scan',
 ].join('\n');
 
 function annotateYaml(output) {
