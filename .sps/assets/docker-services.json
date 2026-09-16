@@ -208,6 +208,17 @@
       "volumes": ["/var/run/docker.sock:/var/run/docker.sock"]
     },
     {
+      "name": "localstack-kinesis",
+      "image": "mirror.gcr.io/localstack/localstack:4.5",
+      "ports": ["4566:4566"],
+      "volumes": ["/var/run/docker.sock:/var/run/docker.sock"],
+      "bootstrap": {
+        "network": "kinesis-bootstrap",
+        "readinessCommand": "awslocal kinesis list-streams",
+        "timeoutSeconds": 180
+      }
+    },
+    {
       "name": "azurite",
       "image": "mcr.microsoft.com/azure-storage/azurite:3.37.0",
       "ports": ["10000:10000", "10001:10001", "10002:10002"],

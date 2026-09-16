@@ -38,11 +38,8 @@ const legacyVersion = '3';
  *        node bin/start-test-containers.js --redis
  *
  * 2. Cluster:
- *    - To run tests against an Azure Redis Cluster, set the following environment variables:
- *        export AZURE_REDIS_CLUSTER=team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380
- *        export AZURE_REDIS_CLUSTER_PWD=<your_password_here>
- *
- *    - Credentials are available in 1Password. Search for: "Team Node.js: Azure Redis cluster"
+ *    - Start a standalone Redis container with:
+ *        node bin/start-test-containers.js --redis --redis-cluster
  *
  * 3. Sentinel:
  *    - To run tests against Redis Sentinel, start Redis Sentinel setup (1 master, 1 slave, 1 sentinel) with:
@@ -1337,7 +1334,7 @@ module.exports = function (name, version, isLatest, mode) {
 
   function verifyConnection(type, span) {
     if (type === 'cluster') {
-      const expectedCluster = process.env.AZURE_REDIS_CLUSTER || process.env.INSTANA_CONNECT_REDIS_CLUSTER || '127.0.0.1';
+      const expectedCluster = process.env.INSTANA_CONNECT_REDIS_CLUSTER || '127.0.0.1';
       expect(span.data.redis.connection).to.contain(expectedCluster.split(':')[0]);
     } else if (type === 'sentinel') {
       expect(span.data.redis.connection).to.contain(process.env.INSTANA_CONNECT_REDIS_SENTINEL_HOST);

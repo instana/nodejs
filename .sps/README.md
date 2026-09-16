@@ -1,172 +1,165 @@
 # SPS Pipeline
 
-## TOC
+Quick-reference guide for working with the IBM SPS CI pipelines in this repo.
 
-- [Overview](#overview)
-  - [Pipeline flavours](#pipeline-flavours)
-- [Configuration files](#configuration-files)
-- [Pipeline structure](#pipeline-structure)
-  - [Task name convention](#task-name-convention)
-  - [Docker services](#docker-services-databases-message-brokers)
-  - [Splitting long-running suites](#splitting-long-running-suites)
-- [Generating pipeline files](#generating-pipeline-files)
-- [Registering triggers](#registering-triggers)
-- [Running a pipeline manually](#running-a-pipeline-manually)
-- [Stopping all active runs](#stopping-all-active-runs)
-- [Removing triggers](#removing-triggers)
-- [Secrets](#secrets)
+- [Pipeline overview](#pipeline-overview)
 - [Compliance](#compliance)
+  - [detect-secrets](#detect-secrets)
+  - [CVE / CRA](#cve--cra)
   - [Branch protection](#branch-protection)
-  - [detect-secrets baseline](#detect-secrets-baseline)
-  - [CRA (Code Risk Analyzer)](#cra-code-risk-analyzer)
-- [Closing compliance issues](#closing-compliance-issues)
-- [References](#references)
+- [Secrets](#secrets)
+- [Scripts](#scripts)
+  - [Generate pipeline configs](#generate-pipeline-configs)
+  - [Create triggers](#create-triggers)
+  - [Run pipelines](#run-pipelines)
+  - [Stop pipelines](#stop-pipelines)
+  - [Remove triggers](#remove-triggers)
+  - [Close compliance issues](#close-compliance-issues)
 
-## Overview
+---
 
-Each test group has its own `pipeline-config-*.yaml`. A single IBM Cloud Toolchain
-pipeline hosts all of them; each trigger passes a different `pipeline-config` property
-to select which YAML to load. This keeps runs independent and parallel.
+## Pipeline overview
 
-### Pipeline flavours
+One IBM Cloud Toolchain hosts all pipelines. Each trigger passes a different
+`pipeline-config` property to select which YAML file to load, keeping runs
+independent and parallel.
 
-| Folder | Trigger type | Event | Root task |
-|---|---|---|---|
-| `.sps/pipeline-config.yaml` (root) | SCM | `pull_request` | `pr-code-checks` |
-| `.sps/pr/` | SCM | `pull_request` | `pr-code-checks` |
-| `.sps/main/` | SCM | `push` (branch: `main`) | `code-build` |
-| `.sps/manual/` | Manual | on demand | `code-build` |
-| `.sps/dependencies/` | Timer + Manual | daily schedule / on demand | `code-build` |
-
-**Security checks run once** — only the root `pipeline-config.yaml` / `pr/pipeline-config.yaml`
-carry live `detect-secrets`, `compliance-checks`, and `peer-review` steps. All test-group
-configs disable those steps (`when: 'false'`) to avoid redundant scanning across
-dozens of parallel tasks.
-
-Set `pipeline-config-filename` in the IBM Cloud Toolchain to:
-
-```text
-.sps/pipeline-config.yaml
-```
-
-Each trigger then overrides `pipeline-config` at run time to point at its own
-group-specific file (e.g. `.sps/pr/pipeline-config-core-group.yaml`).
-
-## Configuration files
-
-| Path | Purpose |
-|---|---|
-| [`.sps/pipeline-config.yaml`](.sps/pipeline-config.yaml) | Root default — used for `pipeline-config-filename`. Security checks only, no tests. |
-| [`.sps/pr/`](.sps/pr/) | PR configs — one file per test group. |
-| [`.sps/main/`](.sps/main/) | Main-commit configs — mirrors of `pr/` with `code-build` task names. |
-| [`.sps/manual/`](.sps/manual/) | Manual-run configs — identical to `main/`. |
-| [`.sps/dependencies/`](.sps/dependencies/) | Bot configs — currency-bot and prod-dependency-bot. Timer-triggered, not generated. |
-| [`.sps/assets/docker-services.json`](.sps/assets/docker-services.json) | Service definitions used by DinD tasks (image, env, args for each Docker service). |
-| [`.sps/scripts/generate-pipeline-configs.js`](.sps/scripts/generate-pipeline-configs.js) | Generator — produces all YAML under `pr/`, `main/`, `manual/`. |
-| [`.sps/scripts/create-triggers.sh`](.sps/scripts/create-triggers.sh) | Registers all triggers in the IBM Cloud Toolchain via API. |
-| [`.sps/scripts/run-pipeline.sh`](.sps/scripts/run-pipeline.sh) | Fires a manual trigger by name. |
-| [`.secrets.baseline`](.secrets.baseline) | Secrets detection baseline required by SPS. |
-| [`.cra/.fileignore`](.cra/.fileignore) | Paths excluded from CRA compliance scanning. |
-
-## Pipeline structure
-
-Each test-group config follows a **root + fan-out** pattern:
-
-```
-pr-code-checks  (root — runs first)
-  steps:
-    - peer-review        → disabled (when: 'false')
-    - detect-secrets     → disabled (when: 'false')
-    - compliance-checks  → disabled (when: 'false')
-    - unit-test          → npm install + create-version-test-folders
-
-pr-code-checks-<name>  (fan-out child — runs in parallel after root)
-  from: pr-code-checks
-  runtimeClassName: large
-  steps:
-    - peer-review        → disabled
-    - detect-secrets     → disabled
-    - compliance-checks  → disabled
-    - unit-test          → run the actual test suite
-```
-
-The root default config (`pipeline-config.yaml` / `pr/pipeline-config.yaml`) is
-**minimal**: only `peer-review` is disabled; `detect-secrets` and `compliance-checks`
-run normally so security scanning still happens exactly once per PR / commit.
-
-### Task name convention
-
-| Pipeline type | Root task | Fan-out task prefix |
+| Folder | Trigger | Event |
 |---|---|---|
-| PR (`pr/`) | `pr-code-checks` | `pr-code-checks-<name>` |
-| Main / Manual (`main/`, `manual/`) | `code-build` | `code-build-<name>` |
+| `.sps/pipeline-config.yaml` (root) | SCM | `pull_request` — security checks only |
+| `.sps/pr/` | SCM | `pull_request` — test groups |
+| `.sps/main/` | SCM | `push` to `main` |
+| `.sps/manual/` | Manual | on demand |
+| `.sps/dependencies/` | Timer + Manual | daily bot runs |
 
-### Docker services (databases, message brokers)
+> **Security checks** (`detect-secrets`, `compliance-checks`) run **once** — only in the
+> root `pipeline-config.yaml`. All test-group configs disable those steps to avoid
+> redundant scanning.
 
-SPS does not support native Tekton sidecars. Tests that need an external service
-(Redis, MySQL, Elasticsearch, Kafka, etc.) use **DinD** (Docker-in-Docker):
+All YAML files under `pr/`, `main/`, and `manual/` are **generated** — do not edit them by hand.
+Run the [generator](#generate-pipeline-configs) whenever you add a package, change a `.needs` file,
+or modify the generator itself.
 
-1. The task declares `include: [dind]` — SPS injects the DinD runtime.
-2. The `unit-test` step declares `include: [docker-socket]` — mounts `/var/run/docker.sock`.
-3. The step script installs `docker-ce-cli` via apt, then starts each service:
-   ```bash
-   docker run -d --network host --name <service> <image> ...
-   sleep 60
-   ```
+---
 
-Service definitions (image, environment variables, startup arguments) live in
-[`.sps/assets/docker-services.json`](.sps/assets/docker-services.json).
+## Compliance
 
-**`.needs` files** declare which Docker services a test folder requires. Place a `.needs`
-file next to the test folder listing one service name per line (names match entries
-in [`.sps/assets/docker-services.json`](.sps/assets/docker-services.json)):
+### detect-secrets
 
-```
-# packages/collector/test/integration/currencies/messaging/kafkajs/.needs
-zookeeper
-kafka
-kafka-topics
-```
+SPS requires the **IBM fork** of detect-secrets. The standard PyPI package will fail.
 
-The generator reads `.needs` files automatically and adds `include: [dind]`,
-`include: [docker-socket]`, and the appropriate `docker run` calls to the generated
-task. **If a test folder needs a sidecar, add a `.needs` file — do not edit the
-generated YAML.**
-
-## Splitting long-running suites
-
-Drop a `.split` file containing a positive integer next to the tests. The
-generator fans the suite out into that many parallel tasks automatically.
-
-- **Currency packages** (with `modes.json`): modes are partitioned into N groups.
-  Capped at the mode count.
-- **`collector-misc`**: Subdirectories are distributed alphabetically
-  into N groups. Folders with a `.needs` file always go into `misc-dind` instead.
-
-Re-run the generator after adding folders — no `.split` edit needed.
-
-## Generating pipeline files
-
-All YAML files under `.sps/pr/`, `.sps/main/`, and `.sps/manual/` are
-**code-generated** — do not edit them by hand. Re-run the generator whenever
-you add a new currency package, add/change a `.needs` file, or modify the generator
-itself.
+**Install once:**
 
 ```bash
-# Regenerate all configs (pr + main + manual)
+pip install "git+https://github.com/IBM/detect-secrets.git@master#egg=detect-secrets"
+detect-secrets --version   # must show 0.13.1+ibm.XX.dss
+```
+
+**Regenerate and audit before every commit that touches source files:**
+
+```bash
+detect-secrets scan --update .secrets.baseline
+detect-secrets audit .secrets.baseline
+```
+
+`audit` opens an interactive prompt for each new finding — mark each as true/false positive.
+The pipeline rejects a baseline with unaudited entries.
+
+---
+
+### CVE / CRA
+
+CRA (Code Risk Analyzer) scans dependencies and Docker images for vulnerabilities.
+
+| File | Purpose |
+|---|---|
+| `.cra/.fileignore` | Exclude paths from scanning. Entries are **literal prefixes** — globs not supported. |
+| `.cra/.cveignore` | Suppress specific CVE findings. Requires `"alwaysOmit": true` per entry. |
+
+Only add entries to `.cra/.cveignore` for false positives or CVEs with no available fix
+(e.g. transitive dependencies).
+
+---
+
+### Branch protection
+
+SPS `compliance-checks` validates that GitHub branch-protection rules exist on the
+target repository. The required configuration lives in
+[`.sps/assets/branch-protection.json`](.sps/assets/branch-protection.json).
+
+This file is referenced by the toolchain pipeline property `branch-protection-rules-path`:
+
+```text
+branch-protection-rules-path = .sps/assets/branch-protection.json
+```
+
+
+Configure these rules in **GitHub → Repository Settings → Rules → Rulesets** on the `main` branch:
+
+1. **Require a pull request before merging**
+   - Set minimum approving reviews to **1**
+   - Enable **Dismiss stale pull request approvals when new commits are pushed**
+
+2. **Require status checks to pass before merging**
+   - Enable **Require branches to be up to date before merging**
+   - In the status checks search box, add each of the following:
+
+   | Status check |
+   |---|
+   | `tekton/pr-code-checks/code-detect-secrets` |
+   | `tekton/pr-code-checks/code-branch-protection` |
+   | `tekton/pr-code-checks/code-vulnerability-scan` |
+   | `tekton/pr-code-checks/code-unit-tests` |
+
+   These names come directly from `.sps/assets/branch-protection.json` — update that file if
+   the set of required checks changes, then update the ruleset to match.
+
+3. **Restrict push to `main`**
+   - Block **force push**
+   - Block **branch deletions**
+
+> Reference: [IBM Cloud DevSecOps — Configure GitHub](https://test.cloud.ibm.com/docs/devsecops?topic=devsecops-cd-devsecops-config-github)
+
+---
+
+## Secrets
+
+SPS secrets are not stored in this repository. Configure them as secure pipeline
+properties in the IBM Cloud toolchain.
+
+| Property | Source |
+|---|---|
+| `git-token` | Enterprise Token in 1Password |
+| `cos-api-key` | IBM Cloud Object Storage credentials |
+| `cos-bucket-name` | Target COS bucket |
+| `cos-endpoint` | COS regional endpoint |
+
+---
+
+## Scripts
+
+All scripts require `ibmcloud` CLI logged in and `jq` installed unless noted otherwise.
+
+### Generate pipeline configs
+
+Regenerate all YAML under `.sps/pr/`, `.sps/main/`, and `.sps/manual/`:
+
+```bash
+# Regenerate everything
 node .sps/scripts/generate-pipeline-configs.js
 
-# Regenerate a single group, all modes
+# Regenerate a single group
 node .sps/scripts/generate-pipeline-configs.js --what=collector-currencies-databases
 
 # Regenerate only pr configs for one group
 node .sps/scripts/generate-pipeline-configs.js --what=core-group --mode=pr
 
-# Regenerate with a specific Node.js version (overrides .nvmrc)
+# Override Node.js version
 node .sps/scripts/generate-pipeline-configs.js --node-version=22
 ```
 
-Available `--what` targets:
+<details>
+<summary>Available <code>--what</code> targets</summary>
 
 | Target | Description |
 |---|---|
@@ -182,175 +175,130 @@ Available `--what` targets:
 | `pr-verify` | PR verification tasks |
 | `upload-currency-report` | Uploads currency report artifact |
 
-## Registering triggers
+</details>
 
-Requires `ibmcloud` CLI logged in and `jq`. Existing triggers are skipped (idempotent).
+---
+
+### Create triggers
+
+Registers triggers in the IBM Cloud Toolchain. Existing triggers are skipped (idempotent).
 
 ```bash
-.sps/scripts/create-triggers.sh --dry-run                                          # preview
-.sps/scripts/create-triggers.sh                                                    # all types
-.sps/scripts/create-triggers.sh --type=dependencies                                # bots only
-.sps/scripts/create-triggers.sh --type=dependencies --name=manual-dep-currency-bot # one trigger
+# Preview without making changes
+.sps/scripts/create-triggers.sh --dry-run
+
+# Register all triggers
+.sps/scripts/create-triggers.sh
+
+# Register only dependency-bot triggers
+.sps/scripts/create-triggers.sh --type=dependencies
+
+# Register a single named trigger
+.sps/scripts/create-triggers.sh --type=dependencies --name=manual-dep-currency-bot
 ```
 
-| `--type` | Kind | Configs | Trigger names |
-|---|---|---|---|
-| `pr` | SCM `pull_request` | `.sps/pr/` | `pr-<name>` |
-| `main` | SCM `push` | `.sps/main/` | `main-<name>` |
-| `manual` | Manual | `.sps/manual/` | `manual-<name>` |
-| `dependencies` | Timer + Manual | `.sps/dependencies/` | `timer-<name>`, `manual-dep-<name>` |
+| `--type` | Kind |
+|---|---|
+| `pr` | SCM `pull_request` |
+| `main` | SCM `push` to `main` |
+| `manual` | Manual on-demand |
+| `dependencies` | Timer + Manual (bots) |
 
-Bot schedules: `timer-currency-bot` → daily 06:00 UTC · `timer-prod-dependency-bot` → Mondays 07:00 UTC.
-Use the `manual-dep-*` trigger to run a bot immediately on demand.
+---
 
-## Running a pipeline manually
+### Run pipelines
 
 ```bash
 # List all available manual triggers
 .sps/scripts/run-pipeline.sh --list
 
-# Run all manual triggers on a branch with Node 20
+# Run all manual triggers (Node version from .nvmrc)
+.sps/scripts/run-pipeline.sh --branch main
+
+# Run with a specific Node version
 .sps/scripts/run-pipeline.sh --branch main --node-version 20
 
-# Run all manual triggers across all Node.js versions (18, 20, 22, 24, 26) with ESM
-.sps/scripts/run-pipeline.sh --branch main --all-node-versions --esm true
+# Run across multiple Node versions
+.sps/scripts/run-pipeline.sh --branch main --node-version 18,20,22,24,26
 
-# Run across specific Node.js versions (comma-separated list)
-.sps/scripts/run-pipeline.sh --branch main --node-version 18,20,22,24,26 --esm true
+# Run a single trigger group
+.sps/scripts/run-pipeline.sh --branch main --node-version 20 --trigger collector-currencies-async
 
-# Run a single group
-.sps/scripts/run-pipeline.sh --branch main --node-version 20 \
-  --trigger collector-currencies-async
-
-
-# Run with ESM mode enabled (sets RUN_ESM=true in the pipeline run)
+# Run with ESM mode enabled
 .sps/scripts/run-pipeline.sh --branch main --node-version 24 --esm true
 
-# Dry run — prints the API payload without making calls
-.sps/scripts/run-pipeline.sh --branch main --all-node-versions --esm true --dry-run
+# Dry run — prints API payloads without making calls
+.sps/scripts/run-pipeline.sh --branch main --node-version 20 --dry-run
 ```
 
-## Stopping all active runs
-
-Use [`.sps/scripts/stop-all-runs.sh`](.sps/scripts/stop-all-runs.sh) to cancel every
-actively running pipeline run on the toolchain in one shot.
+**Full release build** across all configured Node versions (prompts for delay and skip list):
 
 ```bash
-# Dry run — lists runs that would be cancelled without making any API calls
+# Interactive
+.sps/scripts/run-pipeline.sh --release
+
+# Non-interactive with 3-minute delay between steps
+.sps/scripts/run-pipeline.sh --release --delay 3
+
+# Dry run
+.sps/scripts/run-pipeline.sh --branch main --release --dry-run
+```
+
+---
+
+### Stop pipelines
+
+Cancels every actively running pipeline run on the toolchain.
+
+```bash
+# Dry run — lists runs that would be cancelled
 .sps/scripts/stop-all-runs.sh --dry-run
 
-# Live run — cancels all active runs
+# Cancel all active runs
 .sps/scripts/stop-all-runs.sh
 ```
 
-## Removing triggers
+---
 
-Use [`.sps/scripts/remove-all-triggers.sh`](.sps/scripts/remove-all-triggers.sh) to
-delete triggers from the toolchain — useful when resetting or rebuilding triggers from
-scratch.
+### Remove triggers
+
+Deletes triggers from the toolchain. Useful when resetting or rebuilding from scratch.
 
 ```bash
-# Dry run — lists triggers that would be removed without making any API calls
+# Dry run — lists triggers that would be removed
 .sps/scripts/remove-all-triggers.sh --dry-run
 
 # Remove all triggers
 .sps/scripts/remove-all-triggers.sh
 
-# Remove only triggers whose name contains a substring
+# Remove triggers matching a name substring
 .sps/scripts/remove-all-triggers.sh --name=manual-dep-currency-bot
 ```
 
-> Requires `ibmcloud` CLI logged in and `jq`. After removing triggers, use
-> `create-triggers.sh` to recreate them.
+After removing, recreate with [`create-triggers.sh`](#create-triggers).
 
-## Secrets
+---
 
-SPS secrets are not stored in this repository. Configure them as secure pipeline
-properties in the IBM Cloud toolchain.
+### Close compliance issues
 
-Required properties:
+SPS reports compliance failures as issues in [`instana/instana-issues`](https://github.ibm.com/instana/instana-issues).
+Once the underlying problem is fixed, bulk-close matching issues:
 
-| Property | Source |
-|---|---|
-| `git-token` | Enterprise Token in 1Password |
-| `cos-api-key` | IBM Cloud Object Storage credentials |
-| `cos-bucket-name` | Target COS bucket |
-| `cos-endpoint` | COS regional endpoint |
-
-## Compliance
-
-### Branch protection
-
-SPS `compliance-checks` validates that GitHub branch-protection rules are in place
-on the target repository. The required settings are:
-
-- **Require pull request reviews** before merging (at least one approving review).
-- **Require status checks to pass** before merging — add the relevant SPS pipeline
-  checks as required status checks.
-- **Restrict who can push** to `main` directly (no force-push, no deletions).
-
-Configure these rules in GitHub → Repository Settings → Rules → Rulesets.
-
-> Full configuration reference: [IBM Cloud DevSecOps — Configure GitHub](https://test.cloud.ibm.com/docs/devsecops?topic=devsecops-cd-devsecops-config-github)
-
-### detect-secrets baseline
-
-`.secrets.baseline` is required for SPS detect-secrets validation. SPS requires the
-**IBM fork** of detect-secrets. The standard PyPI package will fail with:
-`"The Detect Secrets baseline file present in your repository is not of the IBM version"`.
-
-Install the IBM fork once:
+> Requires [GitHub CLI (`gh`)](https://cli.github.com/) authenticated with access to `instana/instana-issues`.
 
 ```bash
-pip install "git+https://github.com/IBM/detect-secrets.git@master#egg=detect-secrets"
-detect-secrets --version   # must show 0.13.1+ibm.XX.dss
+# Dry run — lists matching open issues without modifying anything
+.sps/scripts/close-compliance-reports.sh --pattern "CVE-2025-14505" --dry-run
+
+# Live run — prompts for a comment, then closes each issue
+.sps/scripts/close-compliance-reports.sh --pattern "CVE-2025-14505"
+
+# Live run with an explicit comment
+.sps/scripts/close-compliance-reports.sh --pattern "CVE-2025-14505" --comment "Fixed in PR #1234"
 ```
 
-**Whenever you modify any source file, regenerate and audit the baseline before committing:**
+Always do a `--dry-run` first to confirm the match set.
 
-```bash
-detect-secrets scan --update .secrets.baseline
-detect-secrets audit .secrets.baseline
-```
-
-> `detect-secrets audit` opens an interactive prompt for each new potential secret found.
-> Mark each finding as a true/false positive. The pipeline will reject a baseline that has
-> unaudited entries.
-
-### CRA (Code Risk Analyzer)
-
-CRA scans the repository for vulnerabilities in dependencies and Docker images.
-
-**`.cra/.fileignore`** excludes paths from CRA scanning. Entries are literal path
-prefixes — globs are **not** supported. List each package path explicitly.
-
-**`.cra/.cveignore`** overrides (suppresses) specific CVE findings reported against
-dependencies. Each entry requires a CVE identifier and `"alwaysOmit": true` to
-permanently suppress the finding across all scans.
-
-> Use `.cra/.cveignore` only for false positives or CVEs that cannot be remediated
-> (e.g. transitive dependencies with no fix available).
-
-## Closing compliance issues
-
-When a pipeline run raises issues in `instana/instana-issues` (e.g. branch-protection
-or CRA BOM failures), use [`bin/close-matched-prs.sh`](bin/close-matched-prs.sh) to
-bulk-comment and close them once the underlying problem is fixed.
-
-**Requires** the [GitHub CLI (`gh`)](https://cli.github.com/) authenticated with
-access to `instana/instana-issues`.
-
-```bash
-# Dry run — lists matching open issues without modifying anything (default)
-./bin/close-matched-prs.sh "CVE-2025-14505"
-
-# Live run — prompts for confirmation, then comments "fixed the case" and closes each issue
-./bin/close-matched-prs.sh "CVE-2025-14505" false
-```
-
-The first argument is a **title substring** matched against all open issues in
-`instana/instana-issues`. The second argument is `true` (dry run, default) or `false`
-(live). Always do a dry run first to confirm the match set before closing.
 
 ## References
 
