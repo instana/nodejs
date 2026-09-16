@@ -154,7 +154,7 @@ let defaults = {
   packageJsonPath: null,
 
   metrics: {
-    transmissionDelay: 30000,
+    transmissionDelay: 1000,
     timeBetweenHealthcheckCalls: 3000
   },
 
