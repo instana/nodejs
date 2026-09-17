@@ -253,7 +253,10 @@
         "node": ">=22"
       },
       {
-        "v": "5.3.1"
+        "v": "5.3.1",
+        "overrides": {
+          "@opentelemetry/core": "^2.8.0"
+        }
       }
     ],
     "group": "cloud"
@@ -270,7 +273,10 @@
     "core": false,
     "versions": [
       {
-        "v": "7.22.0"
+        "v": "7.22.0",
+        "overrides": {
+          "uuid": "^11.1.1"
+        }
       }
     ],
     "group": "cloud"
@@ -398,7 +404,10 @@
     "versions": [
       {
         "v": "2.1693.0",
-        "node": "<26"
+        "node": "<26",
+        "overrides": {
+          "uuid": "^11.1.1"
+        }
       }
     ],
     "group": "cloud"
@@ -416,7 +425,10 @@
     "group": "messaging",
     "versions": [
       {
-        "v": "4.16.5"
+        "v": "4.16.5",
+        "overrides": {
+          "uuid": "^11.1.1"
+        }
       }
     ]
   },
@@ -453,7 +465,10 @@
         "v": "5.2.1"
       },
       {
-        "v": "4.22.2"
+        "v": "4.22.2",
+        "overrides": {
+          "qs": "^6.16.0"
+        }
       }
     ],
     "group": "frameworks"
@@ -670,7 +685,10 @@
     "group": "messaging",
     "versions": [
       {
-        "v": "5.0.0"
+        "v": "5.0.0",
+        "overrides": {
+          "uuid": "^11.1.1"
+        }
       }
     ]
   },
@@ -843,7 +861,11 @@
         "v": "12.7.1"
       },
       {
-        "v": "10.0.4"
+        "v": "10.0.4",
+        "overrides": {
+          "uuid": "^11.1.1",
+          "@azure/identity": "^4.2.1"
+        }
       }
     ],
     "group": "databases"
@@ -1044,7 +1066,12 @@
     "core": false,
     "versions": [
       {
-        "v": "11.1.0"
+        "v": "11.1.0",
+        "overrides": {
+          "uuid": "^11.1.1",
+          "find-my-way": "^9.7.0",
+          "send": "^0.19.0"
+        }
       }
     ],
     "group": "frameworks"
@@ -1194,7 +1221,10 @@
     "core": false,
     "versions": [
       {
-        "v": "4.0.1"
+        "v": "4.0.1",
+        "overrides": {
+          "adm-zip": "^0.6.1"
+        }
       }
     ],
     "group": "databases"
@@ -1230,11 +1260,17 @@
       {
         "v": "7.10.0",
         "node": ">=20.19.0 <23 || >=24",
-        "skipValidation": true
+        "skipValidation": true,
+        "overrides": {
+          "deepmerge-ts": "^8.0.0"
+        }
       },
       {
         "v": "6.19.3",
-        "skipValidation": true
+        "skipValidation": true,
+        "overrides": {
+          "deepmerge-ts": "^8.0.0"
+        }
       },
       {
         "v": "4.16.2",
@@ -1324,7 +1360,11 @@
     "core": false,
     "versions": [
       {
-        "v": "6.6.0"
+        "v": "6.6.0",
+        "overrides": {
+          "qs": "^6.16.0",
+          "ts-deepmerge": "^8.0.0"
+        }
       }
     ],
     "group": "frameworks"
