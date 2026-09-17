@@ -930,7 +930,10 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
         };
 
         const result = spanStatus(span);
-        expect(result.code).to.equal(OTLP_STATUS_CODES.ERROR);
+        expect(result).to.deep.equal({
+          code: OTLP_STATUS_CODES.ERROR,
+          message: 'sdk failed'
+        });
       });
     });
   });
