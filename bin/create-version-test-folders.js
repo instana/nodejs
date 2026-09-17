@@ -129,6 +129,7 @@ function copyParentFiles(dir, sourceDir) {
       e.name !== 'node_modules' &&
       e.name !== 'package.json' &&
       !e.name.startsWith('package.json.template') &&
+      !e.name.startsWith('package.json.v') &&
       !e.name.startsWith('package-lock.json.v') &&
       e.name !== 'package-lock.json.template' &&
       e.name !== 'modes.json'
@@ -392,10 +393,10 @@ function generatePackageJson(opts) {
   }
 
   if (majorVersion != null) {
-    mergeTemplate(versionPackageJson, path.join(testDir, `package.json.template.v${majorVersion}`), currencyVersion);
+    mergeTemplate(versionPackageJson, path.join(testDir, `package.json.v${majorVersion}.template`), currencyVersion);
   }
   if (currencyVersion) {
-    mergeTemplate(versionPackageJson, path.join(testDir, `package.json.template.v${currencyVersion}`), currencyVersion);
+    mergeTemplate(versionPackageJson, path.join(testDir, `package.json.v${currencyVersion}.template`), currencyVersion);
   }
 
   if (!versionPackageJson.dependencies) {
