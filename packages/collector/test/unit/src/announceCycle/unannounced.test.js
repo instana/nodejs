@@ -1405,8 +1405,7 @@ describe('unannounced state', () => {
           transitionTo: () => {
             expect(agentOptsStub.config).to.deep.equal({
               tracing: {
-                disableW3cBaggage: true,
-                global: {}
+                disableW3cBaggage: true
               }
             });
             done();
@@ -1424,11 +1423,7 @@ describe('unannounced state', () => {
         });
         unannouncedState.enter({
           transitionTo: () => {
-            expect(agentOptsStub.config).to.deep.equal({
-              tracing: {
-                global: {}
-              }
-            });
+            expect(agentOptsStub.config).to.deep.equal({});
             done();
           }
         });
@@ -1446,8 +1441,7 @@ describe('unannounced state', () => {
           transitionTo: () => {
             expect(agentOptsStub.config).to.deep.equal({
               tracing: {
-                captureW3cBaggage: ['userId', 'isPremium'],
-                global: {}
+                captureW3cBaggage: ['userId', 'isPremium']
               }
             });
             done();
@@ -1467,8 +1461,7 @@ describe('unannounced state', () => {
           transitionTo: () => {
             expect(agentOptsStub.config).to.deep.equal({
               tracing: {
-                captureW3cBaggage: ['userId', 'isPremium'],
-                global: {}
+                captureW3cBaggage: ['userId', 'isPremium']
               }
             });
             done();
@@ -1486,11 +1479,7 @@ describe('unannounced state', () => {
         });
         unannouncedState.enter({
           transitionTo: () => {
-            expect(agentOptsStub.config).to.deep.equal({
-              tracing: {
-                global: {}
-              }
-            });
+            expect(agentOptsStub.config).to.deep.equal({});
             done();
           }
         });
@@ -1506,11 +1495,7 @@ describe('unannounced state', () => {
         });
         unannouncedState.enter({
           transitionTo: () => {
-            expect(agentOptsStub.config).to.deep.equal({
-              tracing: {
-                global: {}
-              }
-            });
+            expect(agentOptsStub.config).to.deep.equal({});
             done();
           }
         });
