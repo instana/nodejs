@@ -129,6 +129,7 @@ function copyParentFiles(dir, sourceDir) {
       e.name !== 'node_modules' &&
       e.name !== 'package.json' &&
       !e.name.startsWith('package.json.template') &&
+      !e.name.startsWith('package.json.v') &&
       !e.name.startsWith('package-lock.json.v') &&
       e.name !== 'package-lock.json.template' &&
       e.name !== 'modes.json'
@@ -235,7 +236,9 @@ ${
   hasLockFile
     ? `\
       const lockDir = path.resolve(__dirname, '${sourceDepth === 2 ? '../..' : '..'}');
-      const lockFileName = '${isTemplateLock ? 'package-lock.json.template' : `package-lock.json.v${rawVersion}`}';
+      const lockFileName = '${
+        isTemplateLock ? 'package-lock.json.template' : `package-lock.json.v${rawVersion}.template`
+      }';
       const lockFileSrc = path.join(lockDir, lockFileName);
       if (fs.existsSync(lockFileSrc)) {
         fs.copyFileSync(lockFileSrc, path.join(__dirname, 'package-lock.json'));
@@ -390,10 +393,10 @@ function generatePackageJson(opts) {
   }
 
   if (majorVersion != null) {
-    mergeTemplate(versionPackageJson, path.join(testDir, `package.json.template.v${majorVersion}`), currencyVersion);
+    mergeTemplate(versionPackageJson, path.join(testDir, `package.json.v${majorVersion}.template`), currencyVersion);
   }
   if (currencyVersion) {
-    mergeTemplate(versionPackageJson, path.join(testDir, `package.json.template.v${currencyVersion}`), currencyVersion);
+    mergeTemplate(versionPackageJson, path.join(testDir, `package.json.v${currencyVersion}.template`), currencyVersion);
   }
 
   if (!versionPackageJson.dependencies) {
@@ -487,7 +490,7 @@ function main() {
 
           createTgzSymlinks(targetDir);
 
-          const lockSrc = path.join(testDir, `package-lock.json.v${version}`);
+          const lockSrc = path.join(testDir, `package-lock.json.v${version}.template`);
           const hasLockFile = fs.existsSync(lockSrc);
 
           const testContent = generateTestWrapper({
