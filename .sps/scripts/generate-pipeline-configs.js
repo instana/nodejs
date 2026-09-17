@@ -996,11 +996,23 @@ function baseConfig(fanOutTasks, rootTask = 'pr-code-checks') {
   };
 }
 
+const CODE_CHECKS_SKIPPED_COMMENT = [
+  '# code-checks is skipped intentionally — this checks runs on dedicated security-check pipe only.',
+  '# code-checks includes five steps: setup, detect-secrets, compliance-checks, peer-review, static-scan',
+].join('\n');
+
+function annotateYaml(output) {
+  return output.replace(
+    /^(  code-checks:)\n(\s+when: false)$/m,
+    `${CODE_CHECKS_SKIPPED_COMMENT}\n$1\n$2`
+  );
+}
+
 function writeConfig(name, prConfig, mainConfig, manualConfig) {
   function write(filePath, config) {
     const outDir = path.dirname(filePath);
     fs.mkdirSync(outDir, { recursive: true });
-    const output = yaml.dump(config, { lineWidth: -1, quotingType: "'", forceQuotes: false });
+    const output = annotateYaml(yaml.dump(config, { lineWidth: -1, quotingType: "'", forceQuotes: false }));
     fs.writeFileSync(filePath, output);
     console.log(`Written: ${filePath}`);
   }
@@ -1016,7 +1028,7 @@ function writeDefaultConfig(prConfig, mainConfig, mainOnlyConfig) {
   const spsDir = path.join(__dirname, '..');
   function write(filePath, config) {
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
-    const output = yaml.dump(config, { lineWidth: -1, quotingType: "'", forceQuotes: false });
+    const output = annotateYaml(yaml.dump(config, { lineWidth: -1, quotingType: "'", forceQuotes: false }));
     fs.writeFileSync(filePath, output);
     console.log(`Written: ${filePath}`);
   }
