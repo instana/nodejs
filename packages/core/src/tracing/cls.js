@@ -379,10 +379,7 @@ function startSpan(spanAttributes = {}) {
   if (captureW3cBaggage.length > 0) {
     const rawBaggage = ns.get(baggageKey);
     if (rawBaggage) {
-      if (!span.data.sdk) span.data.sdk = {};
-      if (!span.data.sdk.custom) span.data.sdk.custom = {};
-      if (!span.data.sdk.custom.tags) span.data.sdk.custom.tags = {};
-      baggageUtil.applyCaptureTags(rawBaggage, captureW3cBaggage, span.data.sdk.custom.tags);
+      baggageUtil.applyCaptureTags(rawBaggage, captureW3cBaggage, span);
     }
   }
 

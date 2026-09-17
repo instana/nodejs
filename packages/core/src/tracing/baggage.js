@@ -52,15 +52,20 @@ function renderBaggageHeader(entries) {
 /**
  * @param {string | null} rawBaggage
  * @param {string[]} captureKeys
- * @param {Record<string, string>} tags
+ * @param {import('./cls').InstanaSpan} span
  */
-function applyCaptureTags(rawBaggage, captureKeys, tags) {
+function applyCaptureTags(rawBaggage, captureKeys, span) {
   if (!rawBaggage || !captureKeys || captureKeys.length === 0) {
     return;
   }
 
   const parsed = parseBaggageHeader(rawBaggage);
 
+  if (!span.data.sdk) span.data.sdk = {};
+  if (!span.data.sdk.custom) span.data.sdk.custom = {};
+  if (!span.data.sdk.custom.tags) span.data.sdk.custom.tags = {};
+
+  const tags = span.data.sdk.custom.tags;
   for (let i = 0; i < captureKeys.length; i++) {
     const key = captureKeys[i];
     if (parsed[key] !== undefined && tags[key] === undefined) {
