@@ -725,7 +725,6 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
         const result = spanName(span);
         expect(result).to.equal('my-operation');
       });
-
     });
 
     describe('spanAttributes', () => {
@@ -836,9 +835,9 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       };
 
       const result = spanAttributes(span);
-      expect(result).to.deep.include({ key: 'path',     value: { stringValue: '/tmp/file' } });
+      expect(result).to.deep.include({ key: 'path', value: { stringValue: '/tmp/file' } });
       expect(result).to.deep.include({ key: 'encoding', value: { stringValue: 'UTF-8' } });
-      expect(result).to.deep.include({ key: 'success',  value: { boolValue: true } });
+      expect(result).to.deep.include({ key: 'success', value: { boolValue: true } });
     });
 
     it('should expose error message tag when set via completeSpan(error)', () => {
