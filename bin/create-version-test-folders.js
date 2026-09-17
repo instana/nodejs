@@ -372,10 +372,15 @@ function mergeTemplate(target, templatePath, currencyVersion) {
 }
 
 function generatePackageJson(opts) {
-  const { testDir, versionDir, pkgName, currencyName, currencyVersion, isOptional, majorVersion } = opts;
+  const { testDir, versionDir, pkgName, currencyName, currencyVersion, isOptional, majorVersion, currencyOverrides } =
+    opts;
   const packageJsonTemplatePath = path.join(testDir, 'package.json.template');
   const packageJsonPath = path.join(testDir, 'package.json');
   let versionPackageJson = { name: pkgName };
+
+  if (currencyOverrides) {
+    versionPackageJson.overrides = Object.assign({}, currencyOverrides);
+  }
 
   if (fs.existsSync(packageJsonTemplatePath)) {
     let templateContent = fs.readFileSync(packageJsonTemplatePath, 'utf8');
@@ -515,7 +520,8 @@ function main() {
             currencyName: currency.name,
             currencyVersion: version,
             isOptional,
-            majorVersion
+            majorVersion,
+            currencyOverrides: typeof versionObj === 'object' ? versionObj.overrides : undefined
           });
 
           if (hasLockFile) {
