@@ -392,16 +392,19 @@ function readBaggage(headers) {
   if (disableW3cBaggage) {
     return null;
   }
+
   const raw = /** @type {string} */ (readAttribCaseInsensitive(headers, constants.w3cBaggage));
   if (!raw) {
     return null;
   }
-  // Drop the header if it exceeds the byte size limit.
+
+  // CASE: Drop the header if it exceeds the byte size limit.
   if (Buffer.byteLength(raw, 'utf8') > 8192) {
     return null;
   }
-  // Drop the header if it contains more than 64 list-members.
-  // A list-member is a key=value pair (properties attached via ';' belong to the same member).
+
+  // CASE: Drop the header if it contains more than 64 list-members.
+  // NOTE: A list-member is a key=value pair (properties attached via ';' belong to the same member).
   const memberCount = raw.split(',').length;
   if (memberCount > 64) {
     return null;
