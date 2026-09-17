@@ -305,8 +305,6 @@ function applyStackTraceConfiguration(agentResponse) {
   const globalConfig = agentResponse?.tracing?.global;
   if (!globalConfig) return;
 
-  ensureNestedObjectExists(agentOpts.config, ['tracing', 'global']);
-
   if (globalConfig['stack-trace'] !== undefined) {
     const stackTraceModeValidation = coreConfig.validators.validateStackTraceMode(globalConfig['stack-trace']);
     if (stackTraceModeValidation.isValid) {
@@ -314,6 +312,7 @@ function applyStackTraceConfiguration(agentResponse) {
         globalConfig['stack-trace']
       );
       if (normalizedStackTrace != null) {
+        ensureNestedObjectExists(agentOpts.config, ['tracing']);
         agentOpts.config.tracing.stackTrace = normalizedStackTrace;
       }
     } else {
@@ -330,6 +329,7 @@ function applyStackTraceConfiguration(agentResponse) {
         globalConfig['stack-trace-length']
       );
       if (normalizedStackTraceLength != null) {
+        ensureNestedObjectExists(agentOpts.config, ['tracing']);
         agentOpts.config.tracing.stackTraceLength = normalizedStackTraceLength;
       }
     } else {
