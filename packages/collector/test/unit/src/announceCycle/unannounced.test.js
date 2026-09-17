@@ -823,8 +823,7 @@ describe('unannounced state', () => {
           transitionTo: () => {
             expect(agentOptsStub.config).to.deep.equal({
               tracing: {
-                stackTrace: 'all',
-                global: {}
+                stackTrace: 'all'
               }
             });
             done();
@@ -844,8 +843,7 @@ describe('unannounced state', () => {
           transitionTo: () => {
             expect(agentOptsStub.config).to.deep.equal({
               tracing: {
-                stackTraceLength: 15,
-                global: {}
+                stackTraceLength: 15
               }
             });
             done();
@@ -867,8 +865,7 @@ describe('unannounced state', () => {
             expect(agentOptsStub.config).to.deep.equal({
               tracing: {
                 stackTrace: 'error',
-                stackTraceLength: 25,
-                global: {}
+                stackTraceLength: 25
               }
             });
             done();
@@ -888,8 +885,7 @@ describe('unannounced state', () => {
           transitionTo: () => {
             expect(agentOptsStub.config).to.deep.equal({
               tracing: {
-                stackTrace: 'error',
-                global: {}
+                stackTrace: 'error'
               }
             });
             done();
@@ -909,8 +905,7 @@ describe('unannounced state', () => {
           transitionTo: () => {
             expect(agentOptsStub.config).to.deep.equal({
               tracing: {
-                stackTrace: 'none',
-                global: {}
+                stackTrace: 'none'
               }
             });
             done();
@@ -950,11 +945,7 @@ describe('unannounced state', () => {
         });
         unannouncedState.enter({
           transitionTo: () => {
-            expect(agentOptsStub.config).to.deep.equal({
-              tracing: {
-                global: {}
-              }
-            });
+            expect(agentOptsStub.config).to.deep.equal({});
             done();
           }
         });
@@ -970,11 +961,7 @@ describe('unannounced state', () => {
         });
         unannouncedState.enter({
           transitionTo: () => {
-            expect(agentOptsStub.config).to.deep.equal({
-              tracing: {
-                global: {}
-              }
-            });
+            expect(agentOptsStub.config).to.deep.equal({});
             done();
           }
         });
@@ -992,7 +979,6 @@ describe('unannounced state', () => {
           transitionTo: () => {
             expect(agentOptsStub.config).to.deep.equal({
               tracing: {
-                global: {},
                 stackTraceLength: 5
               }
             });
@@ -1013,8 +999,7 @@ describe('unannounced state', () => {
           transitionTo: () => {
             expect(agentOptsStub.config).to.deep.equal({
               tracing: {
-                stackTraceLength: 0,
-                global: {}
+                stackTraceLength: 0
               }
             });
             done();
@@ -1035,8 +1020,7 @@ describe('unannounced state', () => {
           transitionTo: () => {
             expect(agentOptsStub.config).to.deep.equal({
               tracing: {
-                stackTrace: 'all',
-                global: {}
+                stackTrace: 'all'
               }
             });
             done();
@@ -1052,11 +1036,7 @@ describe('unannounced state', () => {
         });
         unannouncedState.enter({
           transitionTo: () => {
-            expect(agentOptsStub.config).to.deep.equal({
-              tracing: {
-                global: {}
-              }
-            });
+            expect(agentOptsStub.config).to.deep.equal({});
             done();
           }
         });
@@ -1285,8 +1265,7 @@ describe('unannounced state', () => {
           transitionTo: () => {
             expect(agentOptsStub.config).to.deep.equal({
               tracing: {
-                disableW3cCorrelation: true,
-                global: {}
+                disableW3cCorrelation: true
               }
             });
             done();
@@ -1306,8 +1285,7 @@ describe('unannounced state', () => {
           transitionTo: () => {
             expect(agentOptsStub.config).to.deep.equal({
               tracing: {
-                disableW3cPropagation: true,
-                global: {}
+                disableW3cPropagation: true
               }
             });
             done();
@@ -1328,8 +1306,7 @@ describe('unannounced state', () => {
             expect(agentOptsStub.config).to.deep.equal({
               tracing: {
                 disableW3cCorrelation: true,
-                disableW3cPropagation: true,
-                global: {}
+                disableW3cPropagation: true
               }
             });
             done();
@@ -1352,8 +1329,7 @@ describe('unannounced state', () => {
             expect(agentOptsStub.config).to.deep.equal({
               tracing: {
                 disableW3cCorrelation: true,
-                disableW3cPropagation: true,
-                global: {}
+                disableW3cPropagation: true
               }
             });
             done();
@@ -1372,11 +1348,7 @@ describe('unannounced state', () => {
         });
         unannouncedState.enter({
           transitionTo: () => {
-            expect(agentOptsStub.config).to.deep.equal({
-              tracing: {
-                global: {}
-              }
-            });
+            expect(agentOptsStub.config).to.deep.equal({});
             done();
           }
         });
@@ -1393,11 +1365,7 @@ describe('unannounced state', () => {
         });
         unannouncedState.enter({
           transitionTo: () => {
-            expect(agentOptsStub.config).to.deep.equal({
-              tracing: {
-                global: {}
-              }
-            });
+            expect(agentOptsStub.config).to.deep.equal({});
             done();
           }
         });
