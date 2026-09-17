@@ -13,7 +13,6 @@ packages/collector/test/integration/currencies/protocols/@apollo/server/_v4.13.0
 packages/collector/test/integration/currencies/messaging/kafka-node/_v5.0.0
 packages/collector/test/integration/currencies/messaging/bull/_v4.16.5
 packages/collector/test/integration/currencies/frameworks/tsoa/_v6.6.0
-packages/collector/test/integration/currencies/frameworks/sequelize/_v6.37.8
 packages/collector/test/integration/currencies/frameworks/restify/_v11.1.0
 packages/collector/test/integration/currencies/frameworks/fastify/_v4.29.1
 packages/collector/test/integration/currencies/frameworks/fastify/_v3.29.5
