@@ -497,6 +497,39 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       expect(getAttr('graphql.document')).to.be.undefined;
       expect(getAttr('error.type')).to.be.undefined;
     });
+
+    it('should map both http and sdk data keys from a single span', () => {
+      const span = {
+        n: 'node.http.server',
+        data: {
+          http: {
+            operation: 'GET',
+            path: '/api/orders',
+            status: 200
+          },
+          sdk: {
+            custom: {
+              tags: {
+                'order.id': '42',
+                'user.id': 'u-99'
+              }
+            }
+          }
+        }
+      };
+
+      const result = spanAttributes(span);
+      const getAttr = key => result.find(a => a.key === key);
+
+      // http data keys
+      expect(getAttr('http.method').value).to.deep.equal({ stringValue: 'GET' });
+      expect(getAttr('http.target').value).to.deep.equal({ stringValue: '/api/orders' });
+      expect(getAttr('http.status_code').value).to.deep.equal({ intValue: 200 });
+
+      // sdk data keys (custom tags expanded as flat attributes)
+      expect(getAttr('order.id').value).to.deep.equal({ stringValue: '42' });
+      expect(getAttr('user.id').value).to.deep.equal({ stringValue: 'u-99' });
+    });
   });
 
   describe('spanStatus', () => {
