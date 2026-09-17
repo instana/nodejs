@@ -1006,7 +1006,7 @@ function writeConfig(name, prConfig, mainConfig, manualConfig) {
   }
 
   const spsDir = path.join(__dirname, '..');
-  if (MODE === 'all' || MODE === 'pr') write(path.join(spsDir, 'pr', `pipeline-config-${name}.yaml`), prConfig);
+  if (MODE === 'all' || MODE === 'pr') write(path.join(spsDir, 'pr', `pipeline-config-${name}.yaml`), toPrConfig(prConfig));
   if (MODE === 'all' || MODE === 'main') write(path.join(spsDir, 'main', `pipeline-config-${name}.yaml`), mainConfig);
   if (MODE === 'all' || MODE === 'manual')
     write(path.join(spsDir, 'manual', `pipeline-config-${name}.yaml`), manualConfig ?? mainConfig);
@@ -1020,10 +1020,63 @@ function writeDefaultConfig(prConfig, mainConfig, mainOnlyConfig) {
     fs.writeFileSync(filePath, output);
     console.log(`Written: ${filePath}`);
   }
-  if (MODE === 'all' || MODE === 'pr') write(path.join(spsDir, 'pr', 'pipeline-config.yaml'), prConfig);
+  if (MODE === 'all' || MODE === 'pr') write(path.join(spsDir, 'pr', 'pipeline-config.yaml'), toPrConfig(prConfig));
   if (MODE === 'all' || MODE === 'main') write(path.join(spsDir, 'main', 'pipeline-config.yaml'), mainOnlyConfig ?? mainConfig);
   if (MODE === 'all' || MODE === 'manual') write(path.join(spsDir, 'manual', 'pipeline-config.yaml'), mainOnlyConfig ?? mainConfig);
-  if (MODE === 'all') write(path.join(spsDir, 'pipeline-config.yaml'), prConfig);
+  if (MODE === 'all') write(path.join(spsDir, 'pipeline-config.yaml'), toPrConfig(prConfig));
+}
+
+// Append a GitHub commit status call to every PR task script so that test failures
+// are reported as "failure" on the commit instead of staying "pending".
+// Uses HEAD_SHA (already set in PR scripts) and the context format that pr-verify polls:
+// tekton/$TASK_NAME/code-unit-tests
+function toPrConfig(prConfig) {
+  const EXIT_MARKER = 'exit $LAST_EXIT';
+
+  function appendPrCommitStatus(script) {
+    if (typeof script !== 'string' || !script.includes(EXIT_MARKER)) return script;
+    const statusLines = [
+      '',
+      '# report commit status to GitHub',
+      'GH_TOKEN="$(get_secret gh-public-token)"',
+      'GIT_COMMIT="$(get_env HEAD_SHA "")"',
+      'PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"',
+      'if [ -n "$GIT_COMMIT" ]; then',
+      '  STATUS="success"',
+      '  if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi',
+      '  CURL_RESPONSE=$(curl -s -w "\\n%{http_code}" \\',
+      '    -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \\',
+      '    -H "Authorization: Bearer $GH_TOKEN" \\',
+      '    -H "Accept: application/vnd.github+json" \\',
+      '    -H "Content-Type: application/json" \\',
+      '    -d "{\\"state\\":\\"$STATUS\\",\\"target_url\\":\\"$PIPELINE_RUN_URL\\",\\"description\\":\\"PR pipeline $STATUS (Node ${node_version%%.*})\\",\\"context\\":\\"tekton/$TASK_NAME/code-unit-tests\\"}")',
+      '  CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)',
+      '  CURL_BODY=$(echo "$CURL_RESPONSE" | sed \'$d\')',
+      '  if [ "$CURL_HTTP" = "201" ]; then',
+      '    echo "Commit status set to \'$STATUS\' for $GIT_COMMIT."',
+      '  else',
+      '    echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"',
+      '  fi',
+      'else',
+      '  echo "WARNING: HEAD_SHA not set — skipping commit status."',
+      'fi',
+    ];
+    return script.replace(EXIT_MARKER, statusLines.join('\n') + '\n' + EXIT_MARKER);
+  }
+
+  // Deep-clone via YAML round-trip then patch every step script
+  const raw = yaml.dump(prConfig, { lineWidth: -1 });
+  const pr = yaml.load(raw);
+
+  for (const task of Object.values(pr.tasks ?? {})) {
+    for (const step of task.steps ?? []) {
+      if (step.script) {
+        step.script = appendPrCommitStatus(step.script);
+      }
+    }
+  }
+
+  return pr;
 }
 
 // Convert a pr config to a main config by swapping pr-code-checks → code-build task names.
@@ -1567,6 +1620,23 @@ function generateOne(t) {
       '  echo "tekton/devsecops status posted: $DEVSECOPS_STATE"',
       'else',
       '  echo "WARNING: Failed to post tekton/devsecops status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"',
+      'fi',
+      '',
+      '# ── Post pr-verify own check-run status to GitHub ───────────────────────────',
+      'VERIFY_STATE="$DEVSECOPS_STATE"',
+      'VERIFY_DESC="$DEVSECOPS_DESC"',
+      'CURL_RESPONSE=$(curl -s -w "\\n%{http_code}" \\',
+      '  -X POST "https://api.github.com/repos/$REPO/statuses/$GIT_COMMIT" \\',
+      '  -H "Authorization: Bearer $GH_TOKEN" \\',
+      '  -H "Accept: application/vnd.github+json" \\',
+      '  -H "Content-Type: application/json" \\',
+      '  -d "{\\"state\\":\\"$VERIFY_STATE\\",\\"target_url\\":\\"$PIPELINE_RUN_URL\\",\\"description\\":\\"$VERIFY_DESC\\",\\"context\\":\\"tekton/pr-code-checks-verify/code-unit-tests\\"}")',
+      'CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)',
+      'CURL_BODY=$(echo "$CURL_RESPONSE" | sed \'$d\')',
+      'if [ "$CURL_HTTP" = "201" ]; then',
+      '  echo "pr-verify status posted: $VERIFY_STATE"',
+      'else',
+      '  echo "WARNING: Failed to post pr-verify status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"',
       'fi',
       '',
       'exit $FINAL_EXIT'
