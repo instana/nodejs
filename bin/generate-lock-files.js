@@ -75,7 +75,7 @@ function findTestDirectories(baseDir, name) {
   return results;
 }
 
-function generateLockFile(currencyName, version, testDir, instanaVersion, baseLockFile) {
+function generateLockFile(currencyName, version, testDir, instanaVersion, baseLockFile, currencyOverrides) {
   const safeName = currencyName.replace(/\//g, '-').replace(/^@/, '');
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), `instana-lock-${safeName}-${version}-`));
 
@@ -90,6 +90,9 @@ function generateLockFile(currencyName, version, testDir, instanaVersion, baseLo
       name: `lock-gen-${safeName}-v${version}`,
       dependencies
     };
+    if (currencyOverrides) {
+      pkgJson.overrides = Object.assign({}, currencyOverrides);
+    }
     fs.writeFileSync(path.join(tmpDir, 'package.json'), `${JSON.stringify(pkgJson, null, 2)}\n`);
 
     if (baseLockFile && fs.existsSync(baseLockFile)) {
@@ -154,10 +157,15 @@ function generateLockFileFromTemplate(templatePath, instanaVersion) {
     }
     if (Object.keys(dependencies).length === 0) return;
 
-    fs.writeFileSync(
-      path.join(tmpDir, 'package.json'),
-      `${JSON.stringify({ name: `lock-gen-tpl-${safeName}`, dependencies }, null, 2)}\n`
-    );
+    const pkgJson = {
+      name: `lock-gen-tpl-${safeName}`,
+      dependencies
+    };
+    if (tpl.overrides) {
+      pkgJson.overrides = Object.assign({}, tpl.overrides);
+    }
+
+    fs.writeFileSync(path.join(tmpDir, 'package.json'), `${JSON.stringify(pkgJson, null, 2)}\n`);
 
     console.log(`  Generating lock file for template ${path.relative(rootDir, templatePath)}...`);
     execSync('npm install --package-lock-only --no-audit --no-progress', {
@@ -222,7 +230,7 @@ function main() {
         allVersions.forEach(version => {
           if (versionFilter && version !== versionFilter) return;
           const baseLockFile = fromVersion ? path.join(testDir, `package-lock.json.v${fromVersion}.template`) : null;
-          generateLockFile(currency.name, version, testDir, instanaVersion, baseLockFile);
+          generateLockFile(currency.name, version, testDir, instanaVersion, baseLockFile, currency.overrides);
         });
         removeOldLockFiles(testDir, allVersions);
       });

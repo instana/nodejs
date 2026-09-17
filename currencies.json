@@ -1059,6 +1059,9 @@
     "ignoreUpdates": false,
     "note": "",
     "core": false,
+    "overrides": {
+      "uuid": "^11.1.1"
+    },
     "versions": [
       {
         "v": "6.37.8"
