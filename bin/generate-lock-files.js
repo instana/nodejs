@@ -227,10 +227,12 @@ function main() {
       console.log(`\n[${currency.name}]`);
       const allVersions = currency.versions.map(v => (typeof v === 'string' ? v : v.v));
       testDirs.forEach(testDir => {
-        allVersions.forEach(version => {
+        currency.versions.forEach(versionObj => {
+          const version = typeof versionObj === 'string' ? versionObj : versionObj.v;
           if (versionFilter && version !== versionFilter) return;
           const baseLockFile = fromVersion ? path.join(testDir, `package-lock.json.v${fromVersion}.template`) : null;
-          generateLockFile(currency.name, version, testDir, instanaVersion, baseLockFile, currency.overrides);
+          const versionOverrides = typeof versionObj === 'object' ? versionObj.overrides : undefined;
+          generateLockFile(currency.name, version, testDir, instanaVersion, baseLockFile, versionOverrides);
         });
         removeOldLockFiles(testDir, allVersions);
       });

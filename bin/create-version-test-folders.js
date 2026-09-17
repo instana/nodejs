@@ -521,7 +521,7 @@ function main() {
             currencyVersion: version,
             isOptional,
             majorVersion,
-            currencyOverrides: currency.overrides
+            currencyOverrides: typeof versionObj === 'object' ? versionObj.overrides : undefined
           });
 
           if (hasLockFile) {
