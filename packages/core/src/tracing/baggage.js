@@ -52,7 +52,7 @@ function renderBaggageHeader(entries) {
 /**
  * @param {string | null} rawBaggage
  * @param {string[]} captureKeys
- * @param {import('./cls').InstanaSpan} span
+ * @param {{ data: { sdk?: { custom?: { tags?: Record<string, any> } } } }} span
  */
 function applyCaptureTags(rawBaggage, captureKeys, span) {
   if (!rawBaggage || !captureKeys || captureKeys.length === 0) {
