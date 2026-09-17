@@ -21,7 +21,7 @@
   },
   "devDependencies": {
     "serverless": "4.41.0",
-    "serverless-offline": "^14.0.0"
+    "serverless-offline": "^14.8.2"
   },
   "overrides": {
     "velocityjs": "2.1.7"
