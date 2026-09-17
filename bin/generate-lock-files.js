@@ -110,8 +110,8 @@ function generateLockFile(currencyName, version, testDir, instanaVersion, baseLo
       return;
     }
 
-    fs.copyFileSync(lockSrc, path.join(testDir, `package-lock.json.v${version}`));
-    console.log(`  Saved → ${path.relative(rootDir, path.join(testDir, `package-lock.json.v${version}`))}`);
+    fs.copyFileSync(lockSrc, path.join(testDir, `package-lock.json.v${version}.template`));
+    console.log(`  Saved → ${path.relative(rootDir, path.join(testDir, `package-lock.json.v${version}.template`))}`);
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
@@ -119,7 +119,12 @@ function generateLockFile(currencyName, version, testDir, instanaVersion, baseLo
 
 function removeOldLockFiles(testDir, keepVersions) {
   fs.readdirSync(testDir)
-    .filter(f => f.startsWith('package-lock.json.v') && !keepVersions.includes(f.slice('package-lock.json.v'.length)))
+    .filter(
+      f =>
+        f.startsWith('package-lock.json.v') &&
+        f.endsWith('.template') &&
+        !keepVersions.includes(f.slice('package-lock.json.v'.length, -'.template'.length))
+    )
     .forEach(f => {
       fs.rmSync(path.join(testDir, f));
       console.log(`  Removed → ${path.relative(rootDir, path.join(testDir, f))}`);
@@ -216,7 +221,7 @@ function main() {
       testDirs.forEach(testDir => {
         allVersions.forEach(version => {
           if (versionFilter && version !== versionFilter) return;
-          const baseLockFile = fromVersion ? path.join(testDir, `package-lock.json.v${fromVersion}`) : null;
+          const baseLockFile = fromVersion ? path.join(testDir, `package-lock.json.v${fromVersion}.template`) : null;
           generateLockFile(currency.name, version, testDir, instanaVersion, baseLockFile);
         });
         removeOldLockFiles(testDir, allVersions);

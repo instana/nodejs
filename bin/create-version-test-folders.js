@@ -235,7 +235,9 @@ ${
   hasLockFile
     ? `\
       const lockDir = path.resolve(__dirname, '${sourceDepth === 2 ? '../..' : '..'}');
-      const lockFileName = '${isTemplateLock ? 'package-lock.json.template' : `package-lock.json.v${rawVersion}`}';
+      const lockFileName = '${
+        isTemplateLock ? 'package-lock.json.template' : `package-lock.json.v${rawVersion}.template`
+      }';
       const lockFileSrc = path.join(lockDir, lockFileName);
       if (fs.existsSync(lockFileSrc)) {
         fs.copyFileSync(lockFileSrc, path.join(__dirname, 'package-lock.json'));
@@ -487,7 +489,7 @@ function main() {
 
           createTgzSymlinks(targetDir);
 
-          const lockSrc = path.join(testDir, `package-lock.json.v${version}`);
+          const lockSrc = path.join(testDir, `package-lock.json.v${version}.template`);
           const hasLockFile = fs.existsSync(lockSrc);
 
           const testContent = generateTestWrapper({
