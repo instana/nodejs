@@ -127,41 +127,49 @@ describe('baggage capturing', () => {
       baggage = require('../../src/tracing/baggage');
     });
 
+    const makeSpan = (existingTags) => {
+      const span = { data: {} };
+      if (existingTags) {
+        span.data.sdk = { custom: { tags: existingTags } };
+      }
+      return span;
+    };
+
     it('captures only configured keys', () => {
-      const tags = {};
-      baggage.applyCaptureTags('userId=alice,isPremium=true,region=eu', ['userId'], tags);
-      expect(tags).to.deep.equal({ userId: 'alice' });
+      const span = makeSpan();
+      baggage.applyCaptureTags('userId=alice,isPremium=true,region=eu', ['userId'], span);
+      expect(span.data.sdk.custom.tags).to.deep.equal({ userId: 'alice' });
     });
 
     it('does not capture keys not in the capture list', () => {
-      const tags = {};
-      baggage.applyCaptureTags('userId=alice,region=eu', ['userId'], tags);
-      expect(tags).to.not.have.property('region');
+      const span = makeSpan();
+      baggage.applyCaptureTags('userId=alice,region=eu', ['userId'], span);
+      expect(span.data.sdk.custom.tags).to.not.have.property('region');
     });
 
     it('does not overwrite existing tag (existing annotation wins)', () => {
-      const tags = { userId: 'existing' };
-      baggage.applyCaptureTags('userId=fromBaggage', ['userId'], tags);
-      expect(tags.userId).to.equal('existing');
+      const span = makeSpan({ userId: 'existing' });
+      baggage.applyCaptureTags('userId=fromBaggage', ['userId'], span);
+      expect(span.data.sdk.custom.tags.userId).to.equal('existing');
     });
 
     it('does nothing when captureKeys is empty', () => {
-      const tags = {};
-      baggage.applyCaptureTags('userId=alice', [], tags);
-      expect(tags).to.deep.equal({});
+      const span = makeSpan();
+      baggage.applyCaptureTags('userId=alice', [], span);
+      expect(span.data).to.deep.equal({});
     });
 
     it('does nothing when rawBaggage is null', () => {
-      const tags = {};
-      baggage.applyCaptureTags(null, ['userId'], tags);
-      expect(tags).to.deep.equal({});
+      const span = makeSpan();
+      baggage.applyCaptureTags(null, ['userId'], span);
+      expect(span.data).to.deep.equal({});
     });
 
     it('does not capture properties', () => {
-      const tags = {};
-      baggage.applyCaptureTags('userId=alice;prop1=v', ['userId'], tags);
-      expect(tags).to.deep.equal({ userId: 'alice' });
-      expect(tags).to.not.have.property('prop1');
+      const span = makeSpan();
+      baggage.applyCaptureTags('userId=alice;prop1=v', ['userId'], span);
+      expect(span.data.sdk.custom.tags).to.deep.equal({ userId: 'alice' });
+      expect(span.data.sdk.custom.tags).to.not.have.property('prop1');
     });
   });
 
