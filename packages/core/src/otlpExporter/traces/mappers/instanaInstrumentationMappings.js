@@ -578,6 +578,7 @@ module.exports = {
       }
     }
 
+    // TODO: where to put
     const customTags = span.data?.sdk?.custom?.tags;
     if (customTags && typeof customTags === 'object') {
       const tagKeys = Object.keys(customTags);
