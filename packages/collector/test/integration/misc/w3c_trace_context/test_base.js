@@ -1150,9 +1150,8 @@ module.exports = function (name, version, isLatest, mode) {
           });
         }));
     });
-  });
 
-  describe('W3C baggage capturing', () => {
+    describe('W3C baggage capturing', () => {
     let baggageAppControls;
 
     before(async () => {
@@ -1301,9 +1300,9 @@ module.exports = function (name, version, isLatest, mode) {
         })
         .finally(() => disabledBaggageControls.stop());
     });
-  });
+    });
 
-  describe('W3C baggage capturing via agent yaml', () => {
+    describe('W3C baggage capturing via agent yaml', () => {
     const { AgentStubControls } = require('@_local/collector/test/apps/agentStubControls');
     const agentStubControls = new AgentStubControls();
     let agentYamlAppControls;
@@ -1381,6 +1380,7 @@ module.exports = function (name, version, isLatest, mode) {
         await disableAgentStub.stopAgent();
       }
     });
+    });
   });
 };
 
@@ -1436,7 +1436,7 @@ function startRequest({
 
   if (withBaggageHeader) {
     request.headers = request.headers || {};
-    request.headers['baggage'] = withBaggageHeader;
+    request.headers.baggage = withBaggageHeader;
   }
 
   if (withInstanaHeaders === 'trace-in-progress') {
