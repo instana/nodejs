@@ -289,7 +289,7 @@ describe('tracing/converters/otlp', () => {
       expect(httpSpan.endTimeUnixNano).to.equal('1710000000025000000');
       expect(httpSpan.status).to.deep.equal({ code: 0 });
       expectAttribute(httpSpan.attributes, 'http.method', { stringValue: 'GET' });
-      expectAttribute(httpSpan.attributes, 'http.url', { stringValue: 'https://example.test/users/42' });
+      expectAttribute(httpSpan.attributes, 'http.url', { stringValue: 'https://example.test/users/42?active=true' });
       expectAttribute(httpSpan.attributes, 'http.target', { stringValue: '/users/42' });
       expectAttribute(httpSpan.attributes, 'http.route', { stringValue: '/users/:id' });
       expectAttribute(httpSpan.attributes, 'server.address', { stringValue: 'api.example.test' });

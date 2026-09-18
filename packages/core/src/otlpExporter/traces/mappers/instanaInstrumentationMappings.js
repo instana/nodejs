@@ -15,7 +15,8 @@ const {
   getRPCMethodOriginal,
   toBoolean,
   getRegionFromArn,
-  getAccountIdFromArn
+  getAccountIdFromArn,
+  buildFullUrl
 } = require('./util');
 
 const ctx = require('../../common/context');
@@ -77,7 +78,7 @@ const instrumentationMappings = {
     },
     spanAttributes: [
       { otlp: OTLP.http.REQUEST_METHOD, instana: 'operation', transform: toUpperCase },
-      { otlp: OTLP.http.URL_FULL, instana: 'endpoints' },
+      { otlp: OTLP.http.URL_FULL, instana: ['endpoints', 'params'], transform: buildFullUrl },
       { otlp: OTLP.http.URL_PATH, instana: 'path' },
       { otlp: OTLP.http.URL_QUERY, instana: 'params' },
       { otlp: OTLP.http.RESPONSE_STATUS, instana: 'status' },

@@ -386,6 +386,8 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
         data: {
           http: {
             operation: 'POST',
+            endpoints: 'https://example.com/api/users',
+            params: 'foo=bar',
             path: '/api/users',
             status: 201,
             host: 'example.com:8080'
@@ -394,11 +396,14 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       };
 
       const result = spanAttributes(span);
-      console.log(result);
       expect(result).to.be.an('array');
       expect(result).to.deep.include({
         key: 'http.method',
         value: { stringValue: 'POST' }
+      });
+      expect(result).to.deep.include({
+        key: 'http.url',
+        value: { stringValue: 'https://example.com/api/users?foo=bar' }
       });
       expect(result).to.deep.include({
         key: 'http.target',
@@ -407,6 +412,23 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       expect(result).to.deep.include({
         key: 'http.status_code',
         value: { intValue: 201 }
+      });
+    });
+
+    it('should extract HTTP attributes without params in URL_FULL when params is missing', () => {
+      const span = {
+        data: {
+          http: {
+            operation: 'GET',
+            endpoints: 'https://example.com/api/users'
+          }
+        }
+      };
+
+      const result = spanAttributes(span);
+      expect(result).to.deep.include({
+        key: 'http.url',
+        value: { stringValue: 'https://example.com/api/users' }
       });
     });
 
