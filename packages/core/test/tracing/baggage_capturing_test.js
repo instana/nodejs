@@ -246,6 +246,23 @@ describe('baggage capturing', () => {
       sdk = generated;
     });
 
+    it('is available on callback, promise, and async sdk exports', () => {
+      const sdkExports = require('../../src/tracing/sdk');
+      sdkExports.init({ logger: createFakeLogger() }, cls);
+      sdkExports.activate();
+
+      cls.ns.run(() => {
+        sdkExports.callback.setBaggage('cbKey', 'cbVal');
+        expect(cls.getBaggage()).to.include('cbKey=cbVal');
+
+        sdkExports.promise.setBaggage('promiseKey', 'promiseVal');
+        expect(cls.getBaggage()).to.include('promiseKey=promiseVal');
+
+        sdkExports.async.setBaggage('asyncKey', 'asyncVal');
+        expect(cls.getBaggage()).to.include('asyncKey=asyncVal');
+      });
+    });
+
     it('sets a new key in the baggage header stored in CLS', () => {
       cls.ns.run(() => {
         cls.setBaggage('existingKey=existingVal');

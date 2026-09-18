@@ -1271,6 +1271,30 @@ module.exports = function (name, version, isLatest, mode) {
         expect(response.w3cTraceContext.receivedHeaders.baggage).to.equal('userId=alice;meta=1,requestId=req-42');
       }));
 
+    it('should propagate baggage set via instana.sdk.setBaggage to downstream services', () =>
+      startRequest({
+        app: instanaAppControls,
+        startPath: '/start-with-baggage',
+        depth: 1,
+        withSpecHeaders: 'valid-sampled-with-random-trace-id'
+      }).then(response => {
+        response = response && response.body ? JSON.parse(response.body) : response;
+        expect(response.w3cTraceContext.receivedHeaders.baggage).to.equal('customSdkKey=customSdkValue');
+      }));
+
+    it('should append baggage set via instana.sdk.setBaggage to incoming baggage headers', () =>
+      startRequest({
+        app: instanaAppControls,
+        startPath: '/start-with-baggage',
+        depth: 1,
+        withSpecHeaders: 'valid-sampled-with-random-trace-id',
+        withBaggageHeader: 'incomingKey=incomingVal'
+      }).then(response => {
+        response = response && response.body ? JSON.parse(response.body) : response;
+        expect(response.w3cTraceContext.receivedHeaders.baggage).to.include('incomingKey=incomingVal');
+        expect(response.w3cTraceContext.receivedHeaders.baggage).to.include('customSdkKey=customSdkValue');
+      }));
+
     it('should NOT propagate the baggage header when INSTANA_TRACING_DISABLE_W3C_BAGGAGE is set', () => {
       const disabledBaggageControls = new ProcessControls({
         dirname: __dirname,
@@ -1386,6 +1410,7 @@ module.exports = function (name, version, isLatest, mode) {
 
 function startRequest({
   app,
+  startPath = '/start',
   depth = 2,
   withSpecHeaders = null,
   otherMode = 'participate',
@@ -1393,7 +1418,7 @@ function startRequest({
   withBaggageHeader = null
 }) {
   const request = {
-    path: `/start?depth=${depth}&otherMode=${otherMode}`
+    path: `${startPath}?depth=${depth}&otherMode=${otherMode}`
   };
   if (withSpecHeaders === 'valid-sampled-with-random-trace-id') {
     request.headers = {
