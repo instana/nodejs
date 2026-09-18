@@ -20,7 +20,8 @@ const instrumentations = {
   '@opentelemetry/instrumentation-socket.io': { name: 'socket.io' },
   '@opentelemetry/instrumentation-tedious': { name: 'tedious' },
   '@opentelemetry/instrumentation-oracledb': { name: 'oracle' },
-  '@instana/instrumentation-confluent-kafka-javascript': { name: 'confluent-kafka' }
+  '@instana/instrumentation-confluent-kafka-javascript': { name: 'confluent-kafka' },
+  '@platformatic/kafka-opentelemetry': { name: 'platformatic-kafka' }
 };
 
 let AsyncHooksContextManager;
