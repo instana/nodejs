@@ -37,8 +37,9 @@ if (vendor === 'instana') {
 }
 
 let cls;
+let instana;
 if (isInstana()) {
-  require('@instana/collector')();
+  instana = require('@instana/collector')();
   cls = require('@instana/core/src/tracing/cls');
 }
 
@@ -164,9 +165,12 @@ function handleRequest(incomingHeaders, method, url, resOrStream) {
       return endWithStatus(method, url, resOrStream, 405);
     }
     return endWithStatus(method, url, resOrStream, 200);
-  } else if (pathname === '/start' || pathname === '/continue') {
+  } else if (pathname === '/start' || pathname === '/continue' || pathname === '/start-with-baggage') {
     if (method !== 'GET') {
       return endWithStatus(method, url, resOrStream, 405);
+    }
+    if (pathname === '/start-with-baggage' && isInstana()) {
+      instana.sdk.async.setBaggage('customSdkKey', 'customSdkValue');
     }
     downstreamPath = depth > 1 ? 'continue' : 'end';
     const requestOptions = {
