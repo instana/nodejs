@@ -1151,9 +1151,108 @@ module.exports = function (name, version, isLatest, mode) {
         }));
     });
   });
+
+  describe('W3C baggage capturing', () => {
+    let baggageAppControls;
+
+    before(async () => {
+      baggageAppControls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        http2: isHTTP2,
+        env: {
+          APM_VENDOR: 'instana',
+          DOWNSTREAM_PORT: otherVendorAppPort,
+          APP_USES_HTTP2: isHTTP2,
+          INSTANA_TRACING_CAPTURE_W3C_BAGGAGE: 'userId,requestId'
+        }
+      });
+      await baggageAppControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await baggageAppControls.stop();
+    });
+
+    it('should NOT capture baggage keys when INSTANA_TRACING_CAPTURE_W3C_BAGGAGE is not configured', () =>
+      startRequest({
+        app: instanaAppControls,
+        depth: 1,
+        withSpecHeaders: 'valid-sampled-with-random-trace-id',
+        withBaggageHeader: 'userId=alice,requestId=req-42'
+      }).then(() =>
+        retryUntilSpansMatch(agentControls, spans => {
+          const entry = verifyHttpRootEntry({ spans, url: '/start', instanaAppControls });
+          expect(entry.data.sdk).to.not.exist;
+        })
+      ));
+
+    it('should capture configured baggage keys into span tags on the HTTP entry span', () =>
+      startRequest({
+        app: baggageAppControls,
+        depth: 1,
+        withSpecHeaders: 'valid-sampled-with-random-trace-id',
+        withBaggageHeader: 'userId=alice,requestId=req-42,ignored=drop-me'
+      }).then(() =>
+        retryUntilSpansMatch(agentControls, spans => {
+          const entry = expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('node.http.server'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.http.url).to.equal('/start'),
+            span => expect(span.data.http.host).to.equal(`localhost:${baggageAppControls.getPort()}`)
+          ]);
+          expect(entry.data.sdk.custom.tags.userId).to.equal('alice');
+          expect(entry.data.sdk.custom.tags.requestId).to.equal('req-42');
+          expect(entry.data.sdk.custom.tags.ignored).to.not.exist;
+        })
+      ));
+
+    it('should not capture baggage keys when the baggage header is absent', () =>
+      startRequest({
+        app: baggageAppControls,
+        depth: 1,
+        withSpecHeaders: 'valid-sampled-with-random-trace-id'
+      }).then(() =>
+        retryUntilSpansMatch(agentControls, spans => {
+          const entry = expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('node.http.server'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.http.url).to.equal('/start'),
+            span => expect(span.data.http.host).to.equal(`localhost:${baggageAppControls.getPort()}`)
+          ]);
+          expect(entry.data.sdk).to.not.exist;
+        })
+      ));
+
+    it('should capture percent-encoded baggage values correctly', () =>
+      startRequest({
+        app: baggageAppControls,
+        depth: 1,
+        withSpecHeaders: 'valid-sampled-with-random-trace-id',
+        withBaggageHeader: `userId=${encodeURIComponent('alice smith')},requestId=req-99`
+      }).then(() =>
+        retryUntilSpansMatch(agentControls, spans => {
+          const entry = expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('node.http.server'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.http.url).to.equal('/start'),
+            span => expect(span.data.http.host).to.equal(`localhost:${baggageAppControls.getPort()}`)
+          ]);
+          expect(entry.data.sdk.custom.tags.userId).to.equal('alice smith');
+          expect(entry.data.sdk.custom.tags.requestId).to.equal('req-99');
+        })
+      ));
+  });
 };
 
-function startRequest({ app, depth = 2, withSpecHeaders = null, otherMode = 'participate', withInstanaHeaders }) {
+function startRequest({
+  app,
+  depth = 2,
+  withSpecHeaders = null,
+  otherMode = 'participate',
+  withInstanaHeaders,
+  withBaggageHeader = null
+}) {
   const request = {
     path: `/start?depth=${depth}&otherMode=${otherMode}`
   };
@@ -1194,6 +1293,11 @@ function startRequest({ app, depth = 2, withSpecHeaders = null, otherMode = 'par
     };
   } else if (withSpecHeaders != null) {
     throw new Error(`Invalid withSpecHeaders value: ${withSpecHeaders}.`);
+  }
+
+  if (withBaggageHeader) {
+    request.headers = request.headers || {};
+    request.headers['baggage'] = withBaggageHeader;
   }
 
   if (withInstanaHeaders === 'trace-in-progress') {
