@@ -207,9 +207,7 @@ function injectTraceCorrelationHeaders(originalArgs, span, w3cTraceContext) {
     [constants.spanIdHeaderName]: span.s,
     [constants.traceLevelHeaderName]: '1'
   };
-  tracingHeaders.addW3cHeaders((name, value) => {
-    headersToAdd[name] = value;
-  }, w3cTraceContext, cls);
+  tracingHeaders.addW3cHeaders((k, v) => { headersToAdd[k] = v; }, w3cTraceContext, cls);
   injectHeaders(originalArgs, headersToAdd);
 }
 
@@ -217,9 +215,7 @@ function injectSuppressionHeader(originalArgs, w3cTraceContext) {
   const headersToAdd = {
     [constants.traceLevelHeaderName]: '0'
   };
-  tracingHeaders.addW3cHeaders((name, value) => {
-    headersToAdd[name] = value;
-  }, w3cTraceContext, cls);
+  tracingHeaders.addW3cHeaders((k, v) => { headersToAdd[k] = v; }, w3cTraceContext, cls);
   injectHeaders(originalArgs, headersToAdd);
 }
 
