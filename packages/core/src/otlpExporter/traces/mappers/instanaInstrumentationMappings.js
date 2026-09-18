@@ -61,7 +61,7 @@ const OTLP = /** @type {any} */ (ctx.semConv);
 /**
  * @typedef {Object} InstrumentationMapping
  * @property {SpanNameFunction} [spanName]
- * @property {AttributeMapping[]} [spanAttributes]
+ * @property {AttributeMapping[] | ((spanData: Record<string, any>) => SpanAttribute[])} [spanAttributes]
  */
 
 /**
@@ -448,6 +448,20 @@ const instrumentationMappings = {
       { otlp: OTLP.network.PEER_NAME, instana: 'hostname' },
       { otlp: OTLP.network.PEER_PORT, instana: 'port' }
     ]
+  },
+
+  // SDK spans are created via the Instana SDK API by the user.
+  // There are no official OTel semantic conventions for these spans.
+  // Tags from sdk.custom.tags are expanded directly as flat attributes (no prefix).
+  [INSTRUMENTATION_TYPES.SDK]: {
+    spanName: data => data.name,
+    spanAttributes: spanData => {
+      const tags = spanData?.custom?.tags;
+      if (!tags || typeof tags !== 'object') return [];
+      return Object.keys(tags)
+        .filter(k => tags[k] !== null && tags[k] !== undefined)
+        .map(k => ({ key: k, value: formatOTLPValue(tags[k]) }));
+    }
   }
 };
 
@@ -460,11 +474,18 @@ function getSpanType(span) {
     return null;
   }
 
-  const key = Object.keys(span.data).find(
+  const keys = Object.keys(span.data).filter(
     k => k !== INSTRUMENTATION_TYPES.PEER && k !== SPECIAL_SPAN_DATA_TYPES.RESOURCE
   );
 
-  return key || null;
+  // CASE: ignore SDK data key if its multiple data keys, because
+  //       we always prefer the other data key such as http
+  if (keys.length > 1) {
+    const nonSdk = keys.find(k => k !== INSTRUMENTATION_TYPES.SDK);
+    if (nonSdk) return nonSdk;
+  }
+
+  return keys[0] || null;
 }
 
 /**
@@ -537,15 +558,21 @@ module.exports = {
       const handler = instrumentationMappings[spanType]?.spanAttributes;
       const spanData = span.data[spanType];
 
-      if (!Array.isArray(handler) || !spanData) {
+      if (!handler || !spanData) {
         continue;
       }
 
-      for (let j = 0; j < handler.length; j++) {
-        const attribute = applyMapping(handler[j], spanData);
-
-        if (attribute) {
-          attributes.push(attribute);
+      if (typeof handler === 'function') {
+        const expanded = handler(spanData);
+        for (let j = 0; j < expanded.length; j++) {
+          attributes.push(expanded[j]);
+        }
+      } else {
+        for (let j = 0; j < handler.length; j++) {
+          const attribute = applyMapping(handler[j], spanData);
+          if (attribute) {
+            attributes.push(attribute);
+          }
         }
       }
     }

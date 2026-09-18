@@ -232,6 +232,26 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       expect(result).to.equal('custom.span');
     });
 
+    it('should use the actual instrumentation type when sdk coexists with another type', () => {
+      const span = {
+        n: 'node.http.server',
+        ec: 1,
+        data: {
+          sdk: { custom: { tags: { foo: 'bar' } } },
+          http: { operation: 'GET', path: '/api' }
+        }
+      };
+
+      // spanName uses getSpanType internally — 'GET /api' proves type='http', not 'sdk'
+      expect(spanName(span)).to.equal('GET /api');
+
+      // spanStatus.message explicitly shows the resolved type: 'http failed', not 'sdk failed'
+      expect(spanStatus(span)).to.deep.equal({
+        code: OTLP_STATUS_CODES.ERROR,
+        message: 'http failed'
+      });
+    });
+
     it('should return "unknown" when span has no name or type', () => {
       const span = {
         data: {}
@@ -497,6 +517,39 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       expect(getAttr('graphql.document')).to.be.undefined;
       expect(getAttr('error.type')).to.be.undefined;
     });
+
+    it('should map both http and sdk data keys from a single span', () => {
+      const span = {
+        n: 'node.http.server',
+        data: {
+          http: {
+            operation: 'GET',
+            path: '/api/orders',
+            status: 200
+          },
+          sdk: {
+            custom: {
+              tags: {
+                'order.id': '42',
+                'user.id': 'u-99'
+              }
+            }
+          }
+        }
+      };
+
+      const result = spanAttributes(span);
+      const getAttr = key => result.find(a => a.key === key);
+
+      // http data keys
+      expect(getAttr('http.method').value).to.deep.equal({ stringValue: 'GET' });
+      expect(getAttr('http.target').value).to.deep.equal({ stringValue: '/api/orders' });
+      expect(getAttr('http.status_code').value).to.deep.equal({ intValue: 200 });
+
+      // sdk data keys (custom tags expanded as flat attributes)
+      expect(getAttr('order.id').value).to.deep.equal({ stringValue: '42' });
+      expect(getAttr('user.id').value).to.deep.equal({ stringValue: 'u-99' });
+    });
   });
 
   describe('spanStatus', () => {
@@ -705,6 +758,202 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       expect(result).to.deep.equal({
         code: OTLP_STATUS_CODES.ERROR,
         message: 'operation failed'
+      });
+    });
+  });
+
+  describe('SDK spans', () => {
+    describe('spanName', () => {
+      it('should use sdk.name as span name', () => {
+        const span = {
+          n: 'sdk',
+          data: {
+            sdk: {
+              name: 'my-operation',
+              type: 'entry'
+            }
+          }
+        };
+
+        const result = spanName(span);
+        expect(result).to.equal('my-operation');
+      });
+    });
+
+    describe('spanAttributes', () => {
+      it('should return empty attributes when no custom tags', () => {
+        const span = {
+          n: 'sdk',
+          data: {
+            sdk: {
+              name: 'bare-operation',
+              type: 'exit'
+            }
+          }
+        };
+
+        const result = spanAttributes(span);
+        expect(result).to.have.lengthOf(0);
+      });
+
+      it('should expand sdk.custom.tags directly as flat attributes (no prefix)', () => {
+        const span = {
+          n: 'sdk',
+          data: {
+            sdk: {
+              name: 'my-operation',
+              type: 'exit',
+              custom: {
+                tags: {
+                  userId: '42',
+                  region: 'eu-west-1'
+                }
+              }
+            }
+          }
+        };
+
+        const result = spanAttributes(span);
+        expect(result).to.deep.include({ key: 'userId', value: { stringValue: '42' } });
+        expect(result).to.deep.include({ key: 'region', value: { stringValue: 'eu-west-1' } });
+      });
+
+      it('should expand numeric and boolean tag values correctly', () => {
+        const span = {
+          n: 'sdk',
+          data: {
+            sdk: {
+              name: 'my-operation',
+              type: 'intermediate',
+              custom: {
+                tags: {
+                  retryCount: 3,
+                  success: false
+                }
+              }
+            }
+          }
+        };
+
+        const result = spanAttributes(span);
+        expect(result).to.deep.include({ key: 'retryCount', value: { intValue: 3 } });
+        expect(result).to.deep.include({ key: 'success', value: { boolValue: false } });
+      });
+
+      it('should not include tags with null or undefined values', () => {
+        const span = {
+          n: 'sdk',
+          data: {
+            sdk: {
+              name: 'my-operation',
+              type: 'entry',
+              custom: {
+                tags: {
+                  present: 'yes',
+                  missing: null,
+                  absent: undefined
+                }
+              }
+            }
+          }
+        };
+
+        const result = spanAttributes(span);
+        const keys = result.map(a => a.key);
+        expect(keys).to.include('present');
+        expect(keys).to.not.include('missing');
+        expect(keys).to.not.include('absent');
+      });
+    });
+
+    it('should merge tags from start and complete into flat attributes', () => {
+      // Simulates: startExitSpan('op', { path: '/tmp/file', encoding: 'UTF-8' })
+      //            completeExitSpan(null, { success: true })
+      // -> sdk.js deepMerges both into sdk.custom.tags
+      const span = {
+        n: 'sdk',
+        data: {
+          sdk: {
+            name: 'file-access',
+            type: 'exit',
+            custom: {
+              tags: {
+                path: '/tmp/file',
+                encoding: 'UTF-8',
+                success: true
+              }
+            }
+          }
+        }
+      };
+
+      const result = spanAttributes(span);
+      expect(result).to.deep.include({ key: 'path', value: { stringValue: '/tmp/file' } });
+      expect(result).to.deep.include({ key: 'encoding', value: { stringValue: 'UTF-8' } });
+      expect(result).to.deep.include({ key: 'success', value: { boolValue: true } });
+    });
+
+    it('should expose error message tag when set via completeSpan(error)', () => {
+      // Simulates: completeExitSpan(new Error('Boom!'))
+      // -> sdk.js writes error.message into sdk.custom.tags.message
+      const span = {
+        n: 'sdk',
+        ec: 1,
+        data: {
+          sdk: {
+            name: 'file-access',
+            type: 'exit',
+            custom: {
+              tags: {
+                message: 'Boom!'
+              }
+            }
+          }
+        }
+      };
+
+      const result = spanAttributes(span);
+      expect(result).to.deep.include({ key: 'message', value: { stringValue: 'Boom!' } });
+    });
+
+    describe('spanStatus', () => {
+      it('should return UNSET status for a successful SDK span', () => {
+        const span = {
+          n: 'sdk',
+          data: {
+            sdk: {
+              name: 'my-operation',
+              type: 'entry'
+            }
+          }
+        };
+
+        const result = spanStatus(span);
+        expect(result).to.deep.equal({ code: OTLP_STATUS_CODES.UNSET });
+      });
+
+      it('should return ERROR status for an SDK span with ec=1', () => {
+        const span = {
+          n: 'sdk',
+          ec: 1,
+          data: {
+            sdk: {
+              name: 'my-operation',
+              type: 'entry',
+              custom: {
+                tags: {
+                  message: 'something went wrong'
+                }
+              }
+            }
+          }
+        };
+
+        const result = spanStatus(span);
+        expect(result).to.deep.equal({
+          code: OTLP_STATUS_CODES.ERROR,
+          message: 'sdk failed'
+        });
       });
     });
   });
