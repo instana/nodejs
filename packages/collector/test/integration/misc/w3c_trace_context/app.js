@@ -195,7 +195,8 @@ function handleRequest(incomingHeaders, method, url, resOrStream) {
       w3cTraceContext: {
         receivedHeaders: {
           traceparent: incomingHeaders.traceparent,
-          tracestate: incomingHeaders.tracestate
+          tracestate: incomingHeaders.tracestate,
+          baggage: incomingHeaders.baggage
         }
       }
     };
