@@ -254,7 +254,8 @@ ${
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         const timeout = 5 * 60 * 1000;
         try {
-          execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });${
+          execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });
+          execSync('npm rebuild', { cwd: __dirname, stdio: 'inherit', timeout });${
             verifyDependency
               ? `
           if (!fs.existsSync(path.join(__dirname, 'node_modules', '${suiteName}'))) {
