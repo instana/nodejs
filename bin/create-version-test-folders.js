@@ -255,6 +255,7 @@ ${
         const timeout = 5 * 60 * 1000;
         try {
           execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });
+          // Compile native C/C++ addons (e.g. better-sqlite3, ibm_db, pg-native) that were skipped by --ignore-scripts
           execSync('npm rebuild', { cwd: __dirname, stdio: 'inherit', timeout });${
             verifyDependency
               ? `
