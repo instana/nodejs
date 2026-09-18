@@ -23,7 +23,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
           node bin/create-version-test-folders.js
       - name: sign-artifact
         when: 'false'
@@ -65,7 +65,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # collect test files
           TEST_FILES=$(cd packages/aws-lambda && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
@@ -199,7 +199,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # collect test files
           TEST_FILES=$(cd packages/aws-fargate && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
@@ -308,7 +308,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # collect test files
           TEST_FILES=$(cd packages/azure-container-services && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
@@ -417,7 +417,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           # collect test files
           TEST_FILES=$(cd packages/google-cloud-run && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')

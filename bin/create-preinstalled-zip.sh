@@ -57,7 +57,7 @@ echo "Running: 'cd $TMPDIR/package'"
 cd "$TMPDIR/package"
 
 echo "Running: 'npm install --omit=optional --omit=dev' in $TMPDIR/package"
-npm install --omit=optional --omit=dev
+npm install --omit=optional --omit=dev --ignore-scripts
 
 CORE_TGZ="$TMPDIR/core.tgz"
 SHARED_TGZ="$TMPDIR/shared-metrics.tgz"
@@ -75,14 +75,14 @@ else
 fi
 
 if [ ${#INSTALL_ARGS[@]} -gt 0 ]; then
-  echo -n "Running: npm install --omit=optional --omit=dev ${INSTALL_ARGS[@]}"
+  echo -n "Running: npm install --omit=optional --omit=dev --ignore-scripts ${INSTALL_ARGS[@]}"
 
   for _p in "${INSTALL_ARGS[@]}"; do
     echo -n " $_p"
   done
   echo
 
-  npm install --omit=optional --omit=dev "${INSTALL_ARGS[@]}"
+  npm install --omit=optional --omit=dev --ignore-scripts "${INSTALL_ARGS[@]}"
 else
   echo "No additional tgz packages to install"
 fi

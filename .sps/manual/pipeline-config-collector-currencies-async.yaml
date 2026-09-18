@@ -23,7 +23,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
           node bin/create-version-test-folders.js
       - name: sign-artifact
         when: 'false'
@@ -61,7 +61,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           node bin/create-version-test-folders.js
 
@@ -184,7 +184,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           node bin/create-version-test-folders.js
 
@@ -307,7 +307,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          npm ci --loglevel warn --ignore-scripts
 
           node bin/create-version-test-folders.js
 
