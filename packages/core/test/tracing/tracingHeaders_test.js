@@ -609,14 +609,14 @@ describe('tracing/headers', () => {
       const context = tracingHeaders.fromHttpRequest({
         headers: { baggage: 'userId=alice,isPremium=true' }
       });
-      expect(context.baggage).to.equal('userId=alice,isPremium=true');
+      expect(context.w3cBaggage).to.equal('userId=alice,isPremium=true');
     });
 
     it('should read baggage header case-insensitively', () => {
       const context = tracingHeaders.fromHttpRequest({
         headers: { Baggage: 'userId=alice' }
       });
-      expect(context.baggage).to.equal('userId=alice');
+      expect(context.w3cBaggage).to.equal('userId=alice');
     });
 
     it('should read baggage alongside X-INSTANA headers', () => {
@@ -627,7 +627,7 @@ describe('tracing/headers', () => {
           baggage: 'userId=alice'
         }
       });
-      expect(context.baggage).to.equal('userId=alice');
+      expect(context.w3cBaggage).to.equal('userId=alice');
     });
 
     it('should read baggage alongside traceparent', () => {
@@ -637,7 +637,7 @@ describe('tracing/headers', () => {
           baggage: 'userId=alice'
         }
       });
-      expect(context.baggage).to.equal('userId=alice');
+      expect(context.w3cBaggage).to.equal('userId=alice');
     });
 
     it('should preserve baggage properties (semicolon-separated metadata)', () => {
@@ -645,12 +645,12 @@ describe('tracing/headers', () => {
       const context = tracingHeaders.fromHttpRequest({
         headers: { baggage: raw }
       });
-      expect(context.baggage).to.equal(raw);
+      expect(context.w3cBaggage).to.equal(raw);
     });
 
     it('should return null baggage when no baggage header is present', () => {
       const context = tracingHeaders.fromHttpRequest({ headers: {} });
-      expect(context.baggage).to.be.null;
+      expect(context.w3cBaggage).to.be.null;
     });
 
     it('should drop baggage when it exceeds 8192 bytes', () => {
@@ -658,7 +658,7 @@ describe('tracing/headers', () => {
       const context = tracingHeaders.fromHttpRequest({
         headers: { baggage: longValue }
       });
-      expect(context.baggage).to.be.null;
+      expect(context.w3cBaggage).to.be.null;
     });
 
     it('should accept baggage at exactly 8192 bytes', () => {
@@ -666,7 +666,7 @@ describe('tracing/headers', () => {
       const context = tracingHeaders.fromHttpRequest({
         headers: { baggage: value }
       });
-      expect(context.baggage).to.equal(value);
+      expect(context.w3cBaggage).to.equal(value);
     });
 
     it('should drop baggage when it contains more than 64 list-members', () => {
@@ -674,7 +674,7 @@ describe('tracing/headers', () => {
       const context = tracingHeaders.fromHttpRequest({
         headers: { baggage: pairs }
       });
-      expect(context.baggage).to.be.null;
+      expect(context.w3cBaggage).to.be.null;
     });
 
     it('should accept baggage with exactly 64 list-members', () => {
@@ -682,7 +682,7 @@ describe('tracing/headers', () => {
       const context = tracingHeaders.fromHttpRequest({
         headers: { baggage: pairs }
       });
-      expect(context.baggage).to.equal(pairs);
+      expect(context.w3cBaggage).to.equal(pairs);
     });
 
     describe('when disableW3cBaggage is true', () => {
@@ -705,7 +705,7 @@ describe('tracing/headers', () => {
         const context = tracingHeaders.fromHttpRequest({
           headers: { baggage: 'userId=alice' }
         });
-        expect(context.baggage).to.be.null;
+        expect(context.w3cBaggage).to.be.null;
       });
     });
   });
