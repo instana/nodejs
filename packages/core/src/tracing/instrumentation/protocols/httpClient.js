@@ -18,12 +18,12 @@ const {
 const constants = require('../../constants');
 const cls = require('../../cls');
 const hook = require('../../../util/hook');
+const tracingHeaders = require('../../tracingHeaders');
 
 const URL = url.URL;
 let extraHttpHeadersToCapture;
 let logger;
 let isActive = false;
-let disableW3cPropagation;
 
 exports.init = function init(config) {
   logger = config.logger;
@@ -31,7 +31,6 @@ exports.init = function init(config) {
   instrument(coreHttpModule, false);
   instrument(coreHttpsModule, true);
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
-  disableW3cPropagation = config.tracing.disableW3cPropagation;
   hook.onModuleLoad('request', logDeprecatedWarning);
 };
 
@@ -43,12 +42,10 @@ function logDeprecatedWarning() {
 }
 exports.updateConfig = function updateConfig(config) {
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
-  disableW3cPropagation = config.tracing.disableW3cPropagation;
 };
 
 exports.activate = function activate(_config) {
   extraHttpHeadersToCapture = _config.tracing.http.extraHttpHeadersToCapture;
-  disableW3cPropagation = _config.tracing.disableW3cPropagation;
 
   isActive = true;
 };
@@ -195,7 +192,9 @@ function instrument(coreModule, forceHttps) {
       removeInstanaHeadersFromOpts(options);
       if (skipTracingResult.suppressed && !traceLevelHeaderHasBeenAdded) {
         clientRequest.setHeader(constants.traceLevelHeaderName, '0');
-        setW3cHeadersOnRequest(clientRequest, w3cTraceContext);
+        tracingHeaders.addW3cHeaders((name, value) => {
+          clientRequest.setHeader(name, value);
+        }, w3cTraceContext);
       }
 
       return clientRequest;
@@ -398,7 +397,9 @@ function tryToAddHeadersToOpts(options, span, w3cTraceContext) {
     options.headers[constants.spanIdHeaderName] = span.s;
     options.headers[constants.traceIdHeaderName] = span.t;
     options.headers[constants.traceLevelHeaderName] = '1';
-    tryToAddW3cHeaderToOpts(options, w3cTraceContext);
+    tracingHeaders.addW3cHeaders((name, value) => {
+      options.headers[name] = value;
+    }, w3cTraceContext);
     return true;
   }
 
@@ -408,22 +409,12 @@ function tryToAddHeadersToOpts(options, span, w3cTraceContext) {
 function tryToAddTraceLevelAddHeaderToOpts(options, level, w3cTraceContext) {
   if (hasHeadersOption(options)) {
     options.headers[constants.traceLevelHeaderName] = level;
-    tryToAddW3cHeaderToOpts(options, w3cTraceContext);
+    tracingHeaders.addW3cHeaders((name, value) => {
+      options.headers[name] = value;
+    }, w3cTraceContext);
     return true;
   }
   return false;
-}
-
-function tryToAddW3cHeaderToOpts(options, w3cTraceContext) {
-  if (disableW3cPropagation) {
-    return;
-  }
-  if (w3cTraceContext) {
-    options.headers[constants.w3cTraceParent] = w3cTraceContext.renderTraceParent();
-    if (w3cTraceContext.hasTraceState()) {
-      options.headers[constants.w3cTraceState] = w3cTraceContext.renderTraceState();
-    }
-  }
 }
 
 function hasHeadersOption(options) {
@@ -446,26 +437,18 @@ function setHeadersOnRequest(clientRequest, span, w3cTraceContext) {
   if (span.shouldSuppressDownstream) {
     // Suppress trace propagation to downstream services.
     clientRequest.setHeader(constants.traceLevelHeaderName, '0');
-    setW3cHeadersOnRequest(clientRequest, w3cTraceContext);
+    tracingHeaders.addW3cHeaders((name, value) => {
+      clientRequest.setHeader(name, value);
+    }, w3cTraceContext);
     return;
   }
 
   clientRequest.setHeader(constants.spanIdHeaderName, span.s);
   clientRequest.setHeader(constants.traceIdHeaderName, span.t);
   clientRequest.setHeader(constants.traceLevelHeaderName, '1');
-  setW3cHeadersOnRequest(clientRequest, w3cTraceContext);
-}
-
-function setW3cHeadersOnRequest(clientRequest, w3cTraceContext) {
-  if (disableW3cPropagation) {
-    return;
-  }
-  if (w3cTraceContext) {
-    clientRequest.setHeader(constants.w3cTraceParent, w3cTraceContext.renderTraceParent());
-    if (w3cTraceContext.hasTraceState()) {
-      clientRequest.setHeader(constants.w3cTraceState, w3cTraceContext.renderTraceState());
-    }
-  }
+  tracingHeaders.addW3cHeaders((name, value) => {
+    clientRequest.setHeader(name, value);
+  }, w3cTraceContext);
 }
 
 function captureRequestHeaders(options, clientRequest, response) {

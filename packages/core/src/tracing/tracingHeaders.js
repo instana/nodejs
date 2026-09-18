@@ -15,6 +15,7 @@ const w3c = require('./w3c_trace_context');
 let logger;
 
 let disableW3cCorrelation = false;
+let disableW3cPropagation = false;
 
 /**
  * @param {import('../config').InstanaConfig} config
@@ -24,6 +25,7 @@ exports.init = function (config) {
 
   w3c.init(config);
   disableW3cCorrelation = config.tracing.disableW3cCorrelation;
+  disableW3cPropagation = config.tracing.disableW3cPropagation;
 };
 
 /**
@@ -31,6 +33,7 @@ exports.init = function (config) {
  */
 exports.activate = function (config) {
   disableW3cCorrelation = config.tracing.disableW3cCorrelation;
+  disableW3cPropagation = config.tracing.disableW3cPropagation;
 };
 
 /**
@@ -419,5 +422,22 @@ exports.setSpanAttributes = function (span, tracingHeaders) {
   }
   if (tracingHeaders.synthetic) {
     span.sy = true;
+  }
+};
+
+/**
+ * Writes traceparent, tracestate and baggage headers using the provided setter function.
+ * @param {(key: string, value: string) => void} set
+ * @param {import('./w3c_trace_context/W3cTraceContext')} w3cTraceContext
+ */
+exports.addW3cHeaders = function addW3cHeaders(set, w3cTraceContext) {
+  if (disableW3cPropagation) {
+    return;
+  }
+  if (w3cTraceContext) {
+    set(constants.w3cTraceParent, w3cTraceContext.renderTraceParent());
+    if (w3cTraceContext.hasTraceState()) {
+      set(constants.w3cTraceState, w3cTraceContext.renderTraceState());
+    }
   }
 };
