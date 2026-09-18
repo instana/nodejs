@@ -578,18 +578,6 @@ module.exports = {
       }
     }
 
-    // TODO: where to put
-    const customTags = span.data?.sdk?.custom?.tags;
-    if (customTags && typeof customTags === 'object') {
-      const tagKeys = Object.keys(customTags);
-      for (let i = 0; i < tagKeys.length; i++) {
-        const k = tagKeys[i];
-        if (customTags[k] !== null && customTags[k] !== undefined) {
-          attributes.push({ key: k, value: formatOTLPValue(customTags[k]) });
-        }
-      }
-    }
-
     return attributes;
   },
 
