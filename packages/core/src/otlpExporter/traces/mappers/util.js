@@ -169,6 +169,20 @@ const getRegionFromArn = arn => getArnPart(arn, 3);
  */
 const getAccountIdFromArn = arn => getArnPart(arn, 4);
 
+/**
+ * @param {any[]} values
+ * @returns {string | undefined}
+ */
+const buildFullUrl = values => {
+  if (!Array.isArray(values)) return undefined;
+  const [endpoints, params] = values;
+  if (!endpoints) return undefined;
+  if (params) {
+    return `${endpoints}?${params}`;
+  }
+  return endpoints;
+};
+
 module.exports = {
   toUpperCase,
   firstDefined,
@@ -181,5 +195,6 @@ module.exports = {
   getRPCMethodOriginal,
   toBoolean,
   getRegionFromArn,
-  getAccountIdFromArn
+  getAccountIdFromArn,
+  buildFullUrl
 };
