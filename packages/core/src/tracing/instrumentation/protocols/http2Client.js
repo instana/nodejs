@@ -14,12 +14,12 @@ const {
   mergeExtraHeadersFromNormalizedObjectLiteral
 } = require('./captureHttpHeadersUtil');
 const readSymbolProperty = require('../../../util/readSymbolProperty');
+const tracingHeaders = require('../../tracingHeaders');
 const tracingUtil = require('../../tracingUtil');
 const { sanitizeUrl, splitAndFilter } = require('../../../util/url');
 
 let extraHttpHeadersToCapture;
 let isActive = false;
-let disableW3cPropagation;
 
 const originS = 'Symbol(origin)';
 const sentHeadersS = 'Symbol(sent-headers)';
@@ -30,17 +30,14 @@ const HTTP2_HEADER_STATUS = http2.constants.HTTP2_HEADER_STATUS;
 exports.init = function init(config) {
   instrument(http2);
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
-  disableW3cPropagation = config.tracing.disableW3cPropagation;
 };
 
 exports.updateConfig = config => {
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
-  disableW3cPropagation = config.tracing.disableW3cPropagation;
 };
 
 exports.activate = function activate(_config) {
   extraHttpHeadersToCapture = _config.tracing.http.extraHttpHeadersToCapture;
-  disableW3cPropagation = _config.tracing.disableW3cPropagation;
 
   isActive = true;
 };
@@ -155,7 +152,9 @@ function addTraceLevelHeader(headers, level, w3cTraceContext) {
     return;
   }
   headers[constants.traceLevelHeaderName] = level;
-  addW3cHeaders(headers, w3cTraceContext);
+  tracingHeaders.addW3cHeaders((name, value) => {
+    headers[name] = value;
+  }, w3cTraceContext);
 }
 
 function addHeaders(headers, span, w3cTraceContext) {
@@ -170,17 +169,7 @@ function addHeaders(headers, span, w3cTraceContext) {
   headers[constants.spanIdHeaderName] = span.s;
   headers[constants.traceIdHeaderName] = span.t;
   headers[constants.traceLevelHeaderName] = '1';
-  addW3cHeaders(headers, w3cTraceContext);
-}
-
-function addW3cHeaders(headers, w3cTraceContext) {
-  if (disableW3cPropagation) {
-    return;
-  }
-  if (w3cTraceContext) {
-    headers[constants.w3cTraceParent] = w3cTraceContext.renderTraceParent();
-    if (w3cTraceContext.hasTraceState()) {
-      headers[constants.w3cTraceState] = w3cTraceContext.renderTraceState();
-    }
-  }
+  tracingHeaders.addW3cHeaders((name, value) => {
+    headers[name] = value;
+  }, w3cTraceContext);
 }

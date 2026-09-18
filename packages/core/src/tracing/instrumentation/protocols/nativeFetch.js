@@ -14,6 +14,7 @@ const {
   getExtraHeadersCaseInsensitive,
   mergeExtraHeadersFromFetchHeaders
 } = require('./captureHttpHeadersUtil');
+const tracingHeaders = require('../../tracingHeaders');
 const tracingUtil = require('../../tracingUtil');
 const { sanitizeUrl, splitAndFilter } = require('../../../util/url');
 
@@ -21,7 +22,6 @@ const originalFetch = global.fetch;
 
 let extraHttpHeadersToCapture;
 let isActive = false;
-let disableW3cPropagation;
 
 // This determines whether we need to apply a workaround for a bug in Node.js fetch implementation (or rather, the
 // underlying dependency undici).
@@ -48,12 +48,10 @@ exports.init = function init(config) {
 
   instrument();
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
-  disableW3cPropagation = config.tracing.disableW3cPropagation;
 };
 
 exports.updateConfig = function updateConfig(config) {
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
-  disableW3cPropagation = config.tracing.disableW3cPropagation;
 };
 
 exports.activate = function activate(_config) {
@@ -63,7 +61,6 @@ exports.activate = function activate(_config) {
   }
 
   extraHttpHeadersToCapture = _config.tracing.http.extraHttpHeadersToCapture;
-  disableW3cPropagation = _config.tracing.disableW3cPropagation;
 
   isActive = true;
 };
@@ -210,7 +207,9 @@ function injectTraceCorrelationHeaders(originalArgs, span, w3cTraceContext) {
     [constants.spanIdHeaderName]: span.s,
     [constants.traceLevelHeaderName]: '1'
   };
-  addW3cTraceContextHeaders(headersToAdd, w3cTraceContext);
+  tracingHeaders.addW3cHeaders((name, value) => {
+    headersToAdd[name] = value;
+  }, w3cTraceContext);
   injectHeaders(originalArgs, headersToAdd);
 }
 
@@ -218,20 +217,10 @@ function injectSuppressionHeader(originalArgs, w3cTraceContext) {
   const headersToAdd = {
     [constants.traceLevelHeaderName]: '0'
   };
-  addW3cTraceContextHeaders(headersToAdd, w3cTraceContext);
+  tracingHeaders.addW3cHeaders((name, value) => {
+    headersToAdd[name] = value;
+  }, w3cTraceContext);
   injectHeaders(originalArgs, headersToAdd);
-}
-
-function addW3cTraceContextHeaders(headersToAdd, w3cTraceContext) {
-  if (disableW3cPropagation) {
-    return;
-  }
-  if (w3cTraceContext) {
-    headersToAdd[constants.w3cTraceParent] = w3cTraceContext.renderTraceParent();
-    if (w3cTraceContext.hasTraceState()) {
-      headersToAdd[constants.w3cTraceState] = w3cTraceContext.renderTraceState();
-    }
-  }
 }
 
 function injectHeaders(originalArgs, headersToAdd) {
