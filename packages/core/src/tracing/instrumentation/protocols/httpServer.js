@@ -59,7 +59,7 @@ function shimEmit(realEmit) {
         cls.ns.bindEmitter(res);
       }
       const incomingHeaders = tracingHeaders.fromHttpRequest(req);
-      const w3cTraceContext = incomingHeaders.w3cTraceContext;
+      const { w3cTraceContext, w3cBaggage } = incomingHeaders;
 
       if (typeof incomingHeaders.level === 'string' && incomingHeaders.level.indexOf('0') === 0) {
         cls.setTracingLevel('0');
@@ -75,8 +75,8 @@ function shimEmit(realEmit) {
         cls.setW3cTraceContext(w3cTraceContext);
       }
 
-      if (incomingHeaders.baggage != null) {
-        cls.setBaggage(incomingHeaders.baggage);
+      if (w3cBaggage != null) {
+        cls.setBaggage(w3cBaggage);
       }
 
       if (cls.tracingSuppressed()) {
