@@ -1150,12 +1150,275 @@ module.exports = function (name, version, isLatest, mode) {
           });
         }));
     });
+
+    describe('W3C baggage capturing', () => {
+    let baggageAppControls;
+
+    before(async () => {
+      baggageAppControls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        http2: isHTTP2,
+        env: {
+          APM_VENDOR: 'instana',
+          DOWNSTREAM_PORT: otherVendorAppPort,
+          APP_USES_HTTP2: isHTTP2,
+          INSTANA_TRACING_CAPTURE_W3C_BAGGAGE: 'userId,requestId'
+        }
+      });
+      await baggageAppControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await baggageAppControls.stop();
+    });
+
+    it('should NOT capture baggage keys when INSTANA_TRACING_CAPTURE_W3C_BAGGAGE is not configured', () =>
+      startRequest({
+        app: instanaAppControls,
+        depth: 1,
+        withSpecHeaders: 'valid-sampled-with-random-trace-id',
+        withBaggageHeader: 'userId=alice,requestId=req-42'
+      }).then(() =>
+        retryUntilSpansMatch(agentControls, spans => {
+          const entry = verifyHttpRootEntry({ spans, url: '/start', instanaAppControls });
+          expect(entry.data.sdk).to.not.exist;
+        })
+      ));
+
+    it('should capture configured baggage keys into span tags on the HTTP entry span', () =>
+      startRequest({
+        app: baggageAppControls,
+        depth: 1,
+        withSpecHeaders: 'valid-sampled-with-random-trace-id',
+        withBaggageHeader: 'userId=alice,requestId=req-42,ignored=drop-me'
+      }).then(() =>
+        retryUntilSpansMatch(agentControls, spans => {
+          const entry = expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('node.http.server'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.http.url).to.equal('/start'),
+            span => expect(span.data.http.host).to.equal(`localhost:${baggageAppControls.getPort()}`)
+          ]);
+          expect(entry.data.sdk.custom.tags.userId).to.equal('alice');
+          expect(entry.data.sdk.custom.tags.requestId).to.equal('req-42');
+          expect(entry.data.sdk.custom.tags.ignored).to.not.exist;
+        })
+      ));
+
+    it('should capture baggage keys on child (exit) spans within the same process', () =>
+      startRequest({
+        app: baggageAppControls,
+        depth: 1,
+        withSpecHeaders: 'valid-sampled-with-random-trace-id',
+        withBaggageHeader: 'userId=alice,requestId=req-42'
+      }).then(() =>
+        retryUntilSpansMatch(agentControls, spans => {
+          const exit = expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('node.http.client'),
+            span => expect(span.k).to.equal(constants.EXIT),
+            span => expect(span.data.http.host).to.include(`${otherVendorAppPort}`)
+          ]);
+          expect(exit.data.sdk.custom.tags.userId).to.equal('alice');
+          expect(exit.data.sdk.custom.tags.requestId).to.equal('req-42');
+        })
+      ));
+
+    it('should not capture baggage keys when the baggage header is absent', () =>
+      startRequest({
+        app: baggageAppControls,
+        depth: 1,
+        withSpecHeaders: 'valid-sampled-with-random-trace-id'
+      }).then(() =>
+        retryUntilSpansMatch(agentControls, spans => {
+          const entry = expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('node.http.server'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.http.url).to.equal('/start'),
+            span => expect(span.data.http.host).to.equal(`localhost:${baggageAppControls.getPort()}`)
+          ]);
+          expect(entry.data.sdk).to.not.exist;
+        })
+      ));
+
+    it('should capture percent-encoded baggage values correctly', () =>
+      startRequest({
+        app: baggageAppControls,
+        depth: 1,
+        withSpecHeaders: 'valid-sampled-with-random-trace-id',
+        withBaggageHeader: `userId=${encodeURIComponent('alice smith')},requestId=req-99`
+      }).then(() =>
+        retryUntilSpansMatch(agentControls, spans => {
+          const entry = expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('node.http.server'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.http.url).to.equal('/start'),
+            span => expect(span.data.http.host).to.equal(`localhost:${baggageAppControls.getPort()}`)
+          ]);
+          expect(entry.data.sdk.custom.tags.userId).to.equal('alice smith');
+          expect(entry.data.sdk.custom.tags.requestId).to.equal('req-99');
+        })
+      ));
+
+    it('should propagate the baggage header as-is to downstream services', () =>
+      startRequest({
+        app: instanaAppControls,
+        depth: 1,
+        withSpecHeaders: 'valid-sampled-with-random-trace-id',
+        withBaggageHeader: 'userId=alice;meta=1,requestId=req-42'
+      }).then(response => {
+        response = response && response.body ? JSON.parse(response.body) : response;
+        expect(response.w3cTraceContext.receivedHeaders.baggage).to.equal('userId=alice;meta=1,requestId=req-42');
+      }));
+
+    it('should propagate baggage set via instana.sdk.setBaggage to downstream services', () =>
+      startRequest({
+        app: instanaAppControls,
+        startPath: '/start-with-baggage',
+        depth: 1,
+        withSpecHeaders: 'valid-sampled-with-random-trace-id'
+      }).then(response => {
+        response = response && response.body ? JSON.parse(response.body) : response;
+        expect(response.w3cTraceContext.receivedHeaders.baggage).to.equal('customSdkKey=customSdkValue');
+      }));
+
+    it('should append baggage set via instana.sdk.setBaggage to incoming baggage headers', () =>
+      startRequest({
+        app: instanaAppControls,
+        startPath: '/start-with-baggage',
+        depth: 1,
+        withSpecHeaders: 'valid-sampled-with-random-trace-id',
+        withBaggageHeader: 'incomingKey=incomingVal'
+      }).then(response => {
+        response = response && response.body ? JSON.parse(response.body) : response;
+        expect(response.w3cTraceContext.receivedHeaders.baggage).to.include('incomingKey=incomingVal');
+        expect(response.w3cTraceContext.receivedHeaders.baggage).to.include('customSdkKey=customSdkValue');
+      }));
+
+    it('should NOT propagate the baggage header when INSTANA_TRACING_DISABLE_W3C_BAGGAGE is set', () => {
+      const disabledBaggageControls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        http2: isHTTP2,
+        env: {
+          APM_VENDOR: 'instana',
+          DOWNSTREAM_PORT: otherVendorAppPort,
+          APP_USES_HTTP2: isHTTP2,
+          INSTANA_TRACING_DISABLE_W3C_BAGGAGE: 'true'
+        }
+      });
+
+      return disabledBaggageControls
+        .startAndWaitForAgentConnection()
+        .then(() =>
+          startRequest({
+            app: disabledBaggageControls,
+            depth: 1,
+            withSpecHeaders: 'valid-sampled-with-random-trace-id',
+            withBaggageHeader: 'userId=alice'
+          })
+        )
+        .then(response => {
+          response = response && response.body ? JSON.parse(response.body) : response;
+          expect(response.w3cTraceContext.receivedHeaders.baggage).to.not.exist;
+        })
+        .finally(() => disabledBaggageControls.stop());
+    });
+    });
+
+    describe('W3C baggage capturing via agent yaml', () => {
+    const { AgentStubControls } = require('@_local/collector/test/apps/agentStubControls');
+    const agentStubControls = new AgentStubControls();
+    let agentYamlAppControls;
+
+    before(async () => {
+      await agentStubControls.startAgent({
+        w3cDisableConfig: { 'capture-w3c-baggage': 'userId,requestId' }
+      });
+      agentYamlAppControls = new ProcessControls({
+        dirname: __dirname,
+        agentControls: agentStubControls,
+        http2: isHTTP2,
+        env: {
+          APM_VENDOR: 'instana',
+          DOWNSTREAM_PORT: otherVendorAppPort,
+          APP_USES_HTTP2: isHTTP2
+        }
+      });
+      await agentYamlAppControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await agentYamlAppControls.stop();
+      await agentStubControls.stopAgent();
+    });
+
+    it('should capture configured keys from agent yaml capture-w3c-baggage', () =>
+      startRequest({
+        app: agentYamlAppControls,
+        depth: 1,
+        withSpecHeaders: 'valid-sampled-with-random-trace-id',
+        withBaggageHeader: 'userId=bob,requestId=req-7,other=ignore'
+      }).then(() =>
+        retryUntilSpansMatch(agentStubControls, spans => {
+          const entry = expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('node.http.server'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.http.url).to.equal('/start'),
+            span => expect(span.data.http.host).to.equal(`localhost:${agentYamlAppControls.getPort()}`)
+          ]);
+          expect(entry.data.sdk.custom.tags.userId).to.equal('bob');
+          expect(entry.data.sdk.custom.tags.requestId).to.equal('req-7');
+          expect(entry.data.sdk.custom.tags.other).to.not.exist;
+        })
+      ));
+
+    it('should disable baggage propagation via agent yaml disable-w3c-baggage', async () => {
+      const disableAgentStub = new AgentStubControls();
+      await disableAgentStub.startAgent({
+        w3cDisableConfig: { 'disable-w3c-baggage': true }
+      });
+      const disableAgentApp = new ProcessControls({
+        dirname: __dirname,
+        agentControls: disableAgentStub,
+        http2: isHTTP2,
+        env: {
+          APM_VENDOR: 'instana',
+          DOWNSTREAM_PORT: otherVendorAppPort,
+          APP_USES_HTTP2: isHTTP2
+        }
+      });
+      await disableAgentApp.startAndWaitForAgentConnection();
+
+      try {
+        const response = await startRequest({
+          app: disableAgentApp,
+          depth: 1,
+          withSpecHeaders: 'valid-sampled-with-random-trace-id',
+          withBaggageHeader: 'userId=alice'
+        });
+        const parsed = response && response.body ? JSON.parse(response.body) : response;
+        expect(parsed.w3cTraceContext.receivedHeaders.baggage).to.not.exist;
+      } finally {
+        await disableAgentApp.stop();
+        await disableAgentStub.stopAgent();
+      }
+    });
+    });
   });
 };
 
-function startRequest({ app, depth = 2, withSpecHeaders = null, otherMode = 'participate', withInstanaHeaders }) {
+function startRequest({
+  app,
+  startPath = '/start',
+  depth = 2,
+  withSpecHeaders = null,
+  otherMode = 'participate',
+  withInstanaHeaders,
+  withBaggageHeader = null
+}) {
   const request = {
-    path: `/start?depth=${depth}&otherMode=${otherMode}`
+    path: `${startPath}?depth=${depth}&otherMode=${otherMode}`
   };
   if (withSpecHeaders === 'valid-sampled-with-random-trace-id') {
     request.headers = {
@@ -1194,6 +1457,11 @@ function startRequest({ app, depth = 2, withSpecHeaders = null, otherMode = 'par
     };
   } else if (withSpecHeaders != null) {
     throw new Error(`Invalid withSpecHeaders value: ${withSpecHeaders}.`);
+  }
+
+  if (withBaggageHeader) {
+    request.headers = request.headers || {};
+    request.headers.baggage = withBaggageHeader;
   }
 
   if (withInstanaHeaders === 'trace-in-progress') {

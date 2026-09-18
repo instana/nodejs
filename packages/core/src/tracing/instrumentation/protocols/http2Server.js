@@ -77,7 +77,7 @@ function shimEmit(realEmit) {
       }
 
       const incomingHeaders = tracingHeaders.fromHeaders(headers);
-      const w3cTraceContext = incomingHeaders.w3cTraceContext;
+      const { w3cTraceContext, w3cBaggage } = incomingHeaders;
 
       if (typeof incomingHeaders.level === 'string' && incomingHeaders.level.indexOf('0') === 0) {
         cls.setTracingLevel('0');
@@ -91,6 +91,10 @@ function shimEmit(realEmit) {
         // we don't call startSpan, so we write to CLS here unconditionally. If we also write an updated trace context
         // later, the one written here will be overwritten.
         cls.setW3cTraceContext(w3cTraceContext);
+      }
+
+      if (w3cBaggage != null) {
+        cls.setBaggage(w3cBaggage);
       }
 
       if (cls.tracingSuppressed()) {
