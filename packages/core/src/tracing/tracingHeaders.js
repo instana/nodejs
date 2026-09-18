@@ -62,7 +62,7 @@ exports.activate = function (config) {
  *     - the tracing level, either '1' (tracing) or '0' (suppressing/not creating spans)
  *     - progated downstream as the first component of X-INSTANA-L
  *     - propagted downstream as the sampled flag in traceparent
- * @property {string} [baggage]
+ * @property {string} [w3cBaggage]
  *     - the raw W3C baggage header value read from the incoming request
  *     - will be propagated downstream as-is (including properties)
  *     - null if baggage support is disabled or the header violates size/count limits
@@ -134,7 +134,7 @@ exports.fromHeaders = function fromHeaders(headers) {
   let correlationId = levelAndCorrelation.correlationId;
   const synthetic = readSyntheticMarker(headers);
   let w3cTraceContext = readW3cTraceContext(headers);
-  const baggage = readBaggage(headers);
+  const w3cBaggage = readBaggage(headers);
 
   if (isSuppressed(level)) {
     // Ignore X-INSTANA-T/-S if X-INSTANA-L: 0 is also present.
@@ -163,7 +163,7 @@ exports.fromHeaders = function fromHeaders(headers) {
       correlationId,
       synthetic,
       w3cTraceContext,
-      baggage
+      w3cBaggage
     };
     return exports.limitTraceId(result);
   } else if (xInstanaT && xInstanaS) {
@@ -182,7 +182,7 @@ exports.fromHeaders = function fromHeaders(headers) {
         /** @type {string} */ (xInstanaS),
         !isSuppressed(level)
       ),
-      baggage
+      w3cBaggage
     });
   } else if (w3cTraceContext && !disableW3cCorrelation) {
     // There are no X-INSTANA- headers, but there are W3C trace context headers. As of 2021-02, we use the IDs from
@@ -215,7 +215,7 @@ exports.fromHeaders = function fromHeaders(headers) {
       synthetic,
       w3cTraceContext,
       instanaAncestor,
-      baggage
+      w3cBaggage
     });
   } else if (w3cTraceContext) {
     // There are no X-INSTANA- headers, but there are W3C trace context headers. But picking up the trace context from
@@ -243,7 +243,7 @@ exports.fromHeaders = function fromHeaders(headers) {
       correlationId,
       synthetic,
       w3cTraceContext,
-      baggage
+      w3cBaggage
     });
   } else {
     // Neither X-INSTANA- headers nor W3C trace context headers are present.
@@ -258,7 +258,7 @@ exports.fromHeaders = function fromHeaders(headers) {
         level,
         synthetic,
         w3cTraceContext: w3c.createEmptyUnsampled(generateRandomTraceId(), generateRandomSpanId()),
-        baggage
+        w3cBaggage
       });
     } else {
       // Neither X-INSTANA- headers nor W3C trace context headers are present and tracing is not suppressed
@@ -278,7 +278,7 @@ exports.fromHeaders = function fromHeaders(headers) {
         correlationId,
         synthetic,
         w3cTraceContext,
-        baggage
+        w3cBaggage
       });
     }
   }
