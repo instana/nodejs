@@ -232,6 +232,26 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       expect(result).to.equal('custom.span');
     });
 
+    it('should use the actual instrumentation type when sdk coexists with another type', () => {
+      const span = {
+        n: 'node.http.server',
+        ec: 1,
+        data: {
+          sdk: { custom: { tags: { foo: 'bar' } } },
+          http: { operation: 'GET', path: '/api' }
+        }
+      };
+
+      // spanName uses getSpanType internally — 'GET /api' proves type='http', not 'sdk'
+      expect(spanName(span)).to.equal('GET /api');
+
+      // spanStatus.message explicitly shows the resolved type: 'http failed', not 'sdk failed'
+      expect(spanStatus(span)).to.deep.equal({
+        code: OTLP_STATUS_CODES.ERROR,
+        message: 'http failed'
+      });
+    });
+
     it('should return "unknown" when span has no name or type', () => {
       const span = {
         data: {}

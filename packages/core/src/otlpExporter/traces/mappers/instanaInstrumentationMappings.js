@@ -474,11 +474,18 @@ function getSpanType(span) {
     return null;
   }
 
-  const key = Object.keys(span.data).find(
+  const keys = Object.keys(span.data).filter(
     k => k !== INSTRUMENTATION_TYPES.PEER && k !== SPECIAL_SPAN_DATA_TYPES.RESOURCE
   );
 
-  return key || null;
+  // CASE: ignore SDK data key if its multiple data keys, because
+  //       we always prefer the other data key such as http
+  if (keys.length > 1) {
+    const nonSdk = keys.find(k => k !== INSTRUMENTATION_TYPES.SDK);
+    if (nonSdk) return nonSdk;
+  }
+
+  return keys[0] || null;
 }
 
 /**
