@@ -98,7 +98,7 @@
     "@types/shimmer": "1.0.2",
     "@types/sinon": "10.0.17",
     "@types/superagent": "4.1.13",
-    "adm-zip": "0.6.0",
+    "adm-zip": "0.6.1",
     "admin": "1.4.1",
     "admin-plugin-healthcheck": "1.1.0",
     "aws-sdk": "2.1693.0",
@@ -192,6 +192,7 @@
       "nan": "2.27.0"
     },
     "handlebars": "4.7.9",
+    "hbs": "4.3.1",
     "immutable": "5.1.8",
     "ip-address": "10.3.1",
     "js-yaml": "4.3.2",

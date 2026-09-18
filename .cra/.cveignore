@@ -14,9 +14,5 @@
   {
     "cve": "CVE-2021-38384",
     "alwaysOmit": true
-  },
-  {
-    "cve": "CVE-2026-76845",
-    "alwaysOmit": true
   }
 ]
