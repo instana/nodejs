@@ -477,7 +477,7 @@ exports.setSpanAttributes = function (span, tracingHeaders) {
  * Writes traceparent, tracestate and baggage headers using the provided setter function.
  * @param {(key: string, value: string) => void} set
  * @param {import('./w3c_trace_context/W3cTraceContext')} w3cTraceContext
- * @param {{ getBaggage: () => string | null }} [cls]
+ * @param {{ getBaggage: () => string | null }} cls
  */
 exports.addW3cHeaders = function addW3cHeaders(set, w3cTraceContext, cls) {
   if (disableW3cPropagation) {
@@ -489,7 +489,7 @@ exports.addW3cHeaders = function addW3cHeaders(set, w3cTraceContext, cls) {
       set(constants.w3cTraceState, w3cTraceContext.renderTraceState());
     }
   }
-  if (!disableW3cBaggage && cls && typeof cls.getBaggage === 'function') {
+  if (!disableW3cBaggage) {
     const baggage = cls.getBaggage();
     if (baggage) {
       set(constants.w3cBaggage, baggage);
