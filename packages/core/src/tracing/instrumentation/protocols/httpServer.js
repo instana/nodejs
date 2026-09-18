@@ -58,10 +58,10 @@ function shimEmit(realEmit) {
       if (res && res.on && res.addListener && res.emit) {
         cls.ns.bindEmitter(res);
       }
-      const headers = tracingHeaders.fromHttpRequest(req);
-      const w3cTraceContext = headers.w3cTraceContext;
+      const incomingHeaders = tracingHeaders.fromHttpRequest(req);
+      const w3cTraceContext = incomingHeaders.w3cTraceContext;
 
-      if (typeof headers.level === 'string' && headers.level.indexOf('0') === 0) {
+      if (typeof incomingHeaders.level === 'string' && incomingHeaders.level.indexOf('0') === 0) {
         cls.setTracingLevel('0');
         if (w3cTraceContext) {
           w3cTraceContext.disableSampling();
@@ -99,13 +99,13 @@ function shimEmit(realEmit) {
       const span = cls.startSpan({
         spanName: exports.spanName,
         kind: constants.ENTRY,
-        traceId: headers.traceId,
-        parentSpanId: headers.parentId,
+        traceId: incomingHeaders.traceId,
+        parentSpanId: incomingHeaders.parentId,
         w3cTraceContext: w3cTraceContext,
         spanData
       });
 
-      tracingHeaders.setSpanAttributes(span, headers);
+      tracingHeaders.setSpanAttributes(span, incomingHeaders);
 
       if (!req.headers['x-instana-t']) {
         // In cases where we have started a fresh trace (that is, there is no X-INSTANA-T in the incoming request
