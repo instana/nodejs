@@ -1276,6 +1276,17 @@ module.exports = function (name, version, isLatest, mode) {
         expect(response.w3cTraceContext.receivedHeaders.baggage).to.equal('userId=alice;meta=1,requestId=req-42');
       }));
 
+    it('should propagate the full incoming baggage header to downstream even when only subset is captured', () =>
+      startRequest({
+        app: baggageAppControls,
+        depth: 1,
+        withSpecHeaders: 'valid-sampled-with-random-trace-id',
+        withBaggageHeader: 'userId=alice,extraKey=extraVal;prop=1'
+      }).then(response => {
+        response = response && response.body ? JSON.parse(response.body) : response;
+        expect(response.w3cTraceContext.receivedHeaders.baggage).to.equal('userId=alice,extraKey=extraVal;prop=1');
+      }));
+
     it('should propagate baggage set via instana.sdk.setBaggage to downstream services', () =>
       startRequest({
         app: instanaAppControls,
