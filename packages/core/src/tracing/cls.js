@@ -62,6 +62,13 @@ function init(config, _processIdentityProvider) {
   captureW3cBaggage = config?.tracing?.captureW3cBaggage || [];
 }
 
+/**
+ * @param {import('../config').InstanaConfig} config
+ */
+function activate(config) {
+  captureW3cBaggage = config?.tracing?.captureW3cBaggage || [];
+}
+
 class InstanaSpan {
   /**
    * @param {string} name
@@ -762,6 +769,7 @@ module.exports = {
   baggageKey,
   ns,
   init,
+  activate,
   startSpan,
   putPseudoSpan,
   getCurrentEntrySpan,
