@@ -1181,7 +1181,12 @@ module.exports = function (name, version, isLatest, mode) {
         withBaggageHeader: 'userId=alice,requestId=req-42'
       }).then(() =>
         retryUntilSpansMatch(agentControls, spans => {
-          const entry = verifyHttpRootEntry({ spans, url: '/start', instanaAppControls });
+          const entry = expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('node.http.server'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.http.url).to.equal('/start'),
+            span => expect(span.data.http.host).to.equal(`localhost:${instanaAppControls.getPort()}`)
+          ]);
           expect(entry.data.sdk).to.not.exist;
         })
       ));
@@ -1217,7 +1222,7 @@ module.exports = function (name, version, isLatest, mode) {
           const exit = expectExactlyOneMatching(spans, [
             span => expect(span.n).to.equal('node.http.client'),
             span => expect(span.k).to.equal(constants.EXIT),
-            span => expect(span.data.http.host).to.include(`${otherVendorAppPort}`)
+            span => expect(span.data.http.url).to.include(`${otherVendorAppPort}`)
           ]);
           expect(exit.data.sdk.custom.tags.userId).to.equal('alice');
           expect(exit.data.sdk.custom.tags.requestId).to.equal('req-42');
