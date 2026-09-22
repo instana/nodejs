@@ -28,7 +28,9 @@ if (!['all', 'pr', 'main', 'manual'].includes(MODE)) {
 }
 
 // All targets to generate when --what is omitted
-const ALL_CURRENCY_GROUPS = fs.readdirSync(CURRENCIES_DIR).map(g => `collector-currencies-${g}`);
+const ALL_CURRENCY_GROUPS = fs.readdirSync(CURRENCIES_DIR)
+  .filter(g => fs.statSync(path.join(CURRENCIES_DIR, g)).isDirectory())
+  .map(g => `collector-currencies-${g}`);
 const ALL_SIMPLE_TARGETS = [
   'collector-metrics',
   'collector-misc-and-unit',
@@ -201,6 +203,17 @@ function readNeeds(folder) {
     .filter(Boolean);
 }
 
+function readProxy(folder) {
+  // Walk up from the package folder to the group root looking for a .proxy marker.
+  // This lets a single marker at e.g. currencies/async/ cover all packages in that group.
+  let dir = folder;
+  while (dir && dir !== REPO_ROOT) {
+    if (fs.existsSync(path.join(dir, '.proxy'))) return true;
+    dir = path.dirname(dir);
+  }
+  return false;
+}
+
 /**
  * Generic collector task builder.
  * Produces the shell script and SPS task object for one pipeline step that
@@ -214,15 +227,119 @@ function readNeeds(folder) {
  * @param {string[]} needs       - Sidecar names required by this task (from .needs)
  */
 function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
+  const { useProxy = false } = options;
+  const useDind = needs.length > 0 || useProxy;
+
+  const prefix = MODE === 'main' ? 'code-build' : 'pr-code-checks';
+  const normalizedSlug = taskSlug.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+  const taskName = `${prefix}-${normalizedSlug}`;
+
+  // ── Proxy path: run npm install + tests inside a Docker container via Squid ──
+  if (useProxy) {
+    const nodeMajorVar = 'NODE_MAJOR';
+    const testFilesCmd = [
+      `TEST_FILES=$(docker exec test-runner \\`,
+      `  bash -c "cd packages/collector && find \\`,
+      ...paths.map(p => `    ${p} \\`),
+      `    -name '*.test.js' \\`,
+      `    -not -path '*/node_modules/*' \\`,
+      `    | sort | tr '\\n' ' '")`
+    ].join('\n');
+
+    const testRetryLines = [
+      'retry=1',
+      'while [ $retry -le 2 ]; do',
+      '  LAST_EXIT=0',
+      '  docker exec \\',
+      '    -e CI=true \\',
+      '    -e HTTP_PROXY="" \\',
+      '    -e HTTPS_PROXY="" \\',
+      '    -e http_proxy="" \\',
+      '    -e https_proxy="" \\',
+      '    -e RUN_ESM="$RUN_ESM" \\',
+      '    -e TEST_FILES="$TEST_FILES" \\',
+      '    test-runner \\',
+      `    npm run coverage-ci --npm_command="test:ci:collector" --report_dir="${taskSlug}" || LAST_EXIT=$?`,
+      '  if [ $LAST_EXIT -eq 0 ]; then',
+      '    break',
+      '  fi',
+      '  echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."',
+      '  retry=$((retry + 1))',
+      'done'
+    ];
+
+    const scriptLines = [
+      '#!/usr/bin/env bash',
+      'set -eo pipefail',
+      '',
+      'node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "$(cat .nvmrc | tr -d \'[:space:]\')")")}",',
+      `${nodeMajorVar}="\${node_version%%.*}"`,
+      ...runEsmReadLines(),
+      '',
+      'cd "$WORKSPACE/$(load_repo app-repo path)"',
+      '',
+      ...proxyScriptLines({
+        repoPath: '$PWD',
+        nodeMajor: nodeMajorVar,
+        installCmd: 'npm install --loglevel warn',
+        testLines: testRetryLines,
+        testFilesCmd,
+        displayName
+      }),
+      '',
+      ...uploadTestFilesLines(taskSlug),
+      'exit $LAST_EXIT'
+    ];
+
+    return {
+      taskName,
+      task: {
+        from: MODE === 'main' ? 'code-build' : 'pr-code-checks',
+        displayName,
+        runtimeClassName: 'large',
+        include: ['dind'],
+        steps: [
+          { name: 'peer-review', when: 'false' },
+          { name: 'detect-secrets', when: 'false' },
+          { name: 'compliance-checks', when: 'false' },
+          {
+            name: 'unit-test',
+            displayName,
+            image: 'mirror.gcr.io/library/debian:bookworm-slim',
+            include: ['docker-socket'],
+            script: scriptLines.join('\n')
+          },
+          { name: 'sign-artifact', when: 'false' },
+          { name: 'build-artifact', when: 'false' },
+          { name: 'scan-artifact', when: 'false' }
+        ]
+      }
+    };
+  }
+
+  // ── Standard path ──────────────────────────────────────────────────────────
   const scriptLines = ['#!/usr/bin/env bash', 'set -eo pipefail', ''];
   scriptLines.push(nodeVersionSwitchScript());
   scriptLines.push('');
   scriptLines.push('cd "$WORKSPACE/$(load_repo app-repo path)"');
 
-  if (needs.length > 0) {
+  if (useDind) {
     scriptLines.push('# install docker client');
     scriptLines.push(dockerClientInstallScript());
     scriptLines.push('');
+  }
+
+  if (useProxy) {
+    // Start Squid on a temporary network, route npm install through it, then tear it down.
+    scriptLines.push('# start egress-proxy — restricts npm install to the allowlist');
+    scriptLines.push(`docker build -t npm-proxy:local "$PWD/ci/squid"`);
+    scriptLines.push('docker network create npm-net');
+    scriptLines.push('docker run -d --name npm-proxy --network npm-net npm-proxy:local');
+    scriptLines.push(`NPM_PROXY_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' npm-proxy)`);
+    scriptLines.push('');
+  }
+
+  if (needs.length > 0) {
     scriptLines.push('# create isolated network');
     scriptLines.push(`docker network create --internal ${SIDECAR_NETWORK}`);
     scriptLines.push('');
@@ -236,8 +353,20 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
     scriptLines.push('');
   }
 
-  scriptLines.push('npm install --loglevel warn --foreground-scripts');
+  if (useProxy) {
+    scriptLines.push('HTTPS_PROXY="http://$NPM_PROXY_IP:3128" HTTP_PROXY="http://$NPM_PROXY_IP:3128" \\');
+    scriptLines.push('  npm install --loglevel warn --foreground-scripts');
+  } else {
+    scriptLines.push('npm install --loglevel warn --foreground-scripts');
+  }
   scriptLines.push('');
+
+  if (useProxy) {
+    scriptLines.push('# tear down proxy — npm install complete');
+    scriptLines.push('docker rm -f npm-proxy || true');
+    scriptLines.push('docker network rm npm-net || true');
+    scriptLines.push('');
+  }
 
   if (needs.length > 0) {
     for (const need of needs) {
@@ -313,18 +442,13 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
   scriptLines.push(...uploadTestFilesLines(taskSlug));
   scriptLines.push('exit $LAST_EXIT');
 
-  const prefix = MODE === 'main' ? 'code-build' : 'pr-code-checks';
-  // RFC 1123: lowercase only.
-  const normalizedSlug = taskSlug.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-  const taskName = `${prefix}-${normalizedSlug}`;
-
   return {
     taskName,
     task: {
       from: MODE === 'main' ? 'code-build' : 'pr-code-checks',
       displayName,
       runtimeClassName: 'large',
-      ...(needs.length > 0 ? { include: ['dind'] } : {}),
+      ...(useDind ? { include: ['dind'] } : {}),
       steps: [
         { name: 'peer-review', when: 'false' },
         { name: 'detect-secrets', when: 'false' },
@@ -333,7 +457,7 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
           name: 'unit-test',
           displayName,
           image: NODE_IMAGE,
-          ...(needs.length > 0 ? { include: ['docker-socket'] } : {}),
+          ...(useDind ? { include: ['docker-socket'] } : {}),
           script: scriptLines.join('\n')
         },
         { name: 'sign-artifact', when: 'false' },
@@ -415,6 +539,76 @@ function runEsmReadLines() {
   // Read RUN_ESM from the pipeline trigger property (injected by run-pipeline.sh --esm true).
   // Falls back to empty string if not set, so tests run normally by default.
   return ['RUN_ESM="$(get_env RUN_ESM "")"'];
+}
+
+/**
+ * Returns script lines for a proxy-wrapped collector task.
+ *
+ * Architecture:
+ *   - Squid sidecar (npm-proxy) enforces the allowlist for the entire run.
+ *   - test-runner container runs on the same network with HTTPS_PROXY set.
+ *   - npm install and create-version-test-folders run via docker exec (proxy active).
+ *   - Test execution runs via docker exec with proxy env vars explicitly cleared
+ *     so that test HTTP calls to local services are not routed through Squid.
+ *
+ * @param {string}   repoPath    - Shell expression resolving to the repo root
+ * @param {string}   nodeMajor   - Shell variable holding the Node major version
+ * @param {string}   installCmd  - npm install command to run inside the container
+ * @param {string[]} testLines   - Lines for the test retry loop (docker exec based)
+ * @param {string}   testFiles   - Shell expression for TEST_FILES discovery
+ * @param {string}   displayName - Human-readable label for skip warnings
+ */
+function proxyScriptLines({ repoPath, nodeMajor, installCmd, testLines, testFilesCmd, displayName }) {
+  return [
+    '# install docker client',
+    dockerClientInstallScript(),
+    '',
+    `REPO_PATH="${repoPath}"`,
+    `NODE_MAJOR="${nodeMajor}"`,
+    '',
+    '# build Squid egress-proxy image',
+    `docker build -t npm-proxy:local "$REPO_PATH/ci/squid"`,
+    '',
+    '# start proxy + test-runner on a shared network',
+    '# The proxy enforces the allowlist for the entire run.',
+    '# Test execution clears proxy env vars so tests don\'t route through Squid.',
+    'docker network create npm-net',
+    'docker run -d \\',
+    '  --name npm-proxy \\',
+    '  --network npm-net \\',
+    '  npm-proxy:local',
+    'docker run -d \\',
+    '  --name test-runner \\',
+    '  --network npm-net \\',
+    '  -v "$REPO_PATH:$REPO_PATH" \\',
+    '  -w "$REPO_PATH" \\',
+    '  -e CI=true \\',
+    '  -e RUN_ESM="$RUN_ESM" \\',
+    '  -e HTTPS_PROXY="http://npm-proxy:3128" \\',
+    '  -e HTTP_PROXY="http://npm-proxy:3128" \\',
+    '  -e NO_PROXY="127.0.0.1,localhost" \\',
+    `  "mirror.gcr.io/library/node:\${${nodeMajor}}" \\`,
+    '  sleep infinity',
+    '',
+    `docker exec test-runner ${installCmd}`,
+    'docker exec test-runner node bin/create-version-test-folders.js',
+    '',
+    '# collect test files',
+    testFilesCmd,
+    '',
+    `if [ -z "$TEST_FILES" ]; then`,
+    `  echo 'WARNING: No test files found for ${displayName} — skipping.'`,
+    '  docker rm -f test-runner npm-proxy || true',
+    '  docker network rm npm-net || true',
+    '  exit 0',
+    'fi',
+    '',
+    ...testLines,
+    '',
+    '# cleanup',
+    'docker rm -f test-runner npm-proxy || true',
+    'docker network rm npm-net || true'
+  ];
 }
 
 function runWithRetryLines(npmScript, envLines = [], withEsm = true) {
@@ -539,6 +733,7 @@ function findTestFolders(groupDir) {
  */
 function buildCurrencyTasks(pkgName, folder, group) {
   const needs = readNeeds(folder);
+  const useProxy = readProxy(folder);
   const relFolder = path.relative(REPO_ROOT, folder).replace(/\\/g, '/');
   const relCollectorFolder = relFolder.replace('packages/collector/', '');
   // slug: for scoped packages (@scope/name) use only the package name part to keep slugs short;
@@ -550,7 +745,7 @@ function buildCurrencyTasks(pkgName, folder, group) {
 
   if (!modeGroups) {
     // Single task — all test files under the package folder
-    return [buildCollectorTask(`collector-${group}-${pkgSlug}`, pkgName, [relCollectorFolder], needs)];
+    return [buildCollectorTask(`collector-${group}-${pkgSlug}`, pkgName, [relCollectorFolder], needs, { useProxy })];
   }
 
   // Fan-out — one task per mode group, numbered 1..N.
@@ -566,17 +761,34 @@ function buildCurrencyTasks(pkgName, folder, group) {
           .flatMap(v => modes.map(m => `${relCollectorFolder}/${v}/${m}`))
       : [relCollectorFolder];
 
-    return buildCollectorTask(`collector-${group}-${pkgSlug}-${index}`, displayName, modeDirs, needs);
+    return buildCollectorTask(`collector-${group}-${pkgSlug}-${index}`, displayName, modeDirs, needs, { useProxy });
   });
 }
 
 function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv = null, supportsEsm = false) {
+  const useDind = true; // always need docker for the egress proxy
   const scriptLines = ['#!/usr/bin/env bash', 'set -eo pipefail', ''];
   scriptLines.push(nodeVersionSwitchScript());
   scriptLines.push('');
   scriptLines.push('cd "$WORKSPACE/$(load_repo app-repo path)"');
-  scriptLines.push('npm install --loglevel warn --foreground-scripts');
+
+  scriptLines.push('# install docker client');
+  scriptLines.push(dockerClientInstallScript());
   scriptLines.push('');
+
+  // Proxy npm install through Squid to enforce the allowlist.
+  scriptLines.push('# start egress-proxy — restricts npm install to the allowlist');
+  scriptLines.push(`docker build -t npm-proxy:local "$PWD/ci/squid"`);
+  scriptLines.push('docker network create npm-net');
+  scriptLines.push('docker run -d --name npm-proxy --network npm-net npm-proxy:local');
+  scriptLines.push(`NPM_PROXY_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' npm-proxy)`);
+  scriptLines.push('');
+  scriptLines.push('HTTPS_PROXY="http://$NPM_PROXY_IP:3128" HTTP_PROXY="http://$NPM_PROXY_IP:3128" \\');
+  scriptLines.push('  npm install --loglevel warn --foreground-scripts');
+  scriptLines.push('docker rm -f npm-proxy || true');
+  scriptLines.push('docker network rm npm-net || true');
+  scriptLines.push('');
+
   scriptLines.push('# collect test files');
   scriptLines.push(
     `TEST_FILES=$(cd packages/${taskSlug} && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\\n' ' ')`
@@ -584,9 +796,6 @@ function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv
   scriptLines.push('');
 
   if (needs.length > 0) {
-    scriptLines.push('# install docker client');
-    scriptLines.push(dockerClientInstallScript());
-    scriptLines.push('');
     scriptLines.push('# create isolated network (no internet access)');
     scriptLines.push(`docker network create --internal ${SIDECAR_NETWORK}`);
     scriptLines.push('');
@@ -624,7 +833,7 @@ function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv
     from: 'pr-code-checks',
     displayName,
     runtimeClassName: 'large',
-    ...(needs.length > 0 ? { include: ['dind'] } : {}),
+    include: ['dind'],
     steps: [
       { name: 'peer-review', when: 'false' },
       { name: 'detect-secrets', when: 'false' },
@@ -633,7 +842,7 @@ function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv
         name: 'unit-test',
         displayName,
         image: NODE_IMAGE,
-        ...(needs.length > 0 ? { include: ['docker-socket'] } : {}),
+        include: ['docker-socket'],
         script: scriptLines.join('\n')
       },
       { name: 'sign-artifact', when: 'false' },
