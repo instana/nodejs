@@ -11,7 +11,9 @@ const {
   DEFAULT_STACK_TRACE_LENGTH,
   DEFAULT_STACK_TRACE_MODE,
   CONFIG_SOURCES,
-  DEFAULT_LOG_LEVEL
+  DEFAULT_LOG_LEVEL,
+  DEFAULT_DB_BIND_VARIABLES_DISABLE,
+  DEFAULT_DB_BIND_VARIABLES_ALLOWED_COLUMNS
 } = require('../util/constants');
 const util = require('./util');
 const validators = require('./validator');
@@ -82,6 +84,7 @@ let currentConfig;
  * @property {globalStackTraceConfig} [global]
  * @property {otlpExporterOptions} [otlp]
  * @property {string} [captureLogLevel]
+ * @property {import('./normalizers/dbBindVariables').DbBindVariablesConfig} [dbBindVariables]
  */
 
 /**
@@ -185,6 +188,10 @@ let defaults = {
     disableW3cPropagation: false,
     kafka: {
       traceCorrelation: true
+    },
+    dbBindVariables: {
+      disable: DEFAULT_DB_BIND_VARIABLES_DISABLE,
+      allowedColumns: DEFAULT_DB_BIND_VARIABLES_ALLOWED_COLUMNS
     },
     ignoreEndpoints: {},
     ignoreEndpointsDisableSuppression: false,
@@ -368,6 +375,7 @@ function normalizeTracingConfig({ userConfig = {}, defaultConfig = {}, finalConf
   normalizeDisableW3c({ userConfig, defaultConfig, finalConfig });
   normalizeTracingKafka({ userConfig, defaultConfig, finalConfig });
   normalizeAllowRootExitSpan({ userConfig, defaultConfig, finalConfig });
+  normalizeDbBindVariables({ userConfig, defaultConfig, finalConfig });
   normalizeIgnoreEndpoints({ userConfig, defaultConfig, finalConfig });
   normalizeIgnoreEndpointsDisableSuppression({ userConfig, defaultConfig, finalConfig });
   normalizeDisableEOLEvents({ userConfig, defaultConfig, finalConfig });
@@ -1186,6 +1194,35 @@ function parseSecretsEnvVar(envVarValue) {
     keywords: keywordsArray
   };
 }
+/**
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
+ */
+function normalizeDbBindVariables({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
+  // Priority 1: environment variables (highest priority)
+  const fromEnv = normalizers.dbBindVariables.fromEnv();
+  if (fromEnv !== null) {
+    finalConfig.tracing.dbBindVariables = fromEnv;
+    configStore.set('config.tracing.dbBindVariables', { source: CONFIG_SOURCES.ENV });
+    logger.debug(
+      `[config] config.tracing.dbBindVariables <- env:INSTANA_TRACING_DB_BIND_VARIABLES_* = ${JSON.stringify(fromEnv)}`
+    );
+    return;
+  }
+
+  // Priority 2: in-code configuration
+  const fromInCode = normalizers.dbBindVariables.fromInCode(userConfig.tracing?.dbBindVariables);
+  if (fromInCode !== null) {
+    finalConfig.tracing.dbBindVariables = fromInCode;
+    configStore.set('config.tracing.dbBindVariables', { source: CONFIG_SOURCES.INCODE });
+    logger.debug(`[config] config.tracing.dbBindVariables <- incode = ${JSON.stringify(fromInCode)}`);
+    return;
+  }
+
+  // Priority 3: default
+  finalConfig.tracing.dbBindVariables = Object.assign({}, defaultConfig.tracing.dbBindVariables);
+  configStore.set('config.tracing.dbBindVariables', { source: CONFIG_SOURCES.DEFAULT });
+}
+
 /**
  * NOTE: This normalization logic is not handled in the resolver.
  * because it involves complex multi-step processing:
