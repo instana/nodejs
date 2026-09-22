@@ -81,8 +81,6 @@ describe('baggage propagation – httpClient', () => {
 
     cls.ns.run(() => {
       cls.setBaggage('userId=alice');
-      // getBaggage still returns the value in CLS — the client just won't write it
-      // to outgoing headers. The propagation guard is inside httpClient.
       expect(cls.getBaggage()).to.equal('userId=alice');
     });
   });
