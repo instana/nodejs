@@ -1,0 +1,10 @@
+{
+  "name": "test-misc-tracing_metrics",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@instana/collector": "{{collectorVersion}}",
+    "@instana/core": "{{coreVersion}}",
+    "@instana/shared-metrics": "{{sharedMetricsVersion}}"
+  }
+}

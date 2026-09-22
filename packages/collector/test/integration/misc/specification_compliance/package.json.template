@@ -1,0 +1,10 @@
+{
+  "name": "test-misc-specification_compliance",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@instana/collector": "{{collectorVersion}}",
+    "@instana/core": "{{coreVersion}}",
+    "@instana/shared-metrics": "{{sharedMetricsVersion}}"
+  }
+}
