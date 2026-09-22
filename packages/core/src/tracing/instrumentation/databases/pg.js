@@ -11,15 +11,18 @@ const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
+const dbBindVariablesUtil = require('../../dbBindVariablesUtil');
 
 let isActive = false;
-let captureBindVariables = false;
+
+/** @type {import('../../../config').InstanaConfig['tracing']['dbBindVariables']} */
+let dbBindVariablesConfig;
 
 exports.spanName = 'postgres';
 exports.batchable = true;
 
 exports.init = function init(config) {
-  captureBindVariables = config && config.tracing && config.tracing.captureBindVariables === true;
+  dbBindVariablesConfig = config && config.tracing && config.tracing.dbBindVariables;
   hook.onModuleLoad('pg', instrumentPg);
 };
 
@@ -61,27 +64,19 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
     });
     span.stack = tracingUtil.getStackTrace(instrumentedQuery);
 
+    const sql = typeof config === 'string' ? config : config.text;
+
     span.data.pg = {
-      stmt: tracingUtil.shortenDatabaseStatement(typeof config === 'string' ? config : config.text),
+      stmt: tracingUtil.shortenDatabaseStatement(sql),
       host,
       port,
       user,
       db
     };
 
-    // Capture raw bind variables if enabled
-    if (captureBindVariables) {
-      let binds;
-      if (typeof config === 'string') {
-        if (argsForOriginalQuery.length > 1 && Array.isArray(argsForOriginalQuery[1])) {
-          binds = argsForOriginalQuery[1];
-        }
-      } else if (config && config.values) {
-        binds = config.values;
-      }
-      if (binds && binds.length > 0) {
-        span.data.pg.binds = binds;
-      }
+    const binds = captureBinds(sql, config, argsForOriginalQuery);
+    if (binds !== null) {
+      span.data.pg.binds = binds;
     }
 
     let originalCallback;
@@ -121,6 +116,40 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
     }
     return promise;
   });
+}
+
+/**
+ * Captures bind variables for a pg query using the shared dbBindVariablesUtil.
+ *
+ * pg only supports PostgreSQL-style positional parameters ($1, $2, ...).
+ * Column names are resolved by parsing the SQL statement.
+ *
+ * @param {string} sql
+ * @param {string | { text: string, values?: any[] }} config
+ * @param {any[]} argsForOriginalQuery
+ * @returns {Array<{ name: string, value: string }> | null}
+ */
+function captureBinds(sql, config, argsForOriginalQuery) {
+  if (!dbBindVariablesUtil.isActive(dbBindVariablesConfig)) {
+    return null;
+  }
+
+  // Collect the raw positional values from the pg API
+  let rawValues;
+  if (typeof config === 'string') {
+    if (argsForOriginalQuery.length > 1 && Array.isArray(argsForOriginalQuery[1])) {
+      rawValues = argsForOriginalQuery[1];
+    }
+  } else if (config && Array.isArray(config.values)) {
+    rawValues = config.values;
+  }
+
+  if (!rawValues || rawValues.length === 0) {
+    return null;
+  }
+
+  const columnNames = dbBindVariablesUtil.resolveColumnNamesDollarParams(sql, rawValues.length);
+  return dbBindVariablesUtil.buildBindsFromPositional(rawValues, columnNames, dbBindVariablesConfig.allowedColumns);
 }
 
 function finishSpan(error, span) {
