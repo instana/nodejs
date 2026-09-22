@@ -4,6 +4,7 @@ tasks:
 # code-checks includes five steps: setup, detect-secrets, compliance-checks, peer-review, static-scan
   code-checks:
     when: false
+
   code-build:
     runtimeClassName: large
     steps:
@@ -31,14 +32,19 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
+
   code-pr-finish:
     when: 'false'
+
   code-ci-finish:
     when: 'false'
+
   deploy-checks:
     when: false
+
   deploy-release:
     when: false
+
   code-build-core:
     from: code-build
     displayName: core
@@ -117,7 +123,6 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
-
           # report commit status to GitHub
           GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
@@ -148,6 +153,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
+
   code-build-metrics-util:
     from: code-build
     displayName: metrics-util
@@ -226,7 +232,6 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
-
           # report commit status to GitHub
           GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
@@ -257,6 +262,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
+
   code-build-serverless:
     from: code-build
     displayName: serverless
@@ -335,7 +341,6 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
-
           # report commit status to GitHub
           GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
@@ -366,6 +371,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
+
   code-build-serverless-collector:
     from: code-build
     displayName: serverless-collector
@@ -444,7 +450,6 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
-
           # report commit status to GitHub
           GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
@@ -475,6 +480,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
+
   code-build-shared-metrics:
     from: code-build
     displayName: shared-metrics
@@ -552,7 +558,6 @@ tasks:
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
-
 
           # report commit status to GitHub
           GH_TOKEN="$(get_secret gh-public-token)"
