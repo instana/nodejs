@@ -83,20 +83,18 @@ tasks:
           docker build -t npm-proxy:local "$REPO_PATH/ci/squid"
 
           # ------------------------------------------------------------
-          # Create networks + start Squid proxy sidecar
+          # Create network + start Squid proxy sidecar
+          # The proxy enforces the allowlist for the entire run.
+          # Test execution clears proxy env vars so tests don't route
+          # their own traffic through Squid.
           # ------------------------------------------------------------
 
           docker network create npm-net
-          docker network create --internal test-net
 
           docker run -d \
             --name npm-proxy \
             --network npm-net \
             npm-proxy:local
-
-          # ------------------------------------------------------------
-          # Start test-runner — outbound npm traffic routed through proxy
-          # ------------------------------------------------------------
 
           docker run -d \
             --name test-runner \
@@ -114,26 +112,12 @@ tasks:
           echo "Node.js inside container:"
           docker exec test-runner node --version
 
-          # ------------------------------------------------------------
-          # Dependency installation (proxy enforces registry.npmjs.org only)
-          # ------------------------------------------------------------
-
           docker exec test-runner \
             npm install --loglevel warn
 
           # generate versioned test folders — must run before TEST_FILES discovery
           docker exec test-runner \
             node bin/create-version-test-folders.js
-
-          # ------------------------------------------------------------
-          # Transition test-runner to isolated test-net
-          # (the _v*/ npm installs run at test-time via --prefer-offline cache)
-          # ------------------------------------------------------------
-
-          docker network connect test-net test-runner
-          docker network disconnect npm-net test-runner
-          docker rm -f npm-proxy || true
-          docker network rm npm-net || true
 
           # ------------------------------------------------------------
           # Collect test files (after versioned folders are generated)
