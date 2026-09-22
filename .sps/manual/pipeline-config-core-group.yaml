@@ -4,7 +4,6 @@ tasks:
 # code-checks includes five steps: setup, detect-secrets, compliance-checks, peer-review, static-scan
   code-checks:
     when: false
-
   code-build:
     runtimeClassName: large
     steps:
@@ -32,27 +31,26 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-
   code-pr-finish:
     when: 'false'
-
   code-ci-finish:
     when: 'false'
-
   deploy-checks:
     when: false
-
   deploy-release:
     when: false
-
   code-build-core:
     from: code-build
     displayName: core
     runtimeClassName: large
+    include:
+      - dind
     steps:
       - name: unit-test
         displayName: core
         image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
@@ -67,7 +65,27 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start egress-proxy — restricts npm install to the allowlist
+          docker build -t npm-proxy:local "$PWD/ci/squid"
+          docker network create npm-net
+          docker run -d --name npm-proxy --network npm-net npm-proxy:local
+          NPM_PROXY_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' npm-proxy)
+
+          HTTPS_PROXY="http://$NPM_PROXY_IP:3128" HTTP_PROXY="http://$NPM_PROXY_IP:3128" \
+            npm install --loglevel warn --foreground-scripts
+          docker rm -f npm-proxy || true
+          docker network rm npm-net || true
 
           # collect test files
           TEST_FILES=$(cd packages/core && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
@@ -123,6 +141,7 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
           # report commit status to GitHub
           GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
@@ -153,15 +172,18 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-
   code-build-metrics-util:
     from: code-build
     displayName: metrics-util
     runtimeClassName: large
+    include:
+      - dind
     steps:
       - name: unit-test
         displayName: metrics-util
         image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
@@ -176,7 +198,27 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start egress-proxy — restricts npm install to the allowlist
+          docker build -t npm-proxy:local "$PWD/ci/squid"
+          docker network create npm-net
+          docker run -d --name npm-proxy --network npm-net npm-proxy:local
+          NPM_PROXY_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' npm-proxy)
+
+          HTTPS_PROXY="http://$NPM_PROXY_IP:3128" HTTP_PROXY="http://$NPM_PROXY_IP:3128" \
+            npm install --loglevel warn --foreground-scripts
+          docker rm -f npm-proxy || true
+          docker network rm npm-net || true
 
           # collect test files
           TEST_FILES=$(cd packages/metrics-util && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
@@ -232,6 +274,7 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
           # report commit status to GitHub
           GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
@@ -262,15 +305,18 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-
   code-build-serverless:
     from: code-build
     displayName: serverless
     runtimeClassName: large
+    include:
+      - dind
     steps:
       - name: unit-test
         displayName: serverless
         image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
@@ -285,7 +331,27 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start egress-proxy — restricts npm install to the allowlist
+          docker build -t npm-proxy:local "$PWD/ci/squid"
+          docker network create npm-net
+          docker run -d --name npm-proxy --network npm-net npm-proxy:local
+          NPM_PROXY_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' npm-proxy)
+
+          HTTPS_PROXY="http://$NPM_PROXY_IP:3128" HTTP_PROXY="http://$NPM_PROXY_IP:3128" \
+            npm install --loglevel warn --foreground-scripts
+          docker rm -f npm-proxy || true
+          docker network rm npm-net || true
 
           # collect test files
           TEST_FILES=$(cd packages/serverless && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
@@ -341,6 +407,7 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
           # report commit status to GitHub
           GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
@@ -371,15 +438,18 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-
   code-build-serverless-collector:
     from: code-build
     displayName: serverless-collector
     runtimeClassName: large
+    include:
+      - dind
     steps:
       - name: unit-test
         displayName: serverless-collector
         image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
@@ -394,7 +464,27 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start egress-proxy — restricts npm install to the allowlist
+          docker build -t npm-proxy:local "$PWD/ci/squid"
+          docker network create npm-net
+          docker run -d --name npm-proxy --network npm-net npm-proxy:local
+          NPM_PROXY_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' npm-proxy)
+
+          HTTPS_PROXY="http://$NPM_PROXY_IP:3128" HTTP_PROXY="http://$NPM_PROXY_IP:3128" \
+            npm install --loglevel warn --foreground-scripts
+          docker rm -f npm-proxy || true
+          docker network rm npm-net || true
 
           # collect test files
           TEST_FILES=$(cd packages/serverless-collector && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
@@ -450,6 +540,7 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
+
           # report commit status to GitHub
           GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
@@ -480,15 +571,18 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
-
   code-build-shared-metrics:
     from: code-build
     displayName: shared-metrics
     runtimeClassName: large
+    include:
+      - dind
     steps:
       - name: unit-test
         displayName: shared-metrics
         image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
@@ -503,7 +597,27 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start egress-proxy — restricts npm install to the allowlist
+          docker build -t npm-proxy:local "$PWD/ci/squid"
+          docker network create npm-net
+          docker run -d --name npm-proxy --network npm-net npm-proxy:local
+          NPM_PROXY_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' npm-proxy)
+
+          HTTPS_PROXY="http://$NPM_PROXY_IP:3128" HTTP_PROXY="http://$NPM_PROXY_IP:3128" \
+            npm install --loglevel warn --foreground-scripts
+          docker rm -f npm-proxy || true
+          docker network rm npm-net || true
 
           # collect test files
           TEST_FILES=$(cd packages/shared-metrics && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
@@ -558,6 +672,7 @@ tasks:
           else
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
+
 
           # report commit status to GitHub
           GH_TOKEN="$(get_secret gh-public-token)"

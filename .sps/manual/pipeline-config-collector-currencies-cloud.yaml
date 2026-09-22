@@ -48,23 +48,19 @@ tasks:
     steps:
       - name: unit-test
         displayName: '@aws-sdk/client-dynamodb'
-        image: mirror.gcr.io/library/node:24
+        image: mirror.gcr.io/library/debian:bookworm-slim
         include:
           - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "$(cat .nvmrc | tr -d '[:space:]')")")}",
+          NODE_MAJOR="${node_version%%.*}"
+          RUN_ESM="$(get_env RUN_ESM "")"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -76,46 +72,63 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          # create isolated network
-          docker network create --internal offline-net
+          REPO_PATH="$PWD"
+          NODE_MAJOR="NODE_MAJOR"
 
-          npm install --loglevel warn --foreground-scripts
+          # build Squid egress-proxy image
+          docker build -t npm-proxy:local "$REPO_PATH/ci/squid"
 
-          # start localstack
-          docker run -d --network offline-net --name localstack \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            "mirror.gcr.io/localstack/localstack:4.5"
-          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack)
-          socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
-          socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
-          timeout 60 bash -c \
-            'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
+          # start proxy + test-runner on a shared network
+          # The proxy enforces the allowlist for the entire run.
+          # Test execution clears proxy env vars so tests don't route through Squid.
+          docker network create npm-net
+          docker run -d \
+            --name npm-proxy \
+            --network npm-net \
+            npm-proxy:local
+          docker run -d \
+            --name test-runner \
+            --network npm-net \
+            -v "$REPO_PATH:$REPO_PATH" \
+            -w "$REPO_PATH" \
+            -e CI=true \
+            -e RUN_ESM="$RUN_ESM" \
+            -e HTTPS_PROXY="http://npm-proxy:3128" \
+            -e HTTP_PROXY="http://npm-proxy:3128" \
+            -e NO_PROXY="127.0.0.1,localhost" \
+            "mirror.gcr.io/library/node:${NODE_MAJOR}" \
+            sleep infinity
 
-          node bin/create-version-test-folders.js
+          docker exec test-runner npm install --loglevel warn
+          docker exec test-runner node bin/create-version-test-folders.js
 
           # collect test files
-          TEST_FILES=$(cd packages/collector && find \
-            test/integration/currencies/cloud/@aws-sdk/client-dynamodb \
-            -name '*.test.js' \
-            -not -path '*/node_modules/*' \
-            | sort | tr '\n' ' ')
+          TEST_FILES=$(docker exec test-runner \
+            bash -c "cd packages/collector && find \
+              test/integration/currencies/cloud/@aws-sdk/client-dynamodb \
+              -name '*.test.js' \
+              -not -path '*/node_modules/*' \
+              | sort | tr '\n' ' '")
 
           if [ -z "$TEST_FILES" ]; then
             echo 'WARNING: No test files found for @aws-sdk/client-dynamodb — skipping.'
+            docker rm -f test-runner npm-proxy || true
+            docker network rm npm-net || true
             exit 0
           fi
 
-          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
-              TEST_FILES="$TEST_FILES" \
+            docker exec \
+              -e CI=true \
+              -e HTTP_PROXY="" \
+              -e HTTPS_PROXY="" \
+              -e http_proxy="" \
+              -e https_proxy="" \
+              -e RUN_ESM="$RUN_ESM" \
+              -e TEST_FILES="$TEST_FILES" \
+              test-runner \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-client-dynamodb" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -123,6 +136,11 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # cleanup
+          docker rm -f test-runner npm-proxy || true
+          docker network rm npm-net || true
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -200,23 +218,19 @@ tasks:
     steps:
       - name: unit-test
         displayName: '@aws-sdk/client-kinesis'
-        image: mirror.gcr.io/library/node:24
+        image: mirror.gcr.io/library/debian:bookworm-slim
         include:
           - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "$(cat .nvmrc | tr -d '[:space:]')")")}",
+          NODE_MAJOR="${node_version%%.*}"
+          RUN_ESM="$(get_env RUN_ESM "")"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -228,51 +242,63 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          # create isolated network
-          docker network create --internal offline-net
+          REPO_PATH="$PWD"
+          NODE_MAJOR="NODE_MAJOR"
 
-          npm install --loglevel warn --foreground-scripts
+          # build Squid egress-proxy image
+          docker build -t npm-proxy:local "$REPO_PATH/ci/squid"
 
-          # start localstack-kinesis
-          docker network create kinesis-bootstrap
-          docker run -d --network kinesis-bootstrap --name localstack-kinesis \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            "mirror.gcr.io/localstack/localstack:4.5"
-          docker network connect offline-net localstack-kinesis
-          timeout 180 bash -c \
-            'until docker exec localstack-kinesis awslocal kinesis list-streams >/dev/null 2>&1; do sleep 2; done'
-          docker network disconnect kinesis-bootstrap localstack-kinesis
-          docker network rm kinesis-bootstrap
-          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack-kinesis)
-          socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
-          socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
-          timeout 60 bash -c \
-            'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
+          # start proxy + test-runner on a shared network
+          # The proxy enforces the allowlist for the entire run.
+          # Test execution clears proxy env vars so tests don't route through Squid.
+          docker network create npm-net
+          docker run -d \
+            --name npm-proxy \
+            --network npm-net \
+            npm-proxy:local
+          docker run -d \
+            --name test-runner \
+            --network npm-net \
+            -v "$REPO_PATH:$REPO_PATH" \
+            -w "$REPO_PATH" \
+            -e CI=true \
+            -e RUN_ESM="$RUN_ESM" \
+            -e HTTPS_PROXY="http://npm-proxy:3128" \
+            -e HTTP_PROXY="http://npm-proxy:3128" \
+            -e NO_PROXY="127.0.0.1,localhost" \
+            "mirror.gcr.io/library/node:${NODE_MAJOR}" \
+            sleep infinity
 
-          node bin/create-version-test-folders.js
+          docker exec test-runner npm install --loglevel warn
+          docker exec test-runner node bin/create-version-test-folders.js
 
           # collect test files
-          TEST_FILES=$(cd packages/collector && find \
-            test/integration/currencies/cloud/@aws-sdk/client-kinesis \
-            -name '*.test.js' \
-            -not -path '*/node_modules/*' \
-            | sort | tr '\n' ' ')
+          TEST_FILES=$(docker exec test-runner \
+            bash -c "cd packages/collector && find \
+              test/integration/currencies/cloud/@aws-sdk/client-kinesis \
+              -name '*.test.js' \
+              -not -path '*/node_modules/*' \
+              | sort | tr '\n' ' '")
 
           if [ -z "$TEST_FILES" ]; then
             echo 'WARNING: No test files found for @aws-sdk/client-kinesis — skipping.'
+            docker rm -f test-runner npm-proxy || true
+            docker network rm npm-net || true
             exit 0
           fi
 
-          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              TEST_FILES="$TEST_FILES" \
+            docker exec \
+              -e CI=true \
+              -e HTTP_PROXY="" \
+              -e HTTPS_PROXY="" \
+              -e http_proxy="" \
+              -e https_proxy="" \
+              -e RUN_ESM="$RUN_ESM" \
+              -e TEST_FILES="$TEST_FILES" \
+              test-runner \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-client-kinesis" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -280,6 +306,11 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # cleanup
+          docker rm -f test-runner npm-proxy || true
+          docker network rm npm-net || true
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -357,23 +388,19 @@ tasks:
     steps:
       - name: unit-test
         displayName: '@aws-sdk/client-lambda'
-        image: mirror.gcr.io/library/node:24
+        image: mirror.gcr.io/library/debian:bookworm-slim
         include:
           - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "$(cat .nvmrc | tr -d '[:space:]')")")}",
+          NODE_MAJOR="${node_version%%.*}"
+          RUN_ESM="$(get_env RUN_ESM "")"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -385,46 +412,63 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          # create isolated network
-          docker network create --internal offline-net
+          REPO_PATH="$PWD"
+          NODE_MAJOR="NODE_MAJOR"
 
-          npm install --loglevel warn --foreground-scripts
+          # build Squid egress-proxy image
+          docker build -t npm-proxy:local "$REPO_PATH/ci/squid"
 
-          # start localstack
-          docker run -d --network offline-net --name localstack \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            "mirror.gcr.io/localstack/localstack:4.5"
-          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack)
-          socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
-          socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
-          timeout 60 bash -c \
-            'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
+          # start proxy + test-runner on a shared network
+          # The proxy enforces the allowlist for the entire run.
+          # Test execution clears proxy env vars so tests don't route through Squid.
+          docker network create npm-net
+          docker run -d \
+            --name npm-proxy \
+            --network npm-net \
+            npm-proxy:local
+          docker run -d \
+            --name test-runner \
+            --network npm-net \
+            -v "$REPO_PATH:$REPO_PATH" \
+            -w "$REPO_PATH" \
+            -e CI=true \
+            -e RUN_ESM="$RUN_ESM" \
+            -e HTTPS_PROXY="http://npm-proxy:3128" \
+            -e HTTP_PROXY="http://npm-proxy:3128" \
+            -e NO_PROXY="127.0.0.1,localhost" \
+            "mirror.gcr.io/library/node:${NODE_MAJOR}" \
+            sleep infinity
 
-          node bin/create-version-test-folders.js
+          docker exec test-runner npm install --loglevel warn
+          docker exec test-runner node bin/create-version-test-folders.js
 
           # collect test files
-          TEST_FILES=$(cd packages/collector && find \
-            test/integration/currencies/cloud/@aws-sdk/client-lambda \
-            -name '*.test.js' \
-            -not -path '*/node_modules/*' \
-            | sort | tr '\n' ' ')
+          TEST_FILES=$(docker exec test-runner \
+            bash -c "cd packages/collector && find \
+              test/integration/currencies/cloud/@aws-sdk/client-lambda \
+              -name '*.test.js' \
+              -not -path '*/node_modules/*' \
+              | sort | tr '\n' ' '")
 
           if [ -z "$TEST_FILES" ]; then
             echo 'WARNING: No test files found for @aws-sdk/client-lambda — skipping.'
+            docker rm -f test-runner npm-proxy || true
+            docker network rm npm-net || true
             exit 0
           fi
 
-          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
-              TEST_FILES="$TEST_FILES" \
+            docker exec \
+              -e CI=true \
+              -e HTTP_PROXY="" \
+              -e HTTPS_PROXY="" \
+              -e http_proxy="" \
+              -e https_proxy="" \
+              -e RUN_ESM="$RUN_ESM" \
+              -e TEST_FILES="$TEST_FILES" \
+              test-runner \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-client-lambda" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -432,6 +476,11 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # cleanup
+          docker rm -f test-runner npm-proxy || true
+          docker network rm npm-net || true
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -509,23 +558,19 @@ tasks:
     steps:
       - name: unit-test
         displayName: '@aws-sdk/client-s3'
-        image: mirror.gcr.io/library/node:24
+        image: mirror.gcr.io/library/debian:bookworm-slim
         include:
           - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "$(cat .nvmrc | tr -d '[:space:]')")")}",
+          NODE_MAJOR="${node_version%%.*}"
+          RUN_ESM="$(get_env RUN_ESM "")"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -537,46 +582,63 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          # create isolated network
-          docker network create --internal offline-net
+          REPO_PATH="$PWD"
+          NODE_MAJOR="NODE_MAJOR"
 
-          npm install --loglevel warn --foreground-scripts
+          # build Squid egress-proxy image
+          docker build -t npm-proxy:local "$REPO_PATH/ci/squid"
 
-          # start localstack
-          docker run -d --network offline-net --name localstack \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            "mirror.gcr.io/localstack/localstack:4.5"
-          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack)
-          socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
-          socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
-          timeout 60 bash -c \
-            'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
+          # start proxy + test-runner on a shared network
+          # The proxy enforces the allowlist for the entire run.
+          # Test execution clears proxy env vars so tests don't route through Squid.
+          docker network create npm-net
+          docker run -d \
+            --name npm-proxy \
+            --network npm-net \
+            npm-proxy:local
+          docker run -d \
+            --name test-runner \
+            --network npm-net \
+            -v "$REPO_PATH:$REPO_PATH" \
+            -w "$REPO_PATH" \
+            -e CI=true \
+            -e RUN_ESM="$RUN_ESM" \
+            -e HTTPS_PROXY="http://npm-proxy:3128" \
+            -e HTTP_PROXY="http://npm-proxy:3128" \
+            -e NO_PROXY="127.0.0.1,localhost" \
+            "mirror.gcr.io/library/node:${NODE_MAJOR}" \
+            sleep infinity
 
-          node bin/create-version-test-folders.js
+          docker exec test-runner npm install --loglevel warn
+          docker exec test-runner node bin/create-version-test-folders.js
 
           # collect test files
-          TEST_FILES=$(cd packages/collector && find \
-            test/integration/currencies/cloud/@aws-sdk/client-s3 \
-            -name '*.test.js' \
-            -not -path '*/node_modules/*' \
-            | sort | tr '\n' ' ')
+          TEST_FILES=$(docker exec test-runner \
+            bash -c "cd packages/collector && find \
+              test/integration/currencies/cloud/@aws-sdk/client-s3 \
+              -name '*.test.js' \
+              -not -path '*/node_modules/*' \
+              | sort | tr '\n' ' '")
 
           if [ -z "$TEST_FILES" ]; then
             echo 'WARNING: No test files found for @aws-sdk/client-s3 — skipping.'
+            docker rm -f test-runner npm-proxy || true
+            docker network rm npm-net || true
             exit 0
           fi
 
-          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
-              TEST_FILES="$TEST_FILES" \
+            docker exec \
+              -e CI=true \
+              -e HTTP_PROXY="" \
+              -e HTTPS_PROXY="" \
+              -e http_proxy="" \
+              -e https_proxy="" \
+              -e RUN_ESM="$RUN_ESM" \
+              -e TEST_FILES="$TEST_FILES" \
+              test-runner \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-client-s3" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -584,6 +646,11 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # cleanup
+          docker rm -f test-runner npm-proxy || true
+          docker network rm npm-net || true
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -661,23 +728,19 @@ tasks:
     steps:
       - name: unit-test
         displayName: '@aws-sdk/client-sns'
-        image: mirror.gcr.io/library/node:24
+        image: mirror.gcr.io/library/debian:bookworm-slim
         include:
           - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "$(cat .nvmrc | tr -d '[:space:]')")")}",
+          NODE_MAJOR="${node_version%%.*}"
+          RUN_ESM="$(get_env RUN_ESM "")"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -689,46 +752,63 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          # create isolated network
-          docker network create --internal offline-net
+          REPO_PATH="$PWD"
+          NODE_MAJOR="NODE_MAJOR"
 
-          npm install --loglevel warn --foreground-scripts
+          # build Squid egress-proxy image
+          docker build -t npm-proxy:local "$REPO_PATH/ci/squid"
 
-          # start localstack
-          docker run -d --network offline-net --name localstack \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            "mirror.gcr.io/localstack/localstack:4.5"
-          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack)
-          socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
-          socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
-          timeout 60 bash -c \
-            'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
+          # start proxy + test-runner on a shared network
+          # The proxy enforces the allowlist for the entire run.
+          # Test execution clears proxy env vars so tests don't route through Squid.
+          docker network create npm-net
+          docker run -d \
+            --name npm-proxy \
+            --network npm-net \
+            npm-proxy:local
+          docker run -d \
+            --name test-runner \
+            --network npm-net \
+            -v "$REPO_PATH:$REPO_PATH" \
+            -w "$REPO_PATH" \
+            -e CI=true \
+            -e RUN_ESM="$RUN_ESM" \
+            -e HTTPS_PROXY="http://npm-proxy:3128" \
+            -e HTTP_PROXY="http://npm-proxy:3128" \
+            -e NO_PROXY="127.0.0.1,localhost" \
+            "mirror.gcr.io/library/node:${NODE_MAJOR}" \
+            sleep infinity
 
-          node bin/create-version-test-folders.js
+          docker exec test-runner npm install --loglevel warn
+          docker exec test-runner node bin/create-version-test-folders.js
 
           # collect test files
-          TEST_FILES=$(cd packages/collector && find \
-            test/integration/currencies/cloud/@aws-sdk/client-sns \
-            -name '*.test.js' \
-            -not -path '*/node_modules/*' \
-            | sort | tr '\n' ' ')
+          TEST_FILES=$(docker exec test-runner \
+            bash -c "cd packages/collector && find \
+              test/integration/currencies/cloud/@aws-sdk/client-sns \
+              -name '*.test.js' \
+              -not -path '*/node_modules/*' \
+              | sort | tr '\n' ' '")
 
           if [ -z "$TEST_FILES" ]; then
             echo 'WARNING: No test files found for @aws-sdk/client-sns — skipping.'
+            docker rm -f test-runner npm-proxy || true
+            docker network rm npm-net || true
             exit 0
           fi
 
-          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
-              TEST_FILES="$TEST_FILES" \
+            docker exec \
+              -e CI=true \
+              -e HTTP_PROXY="" \
+              -e HTTPS_PROXY="" \
+              -e http_proxy="" \
+              -e https_proxy="" \
+              -e RUN_ESM="$RUN_ESM" \
+              -e TEST_FILES="$TEST_FILES" \
+              test-runner \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-client-sns" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -736,6 +816,11 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # cleanup
+          docker rm -f test-runner npm-proxy || true
+          docker network rm npm-net || true
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -813,23 +898,19 @@ tasks:
     steps:
       - name: unit-test
         displayName: '@aws-sdk/client-sqs'
-        image: mirror.gcr.io/library/node:24
+        image: mirror.gcr.io/library/debian:bookworm-slim
         include:
           - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "$(cat .nvmrc | tr -d '[:space:]')")")}",
+          NODE_MAJOR="${node_version%%.*}"
+          RUN_ESM="$(get_env RUN_ESM "")"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -841,46 +922,63 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          # create isolated network
-          docker network create --internal offline-net
+          REPO_PATH="$PWD"
+          NODE_MAJOR="NODE_MAJOR"
 
-          npm install --loglevel warn --foreground-scripts
+          # build Squid egress-proxy image
+          docker build -t npm-proxy:local "$REPO_PATH/ci/squid"
 
-          # start localstack
-          docker run -d --network offline-net --name localstack \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            "mirror.gcr.io/localstack/localstack:4.5"
-          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack)
-          socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
-          socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
-          timeout 60 bash -c \
-            'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
+          # start proxy + test-runner on a shared network
+          # The proxy enforces the allowlist for the entire run.
+          # Test execution clears proxy env vars so tests don't route through Squid.
+          docker network create npm-net
+          docker run -d \
+            --name npm-proxy \
+            --network npm-net \
+            npm-proxy:local
+          docker run -d \
+            --name test-runner \
+            --network npm-net \
+            -v "$REPO_PATH:$REPO_PATH" \
+            -w "$REPO_PATH" \
+            -e CI=true \
+            -e RUN_ESM="$RUN_ESM" \
+            -e HTTPS_PROXY="http://npm-proxy:3128" \
+            -e HTTP_PROXY="http://npm-proxy:3128" \
+            -e NO_PROXY="127.0.0.1,localhost" \
+            "mirror.gcr.io/library/node:${NODE_MAJOR}" \
+            sleep infinity
 
-          node bin/create-version-test-folders.js
+          docker exec test-runner npm install --loglevel warn
+          docker exec test-runner node bin/create-version-test-folders.js
 
           # collect test files
-          TEST_FILES=$(cd packages/collector && find \
-            test/integration/currencies/cloud/@aws-sdk/client-sqs \
-            -name '*.test.js' \
-            -not -path '*/node_modules/*' \
-            | sort | tr '\n' ' ')
+          TEST_FILES=$(docker exec test-runner \
+            bash -c "cd packages/collector && find \
+              test/integration/currencies/cloud/@aws-sdk/client-sqs \
+              -name '*.test.js' \
+              -not -path '*/node_modules/*' \
+              | sort | tr '\n' ' '")
 
           if [ -z "$TEST_FILES" ]; then
             echo 'WARNING: No test files found for @aws-sdk/client-sqs — skipping.'
+            docker rm -f test-runner npm-proxy || true
+            docker network rm npm-net || true
             exit 0
           fi
 
-          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
-              TEST_FILES="$TEST_FILES" \
+            docker exec \
+              -e CI=true \
+              -e HTTP_PROXY="" \
+              -e HTTPS_PROXY="" \
+              -e http_proxy="" \
+              -e https_proxy="" \
+              -e RUN_ESM="$RUN_ESM" \
+              -e TEST_FILES="$TEST_FILES" \
+              test-runner \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-client-sqs" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -888,6 +986,11 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # cleanup
+          docker rm -f test-runner npm-proxy || true
+          docker network rm npm-net || true
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -965,23 +1068,19 @@ tasks:
     steps:
       - name: unit-test
         displayName: '@azure/storage-blob'
-        image: mirror.gcr.io/library/node:24
+        image: mirror.gcr.io/library/debian:bookworm-slim
         include:
           - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "$(cat .nvmrc | tr -d '[:space:]')")")}",
+          NODE_MAJOR="${node_version%%.*}"
+          RUN_ESM="$(get_env RUN_ESM "")"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -993,50 +1092,63 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          # create isolated network
-          docker network create --internal offline-net
+          REPO_PATH="$PWD"
+          NODE_MAJOR="NODE_MAJOR"
 
-          npm install --loglevel warn --foreground-scripts
+          # build Squid egress-proxy image
+          docker build -t npm-proxy:local "$REPO_PATH/ci/squid"
 
-          # start azurite
-          docker run -d --network offline-net --name azurite \
-            -e AZURITE_ACCOUNTS="devstoreaccount1:Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OceiPiBeEEiypt/RI7k9g4Vm0J8SeBLMYxPTLr8GlFocl2qSA1dV5w==" \
-            "mcr.microsoft.com/azure-storage/azurite:3.37.0" "azurite" "--blobHost" "0.0.0.0" "--queueHost" "0.0.0.0" "--tableHost" "0.0.0.0" "--loose" "--inMemoryPersistence"
-          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' azurite)
-          socat TCP-LISTEN:10000,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10000 &
-          socat TCP6-LISTEN:10000,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:10000 &
-          socat TCP-LISTEN:10001,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10001 &
-          socat TCP6-LISTEN:10001,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:10001 &
-          socat TCP-LISTEN:10002,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10002 &
-          socat TCP6-LISTEN:10002,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:10002 &
-          timeout 60 bash -c \
-            'until nc -z 127.0.0.1 10000 2>/dev/null; do sleep 2; done'
+          # start proxy + test-runner on a shared network
+          # The proxy enforces the allowlist for the entire run.
+          # Test execution clears proxy env vars so tests don't route through Squid.
+          docker network create npm-net
+          docker run -d \
+            --name npm-proxy \
+            --network npm-net \
+            npm-proxy:local
+          docker run -d \
+            --name test-runner \
+            --network npm-net \
+            -v "$REPO_PATH:$REPO_PATH" \
+            -w "$REPO_PATH" \
+            -e CI=true \
+            -e RUN_ESM="$RUN_ESM" \
+            -e HTTPS_PROXY="http://npm-proxy:3128" \
+            -e HTTP_PROXY="http://npm-proxy:3128" \
+            -e NO_PROXY="127.0.0.1,localhost" \
+            "mirror.gcr.io/library/node:${NODE_MAJOR}" \
+            sleep infinity
 
-          node bin/create-version-test-folders.js
+          docker exec test-runner npm install --loglevel warn
+          docker exec test-runner node bin/create-version-test-folders.js
 
           # collect test files
-          TEST_FILES=$(cd packages/collector && find \
-            test/integration/currencies/cloud/@azure/storage-blob \
-            -name '*.test.js' \
-            -not -path '*/node_modules/*' \
-            | sort | tr '\n' ' ')
+          TEST_FILES=$(docker exec test-runner \
+            bash -c "cd packages/collector && find \
+              test/integration/currencies/cloud/@azure/storage-blob \
+              -name '*.test.js' \
+              -not -path '*/node_modules/*' \
+              | sort | tr '\n' ' '")
 
           if [ -z "$TEST_FILES" ]; then
             echo 'WARNING: No test files found for @azure/storage-blob — skipping.'
+            docker rm -f test-runner npm-proxy || true
+            docker network rm npm-net || true
             exit 0
           fi
 
-          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              INSTANA_CONNECT_AZURE_BLOB_ENDPOINT="http://127.0.0.1:10000/devstoreaccount1" \
-              TEST_FILES="$TEST_FILES" \
+            docker exec \
+              -e CI=true \
+              -e HTTP_PROXY="" \
+              -e HTTPS_PROXY="" \
+              -e http_proxy="" \
+              -e https_proxy="" \
+              -e RUN_ESM="$RUN_ESM" \
+              -e TEST_FILES="$TEST_FILES" \
+              test-runner \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-storage-blob" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -1044,6 +1156,11 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # cleanup
+          docker rm -f test-runner npm-proxy || true
+          docker network rm npm-net || true
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -1121,23 +1238,19 @@ tasks:
     steps:
       - name: unit-test
         displayName: '@google-cloud/pubsub'
-        image: mirror.gcr.io/library/node:24
+        image: mirror.gcr.io/library/debian:bookworm-slim
         include:
           - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "$(cat .nvmrc | tr -d '[:space:]')")")}",
+          NODE_MAJOR="${node_version%%.*}"
+          RUN_ESM="$(get_env RUN_ESM "")"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -1149,47 +1262,63 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          # create isolated network
-          docker network create --internal offline-net
+          REPO_PATH="$PWD"
+          NODE_MAJOR="NODE_MAJOR"
 
-          npm install --loglevel warn --foreground-scripts
+          # build Squid egress-proxy image
+          docker build -t npm-proxy:local "$REPO_PATH/ci/squid"
 
-          # start pubsub-emulator
-          docker run -d --network offline-net --name pubsub-emulator \
-            --entrypoint "gcloud" \
-            "gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators" "beta" "emulators" "pubsub" "start" "--host-port=0.0.0.0:8085" "--project=test-project"
-          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' pubsub-emulator)
-          socat TCP-LISTEN:8085,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8085 &
-          socat TCP6-LISTEN:8085,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:8085 &
-          timeout 60 bash -c \
-            'until nc -z 127.0.0.1 8085 2>/dev/null; do sleep 2; done'
+          # start proxy + test-runner on a shared network
+          # The proxy enforces the allowlist for the entire run.
+          # Test execution clears proxy env vars so tests don't route through Squid.
+          docker network create npm-net
+          docker run -d \
+            --name npm-proxy \
+            --network npm-net \
+            npm-proxy:local
+          docker run -d \
+            --name test-runner \
+            --network npm-net \
+            -v "$REPO_PATH:$REPO_PATH" \
+            -w "$REPO_PATH" \
+            -e CI=true \
+            -e RUN_ESM="$RUN_ESM" \
+            -e HTTPS_PROXY="http://npm-proxy:3128" \
+            -e HTTP_PROXY="http://npm-proxy:3128" \
+            -e NO_PROXY="127.0.0.1,localhost" \
+            "mirror.gcr.io/library/node:${NODE_MAJOR}" \
+            sleep infinity
 
-          node bin/create-version-test-folders.js
+          docker exec test-runner npm install --loglevel warn
+          docker exec test-runner node bin/create-version-test-folders.js
 
           # collect test files
-          TEST_FILES=$(cd packages/collector && find \
-            test/integration/currencies/cloud/@google-cloud/pubsub \
-            -name '*.test.js' \
-            -not -path '*/node_modules/*' \
-            | sort | tr '\n' ' ')
+          TEST_FILES=$(docker exec test-runner \
+            bash -c "cd packages/collector && find \
+              test/integration/currencies/cloud/@google-cloud/pubsub \
+              -name '*.test.js' \
+              -not -path '*/node_modules/*' \
+              | sort | tr '\n' ' '")
 
           if [ -z "$TEST_FILES" ]; then
             echo 'WARNING: No test files found for @google-cloud/pubsub — skipping.'
+            docker rm -f test-runner npm-proxy || true
+            docker network rm npm-net || true
             exit 0
           fi
 
-          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              INSTANA_CONNECT_PUBSUB_EMULATOR_HOST="127.0.0.1:8085" \
-              GCP_PROJECT="test-project" \
-              TEST_FILES="$TEST_FILES" \
+            docker exec \
+              -e CI=true \
+              -e HTTP_PROXY="" \
+              -e HTTPS_PROXY="" \
+              -e http_proxy="" \
+              -e https_proxy="" \
+              -e RUN_ESM="$RUN_ESM" \
+              -e TEST_FILES="$TEST_FILES" \
+              test-runner \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-pubsub" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -1197,6 +1326,11 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # cleanup
+          docker rm -f test-runner npm-proxy || true
+          docker network rm npm-net || true
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -1274,23 +1408,19 @@ tasks:
     steps:
       - name: unit-test
         displayName: '@google-cloud/storage'
-        image: mirror.gcr.io/library/node:24
+        image: mirror.gcr.io/library/debian:bookworm-slim
         include:
           - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "$(cat .nvmrc | tr -d '[:space:]')")")}",
+          NODE_MAJOR="${node_version%%.*}"
+          RUN_ESM="$(get_env RUN_ESM "")"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -1302,47 +1432,63 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          # create isolated network
-          docker network create --internal offline-net
+          REPO_PATH="$PWD"
+          NODE_MAJOR="NODE_MAJOR"
 
-          npm install --loglevel warn --foreground-scripts
+          # build Squid egress-proxy image
+          docker build -t npm-proxy:local "$REPO_PATH/ci/squid"
 
-          # start fake-gcs-server
-          docker run -d --network offline-net --name fake-gcs-server \
-            "mirror.gcr.io/fsouza/fake-gcs-server:1.52.2" "-scheme" "http" "-port" "4443" "-public-host" "127.0.0.1:4443"
-          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' fake-gcs-server)
-          socat TCP-LISTEN:4443,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4443 &
-          socat TCP6-LISTEN:4443,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4443 &
-          timeout 30 bash -c \
-            'until curl -sf http://127.0.0.1:4443/storage/v1/b >/dev/null; do sleep 2; done'
+          # start proxy + test-runner on a shared network
+          # The proxy enforces the allowlist for the entire run.
+          # Test execution clears proxy env vars so tests don't route through Squid.
+          docker network create npm-net
+          docker run -d \
+            --name npm-proxy \
+            --network npm-net \
+            npm-proxy:local
+          docker run -d \
+            --name test-runner \
+            --network npm-net \
+            -v "$REPO_PATH:$REPO_PATH" \
+            -w "$REPO_PATH" \
+            -e CI=true \
+            -e RUN_ESM="$RUN_ESM" \
+            -e HTTPS_PROXY="http://npm-proxy:3128" \
+            -e HTTP_PROXY="http://npm-proxy:3128" \
+            -e NO_PROXY="127.0.0.1,localhost" \
+            "mirror.gcr.io/library/node:${NODE_MAJOR}" \
+            sleep infinity
 
-          node bin/create-version-test-folders.js
+          docker exec test-runner npm install --loglevel warn
+          docker exec test-runner node bin/create-version-test-folders.js
 
           # collect test files
-          TEST_FILES=$(cd packages/collector && find \
-            test/integration/currencies/cloud/@google-cloud/storage \
-            -name '*.test.js' \
-            -not -path '*/node_modules/*' \
-            | sort | tr '\n' ' ')
+          TEST_FILES=$(docker exec test-runner \
+            bash -c "cd packages/collector && find \
+              test/integration/currencies/cloud/@google-cloud/storage \
+              -name '*.test.js' \
+              -not -path '*/node_modules/*' \
+              | sort | tr '\n' ' '")
 
           if [ -z "$TEST_FILES" ]; then
             echo 'WARNING: No test files found for @google-cloud/storage — skipping.'
+            docker rm -f test-runner npm-proxy || true
+            docker network rm npm-net || true
             exit 0
           fi
 
-          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              INSTANA_CONNECT_GCS_EMULATOR_HOST="http://127.0.0.1:4443" \
-              GCP_PROJECT="test-project" \
-              GCS_SERVICE_ACCOUNT_EMAIL="test-service-account@test-project.iam.gserviceaccount.com" \
-              TEST_FILES="$TEST_FILES" \
+            docker exec \
+              -e CI=true \
+              -e HTTP_PROXY="" \
+              -e HTTPS_PROXY="" \
+              -e http_proxy="" \
+              -e https_proxy="" \
+              -e RUN_ESM="$RUN_ESM" \
+              -e TEST_FILES="$TEST_FILES" \
+              test-runner \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-storage" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -1350,6 +1496,11 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # cleanup
+          docker rm -f test-runner npm-proxy || true
+          docker network rm npm-net || true
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -1427,23 +1578,19 @@ tasks:
     steps:
       - name: unit-test
         displayName: aws-sdk
-        image: mirror.gcr.io/library/node:24
+        image: mirror.gcr.io/library/debian:bookworm-slim
         include:
           - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "$(cat .nvmrc | tr -d '[:space:]')")")}",
+          NODE_MAJOR="${node_version%%.*}"
+          RUN_ESM="$(get_env RUN_ESM "")"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -1455,51 +1602,63 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          # create isolated network
-          docker network create --internal offline-net
+          REPO_PATH="$PWD"
+          NODE_MAJOR="NODE_MAJOR"
 
-          npm install --loglevel warn --foreground-scripts
+          # build Squid egress-proxy image
+          docker build -t npm-proxy:local "$REPO_PATH/ci/squid"
 
-          # start localstack-kinesis
-          docker network create kinesis-bootstrap
-          docker run -d --network kinesis-bootstrap --name localstack-kinesis \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            "mirror.gcr.io/localstack/localstack:4.5"
-          docker network connect offline-net localstack-kinesis
-          timeout 180 bash -c \
-            'until docker exec localstack-kinesis awslocal kinesis list-streams >/dev/null 2>&1; do sleep 2; done'
-          docker network disconnect kinesis-bootstrap localstack-kinesis
-          docker network rm kinesis-bootstrap
-          SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack-kinesis)
-          socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
-          socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
-          timeout 60 bash -c \
-            'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
+          # start proxy + test-runner on a shared network
+          # The proxy enforces the allowlist for the entire run.
+          # Test execution clears proxy env vars so tests don't route through Squid.
+          docker network create npm-net
+          docker run -d \
+            --name npm-proxy \
+            --network npm-net \
+            npm-proxy:local
+          docker run -d \
+            --name test-runner \
+            --network npm-net \
+            -v "$REPO_PATH:$REPO_PATH" \
+            -w "$REPO_PATH" \
+            -e CI=true \
+            -e RUN_ESM="$RUN_ESM" \
+            -e HTTPS_PROXY="http://npm-proxy:3128" \
+            -e HTTP_PROXY="http://npm-proxy:3128" \
+            -e NO_PROXY="127.0.0.1,localhost" \
+            "mirror.gcr.io/library/node:${NODE_MAJOR}" \
+            sleep infinity
 
-          node bin/create-version-test-folders.js
+          docker exec test-runner npm install --loglevel warn
+          docker exec test-runner node bin/create-version-test-folders.js
 
           # collect test files
-          TEST_FILES=$(cd packages/collector && find \
-            test/integration/currencies/cloud/aws-sdk \
-            -name '*.test.js' \
-            -not -path '*/node_modules/*' \
-            | sort | tr '\n' ' ')
+          TEST_FILES=$(docker exec test-runner \
+            bash -c "cd packages/collector && find \
+              test/integration/currencies/cloud/aws-sdk \
+              -name '*.test.js' \
+              -not -path '*/node_modules/*' \
+              | sort | tr '\n' ' '")
 
           if [ -z "$TEST_FILES" ]; then
             echo 'WARNING: No test files found for aws-sdk — skipping.'
+            docker rm -f test-runner npm-proxy || true
+            docker network rm npm-net || true
             exit 0
           fi
 
-          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              TEST_FILES="$TEST_FILES" \
+            docker exec \
+              -e CI=true \
+              -e HTTP_PROXY="" \
+              -e HTTPS_PROXY="" \
+              -e http_proxy="" \
+              -e https_proxy="" \
+              -e RUN_ESM="$RUN_ESM" \
+              -e TEST_FILES="$TEST_FILES" \
+              test-runner \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-aws-sdk" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -1507,6 +1666,11 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # cleanup
+          docker rm -f test-runner npm-proxy || true
+          docker network rm npm-net || true
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"

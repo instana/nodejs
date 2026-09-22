@@ -43,50 +43,92 @@ tasks:
     from: code-build
     displayName: fs
     runtimeClassName: large
+    include:
+      - dind
     steps:
       - name: unit-test
         displayName: fs
-        image: mirror.gcr.io/library/node:24
+        image: mirror.gcr.io/library/debian:bookworm-slim
+        include:
+          - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "$(cat .nvmrc | tr -d '[:space:]')")")}",
+          NODE_MAJOR="${node_version%%.*}"
+          RUN_ESM="$(get_env RUN_ESM "")"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
 
-          node bin/create-version-test-folders.js
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          REPO_PATH="$PWD"
+          NODE_MAJOR="NODE_MAJOR"
+
+          # build Squid egress-proxy image
+          docker build -t npm-proxy:local "$REPO_PATH/ci/squid"
+
+          # start proxy + test-runner on a shared network
+          # The proxy enforces the allowlist for the entire run.
+          # Test execution clears proxy env vars so tests don't route through Squid.
+          docker network create npm-net
+          docker run -d \
+            --name npm-proxy \
+            --network npm-net \
+            npm-proxy:local
+          docker run -d \
+            --name test-runner \
+            --network npm-net \
+            -v "$REPO_PATH:$REPO_PATH" \
+            -w "$REPO_PATH" \
+            -e CI=true \
+            -e RUN_ESM="$RUN_ESM" \
+            -e HTTPS_PROXY="http://npm-proxy:3128" \
+            -e HTTP_PROXY="http://npm-proxy:3128" \
+            -e NO_PROXY="127.0.0.1,localhost" \
+            "mirror.gcr.io/library/node:${NODE_MAJOR}" \
+            sleep infinity
+
+          docker exec test-runner npm install --loglevel warn
+          docker exec test-runner node bin/create-version-test-folders.js
 
           # collect test files
-          TEST_FILES=$(cd packages/collector && find \
-            test/integration/currencies/core/fs \
-            -name '*.test.js' \
-            -not -path '*/node_modules/*' \
-            | sort | tr '\n' ' ')
+          TEST_FILES=$(docker exec test-runner \
+            bash -c "cd packages/collector && find \
+              test/integration/currencies/core/fs \
+              -name '*.test.js' \
+              -not -path '*/node_modules/*' \
+              | sort | tr '\n' ' '")
 
           if [ -z "$TEST_FILES" ]; then
             echo 'WARNING: No test files found for fs — skipping.'
+            docker rm -f test-runner npm-proxy || true
+            docker network rm npm-net || true
             exit 0
           fi
 
-          RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              TEST_FILES="$TEST_FILES" \
+            docker exec \
+              -e CI=true \
+              -e HTTP_PROXY="" \
+              -e HTTPS_PROXY="" \
+              -e http_proxy="" \
+              -e https_proxy="" \
+              -e RUN_ESM="$RUN_ESM" \
+              -e TEST_FILES="$TEST_FILES" \
+              test-runner \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-core-fs" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -94,6 +136,11 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+
+          # cleanup
+          docker rm -f test-runner npm-proxy || true
+          docker network rm npm-net || true
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
