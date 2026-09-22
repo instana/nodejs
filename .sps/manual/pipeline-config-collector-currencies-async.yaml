@@ -132,13 +132,13 @@ tasks:
 
           if [ -z "$TEST_FILES" ]; then
             echo 'WARNING: No test files found for await — skipping.'
-            docker rm -f test-runner || true
-            docker network rm test-net || true
+            docker rm -f test-runner npm-proxy || true
+            docker network rm npm-net || true
             exit 0
           fi
 
           # ------------------------------------------------------------
-          # Run tests (Isolated on test-net --internal, proxy vars cleared)
+          # Run tests (proxy env vars cleared so tests don't route through Squid)
           # ------------------------------------------------------------
 
           LAST_EXIT=0
@@ -172,8 +172,8 @@ tasks:
           # Cleanup
           # ------------------------------------------------------------
 
-          docker rm -f test-runner || true
-          docker network rm test-net || true
+          docker rm -f test-runner npm-proxy || true
+          docker network rm npm-net || true
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -285,20 +285,18 @@ tasks:
           docker build -t npm-proxy:local "$REPO_PATH/ci/squid"
 
           # ------------------------------------------------------------
-          # Create networks + start Squid proxy sidecar
+          # Create network + start Squid proxy sidecar
+          # The proxy enforces the allowlist for the entire run.
+          # Test execution clears proxy env vars so tests don't route
+          # their own traffic through Squid.
           # ------------------------------------------------------------
 
           docker network create npm-net
-          docker network create --internal test-net
 
           docker run -d \
             --name npm-proxy \
             --network npm-net \
             npm-proxy:local
-
-          # ------------------------------------------------------------
-          # Start test-runner — outbound npm traffic routed through proxy
-          # ------------------------------------------------------------
 
           docker run -d \
             --name test-runner \
@@ -316,26 +314,12 @@ tasks:
           echo "Node.js inside container:"
           docker exec test-runner node --version
 
-          # ------------------------------------------------------------
-          # Dependency installation (proxy enforces registry.npmjs.org only)
-          # ------------------------------------------------------------
-
           docker exec test-runner \
             npm install --loglevel warn
 
           # generate versioned test folders — must run before TEST_FILES discovery
           docker exec test-runner \
             node bin/create-version-test-folders.js
-
-          # ------------------------------------------------------------
-          # Transition test-runner to isolated test-net
-          # (the _v*/ npm installs run at test-time via --prefer-offline cache)
-          # ------------------------------------------------------------
-
-          docker network connect test-net test-runner
-          docker network disconnect npm-net test-runner
-          docker rm -f npm-proxy || true
-          docker network rm npm-net || true
 
           # ------------------------------------------------------------
           # Collect test files (after versioned folders are generated)
@@ -350,13 +334,13 @@ tasks:
 
           if [ -z "$TEST_FILES" ]; then
             echo 'WARNING: No test files found for bluebird — skipping.'
-            docker rm -f test-runner || true
-            docker network rm test-net || true
+            docker rm -f test-runner npm-proxy || true
+            docker network rm npm-net || true
             exit 0
           fi
 
           # ------------------------------------------------------------
-          # Run tests (Isolated on test-net --internal, proxy vars cleared)
+          # Run tests (proxy env vars cleared so tests don't route through Squid)
           # ------------------------------------------------------------
 
           LAST_EXIT=0
@@ -390,8 +374,8 @@ tasks:
           # Cleanup
           # ------------------------------------------------------------
 
-          docker rm -f test-runner || true
-          docker network rm test-net || true
+          docker rm -f test-runner npm-proxy || true
+          docker network rm npm-net || true
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -503,20 +487,18 @@ tasks:
           docker build -t npm-proxy:local "$REPO_PATH/ci/squid"
 
           # ------------------------------------------------------------
-          # Create networks + start Squid proxy sidecar
+          # Create network + start Squid proxy sidecar
+          # The proxy enforces the allowlist for the entire run.
+          # Test execution clears proxy env vars so tests don't route
+          # their own traffic through Squid.
           # ------------------------------------------------------------
 
           docker network create npm-net
-          docker network create --internal test-net
 
           docker run -d \
             --name npm-proxy \
             --network npm-net \
             npm-proxy:local
-
-          # ------------------------------------------------------------
-          # Start test-runner — outbound npm traffic routed through proxy
-          # ------------------------------------------------------------
 
           docker run -d \
             --name test-runner \
@@ -534,26 +516,12 @@ tasks:
           echo "Node.js inside container:"
           docker exec test-runner node --version
 
-          # ------------------------------------------------------------
-          # Dependency installation (proxy enforces registry.npmjs.org only)
-          # ------------------------------------------------------------
-
           docker exec test-runner \
             npm install --loglevel warn
 
           # generate versioned test folders — must run before TEST_FILES discovery
           docker exec test-runner \
             node bin/create-version-test-folders.js
-
-          # ------------------------------------------------------------
-          # Transition test-runner to isolated test-net
-          # (the _v*/ npm installs run at test-time via --prefer-offline cache)
-          # ------------------------------------------------------------
-
-          docker network connect test-net test-runner
-          docker network disconnect npm-net test-runner
-          docker rm -f npm-proxy || true
-          docker network rm npm-net || true
 
           # ------------------------------------------------------------
           # Collect test files (after versioned folders are generated)
@@ -568,13 +536,13 @@ tasks:
 
           if [ -z "$TEST_FILES" ]; then
             echo 'WARNING: No test files found for native_promise — skipping.'
-            docker rm -f test-runner || true
-            docker network rm test-net || true
+            docker rm -f test-runner npm-proxy || true
+            docker network rm npm-net || true
             exit 0
           fi
 
           # ------------------------------------------------------------
-          # Run tests (Isolated on test-net --internal, proxy vars cleared)
+          # Run tests (proxy env vars cleared so tests don't route through Squid)
           # ------------------------------------------------------------
 
           LAST_EXIT=0
@@ -608,8 +576,8 @@ tasks:
           # Cleanup
           # ------------------------------------------------------------
 
-          docker rm -f test-runner || true
-          docker network rm test-net || true
+          docker rm -f test-runner npm-proxy || true
+          docker network rm npm-net || true
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
