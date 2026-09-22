@@ -55,7 +55,7 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "$(cat .nvmrc | tr -d '[:space:]')")")}",
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "$(cat .nvmrc | tr -d '[:space:]')")")}"
           NODE_MAJOR="${node_version%%.*}"
           RUN_ESM="$(get_env RUN_ESM "")"
 
@@ -73,7 +73,6 @@ tasks:
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
           REPO_PATH="$PWD"
-          NODE_MAJOR="NODE_MAJOR"
 
           # build Squid egress-proxy image
           docker build -t npm-proxy:local "$REPO_PATH/ci/squid"
@@ -225,7 +224,7 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "$(cat .nvmrc | tr -d '[:space:]')")")}",
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "$(cat .nvmrc | tr -d '[:space:]')")")}"
           NODE_MAJOR="${node_version%%.*}"
           RUN_ESM="$(get_env RUN_ESM "")"
 
@@ -243,7 +242,6 @@ tasks:
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
           REPO_PATH="$PWD"
-          NODE_MAJOR="NODE_MAJOR"
 
           # build Squid egress-proxy image
           docker build -t npm-proxy:local "$REPO_PATH/ci/squid"
@@ -395,7 +393,7 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "$(cat .nvmrc | tr -d '[:space:]')")")}",
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "$(cat .nvmrc | tr -d '[:space:]')")")}"
           NODE_MAJOR="${node_version%%.*}"
           RUN_ESM="$(get_env RUN_ESM "")"
 
@@ -413,7 +411,6 @@ tasks:
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
           REPO_PATH="$PWD"
-          NODE_MAJOR="NODE_MAJOR"
 
           # build Squid egress-proxy image
           docker build -t npm-proxy:local "$REPO_PATH/ci/squid"
@@ -565,7 +562,7 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "$(cat .nvmrc | tr -d '[:space:]')")")}",
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "$(cat .nvmrc | tr -d '[:space:]')")")}"
           NODE_MAJOR="${node_version%%.*}"
           RUN_ESM="$(get_env RUN_ESM "")"
 
@@ -583,7 +580,6 @@ tasks:
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
           REPO_PATH="$PWD"
-          NODE_MAJOR="NODE_MAJOR"
 
           # build Squid egress-proxy image
           docker build -t npm-proxy:local "$REPO_PATH/ci/squid"
@@ -735,7 +731,7 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "$(cat .nvmrc | tr -d '[:space:]')")")}",
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "$(cat .nvmrc | tr -d '[:space:]')")")}"
           NODE_MAJOR="${node_version%%.*}"
           RUN_ESM="$(get_env RUN_ESM "")"
 
@@ -753,7 +749,6 @@ tasks:
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
           REPO_PATH="$PWD"
-          NODE_MAJOR="NODE_MAJOR"
 
           # build Squid egress-proxy image
           docker build -t npm-proxy:local "$REPO_PATH/ci/squid"
@@ -905,7 +900,7 @@ tasks:
           #!/usr/bin/env bash
           set -eo pipefail
 
-          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "$(cat .nvmrc | tr -d '[:space:]')")")}",
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "$(cat .nvmrc | tr -d '[:space:]')")")}"
           NODE_MAJOR="${node_version%%.*}"
           RUN_ESM="$(get_env RUN_ESM "")"
 
@@ -923,7 +918,6 @@ tasks:
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
           REPO_PATH="$PWD"
-          NODE_MAJOR="NODE_MAJOR"
 
           # build Squid egress-proxy image
           docker build -t npm-proxy:local "$REPO_PATH/ci/squid"

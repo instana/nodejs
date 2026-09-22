@@ -65,11 +65,6 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-
-          # collect test files
-          TEST_FILES=$(cd packages/aws-lambda && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
-
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -80,6 +75,20 @@ tasks:
           echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start egress-proxy — restricts npm install to the allowlist
+          docker build -t npm-proxy:local "$PWD/ci/squid"
+          docker network create npm-net
+          docker run -d --name npm-proxy --network npm-net npm-proxy:local
+          NPM_PROXY_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' npm-proxy)
+
+          HTTPS_PROXY="http://$NPM_PROXY_IP:3128" HTTP_PROXY="http://$NPM_PROXY_IP:3128" \
+            npm install --loglevel warn --foreground-scripts
+          docker rm -f npm-proxy || true
+          docker network rm npm-net || true
+
+          # collect test files
+          TEST_FILES=$(cd packages/aws-lambda && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
 
           # create isolated network (no internet access)
           docker network create --internal offline-net
@@ -181,10 +190,14 @@ tasks:
     from: code-build
     displayName: aws-fargate
     runtimeClassName: large
+    include:
+      - dind
     steps:
       - name: unit-test
         displayName: aws-fargate
         image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
@@ -199,7 +212,27 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start egress-proxy — restricts npm install to the allowlist
+          docker build -t npm-proxy:local "$PWD/ci/squid"
+          docker network create npm-net
+          docker run -d --name npm-proxy --network npm-net npm-proxy:local
+          NPM_PROXY_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' npm-proxy)
+
+          HTTPS_PROXY="http://$NPM_PROXY_IP:3128" HTTP_PROXY="http://$NPM_PROXY_IP:3128" \
+            npm install --loglevel warn --foreground-scripts
+          docker rm -f npm-proxy || true
+          docker network rm npm-net || true
 
           # collect test files
           TEST_FILES=$(cd packages/aws-fargate && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
@@ -290,10 +323,14 @@ tasks:
     from: code-build
     displayName: azure-container-services
     runtimeClassName: large
+    include:
+      - dind
     steps:
       - name: unit-test
         displayName: azure-container-services
         image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
@@ -308,7 +345,27 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start egress-proxy — restricts npm install to the allowlist
+          docker build -t npm-proxy:local "$PWD/ci/squid"
+          docker network create npm-net
+          docker run -d --name npm-proxy --network npm-net npm-proxy:local
+          NPM_PROXY_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' npm-proxy)
+
+          HTTPS_PROXY="http://$NPM_PROXY_IP:3128" HTTP_PROXY="http://$NPM_PROXY_IP:3128" \
+            npm install --loglevel warn --foreground-scripts
+          docker rm -f npm-proxy || true
+          docker network rm npm-net || true
 
           # collect test files
           TEST_FILES=$(cd packages/azure-container-services && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
@@ -399,10 +456,14 @@ tasks:
     from: code-build
     displayName: google-cloud-run
     runtimeClassName: large
+    include:
+      - dind
     steps:
       - name: unit-test
         displayName: google-cloud-run
         image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
@@ -417,7 +478,27 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # start egress-proxy — restricts npm install to the allowlist
+          docker build -t npm-proxy:local "$PWD/ci/squid"
+          docker network create npm-net
+          docker run -d --name npm-proxy --network npm-net npm-proxy:local
+          NPM_PROXY_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' npm-proxy)
+
+          HTTPS_PROXY="http://$NPM_PROXY_IP:3128" HTTP_PROXY="http://$NPM_PROXY_IP:3128" \
+            npm install --loglevel warn --foreground-scripts
+          docker rm -f npm-proxy || true
+          docker network rm npm-net || true
 
           # collect test files
           TEST_FILES=$(cd packages/google-cloud-run && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
