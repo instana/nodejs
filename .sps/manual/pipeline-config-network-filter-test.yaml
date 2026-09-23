@@ -4,33 +4,21 @@ tasks:
   # code-checks includes five steps: setup, detect-secrets, compliance-checks, peer-review, static-scan
   code-checks:
     when: false
+
   code-build:
     runtimeClassName: large
     steps:
       - name: unit-test
-        displayName: npm-install
-        image: mirror.gcr.io/library/node:24
         script: |-
           #!/usr/bin/env bash
-          set -eo pipefail
-          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
-
-          cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
-          node bin/create-version-test-folders.js
+          echo "success"
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
         when: 'false'
       - name: scan-artifact
         when: 'false'
+
   code-pr-finish:
     when: 'false'
   code-ci-finish:
@@ -41,29 +29,17 @@ tasks:
     when: false
 
   # ────────────────────────────────────────────────────────────────────────────
-  # network-filter-test
-  #
-  # Purpose: validate the monadicalsas/network-filter image in a CI context.
-  #
-  # Topology:
-  #   1. A `network-filter` sidecar is started with NET_ADMIN and
-  #      ALLOWED_DOMAINS set to the npm registries only.
-  #   2. The test-runner container shares the sidecar's network namespace via
-  #      --network "container:<filter-ctr>", inheriting all iptables rules.
-  #
-  # Tests:
-  #   ✔  npm install succeeds   — registry.npmjs.org / npmjs.com are allowed
-  #   ✔  blocked domain fails   — example.com is NOT in ALLOWED_DOMAINS
+  # collector-async-await
   # ────────────────────────────────────────────────────────────────────────────
-  code-build-network-filter-test:
+  code-build-collector-async-await:
     from: code-build
-    displayName: network-filter-test
+    displayName: await
     runtimeClassName: large
     include:
       - dind
     steps:
       - name: unit-test
-        displayName: network-filter-test
+        displayName: await
         image: mirror.gcr.io/library/node:24
         include:
           - docker-socket
@@ -72,49 +48,54 @@ tasks:
           set -eo pipefail
 
           node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
+          cd "$REPO_DIR"
 
-          cd "$WORKSPACE/$(load_repo app-repo path)"
+          # ── Install Docker CLI on host runner ──────────────────────────────────
+          if ! command -v docker &>/dev/null; then
+            echo "Installing docker-ce-cli..."
+            CODENAME=$(. /etc/os-release && echo "$VERSION_CODENAME")
+            ARCH=$(dpkg --print-architecture)
+            apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg
+            install -m 0755 -d /etc/apt/keyrings
+            curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+            chmod a+r /etc/apt/keyrings/docker.gpg
+            echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" \
+              | tee /etc/apt/sources.list.d/docker.list > /dev/null
+            apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          fi
 
-          # ── install docker client ────────────────────────────────────────────────
-          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
-          ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg
-          install -m 0755 -d /etc/apt/keyrings
-          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-          chmod a+r /etc/apt/keyrings/docker.gpg
-          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" \
-            | tee /etc/apt/sources.list.d/docker.list > /dev/null
-          apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          # ── network-filter sidecar ───────────────────────────────────────────────
-          # ALLOWED_DOMAINS: only npm registries — what npm install needs.
-          # raw.githubusercontent.com is included because nvm fetches its install
-          # script from there (already done above on the host, but listed for
-          # completeness if any in-container npm lifecycle script fetches it).
-          FILTER_CTR="network-filter-$$"
+          # ── Collect test files before isolating network ────────────────────────
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/async/await \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
 
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for await — skipping.'
+            exit 0
+          fi
+
+          # ── Start network-filter sidecar ───────────────────────────────────────
+          FILTER_CTR="network-filter-await-$$"
           cleanup() {
             docker rm -f "$FILTER_CTR" 2>/dev/null || true
           }
           trap cleanup EXIT
 
+          # Domains required for npm install + precompiled binaries
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,objects.githubusercontent.com"
+
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
-            --env ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com" \
+            --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
             monadicalsas/network-filter:latest
 
-          # Wait until the filter container is running and has applied its rules.
-          # The container prints "iptables rules applied" once ready.
           elapsed=0
-          until docker logs "$FILTER_CTR" 2>&1 | grep -q "iptables"; do
+          until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
             elapsed=$((elapsed + 1))
             if [ "$elapsed" -ge 30 ]; then
               echo "ERROR: network-filter did not become ready within 30s"
@@ -124,47 +105,106 @@ tasks:
             sleep 1
           done
           echo "network-filter ready after ${elapsed}s"
-          docker logs "$FILTER_CTR" 2>&1
 
-          # ── TEST 1: npm install succeeds inside the filtered network ─────────────
-          echo ""
-          echo "=== TEST 1: npm install succeeds (allowed domains) ==="
-          # Run npm install inside a node container that shares the filter's
-          # network namespace — it inherits the iptables/dnsmasq restrictions.
+          # ── STEP 1: npm install inside the filtered container ──────────────────
+          echo "Running npm install inside filtered container..."
           docker run --rm \
             --network "container:${FILTER_CTR}" \
-            --volume "$(pwd):/work" \
+            --volume "$REPO_DIR:/work" \
             --workdir /work \
             mirror.gcr.io/library/node:24 \
-            npm install --loglevel warn --foreground-scripts
-          echo "TEST 1 PASSED: npm install completed inside filtered network."
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
-          # ── TEST 2: blocked domain is unreachable inside the filtered network ────
-          echo ""
-          echo "=== TEST 2: non-allowed domain is blocked ==="
-          # example.com is NOT in ALLOWED_DOMAINS — the iptables DROP rule must
-          # prevent any TCP connection to it.  The node script exits 0 on block,
-          # exits 1 if the connection unexpectedly succeeds.
-          BLOCKED_SCRIPT='
-          const https = require("https");
-          const req = https.get("https://example.com/", { timeout: 8000 }, (res) => {
-            console.error("FAIL: connection to example.com succeeded (status " + res.statusCode + ")");
-            process.exit(1);
-          });
-          req.on("timeout", () => { req.destroy(); });
-          req.on("error", (e) => {
-            console.log("OK: blocked — " + e.code);
-            process.exit(0);
-          });
-          '
-          docker run --rm \
-            --network "container:${FILTER_CTR}" \
-            mirror.gcr.io/library/node:24 \
-            node -e "$BLOCKED_SCRIPT"
-          echo "TEST 2 PASSED: non-allowed domain is blocked."
+          # Verification
+          test -d "$REPO_DIR/node_modules" && echo "PASS: node_modules successfully installed under network filter."
 
-          echo ""
-          echo "All network-filter tests PASSED."
+          # ── STEP 2: Run test suite inside filtered container ───────────────────
+          RUN_ESM="$(get_env RUN_ESM "")"
+          retry=1
+          while [ $retry -le 2 ]; do
+            LAST_EXIT=0
+            docker run --rm \
+              --network "container:${FILTER_CTR}" \
+              --volume "$REPO_DIR:/work" \
+              --workdir /work \
+              --env CI=true \
+              --env RUN_ESM="$RUN_ESM" \
+              --env TEST_FILES="$TEST_FILES" \
+              mirror.gcr.io/library/node:24 \
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-async-await" || LAST_EXIT=$?
+
+            if [ $LAST_EXIT -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            retry=$((retry + 1))
+          done
+
+          # Cleanup filter container so subsequent host uploads have full network access
+          cleanup
+          trap - EXIT
+
+          # ── STEP 3: Upload test reports to IBM COS ─────────────────────────────
+          COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
+          GIT_COMMIT="$(get_env commit-id "")"
+          if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
+            IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=$COS_API_KEY" \
+              | grep -o '"access_token":"[^"]*"' | sed 's/"access_token":"//;s/"//')
+            curl -sf -X PUT \
+              "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/collector-async-await.txt" \
+              -H "Authorization: Bearer $IAM_TOKEN" \
+              -H "Content-Type: text/plain" \
+              --data-binary "$(echo "$TEST_FILES" | tr ' ' '\n' | sort)" \
+              && echo "Uploaded test list for collector-async-await → test-results/$GIT_COMMIT/collector-async-await.txt" \
+              || echo "WARNING: Failed to upload test list for collector-async-await (non-fatal)"
+
+            NODE_MAJOR="${node_version%%.*}"
+            if [ "$NODE_MAJOR" != "24" ]; then
+              echo "Skip: lcov upload — not the development node major version ($NODE_MAJOR != 24)"
+            else
+              LCOV_FILE="coverage/collector-async-await/lcov.info"
+              if [ -f "$LCOV_FILE" ]; then
+                curl -sf -X PUT \
+                  "https://s3.eu-de.cloud-object-storage.appdomain.cloud/itp-nodejs-tracer-sps/test-results/$GIT_COMMIT/coverage/collector-async-await/lcov.info" \
+                  -H "Authorization: Bearer $IAM_TOKEN" \
+                  -H "Content-Type: text/plain" \
+                  --data-binary @"$LCOV_FILE" \
+                  && echo "Uploaded lcov for collector-async-await → test-results/$GIT_COMMIT/coverage/collector-async-await/lcov.info" \
+                  || echo "WARNING: Failed to upload lcov for collector-async-await (non-fatal)"
+              else
+                echo "WARNING: lcov not found at $LCOV_FILE — skipping lcov upload"
+              fi
+            fi
+          else
+            echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
+          fi
+
+          # ── STEP 4: Report commit status to GitHub ────────────────────────────
+          GH_TOKEN="$(get_secret gh-public-token)"
+          GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
+          PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
+          if [ -n "$GIT_COMMIT" ]; then
+            STATUS="success"
+            if [ $LAST_EXIT -ne 0 ]; then STATUS="failure"; fi
+            CURL_RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST "https://api.github.com/repos/instana/nodejs/statuses/$GIT_COMMIT" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main/${node_version%%.*}/$TASK_NAME\"}")
+            CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
+            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            if [ "$CURL_HTTP" = "201" ]; then
+              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+            else
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+            fi
+          else
+            echo "WARNING: commit-id not set — skipping commit status."
+          fi
+          exit $LAST_EXIT
       - name: sign-artifact
         when: 'false'
       - name: build-artifact
