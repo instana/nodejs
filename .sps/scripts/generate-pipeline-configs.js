@@ -970,7 +970,6 @@ function baseConfig(fanOutTasks, rootTask = 'pr-code-checks') {
           { name: 'compliance-checks', when: 'false' },
           {
             name: 'unit-test',
-            displayName: 'setup',
             script: '#!/usr/bin/env bash\necho "Setup completed successfully"'
           },
           { name: 'sign-artifact', when: 'false' },
@@ -1925,7 +1924,6 @@ function generateOne(t) {
             { name: 'compliance-checks', when: 'false' },
             {
               name: 'unit-test',
-              displayName: 'setup',
               script: '#!/usr/bin/env bash\necho "Setup completed successfully"'
             },
             { name: 'sign-artifact', when: 'false' },

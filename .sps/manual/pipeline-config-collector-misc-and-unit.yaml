@@ -8,7 +8,6 @@ tasks:
     runtimeClassName: large
     steps:
       - name: unit-test
-        displayName: setup
         script: |-
           #!/usr/bin/env bash
           echo "Setup completed successfully"

@@ -10,7 +10,6 @@ tasks:
       - name: compliance-checks
         when: 'false'
       - name: unit-test
-        displayName: setup
         script: |-
           #!/usr/bin/env bash
           echo "Setup completed successfully"
