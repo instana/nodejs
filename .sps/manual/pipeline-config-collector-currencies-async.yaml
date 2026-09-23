@@ -99,6 +99,26 @@ tasks:
             sleep infinity
 
           docker exec test-runner npm install --loglevel warn
+
+          docker exec \
+          -e HTTP_PROXY="" \
+          -e HTTPS_PROXY="" \
+          -e http_proxy="" \
+          -e https_proxy="" \
+          test-runner \
+          bash -c '
+            echo "=== SPS network restriction check ==="
+            echo "Testing direct access to https://opentelemetry.io/docs"
+
+            if curl -fsSIL --max-time 10 https://opentelemetry.io/docs >/dev/null; then
+              echo "WARNING: Internet restriction FAILED - opentelemetry.io is reachable"
+            else
+              echo "SUCCESS: Internet restriction is working - opentelemetry.io is blocked"
+            fi
+
+            echo "=== End network restriction check ==="
+          '
+          
           docker exec test-runner node bin/create-version-test-folders.js
 
           # collect test files
@@ -268,6 +288,24 @@ tasks:
             sleep infinity
 
           docker exec test-runner npm install --loglevel warn
+          docker exec \
+          -e HTTP_PROXY="" \
+          -e HTTPS_PROXY="" \
+          -e http_proxy="" \
+          -e https_proxy="" \
+          test-runner \
+          bash -c '
+            echo "=== SPS network restriction check ==="
+            echo "Testing direct access to https://opentelemetry.io/docs"
+
+            if curl -fsSIL --max-time 10 https://opentelemetry.io/docs >/dev/null; then
+              echo "WARNING: Internet restriction FAILED - opentelemetry.io is reachable"
+            else
+              echo "SUCCESS: Internet restriction is working - opentelemetry.io is blocked"
+            fi
+
+            echo "=== End network restriction check ==="
+          '
           docker exec test-runner node bin/create-version-test-folders.js
 
           # collect test files
