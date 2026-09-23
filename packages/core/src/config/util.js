@@ -84,6 +84,25 @@ exports.resolve = function resolve({ envValue, inCodeValue, agentValue, defaultV
 };
 
 /**
+ * @param {any} value
+ * @returns {number|undefined}
+ */
+exports.toNumber = function toNumber(value) {
+  if (value == null || value === '') return undefined;
+  const num = typeof value === 'number' ? value : Number(value);
+  return Number.isNaN(num) ? undefined : num;
+};
+
+/**
+ * @param {any} value
+ * @returns {number|undefined}
+ */
+exports.toMilliseconds = function toMilliseconds(value) {
+  const num = exports.toNumber(value);
+  return num !== undefined ? num * 1000 : undefined;
+};
+
+/**
  * @param {{ configPath: string, source: number, value: any, envVarName?: string }} params
  */
 exports.log = function log({ configPath, source, value, envVarName }) {

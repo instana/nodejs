@@ -317,54 +317,37 @@ function normalizeMetricsConfig({ userConfig = {}, defaultConfig = {}, finalConf
   //   5. agent poll_rate update
   //   6. default (1000 ms)
   //
-  // INSTANA_METRICS_TRANSMISSION_DELAY is deprecated and will be removed in a future release.
   let envTransmissionDelay;
   let activeEnvVarName;
 
   const rawPollRate = process.env.INSTANA_METRICS_POLL_RATE;
   const rawLegacyDelay = process.env.INSTANA_METRICS_TRANSMISSION_DELAY;
 
-  if (rawPollRate !== undefined) {
-    const parsedSeconds = validators.numberValidator(rawPollRate);
-    if (parsedSeconds !== undefined) {
-      envTransmissionDelay = parsedSeconds * 1000;
+  if (rawPollRate != null && rawPollRate !== '') {
+    envTransmissionDelay = util.toMilliseconds(rawPollRate);
+    if (envTransmissionDelay !== undefined) {
       activeEnvVarName = 'INSTANA_METRICS_POLL_RATE';
     }
-  } else if (rawLegacyDelay !== undefined) {
+  } else if (rawLegacyDelay != null && rawLegacyDelay !== '') {
     logger?.warn(
       'INSTANA_METRICS_TRANSMISSION_DELAY is deprecated and will be removed in a future release. ' +
         'Please use INSTANA_METRICS_POLL_RATE instead (value in seconds).'
     );
-    const parsedMs = validators.numberValidator(rawLegacyDelay);
-    if (parsedMs !== undefined) {
-      envTransmissionDelay = parsedMs;
+    envTransmissionDelay = util.toNumber(rawLegacyDelay);
+    if (envTransmissionDelay !== undefined) {
       activeEnvVarName = 'INSTANA_METRICS_TRANSMISSION_DELAY';
     }
   }
 
-  // Resolve the effective in-code value: metrics.pollRate (seconds→ms) takes priority over
-  // metrics.transmissionDelay (ms).
-  let inCodeTransmissionDelay;
-  if (userMetrics?.pollRate != null) {
-    const parsedPollRate = validators.numberValidator(userMetrics.pollRate);
-    if (parsedPollRate !== undefined) {
-      inCodeTransmissionDelay = parsedPollRate * 1000;
-    }
-  }
-  if (inCodeTransmissionDelay === undefined && userMetrics?.transmissionDelay != null) {
-    const parsedDelay = validators.numberValidator(userMetrics.transmissionDelay);
-    if (parsedDelay !== undefined) {
-      inCodeTransmissionDelay = parsedDelay;
-    }
-  }
+  const inCodeTransmissionDelay =
+    util.toMilliseconds(userMetrics?.pollRate) ?? util.toNumber(userMetrics?.transmissionDelay);
 
   let transmissionDelay;
   let transmissionDelaySource;
 
   if (envTransmissionDelay !== undefined) {
-    // Env var wins — record source as ENV so agent updates cannot override it.
     transmissionDelay = envTransmissionDelay;
-    transmissionDelaySource = require('../util/constants').CONFIG_SOURCES.ENV;
+    transmissionDelaySource = CONFIG_SOURCES.ENV;
   } else {
     const resolved = util.resolve(
       {

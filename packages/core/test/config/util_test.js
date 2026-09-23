@@ -614,4 +614,40 @@ describe('config.util', () => {
       });
     });
   });
+
+  describe('toNumber', () => {
+    it('should return number for valid numeric input', () => {
+      expect(util.toNumber(123)).to.equal(123);
+      expect(util.toNumber(0)).to.equal(0);
+      expect(util.toNumber(-456)).to.equal(-456);
+      expect(util.toNumber('123')).to.equal(123);
+      expect(util.toNumber('5.5')).to.equal(5.5);
+    });
+
+    it('should return undefined for invalid, null, undefined or empty string', () => {
+      expect(util.toNumber(null)).to.be.undefined;
+      expect(util.toNumber(undefined)).to.be.undefined;
+      expect(util.toNumber('')).to.be.undefined;
+      expect(util.toNumber('abc')).to.be.undefined;
+      expect(util.toNumber(NaN)).to.be.undefined;
+    });
+  });
+
+  describe('toMilliseconds', () => {
+    it('should convert seconds to milliseconds', () => {
+      expect(util.toMilliseconds(1)).to.equal(1000);
+      expect(util.toMilliseconds(5)).to.equal(5000);
+      expect(util.toMilliseconds('5')).to.equal(5000);
+      expect(util.toMilliseconds(0.5)).to.equal(500);
+      expect(util.toMilliseconds(0)).to.equal(0);
+    });
+
+    it('should return undefined for invalid, null, undefined or empty string', () => {
+      expect(util.toMilliseconds(null)).to.be.undefined;
+      expect(util.toMilliseconds(undefined)).to.be.undefined;
+      expect(util.toMilliseconds('')).to.be.undefined;
+      expect(util.toMilliseconds('abc')).to.be.undefined;
+      expect(util.toMilliseconds(NaN)).to.be.undefined;
+    });
+  });
 });
