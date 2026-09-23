@@ -204,14 +204,18 @@ exports.validateTransmissionDelay = function validateTransmissionDelay(value) {
     return value;
   }
 
-  const nearest = allowedTransmissionDelayValues.reduce((prev, curr) =>
-    Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev,
+  const nearest = allowedTransmissionDelayValues.reduce(
+    (prev, curr) => (Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev),
     allowedTransmissionDelayValues[0]
   );
+  const allowedMs = allowedTransmissionDelayValues.join(', ');
+  const allowedSeconds = allowedTransmissionDelayValues.map(ms => ms / 1000).join(', ');
   logger.warn(
-    `The value of config.metrics.transmissionDelay (or INSTANA_METRICS_TRANSMISSION_DELAY) (${value}) is not one of ` +
-      `the allowed values (${allowedTransmissionDelayValues.join(', ')} ms). ` +
-      `Assuming the nearest allowed value ${nearest} ms.`
+    `The configured poll rate (${value} ms) is not one of the allowed values (${allowedMs} ms).` +
+      `Use INSTANA_METRICS_POLL_RATE or config.metrics.pollRate, specify seconds (allowed: ${allowedSeconds} s).` +
+      ` If using INSTANA_METRICS_TRANSMISSION_DELAY (deprecated) or config.metrics.transmissionDelay, 
+      specify milliseconds (allowed: ${allowedMs} ms). 
+    Assuming the nearest allowed value ${nearest} ms.`
   );
   return nearest;
 };

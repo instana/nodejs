@@ -12,11 +12,20 @@ const { createFakeLogger } = require('../test_util');
 const coreConfig = require('../../src/config');
 
 describe('config.normalizeConfig', () => {
+  /** @type {ReturnType<typeof createFakeLogger> & { warnMessages: string[] }} */
+  let fakeLogger;
+
   before(() => {
-    coreConfig.init(createFakeLogger());
+    fakeLogger = createFakeLogger();
+    fakeLogger.warnMessages = [];
+    fakeLogger.warn = msg => fakeLogger.warnMessages.push(msg);
+    coreConfig.init(fakeLogger);
   });
 
-  beforeEach(resetEnv);
+  beforeEach(() => {
+    resetEnv();
+    fakeLogger.warnMessages = [];
+  });
   afterEach(resetEnv);
 
   function resetEnv() {
@@ -28,6 +37,7 @@ describe('config.normalizeConfig', () => {
     delete process.env.INSTANA_TRACE_IMMEDIATELY;
     delete process.env.INSTANA_EXTRA_HTTP_HEADERS;
     delete process.env.INSTANA_FORCE_TRANSMISSION_STARTING_AT;
+    delete process.env.INSTANA_METRICS_POLL_RATE;
     delete process.env.INSTANA_METRICS_TRANSMISSION_DELAY;
     delete process.env.INSTANA_SECRETS;
     delete process.env.INSTANA_SERVICE_NAME;
@@ -230,6 +240,153 @@ describe('config.normalizeConfig', () => {
         }
       });
       expect(config.metrics.timeBetweenHealthcheckCalls).to.equal(9876);
+    });
+  });
+
+  describe('INSTANA_METRICS_POLL_RATE', () => {
+    it('should accept INSTANA_METRICS_POLL_RATE in seconds and convert to ms', () => {
+      process.env.INSTANA_METRICS_POLL_RATE = '5';
+      const config = coreConfig.normalize();
+      expect(config.metrics.transmissionDelay).to.equal(5000);
+    });
+
+    it('should accept INSTANA_METRICS_POLL_RATE of 1 (1s = 1000ms)', () => {
+      process.env.INSTANA_METRICS_POLL_RATE = '1';
+      const config = coreConfig.normalize();
+      expect(config.metrics.transmissionDelay).to.equal(1000);
+    });
+
+    it('should accept INSTANA_METRICS_POLL_RATE of 60 (60s = 60000ms)', () => {
+      process.env.INSTANA_METRICS_POLL_RATE = '60';
+      const config = coreConfig.normalize();
+      expect(config.metrics.transmissionDelay).to.equal(60000);
+    });
+
+    it('should snap INSTANA_METRICS_POLL_RATE to nearest allowed value (e.g. 7s → 5000ms)', () => {
+      process.env.INSTANA_METRICS_POLL_RATE = '7';
+      const config = coreConfig.normalize();
+      // 7s = 7000ms; nearest allowed is 5000ms
+      expect(config.metrics.transmissionDelay).to.equal(5000);
+    });
+
+    it('should fall back to default when INSTANA_METRICS_POLL_RATE is non-numerical', () => {
+      process.env.INSTANA_METRICS_POLL_RATE = 'abc';
+      const config = coreConfig.normalize();
+      expect(config.metrics.transmissionDelay).to.equal(1000);
+    });
+
+    it('should fall back to in-code config when INSTANA_METRICS_POLL_RATE is non-numerical', () => {
+      process.env.INSTANA_METRICS_POLL_RATE = 'abc';
+      const config = coreConfig.normalize({ userConfig: { metrics: { transmissionDelay: 5000 } } });
+      expect(config.metrics.transmissionDelay).to.equal(5000);
+    });
+
+    it('should give INSTANA_METRICS_POLL_RATE priority over INSTANA_METRICS_TRANSMISSION_DELAY', () => {
+      process.env.INSTANA_METRICS_POLL_RATE = '10';
+      process.env.INSTANA_METRICS_TRANSMISSION_DELAY = '30000';
+      const config = coreConfig.normalize();
+      // INSTANA_METRICS_POLL_RATE = 10s = 10000ms wins
+      expect(config.metrics.transmissionDelay).to.equal(10000);
+    });
+
+    it('should give INSTANA_METRICS_POLL_RATE priority over metrics.pollRate in-code', () => {
+      process.env.INSTANA_METRICS_POLL_RATE = '30';
+      const config = coreConfig.normalize({ userConfig: { metrics: { pollRate: 5 } } });
+      // env wins: 30s = 30000ms
+      expect(config.metrics.transmissionDelay).to.equal(30000);
+    });
+
+    it('should give INSTANA_METRICS_POLL_RATE priority over metrics.transmissionDelay in-code', () => {
+      process.env.INSTANA_METRICS_POLL_RATE = '20';
+      const config = coreConfig.normalize({ userConfig: { metrics: { transmissionDelay: 5000 } } });
+      // env wins: 20s = 20000ms
+      expect(config.metrics.transmissionDelay).to.equal(20000);
+    });
+
+    it('should not emit a deprecation warning when INSTANA_METRICS_POLL_RATE is used', () => {
+      process.env.INSTANA_METRICS_POLL_RATE = '5';
+      coreConfig.normalize();
+      const hasDeprecation = fakeLogger.warnMessages.some(m =>
+        m.includes('INSTANA_METRICS_TRANSMISSION_DELAY is deprecated')
+      );
+      expect(hasDeprecation).to.be.false;
+    });
+
+    it('should not emit a deprecation warning when INSTANA_METRICS_POLL_RATE is set even if INSTANA_METRICS_TRANSMISSION_DELAY is also set', () => {
+      process.env.INSTANA_METRICS_POLL_RATE = '5';
+      process.env.INSTANA_METRICS_TRANSMISSION_DELAY = '30000';
+      coreConfig.normalize();
+      const hasDeprecation = fakeLogger.warnMessages.some(m =>
+        m.includes('INSTANA_METRICS_TRANSMISSION_DELAY is deprecated')
+      );
+      expect(hasDeprecation).to.be.false;
+    });
+  });
+
+  describe('metrics.pollRate in-code config', () => {
+    it('should accept metrics.pollRate in seconds and convert to ms', () => {
+      const config = coreConfig.normalize({ userConfig: { metrics: { pollRate: 5 } } });
+      expect(config.metrics.transmissionDelay).to.equal(5000);
+    });
+
+    it('should accept metrics.pollRate of 1 (1s = 1000ms)', () => {
+      const config = coreConfig.normalize({ userConfig: { metrics: { pollRate: 1 } } });
+      expect(config.metrics.transmissionDelay).to.equal(1000);
+    });
+
+    it('should accept metrics.pollRate of 60 (60s = 60000ms)', () => {
+      const config = coreConfig.normalize({ userConfig: { metrics: { pollRate: 60 } } });
+      expect(config.metrics.transmissionDelay).to.equal(60000);
+    });
+
+    it('should snap metrics.pollRate to nearest allowed value (e.g. 7s → 5000ms)', () => {
+      const config = coreConfig.normalize({ userConfig: { metrics: { pollRate: 7 } } });
+      // 7s = 7000ms; nearest allowed is 5000ms
+      expect(config.metrics.transmissionDelay).to.equal(5000);
+    });
+
+    it('should fall back to metrics.transmissionDelay when metrics.pollRate is invalid', () => {
+      const config = coreConfig.normalize({ userConfig: { metrics: { pollRate: 'bad', transmissionDelay: 10000 } } });
+      expect(config.metrics.transmissionDelay).to.equal(10000);
+    });
+
+    it('should give metrics.pollRate priority over metrics.transmissionDelay', () => {
+      const config = coreConfig.normalize({ userConfig: { metrics: { pollRate: 30, transmissionDelay: 5000 } } });
+      // pollRate wins: 30s = 30000ms
+      expect(config.metrics.transmissionDelay).to.equal(30000);
+    });
+
+    it('should fall back to default when metrics.pollRate is invalid and transmissionDelay is not set', () => {
+      const config = coreConfig.normalize({ userConfig: { metrics: { pollRate: 'bad' } } });
+      expect(config.metrics.transmissionDelay).to.equal(1000);
+    });
+  });
+
+  describe('INSTANA_METRICS_TRANSMISSION_DELAY deprecation', () => {
+    it('should emit a deprecation warning when INSTANA_METRICS_TRANSMISSION_DELAY is used', () => {
+      process.env.INSTANA_METRICS_TRANSMISSION_DELAY = '5000';
+      coreConfig.normalize();
+      const hasDeprecation = fakeLogger.warnMessages.some(m =>
+        m.includes('INSTANA_METRICS_TRANSMISSION_DELAY is deprecated')
+      );
+      expect(hasDeprecation).to.be.true;
+    });
+
+    it('should emit a deprecation warning even when INSTANA_METRICS_TRANSMISSION_DELAY value is invalid', () => {
+      process.env.INSTANA_METRICS_TRANSMISSION_DELAY = 'invalid';
+      coreConfig.normalize();
+      const hasDeprecation = fakeLogger.warnMessages.some(m =>
+        m.includes('INSTANA_METRICS_TRANSMISSION_DELAY is deprecated')
+      );
+      expect(hasDeprecation).to.be.true;
+    });
+
+    it('should not emit a deprecation warning when INSTANA_METRICS_TRANSMISSION_DELAY is not set', () => {
+      coreConfig.normalize();
+      const hasDeprecation = fakeLogger.warnMessages.some(m =>
+        m.includes('INSTANA_METRICS_TRANSMISSION_DELAY is deprecated')
+      );
+      expect(hasDeprecation).to.be.false;
     });
   });
 
@@ -2816,6 +2973,58 @@ describe('config.normalizeConfig', () => {
 
         // ENV still wins over agent
         expect(config.metrics.transmissionDelay).to.equal(60000);
+      });
+
+      it('should not override metrics.transmissionDelay when INSTANA_METRICS_POLL_RATE env var is set', () => {
+        process.env.INSTANA_METRICS_POLL_RATE = '5';
+        const config = coreConfig.normalize({});
+
+        // 5s = 5000ms
+        expect(config.metrics.transmissionDelay).to.equal(5000);
+
+        coreConfig.update({
+          externalConfig: { metrics: { transmissionDelay: 10000 } },
+          source: CONFIG_SOURCES.AGENT
+        });
+
+        // env var wins — agent value must be ignored
+        expect(config.metrics.transmissionDelay).to.equal(5000);
+      });
+
+      it('should respect precedence: INSTANA_METRICS_POLL_RATE > IN_CODE > AGENT', () => {
+        process.env.INSTANA_METRICS_POLL_RATE = '60';
+
+        const config = coreConfig.normalize({
+          userConfig: { metrics: { pollRate: 20, transmissionDelay: 5000 } }
+        });
+
+        // INSTANA_METRICS_POLL_RATE (60s = 60000ms) beats in-code pollRate
+        expect(config.metrics.transmissionDelay).to.equal(60000);
+
+        coreConfig.update({
+          externalConfig: { metrics: { transmissionDelay: 1000 } },
+          source: CONFIG_SOURCES.AGENT
+        });
+
+        // INSTANA_METRICS_POLL_RATE still wins over agent
+        expect(config.metrics.transmissionDelay).to.equal(60000);
+      });
+
+      it('should not override metrics.transmissionDelay when metrics.pollRate is set in-code', () => {
+        const config = coreConfig.normalize({
+          userConfig: { metrics: { pollRate: 20 } }
+        });
+
+        // 20s = 20000ms
+        expect(config.metrics.transmissionDelay).to.equal(20000);
+
+        coreConfig.update({
+          externalConfig: { metrics: { transmissionDelay: 1000 } },
+          source: CONFIG_SOURCES.AGENT
+        });
+
+        // in-code pollRate wins — agent value must be ignored
+        expect(config.metrics.transmissionDelay).to.equal(20000);
       });
     });
   });

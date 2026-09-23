@@ -116,6 +116,7 @@ let currentConfig;
 
 /**
  * @typedef {Object} InstanaMetricsOption
+ * @property {number} [pollRate] - Poll rate in seconds; takes priority over transmissionDelay
  * @property {number} [transmissionDelay]
  * @property {number} [timeBetweenHealthcheckCalls]
  */
@@ -308,14 +309,57 @@ function normalizeMetricsConfig({ userConfig = {}, defaultConfig = {}, finalConf
 
   finalConfig.metrics = {};
 
-  const { value: transmissionDelay, source: transmissionDelaySource } = util.resolve(
-    {
-      envValue: 'INSTANA_METRICS_TRANSMISSION_DELAY',
-      inCodeValue: userMetrics?.transmissionDelay,
-      defaultValue: defaultConfig.metrics.transmissionDelay
-    },
-    [validators.numberValidator]
-  );
+  // Priority chain (highest to lowest):
+  //   1. INSTANA_METRICS_POLL_RATE env var  (seconds → ms)
+  //   2. INSTANA_METRICS_TRANSMISSION_DELAY env var  (ms, deprecated)
+  //   3. metrics.pollRate in-code config  (seconds → ms)
+  //   4. metrics.transmissionDelay in-code config  (ms)
+  //   5. agent poll_rate update
+  //   6. default (1000 ms)
+  //
+  let envTransmissionDelay;
+  let activeEnvVarName;
+
+  const rawPollRate = process.env.INSTANA_METRICS_POLL_RATE;
+  const rawLegacyDelay = process.env.INSTANA_METRICS_TRANSMISSION_DELAY;
+
+  if (rawPollRate != null && rawPollRate !== '') {
+    envTransmissionDelay = util.toMilliseconds(rawPollRate);
+    if (envTransmissionDelay !== undefined) {
+      activeEnvVarName = 'INSTANA_METRICS_POLL_RATE';
+    }
+  } else if (rawLegacyDelay != null && rawLegacyDelay !== '') {
+    logger?.warn(
+      // eslint-disable-next-line max-len
+      '[Deprecation Warning] The environment variable INSTANA_METRICS_TRANSMISSION_DELAY is deprecated and will be removed in a future release. ' +
+        'Please use INSTANA_METRICS_POLL_RATE instead (value in seconds).'
+    );
+    envTransmissionDelay = util.toNumber(rawLegacyDelay);
+    if (envTransmissionDelay !== undefined) {
+      activeEnvVarName = 'INSTANA_METRICS_TRANSMISSION_DELAY';
+    }
+  }
+
+  const inCodeTransmissionDelay =
+    util.toMilliseconds(userMetrics?.pollRate) ?? util.toNumber(userMetrics?.transmissionDelay);
+
+  let transmissionDelay;
+  let transmissionDelaySource;
+
+  if (envTransmissionDelay !== undefined) {
+    transmissionDelay = envTransmissionDelay;
+    transmissionDelaySource = CONFIG_SOURCES.ENV;
+  } else {
+    const resolved = util.resolve(
+      {
+        inCodeValue: inCodeTransmissionDelay,
+        defaultValue: defaultConfig.metrics.transmissionDelay
+      },
+      [validators.numberValidator]
+    );
+    transmissionDelay = resolved.value;
+    transmissionDelaySource = resolved.source;
+  }
 
   finalConfig.metrics.transmissionDelay = validators.validateTransmissionDelay(transmissionDelay);
 
@@ -324,7 +368,7 @@ function normalizeMetricsConfig({ userConfig = {}, defaultConfig = {}, finalConf
     configPath: 'config.metrics.transmissionDelay',
     source: transmissionDelaySource,
     value: transmissionDelay,
-    envVarName: 'INSTANA_METRICS_TRANSMISSION_DELAY'
+    envVarName: activeEnvVarName
   });
 
   const { value: healthcheckInterval, source: healthcheckSource } = util.resolve(
