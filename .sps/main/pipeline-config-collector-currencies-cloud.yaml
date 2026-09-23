@@ -103,10 +103,12 @@ tasks:
           socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
           socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
           if [ -n "${FILTER_CTR:-}" ]; then
-            FILTER_NETNS=$(docker inspect -f '{{.NetworkSettings.SandboxKey}}' "$FILTER_CTR")
-            nsenter --net="$FILTER_NETNS" socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
-            nsenter --net="$FILTER_NETNS" socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
-            timeout 30 bash -c "until nsenter --net=\"$FILTER_NETNS\" nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done"
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-localstack-4566-$$" \
+              mirror.gcr.io/alpine/socat:latest \
+              TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
+              mirror.gcr.io/alpine/socat:latest \
+              /bin/sh -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
@@ -301,10 +303,12 @@ tasks:
           socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
           socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
           if [ -n "${FILTER_CTR:-}" ]; then
-            FILTER_NETNS=$(docker inspect -f '{{.NetworkSettings.SandboxKey}}' "$FILTER_CTR")
-            nsenter --net="$FILTER_NETNS" socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
-            nsenter --net="$FILTER_NETNS" socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
-            timeout 30 bash -c "until nsenter --net=\"$FILTER_NETNS\" nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done"
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-localstack-kinesis-4566-$$" \
+              mirror.gcr.io/alpine/socat:latest \
+              TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
+              mirror.gcr.io/alpine/socat:latest \
+              /bin/sh -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
@@ -492,10 +496,12 @@ tasks:
           socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
           socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
           if [ -n "${FILTER_CTR:-}" ]; then
-            FILTER_NETNS=$(docker inspect -f '{{.NetworkSettings.SandboxKey}}' "$FILTER_CTR")
-            nsenter --net="$FILTER_NETNS" socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
-            nsenter --net="$FILTER_NETNS" socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
-            timeout 30 bash -c "until nsenter --net=\"$FILTER_NETNS\" nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done"
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-localstack-4566-$$" \
+              mirror.gcr.io/alpine/socat:latest \
+              TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
+              mirror.gcr.io/alpine/socat:latest \
+              /bin/sh -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
@@ -684,10 +690,12 @@ tasks:
           socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
           socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
           if [ -n "${FILTER_CTR:-}" ]; then
-            FILTER_NETNS=$(docker inspect -f '{{.NetworkSettings.SandboxKey}}' "$FILTER_CTR")
-            nsenter --net="$FILTER_NETNS" socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
-            nsenter --net="$FILTER_NETNS" socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
-            timeout 30 bash -c "until nsenter --net=\"$FILTER_NETNS\" nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done"
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-localstack-4566-$$" \
+              mirror.gcr.io/alpine/socat:latest \
+              TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
+              mirror.gcr.io/alpine/socat:latest \
+              /bin/sh -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
@@ -876,10 +884,12 @@ tasks:
           socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
           socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
           if [ -n "${FILTER_CTR:-}" ]; then
-            FILTER_NETNS=$(docker inspect -f '{{.NetworkSettings.SandboxKey}}' "$FILTER_CTR")
-            nsenter --net="$FILTER_NETNS" socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
-            nsenter --net="$FILTER_NETNS" socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
-            timeout 30 bash -c "until nsenter --net=\"$FILTER_NETNS\" nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done"
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-localstack-4566-$$" \
+              mirror.gcr.io/alpine/socat:latest \
+              TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
+              mirror.gcr.io/alpine/socat:latest \
+              /bin/sh -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
@@ -1068,10 +1078,12 @@ tasks:
           socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
           socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
           if [ -n "${FILTER_CTR:-}" ]; then
-            FILTER_NETNS=$(docker inspect -f '{{.NetworkSettings.SandboxKey}}' "$FILTER_CTR")
-            nsenter --net="$FILTER_NETNS" socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
-            nsenter --net="$FILTER_NETNS" socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
-            timeout 30 bash -c "until nsenter --net=\"$FILTER_NETNS\" nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done"
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-localstack-4566-$$" \
+              mirror.gcr.io/alpine/socat:latest \
+              TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
+              mirror.gcr.io/alpine/socat:latest \
+              /bin/sh -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
@@ -1260,26 +1272,32 @@ tasks:
           socat TCP-LISTEN:10000,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10000 &
           socat TCP6-LISTEN:10000,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:10000 &
           if [ -n "${FILTER_CTR:-}" ]; then
-            FILTER_NETNS=$(docker inspect -f '{{.NetworkSettings.SandboxKey}}' "$FILTER_CTR")
-            nsenter --net="$FILTER_NETNS" socat TCP-LISTEN:10000,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10000 &
-            nsenter --net="$FILTER_NETNS" socat TCP6-LISTEN:10000,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:10000 &
-            timeout 30 bash -c "until nsenter --net=\"$FILTER_NETNS\" nc -z 127.0.0.1 10000 2>/dev/null; do sleep 1; done"
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-azurite-10000-$$" \
+              mirror.gcr.io/alpine/socat:latest \
+              TCP-LISTEN:10000,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10000
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
+              mirror.gcr.io/alpine/socat:latest \
+              /bin/sh -c 'until nc -z 127.0.0.1 10000 2>/dev/null; do sleep 1; done'
           fi
           socat TCP-LISTEN:10001,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10001 &
           socat TCP6-LISTEN:10001,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:10001 &
           if [ -n "${FILTER_CTR:-}" ]; then
-            FILTER_NETNS=$(docker inspect -f '{{.NetworkSettings.SandboxKey}}' "$FILTER_CTR")
-            nsenter --net="$FILTER_NETNS" socat TCP-LISTEN:10001,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10001 &
-            nsenter --net="$FILTER_NETNS" socat TCP6-LISTEN:10001,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:10001 &
-            timeout 30 bash -c "until nsenter --net=\"$FILTER_NETNS\" nc -z 127.0.0.1 10001 2>/dev/null; do sleep 1; done"
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-azurite-10001-$$" \
+              mirror.gcr.io/alpine/socat:latest \
+              TCP-LISTEN:10001,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10001
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
+              mirror.gcr.io/alpine/socat:latest \
+              /bin/sh -c 'until nc -z 127.0.0.1 10001 2>/dev/null; do sleep 1; done'
           fi
           socat TCP-LISTEN:10002,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10002 &
           socat TCP6-LISTEN:10002,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:10002 &
           if [ -n "${FILTER_CTR:-}" ]; then
-            FILTER_NETNS=$(docker inspect -f '{{.NetworkSettings.SandboxKey}}' "$FILTER_CTR")
-            nsenter --net="$FILTER_NETNS" socat TCP-LISTEN:10002,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10002 &
-            nsenter --net="$FILTER_NETNS" socat TCP6-LISTEN:10002,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:10002 &
-            timeout 30 bash -c "until nsenter --net=\"$FILTER_NETNS\" nc -z 127.0.0.1 10002 2>/dev/null; do sleep 1; done"
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-azurite-10002-$$" \
+              mirror.gcr.io/alpine/socat:latest \
+              TCP-LISTEN:10002,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10002
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
+              mirror.gcr.io/alpine/socat:latest \
+              /bin/sh -c 'until nc -z 127.0.0.1 10002 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 10000 2>/dev/null; do sleep 2; done'
@@ -1468,10 +1486,12 @@ tasks:
           socat TCP-LISTEN:8085,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8085 &
           socat TCP6-LISTEN:8085,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:8085 &
           if [ -n "${FILTER_CTR:-}" ]; then
-            FILTER_NETNS=$(docker inspect -f '{{.NetworkSettings.SandboxKey}}' "$FILTER_CTR")
-            nsenter --net="$FILTER_NETNS" socat TCP-LISTEN:8085,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8085 &
-            nsenter --net="$FILTER_NETNS" socat TCP6-LISTEN:8085,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:8085 &
-            timeout 30 bash -c "until nsenter --net=\"$FILTER_NETNS\" nc -z 127.0.0.1 8085 2>/dev/null; do sleep 1; done"
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-pubsub-emulator-8085-$$" \
+              mirror.gcr.io/alpine/socat:latest \
+              TCP-LISTEN:8085,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8085
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
+              mirror.gcr.io/alpine/socat:latest \
+              /bin/sh -c 'until nc -z 127.0.0.1 8085 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 8085 2>/dev/null; do sleep 2; done'
@@ -1660,10 +1680,12 @@ tasks:
           socat TCP-LISTEN:4443,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4443 &
           socat TCP6-LISTEN:4443,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4443 &
           if [ -n "${FILTER_CTR:-}" ]; then
-            FILTER_NETNS=$(docker inspect -f '{{.NetworkSettings.SandboxKey}}' "$FILTER_CTR")
-            nsenter --net="$FILTER_NETNS" socat TCP-LISTEN:4443,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4443 &
-            nsenter --net="$FILTER_NETNS" socat TCP6-LISTEN:4443,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4443 &
-            timeout 30 bash -c "until nsenter --net=\"$FILTER_NETNS\" nc -z 127.0.0.1 4443 2>/dev/null; do sleep 1; done"
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-fake-gcs-server-4443-$$" \
+              mirror.gcr.io/alpine/socat:latest \
+              TCP-LISTEN:4443,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4443
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
+              mirror.gcr.io/alpine/socat:latest \
+              /bin/sh -c 'until nc -z 127.0.0.1 4443 2>/dev/null; do sleep 1; done'
           fi
           timeout 30 bash -c \
             'until curl -sf http://127.0.0.1:4443/storage/v1/b >/dev/null; do sleep 2; done'
@@ -1860,10 +1882,12 @@ tasks:
           socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
           socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
           if [ -n "${FILTER_CTR:-}" ]; then
-            FILTER_NETNS=$(docker inspect -f '{{.NetworkSettings.SandboxKey}}' "$FILTER_CTR")
-            nsenter --net="$FILTER_NETNS" socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
-            nsenter --net="$FILTER_NETNS" socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
-            timeout 30 bash -c "until nsenter --net=\"$FILTER_NETNS\" nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done"
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-localstack-kinesis-4566-$$" \
+              mirror.gcr.io/alpine/socat:latest \
+              TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
+              mirror.gcr.io/alpine/socat:latest \
+              /bin/sh -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
