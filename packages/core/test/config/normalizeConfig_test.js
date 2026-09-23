@@ -37,7 +37,7 @@ describe('config.normalizeConfig', () => {
     delete process.env.INSTANA_TRACE_IMMEDIATELY;
     delete process.env.INSTANA_EXTRA_HTTP_HEADERS;
     delete process.env.INSTANA_FORCE_TRANSMISSION_STARTING_AT;
-    delete process.env.INSTANA_NODEJS_POLL_RATE;
+    delete process.env.INSTANA_METRICS_POLL_RATE;
     delete process.env.INSTANA_METRICS_TRANSMISSION_DELAY;
     delete process.env.INSTANA_SECRETS;
     delete process.env.INSTANA_SERVICE_NAME;
@@ -243,68 +243,68 @@ describe('config.normalizeConfig', () => {
     });
   });
 
-  describe('INSTANA_NODEJS_POLL_RATE', () => {
-    it('should accept INSTANA_NODEJS_POLL_RATE in seconds and convert to ms', () => {
-      process.env.INSTANA_NODEJS_POLL_RATE = '5';
+  describe('INSTANA_METRICS_POLL_RATE', () => {
+    it('should accept INSTANA_METRICS_POLL_RATE in seconds and convert to ms', () => {
+      process.env.INSTANA_METRICS_POLL_RATE = '5';
       const config = coreConfig.normalize();
       expect(config.metrics.transmissionDelay).to.equal(5000);
     });
 
-    it('should accept INSTANA_NODEJS_POLL_RATE of 1 (1s = 1000ms)', () => {
-      process.env.INSTANA_NODEJS_POLL_RATE = '1';
+    it('should accept INSTANA_METRICS_POLL_RATE of 1 (1s = 1000ms)', () => {
+      process.env.INSTANA_METRICS_POLL_RATE = '1';
       const config = coreConfig.normalize();
       expect(config.metrics.transmissionDelay).to.equal(1000);
     });
 
-    it('should accept INSTANA_NODEJS_POLL_RATE of 60 (60s = 60000ms)', () => {
-      process.env.INSTANA_NODEJS_POLL_RATE = '60';
+    it('should accept INSTANA_METRICS_POLL_RATE of 60 (60s = 60000ms)', () => {
+      process.env.INSTANA_METRICS_POLL_RATE = '60';
       const config = coreConfig.normalize();
       expect(config.metrics.transmissionDelay).to.equal(60000);
     });
 
-    it('should snap INSTANA_NODEJS_POLL_RATE to nearest allowed value (e.g. 7s → 5000ms)', () => {
-      process.env.INSTANA_NODEJS_POLL_RATE = '7';
+    it('should snap INSTANA_METRICS_POLL_RATE to nearest allowed value (e.g. 7s → 5000ms)', () => {
+      process.env.INSTANA_METRICS_POLL_RATE = '7';
       const config = coreConfig.normalize();
       // 7s = 7000ms; nearest allowed is 5000ms
       expect(config.metrics.transmissionDelay).to.equal(5000);
     });
 
-    it('should fall back to default when INSTANA_NODEJS_POLL_RATE is non-numerical', () => {
-      process.env.INSTANA_NODEJS_POLL_RATE = 'abc';
+    it('should fall back to default when INSTANA_METRICS_POLL_RATE is non-numerical', () => {
+      process.env.INSTANA_METRICS_POLL_RATE = 'abc';
       const config = coreConfig.normalize();
       expect(config.metrics.transmissionDelay).to.equal(1000);
     });
 
-    it('should fall back to in-code config when INSTANA_NODEJS_POLL_RATE is non-numerical', () => {
-      process.env.INSTANA_NODEJS_POLL_RATE = 'abc';
+    it('should fall back to in-code config when INSTANA_METRICS_POLL_RATE is non-numerical', () => {
+      process.env.INSTANA_METRICS_POLL_RATE = 'abc';
       const config = coreConfig.normalize({ userConfig: { metrics: { transmissionDelay: 5000 } } });
       expect(config.metrics.transmissionDelay).to.equal(5000);
     });
 
-    it('should give INSTANA_NODEJS_POLL_RATE priority over INSTANA_METRICS_TRANSMISSION_DELAY', () => {
-      process.env.INSTANA_NODEJS_POLL_RATE = '10';
+    it('should give INSTANA_METRICS_POLL_RATE priority over INSTANA_METRICS_TRANSMISSION_DELAY', () => {
+      process.env.INSTANA_METRICS_POLL_RATE = '10';
       process.env.INSTANA_METRICS_TRANSMISSION_DELAY = '30000';
       const config = coreConfig.normalize();
-      // INSTANA_NODEJS_POLL_RATE = 10s = 10000ms wins
+      // INSTANA_METRICS_POLL_RATE = 10s = 10000ms wins
       expect(config.metrics.transmissionDelay).to.equal(10000);
     });
 
-    it('should give INSTANA_NODEJS_POLL_RATE priority over metrics.pollRate in-code', () => {
-      process.env.INSTANA_NODEJS_POLL_RATE = '30';
+    it('should give INSTANA_METRICS_POLL_RATE priority over metrics.pollRate in-code', () => {
+      process.env.INSTANA_METRICS_POLL_RATE = '30';
       const config = coreConfig.normalize({ userConfig: { metrics: { pollRate: 5 } } });
       // env wins: 30s = 30000ms
       expect(config.metrics.transmissionDelay).to.equal(30000);
     });
 
-    it('should give INSTANA_NODEJS_POLL_RATE priority over metrics.transmissionDelay in-code', () => {
-      process.env.INSTANA_NODEJS_POLL_RATE = '20';
+    it('should give INSTANA_METRICS_POLL_RATE priority over metrics.transmissionDelay in-code', () => {
+      process.env.INSTANA_METRICS_POLL_RATE = '20';
       const config = coreConfig.normalize({ userConfig: { metrics: { transmissionDelay: 5000 } } });
       // env wins: 20s = 20000ms
       expect(config.metrics.transmissionDelay).to.equal(20000);
     });
 
-    it('should not emit a deprecation warning when INSTANA_NODEJS_POLL_RATE is used', () => {
-      process.env.INSTANA_NODEJS_POLL_RATE = '5';
+    it('should not emit a deprecation warning when INSTANA_METRICS_POLL_RATE is used', () => {
+      process.env.INSTANA_METRICS_POLL_RATE = '5';
       coreConfig.normalize();
       const hasDeprecation = fakeLogger.warnMessages.some(m =>
         m.includes('INSTANA_METRICS_TRANSMISSION_DELAY is deprecated')
@@ -312,8 +312,8 @@ describe('config.normalizeConfig', () => {
       expect(hasDeprecation).to.be.false;
     });
 
-    it('should not emit a deprecation warning when INSTANA_NODEJS_POLL_RATE is set even if INSTANA_METRICS_TRANSMISSION_DELAY is also set', () => {
-      process.env.INSTANA_NODEJS_POLL_RATE = '5';
+    it('should not emit a deprecation warning when INSTANA_METRICS_POLL_RATE is set even if INSTANA_METRICS_TRANSMISSION_DELAY is also set', () => {
+      process.env.INSTANA_METRICS_POLL_RATE = '5';
       process.env.INSTANA_METRICS_TRANSMISSION_DELAY = '30000';
       coreConfig.normalize();
       const hasDeprecation = fakeLogger.warnMessages.some(m =>
@@ -2975,8 +2975,8 @@ describe('config.normalizeConfig', () => {
         expect(config.metrics.transmissionDelay).to.equal(60000);
       });
 
-      it('should not override metrics.transmissionDelay when INSTANA_NODEJS_POLL_RATE env var is set', () => {
-        process.env.INSTANA_NODEJS_POLL_RATE = '5';
+      it('should not override metrics.transmissionDelay when INSTANA_METRICS_POLL_RATE env var is set', () => {
+        process.env.INSTANA_METRICS_POLL_RATE = '5';
         const config = coreConfig.normalize({});
 
         // 5s = 5000ms
@@ -2991,14 +2991,14 @@ describe('config.normalizeConfig', () => {
         expect(config.metrics.transmissionDelay).to.equal(5000);
       });
 
-      it('should respect precedence: INSTANA_NODEJS_POLL_RATE > IN_CODE > AGENT', () => {
-        process.env.INSTANA_NODEJS_POLL_RATE = '60';
+      it('should respect precedence: INSTANA_METRICS_POLL_RATE > IN_CODE > AGENT', () => {
+        process.env.INSTANA_METRICS_POLL_RATE = '60';
 
         const config = coreConfig.normalize({
           userConfig: { metrics: { pollRate: 20, transmissionDelay: 5000 } }
         });
 
-        // INSTANA_NODEJS_POLL_RATE (60s = 60000ms) beats in-code pollRate
+        // INSTANA_METRICS_POLL_RATE (60s = 60000ms) beats in-code pollRate
         expect(config.metrics.transmissionDelay).to.equal(60000);
 
         coreConfig.update({
@@ -3006,7 +3006,7 @@ describe('config.normalizeConfig', () => {
           source: CONFIG_SOURCES.AGENT
         });
 
-        // INSTANA_NODEJS_POLL_RATE still wins over agent
+        // INSTANA_METRICS_POLL_RATE still wins over agent
         expect(config.metrics.transmissionDelay).to.equal(60000);
       });
 

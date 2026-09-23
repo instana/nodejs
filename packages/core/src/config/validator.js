@@ -212,7 +212,7 @@ exports.validateTransmissionDelay = function validateTransmissionDelay(value) {
   const allowedSeconds = allowedTransmissionDelayValues.map(ms => ms / 1000).join(', ');
   logger.warn(
     `The configured poll rate (${value} ms) is not one of the allowed values (${allowedMs} ms).` +
-      `Use INSTANA_NODEJS_POLL_RATE or config.metrics.pollRate, specify seconds (allowed: ${allowedSeconds} s).` +
+      `Use INSTANA_METRICS_POLL_RATE or config.metrics.pollRate, specify seconds (allowed: ${allowedSeconds} s).` +
       ` If using INSTANA_METRICS_TRANSMISSION_DELAY (deprecated) or config.metrics.transmissionDelay, 
       specify milliseconds (allowed: ${allowedMs} ms). 
     Assuming the nearest allowed value ${nearest} ms.`

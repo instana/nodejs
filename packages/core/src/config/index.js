@@ -310,7 +310,7 @@ function normalizeMetricsConfig({ userConfig = {}, defaultConfig = {}, finalConf
   finalConfig.metrics = {};
 
   // Priority chain (highest to lowest):
-  //   1. INSTANA_NODEJS_POLL_RATE env var  (seconds → ms)
+  //   1. INSTANA_METRICS_POLL_RATE env var  (seconds → ms)
   //   2. INSTANA_METRICS_TRANSMISSION_DELAY env var  (ms, deprecated)
   //   3. metrics.pollRate in-code config  (seconds → ms)
   //   4. metrics.transmissionDelay in-code config  (ms)
@@ -321,19 +321,19 @@ function normalizeMetricsConfig({ userConfig = {}, defaultConfig = {}, finalConf
   let envTransmissionDelay;
   let activeEnvVarName;
 
-  const rawPollRate = process.env.INSTANA_NODEJS_POLL_RATE;
+  const rawPollRate = process.env.INSTANA_METRICS_POLL_RATE;
   const rawLegacyDelay = process.env.INSTANA_METRICS_TRANSMISSION_DELAY;
 
   if (rawPollRate !== undefined) {
     const parsedSeconds = validators.numberValidator(rawPollRate);
     if (parsedSeconds !== undefined) {
       envTransmissionDelay = parsedSeconds * 1000;
-      activeEnvVarName = 'INSTANA_NODEJS_POLL_RATE';
+      activeEnvVarName = 'INSTANA_METRICS_POLL_RATE';
     }
   } else if (rawLegacyDelay !== undefined) {
     logger?.warn(
       'INSTANA_METRICS_TRANSMISSION_DELAY is deprecated and will be removed in a future release. ' +
-        'Please use INSTANA_NODEJS_POLL_RATE instead (value in seconds).'
+        'Please use INSTANA_METRICS_POLL_RATE instead (value in seconds).'
     );
     const parsedMs = validators.numberValidator(rawLegacyDelay);
     if (parsedMs !== undefined) {
