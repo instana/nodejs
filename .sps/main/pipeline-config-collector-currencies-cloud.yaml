@@ -86,6 +86,7 @@ tasks:
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
           DOCKERFILE
 
           # create isolated network
@@ -114,8 +115,8 @@ tasks:
             docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-localstack-4566-$$" \
               socat-fwd \
               TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566
-            timeout 30 docker run --rm --network "container:${FILTER_CTR}" socat-fwd \
-              /bin/sh -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
@@ -285,6 +286,7 @@ tasks:
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
           DOCKERFILE
 
           # create isolated network
@@ -319,8 +321,8 @@ tasks:
             docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-localstack-kinesis-4566-$$" \
               socat-fwd \
               TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566
-            timeout 30 docker run --rm --network "container:${FILTER_CTR}" socat-fwd \
-              /bin/sh -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
@@ -489,6 +491,7 @@ tasks:
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
           DOCKERFILE
 
           # create isolated network
@@ -517,8 +520,8 @@ tasks:
             docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-localstack-4566-$$" \
               socat-fwd \
               TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566
-            timeout 30 docker run --rm --network "container:${FILTER_CTR}" socat-fwd \
-              /bin/sh -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
@@ -688,6 +691,7 @@ tasks:
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
           DOCKERFILE
 
           # create isolated network
@@ -716,8 +720,8 @@ tasks:
             docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-localstack-4566-$$" \
               socat-fwd \
               TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566
-            timeout 30 docker run --rm --network "container:${FILTER_CTR}" socat-fwd \
-              /bin/sh -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
@@ -887,6 +891,7 @@ tasks:
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
           DOCKERFILE
 
           # create isolated network
@@ -915,8 +920,8 @@ tasks:
             docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-localstack-4566-$$" \
               socat-fwd \
               TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566
-            timeout 30 docker run --rm --network "container:${FILTER_CTR}" socat-fwd \
-              /bin/sh -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
@@ -1086,6 +1091,7 @@ tasks:
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
           DOCKERFILE
 
           # create isolated network
@@ -1114,8 +1120,8 @@ tasks:
             docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-localstack-4566-$$" \
               socat-fwd \
               TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566
-            timeout 30 docker run --rm --network "container:${FILTER_CTR}" socat-fwd \
-              /bin/sh -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
@@ -1285,6 +1291,7 @@ tasks:
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
           DOCKERFILE
 
           # create isolated network
@@ -1313,8 +1320,8 @@ tasks:
             docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-azurite-10000-$$" \
               socat-fwd \
               TCP-LISTEN:10000,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10000
-            timeout 30 docker run --rm --network "container:${FILTER_CTR}" socat-fwd \
-              /bin/sh -c 'until nc -z 127.0.0.1 10000 2>/dev/null; do sleep 1; done'
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 10000 2>/dev/null; do sleep 1; done'
           fi
           socat TCP-LISTEN:10001,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10001 &
           socat TCP6-LISTEN:10001,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:10001 &
@@ -1322,8 +1329,8 @@ tasks:
             docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-azurite-10001-$$" \
               socat-fwd \
               TCP-LISTEN:10001,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10001
-            timeout 30 docker run --rm --network "container:${FILTER_CTR}" socat-fwd \
-              /bin/sh -c 'until nc -z 127.0.0.1 10001 2>/dev/null; do sleep 1; done'
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 10001 2>/dev/null; do sleep 1; done'
           fi
           socat TCP-LISTEN:10002,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10002 &
           socat TCP6-LISTEN:10002,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:10002 &
@@ -1331,8 +1338,8 @@ tasks:
             docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-azurite-10002-$$" \
               socat-fwd \
               TCP-LISTEN:10002,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10002
-            timeout 30 docker run --rm --network "container:${FILTER_CTR}" socat-fwd \
-              /bin/sh -c 'until nc -z 127.0.0.1 10002 2>/dev/null; do sleep 1; done'
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 10002 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 10000 2>/dev/null; do sleep 2; done'
@@ -1502,6 +1509,7 @@ tasks:
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
           DOCKERFILE
 
           # create isolated network
@@ -1530,8 +1538,8 @@ tasks:
             docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-pubsub-emulator-8085-$$" \
               socat-fwd \
               TCP-LISTEN:8085,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8085
-            timeout 30 docker run --rm --network "container:${FILTER_CTR}" socat-fwd \
-              /bin/sh -c 'until nc -z 127.0.0.1 8085 2>/dev/null; do sleep 1; done'
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 8085 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 8085 2>/dev/null; do sleep 2; done'
@@ -1702,6 +1710,7 @@ tasks:
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
           DOCKERFILE
 
           # create isolated network
@@ -1729,8 +1738,8 @@ tasks:
             docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-fake-gcs-server-4443-$$" \
               socat-fwd \
               TCP-LISTEN:4443,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4443
-            timeout 30 docker run --rm --network "container:${FILTER_CTR}" socat-fwd \
-              /bin/sh -c 'until nc -z 127.0.0.1 4443 2>/dev/null; do sleep 1; done'
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 4443 2>/dev/null; do sleep 1; done'
           fi
           timeout 30 bash -c \
             'until curl -sf http://127.0.0.1:4443/storage/v1/b >/dev/null; do sleep 2; done'
@@ -1902,6 +1911,7 @@ tasks:
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
           DOCKERFILE
 
           # create isolated network
@@ -1936,8 +1946,8 @@ tasks:
             docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-localstack-kinesis-4566-$$" \
               socat-fwd \
               TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566
-            timeout 30 docker run --rm --network "container:${FILTER_CTR}" socat-fwd \
-              /bin/sh -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'

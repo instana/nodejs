@@ -131,8 +131,9 @@ function socatForwardScript(name) {
     lines.push(`    socat-fwd \\`);
     lines.push(`    TCP-LISTEN:${hostPort},fork,reuseaddr,bind=127.0.0.1 TCP:$${varName}:${containerPort}`);
     // Probe the port from inside the same netns to confirm the forwarder is ready.
-    lines.push(`  timeout 30 docker run --rm --network "container:\${FILTER_CTR}" socat-fwd \\`);
-    lines.push(`    /bin/sh -c 'until nc -z 127.0.0.1 ${hostPort} 2>/dev/null; do sleep 1; done'`);
+    // Override the socat entrypoint with sh to run the nc readiness loop.
+    lines.push(`  timeout 30 docker run --rm --network "container:\${FILTER_CTR}" --entrypoint sh socat-fwd \\`);
+    lines.push(`    -c 'until nc -z 127.0.0.1 ${hostPort} 2>/dev/null; do sleep 1; done'`);
     lines.push(`fi`);
   }
   return lines.join('\n');
@@ -240,6 +241,7 @@ function buildSocatFwdImageLines() {
     'docker build -t socat-fwd - <<\'DOCKERFILE\'',
     'FROM mirror.gcr.io/library/alpine:3',
     'RUN apk add --no-cache socat netcat-openbsd',
+    'ENTRYPOINT ["socat"]',
     'DOCKERFILE'
   ];
 }
