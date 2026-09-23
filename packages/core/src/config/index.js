@@ -330,7 +330,8 @@ function normalizeMetricsConfig({ userConfig = {}, defaultConfig = {}, finalConf
     }
   } else if (rawLegacyDelay != null && rawLegacyDelay !== '') {
     logger?.warn(
-      'INSTANA_METRICS_TRANSMISSION_DELAY is deprecated and will be removed in a future release. ' +
+      // eslint-disable-next-line max-len
+      '[Deprecation Warning] The environment variable INSTANA_METRICS_TRANSMISSION_DELAY is deprecated and will be removed in a future release. ' +
         'Please use INSTANA_METRICS_POLL_RATE instead (value in seconds).'
     );
     envTransmissionDelay = util.toNumber(rawLegacyDelay);
