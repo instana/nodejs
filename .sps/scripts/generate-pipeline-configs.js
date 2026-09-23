@@ -105,24 +105,30 @@ function socatForwardScript(name) {
   if (!s || !s.ports || s.ports.length === 0) return '';
   const varName = `SIDECAR_IP`;
   const lines = [`${varName}=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${name})`];
+
+  // When FILTER_CTR is set, the test container runs with --network container:$FILTER_CTR
+  // and therefore uses FILTER_CTR's network namespace. We spin up a dedicated socat
+  // container that joins the same namespace so it can bind 127.0.0.1 ports there.
+  // nsenter is not viable inside the DinD environment (no privilege to reassociate netns).
+  // Docker preserves the network namespace of a container even after it exits (until
+  // docker rm), so --network container:$FILTER_CTR works even when FILTER_CTR has exited.
+  const socatImage = 'mirror.gcr.io/alpine/socat:latest';
+
   for (const p of s.ports) {
     const [hostPort, containerPort] = p.split(':');
-    // IPv4: handles 127.0.0.1 connections (all Node versions)
+    // Host-side forwards — for anything running directly on the host network namespace.
     lines.push(`socat TCP-LISTEN:${hostPort},fork,reuseaddr,bind=127.0.0.1 TCP:$${varName}:${containerPort} &`);
-    // IPv6: handles ::1 connections (Node.js v18 resolves "localhost" to ::1 by default)
     lines.push(`socat TCP6-LISTEN:${hostPort},fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$${varName}:${containerPort} &`);
 
-    // Also forward inside the filtered container network namespace if FILTER_CTR is set.
-    // FILTER_CTR (network-filter) exits after setting up iptables, so its PID is gone.
-    // Use SandboxKey (the netns file path) which Docker keeps mounted until `docker rm`.
+    // Forward inside FILTER_CTR's network namespace via a sidecar container that shares it.
     lines.push(`if [ -n "\${FILTER_CTR:-}" ]; then`);
-    lines.push(`  FILTER_NETNS=\$(docker inspect -f '{{.NetworkSettings.SandboxKey}}' "\$FILTER_CTR")`);
-    lines.push(`  nsenter --net="\$FILTER_NETNS" socat TCP-LISTEN:${hostPort},fork,reuseaddr,bind=127.0.0.1 TCP:\$${varName}:${containerPort} &`);
-    lines.push(`  nsenter --net="\$FILTER_NETNS" socat TCP6-LISTEN:${hostPort},fork,reuseaddr,bind=[::1],ipv6only=1 TCP:\$${varName}:${containerPort} &`);
-    // Wait until the socat is listening inside that namespace before proceeding.
-    // The host-side readiness check only confirms the host socat is up; the test
-    // container shares FILTER_CTR's netns so it depends on this one.
-    lines.push(`  timeout 30 bash -c "until nsenter --net=\\"\$FILTER_NETNS\\" nc -z 127.0.0.1 ${hostPort} 2>/dev/null; do sleep 1; done"`);
+    lines.push(`  docker run -d --rm --network "container:\${FILTER_CTR}" --name "socat-${name}-${hostPort}-\$\$" \\`);
+    lines.push(`    ${socatImage} \\`);
+    lines.push(`    TCP-LISTEN:${hostPort},fork,reuseaddr,bind=127.0.0.1 TCP:$${varName}:${containerPort}`);
+    // Wait until the port is reachable inside FILTER_CTR's namespace via the socat container.
+    lines.push(`  timeout 30 docker run --rm --network "container:\${FILTER_CTR}" \\`);
+    lines.push(`    ${socatImage} \\`);
+    lines.push(`    /bin/sh -c 'until nc -z 127.0.0.1 ${hostPort} 2>/dev/null; do sleep 1; done'`);
     lines.push(`fi`);
   }
   return lines.join('\n');

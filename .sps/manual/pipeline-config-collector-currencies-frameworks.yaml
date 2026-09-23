@@ -962,10 +962,12 @@ tasks:
           socat TCP-LISTEN:5432,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5432 &
           socat TCP6-LISTEN:5432,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:5432 &
           if [ -n "${FILTER_CTR:-}" ]; then
-            FILTER_NETNS=$(docker inspect -f '{{.NetworkSettings.SandboxKey}}' "$FILTER_CTR")
-            nsenter --net="$FILTER_NETNS" socat TCP-LISTEN:5432,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5432 &
-            nsenter --net="$FILTER_NETNS" socat TCP6-LISTEN:5432,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:5432 &
-            timeout 30 bash -c "until nsenter --net=\"$FILTER_NETNS\" nc -z 127.0.0.1 5432 2>/dev/null; do sleep 1; done"
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-postgres-5432-$$" \
+              mirror.gcr.io/alpine/socat:latest \
+              TCP-LISTEN:5432,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5432
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
+              mirror.gcr.io/alpine/socat:latest \
+              /bin/sh -c 'until nc -z 127.0.0.1 5432 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 5432 2>/dev/null; do sleep 2; done'
@@ -1155,10 +1157,12 @@ tasks:
           socat TCP-LISTEN:5432,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5432 &
           socat TCP6-LISTEN:5432,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:5432 &
           if [ -n "${FILTER_CTR:-}" ]; then
-            FILTER_NETNS=$(docker inspect -f '{{.NetworkSettings.SandboxKey}}' "$FILTER_CTR")
-            nsenter --net="$FILTER_NETNS" socat TCP-LISTEN:5432,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5432 &
-            nsenter --net="$FILTER_NETNS" socat TCP6-LISTEN:5432,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:5432 &
-            timeout 30 bash -c "until nsenter --net=\"$FILTER_NETNS\" nc -z 127.0.0.1 5432 2>/dev/null; do sleep 1; done"
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-postgres-5432-$$" \
+              mirror.gcr.io/alpine/socat:latest \
+              TCP-LISTEN:5432,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5432
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
+              mirror.gcr.io/alpine/socat:latest \
+              /bin/sh -c 'until nc -z 127.0.0.1 5432 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 5432 2>/dev/null; do sleep 2; done'
@@ -1519,10 +1523,12 @@ tasks:
           socat TCP-LISTEN:5432,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5432 &
           socat TCP6-LISTEN:5432,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:5432 &
           if [ -n "${FILTER_CTR:-}" ]; then
-            FILTER_NETNS=$(docker inspect -f '{{.NetworkSettings.SandboxKey}}' "$FILTER_CTR")
-            nsenter --net="$FILTER_NETNS" socat TCP-LISTEN:5432,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5432 &
-            nsenter --net="$FILTER_NETNS" socat TCP6-LISTEN:5432,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:5432 &
-            timeout 30 bash -c "until nsenter --net=\"$FILTER_NETNS\" nc -z 127.0.0.1 5432 2>/dev/null; do sleep 1; done"
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-postgres-5432-$$" \
+              mirror.gcr.io/alpine/socat:latest \
+              TCP-LISTEN:5432,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5432
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
+              mirror.gcr.io/alpine/socat:latest \
+              /bin/sh -c 'until nc -z 127.0.0.1 5432 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 5432 2>/dev/null; do sleep 2; done'
