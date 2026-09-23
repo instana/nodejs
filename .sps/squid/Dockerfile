@@ -5,7 +5,7 @@
 # Runs as non-root "proxy" user; all required directories are pre-created and
 # chowned during the build so no root privileges are needed at runtime.
 # ─────────────────────────────────────────────────────────────────────────────
-FROM debian:bookworm-slim
+FROM mirror.gcr.io/library/debian:bookworm-slim
 
 # Install Squid — bookworm ships Squid 5.x which supports the stdio: log target.
 RUN apt-get update -qq \
