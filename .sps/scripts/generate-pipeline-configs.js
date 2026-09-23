@@ -117,6 +117,10 @@ function socatForwardScript(name) {
     lines.push(`  FILTER_PID=\$(docker inspect -f '{{.State.Pid}}' "\$FILTER_CTR")`);
     lines.push(`  nsenter -t "\$FILTER_PID" -n socat TCP-LISTEN:${hostPort},fork,reuseaddr,bind=127.0.0.1 TCP:\$${varName}:${containerPort} &`);
     lines.push(`  nsenter -t "\$FILTER_PID" -n socat TCP6-LISTEN:${hostPort},fork,reuseaddr,bind=[::1],ipv6only=1 TCP:\$${varName}:${containerPort} &`);
+    // The host-side readiness check (nc -z 127.0.0.1) only confirms the host socat is up.
+    // The test container shares FILTER_CTR's netns, so wait until the nsenter socat is
+    // also listening inside that namespace before proceeding.
+    lines.push(`  timeout 30 bash -c "until nsenter -t \\"\\$FILTER_PID\\" -n nc -z 127.0.0.1 ${hostPort} 2>/dev/null; do sleep 1; done"`);
     lines.push(`fi`);
   }
   return lines.join('\n');

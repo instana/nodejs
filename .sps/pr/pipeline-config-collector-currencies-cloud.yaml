@@ -114,6 +114,7 @@ tasks:
             FILTER_PID=$(docker inspect -f '{{.State.Pid}}' "$FILTER_CTR")
             nsenter -t "$FILTER_PID" -n socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
             nsenter -t "$FILTER_PID" -n socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
+            timeout 30 bash -c "until nsenter -t \"\$FILTER_PID\" -n nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done"
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
@@ -317,6 +318,7 @@ tasks:
             FILTER_PID=$(docker inspect -f '{{.State.Pid}}' "$FILTER_CTR")
             nsenter -t "$FILTER_PID" -n socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
             nsenter -t "$FILTER_PID" -n socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
+            timeout 30 bash -c "until nsenter -t \"\$FILTER_PID\" -n nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done"
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
@@ -513,6 +515,7 @@ tasks:
             FILTER_PID=$(docker inspect -f '{{.State.Pid}}' "$FILTER_CTR")
             nsenter -t "$FILTER_PID" -n socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
             nsenter -t "$FILTER_PID" -n socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
+            timeout 30 bash -c "until nsenter -t \"\$FILTER_PID\" -n nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done"
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
@@ -710,6 +713,7 @@ tasks:
             FILTER_PID=$(docker inspect -f '{{.State.Pid}}' "$FILTER_CTR")
             nsenter -t "$FILTER_PID" -n socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
             nsenter -t "$FILTER_PID" -n socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
+            timeout 30 bash -c "until nsenter -t \"\$FILTER_PID\" -n nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done"
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
@@ -907,6 +911,7 @@ tasks:
             FILTER_PID=$(docker inspect -f '{{.State.Pid}}' "$FILTER_CTR")
             nsenter -t "$FILTER_PID" -n socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
             nsenter -t "$FILTER_PID" -n socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
+            timeout 30 bash -c "until nsenter -t \"\$FILTER_PID\" -n nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done"
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
@@ -1104,6 +1109,7 @@ tasks:
             FILTER_PID=$(docker inspect -f '{{.State.Pid}}' "$FILTER_CTR")
             nsenter -t "$FILTER_PID" -n socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
             nsenter -t "$FILTER_PID" -n socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
+            timeout 30 bash -c "until nsenter -t \"\$FILTER_PID\" -n nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done"
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
@@ -1301,6 +1307,7 @@ tasks:
             FILTER_PID=$(docker inspect -f '{{.State.Pid}}' "$FILTER_CTR")
             nsenter -t "$FILTER_PID" -n socat TCP-LISTEN:10000,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10000 &
             nsenter -t "$FILTER_PID" -n socat TCP6-LISTEN:10000,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:10000 &
+            timeout 30 bash -c "until nsenter -t \"\$FILTER_PID\" -n nc -z 127.0.0.1 10000 2>/dev/null; do sleep 1; done"
           fi
           socat TCP-LISTEN:10001,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10001 &
           socat TCP6-LISTEN:10001,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:10001 &
@@ -1308,6 +1315,7 @@ tasks:
             FILTER_PID=$(docker inspect -f '{{.State.Pid}}' "$FILTER_CTR")
             nsenter -t "$FILTER_PID" -n socat TCP-LISTEN:10001,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10001 &
             nsenter -t "$FILTER_PID" -n socat TCP6-LISTEN:10001,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:10001 &
+            timeout 30 bash -c "until nsenter -t \"\$FILTER_PID\" -n nc -z 127.0.0.1 10001 2>/dev/null; do sleep 1; done"
           fi
           socat TCP-LISTEN:10002,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10002 &
           socat TCP6-LISTEN:10002,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:10002 &
@@ -1315,6 +1323,7 @@ tasks:
             FILTER_PID=$(docker inspect -f '{{.State.Pid}}' "$FILTER_CTR")
             nsenter -t "$FILTER_PID" -n socat TCP-LISTEN:10002,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10002 &
             nsenter -t "$FILTER_PID" -n socat TCP6-LISTEN:10002,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:10002 &
+            timeout 30 bash -c "until nsenter -t \"\$FILTER_PID\" -n nc -z 127.0.0.1 10002 2>/dev/null; do sleep 1; done"
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 10000 2>/dev/null; do sleep 2; done'
@@ -1512,6 +1521,7 @@ tasks:
             FILTER_PID=$(docker inspect -f '{{.State.Pid}}' "$FILTER_CTR")
             nsenter -t "$FILTER_PID" -n socat TCP-LISTEN:8085,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8085 &
             nsenter -t "$FILTER_PID" -n socat TCP6-LISTEN:8085,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:8085 &
+            timeout 30 bash -c "until nsenter -t \"\$FILTER_PID\" -n nc -z 127.0.0.1 8085 2>/dev/null; do sleep 1; done"
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 8085 2>/dev/null; do sleep 2; done'
@@ -1709,6 +1719,7 @@ tasks:
             FILTER_PID=$(docker inspect -f '{{.State.Pid}}' "$FILTER_CTR")
             nsenter -t "$FILTER_PID" -n socat TCP-LISTEN:4443,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4443 &
             nsenter -t "$FILTER_PID" -n socat TCP6-LISTEN:4443,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4443 &
+            timeout 30 bash -c "until nsenter -t \"\$FILTER_PID\" -n nc -z 127.0.0.1 4443 2>/dev/null; do sleep 1; done"
           fi
           timeout 30 bash -c \
             'until curl -sf http://127.0.0.1:4443/storage/v1/b >/dev/null; do sleep 2; done'
@@ -1914,6 +1925,7 @@ tasks:
             FILTER_PID=$(docker inspect -f '{{.State.Pid}}' "$FILTER_CTR")
             nsenter -t "$FILTER_PID" -n socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
             nsenter -t "$FILTER_PID" -n socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
+            timeout 30 bash -c "until nsenter -t \"\$FILTER_PID\" -n nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done"
           fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
