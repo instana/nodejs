@@ -24,9 +24,6 @@ describe('config.normalizers.dbBindVariables', function () {
     delete process.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS;
   }
 
-  // ---------------------------------------------------------------------------
-  // fromEnv
-  // ---------------------------------------------------------------------------
   describe('fromEnv', function () {
     it('should return null when no env vars are set', function () {
       expect(dbBindVariables.fromEnv()).to.equal(null);
@@ -74,9 +71,6 @@ describe('config.normalizers.dbBindVariables', function () {
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // fromAgent
-  // ---------------------------------------------------------------------------
   describe('fromAgent', function () {
     it('should return null for null or non-object input', function () {
       expect(dbBindVariables.fromAgent(null)).to.equal(null);
@@ -121,9 +115,6 @@ describe('config.normalizers.dbBindVariables', function () {
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // fromInCode
-  // ---------------------------------------------------------------------------
   describe('fromInCode', function () {
     it('should return null for null or non-object input', function () {
       expect(dbBindVariables.fromInCode(null)).to.equal(null);
@@ -179,9 +170,6 @@ describe('config.normalizers.dbBindVariables', function () {
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // normalizeDbBindVariables via coreConfig.normalize (integration)
-  // ---------------------------------------------------------------------------
   describe('coreConfig.normalize integration', function () {
     it('should apply default dbBindVariables when nothing is configured', function () {
       const config = coreConfig.normalize();
@@ -216,6 +204,42 @@ describe('config.normalizers.dbBindVariables', function () {
         userConfig: { tracing: { dbBindVariables: { disable: false } } }
       });
       expect(config.tracing.dbBindVariables).to.deep.equal({ disable: false, allowedColumns: [] });
+    });
+
+    it('should trim and filter allowedColumns supplied via in-code config', function () {
+      const config = coreConfig.normalize({
+        userConfig: { tracing: { dbBindVariables: { allowedColumns: [' col_a ', '', '  ', 'col_b'] } } }
+      });
+      expect(config.tracing.dbBindVariables).to.deep.equal({ disable: true, allowedColumns: ['col_a', 'col_b'] });
+    });
+
+    it('should trim and filter allowedColumns supplied via env var', function () {
+      process.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS = ' col_a , , col_b ';
+      const config = coreConfig.normalize();
+      expect(config.tracing.dbBindVariables).to.deep.equal({ disable: true, allowedColumns: ['col_a', 'col_b'] });
+    });
+
+    it('should ignore in-code config entirely when env vars are set', function () {
+      process.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE = 'false';
+      process.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS = 'env_only';
+      const config = coreConfig.normalize({
+        userConfig: { tracing: { dbBindVariables: { disable: true, allowedColumns: ['incode_col'] } } }
+      });
+      expect(config.tracing.dbBindVariables).to.deep.equal({ disable: false, allowedColumns: ['env_only'] });
+    });
+
+    it('should treat a null tracing.dbBindVariables in-code value as missing', function () {
+      const config = coreConfig.normalize({
+        userConfig: { tracing: { dbBindVariables: null } }
+      });
+      expect(config.tracing.dbBindVariables).to.deep.equal({ disable: true, allowedColumns: [] });
+    });
+
+    it('should treat an empty object in-code as missing and fall back to defaults', function () {
+      const config = coreConfig.normalize({
+        userConfig: { tracing: { dbBindVariables: {} } }
+      });
+      expect(config.tracing.dbBindVariables).to.deep.equal({ disable: true, allowedColumns: [] });
     });
   });
 });
