@@ -51,7 +51,7 @@ tasks:
           REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
           cd "$REPO_DIR"
 
-          # ── Install Docker CLI on host runner ──────────────────────────────────
+          # ── 1. Install Docker CLI on host runner ────────────────────────────────────
           if ! command -v docker &>/dev/null; then
             echo "Installing docker-ce-cli..."
             CODENAME=$(. /etc/os-release && echo "$VERSION_CODENAME")
@@ -67,26 +67,13 @@ tasks:
 
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          # ── Collect test files before isolating network ────────────────────────
-          TEST_FILES=$(cd packages/collector && find \
-            test/integration/currencies/async/await \
-            -name '*.test.js' \
-            -not -path '*/node_modules/*' \
-            | sort | tr '\n' ' ')
-
-          if [ -z "$TEST_FILES" ]; then
-            echo 'WARNING: No test files found for await — skipping.'
-            exit 0
-          fi
-
-          # ── Start network-filter sidecar ───────────────────────────────────────
+          # ── 2. Start network-filter sidecar ─────────────────────────────────────────
           FILTER_CTR="network-filter-await-$$"
           cleanup() {
             docker rm -f "$FILTER_CTR" 2>/dev/null || true
           }
           trap cleanup EXIT
 
-          # Domains required for npm install + precompiled binaries
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,objects.githubusercontent.com"
 
           docker run --detach --name "$FILTER_CTR" \
@@ -106,8 +93,8 @@ tasks:
           done
           echo "network-filter ready after ${elapsed}s"
 
-          # ── STEP 1: npm install inside the filtered container ──────────────────
-          echo "Running npm install inside filtered container..."
+          # ── 3. Run npm install & generate test folders inside filtered container ────
+          echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
             --network "container:${FILTER_CTR}" \
             --volume "$REPO_DIR:/work" \
@@ -115,10 +102,21 @@ tasks:
             mirror.gcr.io/library/node:24 \
             bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
-          # Verification
-          test -d "$REPO_DIR/node_modules" && echo "PASS: node_modules successfully installed under network filter."
+          # ── 4. Collect test files (now generated on disk) ───────────────────────────
+          TEST_FILES=$(cd packages/collector && find \
+            test/integration/currencies/async/await \
+            -name '*.test.js' \
+            -not -path '*/node_modules/*' \
+            | sort | tr '\n' ' ')
 
-          # ── STEP 2: Run test suite inside filtered container ───────────────────
+          if [ -z "$TEST_FILES" ]; then
+            echo 'WARNING: No test files found for await — skipping.'
+            exit 0
+          fi
+
+          echo "Found test files: $TEST_FILES"
+
+          # ── 5. Run test suite inside filtered container ─────────────────────────────
           RUN_ESM="$(get_env RUN_ESM "")"
           retry=1
           while [ $retry -le 2 ]; do
@@ -140,11 +138,11 @@ tasks:
             retry=$((retry + 1))
           done
 
-          # Cleanup filter container so subsequent host uploads have full network access
+          # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
 
-          # ── STEP 3: Upload test reports to IBM COS ─────────────────────────────
+          # ── 6. Upload test reports to IBM COS ───────────────────────────────────────
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(get_env commit-id "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
@@ -181,7 +179,7 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
-          # ── STEP 4: Report commit status to GitHub ────────────────────────────
+          # ── 7. Report commit status to GitHub ───────────────────────────────────────
           GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
