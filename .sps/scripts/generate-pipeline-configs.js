@@ -106,28 +106,32 @@ function socatForwardScript(name) {
   const varName = `SIDECAR_IP`;
   const lines = [`${varName}=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${name})`];
 
-  // When FILTER_CTR is set, the test container runs with --network container:$FILTER_CTR
-  // and therefore uses FILTER_CTR's network namespace. We spin up a dedicated socat
-  // container that joins the same namespace so it can bind 127.0.0.1 ports there.
-  // nsenter is not viable inside the DinD environment (no privilege to reassociate netns).
-  // Docker preserves the network namespace of a container even after it exits (until
-  // docker rm), so --network container:$FILTER_CTR works even when FILTER_CTR has exited.
-  const socatImage = 'mirror.gcr.io/alpine/socat:latest';
+  // When FILTER_CTR is set the test container runs --network container:$FILTER_CTR and
+  // shares FILTER_CTR's network namespace. The host-side socat listeners below are in the
+  // host netns and are invisible inside that namespace, so we also start a socat container
+  // that shares FILTER_CTR's netns to bind the same ports on 127.0.0.1 there.
+  //
+  // nsenter is not viable in the DinD runner (no privilege to reassociate netns).
+  // --network container:EXITED_CTR works because Docker preserves the network namespace
+  // of a container until docker rm, even after its init process exits.
+  //
+  // The socat image is built from mirror.gcr.io/library/alpine (already mirrored) during
+  // the npm-install phase when the runner still has egress. It is tagged locally so it is
+  // available offline once the isolated network is up.
 
   for (const p of s.ports) {
     const [hostPort, containerPort] = p.split(':');
-    // Host-side forwards — for anything running directly on the host network namespace.
+    // Host-side forwarders (used by anything running in the host netns).
     lines.push(`socat TCP-LISTEN:${hostPort},fork,reuseaddr,bind=127.0.0.1 TCP:$${varName}:${containerPort} &`);
     lines.push(`socat TCP6-LISTEN:${hostPort},fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$${varName}:${containerPort} &`);
 
-    // Forward inside FILTER_CTR's network namespace via a sidecar container that shares it.
+    // Forwarder inside FILTER_CTR's netns.
     lines.push(`if [ -n "\${FILTER_CTR:-}" ]; then`);
     lines.push(`  docker run -d --rm --network "container:\${FILTER_CTR}" --name "socat-${name}-${hostPort}-\$\$" \\`);
-    lines.push(`    ${socatImage} \\`);
+    lines.push(`    socat-fwd \\`);
     lines.push(`    TCP-LISTEN:${hostPort},fork,reuseaddr,bind=127.0.0.1 TCP:$${varName}:${containerPort}`);
-    // Wait until the port is reachable inside FILTER_CTR's namespace via the socat container.
-    lines.push(`  timeout 30 docker run --rm --network "container:\${FILTER_CTR}" \\`);
-    lines.push(`    ${socatImage} \\`);
+    // Probe the port from inside the same netns to confirm the forwarder is ready.
+    lines.push(`  timeout 30 docker run --rm --network "container:\${FILTER_CTR}" socat-fwd \\`);
     lines.push(`    /bin/sh -c 'until nc -z 127.0.0.1 ${hostPort} 2>/dev/null; do sleep 1; done'`);
     lines.push(`fi`);
   }
@@ -221,6 +225,26 @@ function readNeeds(folder) {
 }
 
 /**
+ * Returns script lines that build a local `socat-fwd` Docker image.
+ *
+ * The image is built from mirror.gcr.io/library/alpine (already mirrored in CI)
+ * with socat and netcat added via apk. It must be built while the runner still
+ * has egress — i.e. before the internal offline-net is created.
+ *
+ * The image is used by socatForwardScript() to run socat inside FILTER_CTR's
+ * network namespace via --network container:$FILTER_CTR, which is the only
+ * approach that works in the DinD environment (nsenter cannot reassociate netns).
+ */
+function buildSocatFwdImageLines() {
+  return [
+    'docker build -t socat-fwd - <<\'DOCKERFILE\'',
+    'FROM mirror.gcr.io/library/alpine:3',
+    'RUN apk add --no-cache socat netcat-openbsd',
+    'DOCKERFILE'
+  ];
+}
+
+/**
  * Generic collector task builder.
  * Produces the shell script and SPS task object for one pipeline step that
  * runs a subset of collector integration tests.
@@ -269,6 +293,10 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
   scriptLines.push('');
 
   if (needs.length > 0) {
+    // Build the socat-fwd image while egress is still available (before offline-net).
+    scriptLines.push('# build socat-fwd image (needed to forward ports into FILTER_CTR netns)');
+    scriptLines.push(...buildSocatFwdImageLines());
+    scriptLines.push('');
     scriptLines.push('# create isolated network');
     scriptLines.push(`docker network create --internal ${SIDECAR_NETWORK}`);
     scriptLines.push(`docker network connect ${SIDECAR_NETWORK} "$FILTER_CTR"`);
@@ -703,6 +731,10 @@ function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv
   scriptLines.push('');
 
   if (needs.length > 0) {
+    // Build the socat-fwd image while egress is still available (before offline-net).
+    scriptLines.push('# build socat-fwd image (needed to forward ports into FILTER_CTR netns)');
+    scriptLines.push(...buildSocatFwdImageLines());
+    scriptLines.push('');
     scriptLines.push('# create isolated network');
     scriptLines.push(`docker network create --internal ${SIDECAR_NETWORK}`);
     scriptLines.push(`docker network connect ${SIDECAR_NETWORK} "$FILTER_CTR"`);
