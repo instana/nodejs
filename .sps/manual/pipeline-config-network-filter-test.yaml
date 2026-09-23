@@ -1,0 +1,173 @@
+version: '2'
+tasks:
+  # code-checks is skipped intentionally — this checks runs on dedicated security-check pipe only.
+  # code-checks includes five steps: setup, detect-secrets, compliance-checks, peer-review, static-scan
+  code-checks:
+    when: false
+  code-build:
+    runtimeClassName: large
+    steps:
+      - name: unit-test
+        displayName: npm-install
+        image: mirror.gcr.io/library/node:24
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
+          echo "Node.js: $(node --version)"
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+          npm install --loglevel warn --foreground-scripts
+          node bin/create-version-test-folders.js
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
+  code-pr-finish:
+    when: 'false'
+  code-ci-finish:
+    when: 'false'
+  deploy-checks:
+    when: false
+  deploy-release:
+    when: false
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # network-filter-test
+  #
+  # Purpose: validate the monadicalsas/network-filter image in a CI context.
+  #
+  # Topology:
+  #   1. A `network-filter` sidecar is started with NET_ADMIN and
+  #      ALLOWED_DOMAINS set to the npm registries only.
+  #   2. The test-runner container shares the sidecar's network namespace via
+  #      --network "container:<filter-ctr>", inheriting all iptables rules.
+  #
+  # Tests:
+  #   ✔  npm install succeeds   — registry.npmjs.org / npmjs.com are allowed
+  #   ✔  blocked domain fails   — example.com is NOT in ALLOWED_DOMAINS
+  # ────────────────────────────────────────────────────────────────────────────
+  code-build-network-filter-test:
+    from: code-build
+    displayName: network-filter-test
+    runtimeClassName: large
+    include:
+      - dind
+    steps:
+      - name: unit-test
+        displayName: network-filter-test
+        image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
+        script: |-
+          #!/usr/bin/env bash
+          set -eo pipefail
+
+          node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          # shellcheck source=/dev/null
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$node_version" --no-progress
+          nvm use "$node_version"
+          echo "Node.js: $(node --version)"
+
+          cd "$WORKSPACE/$(load_repo app-repo path)"
+
+          # ── install docker client ────────────────────────────────────────────────
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" \
+            | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
+
+          # ── network-filter sidecar ───────────────────────────────────────────────
+          # ALLOWED_DOMAINS: only npm registries — what npm install needs.
+          # raw.githubusercontent.com is included because nvm fetches its install
+          # script from there (already done above on the host, but listed for
+          # completeness if any in-container npm lifecycle script fetches it).
+          FILTER_CTR="network-filter-$$"
+
+          cleanup() {
+            docker rm -f "$FILTER_CTR" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          docker run --detach --name "$FILTER_CTR" \
+            --cap-add NET_ADMIN \
+            --env ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com" \
+            monadicalsas/network-filter:latest
+
+          # Wait until the filter container is running and has applied its rules.
+          # The container prints "iptables rules applied" once ready.
+          elapsed=0
+          until docker logs "$FILTER_CTR" 2>&1 | grep -q "iptables"; do
+            elapsed=$((elapsed + 1))
+            if [ "$elapsed" -ge 30 ]; then
+              echo "ERROR: network-filter did not become ready within 30s"
+              docker logs "$FILTER_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "network-filter ready after ${elapsed}s"
+          docker logs "$FILTER_CTR" 2>&1
+
+          # ── TEST 1: npm install succeeds inside the filtered network ─────────────
+          echo ""
+          echo "=== TEST 1: npm install succeeds (allowed domains) ==="
+          # Run npm install inside a node container that shares the filter's
+          # network namespace — it inherits the iptables/dnsmasq restrictions.
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            --volume "$(pwd):/work" \
+            --workdir /work \
+            mirror.gcr.io/library/node:24 \
+            npm install --loglevel warn --foreground-scripts
+          echo "TEST 1 PASSED: npm install completed inside filtered network."
+
+          # ── TEST 2: blocked domain is unreachable inside the filtered network ────
+          echo ""
+          echo "=== TEST 2: non-allowed domain is blocked ==="
+          # example.com is NOT in ALLOWED_DOMAINS — the iptables DROP rule must
+          # prevent any TCP connection to it.  The node script exits 0 on block,
+          # exits 1 if the connection unexpectedly succeeds.
+          BLOCKED_SCRIPT='
+          const https = require("https");
+          const req = https.get("https://example.com/", { timeout: 8000 }, (res) => {
+            console.error("FAIL: connection to example.com succeeded (status " + res.statusCode + ")");
+            process.exit(1);
+          });
+          req.on("timeout", () => { req.destroy(); });
+          req.on("error", (e) => {
+            console.log("OK: blocked — " + e.code);
+            process.exit(0);
+          });
+          '
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            mirror.gcr.io/library/node:24 \
+            node -e "$BLOCKED_SCRIPT"
+          echo "TEST 2 PASSED: non-allowed domain is blocked."
+
+          echo ""
+          echo "All network-filter tests PASSED."
+      - name: sign-artifact
+        when: 'false'
+      - name: build-artifact
+        when: 'false'
+      - name: scan-artifact
+        when: 'false'
