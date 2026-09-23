@@ -116,6 +116,7 @@ let currentConfig;
 
 /**
  * @typedef {Object} InstanaMetricsOption
+ * @property {number} [pollRate] - Poll rate in seconds; takes priority over transmissionDelay
  * @property {number} [transmissionDelay]
  * @property {number} [timeBetweenHealthcheckCalls]
  */
@@ -308,14 +309,73 @@ function normalizeMetricsConfig({ userConfig = {}, defaultConfig = {}, finalConf
 
   finalConfig.metrics = {};
 
-  const { value: transmissionDelay, source: transmissionDelaySource } = util.resolve(
-    {
-      envValue: 'INSTANA_METRICS_TRANSMISSION_DELAY',
-      inCodeValue: userMetrics?.transmissionDelay,
-      defaultValue: defaultConfig.metrics.transmissionDelay
-    },
-    [validators.numberValidator]
-  );
+  // Priority chain (highest to lowest):
+  //   1. INSTANA_NODEJS_POLL_RATE env var  (seconds → ms)
+  //   2. INSTANA_METRICS_TRANSMISSION_DELAY env var  (ms, deprecated)
+  //   3. metrics.pollRate in-code config  (seconds → ms)
+  //   4. metrics.transmissionDelay in-code config  (ms)
+  //   5. agent poll_rate update
+  //   6. default (1000 ms)
+  //
+  // INSTANA_METRICS_TRANSMISSION_DELAY is deprecated and will be removed in a future release.
+  let envTransmissionDelay;
+  let activeEnvVarName;
+
+  const rawPollRate = process.env.INSTANA_NODEJS_POLL_RATE;
+  const rawLegacyDelay = process.env.INSTANA_METRICS_TRANSMISSION_DELAY;
+
+  if (rawPollRate !== undefined) {
+    const parsedSeconds = validators.numberValidator(rawPollRate);
+    if (parsedSeconds !== undefined) {
+      envTransmissionDelay = parsedSeconds * 1000;
+      activeEnvVarName = 'INSTANA_NODEJS_POLL_RATE';
+    }
+  } else if (rawLegacyDelay !== undefined) {
+    logger?.warn(
+      'INSTANA_METRICS_TRANSMISSION_DELAY is deprecated and will be removed in a future release. ' +
+        'Please use INSTANA_NODEJS_POLL_RATE instead (value in seconds).'
+    );
+    const parsedMs = validators.numberValidator(rawLegacyDelay);
+    if (parsedMs !== undefined) {
+      envTransmissionDelay = parsedMs;
+      activeEnvVarName = 'INSTANA_METRICS_TRANSMISSION_DELAY';
+    }
+  }
+
+  // Resolve the effective in-code value: metrics.pollRate (seconds→ms) takes priority over
+  // metrics.transmissionDelay (ms).
+  let inCodeTransmissionDelay;
+  if (userMetrics?.pollRate != null) {
+    const parsedPollRate = validators.numberValidator(userMetrics.pollRate);
+    if (parsedPollRate !== undefined) {
+      inCodeTransmissionDelay = parsedPollRate * 1000;
+    }
+  }
+  if (inCodeTransmissionDelay === undefined && userMetrics?.transmissionDelay != null) {
+    const parsedDelay = validators.numberValidator(userMetrics.transmissionDelay);
+    if (parsedDelay !== undefined) {
+      inCodeTransmissionDelay = parsedDelay;
+    }
+  }
+
+  let transmissionDelay;
+  let transmissionDelaySource;
+
+  if (envTransmissionDelay !== undefined) {
+    // Env var wins — record source as ENV so agent updates cannot override it.
+    transmissionDelay = envTransmissionDelay;
+    transmissionDelaySource = require('../util/constants').CONFIG_SOURCES.ENV;
+  } else {
+    const resolved = util.resolve(
+      {
+        inCodeValue: inCodeTransmissionDelay,
+        defaultValue: defaultConfig.metrics.transmissionDelay
+      },
+      [validators.numberValidator]
+    );
+    transmissionDelay = resolved.value;
+    transmissionDelaySource = resolved.source;
+  }
 
   finalConfig.metrics.transmissionDelay = validators.validateTransmissionDelay(transmissionDelay);
 
@@ -324,7 +384,7 @@ function normalizeMetricsConfig({ userConfig = {}, defaultConfig = {}, finalConf
     configPath: 'config.metrics.transmissionDelay',
     source: transmissionDelaySource,
     value: transmissionDelay,
-    envVarName: 'INSTANA_METRICS_TRANSMISSION_DELAY'
+    envVarName: activeEnvVarName
   });
 
   const { value: healthcheckInterval, source: healthcheckSource } = util.resolve(
