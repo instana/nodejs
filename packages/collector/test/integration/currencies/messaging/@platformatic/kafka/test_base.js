@@ -44,7 +44,6 @@ function verifyHttpExit(spans, parentSpan) {
 }
 
 // node bin/start-test-containers.js --zookeeper --kafka --kafka-topics
-// Note: @platformatic/kafka is ESM-only. Run tests with RUN_ESM=true.
 module.exports = function (name, version, isLatest) {
   const suiteFn = process.env.RUN_ESM ? describe : describe.skip;
 
