@@ -39,6 +39,7 @@ tasks:
     when: false
   deploy-release:
     when: false
+
   code-build-collector-async-await:
     from: code-build
     displayName: await
@@ -61,7 +62,7 @@ tasks:
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
 
-          # install docker client
+          # Install Docker CLI
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
           apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
@@ -74,54 +75,81 @@ tasks:
 
           REPO_PATH="$PWD"
 
-          # build Squid egress-proxy image
+          # Build Squid egress-proxy image
           docker build -t npm-proxy:local "$REPO_PATH/ci/squid"
 
-          # start proxy + test-runner on a shared network
-          # The proxy enforces the allowlist for the entire run.
-          # Test execution clears proxy env vars so tests don't route through Squid.
-          docker network create npm-net
+          # 1. Create dual networks:
+          # - egress-net: has external internet gateway (for Squid)
+          # - internal-net: ISOLATED with NO internet gateway (for test-runner)
+          docker network create egress-net
+          docker network create --internal internal-net
+
+          # 2. Run Squid connected to internal-net, then bridge to egress-net
           docker run -d \
             --name npm-proxy \
-            --network npm-net \
+            --network internal-net \
             npm-proxy:local
+
+          docker network connect egress-net npm-proxy
+
+          # 3. Run test-runner ONLY on internal-net (cannot route outside except via proxy)
           docker run -d \
             --name test-runner \
-            --network npm-net \
+            --network internal-net \
             -v "$REPO_PATH:$REPO_PATH" \
             -w "$REPO_PATH" \
             -e CI=true \
             -e RUN_ESM="$RUN_ESM" \
             -e HTTPS_PROXY="http://npm-proxy:3128" \
             -e HTTP_PROXY="http://npm-proxy:3128" \
+            -e https_proxy="http://npm-proxy:3128" \
+            -e http_proxy="http://npm-proxy:3128" \
             -e NO_PROXY="127.0.0.1,localhost" \
             "mirror.gcr.io/library/node:${NODE_MAJOR}" \
             sleep infinity
 
+          # Wait for Squid to be reachable inside internal-net
+          docker exec test-runner bash -c '
+            echo "Waiting for npm-proxy:3128 to be ready..."
+            for i in {1..30}; do
+              if (echo > /dev/tcp/npm-proxy/3128) 2>/dev/null; then
+                echo "npm-proxy is up and accepting connections."
+                break
+              fi
+              if [ "$i" -eq 30 ]; then
+                echo "ERROR: Timed out waiting for npm-proxy."
+                exit 1
+              fi
+              sleep 0.5
+            done
+          '
+
+          # Run npm install through Squid
           docker exec test-runner npm install --loglevel warn
 
+          # Verify network restriction: direct access MUST fail
           docker exec \
-          -e HTTP_PROXY="" \
-          -e HTTPS_PROXY="" \
-          -e http_proxy="" \
-          -e https_proxy="" \
-          test-runner \
-          bash -c '
-            echo "=== SPS network restriction check ==="
-            echo "Testing direct access to https://opentelemetry.io/docs"
+            -e HTTP_PROXY="" \
+            -e HTTPS_PROXY="" \
+            -e http_proxy="" \
+            -e https_proxy="" \
+            test-runner \
+            bash -c '
+              echo "=== SPS network restriction check ==="
+              echo "Testing direct access to https://opentelemetry.io/docs"
+              if curl -fsSIL --max-time 5 https://opentelemetry.io/docs >/dev/null 2>&1; then
+                echo "ERROR: Internet restriction FAILED - opentelemetry.io was reached directly!"
+                exit 1
+              else
+                echo "SUCCESS: Internet restriction is working - direct outbound is physically unreachable."
+              fi
+              echo "=== End network restriction check ==="
+            '
 
-            if curl -fsSIL --max-time 10 https://opentelemetry.io/docs >/dev/null; then
-              echo "WARNING: Internet restriction FAILED - opentelemetry.io is reachable"
-            else
-              echo "SUCCESS: Internet restriction is working - opentelemetry.io is blocked"
-            fi
-
-            echo "=== End network restriction check ==="
-          '
-          
+          # Pre-warm version folders and offline cache while proxy variables are present
           docker exec test-runner node bin/create-version-test-folders.js
 
-          # collect test files
+          # Collect test files
           TEST_FILES=$(docker exec test-runner \
             bash -c "cd packages/collector && find \
               test/integration/currencies/async/await \
@@ -132,10 +160,11 @@ tasks:
           if [ -z "$TEST_FILES" ]; then
             echo 'WARNING: No test files found for await — skipping.'
             docker rm -f test-runner npm-proxy || true
-            docker network rm npm-net || true
+            docker network rm internal-net egress-net || true
             exit 0
           fi
 
+          # Execute tests with cleared proxy variables
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -156,12 +185,11 @@ tasks:
             retry=$((retry + 1))
           done
 
-          # cleanup
+          # Cleanup Docker containers and networks
           docker rm -f test-runner npm-proxy || true
-          docker network rm npm-net || true
+          docker network rm internal-net egress-net || true
 
-
-          # upload executed test files + lcov coverage report to COS
+          # Upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(get_env commit-id "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
@@ -197,8 +225,7 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
-
-          # report commit status to GitHub
+          # Report commit status to GitHub
           GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
@@ -228,6 +255,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
+
   code-build-collector-async-bluebird:
     from: code-build
     displayName: bluebird
@@ -250,7 +278,6 @@ tasks:
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
 
-          # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
           apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
@@ -263,52 +290,71 @@ tasks:
 
           REPO_PATH="$PWD"
 
-          # build Squid egress-proxy image
           docker build -t npm-proxy:local "$REPO_PATH/ci/squid"
 
-          # start proxy + test-runner on a shared network
-          # The proxy enforces the allowlist for the entire run.
-          # Test execution clears proxy env vars so tests don't route through Squid.
-          docker network create npm-net
+          docker network create egress-net
+          docker network create --internal internal-net
+
           docker run -d \
             --name npm-proxy \
-            --network npm-net \
+            --network internal-net \
             npm-proxy:local
+
+          docker network connect egress-net npm-proxy
+
           docker run -d \
             --name test-runner \
-            --network npm-net \
+            --network internal-net \
             -v "$REPO_PATH:$REPO_PATH" \
             -w "$REPO_PATH" \
             -e CI=true \
             -e RUN_ESM="$RUN_ESM" \
             -e HTTPS_PROXY="http://npm-proxy:3128" \
             -e HTTP_PROXY="http://npm-proxy:3128" \
+            -e https_proxy="http://npm-proxy:3128" \
+            -e http_proxy="http://npm-proxy:3128" \
             -e NO_PROXY="127.0.0.1,localhost" \
             "mirror.gcr.io/library/node:${NODE_MAJOR}" \
             sleep infinity
 
-          docker exec test-runner npm install --loglevel warn
-          docker exec \
-          -e HTTP_PROXY="" \
-          -e HTTPS_PROXY="" \
-          -e http_proxy="" \
-          -e https_proxy="" \
-          test-runner \
-          bash -c '
-            echo "=== SPS network restriction check ==="
-            echo "Testing direct access to https://opentelemetry.io/docs"
-
-            if curl -fsSIL --max-time 10 https://opentelemetry.io/docs >/dev/null; then
-              echo "WARNING: Internet restriction FAILED - opentelemetry.io is reachable"
-            else
-              echo "SUCCESS: Internet restriction is working - opentelemetry.io is blocked"
-            fi
-
-            echo "=== End network restriction check ==="
+          # Wait for Squid to be reachable inside internal-net
+          docker exec test-runner bash -c '
+            echo "Waiting for npm-proxy:3128 to be ready..."
+            for i in {1..30}; do
+              if (echo > /dev/tcp/npm-proxy/3128) 2>/dev/null; then
+                echo "npm-proxy is up and accepting connections."
+                break
+              fi
+              if [ "$i" -eq 30 ]; then
+                echo "ERROR: Timed out waiting for npm-proxy."
+                exit 1
+              fi
+              sleep 0.5
+            done
           '
+
+          docker exec test-runner npm install --loglevel warn
+
+          docker exec \
+            -e HTTP_PROXY="" \
+            -e HTTPS_PROXY="" \
+            -e http_proxy="" \
+            -e https_proxy="" \
+            test-runner \
+            bash -c '
+              echo "=== SPS network restriction check ==="
+              echo "Testing direct access to https://opentelemetry.io/docs"
+              if curl -fsSIL --max-time 5 https://opentelemetry.io/docs >/dev/null 2>&1; then
+                echo "ERROR: Internet restriction FAILED - opentelemetry.io was reached directly!"
+                exit 1
+              else
+                echo "SUCCESS: Internet restriction is working - direct outbound is physically unreachable."
+              fi
+              echo "=== End network restriction check ==="
+            '
+
           docker exec test-runner node bin/create-version-test-folders.js
 
-          # collect test files
           TEST_FILES=$(docker exec test-runner \
             bash -c "cd packages/collector && find \
               test/integration/currencies/async/bluebird \
@@ -319,7 +365,7 @@ tasks:
           if [ -z "$TEST_FILES" ]; then
             echo 'WARNING: No test files found for bluebird — skipping.'
             docker rm -f test-runner npm-proxy || true
-            docker network rm npm-net || true
+            docker network rm internal-net egress-net || true
             exit 0
           fi
 
@@ -343,12 +389,9 @@ tasks:
             retry=$((retry + 1))
           done
 
-          # cleanup
           docker rm -f test-runner npm-proxy || true
-          docker network rm npm-net || true
+          docker network rm internal-net egress-net || true
 
-
-          # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(get_env commit-id "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
@@ -384,8 +427,6 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
-
-          # report commit status to GitHub
           GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
@@ -415,6 +456,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
+
   code-build-collector-async-native-promise:
     from: code-build
     displayName: native_promise
@@ -437,7 +479,6 @@ tasks:
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
 
-          # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
           apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
@@ -450,34 +491,52 @@ tasks:
 
           REPO_PATH="$PWD"
 
-          # build Squid egress-proxy image
           docker build -t npm-proxy:local "$REPO_PATH/ci/squid"
 
-          # start proxy + test-runner on a shared network
-          # The proxy enforces the allowlist for the entire run.
-          # Test execution clears proxy env vars so tests don't route through Squid.
-          docker network create npm-net
+          docker network create egress-net
+          docker network create --internal internal-net
+
           docker run -d \
             --name npm-proxy \
-            --network npm-net \
+            --network internal-net \
             npm-proxy:local
+
+          docker network connect egress-net npm-proxy
+
           docker run -d \
             --name test-runner \
-            --network npm-net \
+            --network internal-net \
             -v "$REPO_PATH:$REPO_PATH" \
             -w "$REPO_PATH" \
             -e CI=true \
             -e RUN_ESM="$RUN_ESM" \
             -e HTTPS_PROXY="http://npm-proxy:3128" \
             -e HTTP_PROXY="http://npm-proxy:3128" \
+            -e https_proxy="http://npm-proxy:3128" \
+            -e http_proxy="http://npm-proxy:3128" \
             -e NO_PROXY="127.0.0.1,localhost" \
             "mirror.gcr.io/library/node:${NODE_MAJOR}" \
             sleep infinity
 
+          # Wait for Squid to be reachable inside internal-net
+          docker exec test-runner bash -c '
+            echo "Waiting for npm-proxy:3128 to be ready..."
+            for i in {1..30}; do
+              if (echo > /dev/tcp/npm-proxy/3128) 2>/dev/null; then
+                echo "npm-proxy is up and accepting connections."
+                break
+              fi
+              if [ "$i" -eq 30 ]; then
+                echo "ERROR: Timed out waiting for npm-proxy."
+                exit 1
+              fi
+              sleep 0.5
+            done
+          '
+
           docker exec test-runner npm install --loglevel warn
           docker exec test-runner node bin/create-version-test-folders.js
 
-          # collect test files
           TEST_FILES=$(docker exec test-runner \
             bash -c "cd packages/collector && find \
               test/integration/currencies/async/native_promise \
@@ -488,7 +547,7 @@ tasks:
           if [ -z "$TEST_FILES" ]; then
             echo 'WARNING: No test files found for native_promise — skipping.'
             docker rm -f test-runner npm-proxy || true
-            docker network rm npm-net || true
+            docker network rm internal-net egress-net || true
             exit 0
           fi
 
@@ -512,12 +571,9 @@ tasks:
             retry=$((retry + 1))
           done
 
-          # cleanup
           docker rm -f test-runner npm-proxy || true
-          docker network rm npm-net || true
+          docker network rm internal-net egress-net || true
 
-
-          # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(get_env commit-id "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
@@ -553,8 +609,6 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
-
-          # report commit status to GitHub
           GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
