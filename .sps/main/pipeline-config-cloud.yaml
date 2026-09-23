@@ -80,6 +80,12 @@ tasks:
           done
           echo "network-filter ready after ${elapsed}s"
 
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
           docker network connect offline-net "$FILTER_CTR"
@@ -104,10 +110,9 @@ tasks:
           socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
           if [ -n "${FILTER_CTR:-}" ]; then
             docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-localstack-4566-$$" \
-              mirror.gcr.io/alpine/socat:latest \
+              socat-fwd \
               TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566
-            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
-              mirror.gcr.io/alpine/socat:latest \
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" socat-fwd \
               /bin/sh -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \

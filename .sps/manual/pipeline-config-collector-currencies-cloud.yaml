@@ -80,6 +80,12 @@ tasks:
           done
           echo "network-filter ready after ${elapsed}s"
 
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
           docker network connect offline-net "$FILTER_CTR"
@@ -104,10 +110,9 @@ tasks:
           socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
           if [ -n "${FILTER_CTR:-}" ]; then
             docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-localstack-4566-$$" \
-              mirror.gcr.io/alpine/socat:latest \
+              socat-fwd \
               TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566
-            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
-              mirror.gcr.io/alpine/socat:latest \
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" socat-fwd \
               /bin/sh -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
@@ -274,6 +279,12 @@ tasks:
           done
           echo "network-filter ready after ${elapsed}s"
 
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
           docker network connect offline-net "$FILTER_CTR"
@@ -304,10 +315,9 @@ tasks:
           socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
           if [ -n "${FILTER_CTR:-}" ]; then
             docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-localstack-kinesis-4566-$$" \
-              mirror.gcr.io/alpine/socat:latest \
+              socat-fwd \
               TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566
-            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
-              mirror.gcr.io/alpine/socat:latest \
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" socat-fwd \
               /bin/sh -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
@@ -473,6 +483,12 @@ tasks:
           done
           echo "network-filter ready after ${elapsed}s"
 
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
           docker network connect offline-net "$FILTER_CTR"
@@ -497,10 +513,9 @@ tasks:
           socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
           if [ -n "${FILTER_CTR:-}" ]; then
             docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-localstack-4566-$$" \
-              mirror.gcr.io/alpine/socat:latest \
+              socat-fwd \
               TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566
-            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
-              mirror.gcr.io/alpine/socat:latest \
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" socat-fwd \
               /bin/sh -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
@@ -667,6 +682,12 @@ tasks:
           done
           echo "network-filter ready after ${elapsed}s"
 
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
           docker network connect offline-net "$FILTER_CTR"
@@ -691,10 +712,9 @@ tasks:
           socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
           if [ -n "${FILTER_CTR:-}" ]; then
             docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-localstack-4566-$$" \
-              mirror.gcr.io/alpine/socat:latest \
+              socat-fwd \
               TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566
-            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
-              mirror.gcr.io/alpine/socat:latest \
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" socat-fwd \
               /bin/sh -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
@@ -861,6 +881,12 @@ tasks:
           done
           echo "network-filter ready after ${elapsed}s"
 
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
           docker network connect offline-net "$FILTER_CTR"
@@ -885,10 +911,9 @@ tasks:
           socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
           if [ -n "${FILTER_CTR:-}" ]; then
             docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-localstack-4566-$$" \
-              mirror.gcr.io/alpine/socat:latest \
+              socat-fwd \
               TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566
-            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
-              mirror.gcr.io/alpine/socat:latest \
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" socat-fwd \
               /bin/sh -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
@@ -1055,6 +1080,12 @@ tasks:
           done
           echo "network-filter ready after ${elapsed}s"
 
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
           docker network connect offline-net "$FILTER_CTR"
@@ -1079,10 +1110,9 @@ tasks:
           socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
           if [ -n "${FILTER_CTR:-}" ]; then
             docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-localstack-4566-$$" \
-              mirror.gcr.io/alpine/socat:latest \
+              socat-fwd \
               TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566
-            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
-              mirror.gcr.io/alpine/socat:latest \
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" socat-fwd \
               /bin/sh -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
@@ -1249,6 +1279,12 @@ tasks:
           done
           echo "network-filter ready after ${elapsed}s"
 
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
           docker network connect offline-net "$FILTER_CTR"
@@ -1273,30 +1309,27 @@ tasks:
           socat TCP6-LISTEN:10000,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:10000 &
           if [ -n "${FILTER_CTR:-}" ]; then
             docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-azurite-10000-$$" \
-              mirror.gcr.io/alpine/socat:latest \
+              socat-fwd \
               TCP-LISTEN:10000,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10000
-            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
-              mirror.gcr.io/alpine/socat:latest \
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" socat-fwd \
               /bin/sh -c 'until nc -z 127.0.0.1 10000 2>/dev/null; do sleep 1; done'
           fi
           socat TCP-LISTEN:10001,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10001 &
           socat TCP6-LISTEN:10001,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:10001 &
           if [ -n "${FILTER_CTR:-}" ]; then
             docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-azurite-10001-$$" \
-              mirror.gcr.io/alpine/socat:latest \
+              socat-fwd \
               TCP-LISTEN:10001,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10001
-            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
-              mirror.gcr.io/alpine/socat:latest \
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" socat-fwd \
               /bin/sh -c 'until nc -z 127.0.0.1 10001 2>/dev/null; do sleep 1; done'
           fi
           socat TCP-LISTEN:10002,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10002 &
           socat TCP6-LISTEN:10002,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:10002 &
           if [ -n "${FILTER_CTR:-}" ]; then
             docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-azurite-10002-$$" \
-              mirror.gcr.io/alpine/socat:latest \
+              socat-fwd \
               TCP-LISTEN:10002,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10002
-            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
-              mirror.gcr.io/alpine/socat:latest \
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" socat-fwd \
               /bin/sh -c 'until nc -z 127.0.0.1 10002 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
@@ -1463,6 +1496,12 @@ tasks:
           done
           echo "network-filter ready after ${elapsed}s"
 
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
           docker network connect offline-net "$FILTER_CTR"
@@ -1487,10 +1526,9 @@ tasks:
           socat TCP6-LISTEN:8085,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:8085 &
           if [ -n "${FILTER_CTR:-}" ]; then
             docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-pubsub-emulator-8085-$$" \
-              mirror.gcr.io/alpine/socat:latest \
+              socat-fwd \
               TCP-LISTEN:8085,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8085
-            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
-              mirror.gcr.io/alpine/socat:latest \
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" socat-fwd \
               /bin/sh -c 'until nc -z 127.0.0.1 8085 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
@@ -1658,6 +1696,12 @@ tasks:
           done
           echo "network-filter ready after ${elapsed}s"
 
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
           docker network connect offline-net "$FILTER_CTR"
@@ -1681,10 +1725,9 @@ tasks:
           socat TCP6-LISTEN:4443,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4443 &
           if [ -n "${FILTER_CTR:-}" ]; then
             docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-fake-gcs-server-4443-$$" \
-              mirror.gcr.io/alpine/socat:latest \
+              socat-fwd \
               TCP-LISTEN:4443,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4443
-            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
-              mirror.gcr.io/alpine/socat:latest \
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" socat-fwd \
               /bin/sh -c 'until nc -z 127.0.0.1 4443 2>/dev/null; do sleep 1; done'
           fi
           timeout 30 bash -c \
@@ -1853,6 +1896,12 @@ tasks:
           done
           echo "network-filter ready after ${elapsed}s"
 
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
           docker network connect offline-net "$FILTER_CTR"
@@ -1883,10 +1932,9 @@ tasks:
           socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
           if [ -n "${FILTER_CTR:-}" ]; then
             docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-localstack-kinesis-4566-$$" \
-              mirror.gcr.io/alpine/socat:latest \
+              socat-fwd \
               TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566
-            timeout 30 docker run --rm --network "container:${FILTER_CTR}" \
-              mirror.gcr.io/alpine/socat:latest \
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" socat-fwd \
               /bin/sh -c 'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 1; done'
           fi
           timeout 60 bash -c \
