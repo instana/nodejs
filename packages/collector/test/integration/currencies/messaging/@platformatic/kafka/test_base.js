@@ -45,9 +45,7 @@ function verifyHttpExit(spans, parentSpan) {
 
 // node bin/start-test-containers.js --zookeeper --kafka --kafka-topics
 module.exports = function (name, version, isLatest) {
-  const suiteFn = process.env.RUN_ESM ? describe : describe.skip;
-
-  suiteFn('tracing/@platformatic/kafka', function () {
+  describe('tracing/@platformatic/kafka', function () {
     this.timeout(config.getTestTimeout() * 2.5);
 
     globalAgent.setUpCleanUpHooks();
