@@ -80,7 +80,7 @@ tasks:
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
-            monadicalsas/network-filter:latest
+            mirror.gcr.io/monadicalsas/network-filter:latest
 
           elapsed=0
           until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
