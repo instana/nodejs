@@ -15,7 +15,6 @@ const dbBindVariables = require('./dbBindVariables');
 exports.init = function init(config) {
   disable.init(config);
   ignoreEndpoints.init(config);
-  dbBindVariables.init(config);
 };
 
 exports.disable = disable;

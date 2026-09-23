@@ -12,7 +12,6 @@ const coreConfig = require('../../../src/config');
 
 describe('config.normalizers.dbBindVariables', function () {
   before(function () {
-    dbBindVariables.init({ logger: createFakeLogger() });
     coreConfig.init(createFakeLogger());
   });
 
@@ -79,8 +78,8 @@ describe('config.normalizers.dbBindVariables', function () {
       expect(dbBindVariables.fromAgent(42)).to.equal(null);
     });
 
-    it('should return null for an empty object (no recognized keys)', function () {
-      expect(dbBindVariables.fromAgent({})).to.equal(null);
+    it('should return defaults for an empty object (no recognized keys)', function () {
+      expect(dbBindVariables.fromAgent({})).to.deep.equal({ disable: true, allowedColumns: [] });
     });
 
     it('should parse disable=true from agent', function () {
@@ -108,10 +107,10 @@ describe('config.normalizers.dbBindVariables', function () {
       expect(result.allowedColumns).to.deep.equal(['order_id', 'username']);
     });
 
-    it('should ignore non-boolean disable values and return null for empty object', function () {
+    it('should ignore non-boolean disable values and return defaults', function () {
       const result = dbBindVariables.fromAgent({ disable: 'yes' });
-      // 'disable' is invalid, no allowed-columns set → nothing changed → null
-      expect(result).to.equal(null);
+      // 'disable' is invalid → silently ignored, allowedColumns stays at default
+      expect(result).to.deep.equal({ disable: true, allowedColumns: [] });
     });
   });
 
@@ -123,8 +122,8 @@ describe('config.normalizers.dbBindVariables', function () {
       expect(dbBindVariables.fromInCode(42)).to.equal(null);
     });
 
-    it('should return null for an empty object (no recognized keys)', function () {
-      expect(dbBindVariables.fromInCode({})).to.equal(null);
+    it('should return defaults for an empty object (no recognized keys)', function () {
+      expect(dbBindVariables.fromInCode({})).to.deep.equal({ disable: true, allowedColumns: [] });
     });
 
     it('should parse disable=true', function () {
@@ -154,19 +153,20 @@ describe('config.normalizers.dbBindVariables', function () {
 
     it('should ignore a non-boolean disable and still capture valid allowedColumns', function () {
       const result = dbBindVariables.fromInCode({ disable: 'yes', allowedColumns: ['order_id'] });
-      // disable is invalid but allowedColumns is valid → changed=true, disable stays at default (true)
+      // disable is invalid → silently ignored, allowedColumns captured, disable stays at default
       expect(result).to.deep.equal({ disable: true, allowedColumns: ['order_id'] });
     });
 
     it('should ignore invalid allowedColumns and still capture valid disable', function () {
       const result = dbBindVariables.fromInCode({ disable: false, allowedColumns: 'not-an-array' });
-      // allowedColumns is invalid but disable is valid → changed=true, allowedColumns stays at default ([])
+      // allowedColumns is invalid → silently ignored, disable captured, allowedColumns stays at default
       expect(result).to.deep.equal({ disable: false, allowedColumns: [] });
     });
 
-    it('should return null when both fields are invalid', function () {
+    it('should return defaults when both fields are invalid', function () {
       const result = dbBindVariables.fromInCode({ disable: 'yes', allowedColumns: 'not-an-array' });
-      expect(result).to.equal(null);
+      // validation is the caller's responsibility; normalizer falls back to defaults for unrecognised values
+      expect(result).to.deep.equal({ disable: true, allowedColumns: [] });
     });
   });
 

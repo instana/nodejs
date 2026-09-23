@@ -18,6 +18,7 @@ const {
 const util = require('./util');
 const validators = require('./validator');
 const { validateStackTraceMode, validateStackTraceLength } = validators;
+const { validateDbBindVariablesDisable, validateDbBindVariablesAllowedColumns } = validators;
 
 // @typedef {{ [x: string]: any }} configMeta
 /** @type {configMeta} */
@@ -1238,13 +1239,24 @@ function parseSecretsEnvVar(envVarValue) {
     keywords: keywordsArray
   };
 }
+
 /**
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
 function normalizeDbBindVariables({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
   // Priority 1: environment variables (highest priority)
-  const fromEnv = normalizers.dbBindVariables.fromEnv();
-  if (fromEnv !== null) {
+  const disableEnv = process.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE;
+  const columnsEnv = process.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS;
+
+  if (disableEnv != null || columnsEnv != null) {
+    if (disableEnv != null) {
+      const result = validateDbBindVariablesDisable(disableEnv);
+      if (!result.isValid) {
+        logger.warn(`Invalid env INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE: ${result.error}`);
+      }
+    }
+
+    const fromEnv = normalizers.dbBindVariables.fromEnv();
     finalConfig.tracing.dbBindVariables = fromEnv;
     configStore.set('config.tracing.dbBindVariables', { source: CONFIG_SOURCES.ENV });
     logger.debug(
@@ -1254,8 +1266,22 @@ function normalizeDbBindVariables({ userConfig = {}, defaultConfig = {}, finalCo
   }
 
   // Priority 2: in-code configuration
-  const fromInCode = normalizers.dbBindVariables.fromInCode(userConfig.tracing?.dbBindVariables);
-  if (fromInCode !== null) {
+  const inCode = userConfig.tracing?.dbBindVariables;
+  if (inCode && typeof inCode === 'object' && Object.keys(inCode).length > 0) {
+    if (inCode.disable != null) {
+      const result = validateDbBindVariablesDisable(inCode.disable);
+      if (!result.isValid) {
+        logger.warn(result.error);
+      }
+    }
+    if (inCode.allowedColumns != null) {
+      const result = validateDbBindVariablesAllowedColumns(inCode.allowedColumns);
+      if (!result.isValid) {
+        logger.warn(result.error);
+      }
+    }
+
+    const fromInCode = normalizers.dbBindVariables.fromInCode(inCode);
     finalConfig.tracing.dbBindVariables = fromInCode;
     configStore.set('config.tracing.dbBindVariables', { source: CONFIG_SOURCES.INCODE });
     logger.debug(`[config] config.tracing.dbBindVariables <- incode = ${JSON.stringify(fromInCode)}`);

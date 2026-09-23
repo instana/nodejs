@@ -219,3 +219,38 @@ exports.validateTransmissionDelay = function validateTransmissionDelay(value) {
   );
   return nearest;
 };
+
+/**
+ * Validates a db-bind-variables `disable` value.
+ * Accepts booleans only; strings such as 'true'/'false' are intentionally rejected here
+ * because env-var coercion is handled by the normalizer.
+ *
+ * @param {any} value
+ * @returns {{ isValid: boolean, error: string | null }}
+ */
+exports.validateDbBindVariablesDisable = function validateDbBindVariablesDisable(value) {
+  if (typeof value === 'boolean') {
+    return { isValid: true, error: null };
+  }
+  return {
+    isValid: false,
+    error: `Invalid value for tracing.dbBindVariables.disable: "${value}". Expected a boolean.`
+  };
+};
+
+/**
+ * Validates a db-bind-variables `allowedColumns` value.
+ * Must be an array; individual non-string / blank entries are silently skipped by the normalizer.
+ *
+ * @param {any} value
+ * @returns {{ isValid: boolean, error: string | null }}
+ */
+exports.validateDbBindVariablesAllowedColumns = function validateDbBindVariablesAllowedColumns(value) {
+  if (Array.isArray(value)) {
+    return { isValid: true, error: null };
+  }
+  return {
+    isValid: false,
+    error: `Invalid value for tracing.dbBindVariables.allowedColumns: "${value}". Expected an array of strings.`
+  };
+};
