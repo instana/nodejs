@@ -1,0 +1,13 @@
+{
+  "name": "test-misc-sdk_spans",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@instana/collector": "{{collectorVersion}}",
+    "@instana/core": "{{coreVersion}}",
+    "@instana/shared-metrics": "{{sharedMetricsVersion}}",
+    "body-parser": "1.20.3",
+    "express": "4.21.2",
+    "morgan": "1.10.0"
+  }
+}
