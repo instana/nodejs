@@ -54,7 +54,7 @@ tasks:
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -62,20 +62,88 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          # create isolated network
-          docker network create --internal offline-net
+          # ── egress-proxy setup ────────────────────────────────────────────────────
+          EGRESS_NET="egress-net-$$"
+          INTERNAL_NET="internal-net-$$"
+          SQUID_CTR="squid-proxy-$$"
 
+          cleanup_networks() {
+            docker rm -f "$SQUID_CTR" 2>/dev/null || true
+            docker network rm "$EGRESS_NET"   2>/dev/null || true
+            docker network rm "$INTERNAL_NET" 2>/dev/null || true
+          }
+          trap cleanup_networks EXIT
+
+          docker network create "$EGRESS_NET"
+          docker network create --internal "$INTERNAL_NET"
+
+          docker build \
+            --tag instana-squid-proxy:ci \
+            --file .sps/squid/Dockerfile \
+            .sps/squid
+
+          docker run --detach --name "$SQUID_CTR" \
+            --network "$EGRESS_NET" \
+            --restart no \
+            instana-squid-proxy:ci
+
+          # Connect to internal-net with the DNS alias "squid-proxy"
+          docker network connect --alias squid-proxy "$INTERNAL_NET" "$SQUID_CTR"
+
+          # Expose proxy to host via socat loopback
+          SQUID_INTERNAL_IP=$(docker inspect -f "{{with index .NetworkSettings.Networks \"$INTERNAL_NET\"}}{{.IPAddress}}{{end}}" "$SQUID_CTR")
+          socat TCP-LISTEN:3128,fork,reuseaddr,bind=127.0.0.1 TCP:$SQUID_INTERNAL_IP:3128 &
+          socat TCP6-LISTEN:3128,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SQUID_INTERNAL_IP:3128 &
+
+          # wait for Squid — probe uses internal DNS name "squid-proxy"
+          NODE_PROBE='const net=require("net"),s=net.createConnection({host:process.env.SQUID_HOST,port:3128});s.on("connect",()=>{s.destroy();process.exit(0)});s.on("error",()=>{s.destroy();process.exit(1)})'
+          elapsed=0
+          until docker run --rm --network "$INTERNAL_NET" \
+            --env SQUID_HOST="squid-proxy" \
+            node:24-slim node -e "$NODE_PROBE" 2>/dev/null; do
+            elapsed=$((elapsed+1))
+            if [ "$elapsed" -ge 60 ]; then
+              echo "ERROR: Squid did not become ready within 60s"
+              docker logs "$SQUID_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "Squid ready after ${elapsed}s via internal-net (alias: squid-proxy:3128)"
+
+          # Host uses local socat forward; inside-docker tests/probes can use squid-proxy
+          PROXY_URL="http://127.0.0.1:3128"
+          export HTTP_PROXY="$PROXY_URL" HTTPS_PROXY="$PROXY_URL" \
+                 http_proxy="$PROXY_URL" https_proxy="$PROXY_URL" \
+                 NO_PROXY="localhost,127.0.0.1,::1" \
+                 no_proxy="localhost,127.0.0.1,::1"
+
+          # ── security assertion: direct outbound must be unreachable ───────────────
+          DIRECT_TEST='const http=require("http"),req=http.get("http://registry.npmjs.org/",{timeout:5000});req.on("response",()=>{console.error("FAIL: direct internet reachable");process.exit(1)});req.on("error",e=>{console.log("OK: blocked ("+e.code+")");process.exit(0)});req.on("timeout",()=>{req.destroy();console.log("OK: timed out");process.exit(0)})'
+          docker run --rm --network "$INTERNAL_NET" node:24-slim \
+            node -e "$DIRECT_TEST"
+
+          # Verify curl to blocked domain fails via proxy
+          if curl --connect-timeout 5 -sSf https://opentelemetry.io/ >/dev/null 2>&1; then
+            echo "FAIL: curl to https://opentelemetry.io/ succeeded unexpectedly!"
+            exit 1
+          else
+            echo "OK: https://opentelemetry.io/ blocked by network restriction."
+          fi
+          echo "Security assertion PASSED."
+
+          # ── npm install (proxy-enforced via host loopback forward) ─────────────────
           npm install --loglevel warn --foreground-scripts
 
-          # start localstack
-          docker run -d --network offline-net --name localstack \
+          # ── start localstack on internal-net ─────────────────────────────────────
+          docker run -d --network "$INTERNAL_NET" --name localstack \
             -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack)
           socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
           socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
           timeout 60 bash -c \
-            'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
+            'until node -e "const net=require(\"net\"),s=net.createConnection({host:\"127.0.0.1\",port:4566});s.on(\"connect\",()=>{s.destroy();process.exit(0)});s.on(\"error\",()=>{s.destroy();process.exit(1)})" 2>/dev/null; do sleep 2; done'
 
           node bin/create-version-test-folders.js
 
@@ -102,6 +170,9 @@ tasks:
               RUN_ESM="$RUN_ESM" \
               INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
               TEST_FILES="$TEST_FILES" \
+              HTTP_PROXY="$PROXY_URL" HTTPS_PROXY="$PROXY_URL" \
+              http_proxy="$PROXY_URL" https_proxy="$PROXY_URL" \
+              NO_PROXY="localhost,127.0.0.1,::1" no_proxy="localhost,127.0.0.1,::1" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-client-dynamodb" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -146,7 +217,6 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
-
           # report commit status to GitHub
           GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
@@ -177,6 +247,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
+
   code-build-collector-cloud-client-kinesis:
     from: code-build
     displayName: '@aws-sdk/client-kinesis'
@@ -206,7 +277,7 @@ tasks:
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -214,30 +285,90 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          # create isolated network
-          docker network create --internal offline-net
+          # ── egress-proxy setup ────────────────────────────────────────────────────
+          EGRESS_NET="egress-net-$$"
+          INTERNAL_NET="internal-net-$$"
+          SQUID_CTR="squid-proxy-$$"
+
+          cleanup_networks() {
+            docker rm -f "$SQUID_CTR" 2>/dev/null || true
+            docker network rm "$EGRESS_NET"   2>/dev/null || true
+            docker network rm "$INTERNAL_NET" 2>/dev/null || true
+          }
+          trap cleanup_networks EXIT
+
+          docker network create "$EGRESS_NET"
+          docker network create --internal "$INTERNAL_NET"
+
+          docker build \
+            --tag instana-squid-proxy:ci \
+            --file .sps/squid/Dockerfile \
+            .sps/squid
+
+          docker run --detach --name "$SQUID_CTR" \
+            --network "$EGRESS_NET" \
+            --restart no \
+            instana-squid-proxy:ci
+
+          docker network connect --alias squid-proxy "$INTERNAL_NET" "$SQUID_CTR"
+
+          SQUID_INTERNAL_IP=$(docker inspect -f "{{with index .NetworkSettings.Networks \"$INTERNAL_NET\"}}{{.IPAddress}}{{end}}" "$SQUID_CTR")
+          socat TCP-LISTEN:3128,fork,reuseaddr,bind=127.0.0.1 TCP:$SQUID_INTERNAL_IP:3128 &
+          socat TCP6-LISTEN:3128,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SQUID_INTERNAL_IP:3128 &
+
+          NODE_PROBE='const net=require("net"),s=net.createConnection({host:process.env.SQUID_HOST,port:3128});s.on("connect",()=>{s.destroy();process.exit(0)});s.on("error",()=>{s.destroy();process.exit(1)})'
+          elapsed=0
+          until docker run --rm --network "$INTERNAL_NET" \
+            --env SQUID_HOST="squid-proxy" \
+            node:24-slim node -e "$NODE_PROBE" 2>/dev/null; do
+            elapsed=$((elapsed+1))
+            if [ "$elapsed" -ge 60 ]; then
+              echo "ERROR: Squid did not become ready within 60s"
+              docker logs "$SQUID_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "Squid ready after ${elapsed}s via internal-net (alias: squid-proxy:3128)"
+
+          PROXY_URL="http://127.0.0.1:3128"
+          export HTTP_PROXY="$PROXY_URL" HTTPS_PROXY="$PROXY_URL" \
+                 http_proxy="$PROXY_URL" https_proxy="$PROXY_URL" \
+                 NO_PROXY="localhost,127.0.0.1,::1" \
+                 no_proxy="localhost,127.0.0.1,::1"
+
+          DIRECT_TEST='const http=require("http"),req=http.get("http://registry.npmjs.org/",{timeout:5000});req.on("response",()=>{console.error("FAIL: direct internet reachable");process.exit(1)});req.on("error",e=>{console.log("OK: blocked ("+e.code+")");process.exit(0)});req.on("timeout",()=>{req.destroy();console.log("OK: timed out");process.exit(0)})'
+          docker run --rm --network "$INTERNAL_NET" node:24-slim \
+            node -e "$DIRECT_TEST"
+
+          if curl --connect-timeout 5 -sSf https://opentelemetry.io/ >/dev/null 2>&1; then
+            echo "FAIL: curl to https://opentelemetry.io/ succeeded unexpectedly!"
+            exit 1
+          else
+            echo "OK: https://opentelemetry.io/ blocked by network restriction."
+          fi
+          echo "Security assertion PASSED."
 
           npm install --loglevel warn --foreground-scripts
 
-          # start localstack-kinesis
-          docker network create kinesis-bootstrap
-          docker run -d --network kinesis-bootstrap --name localstack-kinesis \
+          # start localstack-kinesis (needs kinesis-bootstrap net to initialise, then move to internal-net)
+          docker network create kinesis-bootstrap-$$
+          docker run -d --network kinesis-bootstrap-$$ --name localstack-kinesis \
             -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
-          docker network connect offline-net localstack-kinesis
+          docker network connect "$INTERNAL_NET" localstack-kinesis
           timeout 180 bash -c \
             'until docker exec localstack-kinesis awslocal kinesis list-streams >/dev/null 2>&1; do sleep 2; done'
-          docker network disconnect kinesis-bootstrap localstack-kinesis
-          docker network rm kinesis-bootstrap
+          docker network disconnect kinesis-bootstrap-$$ localstack-kinesis
+          docker network rm kinesis-bootstrap-$$
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack-kinesis)
           socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
           socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
           timeout 60 bash -c \
-            'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
+            'until node -e "const net=require(\"net\"),s=net.createConnection({host:\"127.0.0.1\",port:4566});s.on(\"connect\",()=>{s.destroy();process.exit(0)});s.on(\"error\",()=>{s.destroy();process.exit(1)})" 2>/dev/null; do sleep 2; done'
 
           node bin/create-version-test-folders.js
 
-          # collect test files
           TEST_FILES=$(cd packages/collector && find \
             test/integration/currencies/cloud/@aws-sdk/client-kinesis \
             -name '*.test.js' \
@@ -259,6 +390,9 @@ tasks:
               CI=true \
               RUN_ESM="$RUN_ESM" \
               TEST_FILES="$TEST_FILES" \
+              HTTP_PROXY="$PROXY_URL" HTTPS_PROXY="$PROXY_URL" \
+              http_proxy="$PROXY_URL" https_proxy="$PROXY_URL" \
+              NO_PROXY="localhost,127.0.0.1,::1" no_proxy="localhost,127.0.0.1,::1" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-client-kinesis" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -267,7 +401,6 @@ tasks:
             retry=$((retry + 1))
           done
 
-          # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(get_env commit-id "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
@@ -303,8 +436,6 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
-
-          # report commit status to GitHub
           GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
@@ -334,6 +465,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
+
   code-build-collector-cloud-client-lambda:
     from: code-build
     displayName: '@aws-sdk/client-lambda'
@@ -360,10 +492,9 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -371,24 +502,82 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          # create isolated network
-          docker network create --internal offline-net
+          EGRESS_NET="egress-net-$$"
+          INTERNAL_NET="internal-net-$$"
+          SQUID_CTR="squid-proxy-$$"
+
+          cleanup_networks() {
+            docker rm -f "$SQUID_CTR" 2>/dev/null || true
+            docker network rm "$EGRESS_NET"   2>/dev/null || true
+            docker network rm "$INTERNAL_NET" 2>/dev/null || true
+          }
+          trap cleanup_networks EXIT
+
+          docker network create "$EGRESS_NET"
+          docker network create --internal "$INTERNAL_NET"
+
+          docker build \
+            --tag instana-squid-proxy:ci \
+            --file .sps/squid/Dockerfile \
+            .sps/squid
+
+          docker run --detach --name "$SQUID_CTR" \
+            --network "$EGRESS_NET" \
+            --restart no \
+            instana-squid-proxy:ci
+
+          docker network connect --alias squid-proxy "$INTERNAL_NET" "$SQUID_CTR"
+
+          SQUID_INTERNAL_IP=$(docker inspect -f "{{with index .NetworkSettings.Networks \"$INTERNAL_NET\"}}{{.IPAddress}}{{end}}" "$SQUID_CTR")
+          socat TCP-LISTEN:3128,fork,reuseaddr,bind=127.0.0.1 TCP:$SQUID_INTERNAL_IP:3128 &
+          socat TCP6-LISTEN:3128,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SQUID_INTERNAL_IP:3128 &
+
+          NODE_PROBE='const net=require("net"),s=net.createConnection({host:process.env.SQUID_HOST,port:3128});s.on("connect",()=>{s.destroy();process.exit(0)});s.on("error",()=>{s.destroy();process.exit(1)})'
+          elapsed=0
+          until docker run --rm --network "$INTERNAL_NET" \
+            --env SQUID_HOST="squid-proxy" \
+            node:24-slim node -e "$NODE_PROBE" 2>/dev/null; do
+            elapsed=$((elapsed+1))
+            if [ "$elapsed" -ge 60 ]; then
+              echo "ERROR: Squid did not become ready within 60s"
+              docker logs "$SQUID_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "Squid ready after ${elapsed}s via internal-net (alias: squid-proxy:3128)"
+
+          PROXY_URL="http://127.0.0.1:3128"
+          export HTTP_PROXY="$PROXY_URL" HTTPS_PROXY="$PROXY_URL" \
+                 http_proxy="$PROXY_URL" https_proxy="$PROXY_URL" \
+                 NO_PROXY="localhost,127.0.0.1,::1" \
+                 no_proxy="localhost,127.0.0.1,::1"
+
+          DIRECT_TEST='const http=require("http"),req=http.get("http://registry.npmjs.org/",{timeout:5000});req.on("response",()=>{console.error("FAIL: direct internet reachable");process.exit(1)});req.on("error",e=>{console.log("OK: blocked ("+e.code+")");process.exit(0)});req.on("timeout",()=>{req.destroy();console.log("OK: timed out");process.exit(0)})'
+          docker run --rm --network "$INTERNAL_NET" node:24-slim \
+            node -e "$DIRECT_TEST"
+
+          if curl --connect-timeout 5 -sSf https://opentelemetry.io/ >/dev/null 2>&1; then
+            echo "FAIL: curl to https://opentelemetry.io/ succeeded unexpectedly!"
+            exit 1
+          else
+            echo "OK: https://opentelemetry.io/ blocked by network restriction."
+          fi
+          echo "Security assertion PASSED."
 
           npm install --loglevel warn --foreground-scripts
 
-          # start localstack
-          docker run -d --network offline-net --name localstack \
+          docker run -d --network "$INTERNAL_NET" --name localstack \
             -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack)
           socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
           socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
           timeout 60 bash -c \
-            'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
+            'until node -e "const net=require(\"net\"),s=net.createConnection({host:\"127.0.0.1\",port:4566});s.on(\"connect\",()=>{s.destroy();process.exit(0)});s.on(\"error\",()=>{s.destroy();process.exit(1)})" 2>/dev/null; do sleep 2; done'
 
           node bin/create-version-test-folders.js
 
-          # collect test files
           TEST_FILES=$(cd packages/collector && find \
             test/integration/currencies/cloud/@aws-sdk/client-lambda \
             -name '*.test.js' \
@@ -411,6 +600,9 @@ tasks:
               RUN_ESM="$RUN_ESM" \
               INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
               TEST_FILES="$TEST_FILES" \
+              HTTP_PROXY="$PROXY_URL" HTTPS_PROXY="$PROXY_URL" \
+              http_proxy="$PROXY_URL" https_proxy="$PROXY_URL" \
+              NO_PROXY="localhost,127.0.0.1,::1" no_proxy="localhost,127.0.0.1,::1" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-client-lambda" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -419,7 +611,6 @@ tasks:
             retry=$((retry + 1))
           done
 
-          # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(get_env commit-id "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
@@ -455,8 +646,6 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
-
-          # report commit status to GitHub
           GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
@@ -486,6 +675,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
+
   code-build-collector-cloud-client-s3:
     from: code-build
     displayName: '@aws-sdk/client-s3'
@@ -512,10 +702,9 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -523,24 +712,82 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          # create isolated network
-          docker network create --internal offline-net
+          EGRESS_NET="egress-net-$$"
+          INTERNAL_NET="internal-net-$$"
+          SQUID_CTR="squid-proxy-$$"
+
+          cleanup_networks() {
+            docker rm -f "$SQUID_CTR" 2>/dev/null || true
+            docker network rm "$EGRESS_NET"   2>/dev/null || true
+            docker network rm "$INTERNAL_NET" 2>/dev/null || true
+          }
+          trap cleanup_networks EXIT
+
+          docker network create "$EGRESS_NET"
+          docker network create --internal "$INTERNAL_NET"
+
+          docker build \
+            --tag instana-squid-proxy:ci \
+            --file .sps/squid/Dockerfile \
+            .sps/squid
+
+          docker run --detach --name "$SQUID_CTR" \
+            --network "$EGRESS_NET" \
+            --restart no \
+            instana-squid-proxy:ci
+
+          docker network connect --alias squid-proxy "$INTERNAL_NET" "$SQUID_CTR"
+
+          SQUID_INTERNAL_IP=$(docker inspect -f "{{with index .NetworkSettings.Networks \"$INTERNAL_NET\"}}{{.IPAddress}}{{end}}" "$SQUID_CTR")
+          socat TCP-LISTEN:3128,fork,reuseaddr,bind=127.0.0.1 TCP:$SQUID_INTERNAL_IP:3128 &
+          socat TCP6-LISTEN:3128,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SQUID_INTERNAL_IP:3128 &
+
+          NODE_PROBE='const net=require("net"),s=net.createConnection({host:process.env.SQUID_HOST,port:3128});s.on("connect",()=>{s.destroy();process.exit(0)});s.on("error",()=>{s.destroy();process.exit(1)})'
+          elapsed=0
+          until docker run --rm --network "$INTERNAL_NET" \
+            --env SQUID_HOST="squid-proxy" \
+            node:24-slim node -e "$NODE_PROBE" 2>/dev/null; do
+            elapsed=$((elapsed+1))
+            if [ "$elapsed" -ge 60 ]; then
+              echo "ERROR: Squid did not become ready within 60s"
+              docker logs "$SQUID_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "Squid ready after ${elapsed}s via internal-net (alias: squid-proxy:3128)"
+
+          PROXY_URL="http://127.0.0.1:3128"
+          export HTTP_PROXY="$PROXY_URL" HTTPS_PROXY="$PROXY_URL" \
+                 http_proxy="$PROXY_URL" https_proxy="$PROXY_URL" \
+                 NO_PROXY="localhost,127.0.0.1,::1" \
+                 no_proxy="localhost,127.0.0.1,::1"
+
+          DIRECT_TEST='const http=require("http"),req=http.get("http://registry.npmjs.org/",{timeout:5000});req.on("response",()=>{console.error("FAIL: direct internet reachable");process.exit(1)});req.on("error",e=>{console.log("OK: blocked ("+e.code+")");process.exit(0)});req.on("timeout",()=>{req.destroy();console.log("OK: timed out");process.exit(0)})'
+          docker run --rm --network "$INTERNAL_NET" node:24-slim \
+            node -e "$DIRECT_TEST"
+
+          if curl --connect-timeout 5 -sSf https://opentelemetry.io/ >/dev/null 2>&1; then
+            echo "FAIL: curl to https://opentelemetry.io/ succeeded unexpectedly!"
+            exit 1
+          else
+            echo "OK: https://opentelemetry.io/ blocked by network restriction."
+          fi
+          echo "Security assertion PASSED."
 
           npm install --loglevel warn --foreground-scripts
 
-          # start localstack
-          docker run -d --network offline-net --name localstack \
+          docker run -d --network "$INTERNAL_NET" --name localstack \
             -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack)
           socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
           socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
           timeout 60 bash -c \
-            'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
+            'until node -e "const net=require(\"net\"),s=net.createConnection({host:\"127.0.0.1\",port:4566});s.on(\"connect\",()=>{s.destroy();process.exit(0)});s.on(\"error\",()=>{s.destroy();process.exit(1)})" 2>/dev/null; do sleep 2; done'
 
           node bin/create-version-test-folders.js
 
-          # collect test files
           TEST_FILES=$(cd packages/collector && find \
             test/integration/currencies/cloud/@aws-sdk/client-s3 \
             -name '*.test.js' \
@@ -563,6 +810,9 @@ tasks:
               RUN_ESM="$RUN_ESM" \
               INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
               TEST_FILES="$TEST_FILES" \
+              HTTP_PROXY="$PROXY_URL" HTTPS_PROXY="$PROXY_URL" \
+              http_proxy="$PROXY_URL" https_proxy="$PROXY_URL" \
+              NO_PROXY="localhost,127.0.0.1,::1" no_proxy="localhost,127.0.0.1,::1" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-client-s3" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -571,7 +821,6 @@ tasks:
             retry=$((retry + 1))
           done
 
-          # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(get_env commit-id "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
@@ -607,8 +856,6 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
-
-          # report commit status to GitHub
           GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
@@ -638,6 +885,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
+
   code-build-collector-cloud-client-sns:
     from: code-build
     displayName: '@aws-sdk/client-sns'
@@ -664,10 +912,9 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -675,24 +922,82 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          # create isolated network
-          docker network create --internal offline-net
+          EGRESS_NET="egress-net-$$"
+          INTERNAL_NET="internal-net-$$"
+          SQUID_CTR="squid-proxy-$$"
+
+          cleanup_networks() {
+            docker rm -f "$SQUID_CTR" 2>/dev/null || true
+            docker network rm "$EGRESS_NET"   2>/dev/null || true
+            docker network rm "$INTERNAL_NET" 2>/dev/null || true
+          }
+          trap cleanup_networks EXIT
+
+          docker network create "$EGRESS_NET"
+          docker network create --internal "$INTERNAL_NET"
+
+          docker build \
+            --tag instana-squid-proxy:ci \
+            --file .sps/squid/Dockerfile \
+            .sps/squid
+
+          docker run --detach --name "$SQUID_CTR" \
+            --network "$EGRESS_NET" \
+            --restart no \
+            instana-squid-proxy:ci
+
+          docker network connect --alias squid-proxy "$INTERNAL_NET" "$SQUID_CTR"
+
+          SQUID_INTERNAL_IP=$(docker inspect -f "{{with index .NetworkSettings.Networks \"$INTERNAL_NET\"}}{{.IPAddress}}{{end}}" "$SQUID_CTR")
+          socat TCP-LISTEN:3128,fork,reuseaddr,bind=127.0.0.1 TCP:$SQUID_INTERNAL_IP:3128 &
+          socat TCP6-LISTEN:3128,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SQUID_INTERNAL_IP:3128 &
+
+          NODE_PROBE='const net=require("net"),s=net.createConnection({host:process.env.SQUID_HOST,port:3128});s.on("connect",()=>{s.destroy();process.exit(0)});s.on("error",()=>{s.destroy();process.exit(1)})'
+          elapsed=0
+          until docker run --rm --network "$INTERNAL_NET" \
+            --env SQUID_HOST="squid-proxy" \
+            node:24-slim node -e "$NODE_PROBE" 2>/dev/null; do
+            elapsed=$((elapsed+1))
+            if [ "$elapsed" -ge 60 ]; then
+              echo "ERROR: Squid did not become ready within 60s"
+              docker logs "$SQUID_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "Squid ready after ${elapsed}s via internal-net (alias: squid-proxy:3128)"
+
+          PROXY_URL="http://127.0.0.1:3128"
+          export HTTP_PROXY="$PROXY_URL" HTTPS_PROXY="$PROXY_URL" \
+                 http_proxy="$PROXY_URL" https_proxy="$PROXY_URL" \
+                 NO_PROXY="localhost,127.0.0.1,::1" \
+                 no_proxy="localhost,127.0.0.1,::1"
+
+          DIRECT_TEST='const http=require("http"),req=http.get("http://registry.npmjs.org/",{timeout:5000});req.on("response",()=>{console.error("FAIL: direct internet reachable");process.exit(1)});req.on("error",e=>{console.log("OK: blocked ("+e.code+")");process.exit(0)});req.on("timeout",()=>{req.destroy();console.log("OK: timed out");process.exit(0)})'
+          docker run --rm --network "$INTERNAL_NET" node:24-slim \
+            node -e "$DIRECT_TEST"
+
+          if curl --connect-timeout 5 -sSf https://opentelemetry.io/ >/dev/null 2>&1; then
+            echo "FAIL: curl to https://opentelemetry.io/ succeeded unexpectedly!"
+            exit 1
+          else
+            echo "OK: https://opentelemetry.io/ blocked by network restriction."
+          fi
+          echo "Security assertion PASSED."
 
           npm install --loglevel warn --foreground-scripts
 
-          # start localstack
-          docker run -d --network offline-net --name localstack \
+          docker run -d --network "$INTERNAL_NET" --name localstack \
             -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack)
           socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
           socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
           timeout 60 bash -c \
-            'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
+            'until node -e "const net=require(\"net\"),s=net.createConnection({host:\"127.0.0.1\",port:4566});s.on(\"connect\",()=>{s.destroy();process.exit(0)});s.on(\"error\",()=>{s.destroy();process.exit(1)})" 2>/dev/null; do sleep 2; done'
 
           node bin/create-version-test-folders.js
 
-          # collect test files
           TEST_FILES=$(cd packages/collector && find \
             test/integration/currencies/cloud/@aws-sdk/client-sns \
             -name '*.test.js' \
@@ -715,6 +1020,9 @@ tasks:
               RUN_ESM="$RUN_ESM" \
               INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
               TEST_FILES="$TEST_FILES" \
+              HTTP_PROXY="$PROXY_URL" HTTPS_PROXY="$PROXY_URL" \
+              http_proxy="$PROXY_URL" https_proxy="$PROXY_URL" \
+              NO_PROXY="localhost,127.0.0.1,::1" no_proxy="localhost,127.0.0.1,::1" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-client-sns" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -723,7 +1031,6 @@ tasks:
             retry=$((retry + 1))
           done
 
-          # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(get_env commit-id "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
@@ -759,8 +1066,6 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
-
-          # report commit status to GitHub
           GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
@@ -790,6 +1095,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
+
   code-build-collector-cloud-client-sqs:
     from: code-build
     displayName: '@aws-sdk/client-sqs'
@@ -816,10 +1122,9 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -827,24 +1132,82 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          # create isolated network
-          docker network create --internal offline-net
+          EGRESS_NET="egress-net-$$"
+          INTERNAL_NET="internal-net-$$"
+          SQUID_CTR="squid-proxy-$$"
+
+          cleanup_networks() {
+            docker rm -f "$SQUID_CTR" 2>/dev/null || true
+            docker network rm "$EGRESS_NET"   2>/dev/null || true
+            docker network rm "$INTERNAL_NET" 2>/dev/null || true
+          }
+          trap cleanup_networks EXIT
+
+          docker network create "$EGRESS_NET"
+          docker network create --internal "$INTERNAL_NET"
+
+          docker build \
+            --tag instana-squid-proxy:ci \
+            --file .sps/squid/Dockerfile \
+            .sps/squid
+
+          docker run --detach --name "$SQUID_CTR" \
+            --network "$EGRESS_NET" \
+            --restart no \
+            instana-squid-proxy:ci
+
+          docker network connect --alias squid-proxy "$INTERNAL_NET" "$SQUID_CTR"
+
+          SQUID_INTERNAL_IP=$(docker inspect -f "{{with index .NetworkSettings.Networks \"$INTERNAL_NET\"}}{{.IPAddress}}{{end}}" "$SQUID_CTR")
+          socat TCP-LISTEN:3128,fork,reuseaddr,bind=127.0.0.1 TCP:$SQUID_INTERNAL_IP:3128 &
+          socat TCP6-LISTEN:3128,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SQUID_INTERNAL_IP:3128 &
+
+          NODE_PROBE='const net=require("net"),s=net.createConnection({host:process.env.SQUID_HOST,port:3128});s.on("connect",()=>{s.destroy();process.exit(0)});s.on("error",()=>{s.destroy();process.exit(1)})'
+          elapsed=0
+          until docker run --rm --network "$INTERNAL_NET" \
+            --env SQUID_HOST="squid-proxy" \
+            node:24-slim node -e "$NODE_PROBE" 2>/dev/null; do
+            elapsed=$((elapsed+1))
+            if [ "$elapsed" -ge 60 ]; then
+              echo "ERROR: Squid did not become ready within 60s"
+              docker logs "$SQUID_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "Squid ready after ${elapsed}s via internal-net (alias: squid-proxy:3128)"
+
+          PROXY_URL="http://127.0.0.1:3128"
+          export HTTP_PROXY="$PROXY_URL" HTTPS_PROXY="$PROXY_URL" \
+                 http_proxy="$PROXY_URL" https_proxy="$PROXY_URL" \
+                 NO_PROXY="localhost,127.0.0.1,::1" \
+                 no_proxy="localhost,127.0.0.1,::1"
+
+          DIRECT_TEST='const http=require("http"),req=http.get("http://registry.npmjs.org/",{timeout:5000});req.on("response",()=>{console.error("FAIL: direct internet reachable");process.exit(1)});req.on("error",e=>{console.log("OK: blocked ("+e.code+")");process.exit(0)});req.on("timeout",()=>{req.destroy();console.log("OK: timed out");process.exit(0)})'
+          docker run --rm --network "$INTERNAL_NET" node:24-slim \
+            node -e "$DIRECT_TEST"
+
+          if curl --connect-timeout 5 -sSf https://opentelemetry.io/ >/dev/null 2>&1; then
+            echo "FAIL: curl to https://opentelemetry.io/ succeeded unexpectedly!"
+            exit 1
+          else
+            echo "OK: https://opentelemetry.io/ blocked by network restriction."
+          fi
+          echo "Security assertion PASSED."
 
           npm install --loglevel warn --foreground-scripts
 
-          # start localstack
-          docker run -d --network offline-net --name localstack \
+          docker run -d --network "$INTERNAL_NET" --name localstack \
             -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack)
           socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
           socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
           timeout 60 bash -c \
-            'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
+            'until node -e "const net=require(\"net\"),s=net.createConnection({host:\"127.0.0.1\",port:4566});s.on(\"connect\",()=>{s.destroy();process.exit(0)});s.on(\"error\",()=>{s.destroy();process.exit(1)})" 2>/dev/null; do sleep 2; done'
 
           node bin/create-version-test-folders.js
 
-          # collect test files
           TEST_FILES=$(cd packages/collector && find \
             test/integration/currencies/cloud/@aws-sdk/client-sqs \
             -name '*.test.js' \
@@ -867,6 +1230,9 @@ tasks:
               RUN_ESM="$RUN_ESM" \
               INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
               TEST_FILES="$TEST_FILES" \
+              HTTP_PROXY="$PROXY_URL" HTTPS_PROXY="$PROXY_URL" \
+              http_proxy="$PROXY_URL" https_proxy="$PROXY_URL" \
+              NO_PROXY="localhost,127.0.0.1,::1" no_proxy="localhost,127.0.0.1,::1" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-client-sqs" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -875,7 +1241,6 @@ tasks:
             retry=$((retry + 1))
           done
 
-          # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(get_env commit-id "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
@@ -911,8 +1276,6 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
-
-          # report commit status to GitHub
           GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
@@ -942,6 +1305,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
+
   code-build-collector-cloud-storage-blob:
     from: code-build
     displayName: '@azure/storage-blob'
@@ -968,10 +1332,9 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -979,13 +1342,72 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          # create isolated network
-          docker network create --internal offline-net
+          EGRESS_NET="egress-net-$$"
+          INTERNAL_NET="internal-net-$$"
+          SQUID_CTR="squid-proxy-$$"
+
+          cleanup_networks() {
+            docker rm -f "$SQUID_CTR" 2>/dev/null || true
+            docker network rm "$EGRESS_NET"   2>/dev/null || true
+            docker network rm "$INTERNAL_NET" 2>/dev/null || true
+          }
+          trap cleanup_networks EXIT
+
+          docker network create "$EGRESS_NET"
+          docker network create --internal "$INTERNAL_NET"
+
+          docker build \
+            --tag instana-squid-proxy:ci \
+            --file .sps/squid/Dockerfile \
+            .sps/squid
+
+          docker run --detach --name "$SQUID_CTR" \
+            --network "$EGRESS_NET" \
+            --restart no \
+            instana-squid-proxy:ci
+
+          docker network connect --alias squid-proxy "$INTERNAL_NET" "$SQUID_CTR"
+
+          SQUID_INTERNAL_IP=$(docker inspect -f "{{with index .NetworkSettings.Networks \"$INTERNAL_NET\"}}{{.IPAddress}}{{end}}" "$SQUID_CTR")
+          socat TCP-LISTEN:3128,fork,reuseaddr,bind=127.0.0.1 TCP:$SQUID_INTERNAL_IP:3128 &
+          socat TCP6-LISTEN:3128,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SQUID_INTERNAL_IP:3128 &
+
+          NODE_PROBE='const net=require("net"),s=net.createConnection({host:process.env.SQUID_HOST,port:3128});s.on("connect",()=>{s.destroy();process.exit(0)});s.on("error",()=>{s.destroy();process.exit(1)})'
+          elapsed=0
+          until docker run --rm --network "$INTERNAL_NET" \
+            --env SQUID_HOST="squid-proxy" \
+            node:24-slim node -e "$NODE_PROBE" 2>/dev/null; do
+            elapsed=$((elapsed+1))
+            if [ "$elapsed" -ge 60 ]; then
+              echo "ERROR: Squid did not become ready within 60s"
+              docker logs "$SQUID_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "Squid ready after ${elapsed}s via internal-net (alias: squid-proxy:3128)"
+
+          PROXY_URL="http://127.0.0.1:3128"
+          export HTTP_PROXY="$PROXY_URL" HTTPS_PROXY="$PROXY_URL" \
+                 http_proxy="$PROXY_URL" https_proxy="$PROXY_URL" \
+                 NO_PROXY="localhost,127.0.0.1,::1" \
+                 no_proxy="localhost,127.0.0.1,::1"
+
+          DIRECT_TEST='const http=require("http"),req=http.get("http://registry.npmjs.org/",{timeout:5000});req.on("response",()=>{console.error("FAIL: direct internet reachable");process.exit(1)});req.on("error",e=>{console.log("OK: blocked ("+e.code+")");process.exit(0)});req.on("timeout",()=>{req.destroy();console.log("OK: timed out");process.exit(0)})'
+          docker run --rm --network "$INTERNAL_NET" node:24-slim \
+            node -e "$DIRECT_TEST"
+
+          if curl --connect-timeout 5 -sSf https://opentelemetry.io/ >/dev/null 2>&1; then
+            echo "FAIL: curl to https://opentelemetry.io/ succeeded unexpectedly!"
+            exit 1
+          else
+            echo "OK: https://opentelemetry.io/ blocked by network restriction."
+          fi
+          echo "Security assertion PASSED."
 
           npm install --loglevel warn --foreground-scripts
 
-          # start azurite
-          docker run -d --network offline-net --name azurite \
+          docker run -d --network "$INTERNAL_NET" --name azurite \
             -e AZURITE_ACCOUNTS="devstoreaccount1:Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OceiPiBeEEiypt/RI7k9g4Vm0J8SeBLMYxPTLr8GlFocl2qSA1dV5w==" \
             "mcr.microsoft.com/azure-storage/azurite:3.37.0" "azurite" "--blobHost" "0.0.0.0" "--queueHost" "0.0.0.0" "--tableHost" "0.0.0.0" "--loose" "--inMemoryPersistence"
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' azurite)
@@ -996,11 +1418,10 @@ tasks:
           socat TCP-LISTEN:10002,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:10002 &
           socat TCP6-LISTEN:10002,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:10002 &
           timeout 60 bash -c \
-            'until nc -z 127.0.0.1 10000 2>/dev/null; do sleep 2; done'
+            'until node -e "const net=require(\"net\"),s=net.createConnection({host:\"127.0.0.1\",port:10000});s.on(\"connect\",()=>{s.destroy();process.exit(0)});s.on(\"error\",()=>{s.destroy();process.exit(1)})" 2>/dev/null; do sleep 2; done'
 
           node bin/create-version-test-folders.js
 
-          # collect test files
           TEST_FILES=$(cd packages/collector && find \
             test/integration/currencies/cloud/@azure/storage-blob \
             -name '*.test.js' \
@@ -1023,6 +1444,9 @@ tasks:
               RUN_ESM="$RUN_ESM" \
               INSTANA_CONNECT_AZURE_BLOB_ENDPOINT="http://127.0.0.1:10000/devstoreaccount1" \
               TEST_FILES="$TEST_FILES" \
+              HTTP_PROXY="$PROXY_URL" HTTPS_PROXY="$PROXY_URL" \
+              http_proxy="$PROXY_URL" https_proxy="$PROXY_URL" \
+              NO_PROXY="localhost,127.0.0.1,::1" no_proxy="localhost,127.0.0.1,::1" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-storage-blob" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -1031,7 +1455,6 @@ tasks:
             retry=$((retry + 1))
           done
 
-          # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(get_env commit-id "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
@@ -1067,8 +1490,6 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
-
-          # report commit status to GitHub
           GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
@@ -1098,6 +1519,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
+
   code-build-collector-cloud-pubsub:
     from: code-build
     displayName: '@google-cloud/pubsub'
@@ -1124,10 +1546,9 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -1135,24 +1556,82 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          # create isolated network
-          docker network create --internal offline-net
+          EGRESS_NET="egress-net-$$"
+          INTERNAL_NET="internal-net-$$"
+          SQUID_CTR="squid-proxy-$$"
+
+          cleanup_networks() {
+            docker rm -f "$SQUID_CTR" 2>/dev/null || true
+            docker network rm "$EGRESS_NET"   2>/dev/null || true
+            docker network rm "$INTERNAL_NET" 2>/dev/null || true
+          }
+          trap cleanup_networks EXIT
+
+          docker network create "$EGRESS_NET"
+          docker network create --internal "$INTERNAL_NET"
+
+          docker build \
+            --tag instana-squid-proxy:ci \
+            --file .sps/squid/Dockerfile \
+            .sps/squid
+
+          docker run --detach --name "$SQUID_CTR" \
+            --network "$EGRESS_NET" \
+            --restart no \
+            instana-squid-proxy:ci
+
+          docker network connect --alias squid-proxy "$INTERNAL_NET" "$SQUID_CTR"
+
+          SQUID_INTERNAL_IP=$(docker inspect -f "{{with index .NetworkSettings.Networks \"$INTERNAL_NET\"}}{{.IPAddress}}{{end}}" "$SQUID_CTR")
+          socat TCP-LISTEN:3128,fork,reuseaddr,bind=127.0.0.1 TCP:$SQUID_INTERNAL_IP:3128 &
+          socat TCP6-LISTEN:3128,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SQUID_INTERNAL_IP:3128 &
+
+          NODE_PROBE='const net=require("net"),s=net.createConnection({host:process.env.SQUID_HOST,port:3128});s.on("connect",()=>{s.destroy();process.exit(0)});s.on("error",()=>{s.destroy();process.exit(1)})'
+          elapsed=0
+          until docker run --rm --network "$INTERNAL_NET" \
+            --env SQUID_HOST="squid-proxy" \
+            node:24-slim node -e "$NODE_PROBE" 2>/dev/null; do
+            elapsed=$((elapsed+1))
+            if [ "$elapsed" -ge 60 ]; then
+              echo "ERROR: Squid did not become ready within 60s"
+              docker logs "$SQUID_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "Squid ready after ${elapsed}s via internal-net (alias: squid-proxy:3128)"
+
+          PROXY_URL="http://127.0.0.1:3128"
+          export HTTP_PROXY="$PROXY_URL" HTTPS_PROXY="$PROXY_URL" \
+                 http_proxy="$PROXY_URL" https_proxy="$PROXY_URL" \
+                 NO_PROXY="localhost,127.0.0.1,::1" \
+                 no_proxy="localhost,127.0.0.1,::1"
+
+          DIRECT_TEST='const http=require("http"),req=http.get("http://registry.npmjs.org/",{timeout:5000});req.on("response",()=>{console.error("FAIL: direct internet reachable");process.exit(1)});req.on("error",e=>{console.log("OK: blocked ("+e.code+")");process.exit(0)});req.on("timeout",()=>{req.destroy();console.log("OK: timed out");process.exit(0)})'
+          docker run --rm --network "$INTERNAL_NET" node:24-slim \
+            node -e "$DIRECT_TEST"
+
+          if curl --connect-timeout 5 -sSf https://opentelemetry.io/ >/dev/null 2>&1; then
+            echo "FAIL: curl to https://opentelemetry.io/ succeeded unexpectedly!"
+            exit 1
+          else
+            echo "OK: https://opentelemetry.io/ blocked by network restriction."
+          fi
+          echo "Security assertion PASSED."
 
           npm install --loglevel warn --foreground-scripts
 
-          # start pubsub-emulator
-          docker run -d --network offline-net --name pubsub-emulator \
+          docker run -d --network "$INTERNAL_NET" --name pubsub-emulator \
             --entrypoint "gcloud" \
             "gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators" "beta" "emulators" "pubsub" "start" "--host-port=0.0.0.0:8085" "--project=test-project"
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' pubsub-emulator)
           socat TCP-LISTEN:8085,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8085 &
           socat TCP6-LISTEN:8085,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:8085 &
           timeout 60 bash -c \
-            'until nc -z 127.0.0.1 8085 2>/dev/null; do sleep 2; done'
+            'until node -e "const net=require(\"net\"),s=net.createConnection({host:\"127.0.0.1\",port:8085});s.on(\"connect\",()=>{s.destroy();process.exit(0)});s.on(\"error\",()=>{s.destroy();process.exit(1)})" 2>/dev/null; do sleep 2; done'
 
           node bin/create-version-test-folders.js
 
-          # collect test files
           TEST_FILES=$(cd packages/collector && find \
             test/integration/currencies/cloud/@google-cloud/pubsub \
             -name '*.test.js' \
@@ -1176,6 +1655,9 @@ tasks:
               INSTANA_CONNECT_PUBSUB_EMULATOR_HOST="127.0.0.1:8085" \
               GCP_PROJECT="test-project" \
               TEST_FILES="$TEST_FILES" \
+              HTTP_PROXY="$PROXY_URL" HTTPS_PROXY="$PROXY_URL" \
+              http_proxy="$PROXY_URL" https_proxy="$PROXY_URL" \
+              NO_PROXY="localhost,127.0.0.1,::1" no_proxy="localhost,127.0.0.1,::1" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-pubsub" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -1184,7 +1666,6 @@ tasks:
             retry=$((retry + 1))
           done
 
-          # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(get_env commit-id "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
@@ -1220,8 +1701,6 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
-
-          # report commit status to GitHub
           GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
@@ -1251,6 +1730,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
+
   code-build-collector-cloud-storage:
     from: code-build
     displayName: '@google-cloud/storage'
@@ -1277,10 +1757,9 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -1288,13 +1767,72 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          # create isolated network
-          docker network create --internal offline-net
+          EGRESS_NET="egress-net-$$"
+          INTERNAL_NET="internal-net-$$"
+          SQUID_CTR="squid-proxy-$$"
+
+          cleanup_networks() {
+            docker rm -f "$SQUID_CTR" 2>/dev/null || true
+            docker network rm "$EGRESS_NET"   2>/dev/null || true
+            docker network rm "$INTERNAL_NET" 2>/dev/null || true
+          }
+          trap cleanup_networks EXIT
+
+          docker network create "$EGRESS_NET"
+          docker network create --internal "$INTERNAL_NET"
+
+          docker build \
+            --tag instana-squid-proxy:ci \
+            --file .sps/squid/Dockerfile \
+            .sps/squid
+
+          docker run --detach --name "$SQUID_CTR" \
+            --network "$EGRESS_NET" \
+            --restart no \
+            instana-squid-proxy:ci
+
+          docker network connect --alias squid-proxy "$INTERNAL_NET" "$SQUID_CTR"
+
+          SQUID_INTERNAL_IP=$(docker inspect -f "{{with index .NetworkSettings.Networks \"$INTERNAL_NET\"}}{{.IPAddress}}{{end}}" "$SQUID_CTR")
+          socat TCP-LISTEN:3128,fork,reuseaddr,bind=127.0.0.1 TCP:$SQUID_INTERNAL_IP:3128 &
+          socat TCP6-LISTEN:3128,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SQUID_INTERNAL_IP:3128 &
+
+          NODE_PROBE='const net=require("net"),s=net.createConnection({host:process.env.SQUID_HOST,port:3128});s.on("connect",()=>{s.destroy();process.exit(0)});s.on("error",()=>{s.destroy();process.exit(1)})'
+          elapsed=0
+          until docker run --rm --network "$INTERNAL_NET" \
+            --env SQUID_HOST="squid-proxy" \
+            node:24-slim node -e "$NODE_PROBE" 2>/dev/null; do
+            elapsed=$((elapsed+1))
+            if [ "$elapsed" -ge 60 ]; then
+              echo "ERROR: Squid did not become ready within 60s"
+              docker logs "$SQUID_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "Squid ready after ${elapsed}s via internal-net (alias: squid-proxy:3128)"
+
+          PROXY_URL="http://127.0.0.1:3128"
+          export HTTP_PROXY="$PROXY_URL" HTTPS_PROXY="$PROXY_URL" \
+                 http_proxy="$PROXY_URL" https_proxy="$PROXY_URL" \
+                 NO_PROXY="localhost,127.0.0.1,::1" \
+                 no_proxy="localhost,127.0.0.1,::1"
+
+          DIRECT_TEST='const http=require("http"),req=http.get("http://registry.npmjs.org/",{timeout:5000});req.on("response",()=>{console.error("FAIL: direct internet reachable");process.exit(1)});req.on("error",e=>{console.log("OK: blocked ("+e.code+")");process.exit(0)});req.on("timeout",()=>{req.destroy();console.log("OK: timed out");process.exit(0)})'
+          docker run --rm --network "$INTERNAL_NET" node:24-slim \
+            node -e "$DIRECT_TEST"
+
+          if curl --connect-timeout 5 -sSf https://opentelemetry.io/ >/dev/null 2>&1; then
+            echo "FAIL: curl to https://opentelemetry.io/ succeeded unexpectedly!"
+            exit 1
+          else
+            echo "OK: https://opentelemetry.io/ blocked by network restriction."
+          fi
+          echo "Security assertion PASSED."
 
           npm install --loglevel warn --foreground-scripts
 
-          # start fake-gcs-server
-          docker run -d --network offline-net --name fake-gcs-server \
+          docker run -d --network "$INTERNAL_NET" --name fake-gcs-server \
             "mirror.gcr.io/fsouza/fake-gcs-server:1.52.2" "-scheme" "http" "-port" "4443" "-public-host" "127.0.0.1:4443"
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' fake-gcs-server)
           socat TCP-LISTEN:4443,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4443 &
@@ -1304,7 +1842,6 @@ tasks:
 
           node bin/create-version-test-folders.js
 
-          # collect test files
           TEST_FILES=$(cd packages/collector && find \
             test/integration/currencies/cloud/@google-cloud/storage \
             -name '*.test.js' \
@@ -1329,6 +1866,9 @@ tasks:
               GCP_PROJECT="test-project" \
               GCS_SERVICE_ACCOUNT_EMAIL="test-service-account@test-project.iam.gserviceaccount.com" \
               TEST_FILES="$TEST_FILES" \
+              HTTP_PROXY="$PROXY_URL" HTTPS_PROXY="$PROXY_URL" \
+              http_proxy="$PROXY_URL" https_proxy="$PROXY_URL" \
+              NO_PROXY="localhost,127.0.0.1,::1" no_proxy="localhost,127.0.0.1,::1" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-storage" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -1337,7 +1877,6 @@ tasks:
             retry=$((retry + 1))
           done
 
-          # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(get_env commit-id "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
@@ -1373,8 +1912,6 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
-
-          # report commit status to GitHub
           GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
@@ -1404,6 +1941,7 @@ tasks:
         when: 'false'
       - name: scan-artifact
         when: 'false'
+
   code-build-collector-cloud-aws-sdk:
     from: code-build
     displayName: aws-sdk
@@ -1430,10 +1968,9 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
-          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg socat
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
@@ -1441,30 +1978,88 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          # create isolated network
-          docker network create --internal offline-net
+          EGRESS_NET="egress-net-$$"
+          INTERNAL_NET="internal-net-$$"
+          SQUID_CTR="squid-proxy-$$"
+
+          cleanup_networks() {
+            docker rm -f "$SQUID_CTR" 2>/dev/null || true
+            docker network rm "$EGRESS_NET"   2>/dev/null || true
+            docker network rm "$INTERNAL_NET" 2>/dev/null || true
+          }
+          trap cleanup_networks EXIT
+
+          docker network create "$EGRESS_NET"
+          docker network create --internal "$INTERNAL_NET"
+
+          docker build \
+            --tag instana-squid-proxy:ci \
+            --file .sps/squid/Dockerfile \
+            .sps/squid
+
+          docker run --detach --name "$SQUID_CTR" \
+            --network "$EGRESS_NET" \
+            --restart no \
+            instana-squid-proxy:ci
+
+          docker network connect --alias squid-proxy "$INTERNAL_NET" "$SQUID_CTR"
+
+          SQUID_INTERNAL_IP=$(docker inspect -f "{{with index .NetworkSettings.Networks \"$INTERNAL_NET\"}}{{.IPAddress}}{{end}}" "$SQUID_CTR")
+          socat TCP-LISTEN:3128,fork,reuseaddr,bind=127.0.0.1 TCP:$SQUID_INTERNAL_IP:3128 &
+          socat TCP6-LISTEN:3128,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SQUID_INTERNAL_IP:3128 &
+
+          NODE_PROBE='const net=require("net"),s=net.createConnection({host:process.env.SQUID_HOST,port:3128});s.on("connect",()=>{s.destroy();process.exit(0)});s.on("error",()=>{s.destroy();process.exit(1)})'
+          elapsed=0
+          until docker run --rm --network "$INTERNAL_NET" \
+            --env SQUID_HOST="squid-proxy" \
+            node:24-slim node -e "$NODE_PROBE" 2>/dev/null; do
+            elapsed=$((elapsed+1))
+            if [ "$elapsed" -ge 60 ]; then
+              echo "ERROR: Squid did not become ready within 60s"
+              docker logs "$SQUID_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "Squid ready after ${elapsed}s via internal-net (alias: squid-proxy:3128)"
+
+          PROXY_URL="http://127.0.0.1:3128"
+          export HTTP_PROXY="$PROXY_URL" HTTPS_PROXY="$PROXY_URL" \
+                 http_proxy="$PROXY_URL" https_proxy="$PROXY_URL" \
+                 NO_PROXY="localhost,127.0.0.1,::1" \
+                 no_proxy="localhost,127.0.0.1,::1"
+
+          DIRECT_TEST='const http=require("http"),req=http.get("http://registry.npmjs.org/",{timeout:5000});req.on("response",()=>{console.error("FAIL: direct internet reachable");process.exit(1)});req.on("error",e=>{console.log("OK: blocked ("+e.code+")");process.exit(0)});req.on("timeout",()=>{req.destroy();console.log("OK: timed out");process.exit(0)})'
+          docker run --rm --network "$INTERNAL_NET" node:24-slim \
+            node -e "$DIRECT_TEST"
+
+          if curl --connect-timeout 5 -sSf https://opentelemetry.io/ >/dev/null 2>&1; then
+            echo "FAIL: curl to https://opentelemetry.io/ succeeded unexpectedly!"
+            exit 1
+          else
+            echo "OK: https://opentelemetry.io/ blocked by network restriction."
+          fi
+          echo "Security assertion PASSED."
 
           npm install --loglevel warn --foreground-scripts
 
-          # start localstack-kinesis
-          docker network create kinesis-bootstrap
-          docker run -d --network kinesis-bootstrap --name localstack-kinesis \
+          docker network create kinesis-bootstrap-$$
+          docker run -d --network kinesis-bootstrap-$$ --name localstack-kinesis \
             -v /var/run/docker.sock:/var/run/docker.sock \
             "mirror.gcr.io/localstack/localstack:4.5"
-          docker network connect offline-net localstack-kinesis
+          docker network connect "$INTERNAL_NET" localstack-kinesis
           timeout 180 bash -c \
             'until docker exec localstack-kinesis awslocal kinesis list-streams >/dev/null 2>&1; do sleep 2; done'
-          docker network disconnect kinesis-bootstrap localstack-kinesis
-          docker network rm kinesis-bootstrap
+          docker network disconnect kinesis-bootstrap-$$ localstack-kinesis
+          docker network rm kinesis-bootstrap-$$
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' localstack-kinesis)
           socat TCP-LISTEN:4566,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:4566 &
           socat TCP6-LISTEN:4566,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:4566 &
           timeout 60 bash -c \
-            'until nc -z 127.0.0.1 4566 2>/dev/null; do sleep 2; done'
+            'until node -e "const net=require(\"net\"),s=net.createConnection({host:\"127.0.0.1\",port:4566});s.on(\"connect\",()=>{s.destroy();process.exit(0)});s.on(\"error\",()=>{s.destroy();process.exit(1)})" 2>/dev/null; do sleep 2; done'
 
           node bin/create-version-test-folders.js
 
-          # collect test files
           TEST_FILES=$(cd packages/collector && find \
             test/integration/currencies/cloud/aws-sdk \
             -name '*.test.js' \
@@ -1486,6 +2081,9 @@ tasks:
               CI=true \
               RUN_ESM="$RUN_ESM" \
               TEST_FILES="$TEST_FILES" \
+              HTTP_PROXY="$PROXY_URL" HTTPS_PROXY="$PROXY_URL" \
+              http_proxy="$PROXY_URL" https_proxy="$PROXY_URL" \
+              NO_PROXY="localhost,127.0.0.1,::1" no_proxy="localhost,127.0.0.1,::1" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-cloud-aws-sdk" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -1494,7 +2092,6 @@ tasks:
             retry=$((retry + 1))
           done
 
-          # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(get_env commit-id "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
@@ -1530,8 +2127,6 @@ tasks:
             echo "WARNING: COS credentials or git commit unavailable — skipping uploads"
           fi
 
-
-          # report commit status to GitHub
           GH_TOKEN="$(get_secret gh-public-token)"
           GIT_COMMIT="$(get_env commit-id "${COMMIT_SHA:-}")"
           PIPELINE_RUN_URL="$(get_env PIPELINE_RUN_URL "")"
