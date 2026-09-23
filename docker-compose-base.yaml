@@ -121,7 +121,7 @@ services:
         set -euo pipefail
 
         kafka_server="kafka:29092"
-        kafka_topics="test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic"
+        kafka_topics="test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic platformatic-kafka-topic"
 
         echo "Waiting for Kafka to be ready on $$kafka_server..."
 
