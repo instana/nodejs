@@ -74,7 +74,8 @@ tasks:
           }
           trap cleanup EXIT
 
-          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,objects.githubusercontent.com"
+          # Added nodejs.org for node-gyp C++ header downloads
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,objects.githubusercontent.com,nodejs.org"
 
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
@@ -102,7 +103,7 @@ tasks:
             mirror.gcr.io/library/node:24 \
             bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
-          # ── 4. Collect test files (now generated on disk) ───────────────────────────
+          # ── 4. Collect test files (generated on disk) ───────────────────────────────
           TEST_FILES=$(cd packages/collector && find \
             test/integration/currencies/async/await \
             -name '*.test.js' \
