@@ -79,8 +79,8 @@ tasks:
           docker build -t npm-proxy:local "$REPO_PATH/ci/squid"
 
           # 1. Create dual networks:
-          # - egress-net: has external internet gateway (for Squid)
-          # - internal-net: ISOLATED with NO internet gateway (for test-runner)
+          #    - egress-net: has external gateway (for Squid)
+          #    - internal-net: isolated with NO default route to internet
           docker network create egress-net
           docker network create --internal internal-net
 
@@ -92,7 +92,7 @@ tasks:
 
           docker network connect egress-net npm-proxy
 
-          # 3. Run test-runner ONLY on internal-net (cannot route outside except via proxy)
+          # 3. Run test-runner ONLY on internal-net
           docker run -d \
             --name test-runner \
             --network internal-net \
@@ -108,45 +108,44 @@ tasks:
             "mirror.gcr.io/library/node:${NODE_MAJOR}" \
             sleep infinity
 
-          # Wait for Squid to be reachable inside internal-net
-          docker exec test-runner bash -c '
-            echo "Waiting for npm-proxy:3128 to be ready..."
-            for i in {1..30}; do
-              if (echo > /dev/tcp/npm-proxy/3128) 2>/dev/null; then
-                echo "npm-proxy is up and accepting connections."
-                break
-              fi
-              if [ "$i" -eq 30 ]; then
-                echo "ERROR: Timed out waiting for npm-proxy."
-                exit 1
-              fi
-              sleep 0.5
-            done
+          # Wait for npm-proxy to be ready using native node probe
+          docker exec test-runner node -e '
+            const net = require("net");
+            const check = () => {
+              const s = net.connect(3128, "npm-proxy", () => { s.end(); process.exit(0); });
+              s.on("error", () => setTimeout(check, 500));
+            };
+            check();
           '
 
-          # Run npm install through Squid
           docker exec test-runner npm install --loglevel warn
 
-          # Verify network restriction: direct access MUST fail
+          # Verify network restriction: direct outbound access must be blocked
           docker exec \
             -e HTTP_PROXY="" \
             -e HTTPS_PROXY="" \
             -e http_proxy="" \
             -e https_proxy="" \
             test-runner \
-            bash -c '
-              echo "=== SPS network restriction check ==="
-              echo "Testing direct access to https://opentelemetry.io/docs"
-              if curl -fsSIL --max-time 5 https://opentelemetry.io/docs >/dev/null 2>&1; then
-                echo "ERROR: Internet restriction FAILED - opentelemetry.io was reached directly!"
-                exit 1
-              else
-                echo "SUCCESS: Internet restriction is working - direct outbound is physically unreachable."
-              fi
-              echo "=== End network restriction check ==="
+            node -e '
+              console.log("=== SPS network restriction check ===");
+              console.log("Testing direct access to https://opentelemetry.io/docs");
+              const https = require("https");
+              const req = https.get("https://opentelemetry.io/docs", { timeout: 3000 }, (res) => {
+                console.error("ERROR: Internet restriction FAILED - opentelemetry.io was reached directly!");
+                process.exit(1);
+              });
+              req.on("error", (err) => {
+                console.log(`SUCCESS: Internet restriction is working (${err.code || err.message})`);
+                process.exit(0);
+              });
+              req.on("timeout", () => {
+                req.destroy();
+                console.log("SUCCESS: Internet restriction is working (Connection timed out)");
+                process.exit(0);
+              });
             '
 
-          # Pre-warm version folders and offline cache while proxy variables are present
           docker exec test-runner node bin/create-version-test-folders.js
 
           # Collect test files
@@ -164,16 +163,17 @@ tasks:
             exit 0
           fi
 
-          # Execute tests with cleared proxy variables
+          # Execute tests: KEEP proxy env vars active so dynamic tests route via Squid allowlist
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
             docker exec \
               -e CI=true \
-              -e HTTP_PROXY="" \
-              -e HTTPS_PROXY="" \
-              -e http_proxy="" \
-              -e https_proxy="" \
+              -e HTTP_PROXY="http://npm-proxy:3128" \
+              -e HTTPS_PROXY="http://npm-proxy:3128" \
+              -e http_proxy="http://npm-proxy:3128" \
+              -e https_proxy="http://npm-proxy:3128" \
+              -e NO_PROXY="127.0.0.1,localhost" \
               -e RUN_ESM="$RUN_ESM" \
               -e TEST_FILES="$TEST_FILES" \
               test-runner \
@@ -181,15 +181,15 @@ tasks:
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
-            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            echo "Attempt $retry failed with exit code$LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
 
-          # Cleanup Docker containers and networks
+          # Cleanup
           docker rm -f test-runner npm-proxy || true
           docker network rm internal-net egress-net || true
 
-          # Upload executed test files + lcov coverage report to COS
+          # Upload test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
           GIT_COMMIT="$(get_env commit-id "")"
           if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then
@@ -237,13 +237,13 @@ tasks:
               -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github+json" \
               -H "Content-Type: application/json" \
-              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main/${node_version%%.*}/$TASK_NAME\"}")
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node${node_version%%.*})\",\"context\":\"sps/main/${node_version%%.*}/$TASK_NAME\"}")
             CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
             CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
             if [ "$CURL_HTTP" = "201" ]; then
-              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+              echo "Commit status set to '$STATUS' for$GIT_COMMIT."
             else
-              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP:$CURL_BODY"
             fi
           else
             echo "WARNING: commit-id not set — skipping commit status."
@@ -317,20 +317,13 @@ tasks:
             "mirror.gcr.io/library/node:${NODE_MAJOR}" \
             sleep infinity
 
-          # Wait for Squid to be reachable inside internal-net
-          docker exec test-runner bash -c '
-            echo "Waiting for npm-proxy:3128 to be ready..."
-            for i in {1..30}; do
-              if (echo > /dev/tcp/npm-proxy/3128) 2>/dev/null; then
-                echo "npm-proxy is up and accepting connections."
-                break
-              fi
-              if [ "$i" -eq 30 ]; then
-                echo "ERROR: Timed out waiting for npm-proxy."
-                exit 1
-              fi
-              sleep 0.5
-            done
+          docker exec test-runner node -e '
+            const net = require("net");
+            const check = () => {
+              const s = net.connect(3128, "npm-proxy", () => { s.end(); process.exit(0); });
+              s.on("error", () => setTimeout(check, 500));
+            };
+            check();
           '
 
           docker exec test-runner npm install --loglevel warn
@@ -341,16 +334,23 @@ tasks:
             -e http_proxy="" \
             -e https_proxy="" \
             test-runner \
-            bash -c '
-              echo "=== SPS network restriction check ==="
-              echo "Testing direct access to https://opentelemetry.io/docs"
-              if curl -fsSIL --max-time 5 https://opentelemetry.io/docs >/dev/null 2>&1; then
-                echo "ERROR: Internet restriction FAILED - opentelemetry.io was reached directly!"
-                exit 1
-              else
-                echo "SUCCESS: Internet restriction is working - direct outbound is physically unreachable."
-              fi
-              echo "=== End network restriction check ==="
+            node -e '
+              console.log("=== SPS network restriction check ===");
+              console.log("Testing direct access to https://opentelemetry.io/docs");
+              const https = require("https");
+              const req = https.get("https://opentelemetry.io/docs", { timeout: 3000 }, (res) => {
+                console.error("ERROR: Internet restriction FAILED - opentelemetry.io was reached directly!");
+                process.exit(1);
+              });
+              req.on("error", (err) => {
+                console.log(`SUCCESS: Internet restriction is working (${err.code || err.message})`);
+                process.exit(0);
+              });
+              req.on("timeout", () => {
+                req.destroy();
+                console.log("SUCCESS: Internet restriction is working (Connection timed out)");
+                process.exit(0);
+              });
             '
 
           docker exec test-runner node bin/create-version-test-folders.js
@@ -374,10 +374,11 @@ tasks:
             LAST_EXIT=0
             docker exec \
               -e CI=true \
-              -e HTTP_PROXY="" \
-              -e HTTPS_PROXY="" \
-              -e http_proxy="" \
-              -e https_proxy="" \
+              -e HTTP_PROXY="http://npm-proxy:3128" \
+              -e HTTPS_PROXY="http://npm-proxy:3128" \
+              -e http_proxy="http://npm-proxy:3128" \
+              -e https_proxy="http://npm-proxy:3128" \
+              -e NO_PROXY="127.0.0.1,localhost" \
               -e RUN_ESM="$RUN_ESM" \
               -e TEST_FILES="$TEST_FILES" \
               test-runner \
@@ -385,7 +386,7 @@ tasks:
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
-            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            echo "Attempt $retry failed with exit code$LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
 
@@ -438,13 +439,13 @@ tasks:
               -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github+json" \
               -H "Content-Type: application/json" \
-              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main/${node_version%%.*}/$TASK_NAME\"}")
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node${node_version%%.*})\",\"context\":\"sps/main/${node_version\%\%.*}/$TASK_NAME\"}")
             CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
-            CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
+            CURL_BODY=$(echo "$CURL_RESPONSE" \vert{} sed '$d')
             if [ "$CURL_HTTP" = "201" ]; then
-              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+              echo "Commit status set to '$STATUS' for$GIT_COMMIT."
             else
-              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP:$CURL_BODY"
             fi
           else
             echo "WARNING: commit-id not set — skipping commit status."
@@ -485,7 +486,7 @@ tasks:
           install -m 0755 -d /etc/apt/keyrings
           curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           chmod a+r /etc/apt/keyrings/docker.gpg
-          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
@@ -518,20 +519,13 @@ tasks:
             "mirror.gcr.io/library/node:${NODE_MAJOR}" \
             sleep infinity
 
-          # Wait for Squid to be reachable inside internal-net
-          docker exec test-runner bash -c '
-            echo "Waiting for npm-proxy:3128 to be ready..."
-            for i in {1..30}; do
-              if (echo > /dev/tcp/npm-proxy/3128) 2>/dev/null; then
-                echo "npm-proxy is up and accepting connections."
-                break
-              fi
-              if [ "$i" -eq 30 ]; then
-                echo "ERROR: Timed out waiting for npm-proxy."
-                exit 1
-              fi
-              sleep 0.5
-            done
+          docker exec test-runner node -e '
+            const net = require("net");
+            const check = () => {
+              const s = net.connect(3128, "npm-proxy", () => { s.end(); process.exit(0); });
+              s.on("error", () => setTimeout(check, 500));
+            };
+            check();
           '
 
           docker exec test-runner npm install --loglevel warn
@@ -556,10 +550,11 @@ tasks:
             LAST_EXIT=0
             docker exec \
               -e CI=true \
-              -e HTTP_PROXY="" \
-              -e HTTPS_PROXY="" \
-              -e http_proxy="" \
-              -e https_proxy="" \
+              -e HTTP_PROXY="http://npm-proxy:3128" \
+              -e HTTPS_PROXY="http://npm-proxy:3128" \
+              -e http_proxy="http://npm-proxy:3128" \
+              -e https_proxy="http://npm-proxy:3128" \
+              -e NO_PROXY="127.0.0.1,localhost" \
               -e RUN_ESM="$RUN_ESM" \
               -e TEST_FILES="$TEST_FILES" \
               test-runner \
@@ -567,7 +562,7 @@ tasks:
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
-            echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
+            echo "Attempt $retry failed with exit code$LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
 
@@ -620,13 +615,13 @@ tasks:
               -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github+json" \
               -H "Content-Type: application/json" \
-              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node ${node_version%%.*})\",\"context\":\"sps/main/${node_version%%.*}/$TASK_NAME\"}")
+              -d "{\"state\":\"$STATUS\",\"target_url\":\"$PIPELINE_RUN_URL\",\"description\":\"Main pipeline $STATUS (Node${node_version%%.*})\",\"context\":\"sps/main/${node_version\%\%.*}/$TASK_NAME\"}")
             CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)
             CURL_BODY=$(echo "$CURL_RESPONSE" | sed '$d')
             if [ "$CURL_HTTP" = "201" ]; then
-              echo "Commit status set to '$STATUS' for $GIT_COMMIT."
+              echo "Commit status set to '$STATUS' for$GIT_COMMIT."
             else
-              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"
+              echo "WARNING: Failed to set commit status (non-fatal). HTTP $CURL_HTTP:$CURL_BODY"
             fi
           else
             echo "WARNING: commit-id not set — skipping commit status."
