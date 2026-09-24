@@ -1,7 +1,0 @@
-{
-  "name": "@instana/npm-network-test",
-  "version": "1.0.0",
-  "scripts": {
-    "postinstall": "node postinstall.js"
-  }
-}

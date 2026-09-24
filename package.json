@@ -160,8 +160,7 @@
     "typescript": "5.9.3",
     "uuid": "^11.1.1",
     "ws": "8.21.0",
-    "yargs": "17.7.3",
-    "npm-network-test":"file:./npm-network-test"
+    "yargs": "17.7.3"
   },
   "overrides": {
     "@as-integrations/express5": {
