@@ -194,7 +194,7 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
       // Guard upfront before any stream is created.
       const bufferConcatDescriptor = Object.getOwnPropertyDescriptor(Buffer, 'concat');
       if (bufferConcatDescriptor && !bufferConcatDescriptor.writable && !bufferConcatDescriptor.set) {
-        logger.warn(
+        logger.debug(
           `Skipping precompiled addon extraction for ${opts.nativeModuleName}: Buffer.concat is ` +
             'non-writable in this environment. ' +
             'GC and event-loop metrics will not be available.'
