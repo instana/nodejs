@@ -1243,47 +1243,47 @@ function parseSecretsEnvVar(envVarValue) {
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
 function normalizeDbBindVariables({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
-  // Priority 1: environment variables (highest priority)
-  const disableEnv = process.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE;
-  const columnsEnv = process.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS;
+  /** @type {import('./normalizers/dbBindVariables').DbBindVariablesConfig} */
+  const userDbBindVars = userConfig.tracing?.dbBindVariables || /** @type {any} */ ({});
+  finalConfig.tracing.dbBindVariables = finalConfig.tracing.dbBindVariables || /** @type {any} */ ({});
 
-  if (disableEnv != null || columnsEnv != null) {
-    if (disableEnv != null && validators.booleanValidator(disableEnv) === undefined) {
-      logger.warn(`Invalid env INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE: "${disableEnv}". Expected true or false.`);
-    }
+  const { value: disable, source: disableSource } = util.resolve(
+    {
+      envValue: 'INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE',
+      inCodeValue: userDbBindVars.disable,
+      defaultValue: defaultConfig.tracing.dbBindVariables.disable
+    },
+    [validators.booleanValidator]
+  );
 
-    const fromEnv = normalizers.dbBindVariables.fromEnv();
-    finalConfig.tracing.dbBindVariables = fromEnv;
-    configStore.set('config.tracing.dbBindVariables', { source: CONFIG_SOURCES.ENV });
-    logger.debug(
-      `[config] config.tracing.dbBindVariables <- env:INSTANA_TRACING_DB_BIND_VARIABLES_* = ${JSON.stringify(fromEnv)}`
-    );
-    return;
-  }
+  configStore.set('config.tracing.dbBindVariables.disable', { source: disableSource });
+  finalConfig.tracing.dbBindVariables.disable = disable;
+  util.log({
+    configPath: 'config.tracing.dbBindVariables.disable',
+    source: disableSource,
+    value: disable,
+    envVarName: 'INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE'
+  });
 
-  // Priority 2: in-code configuration
-  const inCode = userConfig.tracing?.dbBindVariables;
-  if (inCode && typeof inCode === 'object' && Object.keys(inCode).length > 0) {
-    if (inCode.disable != null && validators.booleanValidator(inCode.disable) === undefined) {
-      logger.warn(`Invalid value for tracing.dbBindVariables.disable: "${inCode.disable}". Expected a boolean.`);
-    }
-    if (inCode.allowedColumns != null && !Array.isArray(inCode.allowedColumns)) {
-      logger.warn(
-        `Invalid value for tracing.dbBindVariables.allowedColumns: "${inCode.allowedColumns}".` +
-          ' Expected an array of strings.'
-      );
-    }
+  const { value: allowedColumns, source: allowedColumnsSource } = util.resolve(
+    {
+      // env: value is a comma-separated string (e.g. "col_a,col_b"); the validator splits it into an array.
+      envValue: 'INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS',
+      // incode: must be an array — strings are rejected (undefined) so the resolver falls through to the default.
+      inCodeValue: Array.isArray(userDbBindVars.allowedColumns) ? userDbBindVars.allowedColumns : undefined,
+      defaultValue: defaultConfig.tracing.dbBindVariables.allowedColumns
+    },
+    [validators.allowedColumnsValidator]
+  );
 
-    const fromInCode = normalizers.dbBindVariables.fromInCode(inCode);
-    finalConfig.tracing.dbBindVariables = fromInCode;
-    configStore.set('config.tracing.dbBindVariables', { source: CONFIG_SOURCES.INCODE });
-    logger.debug(`[config] config.tracing.dbBindVariables <- incode = ${JSON.stringify(fromInCode)}`);
-    return;
-  }
-
-  // Priority 3: default
-  finalConfig.tracing.dbBindVariables = Object.assign({}, defaultConfig.tracing.dbBindVariables);
-  configStore.set('config.tracing.dbBindVariables', { source: CONFIG_SOURCES.DEFAULT });
+  configStore.set('config.tracing.dbBindVariables.allowedColumns', { source: allowedColumnsSource });
+  finalConfig.tracing.dbBindVariables.allowedColumns = allowedColumns;
+  util.log({
+    configPath: 'config.tracing.dbBindVariables.allowedColumns',
+    source: allowedColumnsSource,
+    value: allowedColumns,
+    envVarName: 'INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS'
+  });
 }
 
 /**
