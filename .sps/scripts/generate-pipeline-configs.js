@@ -105,12 +105,36 @@ function socatForwardScript(name) {
   if (!s || !s.ports || s.ports.length === 0) return '';
   const varName = `SIDECAR_IP`;
   const lines = [`${varName}=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${name})`];
+
+  // When FILTER_CTR is set the test container runs --network container:$FILTER_CTR and
+  // shares FILTER_CTR's network namespace. The host-side socat listeners below are in the
+  // host netns and are invisible inside that namespace, so we also start a socat container
+  // that shares FILTER_CTR's netns to bind the same ports on 127.0.0.1 there.
+  //
+  // nsenter is not viable in the DinD runner (no privilege to reassociate netns).
+  // --network container:EXITED_CTR works because Docker preserves the network namespace
+  // of a container until docker rm, even after its init process exits.
+  //
+  // The socat image is built from mirror.gcr.io/library/alpine (already mirrored) during
+  // the npm-install phase when the runner still has egress. It is tagged locally so it is
+  // available offline once the isolated network is up.
+
   for (const p of s.ports) {
     const [hostPort, containerPort] = p.split(':');
-    // IPv4: handles 127.0.0.1 connections (all Node versions)
+    // Host-side forwarders (used by anything running in the host netns).
     lines.push(`socat TCP-LISTEN:${hostPort},fork,reuseaddr,bind=127.0.0.1 TCP:$${varName}:${containerPort} &`);
-    // IPv6: handles ::1 connections (Node.js v18 resolves "localhost" to ::1 by default)
     lines.push(`socat TCP6-LISTEN:${hostPort},fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$${varName}:${containerPort} &`);
+
+    // Forwarder inside FILTER_CTR's netns.
+    lines.push(`if [ -n "\${FILTER_CTR:-}" ]; then`);
+    lines.push(`  docker run -d --rm --network "container:\${FILTER_CTR}" --name "socat-${name}-${hostPort}-\$\$" \\`);
+    lines.push(`    socat-fwd \\`);
+    lines.push(`    TCP-LISTEN:${hostPort},fork,reuseaddr,bind=127.0.0.1 TCP:$${varName}:${containerPort}`);
+    // Probe the port from inside the same netns to confirm the forwarder is ready.
+    // Override the socat entrypoint with sh to run the nc readiness loop.
+    lines.push(`  timeout 30 docker run --rm --network "container:\${FILTER_CTR}" --entrypoint sh socat-fwd \\`);
+    lines.push(`    -c 'until nc -z 127.0.0.1 ${hostPort} 2>/dev/null; do sleep 1; done'`);
+    lines.push(`fi`);
   }
   return lines.join('\n');
 }
@@ -202,6 +226,27 @@ function readNeeds(folder) {
 }
 
 /**
+ * Returns script lines that build a local `socat-fwd` Docker image.
+ *
+ * The image is built from mirror.gcr.io/library/alpine (already mirrored in CI)
+ * with socat and netcat added via apk. It must be built while the runner still
+ * has egress — i.e. before the internal offline-net is created.
+ *
+ * The image is used by socatForwardScript() to run socat inside FILTER_CTR's
+ * network namespace via --network container:$FILTER_CTR, which is the only
+ * approach that works in the DinD environment (nsenter cannot reassociate netns).
+ */
+function buildSocatFwdImageLines() {
+  return [
+    'docker build -t socat-fwd - <<\'DOCKERFILE\'',
+    'FROM mirror.gcr.io/library/alpine:3',
+    'RUN apk add --no-cache socat netcat-openbsd',
+    'ENTRYPOINT ["socat"]',
+    'DOCKERFILE'
+  ];
+}
+
+/**
  * Generic collector task builder.
  * Produces the shell script and SPS task object for one pipeline step that
  * runs a subset of collector integration tests.
@@ -215,18 +260,62 @@ function readNeeds(folder) {
  */
 function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
   const scriptLines = ['#!/usr/bin/env bash', 'set -eo pipefail', ''];
-  scriptLines.push(nodeVersionSwitchScript());
+  scriptLines.push('node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"');
+  scriptLines.push('REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"');
+  scriptLines.push('cd "$REPO_DIR"');
   scriptLines.push('');
-  scriptLines.push('cd "$WORKSPACE/$(load_repo app-repo path)"');
+  scriptLines.push('# install docker client');
+  scriptLines.push(dockerClientInstallScript());
+  scriptLines.push('');
+  scriptLines.push('# start network-filter sidecar');
+  scriptLines.push(`FILTER_CTR="network-filter-${taskSlug}-\$\$"`);
+  scriptLines.push('cleanup() {');
+  scriptLines.push('  docker rm -f "$FILTER_CTR" 2>/dev/null || true');
+  scriptLines.push('}');
+  scriptLines.push('trap cleanup EXIT');
+  scriptLines.push('');
+  scriptLines.push('ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"');
+  scriptLines.push('');
+  scriptLines.push('docker run --detach --name "$FILTER_CTR" \\');
+  scriptLines.push('  --cap-add NET_ADMIN \\');
+  scriptLines.push('  --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \\');
+  scriptLines.push('  mirror.gcr.io/monadicalsas/network-filter:latest');
+  scriptLines.push('');
+  scriptLines.push('elapsed=0');
+  scriptLines.push('until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do');
+  scriptLines.push('  elapsed=$((elapsed + 1))');
+  scriptLines.push('  if [ "$elapsed" -ge 30 ]; then');
+  scriptLines.push('    echo "ERROR: network-filter did not become ready within 30s"');
+  scriptLines.push('    docker logs "$FILTER_CTR" 2>&1 || true');
+  scriptLines.push('    exit 1');
+  scriptLines.push('  fi');
+  scriptLines.push('  sleep 1');
+  scriptLines.push('done');
+  scriptLines.push('echo "network-filter ready after ${elapsed}s"');
+  scriptLines.push('');
 
   if (needs.length > 0) {
-    scriptLines.push('# install docker client');
-    scriptLines.push(dockerClientInstallScript());
+    // Build the socat-fwd image while egress is still available (before offline-net).
+    scriptLines.push('# build socat-fwd image (needed to forward ports into FILTER_CTR netns)');
+    scriptLines.push(...buildSocatFwdImageLines());
     scriptLines.push('');
     scriptLines.push('# create isolated network');
     scriptLines.push(`docker network create --internal ${SIDECAR_NETWORK}`);
+    scriptLines.push(`docker network connect ${SIDECAR_NETWORK} "$FILTER_CTR"`);
     scriptLines.push('');
   }
+
+  scriptLines.push('NODE_MAJOR="${node_version%%.*}"');
+  scriptLines.push('NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"');
+  scriptLines.push('');
+  scriptLines.push('echo "Running npm install & test folder setup inside filtered container..."');
+  scriptLines.push('docker run --rm \\');
+  scriptLines.push('  --network "container:${FILTER_CTR}" \\');
+  scriptLines.push('  --volume "$REPO_DIR:/work" \\');
+  scriptLines.push('  --workdir /work \\');
+  scriptLines.push('  "$NODE_IMAGE" \\');
+  scriptLines.push('  bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"');
+  scriptLines.push('');
 
   if (needs.includes('oracledb')) {
     scriptLines.push('# start oracledb early — initialises during npm install');
@@ -235,9 +324,6 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
     if (socatOracle) scriptLines.push(socatOracle);
     scriptLines.push('');
   }
-
-  scriptLines.push('npm install --loglevel warn --foreground-scripts');
-  scriptLines.push('');
 
   if (needs.length > 0) {
     for (const need of needs) {
@@ -275,8 +361,6 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
     }
   }
 
-  scriptLines.push('node bin/create-version-test-folders.js');
-  scriptLines.push('');
   scriptLines.push('# collect test files');
   scriptLines.push(`TEST_FILES=$(cd packages/collector && find \\`);
   for (const p of paths) scriptLines.push(`  ${p} \\`);
@@ -308,8 +392,13 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
     extraEnvLines.push('GCP_PROJECT="test-project" \\');
     extraEnvLines.push('GCS_SERVICE_ACCOUNT_EMAIL="test-service-account@test-project.iam.gserviceaccount.com" \\');
   }
-  extraEnvLines.push('TEST_FILES="$TEST_FILES" \\');
-  scriptLines.push(...runWithRetryLines(`coverage-ci --npm_command="test:ci:collector" --report_dir="${taskSlug}"`, extraEnvLines));
+  scriptLines.push(...runWithRetryContainerLines(`coverage-ci --npm_command="test:ci:collector" --report_dir="${taskSlug}"`, extraEnvLines));
+
+  scriptLines.push('# Cleanup filter container so host has direct connectivity for uploads');
+  scriptLines.push('cleanup');
+  scriptLines.push('trap - EXIT');
+  scriptLines.push('');
+
   scriptLines.push(...uploadTestFilesLines(taskSlug));
   scriptLines.push('exit $LAST_EXIT');
 
@@ -324,7 +413,7 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
       from: MODE === 'main' ? 'code-build' : 'pr-code-checks',
       displayName,
       runtimeClassName: 'large',
-      ...(needs.length > 0 ? { include: ['dind'] } : {}),
+      include: ['dind'],
       steps: [
         { name: 'peer-review', when: 'false' },
         { name: 'detect-secrets', when: 'false' },
@@ -333,7 +422,7 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
           name: 'unit-test',
           displayName,
           image: NODE_IMAGE,
-          ...(needs.length > 0 ? { include: ['docker-socket'] } : {}),
+          include: ['docker-socket'],
           script: scriptLines.join('\n')
         },
         { name: 'sign-artifact', when: 'false' },
@@ -429,6 +518,43 @@ function runWithRetryLines(npmScript, envLines = [], withEsm = true) {
     '    CI=true \\',
     ...(withEsm ? ['    RUN_ESM="$RUN_ESM" \\'] : []),
     ...envLines.map(l => `    ${l}`),
+    `    npm run ${npmScript} || LAST_EXIT=$?`,
+    '  if [ $LAST_EXIT -eq 0 ]; then',
+    '    break',
+    '  fi',
+    '  echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."',
+    '  retry=$((retry + 1))',
+    'done'
+  ];
+}
+
+function runWithRetryContainerLines(npmScript, envLines = [], withEsm = true) {
+  const dockerEnvFlags = [];
+  for (const line of envLines) {
+    const trimmed = line.trim().replace(/\\$/, '').trim();
+    if (!trimmed) continue;
+    const eqIdx = trimmed.indexOf('=');
+    if (eqIdx !== -1) {
+      const name = trimmed.substring(0, eqIdx).trim();
+      const value = trimmed.substring(eqIdx + 1).trim();
+      dockerEnvFlags.push(`--env ${name}=${value}`);
+    }
+  }
+
+  return [
+    ...(withEsm ? runEsmReadLines() : []),
+    'retry=1',
+    'while [ $retry -le 2 ]; do',
+    '  LAST_EXIT=0',
+    '  docker run --rm \\',
+    '    --network "container:${FILTER_CTR}" \\',
+    '    --volume "$REPO_DIR:/work" \\',
+    '    --workdir /work \\',
+    '    --env CI=true \\',
+    ...(withEsm ? ['    --env RUN_ESM="$RUN_ESM" \\'] : []),
+    '    --env TEST_FILES="$TEST_FILES" \\',
+    ...dockerEnvFlags.map(f => `    ${f} \\`),
+    '    "$NODE_IMAGE" \\',
     `    npm run ${npmScript} || LAST_EXIT=$?`,
     '  if [ $LAST_EXIT -eq 0 ]; then',
     '    break',
@@ -572,24 +698,64 @@ function buildCurrencyTasks(pkgName, folder, group) {
 
 function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv = null, supportsEsm = false) {
   const scriptLines = ['#!/usr/bin/env bash', 'set -eo pipefail', ''];
-  scriptLines.push(nodeVersionSwitchScript());
+  scriptLines.push('node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"');
+  scriptLines.push('REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"');
+  scriptLines.push('cd "$REPO_DIR"');
   scriptLines.push('');
-  scriptLines.push('cd "$WORKSPACE/$(load_repo app-repo path)"');
-  scriptLines.push('npm install --loglevel warn --foreground-scripts');
+  scriptLines.push('# install docker client');
+  scriptLines.push(dockerClientInstallScript());
   scriptLines.push('');
-  scriptLines.push('# collect test files');
-  scriptLines.push(
-    `TEST_FILES=$(cd packages/${taskSlug} && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\\n' ' ')`
-  );
+  scriptLines.push('# start network-filter sidecar');
+  scriptLines.push(`FILTER_CTR="network-filter-${taskSlug}-\$\$"`);
+  scriptLines.push('cleanup() {');
+  scriptLines.push('  docker rm -f "$FILTER_CTR" 2>/dev/null || true');
+  scriptLines.push('}');
+  scriptLines.push('trap cleanup EXIT');
+  scriptLines.push('');
+  scriptLines.push('ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"');
+  scriptLines.push('');
+  scriptLines.push('docker run --detach --name "$FILTER_CTR" \\');
+  scriptLines.push('  --cap-add NET_ADMIN \\');
+  scriptLines.push('  --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \\');
+  scriptLines.push('  mirror.gcr.io/monadicalsas/network-filter:latest');
+  scriptLines.push('');
+  scriptLines.push('elapsed=0');
+  scriptLines.push('until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do');
+  scriptLines.push('  elapsed=$((elapsed + 1))');
+  scriptLines.push('  if [ "$elapsed" -ge 30 ]; then');
+  scriptLines.push('    echo "ERROR: network-filter did not become ready within 30s"');
+  scriptLines.push('    docker logs "$FILTER_CTR" 2>&1 || true');
+  scriptLines.push('    exit 1');
+  scriptLines.push('  fi');
+  scriptLines.push('  sleep 1');
+  scriptLines.push('done');
+  scriptLines.push('echo "network-filter ready after ${elapsed}s"');
   scriptLines.push('');
 
   if (needs.length > 0) {
-    scriptLines.push('# install docker client');
-    scriptLines.push(dockerClientInstallScript());
+    // Build the socat-fwd image while egress is still available (before offline-net).
+    scriptLines.push('# build socat-fwd image (needed to forward ports into FILTER_CTR netns)');
+    scriptLines.push(...buildSocatFwdImageLines());
     scriptLines.push('');
-    scriptLines.push('# create isolated network (no internet access)');
+    scriptLines.push('# create isolated network');
     scriptLines.push(`docker network create --internal ${SIDECAR_NETWORK}`);
+    scriptLines.push(`docker network connect ${SIDECAR_NETWORK} "$FILTER_CTR"`);
     scriptLines.push('');
+  }
+
+  scriptLines.push('NODE_MAJOR="${node_version%%.*}"');
+  scriptLines.push('NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"');
+  scriptLines.push('');
+  scriptLines.push('echo "Running npm install & test folder setup inside filtered container..."');
+  scriptLines.push('docker run --rm \\');
+  scriptLines.push('  --network "container:${FILTER_CTR}" \\');
+  scriptLines.push('  --volume "$REPO_DIR:/work" \\');
+  scriptLines.push('  --workdir /work \\');
+  scriptLines.push('  "$NODE_IMAGE" \\');
+  scriptLines.push('  bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"');
+  scriptLines.push('');
+
+  if (needs.length > 0) {
     for (const need of needs) {
       scriptLines.push(`# start ${need}`);
       scriptLines.push(dockerRunScript(need));
@@ -600,6 +766,12 @@ function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv
       scriptLines.push('');
     }
   }
+
+  scriptLines.push('# collect test files');
+  scriptLines.push(
+    `TEST_FILES=\$(cd packages/${taskSlug} && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\\n' ' ')`
+  );
+  scriptLines.push('');
 
   if (extraEnv) {
     scriptLines.push(`export ${extraEnv}`);
@@ -612,11 +784,14 @@ function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv
     const varName = extraEnv.split('=')[0];
     simpleEnvLines.push(`${varName}="$${varName}" \\`);
   }
-  // Only forward RUN_ESM for packages whose test hooks understand it (i.e. use
-  // packages/collector/test/hooks.js with checkESMApp). Simple-target packages
-  // have no such hook and would run all tests unconditionally regardless of the
-  // flag, producing incorrect results when RUN_ESM is set.
-  scriptLines.push(...runWithRetryLines(`coverage-ci --npm_command="${testScript}" --report_dir="${taskSlug}"`, simpleEnvLines, supportsEsm));
+
+  scriptLines.push(...runWithRetryContainerLines(`coverage-ci --npm_command="${testScript}" --report_dir="${taskSlug}"`, simpleEnvLines, supportsEsm));
+
+  scriptLines.push('# Cleanup filter container so host has direct connectivity for uploads');
+  scriptLines.push('cleanup');
+  scriptLines.push('trap - EXIT');
+  scriptLines.push('');
+
   scriptLines.push(...uploadTestFilesLines(taskSlug));
   scriptLines.push('exit $LAST_EXIT');
 
@@ -624,7 +799,7 @@ function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv
     from: 'pr-code-checks',
     displayName,
     runtimeClassName: 'large',
-    ...(needs.length > 0 ? { include: ['dind'] } : {}),
+    include: ['dind'],
     steps: [
       { name: 'peer-review', when: 'false' },
       { name: 'detect-secrets', when: 'false' },
@@ -633,7 +808,7 @@ function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv
         name: 'unit-test',
         displayName,
         image: NODE_IMAGE,
-        ...(needs.length > 0 ? { include: ['docker-socket'] } : {}),
+        include: ['docker-socket'],
         script: scriptLines.join('\n')
       },
       { name: 'sign-artifact', when: 'false' },

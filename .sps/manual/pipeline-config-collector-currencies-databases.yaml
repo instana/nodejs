@@ -40,15 +40,9 @@ tasks:
           set -eo pipefail
 
           node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
+          cd "$REPO_DIR"
 
-          cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -60,10 +54,53 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # start network-filter sidecar
+          FILTER_CTR="network-filter-collector-databases-elasticsearch-$$"
+          cleanup() {
+            docker rm -f "$FILTER_CTR" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
+
+          docker run --detach --name "$FILTER_CTR" \
+            --cap-add NET_ADMIN \
+            --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
+            mirror.gcr.io/monadicalsas/network-filter:latest
+
+          elapsed=0
+          until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
+            elapsed=$((elapsed + 1))
+            if [ "$elapsed" -ge 30 ]; then
+              echo "ERROR: network-filter did not become ready within 30s"
+              docker logs "$FILTER_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "network-filter ready after ${elapsed}s"
+
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
+          docker network connect offline-net "$FILTER_CTR"
 
-          npm install --loglevel warn --foreground-scripts
+          NODE_MAJOR="${node_version%%.*}"
+          NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+
+          echo "Running npm install & test folder setup inside filtered container..."
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            --volume "$REPO_DIR:/work" \
+            --workdir /work \
+            "$NODE_IMAGE" \
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start elasticsearch
           docker run -d --network offline-net --name elasticsearch \
@@ -74,12 +111,17 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' elasticsearch)
           socat TCP-LISTEN:9200,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:9200 &
           socat TCP6-LISTEN:9200,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:9200 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-elasticsearch-9200-$$" \
+              socat-fwd \
+              TCP-LISTEN:9200,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:9200
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 9200 2>/dev/null; do sleep 1; done'
+          fi
           echo "Waiting for Elasticsearch to be ready..."
           timeout 120 bash -c \
             'until curl -sf http://127.0.0.1:9200/_cluster/health | grep -q '\''"status":"green"\|"status":"yellow"'\'' ; do sleep 3; done'
           echo "Elasticsearch is ready."
-
-          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -97,14 +139,16 @@ tasks:
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              INSTANA_CONNECT_ELASTICSEARCH="127.0.0.1:9200" \
-              INSTANA_CONNECT_ELASTICSEARCH_ALTERNATIVE="localhost:9200" \
-              TEST_FILES="$TEST_FILES" \
+            docker run --rm \
+              --network "container:${FILTER_CTR}" \
+              --volume "$REPO_DIR:/work" \
+              --workdir /work \
+              --env CI=true \
+              --env RUN_ESM="$RUN_ESM" \
+              --env TEST_FILES="$TEST_FILES" \
+              --env INSTANA_CONNECT_ELASTICSEARCH="127.0.0.1:9200" \
+              --env INSTANA_CONNECT_ELASTICSEARCH_ALTERNATIVE="localhost:9200" \
+              "$NODE_IMAGE" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-databases-elasticsearch" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -112,6 +156,10 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          # Cleanup filter container so host has direct connectivity for uploads
+          cleanup
+          trap - EXIT
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -197,15 +245,9 @@ tasks:
           set -eo pipefail
 
           node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
+          cd "$REPO_DIR"
 
-          cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -217,10 +259,53 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # start network-filter sidecar
+          FILTER_CTR="network-filter-collector-databases-client-$$"
+          cleanup() {
+            docker rm -f "$FILTER_CTR" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
+
+          docker run --detach --name "$FILTER_CTR" \
+            --cap-add NET_ADMIN \
+            --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
+            mirror.gcr.io/monadicalsas/network-filter:latest
+
+          elapsed=0
+          until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
+            elapsed=$((elapsed + 1))
+            if [ "$elapsed" -ge 30 ]; then
+              echo "ERROR: network-filter did not become ready within 30s"
+              docker logs "$FILTER_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "network-filter ready after ${elapsed}s"
+
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
+          docker network connect offline-net "$FILTER_CTR"
 
-          npm install --loglevel warn --foreground-scripts
+          NODE_MAJOR="${node_version%%.*}"
+          NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+
+          echo "Running npm install & test folder setup inside filtered container..."
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            --volume "$REPO_DIR:/work" \
+            --workdir /work \
+            "$NODE_IMAGE" \
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start redis
           docker run -d --network offline-net --name redis \
@@ -228,6 +313,13 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis)
           socat TCP-LISTEN:6379,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:6379 &
           socat TCP6-LISTEN:6379,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:6379 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-redis-6379-$$" \
+              socat-fwd \
+              TCP-LISTEN:6379,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:6379
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 6379 2>/dev/null; do sleep 1; done'
+          fi
           timeout 30 bash -c \
             'until nc -z 127.0.0.1 6379 2>/dev/null; do sleep 1; done'
 
@@ -242,6 +334,13 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis-sentinel)
           socat TCP-LISTEN:26379,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:26379 &
           socat TCP6-LISTEN:26379,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:26379 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-redis-sentinel-26379-$$" \
+              socat-fwd \
+              TCP-LISTEN:26379,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:26379
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 26379 2>/dev/null; do sleep 1; done'
+          fi
           sleep 60
 
           # start redis-cluster
@@ -251,14 +350,33 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis-cluster)
           socat TCP-LISTEN:7000,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:7000 &
           socat TCP6-LISTEN:7000,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:7000 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-redis-cluster-7000-$$" \
+              socat-fwd \
+              TCP-LISTEN:7000,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:7000
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 7000 2>/dev/null; do sleep 1; done'
+          fi
           socat TCP-LISTEN:7001,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:7001 &
           socat TCP6-LISTEN:7001,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:7001 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-redis-cluster-7001-$$" \
+              socat-fwd \
+              TCP-LISTEN:7001,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:7001
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 7001 2>/dev/null; do sleep 1; done'
+          fi
           socat TCP-LISTEN:7002,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:7002 &
           socat TCP6-LISTEN:7002,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:7002 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-redis-cluster-7002-$$" \
+              socat-fwd \
+              TCP-LISTEN:7002,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:7002
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 7002 2>/dev/null; do sleep 1; done'
+          fi
           timeout 30 bash -c \
             'until nc -z 127.0.0.1 7000 2>/dev/null; do sleep 1; done'
-
-          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -276,12 +394,14 @@ tasks:
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              TEST_FILES="$TEST_FILES" \
+            docker run --rm \
+              --network "container:${FILTER_CTR}" \
+              --volume "$REPO_DIR:/work" \
+              --workdir /work \
+              --env CI=true \
+              --env RUN_ESM="$RUN_ESM" \
+              --env TEST_FILES="$TEST_FILES" \
+              "$NODE_IMAGE" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-databases-client" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -289,6 +409,10 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          # Cleanup filter container so host has direct connectivity for uploads
+          cleanup
+          trap - EXIT
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -374,15 +498,9 @@ tasks:
           set -eo pipefail
 
           node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
+          cd "$REPO_DIR"
 
-          cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -394,10 +512,53 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # start network-filter sidecar
+          FILTER_CTR="network-filter-collector-databases-couchbase-$$"
+          cleanup() {
+            docker rm -f "$FILTER_CTR" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
+
+          docker run --detach --name "$FILTER_CTR" \
+            --cap-add NET_ADMIN \
+            --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
+            mirror.gcr.io/monadicalsas/network-filter:latest
+
+          elapsed=0
+          until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
+            elapsed=$((elapsed + 1))
+            if [ "$elapsed" -ge 30 ]; then
+              echo "ERROR: network-filter did not become ready within 30s"
+              docker logs "$FILTER_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "network-filter ready after ${elapsed}s"
+
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
+          docker network connect offline-net "$FILTER_CTR"
 
-          npm install --loglevel warn --foreground-scripts
+          NODE_MAJOR="${node_version%%.*}"
+          NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+
+          echo "Running npm install & test folder setup inside filtered container..."
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            --volume "$REPO_DIR:/work" \
+            --workdir /work \
+            "$NODE_IMAGE" \
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start couchbase
           docker run -d --network offline-net --name couchbase \
@@ -405,22 +566,69 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' couchbase)
           socat TCP-LISTEN:8091,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8091 &
           socat TCP6-LISTEN:8091,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:8091 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-couchbase-8091-$$" \
+              socat-fwd \
+              TCP-LISTEN:8091,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8091
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 8091 2>/dev/null; do sleep 1; done'
+          fi
           socat TCP-LISTEN:8092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8092 &
           socat TCP6-LISTEN:8092,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:8092 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-couchbase-8092-$$" \
+              socat-fwd \
+              TCP-LISTEN:8092,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8092
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 8092 2>/dev/null; do sleep 1; done'
+          fi
           socat TCP-LISTEN:8093,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8093 &
           socat TCP6-LISTEN:8093,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:8093 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-couchbase-8093-$$" \
+              socat-fwd \
+              TCP-LISTEN:8093,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8093
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 8093 2>/dev/null; do sleep 1; done'
+          fi
           socat TCP-LISTEN:8094,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8094 &
           socat TCP6-LISTEN:8094,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:8094 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-couchbase-8094-$$" \
+              socat-fwd \
+              TCP-LISTEN:8094,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8094
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 8094 2>/dev/null; do sleep 1; done'
+          fi
           socat TCP-LISTEN:8095,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8095 &
           socat TCP6-LISTEN:8095,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:8095 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-couchbase-8095-$$" \
+              socat-fwd \
+              TCP-LISTEN:8095,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8095
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 8095 2>/dev/null; do sleep 1; done'
+          fi
           socat TCP-LISTEN:8096,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8096 &
           socat TCP6-LISTEN:8096,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:8096 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-couchbase-8096-$$" \
+              socat-fwd \
+              TCP-LISTEN:8096,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:8096
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 8096 2>/dev/null; do sleep 1; done'
+          fi
           socat TCP-LISTEN:11210,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:11210 &
           socat TCP6-LISTEN:11210,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:11210 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-couchbase-11210-$$" \
+              socat-fwd \
+              TCP-LISTEN:11210,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:11210
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 11210 2>/dev/null; do sleep 1; done'
+          fi
           timeout 60 bash -c \
             'until curl -sf http://127.0.0.1:8091/ >/dev/null; do sleep 2; done'
-
-          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -438,12 +646,14 @@ tasks:
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              TEST_FILES="$TEST_FILES" \
+            docker run --rm \
+              --network "container:${FILTER_CTR}" \
+              --volume "$REPO_DIR:/work" \
+              --workdir /work \
+              --env CI=true \
+              --env RUN_ESM="$RUN_ESM" \
+              --env TEST_FILES="$TEST_FILES" \
+              "$NODE_IMAGE" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-databases-couchbase" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -451,6 +661,10 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          # Cleanup filter container so host has direct connectivity for uploads
+          cleanup
+          trap - EXIT
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -536,15 +750,9 @@ tasks:
           set -eo pipefail
 
           node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
+          cd "$REPO_DIR"
 
-          cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -556,10 +764,53 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # start network-filter sidecar
+          FILTER_CTR="network-filter-collector-databases-ibm-db-$$"
+          cleanup() {
+            docker rm -f "$FILTER_CTR" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
+
+          docker run --detach --name "$FILTER_CTR" \
+            --cap-add NET_ADMIN \
+            --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
+            mirror.gcr.io/monadicalsas/network-filter:latest
+
+          elapsed=0
+          until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
+            elapsed=$((elapsed + 1))
+            if [ "$elapsed" -ge 30 ]; then
+              echo "ERROR: network-filter did not become ready within 30s"
+              docker logs "$FILTER_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "network-filter ready after ${elapsed}s"
+
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
+          docker network connect offline-net "$FILTER_CTR"
 
-          npm install --loglevel warn --foreground-scripts
+          NODE_MAJOR="${node_version%%.*}"
+          NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+
+          echo "Running npm install & test folder setup inside filtered container..."
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            --volume "$REPO_DIR:/work" \
+            --workdir /work \
+            "$NODE_IMAGE" \
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start ibm_db
           docker run -d --network offline-net --name ibm_db \
@@ -584,12 +835,24 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ibm_db)
           socat TCP-LISTEN:50000,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:50000 &
           socat TCP6-LISTEN:50000,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:50000 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-ibm_db-50000-$$" \
+              socat-fwd \
+              TCP-LISTEN:50000,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:50000
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 50000 2>/dev/null; do sleep 1; done'
+          fi
           socat TCP-LISTEN:58885,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:50000 &
           socat TCP6-LISTEN:58885,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:50000 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-ibm_db-58885-$$" \
+              socat-fwd \
+              TCP-LISTEN:58885,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:50000
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 58885 2>/dev/null; do sleep 1; done'
+          fi
           timeout 300 bash -c \
             'until docker exec ibm_db bash -c "su - node -c \"db2 connect to nodedb && db2 \\\"select 1 from sysibm.sysdummy1\\\"\"" > /dev/null 2>&1; do sleep 5; done'
-
-          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -607,12 +870,14 @@ tasks:
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              TEST_FILES="$TEST_FILES" \
+            docker run --rm \
+              --network "container:${FILTER_CTR}" \
+              --volume "$REPO_DIR:/work" \
+              --workdir /work \
+              --env CI=true \
+              --env RUN_ESM="$RUN_ESM" \
+              --env TEST_FILES="$TEST_FILES" \
+              "$NODE_IMAGE" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-databases-ibm-db" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -620,6 +885,10 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          # Cleanup filter container so host has direct connectivity for uploads
+          cleanup
+          trap - EXIT
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -705,15 +974,9 @@ tasks:
           set -eo pipefail
 
           node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
+          cd "$REPO_DIR"
 
-          cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -725,10 +988,53 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # start network-filter sidecar
+          FILTER_CTR="network-filter-collector-databases-ioredis-$$"
+          cleanup() {
+            docker rm -f "$FILTER_CTR" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
+
+          docker run --detach --name "$FILTER_CTR" \
+            --cap-add NET_ADMIN \
+            --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
+            mirror.gcr.io/monadicalsas/network-filter:latest
+
+          elapsed=0
+          until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
+            elapsed=$((elapsed + 1))
+            if [ "$elapsed" -ge 30 ]; then
+              echo "ERROR: network-filter did not become ready within 30s"
+              docker logs "$FILTER_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "network-filter ready after ${elapsed}s"
+
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
+          docker network connect offline-net "$FILTER_CTR"
 
-          npm install --loglevel warn --foreground-scripts
+          NODE_MAJOR="${node_version%%.*}"
+          NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+
+          echo "Running npm install & test folder setup inside filtered container..."
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            --volume "$REPO_DIR:/work" \
+            --workdir /work \
+            "$NODE_IMAGE" \
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start redis
           docker run -d --network offline-net --name redis \
@@ -736,6 +1042,13 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis)
           socat TCP-LISTEN:6379,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:6379 &
           socat TCP6-LISTEN:6379,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:6379 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-redis-6379-$$" \
+              socat-fwd \
+              TCP-LISTEN:6379,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:6379
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 6379 2>/dev/null; do sleep 1; done'
+          fi
           timeout 30 bash -c \
             'until nc -z 127.0.0.1 6379 2>/dev/null; do sleep 1; done'
 
@@ -750,6 +1063,13 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis-sentinel)
           socat TCP-LISTEN:26379,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:26379 &
           socat TCP6-LISTEN:26379,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:26379 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-redis-sentinel-26379-$$" \
+              socat-fwd \
+              TCP-LISTEN:26379,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:26379
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 26379 2>/dev/null; do sleep 1; done'
+          fi
           sleep 60
 
           # start redis-cluster
@@ -759,14 +1079,33 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis-cluster)
           socat TCP-LISTEN:7000,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:7000 &
           socat TCP6-LISTEN:7000,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:7000 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-redis-cluster-7000-$$" \
+              socat-fwd \
+              TCP-LISTEN:7000,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:7000
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 7000 2>/dev/null; do sleep 1; done'
+          fi
           socat TCP-LISTEN:7001,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:7001 &
           socat TCP6-LISTEN:7001,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:7001 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-redis-cluster-7001-$$" \
+              socat-fwd \
+              TCP-LISTEN:7001,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:7001
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 7001 2>/dev/null; do sleep 1; done'
+          fi
           socat TCP-LISTEN:7002,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:7002 &
           socat TCP6-LISTEN:7002,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:7002 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-redis-cluster-7002-$$" \
+              socat-fwd \
+              TCP-LISTEN:7002,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:7002
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 7002 2>/dev/null; do sleep 1; done'
+          fi
           timeout 30 bash -c \
             'until nc -z 127.0.0.1 7000 2>/dev/null; do sleep 1; done'
-
-          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -784,12 +1123,14 @@ tasks:
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              TEST_FILES="$TEST_FILES" \
+            docker run --rm \
+              --network "container:${FILTER_CTR}" \
+              --volume "$REPO_DIR:/work" \
+              --workdir /work \
+              --env CI=true \
+              --env RUN_ESM="$RUN_ESM" \
+              --env TEST_FILES="$TEST_FILES" \
+              "$NODE_IMAGE" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-databases-ioredis" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -797,6 +1138,10 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          # Cleanup filter container so host has direct connectivity for uploads
+          cleanup
+          trap - EXIT
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -882,15 +1227,9 @@ tasks:
           set -eo pipefail
 
           node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
+          cd "$REPO_DIR"
 
-          cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -902,10 +1241,53 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # start network-filter sidecar
+          FILTER_CTR="network-filter-collector-databases-memcached-$$"
+          cleanup() {
+            docker rm -f "$FILTER_CTR" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
+
+          docker run --detach --name "$FILTER_CTR" \
+            --cap-add NET_ADMIN \
+            --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
+            mirror.gcr.io/monadicalsas/network-filter:latest
+
+          elapsed=0
+          until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
+            elapsed=$((elapsed + 1))
+            if [ "$elapsed" -ge 30 ]; then
+              echo "ERROR: network-filter did not become ready within 30s"
+              docker logs "$FILTER_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "network-filter ready after ${elapsed}s"
+
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
+          docker network connect offline-net "$FILTER_CTR"
 
-          npm install --loglevel warn --foreground-scripts
+          NODE_MAJOR="${node_version%%.*}"
+          NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+
+          echo "Running npm install & test folder setup inside filtered container..."
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            --volume "$REPO_DIR:/work" \
+            --workdir /work \
+            "$NODE_IMAGE" \
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start memcached
           docker run -d --network offline-net --name memcached \
@@ -913,9 +1295,14 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' memcached)
           socat TCP-LISTEN:11211,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:11211 &
           socat TCP6-LISTEN:11211,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:11211 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-memcached-11211-$$" \
+              socat-fwd \
+              TCP-LISTEN:11211,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:11211
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 11211 2>/dev/null; do sleep 1; done'
+          fi
           sleep 60
-
-          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -933,12 +1320,14 @@ tasks:
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              TEST_FILES="$TEST_FILES" \
+            docker run --rm \
+              --network "container:${FILTER_CTR}" \
+              --volume "$REPO_DIR:/work" \
+              --workdir /work \
+              --env CI=true \
+              --env RUN_ESM="$RUN_ESM" \
+              --env TEST_FILES="$TEST_FILES" \
+              "$NODE_IMAGE" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-databases-memcached" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -946,6 +1335,10 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          # Cleanup filter container so host has direct connectivity for uploads
+          cleanup
+          trap - EXIT
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -1031,15 +1424,9 @@ tasks:
           set -eo pipefail
 
           node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
+          cd "$REPO_DIR"
 
-          cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -1051,10 +1438,53 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # start network-filter sidecar
+          FILTER_CTR="network-filter-collector-databases-mongodb-$$"
+          cleanup() {
+            docker rm -f "$FILTER_CTR" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
+
+          docker run --detach --name "$FILTER_CTR" \
+            --cap-add NET_ADMIN \
+            --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
+            mirror.gcr.io/monadicalsas/network-filter:latest
+
+          elapsed=0
+          until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
+            elapsed=$((elapsed + 1))
+            if [ "$elapsed" -ge 30 ]; then
+              echo "ERROR: network-filter did not become ready within 30s"
+              docker logs "$FILTER_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "network-filter ready after ${elapsed}s"
+
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
+          docker network connect offline-net "$FILTER_CTR"
 
-          npm install --loglevel warn --foreground-scripts
+          NODE_MAJOR="${node_version%%.*}"
+          NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+
+          echo "Running npm install & test folder setup inside filtered container..."
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            --volume "$REPO_DIR:/work" \
+            --workdir /work \
+            "$NODE_IMAGE" \
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start mongodb
           docker run -d --network offline-net --name mongodb \
@@ -1062,10 +1492,15 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mongodb)
           socat TCP-LISTEN:27017,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:27017 &
           socat TCP6-LISTEN:27017,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:27017 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-mongodb-27017-$$" \
+              socat-fwd \
+              TCP-LISTEN:27017,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:27017
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 27017 2>/dev/null; do sleep 1; done'
+          fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 27017 2>/dev/null; do sleep 2; done'
-
-          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -1083,12 +1518,14 @@ tasks:
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              TEST_FILES="$TEST_FILES" \
+            docker run --rm \
+              --network "container:${FILTER_CTR}" \
+              --volume "$REPO_DIR:/work" \
+              --workdir /work \
+              --env CI=true \
+              --env RUN_ESM="$RUN_ESM" \
+              --env TEST_FILES="$TEST_FILES" \
+              "$NODE_IMAGE" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-databases-mongodb" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -1096,6 +1533,10 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          # Cleanup filter container so host has direct connectivity for uploads
+          cleanup
+          trap - EXIT
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -1181,15 +1622,9 @@ tasks:
           set -eo pipefail
 
           node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
+          cd "$REPO_DIR"
 
-          cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -1201,10 +1636,53 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # start network-filter sidecar
+          FILTER_CTR="network-filter-collector-databases-mongoose-$$"
+          cleanup() {
+            docker rm -f "$FILTER_CTR" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
+
+          docker run --detach --name "$FILTER_CTR" \
+            --cap-add NET_ADMIN \
+            --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
+            mirror.gcr.io/monadicalsas/network-filter:latest
+
+          elapsed=0
+          until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
+            elapsed=$((elapsed + 1))
+            if [ "$elapsed" -ge 30 ]; then
+              echo "ERROR: network-filter did not become ready within 30s"
+              docker logs "$FILTER_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "network-filter ready after ${elapsed}s"
+
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
+          docker network connect offline-net "$FILTER_CTR"
 
-          npm install --loglevel warn --foreground-scripts
+          NODE_MAJOR="${node_version%%.*}"
+          NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+
+          echo "Running npm install & test folder setup inside filtered container..."
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            --volume "$REPO_DIR:/work" \
+            --workdir /work \
+            "$NODE_IMAGE" \
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start mongodb
           docker run -d --network offline-net --name mongodb \
@@ -1212,10 +1690,15 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mongodb)
           socat TCP-LISTEN:27017,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:27017 &
           socat TCP6-LISTEN:27017,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:27017 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-mongodb-27017-$$" \
+              socat-fwd \
+              TCP-LISTEN:27017,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:27017
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 27017 2>/dev/null; do sleep 1; done'
+          fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 27017 2>/dev/null; do sleep 2; done'
-
-          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -1233,12 +1716,14 @@ tasks:
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              TEST_FILES="$TEST_FILES" \
+            docker run --rm \
+              --network "container:${FILTER_CTR}" \
+              --volume "$REPO_DIR:/work" \
+              --workdir /work \
+              --env CI=true \
+              --env RUN_ESM="$RUN_ESM" \
+              --env TEST_FILES="$TEST_FILES" \
+              "$NODE_IMAGE" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-databases-mongoose" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -1246,6 +1731,10 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          # Cleanup filter container so host has direct connectivity for uploads
+          cleanup
+          trap - EXIT
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -1331,15 +1820,9 @@ tasks:
           set -eo pipefail
 
           node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
+          cd "$REPO_DIR"
 
-          cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -1351,10 +1834,53 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # start network-filter sidecar
+          FILTER_CTR="network-filter-collector-databases-mssql-$$"
+          cleanup() {
+            docker rm -f "$FILTER_CTR" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
+
+          docker run --detach --name "$FILTER_CTR" \
+            --cap-add NET_ADMIN \
+            --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
+            mirror.gcr.io/monadicalsas/network-filter:latest
+
+          elapsed=0
+          until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
+            elapsed=$((elapsed + 1))
+            if [ "$elapsed" -ge 30 ]; then
+              echo "ERROR: network-filter did not become ready within 30s"
+              docker logs "$FILTER_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "network-filter ready after ${elapsed}s"
+
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
+          docker network connect offline-net "$FILTER_CTR"
 
-          npm install --loglevel warn --foreground-scripts
+          NODE_MAJOR="${node_version%%.*}"
+          NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+
+          echo "Running npm install & test folder setup inside filtered container..."
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            --volume "$REPO_DIR:/work" \
+            --workdir /work \
+            "$NODE_IMAGE" \
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start mssql
           docker run -d --network offline-net --name mssql \
@@ -1364,9 +1890,14 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mssql)
           socat TCP-LISTEN:1433,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:1433 &
           socat TCP6-LISTEN:1433,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:1433 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-mssql-1433-$$" \
+              socat-fwd \
+              TCP-LISTEN:1433,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:1433
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 1433 2>/dev/null; do sleep 1; done'
+          fi
           sleep 60
-
-          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -1384,12 +1915,14 @@ tasks:
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              TEST_FILES="$TEST_FILES" \
+            docker run --rm \
+              --network "container:${FILTER_CTR}" \
+              --volume "$REPO_DIR:/work" \
+              --workdir /work \
+              --env CI=true \
+              --env RUN_ESM="$RUN_ESM" \
+              --env TEST_FILES="$TEST_FILES" \
+              "$NODE_IMAGE" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-databases-mssql" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -1397,6 +1930,10 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          # Cleanup filter container so host has direct connectivity for uploads
+          cleanup
+          trap - EXIT
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -1482,15 +2019,9 @@ tasks:
           set -eo pipefail
 
           node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
+          cd "$REPO_DIR"
 
-          cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -1502,10 +2033,53 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # start network-filter sidecar
+          FILTER_CTR="network-filter-collector-databases-mysql-$$"
+          cleanup() {
+            docker rm -f "$FILTER_CTR" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
+
+          docker run --detach --name "$FILTER_CTR" \
+            --cap-add NET_ADMIN \
+            --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
+            mirror.gcr.io/monadicalsas/network-filter:latest
+
+          elapsed=0
+          until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
+            elapsed=$((elapsed + 1))
+            if [ "$elapsed" -ge 30 ]; then
+              echo "ERROR: network-filter did not become ready within 30s"
+              docker logs "$FILTER_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "network-filter ready after ${elapsed}s"
+
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
+          docker network connect offline-net "$FILTER_CTR"
 
-          npm install --loglevel warn --foreground-scripts
+          NODE_MAJOR="${node_version%%.*}"
+          NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+
+          echo "Running npm install & test folder setup inside filtered container..."
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            --volume "$REPO_DIR:/work" \
+            --workdir /work \
+            "$NODE_IMAGE" \
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start mysql
           docker run -d --network offline-net --name mysql \
@@ -1518,10 +2092,15 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mysql)
           socat TCP-LISTEN:3306,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:3306 &
           socat TCP6-LISTEN:3306,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:3306 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-mysql-3306-$$" \
+              socat-fwd \
+              TCP-LISTEN:3306,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:3306
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 3306 2>/dev/null; do sleep 1; done'
+          fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 3306 2>/dev/null; do sleep 2; done'
-
-          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -1539,12 +2118,14 @@ tasks:
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              TEST_FILES="$TEST_FILES" \
+            docker run --rm \
+              --network "container:${FILTER_CTR}" \
+              --volume "$REPO_DIR:/work" \
+              --workdir /work \
+              --env CI=true \
+              --env RUN_ESM="$RUN_ESM" \
+              --env TEST_FILES="$TEST_FILES" \
+              "$NODE_IMAGE" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-databases-mysql" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -1552,6 +2133,10 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          # Cleanup filter container so host has direct connectivity for uploads
+          cleanup
+          trap - EXIT
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -1637,15 +2222,9 @@ tasks:
           set -eo pipefail
 
           node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
+          cd "$REPO_DIR"
 
-          cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -1657,10 +2236,53 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # start network-filter sidecar
+          FILTER_CTR="network-filter-collector-databases-mysql2-$$"
+          cleanup() {
+            docker rm -f "$FILTER_CTR" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
+
+          docker run --detach --name "$FILTER_CTR" \
+            --cap-add NET_ADMIN \
+            --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
+            mirror.gcr.io/monadicalsas/network-filter:latest
+
+          elapsed=0
+          until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
+            elapsed=$((elapsed + 1))
+            if [ "$elapsed" -ge 30 ]; then
+              echo "ERROR: network-filter did not become ready within 30s"
+              docker logs "$FILTER_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "network-filter ready after ${elapsed}s"
+
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
+          docker network connect offline-net "$FILTER_CTR"
 
-          npm install --loglevel warn --foreground-scripts
+          NODE_MAJOR="${node_version%%.*}"
+          NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+
+          echo "Running npm install & test folder setup inside filtered container..."
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            --volume "$REPO_DIR:/work" \
+            --workdir /work \
+            "$NODE_IMAGE" \
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start mysql
           docker run -d --network offline-net --name mysql \
@@ -1673,10 +2295,15 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mysql)
           socat TCP-LISTEN:3306,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:3306 &
           socat TCP6-LISTEN:3306,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:3306 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-mysql-3306-$$" \
+              socat-fwd \
+              TCP-LISTEN:3306,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:3306
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 3306 2>/dev/null; do sleep 1; done'
+          fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 3306 2>/dev/null; do sleep 2; done'
-
-          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -1694,12 +2321,14 @@ tasks:
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              TEST_FILES="$TEST_FILES" \
+            docker run --rm \
+              --network "container:${FILTER_CTR}" \
+              --volume "$REPO_DIR:/work" \
+              --workdir /work \
+              --env CI=true \
+              --env RUN_ESM="$RUN_ESM" \
+              --env TEST_FILES="$TEST_FILES" \
+              "$NODE_IMAGE" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-databases-mysql2" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -1707,6 +2336,10 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          # Cleanup filter container so host has direct connectivity for uploads
+          cleanup
+          trap - EXIT
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -1792,15 +2425,9 @@ tasks:
           set -eo pipefail
 
           node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
+          cd "$REPO_DIR"
 
-          cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -1812,8 +2439,53 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # start network-filter sidecar
+          FILTER_CTR="network-filter-collector-databases-oracledb-$$"
+          cleanup() {
+            docker rm -f "$FILTER_CTR" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
+
+          docker run --detach --name "$FILTER_CTR" \
+            --cap-add NET_ADMIN \
+            --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
+            mirror.gcr.io/monadicalsas/network-filter:latest
+
+          elapsed=0
+          until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
+            elapsed=$((elapsed + 1))
+            if [ "$elapsed" -ge 30 ]; then
+              echo "ERROR: network-filter did not become ready within 30s"
+              docker logs "$FILTER_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "network-filter ready after ${elapsed}s"
+
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
+          docker network connect offline-net "$FILTER_CTR"
+
+          NODE_MAJOR="${node_version%%.*}"
+          NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+
+          echo "Running npm install & test folder setup inside filtered container..."
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            --volume "$REPO_DIR:/work" \
+            --workdir /work \
+            "$NODE_IMAGE" \
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start oracledb early — initialises during npm install
           docker run -d --network offline-net --name oracledb \
@@ -1822,15 +2494,18 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' oracledb)
           socat TCP-LISTEN:1521,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:1521 &
           socat TCP6-LISTEN:1521,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:1521 &
-
-          npm install --loglevel warn --foreground-scripts
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-oracledb-1521-$$" \
+              socat-fwd \
+              TCP-LISTEN:1521,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:1521
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 1521 2>/dev/null; do sleep 1; done'
+          fi
 
           echo "Waiting for Oracle FREEPDB1..."
           timeout 180 bash -c \
             'until docker exec oracledb lsnrctl status 2>/dev/null | grep -qi "FREEPDB1"; do sleep 5; done'
           echo "Oracle FREEPDB1 is ready."
-
-          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -1848,13 +2523,15 @@ tasks:
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              INSTANA_CONNECT_ORACLEDB="localhost:1521" \
-              TEST_FILES="$TEST_FILES" \
+            docker run --rm \
+              --network "container:${FILTER_CTR}" \
+              --volume "$REPO_DIR:/work" \
+              --workdir /work \
+              --env CI=true \
+              --env RUN_ESM="$RUN_ESM" \
+              --env TEST_FILES="$TEST_FILES" \
+              --env INSTANA_CONNECT_ORACLEDB="localhost:1521" \
+              "$NODE_IMAGE" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-databases-oracledb" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -1862,6 +2539,10 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          # Cleanup filter container so host has direct connectivity for uploads
+          cleanup
+          trap - EXIT
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -1947,15 +2628,9 @@ tasks:
           set -eo pipefail
 
           node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
+          cd "$REPO_DIR"
 
-          cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -1967,10 +2642,53 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # start network-filter sidecar
+          FILTER_CTR="network-filter-collector-databases-pg-$$"
+          cleanup() {
+            docker rm -f "$FILTER_CTR" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
+
+          docker run --detach --name "$FILTER_CTR" \
+            --cap-add NET_ADMIN \
+            --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
+            mirror.gcr.io/monadicalsas/network-filter:latest
+
+          elapsed=0
+          until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
+            elapsed=$((elapsed + 1))
+            if [ "$elapsed" -ge 30 ]; then
+              echo "ERROR: network-filter did not become ready within 30s"
+              docker logs "$FILTER_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "network-filter ready after ${elapsed}s"
+
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
+          docker network connect offline-net "$FILTER_CTR"
 
-          npm install --loglevel warn --foreground-scripts
+          NODE_MAJOR="${node_version%%.*}"
+          NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+
+          echo "Running npm install & test folder setup inside filtered container..."
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            --volume "$REPO_DIR:/work" \
+            --workdir /work \
+            "$NODE_IMAGE" \
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start postgres
           docker run -d --network offline-net --name postgres \
@@ -1981,10 +2699,15 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' postgres)
           socat TCP-LISTEN:5432,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5432 &
           socat TCP6-LISTEN:5432,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:5432 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-postgres-5432-$$" \
+              socat-fwd \
+              TCP-LISTEN:5432,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5432
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 5432 2>/dev/null; do sleep 1; done'
+          fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 5432 2>/dev/null; do sleep 2; done'
-
-          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -2002,12 +2725,14 @@ tasks:
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              TEST_FILES="$TEST_FILES" \
+            docker run --rm \
+              --network "container:${FILTER_CTR}" \
+              --volume "$REPO_DIR:/work" \
+              --workdir /work \
+              --env CI=true \
+              --env RUN_ESM="$RUN_ESM" \
+              --env TEST_FILES="$TEST_FILES" \
+              "$NODE_IMAGE" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-databases-pg" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -2015,6 +2740,10 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          # Cleanup filter container so host has direct connectivity for uploads
+          cleanup
+          trap - EXIT
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -2100,15 +2829,9 @@ tasks:
           set -eo pipefail
 
           node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
+          cd "$REPO_DIR"
 
-          cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -2120,10 +2843,53 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # start network-filter sidecar
+          FILTER_CTR="network-filter-collector-databases-pg-native-$$"
+          cleanup() {
+            docker rm -f "$FILTER_CTR" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
+
+          docker run --detach --name "$FILTER_CTR" \
+            --cap-add NET_ADMIN \
+            --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
+            mirror.gcr.io/monadicalsas/network-filter:latest
+
+          elapsed=0
+          until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
+            elapsed=$((elapsed + 1))
+            if [ "$elapsed" -ge 30 ]; then
+              echo "ERROR: network-filter did not become ready within 30s"
+              docker logs "$FILTER_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "network-filter ready after ${elapsed}s"
+
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
+          docker network connect offline-net "$FILTER_CTR"
 
-          npm install --loglevel warn --foreground-scripts
+          NODE_MAJOR="${node_version%%.*}"
+          NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+
+          echo "Running npm install & test folder setup inside filtered container..."
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            --volume "$REPO_DIR:/work" \
+            --workdir /work \
+            "$NODE_IMAGE" \
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start postgres
           docker run -d --network offline-net --name postgres \
@@ -2134,10 +2900,15 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' postgres)
           socat TCP-LISTEN:5432,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5432 &
           socat TCP6-LISTEN:5432,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:5432 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-postgres-5432-$$" \
+              socat-fwd \
+              TCP-LISTEN:5432,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5432
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 5432 2>/dev/null; do sleep 1; done'
+          fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 5432 2>/dev/null; do sleep 2; done'
-
-          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -2155,12 +2926,14 @@ tasks:
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              TEST_FILES="$TEST_FILES" \
+            docker run --rm \
+              --network "container:${FILTER_CTR}" \
+              --volume "$REPO_DIR:/work" \
+              --workdir /work \
+              --env CI=true \
+              --env RUN_ESM="$RUN_ESM" \
+              --env TEST_FILES="$TEST_FILES" \
+              "$NODE_IMAGE" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-databases-pg-native" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -2168,6 +2941,10 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          # Cleanup filter container so host has direct connectivity for uploads
+          cleanup
+          trap - EXIT
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -2253,15 +3030,9 @@ tasks:
           set -eo pipefail
 
           node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
+          cd "$REPO_DIR"
 
-          cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -2273,10 +3044,53 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # start network-filter sidecar
+          FILTER_CTR="network-filter-collector-databases-prisma-$$"
+          cleanup() {
+            docker rm -f "$FILTER_CTR" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
+
+          docker run --detach --name "$FILTER_CTR" \
+            --cap-add NET_ADMIN \
+            --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
+            mirror.gcr.io/monadicalsas/network-filter:latest
+
+          elapsed=0
+          until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
+            elapsed=$((elapsed + 1))
+            if [ "$elapsed" -ge 30 ]; then
+              echo "ERROR: network-filter did not become ready within 30s"
+              docker logs "$FILTER_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "network-filter ready after ${elapsed}s"
+
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
+          docker network connect offline-net "$FILTER_CTR"
 
-          npm install --loglevel warn --foreground-scripts
+          NODE_MAJOR="${node_version%%.*}"
+          NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+
+          echo "Running npm install & test folder setup inside filtered container..."
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            --volume "$REPO_DIR:/work" \
+            --workdir /work \
+            "$NODE_IMAGE" \
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start postgres
           docker run -d --network offline-net --name postgres \
@@ -2287,6 +3101,13 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' postgres)
           socat TCP-LISTEN:5432,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5432 &
           socat TCP6-LISTEN:5432,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:5432 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-postgres-5432-$$" \
+              socat-fwd \
+              TCP-LISTEN:5432,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5432
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 5432 2>/dev/null; do sleep 1; done'
+          fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 5432 2>/dev/null; do sleep 2; done'
 
@@ -2301,10 +3122,15 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mysql)
           socat TCP-LISTEN:3306,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:3306 &
           socat TCP6-LISTEN:3306,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:3306 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-mysql-3306-$$" \
+              socat-fwd \
+              TCP-LISTEN:3306,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:3306
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 3306 2>/dev/null; do sleep 1; done'
+          fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 3306 2>/dev/null; do sleep 2; done'
-
-          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -2322,12 +3148,14 @@ tasks:
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              TEST_FILES="$TEST_FILES" \
+            docker run --rm \
+              --network "container:${FILTER_CTR}" \
+              --volume "$REPO_DIR:/work" \
+              --workdir /work \
+              --env CI=true \
+              --env RUN_ESM="$RUN_ESM" \
+              --env TEST_FILES="$TEST_FILES" \
+              "$NODE_IMAGE" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-databases-prisma" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -2335,6 +3163,10 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          # Cleanup filter container so host has direct connectivity for uploads
+          cleanup
+          trap - EXIT
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -2420,15 +3252,9 @@ tasks:
           set -eo pipefail
 
           node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
+          cd "$REPO_DIR"
 
-          cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -2440,10 +3266,53 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # start network-filter sidecar
+          FILTER_CTR="network-filter-collector-databases-redis-$$"
+          cleanup() {
+            docker rm -f "$FILTER_CTR" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
+
+          docker run --detach --name "$FILTER_CTR" \
+            --cap-add NET_ADMIN \
+            --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
+            mirror.gcr.io/monadicalsas/network-filter:latest
+
+          elapsed=0
+          until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
+            elapsed=$((elapsed + 1))
+            if [ "$elapsed" -ge 30 ]; then
+              echo "ERROR: network-filter did not become ready within 30s"
+              docker logs "$FILTER_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "network-filter ready after ${elapsed}s"
+
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
+          docker network connect offline-net "$FILTER_CTR"
 
-          npm install --loglevel warn --foreground-scripts
+          NODE_MAJOR="${node_version%%.*}"
+          NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+
+          echo "Running npm install & test folder setup inside filtered container..."
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            --volume "$REPO_DIR:/work" \
+            --workdir /work \
+            "$NODE_IMAGE" \
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start redis
           docker run -d --network offline-net --name redis \
@@ -2451,6 +3320,13 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis)
           socat TCP-LISTEN:6379,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:6379 &
           socat TCP6-LISTEN:6379,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:6379 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-redis-6379-$$" \
+              socat-fwd \
+              TCP-LISTEN:6379,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:6379
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 6379 2>/dev/null; do sleep 1; done'
+          fi
           timeout 30 bash -c \
             'until nc -z 127.0.0.1 6379 2>/dev/null; do sleep 1; done'
 
@@ -2465,6 +3341,13 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis-sentinel)
           socat TCP-LISTEN:26379,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:26379 &
           socat TCP6-LISTEN:26379,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:26379 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-redis-sentinel-26379-$$" \
+              socat-fwd \
+              TCP-LISTEN:26379,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:26379
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 26379 2>/dev/null; do sleep 1; done'
+          fi
           sleep 60
 
           # start redis-cluster
@@ -2474,14 +3357,33 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis-cluster)
           socat TCP-LISTEN:7000,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:7000 &
           socat TCP6-LISTEN:7000,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:7000 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-redis-cluster-7000-$$" \
+              socat-fwd \
+              TCP-LISTEN:7000,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:7000
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 7000 2>/dev/null; do sleep 1; done'
+          fi
           socat TCP-LISTEN:7001,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:7001 &
           socat TCP6-LISTEN:7001,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:7001 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-redis-cluster-7001-$$" \
+              socat-fwd \
+              TCP-LISTEN:7001,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:7001
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 7001 2>/dev/null; do sleep 1; done'
+          fi
           socat TCP-LISTEN:7002,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:7002 &
           socat TCP6-LISTEN:7002,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:7002 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-redis-cluster-7002-$$" \
+              socat-fwd \
+              TCP-LISTEN:7002,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:7002
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 7002 2>/dev/null; do sleep 1; done'
+          fi
           timeout 30 bash -c \
             'until nc -z 127.0.0.1 7000 2>/dev/null; do sleep 1; done'
-
-          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -2499,12 +3401,14 @@ tasks:
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              TEST_FILES="$TEST_FILES" \
+            docker run --rm \
+              --network "container:${FILTER_CTR}" \
+              --volume "$REPO_DIR:/work" \
+              --workdir /work \
+              --env CI=true \
+              --env RUN_ESM="$RUN_ESM" \
+              --env TEST_FILES="$TEST_FILES" \
+              "$NODE_IMAGE" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-databases-redis" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -2512,6 +3416,10 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          # Cleanup filter container so host has direct connectivity for uploads
+          cleanup
+          trap - EXIT
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -2597,15 +3505,9 @@ tasks:
           set -eo pipefail
 
           node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
+          cd "$REPO_DIR"
 
-          cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -2617,10 +3519,53 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # start network-filter sidecar
+          FILTER_CTR="network-filter-collector-databases-sequelize-$$"
+          cleanup() {
+            docker rm -f "$FILTER_CTR" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
+
+          docker run --detach --name "$FILTER_CTR" \
+            --cap-add NET_ADMIN \
+            --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
+            mirror.gcr.io/monadicalsas/network-filter:latest
+
+          elapsed=0
+          until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
+            elapsed=$((elapsed + 1))
+            if [ "$elapsed" -ge 30 ]; then
+              echo "ERROR: network-filter did not become ready within 30s"
+              docker logs "$FILTER_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "network-filter ready after ${elapsed}s"
+
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
+          docker network connect offline-net "$FILTER_CTR"
 
-          npm install --loglevel warn --foreground-scripts
+          NODE_MAJOR="${node_version%%.*}"
+          NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+
+          echo "Running npm install & test folder setup inside filtered container..."
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            --volume "$REPO_DIR:/work" \
+            --workdir /work \
+            "$NODE_IMAGE" \
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start postgres
           docker run -d --network offline-net --name postgres \
@@ -2631,10 +3576,15 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' postgres)
           socat TCP-LISTEN:5432,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5432 &
           socat TCP6-LISTEN:5432,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:5432 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-postgres-5432-$$" \
+              socat-fwd \
+              TCP-LISTEN:5432,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:5432
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 5432 2>/dev/null; do sleep 1; done'
+          fi
           timeout 60 bash -c \
             'until nc -z 127.0.0.1 5432 2>/dev/null; do sleep 2; done'
-
-          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -2652,12 +3602,14 @@ tasks:
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              TEST_FILES="$TEST_FILES" \
+            docker run --rm \
+              --network "container:${FILTER_CTR}" \
+              --volume "$REPO_DIR:/work" \
+              --workdir /work \
+              --env CI=true \
+              --env RUN_ESM="$RUN_ESM" \
+              --env TEST_FILES="$TEST_FILES" \
+              "$NODE_IMAGE" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-databases-sequelize" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -2665,6 +3617,10 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          # Cleanup filter container so host has direct connectivity for uploads
+          cleanup
+          trap - EXIT
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -2750,15 +3706,9 @@ tasks:
           set -eo pipefail
 
           node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
+          cd "$REPO_DIR"
 
-          cd "$WORKSPACE/$(load_repo app-repo path)"
           # install docker client
           CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
           ARCH=$(dpkg --print-architecture)
@@ -2770,10 +3720,53 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          # start network-filter sidecar
+          FILTER_CTR="network-filter-collector-databases-tedious-$$"
+          cleanup() {
+            docker rm -f "$FILTER_CTR" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
+
+          docker run --detach --name "$FILTER_CTR" \
+            --cap-add NET_ADMIN \
+            --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
+            mirror.gcr.io/monadicalsas/network-filter:latest
+
+          elapsed=0
+          until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
+            elapsed=$((elapsed + 1))
+            if [ "$elapsed" -ge 30 ]; then
+              echo "ERROR: network-filter did not become ready within 30s"
+              docker logs "$FILTER_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "network-filter ready after ${elapsed}s"
+
+          # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker build -t socat-fwd - <<'DOCKERFILE'
+          FROM mirror.gcr.io/library/alpine:3
+          RUN apk add --no-cache socat netcat-openbsd
+          ENTRYPOINT ["socat"]
+          DOCKERFILE
+
           # create isolated network
           docker network create --internal offline-net
+          docker network connect offline-net "$FILTER_CTR"
 
-          npm install --loglevel warn --foreground-scripts
+          NODE_MAJOR="${node_version%%.*}"
+          NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+
+          echo "Running npm install & test folder setup inside filtered container..."
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            --volume "$REPO_DIR:/work" \
+            --workdir /work \
+            "$NODE_IMAGE" \
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start mssql
           docker run -d --network offline-net --name mssql \
@@ -2783,9 +3776,14 @@ tasks:
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mssql)
           socat TCP-LISTEN:1433,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:1433 &
           socat TCP6-LISTEN:1433,fork,reuseaddr,bind=[::1],ipv6only=1 TCP:$SIDECAR_IP:1433 &
+          if [ -n "${FILTER_CTR:-}" ]; then
+            docker run -d --rm --network "container:${FILTER_CTR}" --name "socat-mssql-1433-$$" \
+              socat-fwd \
+              TCP-LISTEN:1433,fork,reuseaddr,bind=127.0.0.1 TCP:$SIDECAR_IP:1433
+            timeout 30 docker run --rm --network "container:${FILTER_CTR}" --entrypoint sh socat-fwd \
+              -c 'until nc -z 127.0.0.1 1433 2>/dev/null; do sleep 1; done'
+          fi
           sleep 60
-
-          node bin/create-version-test-folders.js
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -2803,12 +3801,14 @@ tasks:
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              TEST_FILES="$TEST_FILES" \
+            docker run --rm \
+              --network "container:${FILTER_CTR}" \
+              --volume "$REPO_DIR:/work" \
+              --workdir /work \
+              --env CI=true \
+              --env RUN_ESM="$RUN_ESM" \
+              --env TEST_FILES="$TEST_FILES" \
+              "$NODE_IMAGE" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-databases-tedious" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -2816,6 +3816,10 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          # Cleanup filter container so host has direct connectivity for uploads
+          cleanup
+          trap - EXIT
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"

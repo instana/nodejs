@@ -29,6 +29,8 @@ tasks:
     from: pr-code-checks
     displayName: bunyan
     runtimeClassName: large
+    include:
+      - dind
     steps:
       - name: peer-review
         when: 'false'
@@ -39,23 +41,63 @@ tasks:
       - name: unit-test
         displayName: bunyan
         image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
 
           node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
+          cd "$REPO_DIR"
 
-          cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          node bin/create-version-test-folders.js
+          # start network-filter sidecar
+          FILTER_CTR="network-filter-collector-logging-bunyan-$$"
+          cleanup() {
+            docker rm -f "$FILTER_CTR" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
+
+          docker run --detach --name "$FILTER_CTR" \
+            --cap-add NET_ADMIN \
+            --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
+            mirror.gcr.io/monadicalsas/network-filter:latest
+
+          elapsed=0
+          until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
+            elapsed=$((elapsed + 1))
+            if [ "$elapsed" -ge 30 ]; then
+              echo "ERROR: network-filter did not become ready within 30s"
+              docker logs "$FILTER_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "network-filter ready after ${elapsed}s"
+
+          NODE_MAJOR="${node_version%%.*}"
+          NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+
+          echo "Running npm install & test folder setup inside filtered container..."
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            --volume "$REPO_DIR:/work" \
+            --workdir /work \
+            "$NODE_IMAGE" \
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -73,12 +115,14 @@ tasks:
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              TEST_FILES="$TEST_FILES" \
+            docker run --rm \
+              --network "container:${FILTER_CTR}" \
+              --volume "$REPO_DIR:/work" \
+              --workdir /work \
+              --env CI=true \
+              --env RUN_ESM="$RUN_ESM" \
+              --env TEST_FILES="$TEST_FILES" \
+              "$NODE_IMAGE" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-logging-bunyan" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -86,6 +130,10 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          # Cleanup filter container so host has direct connectivity for uploads
+          cleanup
+          trap - EXIT
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -158,6 +206,8 @@ tasks:
     from: pr-code-checks
     displayName: console
     runtimeClassName: large
+    include:
+      - dind
     steps:
       - name: peer-review
         when: 'false'
@@ -168,23 +218,63 @@ tasks:
       - name: unit-test
         displayName: console
         image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
 
           node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
+          cd "$REPO_DIR"
 
-          cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          node bin/create-version-test-folders.js
+          # start network-filter sidecar
+          FILTER_CTR="network-filter-collector-logging-console-$$"
+          cleanup() {
+            docker rm -f "$FILTER_CTR" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
+
+          docker run --detach --name "$FILTER_CTR" \
+            --cap-add NET_ADMIN \
+            --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
+            mirror.gcr.io/monadicalsas/network-filter:latest
+
+          elapsed=0
+          until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
+            elapsed=$((elapsed + 1))
+            if [ "$elapsed" -ge 30 ]; then
+              echo "ERROR: network-filter did not become ready within 30s"
+              docker logs "$FILTER_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "network-filter ready after ${elapsed}s"
+
+          NODE_MAJOR="${node_version%%.*}"
+          NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+
+          echo "Running npm install & test folder setup inside filtered container..."
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            --volume "$REPO_DIR:/work" \
+            --workdir /work \
+            "$NODE_IMAGE" \
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -202,12 +292,14 @@ tasks:
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              TEST_FILES="$TEST_FILES" \
+            docker run --rm \
+              --network "container:${FILTER_CTR}" \
+              --volume "$REPO_DIR:/work" \
+              --workdir /work \
+              --env CI=true \
+              --env RUN_ESM="$RUN_ESM" \
+              --env TEST_FILES="$TEST_FILES" \
+              "$NODE_IMAGE" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-logging-console" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -215,6 +307,10 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          # Cleanup filter container so host has direct connectivity for uploads
+          cleanup
+          trap - EXIT
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -287,6 +383,8 @@ tasks:
     from: pr-code-checks
     displayName: express-winston
     runtimeClassName: large
+    include:
+      - dind
     steps:
       - name: peer-review
         when: 'false'
@@ -297,23 +395,63 @@ tasks:
       - name: unit-test
         displayName: express-winston
         image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
 
           node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
+          cd "$REPO_DIR"
 
-          cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          node bin/create-version-test-folders.js
+          # start network-filter sidecar
+          FILTER_CTR="network-filter-collector-logging-express-winston-$$"
+          cleanup() {
+            docker rm -f "$FILTER_CTR" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
+
+          docker run --detach --name "$FILTER_CTR" \
+            --cap-add NET_ADMIN \
+            --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
+            mirror.gcr.io/monadicalsas/network-filter:latest
+
+          elapsed=0
+          until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
+            elapsed=$((elapsed + 1))
+            if [ "$elapsed" -ge 30 ]; then
+              echo "ERROR: network-filter did not become ready within 30s"
+              docker logs "$FILTER_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "network-filter ready after ${elapsed}s"
+
+          NODE_MAJOR="${node_version%%.*}"
+          NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+
+          echo "Running npm install & test folder setup inside filtered container..."
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            --volume "$REPO_DIR:/work" \
+            --workdir /work \
+            "$NODE_IMAGE" \
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -331,12 +469,14 @@ tasks:
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              TEST_FILES="$TEST_FILES" \
+            docker run --rm \
+              --network "container:${FILTER_CTR}" \
+              --volume "$REPO_DIR:/work" \
+              --workdir /work \
+              --env CI=true \
+              --env RUN_ESM="$RUN_ESM" \
+              --env TEST_FILES="$TEST_FILES" \
+              "$NODE_IMAGE" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-logging-express-winston" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -344,6 +484,10 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          # Cleanup filter container so host has direct connectivity for uploads
+          cleanup
+          trap - EXIT
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -416,6 +560,8 @@ tasks:
     from: pr-code-checks
     displayName: log4js
     runtimeClassName: large
+    include:
+      - dind
     steps:
       - name: peer-review
         when: 'false'
@@ -426,23 +572,63 @@ tasks:
       - name: unit-test
         displayName: log4js
         image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
 
           node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
+          cd "$REPO_DIR"
 
-          cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          node bin/create-version-test-folders.js
+          # start network-filter sidecar
+          FILTER_CTR="network-filter-collector-logging-log4js-$$"
+          cleanup() {
+            docker rm -f "$FILTER_CTR" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
+
+          docker run --detach --name "$FILTER_CTR" \
+            --cap-add NET_ADMIN \
+            --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
+            mirror.gcr.io/monadicalsas/network-filter:latest
+
+          elapsed=0
+          until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
+            elapsed=$((elapsed + 1))
+            if [ "$elapsed" -ge 30 ]; then
+              echo "ERROR: network-filter did not become ready within 30s"
+              docker logs "$FILTER_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "network-filter ready after ${elapsed}s"
+
+          NODE_MAJOR="${node_version%%.*}"
+          NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+
+          echo "Running npm install & test folder setup inside filtered container..."
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            --volume "$REPO_DIR:/work" \
+            --workdir /work \
+            "$NODE_IMAGE" \
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -460,12 +646,14 @@ tasks:
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              TEST_FILES="$TEST_FILES" \
+            docker run --rm \
+              --network "container:${FILTER_CTR}" \
+              --volume "$REPO_DIR:/work" \
+              --workdir /work \
+              --env CI=true \
+              --env RUN_ESM="$RUN_ESM" \
+              --env TEST_FILES="$TEST_FILES" \
+              "$NODE_IMAGE" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-logging-log4js" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -473,6 +661,10 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          # Cleanup filter container so host has direct connectivity for uploads
+          cleanup
+          trap - EXIT
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -545,6 +737,8 @@ tasks:
     from: pr-code-checks
     displayName: pino
     runtimeClassName: large
+    include:
+      - dind
     steps:
       - name: peer-review
         when: 'false'
@@ -555,23 +749,63 @@ tasks:
       - name: unit-test
         displayName: pino
         image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
 
           node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
+          cd "$REPO_DIR"
 
-          cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          node bin/create-version-test-folders.js
+          # start network-filter sidecar
+          FILTER_CTR="network-filter-collector-logging-pino-$$"
+          cleanup() {
+            docker rm -f "$FILTER_CTR" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
+
+          docker run --detach --name "$FILTER_CTR" \
+            --cap-add NET_ADMIN \
+            --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
+            mirror.gcr.io/monadicalsas/network-filter:latest
+
+          elapsed=0
+          until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
+            elapsed=$((elapsed + 1))
+            if [ "$elapsed" -ge 30 ]; then
+              echo "ERROR: network-filter did not become ready within 30s"
+              docker logs "$FILTER_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "network-filter ready after ${elapsed}s"
+
+          NODE_MAJOR="${node_version%%.*}"
+          NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+
+          echo "Running npm install & test folder setup inside filtered container..."
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            --volume "$REPO_DIR:/work" \
+            --workdir /work \
+            "$NODE_IMAGE" \
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -589,12 +823,14 @@ tasks:
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              TEST_FILES="$TEST_FILES" \
+            docker run --rm \
+              --network "container:${FILTER_CTR}" \
+              --volume "$REPO_DIR:/work" \
+              --workdir /work \
+              --env CI=true \
+              --env RUN_ESM="$RUN_ESM" \
+              --env TEST_FILES="$TEST_FILES" \
+              "$NODE_IMAGE" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-logging-pino" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -602,6 +838,10 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          # Cleanup filter container so host has direct connectivity for uploads
+          cleanup
+          trap - EXIT
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
@@ -674,6 +914,8 @@ tasks:
     from: pr-code-checks
     displayName: winston
     runtimeClassName: large
+    include:
+      - dind
     steps:
       - name: peer-review
         when: 'false'
@@ -684,23 +926,63 @@ tasks:
       - name: unit-test
         displayName: winston
         image: mirror.gcr.io/library/node:24
+        include:
+          - docker-socket
         script: |-
           #!/usr/bin/env bash
           set -eo pipefail
 
           node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          # shellcheck source=/dev/null
-          . "$NVM_DIR/nvm.sh"
-          nvm install "$node_version" --no-progress
-          nvm use "$node_version"
-          echo "Node.js: $(node --version)"
+          REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"
+          cd "$REPO_DIR"
 
-          cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          # install docker client
+          CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
+          ARCH=$(dpkg --print-architecture)
+          apt-get update -qq && apt-get install -y -qq ca-certificates curl gnupg netcat-openbsd socat
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -qq && apt-get install -y -qq docker-ce-cli
+          timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
-          node bin/create-version-test-folders.js
+          # start network-filter sidecar
+          FILTER_CTR="network-filter-collector-logging-winston-$$"
+          cleanup() {
+            docker rm -f "$FILTER_CTR" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
+
+          docker run --detach --name "$FILTER_CTR" \
+            --cap-add NET_ADMIN \
+            --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
+            mirror.gcr.io/monadicalsas/network-filter:latest
+
+          elapsed=0
+          until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
+            elapsed=$((elapsed + 1))
+            if [ "$elapsed" -ge 30 ]; then
+              echo "ERROR: network-filter did not become ready within 30s"
+              docker logs "$FILTER_CTR" 2>&1 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "network-filter ready after ${elapsed}s"
+
+          NODE_MAJOR="${node_version%%.*}"
+          NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+
+          echo "Running npm install & test folder setup inside filtered container..."
+          docker run --rm \
+            --network "container:${FILTER_CTR}" \
+            --volume "$REPO_DIR:/work" \
+            --workdir /work \
+            "$NODE_IMAGE" \
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -718,12 +1000,14 @@ tasks:
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
-            env -i \
-              PATH="$PATH" \
-              HOME="$HOME" \
-              CI=true \
-              RUN_ESM="$RUN_ESM" \
-              TEST_FILES="$TEST_FILES" \
+            docker run --rm \
+              --network "container:${FILTER_CTR}" \
+              --volume "$REPO_DIR:/work" \
+              --workdir /work \
+              --env CI=true \
+              --env RUN_ESM="$RUN_ESM" \
+              --env TEST_FILES="$TEST_FILES" \
+              "$NODE_IMAGE" \
               npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-logging-winston" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
@@ -731,6 +1015,10 @@ tasks:
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          # Cleanup filter container so host has direct connectivity for uploads
+          cleanup
+          trap - EXIT
+
 
           # upload executed test files + lcov coverage report to COS
           COS_API_KEY="$(get_secret ibm-object-storage-api-key)"
