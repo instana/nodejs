@@ -18,7 +18,6 @@ const {
 const util = require('./util');
 const validators = require('./validator');
 const { validateStackTraceMode, validateStackTraceLength } = validators;
-const { validateDbBindVariablesDisable, validateDbBindVariablesAllowedColumns } = validators;
 
 // @typedef {{ [x: string]: any }} configMeta
 /** @type {configMeta} */
@@ -1249,11 +1248,8 @@ function normalizeDbBindVariables({ userConfig = {}, defaultConfig = {}, finalCo
   const columnsEnv = process.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS;
 
   if (disableEnv != null || columnsEnv != null) {
-    if (disableEnv != null) {
-      const result = validateDbBindVariablesDisable(disableEnv);
-      if (!result.isValid) {
-        logger.warn(`Invalid env INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE: ${result.error}`);
-      }
+    if (disableEnv != null && validators.booleanValidator(disableEnv) === undefined) {
+      logger.warn(`Invalid env INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE: "${disableEnv}". Expected true or false.`);
     }
 
     const fromEnv = normalizers.dbBindVariables.fromEnv();
@@ -1268,17 +1264,14 @@ function normalizeDbBindVariables({ userConfig = {}, defaultConfig = {}, finalCo
   // Priority 2: in-code configuration
   const inCode = userConfig.tracing?.dbBindVariables;
   if (inCode && typeof inCode === 'object' && Object.keys(inCode).length > 0) {
-    if (inCode.disable != null) {
-      const result = validateDbBindVariablesDisable(inCode.disable);
-      if (!result.isValid) {
-        logger.warn(result.error);
-      }
+    if (inCode.disable != null && validators.booleanValidator(inCode.disable) === undefined) {
+      logger.warn(`Invalid value for tracing.dbBindVariables.disable: "${inCode.disable}". Expected a boolean.`);
     }
-    if (inCode.allowedColumns != null) {
-      const result = validateDbBindVariablesAllowedColumns(inCode.allowedColumns);
-      if (!result.isValid) {
-        logger.warn(result.error);
-      }
+    if (inCode.allowedColumns != null && !Array.isArray(inCode.allowedColumns)) {
+      logger.warn(
+        `Invalid value for tracing.dbBindVariables.allowedColumns: "${inCode.allowedColumns}".` +
+          ' Expected an array of strings.'
+      );
     }
 
     const fromInCode = normalizers.dbBindVariables.fromInCode(inCode);
