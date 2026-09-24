@@ -187,58 +187,78 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
 
     logger.info(`Found a precompiled version for ${opts.nativeModuleName} ${label}, unpacking.`);
 
-    tar
-      .x({
-        cwd: os.tmpdir(),
-        file: precompiledTarGzPath
-      })
-      .then(() => {
-        // See below for the reason why we append 'precompiled' to the path.
-        const targetDir = path.join(opts.nativeModulePath, 'precompiled');
-        const sourceDir = path.join(os.tmpdir(), opts.nativeModuleName);
+    try {
+      // minizlib (bundled in tar) patches Buffer.concat temporarily during decompression.
+      // In sandboxed environments (e.g. n8n Task Runner), Buffer.concat becomes non-writable
+      // after startup. The patch fires inside an async stream listener.
+      // Guard upfront before any stream is created.
+      const bufferConcatDescriptor = Object.getOwnPropertyDescriptor(Buffer, 'concat');
+      if (bufferConcatDescriptor && !bufferConcatDescriptor.writable && !bufferConcatDescriptor.set) {
         logger.debug(
-          `Copying the precompiled build for ${opts.nativeModuleName} ${label} from ${sourceDir} to ${targetDir}.`
+          `Skipping precompiled addon extraction for ${opts.nativeModuleName}: Buffer.concat is ` +
+            'non-writable in this environment. ' +
+            'GC and event-loop metrics will not be available.'
         );
-
-        fs.promises
-          .cp(sourceDir, targetDir, { recursive: true })
-          .then(() => {
-            // We have unpacked and copied the correct precompiled native addon. The next attempt to require the
-            // dependency should work.
-            //
-            // However, we must not use any of the paths from which Node.js has tried to load the module before (that
-            // is, node_modules/${opts.nativeModuleName}). Node.js' module loading infrastructure
-            // (lib/internal/modules/cjs/loader.js and lib/internal/modules/package_json_reader.js) have built-in
-            // caching on multiple levels (for example, package.json locations and package.json contents). If Node.js
-            // has tried unsuccessfully to load a module or read a package.json from a particular path,
-            // it will remember and not try to load anything from that path again (a `false` will be
-            // put into the cache for that cache key). Instead, we force a new path, by adding precompiled
-            // to the module path and use the absolute path to the module to load it.
-            logger.debug(`Successfully copied the precompiled build for ${opts.nativeModuleName} ${label}.`);
-            opts.loadFrom = targetDir;
-            callback(true);
-          })
-          .catch(error => {
-            // The log triggered when the Instana Node.js collector fails to load a precompiled native module.
-            // The collector first attempts to load the module directly; if that fails, it extracts a precompiled
-            // version from the instrumentation image, which is currently compiled only for Node.js v21.
-            // If the application runs a different Node.js version and the filesystem is read-only, extraction may fail,
-            // preventing collection of certain telemetry data (garbage collection and event loop stats).
-            // TODO: Fix the issue tracked under INSTA-6673. Ensure prebuilt binaries are available for the
-            // corresponding Node.js version.
-            logger.debug(
-              `Failed to load precompiled build for ${opts.nativeModuleName} ${label}. ` +
-                'Precompiled binary extraction has failed, possibly due to a read-only filesystem or an unknown' +
-                `system operation error for the Node.js ${process.version}. ${error?.message} ${error?.stack}`
-            );
-            callback(false);
-          });
-      })
-      .catch(tarErr => {
-        logger.warn(`Unpacking the precompiled build for ${opts.nativeModuleName} ${label} failed.
-          ${tarErr?.message} ${tarErr?.stack}`);
         callback(false);
-      });
+        return;
+      }
+      tar
+        .x({
+          cwd: os.tmpdir(),
+          file: precompiledTarGzPath
+        })
+        .then(() => {
+          // See below for the reason why we append 'precompiled' to the path.
+          const targetDir = path.join(opts.nativeModulePath, 'precompiled');
+          const sourceDir = path.join(os.tmpdir(), opts.nativeModuleName);
+          logger.debug(
+            `Copying the precompiled build for ${opts.nativeModuleName} ${label} from ${sourceDir} to ${targetDir}.`
+          );
+
+          fs.promises
+            .cp(sourceDir, targetDir, { recursive: true })
+            .then(() => {
+              // We have unpacked and copied the correct precompiled native addon. The next attempt to require the
+              // dependency should work.
+              //
+              // However, we must not use any of the paths from which Node.js has tried to load the module before (that
+              // is, node_modules/${opts.nativeModuleName}). Node.js' module loading infrastructure
+              // (lib/internal/modules/cjs/loader.js and lib/internal/modules/package_json_reader.js) have built-in
+              // caching on multiple levels (for example, package.json locations and package.json contents). If Node.js
+              // has tried unsuccessfully to load a module or read a package.json from a particular path,
+              // it will remember and not try to load anything from that path again (a `false` will be
+              // put into the cache for that cache key). Instead, we force a new path, by adding precompiled
+              // to the module path and use the absolute path to the module to load it.
+              logger.debug(`Successfully copied the precompiled build for ${opts.nativeModuleName} ${label}.`);
+              opts.loadFrom = targetDir;
+              callback(true);
+            })
+            .catch(error => {
+              // The log triggered when the Instana Node.js collector fails to load a precompiled native module.
+              // The collector first attempts to load the module directly; if that fails, it extracts a precompiled
+              // version from the instrumentation image, which is currently compiled only for Node.js v21.
+              // If the application runs a different Node.js version and the filesystem is read-only, extraction may
+              // fail,preventing collection of certain telemetry data (garbage collection and event loop stats).
+              // TODO: Fix the issue tracked under INSTA-6673. Ensure prebuilt binaries are available for the
+              // corresponding Node.js version.
+              logger.debug(
+                `Failed to load precompiled build for ${opts.nativeModuleName} ${label}. ` +
+                  'Precompiled binary extraction has failed, possibly due to a read-only filesystem or an unknown' +
+                  `system operation error for the Node.js ${process.version}. ${error?.message} ${error?.stack}`
+              );
+              callback(false);
+            });
+        })
+        .catch(tarErr => {
+          logger.warn(`Unpacking the precompiled build for ${opts.nativeModuleName} ${label} failed.
+            ${tarErr?.message} ${tarErr?.stack}`);
+          callback(false);
+        });
+    } catch (err) {
+      logger.warn(`Unpacking the precompiled build for ${opts.nativeModuleName} ${label} failed.
+       ${err?.message} ${err?.stack}`);
+      callback(false);
+    }
   });
 }
 
