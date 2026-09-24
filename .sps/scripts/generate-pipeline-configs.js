@@ -274,7 +274,7 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
   scriptLines.push('}');
   scriptLines.push('trap cleanup EXIT');
   scriptLines.push('');
-  scriptLines.push('ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,objects.githubusercontent.com,nodejs.org"');
+  scriptLines.push('ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"');
   scriptLines.push('');
   scriptLines.push('docker run --detach --name "$FILTER_CTR" \\');
   scriptLines.push('  --cap-add NET_ADMIN \\');
@@ -712,7 +712,7 @@ function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv
   scriptLines.push('}');
   scriptLines.push('trap cleanup EXIT');
   scriptLines.push('');
-  scriptLines.push('ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,objects.githubusercontent.com,nodejs.org"');
+  scriptLines.push('ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"');
   scriptLines.push('');
   scriptLines.push('docker run --detach --name "$FILTER_CTR" \\');
   scriptLines.push('  --cap-add NET_ADMIN \\');
