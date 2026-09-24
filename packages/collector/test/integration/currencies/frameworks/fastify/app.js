@@ -118,11 +118,7 @@ app.register(subRouter, { prefix: '/sub' });
 
 const start = async () => {
   try {
-    if (process.env.LIBRARY_LATEST === 'true') {
-      await app.listen({ port });
-    } else {
-      await app.listen(port);
-    }
+    await app.listen({ port, host: '0.0.0.0' });
     log(`listening on ${app.server.address().port} with Fastify version ${process.env.LIBRARY_VERSION}`);
   } catch (err) {
     log('startup failure', err);
