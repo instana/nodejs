@@ -20,7 +20,7 @@ const port = require('@_local/collector/test/test_util/app-port')();
 const init = async () => {
   const server = Hapi.server({
     port,
-    host: 'localhost'
+    host: '127.0.0.1'
   });
 
   server.route({

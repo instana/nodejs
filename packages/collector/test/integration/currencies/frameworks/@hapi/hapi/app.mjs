@@ -20,7 +20,7 @@ const logPrefix = `Hapi Server: (${process.pid}):\t`;
 const init = async () => {
   const server = Hapi.server({
     port,
-    host: 'localhost'
+    host: '127.0.0.1'
   });
 
   server.route({
