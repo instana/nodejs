@@ -10,9 +10,7 @@ tasks:
       - name: compliance-checks
         when: 'false'
       - name: unit-test
-        script: |-
-          #!/usr/bin/env bash
-          echo "Setup completed successfully"
+        when: 'false'
       - name: sign-artifact
         when: 'false'
       - name: build-artifact

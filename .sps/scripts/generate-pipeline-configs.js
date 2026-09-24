@@ -968,10 +968,7 @@ function baseConfig(fanOutTasks, rootTask = 'pr-code-checks') {
           { name: 'peer-review', when: 'false' },
           { name: 'detect-secrets', when: 'false' },
           { name: 'compliance-checks', when: 'false' },
-          {
-            name: 'unit-test',
-            script: '#!/usr/bin/env bash\necho "Setup completed successfully"'
-          },
+          { name: 'unit-test', when: 'false' },
           { name: 'sign-artifact', when: 'false' },
           { name: 'build-artifact', when: 'false' },
           { name: 'scan-artifact', when: 'false' }
@@ -1370,8 +1367,7 @@ function generateOne(t) {
     // Each task name becomes exactly one check-run on GitHub.
     // A task produces NO check-run when:
     //   - it has when:false at task level (e.g. deploy-checks, deploy-release), OR
-    //   - it has no active unit-test step (pure infra tasks: code-pr-finish, code-ci-finish), OR
-    //   - its unit-test step has displayName 'npm-install' (the shared setup task pr-code-checks)
+    //   - it has no active unit-test step (pure infra tasks: code-pr-finish, code-ci-finish)
     const spsDir = path.join(__dirname, '..');
     const prDir = path.join(spsDir, 'pr');
     const seenTasks = new Set();
@@ -1385,7 +1381,6 @@ function generateOne(t) {
         const steps = taskDef.steps ?? [];
         const unitTestStep = steps.find(s => s.name === 'unit-test' && s.when !== 'false');
         if (!unitTestStep) continue;
-        if ((unitTestStep.displayName ?? '') === 'npm-install') continue;
         seenTasks.add(name);
       }
     }
@@ -1695,7 +1690,6 @@ function generateOne(t) {
         const steps = taskDef.steps ?? [];
         const unitTestStep = steps.find(s => s.name === 'unit-test' && s.when !== 'false');
         if (!unitTestStep) continue;
-        if ((unitTestStep.displayName ?? '') === 'npm-install') continue;
         // Only count tasks whose script actually posts a sps/main/* GitHub commit status
         if (!(unitTestStep.script ?? '').includes('sps/main/')) continue;
         expectedMainTasks.add(name);
@@ -1922,10 +1916,7 @@ function generateOne(t) {
             { name: 'peer-review', when: 'false' },
             { name: 'detect-secrets', when: 'false' },
             { name: 'compliance-checks', when: 'false' },
-            {
-              name: 'unit-test',
-              script: '#!/usr/bin/env bash\necho "Setup completed successfully"'
-            },
+            { name: 'unit-test', when: 'false' },
             { name: 'sign-artifact', when: 'false' },
             { name: 'build-artifact', when: 'false' },
             { name: 'scan-artifact', when: 'false' }
