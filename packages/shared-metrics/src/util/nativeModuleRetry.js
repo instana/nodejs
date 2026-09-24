@@ -188,6 +188,20 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
     logger.info(`Found a precompiled version for ${opts.nativeModuleName} ${label}, unpacking.`);
 
     try {
+      // minizlib (bundled in tar) patches Buffer.concat temporarily during decompression.
+      // In sandboxed environments (e.g. n8n Task Runner), Buffer.concat becomes non-writable
+      // after startup. The patch fires inside an async stream listener.
+      // Guard upfront before any stream is created.
+      const bufferConcatDescriptor = Object.getOwnPropertyDescriptor(Buffer, 'concat');
+      if (bufferConcatDescriptor && !bufferConcatDescriptor.writable && !bufferConcatDescriptor.set) {
+        logger.warn(
+          `Skipping precompiled addon extraction for ${opts.nativeModuleName}: Buffer.concat is ` +
+            'non-writable in this environment. ' +
+            'GC and event-loop metrics will not be available.'
+        );
+        callback(false);
+        return;
+      }
       tar
         .x({
           cwd: os.tmpdir(),
@@ -241,8 +255,6 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
           callback(false);
         });
     } catch (err) {
-      // In sandboxed environments (e.g. n8n Task Runner) Buffer.concat may be non-writable, causing
-      // TypeError. Catch it here so the process is not disrupted.
       logger.warn(`Unpacking the precompiled build for ${opts.nativeModuleName} ${label} failed.
        ${err?.message} ${err?.stack}`);
       callback(false);
