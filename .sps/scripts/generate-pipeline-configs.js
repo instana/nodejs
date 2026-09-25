@@ -238,7 +238,7 @@ function readNeeds(folder) {
  */
 function buildSocatFwdImageLines() {
   return [
-    'docker build -t socat-fwd - <<\'DOCKERFILE\'',
+    "docker build -t socat-fwd - <<'DOCKERFILE'",
     'FROM mirror.gcr.io/library/alpine:3',
     'RUN apk add --no-cache socat netcat-openbsd',
     'ENTRYPOINT ["socat"]',
@@ -274,7 +274,9 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
   scriptLines.push('}');
   scriptLines.push('trap cleanup EXIT');
   scriptLines.push('');
-  scriptLines.push('ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"');
+  scriptLines.push(
+    'ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"'
+  );
   scriptLines.push('');
   scriptLines.push('docker run --detach --name "$FILTER_CTR" \\');
   scriptLines.push('  --cap-add NET_ADMIN \\');
@@ -314,7 +316,9 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
   scriptLines.push('  --volume "$REPO_DIR:/work" \\');
   scriptLines.push('  --workdir /work \\');
   scriptLines.push('  "$NODE_IMAGE" \\');
-  scriptLines.push('  bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"');
+  scriptLines.push(
+    '  bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"'
+  );
   scriptLines.push('');
 
   if (needs.includes('oracledb')) {
@@ -344,9 +348,7 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
           scriptLines.push(dockerRunScript(need, { network: bootstrapNetwork }));
           scriptLines.push(`docker network connect ${SIDECAR_NETWORK} ${need}`);
           scriptLines.push(`timeout ${timeoutSeconds} bash -c \\`);
-          scriptLines.push(
-            `  'until docker exec ${need} ${readinessCommand} >/dev/null 2>&1; do sleep 2; done'`
-          );
+          scriptLines.push(`  'until docker exec ${need} ${readinessCommand} >/dev/null 2>&1; do sleep 2; done'`);
           scriptLines.push(`docker network disconnect ${bootstrapNetwork} ${need}`);
           scriptLines.push(`docker network rm ${bootstrapNetwork}`);
         } else {
@@ -392,7 +394,12 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
     extraEnvLines.push('GCP_PROJECT="test-project" \\');
     extraEnvLines.push('GCS_SERVICE_ACCOUNT_EMAIL="test-service-account@test-project.iam.gserviceaccount.com" \\');
   }
-  scriptLines.push(...runWithRetryContainerLines(`coverage-ci --npm_command="test:ci:collector" --report_dir="${taskSlug}"`, extraEnvLines));
+  scriptLines.push(
+    ...runWithRetryContainerLines(
+      `coverage-ci --npm_command="test:ci:collector" --report_dir="${taskSlug}"`,
+      extraEnvLines
+    )
+  );
 
   scriptLines.push('# Cleanup filter container so host has direct connectivity for uploads');
   scriptLines.push('cleanup');
@@ -593,12 +600,7 @@ function uploadTestFilesLines(taskSlug, { gitShaFallback = false } = {}) {
     '',
     '# upload executed test files + lcov coverage report to COS',
     'COS_API_KEY="$(get_secret ibm-object-storage-api-key)"',
-    ...(gitShaFallback ? [
-
-      'GIT_COMMIT="$(get_env commit_id "")"',
-    ] : [
-      'GIT_COMMIT="$(get_env HEAD_SHA "")"',
-    ]),
+    ...(gitShaFallback ? ['GIT_COMMIT="$(get_env commit_id "")"'] : ['GIT_COMMIT="$(get_env HEAD_SHA "")"']),
     'if [ -n "$COS_API_KEY" ] && [ -n "$GIT_COMMIT" ]; then',
     '  IAM_TOKEN=$(curl -sf -X POST "https://iam.cloud.ibm.com/identity/token" \\',
     '    -H "Content-Type: application/x-www-form-urlencoded" \\',
@@ -712,7 +714,9 @@ function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv
   scriptLines.push('}');
   scriptLines.push('trap cleanup EXIT');
   scriptLines.push('');
-  scriptLines.push('ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"');
+  scriptLines.push(
+    'ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"'
+  );
   scriptLines.push('');
   scriptLines.push('docker run --detach --name "$FILTER_CTR" \\');
   scriptLines.push('  --cap-add NET_ADMIN \\');
@@ -752,7 +756,9 @@ function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv
   scriptLines.push('  --volume "$REPO_DIR:/work" \\');
   scriptLines.push('  --workdir /work \\');
   scriptLines.push('  "$NODE_IMAGE" \\');
-  scriptLines.push('  bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"');
+  scriptLines.push(
+    '  bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"'
+  );
   scriptLines.push('');
 
   if (needs.length > 0) {
@@ -785,7 +791,13 @@ function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv
     simpleEnvLines.push(`${varName}="$${varName}" \\`);
   }
 
-  scriptLines.push(...runWithRetryContainerLines(`coverage-ci --npm_command="${testScript}" --report_dir="${taskSlug}"`, simpleEnvLines, supportsEsm));
+  scriptLines.push(
+    ...runWithRetryContainerLines(
+      `coverage-ci --npm_command="${testScript}" --report_dir="${taskSlug}"`,
+      simpleEnvLines,
+      supportsEsm
+    )
+  );
 
   scriptLines.push('# Cleanup filter container so host has direct connectivity for uploads');
   scriptLines.push('cleanup');
@@ -830,7 +842,7 @@ function buildGeneralTasks() {
       nodeVersionSwitchScript(),
       '',
       'cd "$WORKSPACE/$(load_repo app-repo path)"',
-      'npm install --loglevel warn --foreground-scripts',
+      'npm install --loglevel warn --ignore-scripts',
       '',
       'LAST_EXIT=0',
       `${cmd} || LAST_EXIT=$?`,
@@ -879,7 +891,7 @@ function buildGeneralTasks() {
     '# ── Runtime versions ──────────────────────────────────────────────────────',
     'echo "Using node:    $(node --version 2>/dev/null || echo \'Node.js not found\')"',
     'echo "Using npm:     $(npm --version 2>/dev/null || echo \'NPM not found\')"',
-    'echo "Architecture:  $(node -p \'process.arch\' 2>/dev/null || echo \'Unknown\')"',
+    "echo \"Architecture:  $(node -p 'process.arch' 2>/dev/null || echo 'Unknown')\"",
     '',
     '# ── ESM support ───────────────────────────────────────────────────────────',
     'if [ -n "$RUN_ESM" ] && [ "$RUN_ESM" = "true" ]; then',
@@ -916,10 +928,10 @@ function buildGeneralTasks() {
         { name: 'scan-artifact', when: 'false' }
       ]
     },
-    [`${prefix}-audit`]:       task('audit',       'npm run audit'),
-    [`${prefix}-lint`]:        task('lint',        'npm run lint'),
-    [`${prefix}-commitlint`]:  task('commitlint',  'npm run commitlint'),
-    [`${prefix}-depcheck`]:    task('depcheck',    'npm run depcheck')
+    [`${prefix}-audit`]: task('audit', 'npm run audit'),
+    [`${prefix}-lint`]: task('lint', 'npm run lint'),
+    [`${prefix}-commitlint`]: task('commitlint', 'npm run commitlint'),
+    [`${prefix}-depcheck`]: task('depcheck', 'npm run depcheck')
   };
 }
 
@@ -946,7 +958,7 @@ function buildSonarTask(rootTask = 'pr-code-checks') {
     `  SLUGS=$(curl -sf \\`,
     `    "${COS_ENDPOINT}/${COS_BUCKET}?prefix=\$PREFIX/&delimiter=/" \\`,
     '    -H "Authorization: Bearer $IAM_TOKEN" \\',
-    '    | grep -oP \'(?<=<Prefix>)[^<]+(?=</Prefix>)\' \\',
+    "    | grep -oP '(?<=<Prefix>)[^<]+(?=</Prefix>)' \\",
     '    | grep -v "^$PREFIX/$" \\',
     '    | sed "s|$PREFIX/||;s|/||")',
     '  mkdir -p coverage',
@@ -959,13 +971,13 @@ function buildSonarTask(rootTask = 'pr-code-checks') {
     '      && echo "  ✔ downloaded lcov for $SLUG" \\',
     '      || echo "  – no lcov for $SLUG (skipping)"',
     '  done',
-    '  LCOV_PATHS=$(find coverage -name "lcov.info" | tr \'\\n\' \',\' | sed \'s/,$//\')',
+    "  LCOV_PATHS=$(find coverage -name \"lcov.info\" | tr '\\n' ',' | sed 's/,$//')",
     '  echo "LCOV_PATHS=$LCOV_PATHS"',
     'else',
     '  echo "WARNING: COS credentials or git commit unavailable — skipping lcov download"',
     'fi',
     'fi',
-    '',
+    ''
   ].join('\n');
 
   const script = isPR
@@ -993,7 +1005,7 @@ function buildSonarTask(rootTask = 'pr-code-checks') {
         '    -H "Authorization: Bearer $GH_TOKEN" \\',
         '    -H "Accept: application/vnd.github+json" \\',
         '    "https://api.github.com/repos/$REPO/commits/$GIT_COMMIT/statuses?per_page=100" \\',
-        '    | python3 -c "import sys,json; d=json.load(sys.stdin); st=[r[\'state\'] for r in d if r[\'context\']==\'tekton/pr-code-checks-verify/code-unit-tests\']; print(st[0] if st else \'pending\')" 2>/dev/null || echo "pending")',
+        "    | python3 -c \"import sys,json; d=json.load(sys.stdin); st=[r['state'] for r in d if r['context']=='tekton/pr-code-checks-verify/code-unit-tests']; print(st[0] if st else 'pending')\" 2>/dev/null || echo \"pending\")",
         '  echo "  pr-verify status: $STATE (${ELAPSED}s elapsed)"',
         '  if [ "$STATE" = "success" ] || [ "$STATE" = "failure" ]; then',
         '    echo "pr-verify completed with status: $STATE"',
@@ -1013,7 +1025,7 @@ function buildSonarTask(rootTask = 'pr-code-checks') {
         'PR_STATE="$(get_env pr-state "")"',
         '',
         'cd "$WORKSPACE/$(load_repo app-repo path)"',
-        'npm install --loglevel warn --foreground-scripts',
+        'npm install --loglevel warn --ignore-scripts',
         '',
         'echo "Running ESLint..."',
         'npx eslint packages/ -f json -o eslint-report.json || true',
@@ -1054,7 +1066,7 @@ function buildSonarTask(rootTask = 'pr-code-checks') {
         'fi',
         '',
         'cd "$WORKSPACE/$(load_repo app-repo path)"',
-        'npm install --loglevel warn --foreground-scripts',
+        'npm install --loglevel warn --ignore-scripts',
         '',
         'echo "Running ESLint..."',
         'npx eslint packages/ -f json -o eslint-report.json || true',
@@ -1093,7 +1105,7 @@ function buildUploadCurrencyReportTask() {
     'GH_ENTERPRISE_TOKEN="$(get_secret git-token)"',
     '',
     'cd "$WORKSPACE/$(load_repo app-repo path)"',
-    'npm install --loglevel warn --foreground-scripts',
+    'npm install --loglevel warn --ignore-scripts',
     '',
     'echo "Generating report..."',
     'node bin/dependencies/currency/generate-currency-report.js',
@@ -1160,14 +1172,11 @@ function baseConfig(fanOutTasks, rootTask = 'pr-code-checks') {
 
 const CODE_CHECKS_SKIPPED_COMMENT = [
   '# code-checks is skipped intentionally — this checks runs on dedicated security-check pipe only.',
-  '# code-checks includes five steps: setup, detect-secrets, compliance-checks, peer-review, static-scan',
+  '# code-checks includes five steps: setup, detect-secrets, compliance-checks, peer-review, static-scan'
 ].join('\n');
 
 function annotateYaml(output) {
-  return output.replace(
-    /^(  code-checks:)\n(\s+when: false)$/m,
-    `${CODE_CHECKS_SKIPPED_COMMENT}\n$1\n$2`
-  );
+  return output.replace(/^(  code-checks:)\n(\s+when: false)$/m, `${CODE_CHECKS_SKIPPED_COMMENT}\n$1\n$2`);
 }
 
 function writeConfig(name, prConfig, mainConfig, manualConfig) {
@@ -1180,7 +1189,8 @@ function writeConfig(name, prConfig, mainConfig, manualConfig) {
   }
 
   const spsDir = path.join(__dirname, '..');
-  if (MODE === 'all' || MODE === 'pr') write(path.join(spsDir, 'pr', `pipeline-config-${name}.yaml`), toPrConfig(prConfig));
+  if (MODE === 'all' || MODE === 'pr')
+    write(path.join(spsDir, 'pr', `pipeline-config-${name}.yaml`), toPrConfig(prConfig));
   if (MODE === 'all' || MODE === 'main') write(path.join(spsDir, 'main', `pipeline-config-${name}.yaml`), mainConfig);
   if (MODE === 'all' || MODE === 'manual')
     write(path.join(spsDir, 'manual', `pipeline-config-${name}.yaml`), manualConfig ?? mainConfig);
@@ -1195,8 +1205,10 @@ function writeDefaultConfig(prConfig, mainConfig, mainOnlyConfig) {
     console.log(`Written: ${filePath}`);
   }
   if (MODE === 'all' || MODE === 'pr') write(path.join(spsDir, 'pr', 'pipeline-config.yaml'), toPrConfig(prConfig));
-  if (MODE === 'all' || MODE === 'main') write(path.join(spsDir, 'main', 'pipeline-config.yaml'), mainOnlyConfig ?? mainConfig);
-  if (MODE === 'all' || MODE === 'manual') write(path.join(spsDir, 'manual', 'pipeline-config.yaml'), mainOnlyConfig ?? mainConfig);
+  if (MODE === 'all' || MODE === 'main')
+    write(path.join(spsDir, 'main', 'pipeline-config.yaml'), mainOnlyConfig ?? mainConfig);
+  if (MODE === 'all' || MODE === 'manual')
+    write(path.join(spsDir, 'manual', 'pipeline-config.yaml'), mainOnlyConfig ?? mainConfig);
   if (MODE === 'all') write(path.join(spsDir, 'pipeline-config.yaml'), toPrConfig(prConfig));
 }
 
@@ -1233,7 +1245,7 @@ function toPrConfig(prConfig) {
       '  fi',
       'else',
       '  echo "WARNING: HEAD_SHA not set — skipping commit status."',
-      'fi',
+      'fi'
     ];
     return script.replace(EXIT_MARKER, statusLines.join('\n') + '\n' + EXIT_MARKER);
   }
@@ -1286,7 +1298,9 @@ function toMainConfig(prConfig, context = 'sps/main/$TASK_NAME') {
       '    -H "Authorization: Bearer $GH_TOKEN" \\',
       '    -H "Accept: application/vnd.github+json" \\',
       '    -H "Content-Type: application/json" \\',
-      '    -d "{\\"state\\":\\"$STATUS\\",\\"target_url\\":\\"$PIPELINE_RUN_URL\\",\\"description\\":\\"Main pipeline $STATUS (Node ${node_version%%.*})\\",\\"context\\":\\"' + context + '\\"}")',
+      '    -d "{\\"state\\":\\"$STATUS\\",\\"target_url\\":\\"$PIPELINE_RUN_URL\\",\\"description\\":\\"Main pipeline $STATUS (Node ${node_version%%.*})\\",\\"context\\":\\"' +
+        context +
+        '\\"}")',
       '  CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)',
       '  CURL_BODY=$(echo "$CURL_RESPONSE" | sed \'$d\')',
       '  if [ "$CURL_HTTP" = "201" ]; then',
@@ -1296,7 +1310,7 @@ function toMainConfig(prConfig, context = 'sps/main/$TASK_NAME') {
       '  fi',
       'else',
       '  echo "WARNING: commit-id not set — skipping commit status."',
-      'fi',
+      'fi'
     ];
     return script.replace(EXIT_MARKER, statusLines.join('\n') + '\n' + EXIT_MARKER);
   }
@@ -1372,7 +1386,7 @@ function generateOne(t) {
                 nodeVersionSwitchScript(),
                 '',
                 'cd "$WORKSPACE/$(load_repo app-repo path)"',
-                'npm install --loglevel warn --foreground-scripts',
+                'npm install --loglevel warn --ignore-scripts',
                 'node bin/create-version-test-folders.js'
               ].join('\n')
             }
@@ -1536,7 +1550,12 @@ function generateOne(t) {
     writeConfig(t, prConfig, toMainConfig(prConfig), toMainConfig(prConfig, 'sps/main/${node_version%%.*}/$TASK_NAME'));
   } else if (t === 'pr-general') {
     const prConfig = baseConfig(buildGeneralTasks());
-    writeConfig('general', prConfig, toMainConfig(prConfig), toMainConfig(prConfig, 'sps/main/${node_version%%.*}/$TASK_NAME'));
+    writeConfig(
+      'general',
+      prConfig,
+      toMainConfig(prConfig),
+      toMainConfig(prConfig, 'sps/main/${node_version%%.*}/$TASK_NAME')
+    );
   } else if (t === 'pr-verify') {
     // Count expected GitHub check-runs from all other PR pipeline configs.
     // Each task name becomes exactly one check-run on GitHub.
@@ -1593,7 +1612,7 @@ function generateOne(t) {
       'touch "$CLAIMED_FILE" "$DOWNLOADED_FILE"',
       '',
       'cd "$WORKSPACE/$(load_repo app-repo path)"',
-      'npm install --loglevel warn --foreground-scripts',
+      'npm install --loglevel warn --ignore-scripts',
       'node bin/create-version-test-folders.js',
       '',
       '# Helper: download the COS result file for a single completed status context.',
@@ -1664,7 +1683,7 @@ function generateOne(t) {
       'while true; do',
       '  STATUSES=$(fetch_statuses)',
       '  # Count unique contexts (deduplicate — statuses API returns history, latest first)',
-      '  OTHERS=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(set(r[\'context\'] for r in d if r[\'context\'].startswith(\'tekton/pr-code-checks-\') and not r[\'context\'].startswith(\'tekton/pr-code-checks-verify\') and not r[\'context\'].startswith(\'tekton/pr-code-checks-sonar\'))))")',
+      "  OTHERS=$(echo \"$STATUSES\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(len(set(r['context'] for r in d if r['context'].startswith('tekton/pr-code-checks-') and not r['context'].startswith('tekton/pr-code-checks-verify') and not r['context'].startswith('tekton/pr-code-checks-sonar'))))\")",
       '  echo "  $OTHERS / $EXPECTED_CHECKS checks registered (${ELAPSED}s elapsed)"',
       '  if [ "$OTHERS" -ge "$EXPECTED_CHECKS" ]; then',
       '    echo "All expected checks are now registered."',
@@ -1690,8 +1709,8 @@ function generateOne(t) {
       "  done < <(echo \"$STATUSES\" | python3 -c \"import sys,json; d=json.load(sys.stdin); seen=set(); [print(r['context']) or seen.add(r['context']) for r in d if r['context'].endswith('/code-unit-tests') and r['context'] not in seen and r['state'] in ('success','failure') and not r['context'].startswith('tekton/pr-code-checks-verify') and not r['context'].startswith('tekton/sonar-analysis')]\")",
       '  PENDING=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); seen=set(); pending=0',
       'for r in d:',
-      '    c=r[\'context\']',
-      '    if not c.endswith(\'/code-unit-tests\') or c.startswith(\'tekton/pr-code-checks-verify\') or c.startswith(\'tekton/sonar-analysis\'): continue',
+      "    c=r['context']",
+      "    if not c.endswith('/code-unit-tests') or c.startswith('tekton/pr-code-checks-verify') or c.startswith('tekton/sonar-analysis'): continue",
       '    if c in seen: continue',
       '    seen.add(c)',
       "    if r['state']=='pending': pending+=1",
@@ -1753,14 +1772,14 @@ function generateOne(t) {
       'STATUSES=$(fetch_statuses)',
       'FAILED_CHECKS=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); seen=set(); failed=[]',
       'for r in d:',
-      '    c=r[\'context\']',
-      '    if not c.startswith(\'tekton/pr-code-checks-\'): continue',
-      '    if c.startswith(\'tekton/pr-code-checks-verify\'): continue',
-      '    if c.startswith(\'tekton/pr-code-checks-sonar\'): continue',
+      "    c=r['context']",
+      "    if not c.startswith('tekton/pr-code-checks-'): continue",
+      "    if c.startswith('tekton/pr-code-checks-verify'): continue",
+      "    if c.startswith('tekton/pr-code-checks-sonar'): continue",
       '    if c in seen: continue',
       '    seen.add(c)',
-      '    if r[\'state\'] == \'failure\': failed.append(c)',
-      'print(\'\\n\'.join(failed))")',
+      "    if r['state'] == 'failure': failed.append(c)",
+      "print('\\n'.join(failed))\")",
       'if [ -n "$FAILED_CHECKS" ]; then',
       '  echo "❌ The following pipeline checks failed:"',
       '  echo "$FAILED_CHECKS" | sed \'s/^/  /\'',
@@ -1922,7 +1941,7 @@ function generateOne(t) {
       `EXPECTED_CHECKS=${expectedMainChecks}`,
       'while true; do',
       '  STATUSES=$(fetch_statuses)',
-      '  REGISTERED=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(set(r[\'context\'] for r in d if r[\'context\'].startswith(\'sps/main/\'))))")',
+      "  REGISTERED=$(echo \"$STATUSES\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(len(set(r['context'] for r in d if r['context'].startswith('sps/main/'))))\")",
       '  echo "  $REGISTERED / $EXPECTED_CHECKS checks registered (${ELAPSED}s elapsed)"',
       '  if [ "$REGISTERED" -ge "$EXPECTED_CHECKS" ]; then',
       '    echo "All expected checks are now registered."',
@@ -1942,11 +1961,11 @@ function generateOne(t) {
       '  STATUSES=$(fetch_statuses)',
       '  PENDING=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); seen=set(); pending=0',
       'for r in d:',
-      '    c=r[\'context\']',
-      '    if not c.startswith(\'sps/main/\') and not c.startswith(\'tekton/code-build/\'): continue',
+      "    c=r['context']",
+      "    if not c.startswith('sps/main/') and not c.startswith('tekton/code-build/'): continue",
       '    if c in seen: continue',
       '    seen.add(c)',
-      '    if r[\'state\'] == \'pending\': pending+=1',
+      "    if r['state'] == 'pending': pending+=1",
       'print(pending)")',
       '  echo "  $PENDING checks still pending (${ELAPSED}s elapsed)"',
       '  if [ "$PENDING" -eq 0 ]; then',
@@ -1967,12 +1986,12 @@ function generateOne(t) {
       'STATUSES=$(fetch_statuses)',
       'FAILED_CHECKS=$(echo "$STATUSES" | python3 -c "import sys,json; d=json.load(sys.stdin); seen=set(); failed=[]',
       'for r in d:',
-      '    c=r[\'context\']',
-      '    if not c.startswith(\'sps/main/\'): continue',
+      "    c=r['context']",
+      "    if not c.startswith('sps/main/'): continue",
       '    if c in seen: continue',
       '    seen.add(c)',
-      '    if r[\'state\'] == \'failure\': failed.append(c)',
-      'print(\'\\n\'.join(failed))")',
+      "    if r['state'] == 'failure': failed.append(c)",
+      "print('\\n'.join(failed))\")",
       'FINAL_EXIT=0',
       'if [ -n "$FAILED_CHECKS" ]; then',
       '  echo "❌ The following main pipeline checks failed:"',
@@ -1991,10 +2010,11 @@ function generateOne(t) {
       '  DEVSECOPS_STATE="failure"',
       '  DEVSECOPS_DESC="One or more main pipeline checks failed"',
       'fi',
-      'echo "Posting tekton/devsecops status: $DEVSECOPS_STATE"',
+      'echo "Posting tekton/devsecops status: $DEVSECOPS_STATE"'
     ];
 
-    const mainVerifyScript = [...mainVerifyScriptLines,
+    const mainVerifyScript = [
+      ...mainVerifyScriptLines,
       'CURL_RESPONSE=$(curl -s -w "\\n%{http_code}" \\',
       '  -X POST "https://api.github.com/repos/$REPO/statuses/$GIT_COMMIT" \\',
       '  -H "Authorization: Bearer $GH_TOKEN" \\',
@@ -2012,7 +2032,8 @@ function generateOne(t) {
       'exit $FINAL_EXIT'
     ].join('\n');
 
-    const manualVerifyScript = [...mainVerifyScriptLines,
+    const manualVerifyScript = [
+      ...mainVerifyScriptLines,
       'CURL_RESPONSE=$(curl -s -w "\\n%{http_code}" \\',
       '  -X POST "https://api.github.com/repos/$REPO/statuses/$GIT_COMMIT" \\',
       '  -H "Authorization: Bearer $GH_TOKEN" \\',
@@ -2073,8 +2094,8 @@ function generateOne(t) {
     }
     if (MODE === 'all' || MODE === 'manual') {
       const manualVerifyConfig = JSON.parse(JSON.stringify(mainVerifyConfig));
-      manualVerifyConfig.tasks['code-build-verify'].steps = manualVerifyConfig.tasks['code-build-verify'].steps.map(
-        s => s.name === 'unit-test' ? { ...s, script: manualVerifyScript } : s
+      manualVerifyConfig.tasks['code-build-verify'].steps = manualVerifyConfig.tasks['code-build-verify'].steps.map(s =>
+        s.name === 'unit-test' ? { ...s, script: manualVerifyScript } : s
       );
       const manualOutput = yaml.dump(manualVerifyConfig, { lineWidth: -1, quotingType: "'", forceQuotes: false });
       const manualPath = path.join(spsDir, 'manual', 'pipeline-config-verify.yaml');
