@@ -10,7 +10,15 @@ const W3cTraceContext = require('../w3c_trace_context/W3cTraceContext');
 let KafkaInstrumentation;
 
 function initInstrumentation() {
-  KafkaInstrumentation = KafkaInstrumentation || require('@platformatic/kafka-opentelemetry').KafkaInstrumentation;
+  if (KafkaInstrumentation) {
+    return;
+  }
+
+  try {
+    KafkaInstrumentation = require('@platformatic/kafka-opentelemetry').KafkaInstrumentation;
+  } catch (e) {
+    // optional dependency not installed
+  }
 }
 
 module.exports.preInit = () => {
@@ -19,6 +27,10 @@ module.exports.preInit = () => {
 
 module.exports.init = () => {
   initInstrumentation();
+
+  if (!KafkaInstrumentation) {
+    return;
+  }
 
   const instrumentation = new KafkaInstrumentation({});
 
