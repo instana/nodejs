@@ -219,3 +219,25 @@ exports.validateTransmissionDelay = function validateTransmissionDelay(value) {
   );
   return nearest;
 };
+
+/**
+ * Validator/parser for the allowedColumns field.
+ * - String (env var): parsed as a comma-separated list.
+ * - Array (in-code): returned as-is after trimming and filtering blank entries.
+ * - Anything else: returns undefined (invalid, resolver falls through to next source).
+ *
+ * @param {any} value
+ * @returns {string[]|undefined}
+ */
+exports.allowedColumnsValidator = function allowedColumnsValidator(value) {
+  if (typeof value === 'string') {
+    return value
+      .split(',')
+      .map(c => c.trim())
+      .filter(c => c !== '');
+  }
+  if (Array.isArray(value)) {
+    return value.filter(c => typeof c === 'string' && c.trim() !== '').map(c => c.trim());
+  }
+  return undefined;
+};
