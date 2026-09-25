@@ -141,7 +141,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --ignore-scripts
+          npm install --loglevel warn --foreground-scripts
 
           LAST_EXIT=0
           npm run audit || LAST_EXIT=$?
@@ -204,7 +204,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --ignore-scripts
+          npm install --loglevel warn --foreground-scripts
 
           LAST_EXIT=0
           npm run lint || LAST_EXIT=$?
@@ -267,7 +267,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --ignore-scripts
+          npm install --loglevel warn --foreground-scripts
 
           LAST_EXIT=0
           npm run commitlint || LAST_EXIT=$?
@@ -330,7 +330,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --ignore-scripts
+          npm install --loglevel warn --foreground-scripts
 
           LAST_EXIT=0
           npm run depcheck || LAST_EXIT=$?

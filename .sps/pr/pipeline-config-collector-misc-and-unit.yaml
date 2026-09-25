@@ -97,7 +97,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -279,7 +279,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -461,7 +461,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -643,7 +643,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -825,7 +825,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -1007,7 +1007,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -1187,7 +1187,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
@@ -1375,7 +1375,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start redis
           docker run -d --network offline-net --name redis \

@@ -100,7 +100,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start elasticsearch
           docker run -d --network offline-net --name elasticsearch \
@@ -305,7 +305,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start redis
           docker run -d --network offline-net --name redis \
@@ -558,7 +558,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start couchbase
           docker run -d --network offline-net --name couchbase \
@@ -810,7 +810,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start ibm_db
           docker run -d --network offline-net --name ibm_db \
@@ -1034,7 +1034,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start redis
           docker run -d --network offline-net --name redis \
@@ -1287,7 +1287,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start memcached
           docker run -d --network offline-net --name memcached \
@@ -1484,7 +1484,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start mongodb
           docker run -d --network offline-net --name mongodb \
@@ -1682,7 +1682,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start mongodb
           docker run -d --network offline-net --name mongodb \
@@ -1880,7 +1880,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start mssql
           docker run -d --network offline-net --name mssql \
@@ -2079,7 +2079,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start mysql
           docker run -d --network offline-net --name mysql \
@@ -2282,7 +2282,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start mysql
           docker run -d --network offline-net --name mysql \
@@ -2485,7 +2485,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start oracledb early — initialises during npm install
           docker run -d --network offline-net --name oracledb \
@@ -2688,7 +2688,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start postgres
           docker run -d --network offline-net --name postgres \
@@ -2889,7 +2889,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start postgres
           docker run -d --network offline-net --name postgres \
@@ -3090,7 +3090,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start postgres
           docker run -d --network offline-net --name postgres \
@@ -3312,7 +3312,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start redis
           docker run -d --network offline-net --name redis \
@@ -3565,7 +3565,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start postgres
           docker run -d --network offline-net --name postgres \
@@ -3766,7 +3766,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # start mssql
           docker run -d --network offline-net --name mssql \
