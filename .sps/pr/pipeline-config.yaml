@@ -21,7 +21,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          npm install --loglevel warn --ignore-scripts
           node bin/create-version-test-folders.js
   code-pr-finish:
     when: 'false'
