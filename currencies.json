@@ -1458,7 +1458,8 @@
     "versions": [
       {
         "v": "2.12.0",
-        "esmOnly": true
+        "esmOnly": true,
+        "node": ">=22"
       }
     ]
   }
