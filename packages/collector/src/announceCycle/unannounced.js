@@ -59,6 +59,7 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @property {boolean} [disable-w3c-correlation]
  * @property {boolean} [disable-w3c-propagation]
  * @property {boolean} [disable-w3c]
+ * @property {Record<string, any>} [db-bind-variables]
  */
 
 /**
@@ -158,6 +159,7 @@ function applyAgentConfiguration(agentResponse) {
   applyDisableConfiguration(agentResponse);
   applyW3cDisableConfiguration(agentResponse);
   applyPollRateConfiguration(agentResponse);
+  applyDbBindVariablesConfiguration(agentResponse);
 }
 
 /**
@@ -415,6 +417,22 @@ function applyHttpExitConfiguration(agentResponse) {
   if (classifyAsErrors !== undefined) {
     agentOpts.config.tracing.http.exit.classifyAsErrors = classifyAsErrors;
   }
+}
+
+/**
+ * Applies the global db-bind-variables configuration from the agent's `tracing.global` block.
+ *
+ * @param {AgentAnnounceResponse} agentResponse
+ */
+function applyDbBindVariablesConfiguration(agentResponse) {
+  const dbBindVarsFromAgent = agentResponse?.tracing?.global?.['db-bind-variables'];
+  if (!dbBindVarsFromAgent) return;
+
+  const normalized = coreConfig.normalizers.dbBindVariables.fromAgent(dbBindVarsFromAgent);
+  if (normalized === null) return;
+
+  ensureNestedObjectExists(agentOpts.config, ['tracing', 'dbBindVariables']);
+  agentOpts.config.tracing.dbBindVariables = normalized;
 }
 
 module.exports = {

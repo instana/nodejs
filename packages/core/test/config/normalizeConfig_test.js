@@ -62,6 +62,7 @@ describe('config.normalizeConfig', () => {
     delete process.env.INSTANA_TRACING_HTTP_EXIT_CLASSIFY_ALL_4XX_AS_ERRORS;
     delete process.env.INSTANA_TRACING_HTTP_EXIT_CLASSIFY_AS_ERRORS;
     delete process.env.INSTANA_TRACING_CAPTURE_LOG_LEVEL;
+    delete process.env.INSTANA_TRACING_BIND_VARIABLES;
   }
 
   describe('default configuration', () => {
@@ -3029,6 +3030,53 @@ describe('config.normalizeConfig', () => {
     });
   });
 
+  describe('dbBindVariables configuration', () => {
+    afterEach(() => {
+      delete process.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE;
+      delete process.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS;
+    });
+
+    it('should default to disable=true, allowedColumns=[]', () => {
+      const config = coreConfig.normalize();
+      expect(config.tracing.dbBindVariables).to.deep.equal({ disable: true, allowedColumns: [] });
+    });
+
+    it('should use default when neither env nor config is set', () => {
+      const config = coreConfig.normalize({});
+      expect(config.tracing.dbBindVariables).to.deep.equal({ disable: true, allowedColumns: [] });
+    });
+
+    it('should apply in-code config', () => {
+      const config = coreConfig.normalize({
+        userConfig: { tracing: { dbBindVariables: { disable: false, allowedColumns: ['order_id'] } } }
+      });
+      expect(config.tracing.dbBindVariables).to.deep.equal({ disable: false, allowedColumns: ['order_id'] });
+    });
+
+    it('should apply disable=false via INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE=false', () => {
+      process.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE = 'false';
+      process.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS = 'order_id';
+      const config = coreConfig.normalize();
+      expect(config.tracing.dbBindVariables).to.deep.equal({ disable: false, allowedColumns: ['order_id'] });
+    });
+
+    it('should keep disable=true when env var is not "true" or "false"', () => {
+      process.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE = 'invalid';
+      process.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS = 'order_id';
+      const config = coreConfig.normalize();
+      expect(config.tracing.dbBindVariables.disable).to.equal(true);
+    });
+
+    it('should give precedence to env vars over in-code config', () => {
+      process.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE = 'true';
+      process.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS = 'env_col';
+      const config = coreConfig.normalize({
+        userConfig: { tracing: { dbBindVariables: { disable: false, allowedColumns: ['incode_col'] } } }
+      });
+      expect(config.tracing.dbBindVariables).to.deep.equal({ disable: true, allowedColumns: ['env_col'] });
+    });
+  });
+
   function checkDefaults(config) {
     expect(config).to.be.an('object');
 
@@ -3063,6 +3111,7 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.kafka.traceCorrelation).to.be.true;
     expect(config.tracing.useOpentelemetry).to.equal(true);
     expect(config.tracing.allowRootExitSpan).to.equal(false);
+    expect(config.tracing.dbBindVariables).to.deep.equal({ disable: true, allowedColumns: [] });
 
     expect(config.tracing.otlp).to.deep.equal({
       enabled: false,
