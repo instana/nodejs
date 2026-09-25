@@ -82,7 +82,7 @@ if [ ${#INSTALL_ARGS[@]} -gt 0 ]; then
   done
   echo
 
-  npm install --omit=optional --omit=dev "${INSTALL_ARGS[@]}"
+  npm install --omit=optional --omit=dev --ignore-scripts "${INSTALL_ARGS[@]}"
 else
   echo "No additional tgz packages to install"
 fi
