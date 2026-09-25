@@ -248,15 +248,13 @@ ${
 }      log('[INFO] Running npm install for ${suiteName}@${displayVersion}...');
       const npmCmd = process.env.CI ?
         'npm install --cache ${rootDir}/.npm-offline-cache --prefer-offline ' +
-        '${hasLockFile ? '' : '--no-package-lock '}--no-audit --ignore-scripts --prefix ./ --no-progress' :
-        'npm install ${hasLockFile ? '' : '--no-package-lock '}--no-audit --ignore-scripts --prefix ./ --no-progress';
+        '${hasLockFile ? '' : '--no-package-lock '}--no-audit --prefix ./ --no-progress' :
+        'npm install ${hasLockFile ? '' : '--no-package-lock '}--no-audit --prefix ./ --no-progress';
 
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         const timeout = 5 * 60 * 1000;
         try {
-          execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });
-          // Compile native C/C++ addons (e.g. better-sqlite3, ibm_db, pg-native) that were skipped by --ignore-scripts
-          execSync('npm rebuild', { cwd: __dirname, stdio: 'inherit', timeout });${
+          execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });${
             verifyDependency
               ? `
           if (!fs.existsSync(path.join(__dirname, 'node_modules', '${suiteName}'))) {

@@ -40,7 +40,7 @@ tasks:
           GH_ENTERPRISE_TOKEN="$(get_secret git-token)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --ignore-scripts
+          npm install --loglevel warn --foreground-scripts
 
           echo "Generating report..."
           node bin/dependencies/currency/generate-currency-report.js

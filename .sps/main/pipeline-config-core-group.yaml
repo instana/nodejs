@@ -89,7 +89,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # collect test files
           TEST_FILES=$(cd packages/core && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
@@ -249,7 +249,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # collect test files
           TEST_FILES=$(cd packages/metrics-util && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
@@ -409,7 +409,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # collect test files
           TEST_FILES=$(cd packages/serverless && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
@@ -569,7 +569,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # collect test files
           TEST_FILES=$(cd packages/serverless-collector && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
@@ -729,7 +729,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # collect test files
           TEST_FILES=$(cd packages/shared-metrics && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')

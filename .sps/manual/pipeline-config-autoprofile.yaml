@@ -89,7 +89,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
+            bash -c "npm install --loglevel warn --foreground-scripts && node bin/create-version-test-folders.js"
 
           # collect test files
           TEST_FILES=$(cd packages/autoprofile && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
