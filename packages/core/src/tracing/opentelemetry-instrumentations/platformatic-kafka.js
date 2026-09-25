@@ -21,6 +21,8 @@ function initInstrumentation() {
   }
 }
 
+module.exports.isActive = () => !!KafkaInstrumentation;
+
 module.exports.preInit = () => {
   initInstrumentation();
 };
