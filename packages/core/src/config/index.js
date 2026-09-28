@@ -11,7 +11,9 @@ const {
   DEFAULT_STACK_TRACE_LENGTH,
   DEFAULT_STACK_TRACE_MODE,
   CONFIG_SOURCES,
-  DEFAULT_LOG_LEVEL
+  DEFAULT_LOG_LEVEL,
+  DEFAULT_DB_BIND_VARIABLES_DISABLE,
+  DEFAULT_DB_BIND_VARIABLES_ALLOWED_COLUMNS
 } = require('../util/constants');
 const util = require('./util');
 const validators = require('./validator');
@@ -84,6 +86,7 @@ let currentConfig;
  * @property {globalStackTraceConfig} [global]
  * @property {otlpExporterOptions} [otlp]
  * @property {string} [captureLogLevel]
+ * @property {DbBindVariablesConfig} [dbBindVariables]
  */
 
 /**
@@ -131,6 +134,12 @@ let currentConfig;
  * @typedef {Object} InstanaSecretsOption
  * @property {MatchingOption} [matcherMode]
  * @property {Array<string>} [keywords]
+ */
+
+/**
+ * @typedef {Object} DbBindVariablesConfig
+ * @property {boolean} disable
+ * @property {string[]} allowedColumns
  */
 
 /** @type {String[]} */
@@ -190,6 +199,10 @@ let defaults = {
     captureW3cBaggage: [],
     kafka: {
       traceCorrelation: true
+    },
+    dbBindVariables: {
+      disable: DEFAULT_DB_BIND_VARIABLES_DISABLE,
+      allowedColumns: DEFAULT_DB_BIND_VARIABLES_ALLOWED_COLUMNS
     },
     ignoreEndpoints: {},
     ignoreEndpointsDisableSuppression: false,
@@ -418,6 +431,7 @@ function normalizeTracingConfig({ userConfig = {}, defaultConfig = {}, finalConf
   normalizeDisableW3c({ userConfig, defaultConfig, finalConfig });
   normalizeTracingKafka({ userConfig, defaultConfig, finalConfig });
   normalizeAllowRootExitSpan({ userConfig, defaultConfig, finalConfig });
+  normalizeDbBindVariables({ userConfig, defaultConfig, finalConfig });
   normalizeIgnoreEndpoints({ userConfig, defaultConfig, finalConfig });
   normalizeIgnoreEndpointsDisableSuppression({ userConfig, defaultConfig, finalConfig });
   normalizeDisableEOLEvents({ userConfig, defaultConfig, finalConfig });
@@ -1282,6 +1296,52 @@ function parseSecretsEnvVar(envVarValue) {
     keywords: keywordsArray
   };
 }
+
+/**
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
+ */
+function normalizeDbBindVariables({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
+  /** @type {DbBindVariablesConfig} */
+  const userDbBindVars = userConfig.tracing?.dbBindVariables || /** @type {any} */ ({});
+  finalConfig.tracing.dbBindVariables = finalConfig.tracing.dbBindVariables || /** @type {any} */ ({});
+
+  const { value: disable, source: disableSource } = util.resolve(
+    {
+      envValue: 'INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE',
+      inCodeValue: userDbBindVars.disable,
+      defaultValue: defaultConfig.tracing.dbBindVariables.disable
+    },
+    [validators.booleanValidator]
+  );
+
+  configStore.set('config.tracing.dbBindVariables.disable', { source: disableSource });
+  finalConfig.tracing.dbBindVariables.disable = disable;
+  util.log({
+    configPath: 'config.tracing.dbBindVariables.disable',
+    source: disableSource,
+    value: disable,
+    envVarName: 'INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE'
+  });
+
+  const { value: allowedColumns, source: allowedColumnsSource } = util.resolve(
+    {
+      envValue: 'INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS',
+      inCodeValue: userDbBindVars.allowedColumns,
+      defaultValue: defaultConfig.tracing.dbBindVariables.allowedColumns
+    },
+    [validators.allowedColumnsValidator]
+  );
+
+  configStore.set('config.tracing.dbBindVariables.allowedColumns', { source: allowedColumnsSource });
+  finalConfig.tracing.dbBindVariables.allowedColumns = allowedColumns;
+  util.log({
+    configPath: 'config.tracing.dbBindVariables.allowedColumns',
+    source: allowedColumnsSource,
+    value: allowedColumns,
+    envVarName: 'INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS'
+  });
+}
+
 /**
  * NOTE: This normalization logic is not handled in the resolver.
  * because it involves complex multi-step processing:
