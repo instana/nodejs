@@ -317,7 +317,7 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
   scriptLines.push('  --workdir /work \\');
   scriptLines.push('  "$NODE_IMAGE" \\');
   scriptLines.push(
-    '  bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"'
+    '  bash -c "npm install --loglevel warn --ignore-scripts && npm rebuild gcstats.js event-loop-stats @instana/autoprofile && node bin/create-version-test-folders.js"'
   );
   scriptLines.push('');
 
@@ -757,7 +757,7 @@ function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv
   scriptLines.push('  --workdir /work \\');
   scriptLines.push('  "$NODE_IMAGE" \\');
   scriptLines.push(
-    '  bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"'
+    '  bash -c "npm install --loglevel warn --ignore-scripts && npm rebuild gcstats.js event-loop-stats @instana/autoprofile && node bin/create-version-test-folders.js"'
   );
   scriptLines.push('');
 
