@@ -426,13 +426,19 @@ function applyHttpExitConfiguration(agentResponse) {
  */
 function applyDbBindVariablesConfiguration(agentResponse) {
   const dbBindVarsFromAgent = agentResponse?.tracing?.global?.['db-bind-variables'];
-  if (!dbBindVarsFromAgent) return;
-
-  const normalized = coreConfig.normalizers.dbBindVariables.fromAgent(dbBindVarsFromAgent);
-  if (normalized === null) return;
+  if (!dbBindVarsFromAgent || typeof dbBindVarsFromAgent !== 'object') return;
 
   ensureNestedObjectExists(agentOpts.config, ['tracing', 'dbBindVariables']);
-  agentOpts.config.tracing.dbBindVariables = normalized;
+
+  const disable = coreConfig.validators.booleanValidator(dbBindVarsFromAgent?.disable);
+  if (disable !== undefined) {
+    agentOpts.config.tracing.dbBindVariables.disable = disable;
+  }
+
+  const allowedColumns = coreConfig.validators.allowedColumnsValidator(dbBindVarsFromAgent['allowed-columns']);
+  if (allowedColumns !== undefined) {
+    agentOpts.config.tracing.dbBindVariables.allowedColumns = allowedColumns;
+  }
 }
 
 module.exports = {

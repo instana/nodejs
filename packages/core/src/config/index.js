@@ -84,7 +84,7 @@ let currentConfig;
  * @property {globalStackTraceConfig} [global]
  * @property {otlpExporterOptions} [otlp]
  * @property {string} [captureLogLevel]
- * @property {import('./normalizers/dbBindVariables').DbBindVariablesConfig} [dbBindVariables]
+ * @property {DbBindVariablesConfig} [dbBindVariables]
  */
 
 /**
@@ -132,6 +132,12 @@ let currentConfig;
  * @typedef {Object} InstanaSecretsOption
  * @property {MatchingOption} [matcherMode]
  * @property {Array<string>} [keywords]
+ */
+
+/**
+ * @typedef {Object} DbBindVariablesConfig
+ * @property {boolean} disable
+ * @property {string[]} allowedColumns
  */
 
 /** @type {String[]} */
@@ -1243,7 +1249,7 @@ function parseSecretsEnvVar(envVarValue) {
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
 function normalizeDbBindVariables({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
-  /** @type {import('./normalizers/dbBindVariables').DbBindVariablesConfig} */
+  /** @type {DbBindVariablesConfig} */
   const userDbBindVars = userConfig.tracing?.dbBindVariables || /** @type {any} */ ({});
   finalConfig.tracing.dbBindVariables = finalConfig.tracing.dbBindVariables || /** @type {any} */ ({});
 
