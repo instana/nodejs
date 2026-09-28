@@ -7,12 +7,16 @@
 const constants = require('../constants');
 
 let RestifyInstrumentation;
+let isActive = false;
 
 function initInstrumentation() {
   if (!RestifyInstrumentation) {
     RestifyInstrumentation = require('@opentelemetry/instrumentation-restify').RestifyInstrumentation;
+    isActive = true;
   }
 }
+
+module.exports.isActive = () => isActive;
 
 module.exports.preInit = () => {
   initInstrumentation();

@@ -5,10 +5,16 @@
 'use strict';
 
 let FsInstrumentation;
+let isActive = false;
 
 function initInstrumentation() {
-  FsInstrumentation = FsInstrumentation || require('@opentelemetry/instrumentation-fs').FsInstrumentation;
+  if (!FsInstrumentation) {
+    FsInstrumentation = require('@opentelemetry/instrumentation-fs').FsInstrumentation;
+    isActive = true;
+  }
 }
+
+module.exports.isActive = () => isActive;
 
 module.exports.preInit = () => {
   initInstrumentation();

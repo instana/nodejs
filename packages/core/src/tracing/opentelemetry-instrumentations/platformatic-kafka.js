@@ -8,6 +8,7 @@ const constants = require('../constants');
 const W3cTraceContext = require('../w3c_trace_context/W3cTraceContext');
 
 let KafkaInstrumentation;
+let isActive = false;
 
 function initInstrumentation() {
   if (KafkaInstrumentation) {
@@ -16,12 +17,13 @@ function initInstrumentation() {
 
   try {
     KafkaInstrumentation = require('@platformatic/kafka-opentelemetry').KafkaInstrumentation;
+    isActive = true;
   } catch (e) {
     // optional dependency not installed
   }
 }
 
-module.exports.isActive = () => !!KafkaInstrumentation;
+module.exports.isActive = () => isActive;
 
 module.exports.preInit = () => {
   initInstrumentation();

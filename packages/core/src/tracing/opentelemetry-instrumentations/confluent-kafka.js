@@ -8,12 +8,17 @@ const constants = require('../constants');
 const W3cTraceContext = require('../w3c_trace_context/W3cTraceContext');
 
 let ConfluentKafkaInstrumentation;
+let isActive = false;
 
 function initInstrumentation() {
-  ConfluentKafkaInstrumentation =
-    ConfluentKafkaInstrumentation ||
-    require('@instana/instrumentation-confluent-kafka-javascript').ConfluentKafkaInstrumentation;
+  if (!ConfluentKafkaInstrumentation) {
+    ConfluentKafkaInstrumentation =
+      require('@instana/instrumentation-confluent-kafka-javascript').ConfluentKafkaInstrumentation;
+    isActive = true;
+  }
 }
+
+module.exports.isActive = () => isActive;
 
 module.exports.preInit = () => {
   initInstrumentation();
