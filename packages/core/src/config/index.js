@@ -1267,10 +1267,8 @@ function normalizeDbBindVariables({ userConfig = {}, defaultConfig = {}, finalCo
 
   const { value: allowedColumns, source: allowedColumnsSource } = util.resolve(
     {
-      // env: value is a comma-separated string (e.g. "col_a,col_b"); the validator splits it into an array.
       envValue: 'INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS',
-      // incode: must be an array — strings are rejected (undefined) so the resolver falls through to the default.
-      inCodeValue: Array.isArray(userDbBindVars.allowedColumns) ? userDbBindVars.allowedColumns : undefined,
+      inCodeValue: userDbBindVars.allowedColumns,
       defaultValue: defaultConfig.tracing.dbBindVariables.allowedColumns
     },
     [validators.allowedColumnsValidator]
