@@ -59,6 +59,7 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @property {boolean} [disable-w3c-correlation]
  * @property {boolean} [disable-w3c-propagation]
  * @property {boolean} [disable-w3c]
+ * @property {Record<string, any>} [db-bind-variables]
  */
 
 /**
@@ -158,6 +159,7 @@ function applyAgentConfiguration(agentResponse) {
   applyDisableConfiguration(agentResponse);
   applyW3cDisableConfiguration(agentResponse);
   applyPollRateConfiguration(agentResponse);
+  applyDbBindVariablesConfiguration(agentResponse);
 }
 
 /**
@@ -414,6 +416,28 @@ function applyHttpExitConfiguration(agentResponse) {
   const classifyAsErrors = coreConfig.validators.httpExitErrorCodeValidator(exitConfig['classify-as-errors']);
   if (classifyAsErrors !== undefined) {
     agentOpts.config.tracing.http.exit.classifyAsErrors = classifyAsErrors;
+  }
+}
+
+/**
+ * Applies the global db-bind-variables configuration from the agent's `tracing.global` block.
+ *
+ * @param {AgentAnnounceResponse} agentResponse
+ */
+function applyDbBindVariablesConfiguration(agentResponse) {
+  const dbBindVarsFromAgent = agentResponse?.tracing?.global?.['db-bind-variables'];
+  if (!dbBindVarsFromAgent || typeof dbBindVarsFromAgent !== 'object') return;
+
+  ensureNestedObjectExists(agentOpts.config, ['tracing', 'dbBindVariables']);
+
+  const disable = coreConfig.validators.booleanValidator(dbBindVarsFromAgent?.disable);
+  if (disable !== undefined) {
+    agentOpts.config.tracing.dbBindVariables.disable = disable;
+  }
+
+  const allowedColumns = coreConfig.validators.allowedColumnsValidator(dbBindVarsFromAgent['allowed-columns']);
+  if (allowedColumns !== undefined) {
+    agentOpts.config.tracing.dbBindVariables.allowedColumns = allowedColumns;
   }
 }
 

@@ -1684,6 +1684,171 @@ describe('unannounced state', () => {
       });
     });
 
+    describe('applyDbBindVariablesConfiguration', () => {
+      it('should apply disable=true and allowed-columns from agent response', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'db-bind-variables': {
+                disable: true,
+                'allowed-columns': ['order_id', 'username']
+              }
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                dbBindVariables: { disable: true, allowedColumns: ['order_id', 'username'] }
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should apply disable=false with no allowed-columns', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'db-bind-variables': {
+                disable: false
+              }
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                dbBindVariables: { disable: false, allowedColumns: [] }
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should trim whitespace and filter blank entries in allowed-columns', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'db-bind-variables': {
+                disable: false,
+                'allowed-columns': [' order_id ', '', '  ', 'username ']
+              }
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                dbBindVariables: { disable: false, allowedColumns: ['order_id', 'username'] }
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should fall back to default disable=true when disable value is invalid', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'db-bind-variables': {
+                disable: 'yes',
+                'allowed-columns': ['order_id']
+              }
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                dbBindVariables: { disable: true, allowedColumns: ['order_id'] }
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should not apply config when db-bind-variables is null', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'db-bind-variables': null
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config.tracing).to.be.undefined;
+            done();
+          }
+        });
+      });
+
+      it('should not apply config when db-bind-variables is absent from tracing.global', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {}
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({});
+            done();
+          }
+        });
+      });
+
+      it('should not apply config when tracing.global is missing', done => {
+        prepareAnnounceResponse({
+          tracing: {}
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({});
+            done();
+          }
+        });
+      });
+
+      it('should not apply config when tracing is missing', done => {
+        prepareAnnounceResponse({});
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({});
+            done();
+          }
+        });
+      });
+
+      it('should apply defaults when db-bind-variables is an empty object', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'db-bind-variables': {}
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                dbBindVariables: { disable: true, allowedColumns: [] }
+              }
+            });
+            done();
+          }
+        });
+      });
+    });
+
     function prepareAnnounceResponse(announceResponse) {
       agentConnectionStub.announceNodeCollector.callsArgWithAsync(0, null, JSON.stringify(announceResponse));
     }

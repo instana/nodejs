@@ -573,6 +573,72 @@ describe('config.validator', () => {
     });
   });
 
+  describe('allowedColumnsValidator', () => {
+    it('should parse a comma-separated string into a trimmed array', () => {
+      expect(validator.allowedColumnsValidator('col_a,col_b,col_c')).to.deep.equal(['col_a', 'col_b', 'col_c']);
+    });
+
+    it('should trim whitespace around each column in a string', () => {
+      expect(validator.allowedColumnsValidator(' col_a , col_b , col_c ')).to.deep.equal(['col_a', 'col_b', 'col_c']);
+    });
+
+    it('should filter out empty entries in a comma-separated string', () => {
+      expect(validator.allowedColumnsValidator('col_a,,col_b,')).to.deep.equal(['col_a', 'col_b']);
+    });
+
+    it('should return an empty array for a string of only commas and spaces', () => {
+      expect(validator.allowedColumnsValidator(',, ,')).to.deep.equal([]);
+    });
+
+    it('should return an empty array for an empty string', () => {
+      expect(validator.allowedColumnsValidator('')).to.deep.equal([]);
+    });
+
+    it('should return a valid array as-is after trimming', () => {
+      expect(validator.allowedColumnsValidator(['col_a', 'col_b'])).to.deep.equal(['col_a', 'col_b']);
+    });
+
+    it('should trim whitespace from array entries', () => {
+      expect(validator.allowedColumnsValidator([' col_a ', '  col_b  '])).to.deep.equal(['col_a', 'col_b']);
+    });
+
+    it('should filter out blank array entries', () => {
+      expect(validator.allowedColumnsValidator(['col_a', '', '  ', 'col_b'])).to.deep.equal(['col_a', 'col_b']);
+    });
+
+    it('should filter out non-string array entries', () => {
+      expect(validator.allowedColumnsValidator(['col_a', 42, null, undefined, 'col_b'])).to.deep.equal([
+        'col_a',
+        'col_b'
+      ]);
+    });
+
+    it('should return an empty array for an array of only blank/non-string values', () => {
+      expect(validator.allowedColumnsValidator(['', '  ', 42, null])).to.deep.equal([]);
+    });
+
+    it('should return undefined for null', () => {
+      expect(validator.allowedColumnsValidator(null)).to.be.undefined;
+    });
+
+    it('should return undefined for undefined', () => {
+      expect(validator.allowedColumnsValidator(undefined)).to.be.undefined;
+    });
+
+    it('should return undefined for a number', () => {
+      expect(validator.allowedColumnsValidator(42)).to.be.undefined;
+    });
+
+    it('should return undefined for a boolean', () => {
+      expect(validator.allowedColumnsValidator(true)).to.be.undefined;
+      expect(validator.allowedColumnsValidator(false)).to.be.undefined;
+    });
+
+    it('should return undefined for a plain object', () => {
+      expect(validator.allowedColumnsValidator({})).to.be.undefined;
+    });
+  });
+
   describe('validateTransmissionDelay', () => {
     before(() => {
       validator.init({ warn: () => {} });
