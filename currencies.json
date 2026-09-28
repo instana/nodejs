@@ -1073,7 +1073,7 @@
     "core": false,
     "versions": [
       {
-        "v": "11.1.0",
+        "v": "12.0.0",
         "overrides": {
           "uuid": "^11.1.1",
           "find-my-way": "^9.7.0",
