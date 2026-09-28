@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.8.0](https://github.com/instana/nodejs/compare/v6.7.0...v6.8.0) (2026-09-28)
+
+
+### Features
+
+* added support for @google-cloud/pubsub v6 ([#2761](https://github.com/instana/nodejs/issues/2761)) ([d8b9277](https://github.com/instana/nodejs/commit/d8b92774eb327848f72ce611bbb17ec46ffbea0e))
+* added support for @google-cloud/storage v8 ([#2770](https://github.com/instana/nodejs/issues/2770)) ([9967b69](https://github.com/instana/nodejs/commit/9967b69b3d8f6537da995c75df96271ca1810d18))
+* added support for @platformatic/kafka ([#2751](https://github.com/instana/nodejs/issues/2751)) ([998e341](https://github.com/instana/nodejs/commit/998e34174db89678b27473d511a18ba22aa82ae8))
+* added support for got v16 ([#2762](https://github.com/instana/nodejs/issues/2762)) ([f9ff8d3](https://github.com/instana/nodejs/commit/f9ff8d30d42ca17935aa859dc8e7c84bd5c21633))
+* **core:** added support for agent poll_rate config ([#2716](https://github.com/instana/nodejs/issues/2716)) ([7c54f70](https://github.com/instana/nodejs/commit/7c54f70d6a2090bec02988f50cb009017431ec6f))
+
+
+
+
+
 # [6.7.0](https://github.com/instana/nodejs/compare/v6.6.1...v6.7.0) (2026-09-15)
 
 

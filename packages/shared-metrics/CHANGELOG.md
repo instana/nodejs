@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.8.0](https://github.com/instana/nodejs/compare/v6.7.0...v6.8.0) (2026-09-28)
+
+
+### Bug Fixes
+
+* **shared-metrics:** skipped native addon extraction when Buffer.concat is non-writable ([#2797](https://github.com/instana/nodejs/issues/2797)) ([638c0ad](https://github.com/instana/nodejs/commit/638c0ad99749d70114d7d70b2f08a952342b31c2))
+
+
+
+
+
 # [6.7.0](https://github.com/instana/nodejs/compare/v6.6.1...v6.7.0) (2026-09-15)
 
 **Note:** Version bump only for package @instana/shared-metrics

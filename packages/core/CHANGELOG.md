@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.8.0](https://github.com/instana/nodejs/compare/v6.7.0...v6.8.0) (2026-09-28)
+
+
+### Bug Fixes
+
+* bumped @opentelemetry/instrumentation-fs from 0.39.0 to 0.41.0 ([#2769](https://github.com/instana/nodejs/issues/2769)) ([87edad0](https://github.com/instana/nodejs/commit/87edad0377a8c0ac32c563c0f73bb0e165aa803f))
+
+
+### Features
+
+* added INSTANA_METRICS_POLL_RATE config option ([#2791](https://github.com/instana/nodejs/issues/2791)) ([2dbc63e](https://github.com/instana/nodejs/commit/2dbc63e64e7e0552e129a9eca858b15325986e96))
+* added support for @platformatic/kafka ([#2751](https://github.com/instana/nodejs/issues/2751)) ([998e341](https://github.com/instana/nodejs/commit/998e34174db89678b27473d511a18ba22aa82ae8))
+* **core:** added support for agent poll_rate config ([#2716](https://github.com/instana/nodejs/issues/2716)) ([7c54f70](https://github.com/instana/nodejs/commit/7c54f70d6a2090bec02988f50cb009017431ec6f))
+* **otlp:** added support for mapping Instana SDK spans to OTLP ([#2782](https://github.com/instana/nodejs/issues/2782)) ([dbd5afe](https://github.com/instana/nodejs/commit/dbd5afe3216e68d789e54465529a2f03fc078efc))
+
+
+
+
+
 # [6.7.0](https://github.com/instana/nodejs/compare/v6.6.1...v6.7.0) (2026-09-15)
 
 

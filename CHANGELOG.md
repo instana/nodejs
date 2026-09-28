@@ -3,6 +3,35 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.8.0](https://github.com/instana/nodejs/compare/v6.7.0...v6.8.0) (2026-09-28)
+
+
+### Bug Fixes
+
+* bumped @opentelemetry/instrumentation-fs from 0.39.0 to 0.41.0 ([#2769](https://github.com/instana/nodejs/issues/2769)) ([87edad0](https://github.com/instana/nodejs/commit/87edad0377a8c0ac32c563c0f73bb0e165aa803f))
+* bumped nan from 2.28.0 to 2.29.0 ([#2787](https://github.com/instana/nodejs/issues/2787)) ([84cef7d](https://github.com/instana/nodejs/commit/84cef7d9873e9e45bac622b2c9e59c84c35e1c78))
+* **shared-metrics:** skipped native addon extraction when Buffer.concat is non-writable ([#2797](https://github.com/instana/nodejs/issues/2797)) ([638c0ad](https://github.com/instana/nodejs/commit/638c0ad99749d70114d7d70b2f08a952342b31c2))
+
+
+### Features
+
+* added INSTANA_METRICS_POLL_RATE config option ([#2791](https://github.com/instana/nodejs/issues/2791)) ([2dbc63e](https://github.com/instana/nodejs/commit/2dbc63e64e7e0552e129a9eca858b15325986e96))
+* added support for @google-cloud/pubsub v6 ([#2761](https://github.com/instana/nodejs/issues/2761)) ([d8b9277](https://github.com/instana/nodejs/commit/d8b92774eb327848f72ce611bbb17ec46ffbea0e))
+* added support for @google-cloud/storage v8 ([#2770](https://github.com/instana/nodejs/issues/2770)) ([9967b69](https://github.com/instana/nodejs/commit/9967b69b3d8f6537da995c75df96271ca1810d18))
+* added support for @platformatic/kafka ([#2751](https://github.com/instana/nodejs/issues/2751)) ([998e341](https://github.com/instana/nodejs/commit/998e34174db89678b27473d511a18ba22aa82ae8))
+* added support for got v16 ([#2762](https://github.com/instana/nodejs/issues/2762)) ([f9ff8d3](https://github.com/instana/nodejs/commit/f9ff8d30d42ca17935aa859dc8e7c84bd5c21633))
+* **core:** added support for agent poll_rate config ([#2716](https://github.com/instana/nodejs/issues/2716)) ([7c54f70](https://github.com/instana/nodejs/commit/7c54f70d6a2090bec02988f50cb009017431ec6f))
+* **otlp:** added support for mapping Instana SDK spans to OTLP ([#2782](https://github.com/instana/nodejs/issues/2782)) ([dbd5afe](https://github.com/instana/nodejs/commit/dbd5afe3216e68d789e54465529a2f03fc078efc))
+
+
+### Reverts
+
+* Revert "ci: use --ignore-scripts in sps during npm installation (#2775)" ([b4fa3bd](https://github.com/instana/nodejs/commit/b4fa3bdcaeda904bb82c7a83d0edb6d79c83b4a5)), closes [#2775](https://github.com/instana/nodejs/issues/2775)
+
+
+
+
+
 # [6.7.0](https://github.com/instana/nodejs/compare/v6.6.1...v6.7.0) (2026-09-15)
 
 
