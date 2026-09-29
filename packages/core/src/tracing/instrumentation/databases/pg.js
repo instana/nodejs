@@ -11,7 +11,7 @@ const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
-const dbBindVariablesUtil = require('../../dbBindVariablesUtil');
+const dbBindVariablesUtil = require('../../../util/bindVariables');
 
 let isActive = false;
 

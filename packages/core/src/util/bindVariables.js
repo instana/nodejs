@@ -4,7 +4,7 @@
 
 'use strict';
 
-const MAX_BINDS = 100;
+const { MAX_BINDS } = require('../tracing/constants');
 
 /**
  * @typedef {{ name: string, value: string | string[] }} BindEntry

@@ -1,13 +1,13 @@
 /*
- * (c) Copyright IBM Corp. 2025
+ * (c) Copyright IBM Corp. 2026
  */
 
 'use strict';
 
 const { expect } = require('chai');
-const util = require('../../src/tracing/dbBindVariablesUtil');
+const util = require('../../src/util/bindVariables');
 
-describe('tracing.dbBindVariablesUtil', function () {
+describe('tracing.bindVariables', function () {
   // ---------------------------------------------------------------------------
   // isActive
   // ---------------------------------------------------------------------------
@@ -106,10 +106,7 @@ describe('tracing.dbBindVariablesUtil', function () {
   // ---------------------------------------------------------------------------
   describe('buildBindsFromNamed', function () {
     it('returns null when no entries match allowed columns', function () {
-      const result = util.buildBindsFromNamed(
-        [{ name: 'password', rawValue: 'secret' }],
-        ['username']
-      );
+      const result = util.buildBindsFromNamed([{ name: 'password', rawValue: 'secret' }], ['username']);
       expect(result).to.equal(null);
     });
 
@@ -125,10 +122,7 @@ describe('tracing.dbBindVariablesUtil', function () {
     });
 
     it('normalizes values', function () {
-      const result = util.buildBindsFromNamed(
-        [{ name: 'data', rawValue: null }],
-        ['data']
-      );
+      const result = util.buildBindsFromNamed([{ name: 'data', rawValue: null }], ['data']);
       expect(result).to.deep.equal([{ name: 'data', value: 'null' }]);
     });
 
@@ -155,11 +149,7 @@ describe('tracing.dbBindVariablesUtil', function () {
     });
 
     it('skips columns not in allowedColumns', function () {
-      const result = util.buildBindsFromPositional(
-        ['john', 'secret'],
-        ['username', 'password'],
-        ['username']
-      );
+      const result = util.buildBindsFromPositional(['john', 'secret'], ['username', 'password'], ['username']);
       expect(result).to.deep.equal([{ name: 'username', value: 'john' }]);
     });
 
@@ -181,54 +171,36 @@ describe('tracing.dbBindVariablesUtil', function () {
     });
 
     it('resolves multiple conditions', function () {
-      const r = util.resolveColumnNamesDollarParams(
-        'SELECT * FROM t WHERE username = $1 AND password = $2',
-        2
-      );
+      const r = util.resolveColumnNamesDollarParams('SELECT * FROM t WHERE username = $1 AND password = $2', 2);
       expect(r[0]).to.equal('username');
       expect(r[1]).to.equal('password');
     });
 
     it('resolves table-qualified column names', function () {
-      const r = util.resolveColumnNamesDollarParams(
-        'SELECT * FROM orders WHERE orders.user_id = $1',
-        1
-      );
+      const r = util.resolveColumnNamesDollarParams('SELECT * FROM orders WHERE orders.user_id = $1', 1);
       expect(r[0]).to.equal('orders.user_id');
     });
 
     it('resolves comparison operators other than =', function () {
-      const r = util.resolveColumnNamesDollarParams(
-        'SELECT * FROM t WHERE age >= $1 AND score < $2',
-        2
-      );
+      const r = util.resolveColumnNamesDollarParams('SELECT * FROM t WHERE age >= $1 AND score < $2', 2);
       expect(r[0]).to.equal('age');
       expect(r[1]).to.equal('score');
     });
 
     it('resolves LIKE and ILIKE operators', function () {
-      const r = util.resolveColumnNamesDollarParams(
-        'SELECT * FROM t WHERE name LIKE $1 AND bio ILIKE $2',
-        2
-      );
+      const r = util.resolveColumnNamesDollarParams('SELECT * FROM t WHERE name LIKE $1 AND bio ILIKE $2', 2);
       expect(r[0]).to.equal('name');
       expect(r[1]).to.equal('bio');
     });
 
     it('leaves INSERT VALUES positions as undefined', function () {
-      const r = util.resolveColumnNamesDollarParams(
-        'INSERT INTO users (username, email) VALUES ($1, $2)',
-        2
-      );
+      const r = util.resolveColumnNamesDollarParams('INSERT INTO users (username, email) VALUES ($1, $2)', 2);
       expect(r[0]).to.equal(undefined);
       expect(r[1]).to.equal(undefined);
     });
 
     it('resolves UPDATE SET conditions', function () {
-      const r = util.resolveColumnNamesDollarParams(
-        'UPDATE users SET username = $1, email = $2 WHERE id = $3',
-        3
-      );
+      const r = util.resolveColumnNamesDollarParams('UPDATE users SET username = $1, email = $2 WHERE id = $3', 3);
       expect(r[0]).to.equal('username');
       expect(r[1]).to.equal('email');
       expect(r[2]).to.equal('id');
@@ -245,36 +217,24 @@ describe('tracing.dbBindVariablesUtil', function () {
     });
 
     it('resolves multiple conditions in order', function () {
-      const r = util.resolveColumnNamesQuestionMarkParams(
-        'SELECT * FROM t WHERE username = ? AND age > ?',
-        2
-      );
+      const r = util.resolveColumnNamesQuestionMarkParams('SELECT * FROM t WHERE username = ? AND age > ?', 2);
       expect(r[0]).to.equal('username');
       expect(r[1]).to.equal('age');
     });
 
     it('resolves table-qualified column names', function () {
-      const r = util.resolveColumnNamesQuestionMarkParams(
-        'SELECT * FROM orders WHERE orders.user_id = ?',
-        1
-      );
+      const r = util.resolveColumnNamesQuestionMarkParams('SELECT * FROM orders WHERE orders.user_id = ?', 1);
       expect(r[0]).to.equal('orders.user_id');
     });
 
     it('leaves INSERT VALUES positions as undefined', function () {
-      const r = util.resolveColumnNamesQuestionMarkParams(
-        'INSERT INTO users (username, email) VALUES (?, ?)',
-        2
-      );
+      const r = util.resolveColumnNamesQuestionMarkParams('INSERT INTO users (username, email) VALUES (?, ?)', 2);
       expect(r[0]).to.equal(undefined);
       expect(r[1]).to.equal(undefined);
     });
 
     it('stops at paramCount even if more matches exist', function () {
-      const r = util.resolveColumnNamesQuestionMarkParams(
-        'SELECT * FROM t WHERE a = ? AND b = ? AND c = ?',
-        2
-      );
+      const r = util.resolveColumnNamesQuestionMarkParams('SELECT * FROM t WHERE a = ? AND b = ? AND c = ?', 2);
       expect(r).to.have.length(2);
       expect(r[0]).to.equal('a');
       expect(r[1]).to.equal('b');

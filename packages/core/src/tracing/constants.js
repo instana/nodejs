@@ -88,3 +88,5 @@ exports.isIntermediateSpan = function isIntermediateSpan(span) {
  * @type {Set<string>}
  */
 exports.DISABLABLE_INSTRUMENTATION_GROUPS = new Set(['logging', 'messaging', 'databases']);
+
+exports.MAX_BINDS = 100;
