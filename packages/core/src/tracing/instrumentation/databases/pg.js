@@ -11,18 +11,13 @@ const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
-const bindVariables = require('../../../util/bindVariables');
 
 let isActive = false;
-
-/** @type {import('../../../config').InstanaConfig['tracing']['dbBindVariables']} */
-let bindVariablesConfig;
 
 exports.spanName = 'postgres';
 exports.batchable = true;
 
-exports.init = function init(config) {
-  bindVariablesConfig = config && config.tracing && config.tracing.dbBindVariables;
+exports.init = function init() {
   hook.onModuleLoad('pg', instrumentPg);
 };
 
@@ -74,7 +69,7 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
       db
     };
 
-    const binds = bindVariables.captureBinds(sql, config, argsForOriginalQuery, bindVariablesConfig);
+    const binds = tracingUtil.captureBinds(sql, config, argsForOriginalQuery);
     if (binds !== null) {
       span.data.pg.binds = binds;
     }
