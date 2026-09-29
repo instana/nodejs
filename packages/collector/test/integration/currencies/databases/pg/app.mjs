@@ -88,6 +88,7 @@ app.get('/select-now-pool', (req, res) => {
       log('Failed to execute select now query', err);
       return res.sendStatus(500);
     }
+    // Execute another traced call to verify that we keep the tracing context.
     fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
       res.json(results);
     });
@@ -143,6 +144,8 @@ app.get('/bind-variables-allowed-columns-test', async (req, res) => {
 
   await client.query('UPDATE users SET name = $1, email = $2 WHERE id = $3', ['updatedname', 'upd@example.com', 1]);
 
+  await client.query('DELETE FROM users WHERE name = $1 AND email = $2', ['deleteuser', 'delete@example.com']);
+
   res.json({ success: true });
 });
 
@@ -189,11 +192,6 @@ app.get('/bind-variables-stored-procedure-test', async (req, res) => {
   res.json({ success: true, rows: result.rows });
 });
 
-// Spec: 100-entry cap — 150 params total:
-//   positions 1-100 (indices 0-99):  even indices → name (allowed), odd indices → email (not allowed)
-//                                    → 50 name + 50 email in the first 100
-//   positions 101-150 (indices 100-149): all name (allowed)
-// After allowed-columns filtering: 50 from first 100 + 50 from remaining 50 = exactly 100 captured.
 app.get('/bind-variables-cap-test', async (req, res) => {
   const conditions = Array.from({ length: 150 }, (_, i) => {
     const col = i < 100 && i % 2 !== 0 ? 'email' : 'name';

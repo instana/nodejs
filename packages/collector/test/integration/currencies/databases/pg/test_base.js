@@ -132,6 +132,23 @@ module.exports = function (name, version, isLatest) {
         )
       ));
 
+    it('must capture only the allowed column (name), not email — DELETE', () =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables-allowed-columns-test' }).then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables-allowed-columns-test');
+
+            const deleteSpan = getSpansByName(spans, 'postgres').find(
+              span => span.data.pg.stmt === 'DELETE FROM users WHERE name = $1 AND email = $2'
+            );
+            expect(deleteSpan).to.exist;
+            expect(deleteSpan.data.pg.binds).to.be.an('array');
+            expect(deleteSpan.data.pg.binds).to.have.lengthOf(1);
+            expect(deleteSpan.data.pg.binds[0]).to.deep.equal({ name: 'name', value: 'deleteuser' });
+          })
+        )
+      ));
+
     it('must not capture binds for INSERT (positional params in VALUES list not resolvable)', () =>
       controls.sendRequest({ method: 'GET', path: '/bind-variables-test' }).then(() =>
         retry(() =>
@@ -757,6 +774,7 @@ module.exports = function (name, version, isLatest) {
       .then(response => {
         expect(response).to.exist;
         expect(response.severity).to.equal('ERROR');
+        // 42P01 -> PostgreSQL's code for "relation does not exist"
         expect(response.code).to.equal('42P01');
 
         return retry(() =>

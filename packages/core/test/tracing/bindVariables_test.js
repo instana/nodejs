@@ -8,9 +8,6 @@ const { expect } = require('chai');
 const util = require('../../src/util/bindVariables');
 
 describe('tracing.bindVariables', function () {
-  // ---------------------------------------------------------------------------
-  // isCaptureEnabled
-  // ---------------------------------------------------------------------------
   describe('isCaptureEnabled', function () {
     it('should return false when config is undefined', function () {
       expect(util.isCaptureEnabled(undefined)).to.be.false;
@@ -29,9 +26,6 @@ describe('tracing.bindVariables', function () {
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // isColumnAllowed
-  // ---------------------------------------------------------------------------
   describe('isColumnAllowed', function () {
     it('unqualified entry matches bare column name', function () {
       expect(util.isColumnAllowed('username', ['username'])).to.be.true;
@@ -64,9 +58,6 @@ describe('tracing.bindVariables', function () {
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // normalizeValue
-  // ---------------------------------------------------------------------------
   describe('normalizeValue', function () {
     it('converts null to "null"', function () {
       expect(util.normalizeValue(null)).to.equal('null');
@@ -107,9 +98,6 @@ describe('tracing.bindVariables', function () {
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // buildBindsFromNamed
-  // ---------------------------------------------------------------------------
   describe('buildBindsFromNamed', function () {
     it('returns null when no entries match allowed columns', function () {
       const result = util.buildBindsFromNamed([{ name: 'password', rawValue: 'secret' }], ['username']);
@@ -139,9 +127,6 @@ describe('tracing.bindVariables', function () {
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // buildBindsFromPositional
-  // ---------------------------------------------------------------------------
   describe('buildBindsFromPositional', function () {
     it('returns null when no column names can be resolved', function () {
       const result = util.buildBindsFromPositional([42, 'secret'], [undefined, undefined], ['id']);
@@ -167,9 +152,6 @@ describe('tracing.bindVariables', function () {
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // resolveColumnNamesDollarParams  (PostgreSQL $1, $2, ...)
-  // ---------------------------------------------------------------------------
   describe('resolveColumnNamesDollarParams', function () {
     it('resolves a single equality condition', function () {
       const r = util.resolveColumnNamesDollarParams('SELECT * FROM t WHERE id = $1', 1);
@@ -213,9 +195,6 @@ describe('tracing.bindVariables', function () {
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // resolveColumnNamesQuestionMarkParams  (MySQL/MSSQL ?)
-  // ---------------------------------------------------------------------------
   describe('resolveColumnNamesQuestionMarkParams', function () {
     it('resolves a single condition', function () {
       const r = util.resolveColumnNamesQuestionMarkParams('SELECT * FROM t WHERE id = ?', 1);
