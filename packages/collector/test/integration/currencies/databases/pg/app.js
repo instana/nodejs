@@ -49,16 +49,15 @@ pool.query(createTableQuery, err => {
   }
 });
 
-const createBlobTableQuery =
+const createBlobsTableQuery =
   'CREATE TABLE IF NOT EXISTS blobs(id serial primary key, name varchar(40) NOT NULL, data bytea)';
 
-pool.query(createBlobTableQuery, err => {
+pool.query(createBlobsTableQuery, err => {
   if (err) {
     log('Failed to create blobs table', err);
   }
 });
 
-// Create a stored procedure for testing
 const createProcedureQuery = `
   CREATE OR REPLACE FUNCTION get_user_by_name(user_name VARCHAR)
   RETURNS TABLE(id INT, name VARCHAR, email VARCHAR) AS $$
@@ -90,7 +89,6 @@ app.get('/select-now-pool', (req, res) => {
       log('Failed to execute select now query', err);
       return res.sendStatus(500);
     }
-    // Execute another traced call to verify that we keep the tracing context.
     fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
       res.json(results);
     });
@@ -131,10 +129,8 @@ app.get('/parameterized-query', async (req, res) => {
 });
 
 app.get('/bind-variables-test', async (req, res) => {
-  // string query + positional array: both name and email columns present in WHERE clause
   await client.query('SELECT * FROM users WHERE name = $1 AND email = $2', ['testuser', 'test@example.com']);
 
-  // config object with values property: INSERT – no column=$N patterns so nothing resolves
   await pool.query({
     text: 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *',
     values: ['bindtest', 'bindtest@example.com']
@@ -144,59 +140,44 @@ app.get('/bind-variables-test', async (req, res) => {
 });
 
 app.get('/bind-variables-allowed-columns-test', async (req, res) => {
-  // Only the 'name' column should be captured (email excluded by allowed-columns config)
   await client.query('SELECT * FROM users WHERE name = $1 AND email = $2', ['alloweduser', 'allowed@example.com']);
 
-  // UPDATE: both name and email in SET + id in WHERE — only 'name' captured
   await client.query('UPDATE users SET name = $1, email = $2 WHERE id = $3', ['updatedname', 'upd@example.com', 1]);
 
   res.json({ success: true });
 });
 
-// Spec example: Unqualified allowed-columns entry matches qualified column name
-// e.g. allowed=user_id matches orders.user_id in the query
 app.get('/bind-variables-qualified-col-test', async (req, res) => {
   await client.query('SELECT * FROM orders WHERE orders.id = $1', [42]);
   res.json({ success: true });
 });
 
-// Spec example: Fully qualified allowed-columns entry does NOT match bare column name
 app.get('/bind-variables-qualified-entry-no-match-test', async (req, res) => {
   await client.query('SELECT * FROM users WHERE id = $1', [99]);
   res.json({ success: true });
 });
 
-// Spec example: kill switch — INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE=true suppresses capture
-// (same route as allowed-columns test, different env config in the test)
-
-// Spec example: null value represented as "null"
 app.get('/bind-variables-null-value-test', async (req, res) => {
-  // Use 'name' column (which is in the allowed-columns for this test) with a null value
   await pool.query('SELECT * FROM users WHERE name = $1', [null]);
   res.json({ success: true });
 });
 
-// Spec example: OR clause — same column referenced twice with distinct params
 app.get('/bind-variables-or-clause-test', async (req, res) => {
   await client.query('SELECT * FROM users WHERE name = $1 OR name = $2', ['alice', 'bob']);
   res.json({ success: true });
 });
 
-// Spec: Binary data (Buffer) represented as "<binary>"
 app.get('/bind-variables-binary-test', async (req, res) => {
   const binaryData = Buffer.from('binary-payload');
   await client.query('UPDATE blobs SET data = $1 WHERE name = $2', [binaryData, 'testblob']);
   res.json({ success: true });
 });
 
-// Spec: Unsupported type (plain object) represented as "<unsupported>"
 app.get('/bind-variables-unsupported-test', async (req, res) => {
-  // pg serialises plain objects via JSON, but our tracer sees it before serialisation
   await client.query('SELECT * FROM users WHERE name = $1', [{ key: 'value' }]);
   res.json({ success: true });
 });
 
-// Spec: Stored procedure — bind variable captured for the function call argument
 app.get('/bind-variables-stored-procedure-test', async (req, res) => {
   const result = await client.query('SELECT * FROM get_user_by_name($1)', ['proceduretest']);
   res.json({ success: true, rows: result.rows });
@@ -209,7 +190,6 @@ app.get('/bind-variables-stored-procedure-test', async (req, res) => {
 // After allowed-columns filtering: 50 from first 100 + 50 from remaining 50 = exactly 100 captured.
 app.get('/bind-variables-cap-test', async (req, res) => {
   const conditions = Array.from({ length: 150 }, (_, i) => {
-    // Within the first 100: even indices are name (allowed), odd indices are email (not allowed)
     const col = i < 100 && i % 2 !== 0 ? 'email' : 'name';
     return `${col} = $${i + 1}`;
   }).join(' OR ');
@@ -218,22 +198,18 @@ app.get('/bind-variables-cap-test', async (req, res) => {
   res.json({ success: true });
 });
 
-// Spec: Span batching — two quick successive queries; only the last (merged) span's binds are reported
 app.get('/bind-variables-span-batching-test', async (req, res) => {
-  // Fire two queries back-to-back without awaiting — they should be batched into one span
   client.query('SELECT * FROM users WHERE name = $1', ['first-query']);
   await client.query('SELECT * FROM users WHERE name = $1', ['last-query']);
   res.json({ success: true });
 });
 
 app.get('/stored-procedure-test', async (req, res) => {
-  // First insert a test user
   await client.query('INSERT INTO users(name, email) VALUES($1, $2) ON CONFLICT DO NOTHING', [
     'proceduretest',
     'procedure@example.com'
   ]);
 
-  // Call stored procedure with bind variable
   const result = await client.query('SELECT * FROM get_user_by_name($1)', ['proceduretest']);
 
   res.json({ success: true, rows: result.rows });
