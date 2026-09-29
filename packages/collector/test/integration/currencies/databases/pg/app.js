@@ -178,6 +178,13 @@ app.get('/bind-variables-unsupported-test', async (req, res) => {
   res.json({ success: true });
 });
 
+app.get('/bind-variables-circular-test', async (req, res) => {
+  const circular = {};
+  circular.self = circular;
+  await client.query('SELECT * FROM users WHERE name = $1', [circular]);
+  res.json({ success: true });
+});
+
 app.get('/bind-variables-stored-procedure-test', async (req, res) => {
   const result = await client.query('SELECT * FROM get_user_by_name($1)', ['proceduretest']);
   res.json({ success: true, rows: result.rows });
