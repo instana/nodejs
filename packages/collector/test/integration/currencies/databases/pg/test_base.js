@@ -17,6 +17,7 @@ const {
 } = require('@_local/core/test/test_util');
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 const globalAgent = require('@_local/collector/test/globalAgent');
+const { AgentStubControls } = require('@_local/collector/test/apps/agentStubControls');
 
 module.exports = function (name, version, isLatest) {
   globalAgent.setUpCleanUpHooks();
@@ -505,77 +506,122 @@ module.exports = function (name, version, isLatest) {
       ));
   });
 
-  // describe('bind variables configured via agent config', () => {
-  //   let customAgentControls;
+  describe('Config precedence', () => {
+    describe('when both agent config and env var are set, env var takes precedence', () => {
+      const customAgentControls = new AgentStubControls();
+      let configControls;
 
-  //   before(async () => {
-  //     customAgentControls = new AgentStubControls();
-  //     await customAgentControls.startAgent({
-  //       dbBindVariablesConfig: {
-  //         disable: false,
-  //         'allowed-columns': ['name']
-  //       }
-  //     });
-  //     await controls.stop();
-  //     controls.agentControls = customAgentControls;
-  //     await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
-  //   });
+      before(async () => {
+        await customAgentControls.startAgent({
+          dbBindVariablesConfig: {
+            disable: false,
+            'allowed-columns': ['name']
+          }
+        });
 
-  //   after(async () => {
-  //     await controls.stop();
-  //     controls.agentControls = agentControls;
-  //     await customAgentControls.stopAgent();
-  //     await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
-  //   });
+        configControls = new ProcessControls({
+          agentControls: customAgentControls,
+          dirname: __dirname,
+          env: {
+            LIBRARY_LATEST: isLatest,
+            LIBRARY_VERSION: version,
+            LIBRARY_NAME: name,
+            // env var kill switch overrides the agent config (disable: false)
+            INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE: 'true',
+            INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS: 'name'
+          }
+        });
+        await configControls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+      });
 
-  //   beforeEach(async () => {
-  //     await customAgentControls.clearReceivedTraceData();
-  //   });
+      beforeEach(async () => {
+        await customAgentControls.clearReceivedTraceData();
+      });
 
-  //   it('must capture allowed bind variables when config is delivered via agent', () =>
-  //     controls.sendRequest({ method: 'GET', path: '/bind-variables-allowed-columns-test' }).then(() =>
-  //       retry(() =>
-  //         customAgentControls.getSpans().then(spans => {
-  //           verifyHttpEntry(spans, '/bind-variables-allowed-columns-test');
+      after(async () => {
+        await customAgentControls.stopAgent();
+        await configControls.stop();
+      });
 
-  //           const selectSpan = getSpansByName(spans, 'postgres').find(
-  //             span => span.data.pg.stmt === 'SELECT * FROM users WHERE name = $1 AND email = $2'
-  //           );
-  //           expect(selectSpan).to.exist;
-  //           expect(selectSpan.data.pg.binds).to.be.an('array');
-  //           expect(selectSpan.data.pg.binds).to.have.lengthOf(1);
-  //           expect(selectSpan.data.pg.binds[0]).to.deep.equal({ name: 'name', value: 'alloweduser' });
-  //         })
-  //       )
-  //     ));
+      it('must not capture bind variables when env var kill switch overrides agent config', () =>
+        configControls.sendRequest({ method: 'GET', path: '/bind-variables-allowed-columns-test' }).then(() =>
+          retry(() =>
+            customAgentControls.getSpans().then(spans => {
+              expectAtLeastOneMatching(spans, [
+                span => expect(span.p).to.not.exist,
+                span => expect(span.k).to.equal(constants.ENTRY),
+                span => expect(span.f.e).to.equal(String(configControls.getPid())),
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.data.http.url).to.equal('/bind-variables-allowed-columns-test')
+              ]);
 
-  //   it('must not capture bind variables when kill switch is set via agent config', async () => {
-  //     await controls.stop();
-  //     await customAgentControls.stopAgent();
-  //     await customAgentControls.startAgent({
-  //       dbBindVariablesConfig: {
-  //         disable: true,
-  //         'allowed-columns': ['name']
-  //       }
-  //     });
-  //     await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
-  //     await customAgentControls.clearReceivedTraceData();
+              const pgSpans = getSpansByName(spans, 'postgres');
+              expect(pgSpans.length).to.be.greaterThan(0);
+              pgSpans.forEach(span => {
+                expect(span.data.pg.binds).to.not.exist;
+              });
+            })
+          )
+        ));
+    });
 
-  //     await controls.sendRequest({ method: 'GET', path: '/bind-variables-allowed-columns-test' });
+    describe('when only agent config is set (no env var)', () => {
+      const customAgentControls = new AgentStubControls();
+      let configControls;
 
-  //     await retry(() =>
-  //       customAgentControls.getSpans().then(spans => {
-  //         verifyHttpEntry(spans, '/bind-variables-allowed-columns-test');
+      before(async () => {
+        await customAgentControls.startAgent({
+          dbBindVariablesConfig: {
+            disable: false,
+            'allowed-columns': ['name']
+          }
+        });
 
-  //         const pgSpans = getSpansByName(spans, 'postgres');
-  //         expect(pgSpans.length).to.be.greaterThan(0);
-  //         pgSpans.forEach(span => {
-  //           expect(span.data.pg.binds).to.not.exist;
-  //         });
-  //       })
-  //     );
-  //   });
-  // });
+        configControls = new ProcessControls({
+          agentControls: customAgentControls,
+          dirname: __dirname,
+          env: {
+            LIBRARY_LATEST: isLatest,
+            LIBRARY_VERSION: version,
+            LIBRARY_NAME: name
+          }
+        });
+        await configControls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+      });
+
+      beforeEach(async () => {
+        await customAgentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await customAgentControls.stopAgent();
+        await configControls.stop();
+      });
+
+      it('must capture allowed bind variables when config is delivered via agent', () =>
+        configControls.sendRequest({ method: 'GET', path: '/bind-variables-allowed-columns-test' }).then(() =>
+          retry(() =>
+            customAgentControls.getSpans().then(spans => {
+              expectAtLeastOneMatching(spans, [
+                span => expect(span.p).to.not.exist,
+                span => expect(span.k).to.equal(constants.ENTRY),
+                span => expect(span.f.e).to.equal(String(configControls.getPid())),
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.data.http.url).to.equal('/bind-variables-allowed-columns-test')
+              ]);
+
+              const selectSpan = getSpansByName(spans, 'postgres').find(
+                span => span.data.pg.stmt === 'SELECT * FROM users WHERE name = $1 AND email = $2'
+              );
+              expect(selectSpan).to.exist;
+              expect(selectSpan.data.pg.binds).to.be.an('array');
+              expect(selectSpan.data.pg.binds).to.have.lengthOf(1);
+              expect(selectSpan.data.pg.binds[0]).to.deep.equal({ name: 'name', value: 'alloweduser' });
+            })
+          )
+        ));
+    });
+  });
 
   it('must trace pooled select now', () =>
     controls
