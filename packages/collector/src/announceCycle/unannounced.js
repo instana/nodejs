@@ -443,7 +443,7 @@ function applyDbBindVariablesConfiguration(agentResponse) {
 
   ensureNestedObjectExists(agentOpts.config, ['tracing', 'dbBindVariables']);
 
-  const disable = coreConfig.validators.booleanValidator(dbBindVarsFromAgent?.disable);
+  const disable = coreConfig.validators.booleanValidator(dbBindVarsFromAgent.disable);
   if (disable !== undefined) {
     agentOpts.config.tracing.dbBindVariables.disable = disable;
   }
