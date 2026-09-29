@@ -48,11 +48,6 @@ describe('tracing.bindVariables', function () {
       expect(util.isColumnAllowed('items.user_id', ['orders.user_id'])).to.be.false;
     });
 
-    it('matching is case-insensitive', function () {
-      expect(util.isColumnAllowed('UserName', ['username'])).to.be.true;
-      expect(util.isColumnAllowed('username', ['UserName'])).to.be.true;
-    });
-
     it('returns false when column is not in list', function () {
       expect(util.isColumnAllowed('password', ['username', 'email'])).to.be.false;
     });

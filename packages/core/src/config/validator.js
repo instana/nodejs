@@ -233,11 +233,11 @@ exports.allowedColumnsValidator = function allowedColumnsValidator(value) {
   if (typeof value === 'string') {
     return value
       .split(',')
-      .map(c => c.trim())
+      .map(c => c.trim().toLowerCase())
       .filter(c => c !== '');
   }
   if (Array.isArray(value)) {
-    return value.filter(c => typeof c === 'string' && c.trim() !== '').map(c => c.trim());
+    return value.filter(c => typeof c === 'string' && c.trim() !== '').map(c => c.trim().toLowerCase());
   }
   return undefined;
 };

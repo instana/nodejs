@@ -1249,9 +1249,9 @@ function parseSecretsEnvVar(envVarValue) {
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
 function normalizeDbBindVariables({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
-  /** @type {DbBindVariablesConfig} */
-  const userDbBindVars = userConfig.tracing?.dbBindVariables || /** @type {any} */ ({});
-  finalConfig.tracing.dbBindVariables = finalConfig.tracing.dbBindVariables || /** @type {any} */ ({});
+  const userDbBindVars = userConfig.tracing?.dbBindVariables || /** @type {DbBindVariablesConfig} */ ({});
+  finalConfig.tracing.dbBindVariables =
+    finalConfig.tracing.dbBindVariables || /** @type {DbBindVariablesConfig} */ ({});
 
   const { value: disable, source: disableSource } = util.resolve(
     {

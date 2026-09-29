@@ -1,18 +1,17 @@
 /*
- * (c) Copyright IBM Corp. 2026
+ * (c) Copyright IBM Corp. 2025
  */
 
 'use strict';
 
 const { MAX_BINDS } = require('../tracing/constants');
 
-/**
- * @typedef {{ name: string, value: string }} BindEntry
- */
+const DOLLAR_PARAM_RE_SOURCE = '([\\w.]+)\\s*(?:=|!=|<>|<=|>=|<|>|LIKE|ILIKE)\\s*\\$(\\d+)';
+const QUESTION_MARK_RE_SOURCE = '([\\w.]+)\\s*(?:=|!=|<>|<=|>=|<|>|LIKE|ILIKE)\\s*\\?';
+
+/** @typedef {{ name: string, value: string }} BindEntry */
 
 /**
- * Determines whether bind variable capture is enabled for the given config.
- *
  * @param {import('../config').InstanaConfig['tracing']['dbBindVariables']} cfg
  * @returns {boolean}
  */
@@ -21,16 +20,11 @@ exports.isCaptureEnabled = function isCaptureEnabled(cfg) {
 };
 
 /**
- * Checks whether a column name is permitted by the allowed-columns list.
+ * Unqualified entries match both bare and qualified column names.
+ * Qualified entries match only the exact qualified form.
  *
- * Matching rules (per spec):
- * - An **unqualified** entry (e.g. `user_id`) matches the bare column name AND any
- *   qualified form whose unqualified part matches (e.g. `orders.user_id`, `o.user_id`).
- * - A **fully qualified** entry (e.g. `orders.user_id`) matches only the exact
- *   qualified form; it does NOT match a bare `user_id`.
- *
- * @param {string} colName - column name as it appears in the query (may be qualified)
- * @param {string[]} allowedColumns
+ * @param {string} colName
+ * @param {string[]} allowedColumns - pre-lowercased
  * @returns {boolean}
  */
 exports.isColumnAllowed = function isColumnAllowed(colName, allowedColumns) {
@@ -39,27 +33,17 @@ exports.isColumnAllowed = function isColumnAllowed(colName, allowedColumns) {
   const unqualifiedCol = dotIndex >= 0 ? col.slice(dotIndex + 1) : col;
 
   for (let i = 0; i < allowedColumns.length; i++) {
-    const entry = allowedColumns[i].toLowerCase();
+    const entry = allowedColumns[i];
     if (entry.includes('.')) {
-      // qualified entry: exact match only
       if (col === entry) return true;
-    } else {
-      // unqualified entry: matches bare name or any qualified form's tail
-      // eslint-disable-next-line no-lonely-if
-      if (unqualifiedCol === entry) return true;
+    } else if (unqualifiedCol === entry) {
+      return true;
     }
   }
   return false;
 };
 
 /**
- * Normalises a single raw bind value to its string representation.
- *
- * - `null` / `undefined` → `"null"`
- * - `Buffer`             → `"<binary>"`
- * - plain `object`       → `"<unsupported>"`
- * - everything else      → `String(value)`
- *
  * @param {any} rawValue
  * @returns {string}
  */
@@ -77,12 +61,6 @@ exports.normalizeValue = function normalizeValue(rawValue) {
 };
 
 /**
- * Builds the `binds` array from a map of `{ colName → rawValue }` entries,
- * applying the allowed-columns filter and the 100-entry cap.
- *
- * Use this when the driver already provides column names (named parameters,
- * or when metadata is available from a prepared statement).
- *
  * @param {Array<{ name: string, rawValue: any }>} namedBinds
  * @param {string[]} allowedColumns
  * @returns {BindEntry[] | null}
@@ -99,14 +77,8 @@ exports.buildBindsFromNamed = function buildBindsFromNamed(namedBinds, allowedCo
 };
 
 /**
- * Builds the `binds` array from a positional values array, using SQL parsing
- * to resolve `$N` / `?` placeholders to column names.
- *
- * Values whose placeholder cannot be resolved to a column name in the
- * allowed-columns are silently ignored, per spec rule 5.
- *
- * @param {any[]} positionalValues  - raw values array from the driver
- * @param {string[]} columnNames    - sparse array from resolveColumnNames*; index = param index
+ * @param {any[]} positionalValues
+ * @param {string[]} columnNames
  * @param {string[]} allowedColumns
  * @returns {BindEntry[] | null}
  */
@@ -114,7 +86,7 @@ exports.buildBindsFromPositional = function buildBindsFromPositional(positionalV
   const binds = [];
   for (let i = 0; i < positionalValues.length; i++) {
     const colName = columnNames[i];
-    if (!colName) continue; // spec: ignore unresolvable positional params
+    if (!colName) continue;
     if (!exports.isColumnAllowed(colName, allowedColumns)) continue;
     binds.push({ name: colName, value: exports.normalizeValue(positionalValues[i]) });
     if (binds.length >= MAX_BINDS) break;
@@ -123,13 +95,8 @@ exports.buildBindsFromPositional = function buildBindsFromPositional(positionalV
 };
 
 /**
- * Parses a SQL statement to resolve PostgreSQL-style positional parameters
- * (`$1`, `$2`, …) to column names via simple pattern matching.
- *
- * Recognised patterns:  `<col> <op> $N`  where op ∈ =, !=, <>, <=, >=, <, >, LIKE, ILIKE
- *
- * Returns a sparse array where index `i` holds the column name for `$(i+1)`.
- * Unresolvable positions are left `undefined` — callers must skip them.
+ * Resolves PostgreSQL `$N` placeholders to column names via `<col> <op> $N` pattern matching.
+ * Returns a sparse array indexed by param position (0-based).
  *
  * @param {string} sql
  * @param {number} paramCount
@@ -137,9 +104,9 @@ exports.buildBindsFromPositional = function buildBindsFromPositional(positionalV
  */
 exports.resolveColumnNamesDollarParams = function resolveColumnNamesDollarParams(sql, paramCount) {
   const result = new Array(paramCount);
-  const re = /([\w.]+)\s*(?:=|!=|<>|<=|>=|<|>|LIKE|ILIKE)\s*\$(\d+)/gi;
+  const re = new RegExp(DOLLAR_PARAM_RE_SOURCE, 'gi');
   for (let match = re.exec(sql); match !== null; match = re.exec(sql)) {
-    const idx = parseInt(match[2], 10) - 1; // $1 → index 0
+    const idx = parseInt(match[2], 10) - 1;
     if (idx >= 0 && idx < paramCount) {
       result[idx] = match[1];
     }
@@ -148,13 +115,8 @@ exports.resolveColumnNamesDollarParams = function resolveColumnNamesDollarParams
 };
 
 /**
- * Parses a SQL statement to resolve MySQL/MSSQL-style positional parameters
- * (`?`) to column names via simple pattern matching.
- *
- * Recognised patterns:  `<col> <op> ?`  where op ∈ =, !=, <>, <=, >=, <, >, LIKE
- *
+ * Resolves `?` placeholders to column names via `<col> <op> ?` pattern matching.
  * Returns a sparse array in occurrence order.
- * Unresolvable positions are left `undefined` — callers must skip them.
  *
  * @param {string} sql
  * @param {number} paramCount
@@ -162,7 +124,7 @@ exports.resolveColumnNamesDollarParams = function resolveColumnNamesDollarParams
  */
 exports.resolveColumnNamesQuestionMarkParams = function resolveColumnNamesQuestionMarkParams(sql, paramCount) {
   const result = new Array(paramCount);
-  const re = /([\w.]+)\s*(?:=|!=|<>|<=|>=|<|>|LIKE|ILIKE)\s*\?/gi;
+  const re = new RegExp(QUESTION_MARK_RE_SOURCE, 'gi');
   let idx = 0;
   for (let match = re.exec(sql); match !== null && idx < paramCount; match = re.exec(sql)) {
     result[idx++] = match[1];
@@ -171,11 +133,6 @@ exports.resolveColumnNamesQuestionMarkParams = function resolveColumnNamesQuesti
 };
 
 /**
- * Extracts raw positional values from pg query arguments and builds the binds array.
- *
- * pg only supports PostgreSQL-style positional parameters ($1, $2, ...).
- * Column names are resolved by parsing the SQL statement.
- *
  * @param {string} sql
  * @param {string | { text: string, values?: any[] }} config
  * @param {any[]} argsForOriginalQuery
