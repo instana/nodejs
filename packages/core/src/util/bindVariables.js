@@ -7,7 +7,7 @@
 const { MAX_BINDS } = require('../tracing/constants');
 
 /**
- * @typedef {{ name: string, value: string | string[] }} BindEntry
+ * @typedef {{ name: string, value: string }} BindEntry
  */
 
 /**

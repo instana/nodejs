@@ -62,7 +62,8 @@ describe('config.normalizeConfig', () => {
     delete process.env.INSTANA_TRACING_HTTP_EXIT_CLASSIFY_ALL_4XX_AS_ERRORS;
     delete process.env.INSTANA_TRACING_HTTP_EXIT_CLASSIFY_AS_ERRORS;
     delete process.env.INSTANA_TRACING_CAPTURE_LOG_LEVEL;
-    delete process.env.INSTANA_TRACING_BIND_VARIABLES;
+    delete process.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE;
+    delete process.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS;
   }
 
   describe('default configuration', () => {
