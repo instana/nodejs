@@ -74,7 +74,7 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
       db
     };
 
-    const binds = captureBinds(sql, config, argsForOriginalQuery);
+    const binds = bindVariables.captureBinds(sql, config, argsForOriginalQuery, bindVariablesConfig);
     if (binds !== null) {
       span.data.pg.binds = binds;
     }
@@ -116,40 +116,6 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
     }
     return promise;
   });
-}
-
-/**
- * Captures bind variables for a pg query using the shared bindVariables util.
- *
- * pg only supports PostgreSQL-style positional parameters ($1, $2, ...).
- * Column names are resolved by parsing the SQL statement.
- *
- * @param {string} sql
- * @param {string | { text: string, values?: any[] }} config
- * @param {any[]} argsForOriginalQuery
- * @returns {Array<{ name: string, value: string }> | null}
- */
-function captureBinds(sql, config, argsForOriginalQuery) {
-  if (!bindVariables.isCaptureEnabled(bindVariablesConfig)) {
-    return null;
-  }
-
-  // Collect the raw positional values from the pg API
-  let rawValues;
-  if (typeof config === 'string') {
-    if (argsForOriginalQuery.length > 1 && Array.isArray(argsForOriginalQuery[1])) {
-      rawValues = argsForOriginalQuery[1];
-    }
-  } else if (config && Array.isArray(config.values)) {
-    rawValues = config.values;
-  }
-
-  if (!rawValues || rawValues.length === 0) {
-    return null;
-  }
-
-  const columnNames = bindVariables.resolveColumnNamesDollarParams(sql, rawValues.length);
-  return bindVariables.buildBindsFromPositional(rawValues, columnNames, bindVariablesConfig.allowedColumns);
 }
 
 function finishSpan(error, span) {

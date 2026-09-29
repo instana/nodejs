@@ -169,3 +169,37 @@ exports.resolveColumnNamesQuestionMarkParams = function resolveColumnNamesQuesti
   }
   return result;
 };
+
+/**
+ * Extracts raw positional values from pg query arguments and builds the binds array.
+ *
+ * pg only supports PostgreSQL-style positional parameters ($1, $2, ...).
+ * Column names are resolved by parsing the SQL statement.
+ *
+ * @param {string} sql
+ * @param {string | { text: string, values?: any[] }} config
+ * @param {any[]} argsForOriginalQuery
+ * @param {import('../config').InstanaConfig['tracing']['dbBindVariables']} bindVariablesConfig
+ * @returns {BindEntry[] | null}
+ */
+exports.captureBinds = function captureBinds(sql, config, argsForOriginalQuery, bindVariablesConfig) {
+  if (!exports.isCaptureEnabled(bindVariablesConfig)) {
+    return null;
+  }
+
+  let rawValues;
+  if (typeof config === 'string') {
+    if (argsForOriginalQuery.length > 1 && Array.isArray(argsForOriginalQuery[1])) {
+      rawValues = argsForOriginalQuery[1];
+    }
+  } else if (config && Array.isArray(config.values)) {
+    rawValues = config.values;
+  }
+
+  if (!rawValues || rawValues.length === 0) {
+    return null;
+  }
+
+  const columnNames = exports.resolveColumnNamesDollarParams(sql, rawValues.length);
+  return exports.buildBindsFromPositional(rawValues, columnNames, bindVariablesConfig.allowedColumns);
+};
