@@ -66,7 +66,13 @@ exports.isColumnAllowed = function isColumnAllowed(colName, allowedColumns) {
 exports.normalizeValue = function normalizeValue(rawValue) {
   if (rawValue === null || rawValue === undefined) return 'null';
   if (Buffer.isBuffer(rawValue)) return '<binary>';
-  if (typeof rawValue === 'object') return '<unsupported>';
+  if (typeof rawValue === 'object') {
+    try {
+      return JSON.stringify(rawValue);
+    } catch (_) {
+      return '<unsupported>';
+    }
+  }
   return String(rawValue);
 };
 

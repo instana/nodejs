@@ -80,12 +80,18 @@ describe('tracing.bindVariables', function () {
       expect(util.normalizeValue(Buffer.from('data'))).to.equal('<binary>');
     });
 
-    it('converts plain object to "<unsupported>"', function () {
-      expect(util.normalizeValue({ foo: 'bar' })).to.equal('<unsupported>');
+    it('converts plain object to JSON string', function () {
+      expect(util.normalizeValue({ foo: 'bar' })).to.equal('{"foo":"bar"}');
     });
 
-    it('converts array to "<unsupported>"', function () {
-      expect(util.normalizeValue([1, 2, 3])).to.equal('<unsupported>');
+    it('converts array to JSON string', function () {
+      expect(util.normalizeValue([1, 2, 3])).to.equal('[1,2,3]');
+    });
+
+    it('converts circular object to "<unsupported>"', function () {
+      const circular = {};
+      circular.self = circular;
+      expect(util.normalizeValue(circular)).to.equal('<unsupported>');
     });
 
     it('converts number to string', function () {
