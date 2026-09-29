@@ -11,18 +11,18 @@ const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
-const dbBindVariablesUtil = require('../../../util/bindVariables');
+const bindVariables = require('../../../util/bindVariables');
 
 let isActive = false;
 
 /** @type {import('../../../config').InstanaConfig['tracing']['dbBindVariables']} */
-let dbBindVariablesConfig;
+let bindVariablesConfig;
 
 exports.spanName = 'postgres';
 exports.batchable = true;
 
 exports.init = function init(config) {
-  dbBindVariablesConfig = config && config.tracing && config.tracing.dbBindVariables;
+  bindVariablesConfig = config && config.tracing && config.tracing.dbBindVariables;
   hook.onModuleLoad('pg', instrumentPg);
 };
 
@@ -119,7 +119,7 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
 }
 
 /**
- * Captures bind variables for a pg query using the shared dbBindVariablesUtil.
+ * Captures bind variables for a pg query using the shared bindVariables util.
  *
  * pg only supports PostgreSQL-style positional parameters ($1, $2, ...).
  * Column names are resolved by parsing the SQL statement.
@@ -130,7 +130,7 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
  * @returns {Array<{ name: string, value: string }> | null}
  */
 function captureBinds(sql, config, argsForOriginalQuery) {
-  if (!dbBindVariablesUtil.isActive(dbBindVariablesConfig)) {
+  if (!bindVariables.isCaptureEnabled(bindVariablesConfig)) {
     return null;
   }
 
@@ -148,8 +148,8 @@ function captureBinds(sql, config, argsForOriginalQuery) {
     return null;
   }
 
-  const columnNames = dbBindVariablesUtil.resolveColumnNamesDollarParams(sql, rawValues.length);
-  return dbBindVariablesUtil.buildBindsFromPositional(rawValues, columnNames, dbBindVariablesConfig.allowedColumns);
+  const columnNames = bindVariables.resolveColumnNamesDollarParams(sql, rawValues.length);
+  return bindVariables.buildBindsFromPositional(rawValues, columnNames, bindVariablesConfig.allowedColumns);
 }
 
 function finishSpan(error, span) {

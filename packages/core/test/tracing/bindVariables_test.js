@@ -9,23 +9,23 @@ const util = require('../../src/util/bindVariables');
 
 describe('tracing.bindVariables', function () {
   // ---------------------------------------------------------------------------
-  // isActive
+  // isCaptureEnabled
   // ---------------------------------------------------------------------------
-  describe('isActive', function () {
+  describe('isCaptureEnabled', function () {
     it('should return false when config is undefined', function () {
-      expect(util.isActive(undefined)).to.be.false;
+      expect(util.isCaptureEnabled(undefined)).to.be.false;
     });
 
     it('should return false when disable=true', function () {
-      expect(util.isActive({ disable: true, allowedColumns: ['id'] })).to.be.false;
+      expect(util.isCaptureEnabled({ disable: true, allowedColumns: ['id'] })).to.be.false;
     });
 
     it('should return false when allowedColumns is empty', function () {
-      expect(util.isActive({ disable: false, allowedColumns: [] })).to.be.false;
+      expect(util.isCaptureEnabled({ disable: false, allowedColumns: [] })).to.be.false;
     });
 
     it('should return true when disable=false and allowedColumns is non-empty', function () {
-      expect(util.isActive({ disable: false, allowedColumns: ['id'] })).to.be.true;
+      expect(util.isCaptureEnabled({ disable: false, allowedColumns: ['id'] })).to.be.true;
     });
   });
 

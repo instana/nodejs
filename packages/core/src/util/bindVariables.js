@@ -11,12 +11,12 @@ const { MAX_BINDS } = require('../tracing/constants');
  */
 
 /**
- * Determines whether bind variable capture is active for the given config.
+ * Determines whether bind variable capture is enabled for the given config.
  *
  * @param {import('../config').InstanaConfig['tracing']['dbBindVariables']} cfg
  * @returns {boolean}
  */
-exports.isActive = function isActive(cfg) {
+exports.isCaptureEnabled = function isCaptureEnabled(cfg) {
   return !!(cfg && cfg.disable === false && cfg.allowedColumns && cfg.allowedColumns.length > 0);
 };
 
