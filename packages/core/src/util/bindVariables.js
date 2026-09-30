@@ -15,7 +15,7 @@ const DOLLAR_PARAM_RE_SOURCE = '([\\w.]+)\\s*(?:=|!=|<>|<=|>=|<|>|LIKE|ILIKE)\\s
  * Qualified entries match only the exact qualified form.
  *
  * @param {string} colName
- * @param {string[]} allowedColumns - pre-lowercased
+ * @param {string[]} allowedColumns
  * @returns {boolean}
  */
 exports.isColumnAllowed = function isColumnAllowed(colName, allowedColumns) {
@@ -70,7 +70,7 @@ exports.buildBindsFromPositional = function buildBindsFromPositional(positionalV
 };
 
 /**
- * Resolves PostgreSQL `$N` placeholders to column names via `<col> <op> $N` pattern matching.
+ * Resolves PostgreSQL like `$N` placeholders to column names via `<col> <op> $N` pattern matching.
  * Returns a sparse array indexed by param position (0-based).
  *
  * @param {string} sql
@@ -90,7 +90,7 @@ exports.resolveColumnNamesDollarParams = function resolveColumnNamesDollarParams
 };
 
 /**
- * @param {{ sql: string, rawValues: any[], allowedColumns: string[] }} opts - allowedColumns must be pre-lowercased
+ * @param {{ sql: string, rawValues: any[], allowedColumns: string[] }} opts
  * @returns {BindEntry[] | null}
  */
 exports.buildBinds = function buildBinds({ sql, rawValues, allowedColumns }) {
