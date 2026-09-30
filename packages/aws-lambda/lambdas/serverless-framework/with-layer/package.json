@@ -17,5 +17,8 @@
   "license": "MIT",
   "devDependencies": {
     "serverless": "4.41.0"
+  },
+  "overrides": {
+    "undici": "6.29.0"
   }
 }
