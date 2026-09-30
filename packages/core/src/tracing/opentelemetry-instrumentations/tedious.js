@@ -7,11 +7,16 @@
 const constants = require('../constants');
 
 let TediousInstrumentation;
+let isActive = false;
 
 function initInstrumentation() {
-  TediousInstrumentation =
-    TediousInstrumentation || require('@opentelemetry/instrumentation-tedious').TediousInstrumentation;
+  if (!TediousInstrumentation) {
+    TediousInstrumentation = require('@opentelemetry/instrumentation-tedious').TediousInstrumentation;
+    isActive = true;
+  }
 }
+
+module.exports.isActive = () => isActive;
 
 module.exports.preInit = () => {
   initInstrumentation();
