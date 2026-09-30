@@ -7,7 +7,6 @@
 const { MAX_BINDS } = require('../tracing/constants');
 
 const DOLLAR_PARAM_RE_SOURCE = '([\\w.]+)\\s*(?:=|!=|<>|<=|>=|<|>|LIKE|ILIKE)\\s*\\$(\\d+)';
-const QUESTION_MARK_RE_SOURCE = '([\\w.]+)\\s*(?:=|!=|<>|<=|>=|<|>|LIKE|ILIKE)\\s*\\?';
 
 /** @typedef {{ name: string, value: string }} BindEntry */
 
@@ -110,24 +109,6 @@ exports.resolveColumnNamesDollarParams = function resolveColumnNamesDollarParams
     if (idx >= 0 && idx < paramCount) {
       result[idx] = match[1];
     }
-  }
-  return result;
-};
-
-/**
- * Resolves `?` placeholders to column names via `<col> <op> ?` pattern matching.
- * Returns a sparse array in occurrence order.
- *
- * @param {string} sql
- * @param {number} paramCount
- * @returns {(string | undefined)[]}
- */
-exports.resolveColumnNamesQuestionMarkParams = function resolveColumnNamesQuestionMarkParams(sql, paramCount) {
-  const result = new Array(paramCount);
-  const re = new RegExp(QUESTION_MARK_RE_SOURCE, 'gi');
-  let idx = 0;
-  for (let match = re.exec(sql); match !== null && idx < paramCount; match = re.exec(sql)) {
-    result[idx++] = match[1];
   }
   return result;
 };

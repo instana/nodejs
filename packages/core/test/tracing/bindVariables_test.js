@@ -196,42 +196,6 @@ describe('tracing.bindVariables', function () {
     });
   });
 
-  describe('resolveColumnNamesQuestionMarkParams', function () {
-    it('resolves a single condition', function () {
-      const r = util.resolveColumnNamesQuestionMarkParams('SELECT * FROM t WHERE id = ?', 1);
-      expect(r[0]).to.equal('id');
-    });
-
-    it('resolves multiple conditions in order', function () {
-      const r = util.resolveColumnNamesQuestionMarkParams('SELECT * FROM t WHERE username = ? AND age > ?', 2);
-      expect(r[0]).to.equal('username');
-      expect(r[1]).to.equal('age');
-    });
-
-    it('resolves table-qualified column names', function () {
-      const r = util.resolveColumnNamesQuestionMarkParams('SELECT * FROM orders WHERE orders.user_id = ?', 1);
-      expect(r[0]).to.equal('orders.user_id');
-    });
-
-    it('leaves INSERT VALUES positions as undefined', function () {
-      const r = util.resolveColumnNamesQuestionMarkParams('INSERT INTO users (username, email) VALUES (?, ?)', 2);
-      expect(r[0]).to.equal(undefined);
-      expect(r[1]).to.equal(undefined);
-    });
-
-    it('stops at paramCount even if more matches exist', function () {
-      const r = util.resolveColumnNamesQuestionMarkParams('SELECT * FROM t WHERE a = ? AND b = ? AND c = ?', 2);
-      expect(r).to.have.length(2);
-      expect(r[0]).to.equal('a');
-      expect(r[1]).to.equal('b');
-    });
-
-    it('resolves DELETE WHERE conditions', function () {
-      const r = util.resolveColumnNamesQuestionMarkParams('DELETE FROM users WHERE name = ? AND email = ?', 2);
-      expect(r[0]).to.equal('name');
-      expect(r[1]).to.equal('email');
-    });
-  });
 
   describe('captureBinds', function () {
     const enabledConfig = { disable: false, allowedColumns: ['name'] };
