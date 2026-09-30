@@ -206,6 +206,125 @@ describe('tracing.bindVariables', function () {
     });
   });
 
+  describe('resolveColumnNamesNamedParams', function () {
+    it('resolves a single :name equality condition', function () {
+      const r = util.resolveColumnNamesNamedParams('SELECT * FROM t WHERE id = :id');
+      expect(r).to.deep.equal([{ col: 'id', key: 'id' }]);
+    });
+
+    it('resolves multiple named conditions in left-to-right order', function () {
+      const r = util.resolveColumnNamesNamedParams('SELECT * FROM t WHERE name = :name AND age > :age');
+      expect(r).to.deep.equal([
+        { col: 'name', key: 'name' },
+        { col: 'age', key: 'age' }
+      ]);
+    });
+
+    it('resolves table-qualified column names', function () {
+      const r = util.resolveColumnNamesNamedParams('SELECT * FROM orders WHERE orders.user_id = :userId');
+      expect(r).to.deep.equal([{ col: 'orders.user_id', key: 'userId' }]);
+    });
+
+    it('resolves comparison operators other than =', function () {
+      const r = util.resolveColumnNamesNamedParams('SELECT * FROM t WHERE age >= :minAge AND score < :maxScore');
+      expect(r).to.deep.equal([
+        { col: 'age', key: 'minAge' },
+        { col: 'score', key: 'maxScore' }
+      ]);
+    });
+
+    it('resolves LIKE operator', function () {
+      const r = util.resolveColumnNamesNamedParams('SELECT * FROM t WHERE name LIKE :namePattern');
+      expect(r).to.deep.equal([{ col: 'name', key: 'namePattern' }]);
+    });
+
+    it('resolves INSERT column-list positions', function () {
+      const r = util.resolveColumnNamesNamedParams('INSERT INTO users (name, email) VALUES (:name, :email)');
+      expect(r).to.deep.equal([
+        { col: 'name', key: 'name' },
+        { col: 'email', key: 'email' }
+      ]);
+    });
+
+    it('resolves INSERT when param key differs from column name', function () {
+      const r = util.resolveColumnNamesNamedParams('INSERT INTO users (name, email) VALUES (:n, :e)');
+      expect(r).to.deep.equal([
+        { col: 'name', key: 'n' },
+        { col: 'email', key: 'e' }
+      ]);
+    });
+
+    it('resolves UPDATE SET conditions', function () {
+      const r = util.resolveColumnNamesNamedParams('UPDATE users SET name = :name, email = :email WHERE id = :id');
+      expect(r).to.deep.equal([
+        { col: 'name', key: 'name' },
+        { col: 'email', key: 'email' },
+        { col: 'id', key: 'id' }
+      ]);
+    });
+
+    it('resolves DELETE WHERE conditions', function () {
+      const r = util.resolveColumnNamesNamedParams('DELETE FROM users WHERE name = :name AND email = :email');
+      expect(r).to.deep.equal([
+        { col: 'name', key: 'name' },
+        { col: 'email', key: 'email' }
+      ]);
+    });
+
+    it('returns empty array when no named placeholders present', function () {
+      const r = util.resolveColumnNamesNamedParams('SELECT * FROM t WHERE id = ?');
+      expect(r).to.deep.equal([]);
+    });
+  });
+
+  describe('buildBindsFromNamed', function () {
+    it('maps param names to column names and values', function () {
+      const r = util.buildBindsFromNamed(
+        'SELECT * FROM users WHERE name = :name AND age > :age',
+        { name: 'alice', age: 30 },
+        ['name', 'age']
+      );
+      expect(r).to.deep.equal([
+        { name: 'name', value: 'alice' },
+        { name: 'age', value: '30' }
+      ]);
+    });
+
+    it('applies allowed-columns filter', function () {
+      const r = util.buildBindsFromNamed(
+        'SELECT * FROM users WHERE name = :name AND email = :email',
+        { name: 'alice', email: 'alice@example.com' },
+        ['name']
+      );
+      expect(r).to.deep.equal([{ name: 'name', value: 'alice' }]);
+    });
+
+    it('skips param when key is absent from values object', function () {
+      const r = util.buildBindsFromNamed('SELECT * FROM t WHERE name = :name AND age > :age', { name: 'alice' }, [
+        'name',
+        'age'
+      ]);
+      expect(r).to.deep.equal([{ name: 'name', value: 'alice' }]);
+    });
+
+    it('resolves INSERT column-list', function () {
+      const r = util.buildBindsFromNamed(
+        'INSERT INTO users (name, email) VALUES (:name, :email)',
+        { name: 'alice', email: 'alice@example.com' },
+        ['name', 'email']
+      );
+      expect(r).to.deep.equal([
+        { name: 'name', value: 'alice' },
+        { name: 'email', value: 'alice@example.com' }
+      ]);
+    });
+
+    it('returns null when values object is empty', function () {
+      const r = util.buildBindsFromNamed('SELECT * FROM t WHERE name = :name', {}, ['name']);
+      expect(r).to.equal(null);
+    });
+  });
+
   describe('buildBinds', function () {
     const allowedColumns = ['name'];
 
@@ -230,6 +349,34 @@ describe('tracing.bindVariables', function () {
     it('applies allowed-columns filter', function () {
       const sql = 'SELECT * FROM users WHERE name = $1 AND email = $2';
       const result = util.buildBinds({ sql, rawValues: ['alice', 'alice@example.com'], allowedColumns });
+      expect(result).to.deep.equal([{ name: 'name', value: 'alice' }]);
+    });
+
+    it('resolves INSERT column-list (dollar)', function () {
+      const sql = 'INSERT INTO users (name, email) VALUES ($1, $2)';
+      const result = util.buildBinds({ sql, rawValues: ['alice', 'alice@example.com'], allowedColumns });
+      expect(result).to.deep.equal([{ name: 'name', value: 'alice' }]);
+    });
+
+    it('resolves INSERT column-list (question)', function () {
+      const sql = 'INSERT INTO users (name, email) VALUES (?, ?)';
+      const result = util.buildBinds({
+        sql,
+        rawValues: ['alice', 'alice@example.com'],
+        allowedColumns,
+        parameterStyle: 'question'
+      });
+      expect(result).to.deep.equal([{ name: 'name', value: 'alice' }]);
+    });
+
+    it('resolves INSERT column-list (named)', function () {
+      const sql = 'INSERT INTO users (name, email) VALUES (:name, :email)';
+      const result = util.buildBinds({
+        sql,
+        rawValues: { name: 'alice', email: 'alice@example.com' },
+        allowedColumns,
+        parameterStyle: 'named'
+      });
       expect(result).to.deep.equal([{ name: 'name', value: 'alice' }]);
     });
 

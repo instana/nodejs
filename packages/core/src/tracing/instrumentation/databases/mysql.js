@@ -170,21 +170,36 @@ function instrumentedAccessFunction(
     span.b = { s: 1 };
     span.stack = tracingUtil.getStackTrace(instrumentedAccessFunction);
 
-    // TODO: To enable bind variable capture for mysql/mysql2, call tracingUtil.captureBinds here.
-    // mysql2 supports two value styles that need to be handled separately:
-    //   - Array values (? positional):  parameterStyle: 'question'
-    //   - Object values (namedPlaceholders: true, :name style): parameterStyle: 'named'
-    //     The 'named' resolver and buildBindsFromNamed path in bindVariables.js still need to be
-    //     implemented before wiring this up.
+    const sql = typeof statementOrOpts === 'string' ? statementOrOpts : statementOrOpts.sql;
+
+    // valuesOrCallback is one of:
+    //   Array  — anonymous ? positional values
+    //   Object — mysql2 namedPlaceholders: true, values passed as { key: value }
+    //   Function — no bind values, just a callback
+    let rawValues;
+    let parameterStyle;
+    if (Array.isArray(valuesOrCallback)) {
+      rawValues = valuesOrCallback;
+      parameterStyle = 'question';
+    } else if (valuesOrCallback !== null && typeof valuesOrCallback === 'object') {
+      rawValues = valuesOrCallback;
+      parameterStyle = 'named';
+    }
+
     span.data.mysql = {
-      stmt: tracingUtil.shortenDatabaseStatement(
-        typeof statementOrOpts === 'string' ? statementOrOpts : statementOrOpts.sql
-      ),
+      stmt: tracingUtil.shortenDatabaseStatement(sql),
       host,
       port,
       user,
       db
     };
+
+    if (parameterStyle) {
+      const binds = tracingUtil.captureBinds({ sql, rawValues, parameterStyle });
+      if (binds !== null) {
+        span.data.mysql.binds = binds;
+      }
+    }
 
     if (isPromiseImpl) {
       const resultPromise = originalFunction.apply(ctx, originalArgs);
