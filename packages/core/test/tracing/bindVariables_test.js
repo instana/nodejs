@@ -129,10 +129,10 @@ describe('tracing.bindVariables', function () {
       expect(r[1]).to.equal('bio');
     });
 
-    it('leaves INSERT VALUES positions as undefined', function () {
+    it('resolves INSERT VALUES positions from column list', function () {
       const r = util.resolveDollarParamColumns('INSERT INTO users (username, email) VALUES ($1, $2)', 2);
-      expect(r[0]).to.equal(undefined);
-      expect(r[1]).to.equal(undefined);
+      expect(r[0]).to.equal('username');
+      expect(r[1]).to.equal('email');
     });
 
     it('resolves UPDATE SET conditions', function () {
@@ -178,10 +178,10 @@ describe('tracing.bindVariables', function () {
       expect(r[1]).to.equal('bio');
     });
 
-    it('leaves INSERT VALUES positions as undefined', function () {
+    it('resolves INSERT VALUES positions from column list', function () {
       const r = util.resolveQuestionParamColumns('INSERT INTO users (username, email) VALUES (?, ?)', 2);
-      expect(r[0]).to.equal(undefined);
-      expect(r[1]).to.equal(undefined);
+      expect(r[0]).to.equal('username');
+      expect(r[1]).to.equal('email');
     });
 
     it('resolves UPDATE SET conditions', function () {
