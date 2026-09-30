@@ -7,8 +7,8 @@
 const { MAX_BINDS } = require('../tracing/constants');
 
 const OP_GROUP = '(?:=|!=|<>|<=|>=|<|>|LIKE|ILIKE)';
-const DOLLAR_PARAM_RE_SOURCE = `([\\w.]+)\\s*${OP_GROUP}\\s*\\$(\\d+)`;
-const QUESTION_PARAM_RE_SOURCE = `([\\w.]+)\\s*${OP_GROUP}\\s*\\?`;
+const DOLLAR_PARAM_REGEX = `([\\w.]+)\\s*${OP_GROUP}\\s*\\$(\\d+)`;
+const QUESTION_PARAM_REGEX = `([\\w.]+)\\s*${OP_GROUP}\\s*\\?`;
 
 /** @typedef {{ name: string, value: string }} BindEntry */
 
@@ -40,7 +40,7 @@ exports.isColumnAllowed = function isColumnAllowed(colName, allowedColumns) {
  * @param {any} rawValue
  * @returns {string}
  */
-exports.normalizeValue = function normalizeValue(rawValue) {
+exports.normalizeBindValue = function normalizeBindValue(rawValue) {
   if (rawValue === null || rawValue === undefined) return 'null';
   if (Buffer.isBuffer(rawValue)) return '<binary>';
   if (typeof rawValue === 'object') {
@@ -59,13 +59,13 @@ exports.normalizeValue = function normalizeValue(rawValue) {
  * @param {string[]} allowedColumns
  * @returns {BindEntry[] | null}
  */
-exports.buildBindsFromPositional = function buildBindsFromPositional(positionalValues, columnNames, allowedColumns) {
+exports.buildPositionalBinds = function buildPositionalBinds(positionalValues, columnNames, allowedColumns) {
   const binds = [];
   for (let i = 0; i < positionalValues.length; i++) {
     const colName = columnNames[i];
     if (!colName) continue;
     if (!exports.isColumnAllowed(colName, allowedColumns)) continue;
-    binds.push({ name: colName, value: exports.normalizeValue(positionalValues[i]) });
+    binds.push({ name: colName, value: exports.normalizeBindValue(positionalValues[i]) });
     if (binds.length >= MAX_BINDS) break;
   }
   return binds.length > 0 ? binds : null;
@@ -79,9 +79,9 @@ exports.buildBindsFromPositional = function buildBindsFromPositional(positionalV
  * @param {number} paramCount
  * @returns {(string | undefined)[]}
  */
-exports.resolveColumnNamesDollarParams = function resolveColumnNamesDollarParams(sql, paramCount) {
+exports.resolveDollarParamColumns = function resolveDollarParamColumns(sql, paramCount) {
   const result = new Array(paramCount);
-  const re = new RegExp(DOLLAR_PARAM_RE_SOURCE, 'gi');
+  const re = new RegExp(DOLLAR_PARAM_REGEX, 'gi');
   for (let match = re.exec(sql); match !== null; match = re.exec(sql)) {
     const idx = parseInt(match[2], 10) - 1;
     if (idx >= 0 && idx < paramCount) {
@@ -99,9 +99,9 @@ exports.resolveColumnNamesDollarParams = function resolveColumnNamesDollarParams
  * @param {number} paramCount
  * @returns {(string | undefined)[]}
  */
-exports.resolveColumnNamesQuestionParams = function resolveColumnNamesQuestionParams(sql, paramCount) {
+exports.resolveQuestionParamColumns = function resolveQuestionParamColumns(sql, paramCount) {
   const result = new Array(paramCount);
-  const re = new RegExp(QUESTION_PARAM_RE_SOURCE, 'gi');
+  const re = new RegExp(QUESTION_PARAM_REGEX, 'gi');
   let pos = 0;
   for (let match = re.exec(sql); match !== null && pos < paramCount; match = re.exec(sql)) {
     result[pos++] = match[1];
@@ -118,8 +118,8 @@ exports.resolveColumnNamesQuestionParams = function resolveColumnNamesQuestionPa
  * @type {{ [style: string]: (sql: string, paramCount: number) => (string | undefined)[] }}
  */
 const resolvers = {
-  dollar: exports.resolveColumnNamesDollarParams,
-  question: exports.resolveColumnNamesQuestionParams
+  dollar: exports.resolveDollarParamColumns,
+  question: exports.resolveQuestionParamColumns
 };
 
 /**
@@ -131,7 +131,12 @@ exports.buildBinds = function buildBinds({ sql, rawValues, allowedColumns, param
     return null;
   }
 
-  const resolver = resolvers[parameterStyle] || resolvers.dollar;
+  const resolver = resolvers[parameterStyle];
+
+  if (!resolver) {
+    return null;
+  }
+
   const columnNames = resolver(sql, rawValues.length);
-  return exports.buildBindsFromPositional(rawValues, columnNames, allowedColumns);
+  return exports.buildPositionalBinds(rawValues, columnNames, allowedColumns);
 };

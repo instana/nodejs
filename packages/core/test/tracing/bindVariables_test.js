@@ -35,171 +35,171 @@ describe('tracing.bindVariables', function () {
     });
   });
 
-  describe('normalizeValue', function () {
+  describe('normalizeBindValue', function () {
     it('converts null to "null"', function () {
-      expect(util.normalizeValue(null)).to.equal('null');
+      expect(util.normalizeBindValue(null)).to.equal('null');
     });
 
     it('converts undefined to "null"', function () {
-      expect(util.normalizeValue(undefined)).to.equal('null');
+      expect(util.normalizeBindValue(undefined)).to.equal('null');
     });
 
     it('converts Buffer to "<binary>"', function () {
-      expect(util.normalizeValue(Buffer.from('data'))).to.equal('<binary>');
+      expect(util.normalizeBindValue(Buffer.from('data'))).to.equal('<binary>');
     });
 
     it('converts plain object to JSON string', function () {
-      expect(util.normalizeValue({ foo: 'bar' })).to.equal('{"foo":"bar"}');
+      expect(util.normalizeBindValue({ foo: 'bar' })).to.equal('{"foo":"bar"}');
     });
 
     it('converts array to JSON string', function () {
-      expect(util.normalizeValue([1, 2, 3])).to.equal('[1,2,3]');
+      expect(util.normalizeBindValue([1, 2, 3])).to.equal('[1,2,3]');
     });
 
     it('converts circular object to "<unsupported>"', function () {
       const circular = {};
       circular.self = circular;
-      expect(util.normalizeValue(circular)).to.equal('<unsupported>');
+      expect(util.normalizeBindValue(circular)).to.equal('<unsupported>');
     });
 
     it('converts number to string', function () {
-      expect(util.normalizeValue(42)).to.equal('42');
+      expect(util.normalizeBindValue(42)).to.equal('42');
     });
 
     it('converts boolean to string', function () {
-      expect(util.normalizeValue(true)).to.equal('true');
+      expect(util.normalizeBindValue(true)).to.equal('true');
     });
 
     it('passes strings through', function () {
-      expect(util.normalizeValue('hello')).to.equal('hello');
+      expect(util.normalizeBindValue('hello')).to.equal('hello');
     });
   });
 
-  describe('buildBindsFromPositional', function () {
+  describe('buildPositionalBinds', function () {
     it('returns null when no column names can be resolved', function () {
-      const result = util.buildBindsFromPositional([42, 'secret'], [undefined, undefined], ['id']);
+      const result = util.buildPositionalBinds([42, 'secret'], [undefined, undefined], ['id']);
       expect(result).to.equal(null);
     });
 
     it('skips unresolvable positions', function () {
       // $1 → id, $2 → unresolvable
-      const result = util.buildBindsFromPositional([42, 'secret'], ['id', undefined], ['id']);
+      const result = util.buildPositionalBinds([42, 'secret'], ['id', undefined], ['id']);
       expect(result).to.deep.equal([{ name: 'id', value: '42' }]);
     });
 
     it('skips columns not in allowedColumns', function () {
-      const result = util.buildBindsFromPositional(['john', 'secret'], ['username', 'password'], ['username']);
+      const result = util.buildPositionalBinds(['john', 'secret'], ['username', 'password'], ['username']);
       expect(result).to.deep.equal([{ name: 'username', value: 'john' }]);
     });
 
     it('caps at 100 entries', function () {
       const values = Array.from({ length: 110 }, (_, i) => i);
       const colNames = Array.from({ length: 110 }, () => 'col');
-      const result = util.buildBindsFromPositional(values, colNames, ['col']);
+      const result = util.buildPositionalBinds(values, colNames, ['col']);
       expect(result).to.have.length(100);
     });
   });
 
-  describe('resolveColumnNamesDollarParams', function () {
+  describe('resolveDollarParamColumns', function () {
     it('resolves a single equality condition', function () {
-      const r = util.resolveColumnNamesDollarParams('SELECT * FROM t WHERE id = $1', 1);
+      const r = util.resolveDollarParamColumns('SELECT * FROM t WHERE id = $1', 1);
       expect(r[0]).to.equal('id');
     });
 
     it('resolves multiple conditions', function () {
-      const r = util.resolveColumnNamesDollarParams('SELECT * FROM t WHERE username = $1 AND password = $2', 2);
+      const r = util.resolveDollarParamColumns('SELECT * FROM t WHERE username = $1 AND password = $2', 2);
       expect(r[0]).to.equal('username');
       expect(r[1]).to.equal('password');
     });
 
     it('resolves table-qualified column names', function () {
-      const r = util.resolveColumnNamesDollarParams('SELECT * FROM orders WHERE orders.user_id = $1', 1);
+      const r = util.resolveDollarParamColumns('SELECT * FROM orders WHERE orders.user_id = $1', 1);
       expect(r[0]).to.equal('orders.user_id');
     });
 
     it('resolves comparison operators other than =', function () {
-      const r = util.resolveColumnNamesDollarParams('SELECT * FROM t WHERE age >= $1 AND score < $2', 2);
+      const r = util.resolveDollarParamColumns('SELECT * FROM t WHERE age >= $1 AND score < $2', 2);
       expect(r[0]).to.equal('age');
       expect(r[1]).to.equal('score');
     });
 
     it('resolves LIKE and ILIKE operators', function () {
-      const r = util.resolveColumnNamesDollarParams('SELECT * FROM t WHERE name LIKE $1 AND bio ILIKE $2', 2);
+      const r = util.resolveDollarParamColumns('SELECT * FROM t WHERE name LIKE $1 AND bio ILIKE $2', 2);
       expect(r[0]).to.equal('name');
       expect(r[1]).to.equal('bio');
     });
 
     it('leaves INSERT VALUES positions as undefined', function () {
-      const r = util.resolveColumnNamesDollarParams('INSERT INTO users (username, email) VALUES ($1, $2)', 2);
+      const r = util.resolveDollarParamColumns('INSERT INTO users (username, email) VALUES ($1, $2)', 2);
       expect(r[0]).to.equal(undefined);
       expect(r[1]).to.equal(undefined);
     });
 
     it('resolves UPDATE SET conditions', function () {
-      const r = util.resolveColumnNamesDollarParams('UPDATE users SET username = $1, email = $2 WHERE id = $3', 3);
+      const r = util.resolveDollarParamColumns('UPDATE users SET username = $1, email = $2 WHERE id = $3', 3);
       expect(r[0]).to.equal('username');
       expect(r[1]).to.equal('email');
       expect(r[2]).to.equal('id');
     });
 
     it('resolves DELETE WHERE conditions', function () {
-      const r = util.resolveColumnNamesDollarParams('DELETE FROM users WHERE name = $1 AND email = $2', 2);
+      const r = util.resolveDollarParamColumns('DELETE FROM users WHERE name = $1 AND email = $2', 2);
       expect(r[0]).to.equal('name');
       expect(r[1]).to.equal('email');
     });
   });
 
-  describe('resolveColumnNamesQuestionParams', function () {
+  describe('resolveQuestionParamColumns', function () {
     it('resolves a single equality condition', function () {
-      const r = util.resolveColumnNamesQuestionParams('SELECT * FROM t WHERE id = ?', 1);
+      const r = util.resolveQuestionParamColumns('SELECT * FROM t WHERE id = ?', 1);
       expect(r[0]).to.equal('id');
     });
 
     it('resolves multiple conditions in left-to-right order', function () {
-      const r = util.resolveColumnNamesQuestionParams('SELECT * FROM t WHERE username = ? AND password = ?', 2);
+      const r = util.resolveQuestionParamColumns('SELECT * FROM t WHERE username = ? AND password = ?', 2);
       expect(r[0]).to.equal('username');
       expect(r[1]).to.equal('password');
     });
 
     it('resolves table-qualified column names', function () {
-      const r = util.resolveColumnNamesQuestionParams('SELECT * FROM orders WHERE orders.user_id = ?', 1);
+      const r = util.resolveQuestionParamColumns('SELECT * FROM orders WHERE orders.user_id = ?', 1);
       expect(r[0]).to.equal('orders.user_id');
     });
 
     it('resolves comparison operators other than =', function () {
-      const r = util.resolveColumnNamesQuestionParams('SELECT * FROM t WHERE age >= ? AND score < ?', 2);
+      const r = util.resolveQuestionParamColumns('SELECT * FROM t WHERE age >= ? AND score < ?', 2);
       expect(r[0]).to.equal('age');
       expect(r[1]).to.equal('score');
     });
 
     it('resolves LIKE and ILIKE operators', function () {
-      const r = util.resolveColumnNamesQuestionParams('SELECT * FROM t WHERE name LIKE ? AND bio ILIKE ?', 2);
+      const r = util.resolveQuestionParamColumns('SELECT * FROM t WHERE name LIKE ? AND bio ILIKE ?', 2);
       expect(r[0]).to.equal('name');
       expect(r[1]).to.equal('bio');
     });
 
     it('leaves INSERT VALUES positions as undefined', function () {
-      const r = util.resolveColumnNamesQuestionParams('INSERT INTO users (username, email) VALUES (?, ?)', 2);
+      const r = util.resolveQuestionParamColumns('INSERT INTO users (username, email) VALUES (?, ?)', 2);
       expect(r[0]).to.equal(undefined);
       expect(r[1]).to.equal(undefined);
     });
 
     it('resolves UPDATE SET conditions', function () {
-      const r = util.resolveColumnNamesQuestionParams('UPDATE users SET username = ?, email = ? WHERE id = ?', 3);
+      const r = util.resolveQuestionParamColumns('UPDATE users SET username = ?, email = ? WHERE id = ?', 3);
       expect(r[0]).to.equal('username');
       expect(r[1]).to.equal('email');
       expect(r[2]).to.equal('id');
     });
 
     it('resolves DELETE WHERE conditions', function () {
-      const r = util.resolveColumnNamesQuestionParams('DELETE FROM users WHERE name = ? AND email = ?', 2);
+      const r = util.resolveQuestionParamColumns('DELETE FROM users WHERE name = ? AND email = ?', 2);
       expect(r[0]).to.equal('name');
       expect(r[1]).to.equal('email');
     });
 
     it('stops collecting once paramCount is reached', function () {
       // sql has 3 ? but we only ask for 2
-      const r = util.resolveColumnNamesQuestionParams('SELECT * FROM t WHERE a = ? AND b = ? AND c = ?', 2);
+      const r = util.resolveQuestionParamColumns('SELECT * FROM t WHERE a = ? AND b = ? AND c = ?', 2);
       expect(r[0]).to.equal('a');
       expect(r[1]).to.equal('b');
       expect(r[2]).to.equal(undefined);
