@@ -11,14 +11,6 @@ const DOLLAR_PARAM_RE_SOURCE = '([\\w.]+)\\s*(?:=|!=|<>|<=|>=|<|>|LIKE|ILIKE)\\s
 /** @typedef {{ name: string, value: string }} BindEntry */
 
 /**
- * @param {import('../config').InstanaConfig['tracing']['dbBindVariables']} cfg
- * @returns {boolean}
- */
-exports.isCaptureEnabled = function isCaptureEnabled(cfg) {
-  return !!(cfg && cfg.disable === false && cfg.allowedColumns && cfg.allowedColumns.length > 0);
-};
-
-/**
  * Unqualified entries match both bare and qualified column names.
  * Qualified entries match only the exact qualified form.
  *
@@ -98,30 +90,14 @@ exports.resolveColumnNamesDollarParams = function resolveColumnNamesDollarParams
 };
 
 /**
- * @param {string} sql
- * @param {string | { text: string, values?: any[] }} config
- * @param {any[]} argsForOriginalQuery
- * @param {import('../config').InstanaConfig['tracing']['dbBindVariables']} bindVariablesConfig
+ * @param {{ sql: string, rawValues: any[], allowedColumns: string[] }} opts - allowedColumns must be pre-lowercased
  * @returns {BindEntry[] | null}
  */
-exports.captureBinds = function captureBinds(sql, config, argsForOriginalQuery, bindVariablesConfig) {
-  if (!exports.isCaptureEnabled(bindVariablesConfig)) {
-    return null;
-  }
-
-  let rawValues;
-  if (typeof config === 'string') {
-    if (argsForOriginalQuery.length > 1 && Array.isArray(argsForOriginalQuery[1])) {
-      rawValues = argsForOriginalQuery[1];
-    }
-  } else if (config && Array.isArray(config.values)) {
-    rawValues = config.values;
-  }
-
-  if (!rawValues || rawValues.length === 0) {
+exports.buildBinds = function buildBinds({ sql, rawValues, allowedColumns }) {
+  if (!sql || !Array.isArray(rawValues) || rawValues.length === 0) {
     return null;
   }
 
   const columnNames = exports.resolveColumnNamesDollarParams(sql, rawValues.length);
-  return exports.buildBindsFromPositional(rawValues, columnNames, bindVariablesConfig.allowedColumns);
+  return exports.buildBindsFromPositional(rawValues, columnNames, allowedColumns);
 };

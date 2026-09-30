@@ -8,24 +8,6 @@ const { expect } = require('chai');
 const util = require('../../src/util/bindVariables');
 
 describe('tracing.bindVariables', function () {
-  describe('isCaptureEnabled', function () {
-    it('should return false when config is undefined', function () {
-      expect(util.isCaptureEnabled(undefined)).to.be.false;
-    });
-
-    it('should return false when disable=true', function () {
-      expect(util.isCaptureEnabled({ disable: true, allowedColumns: ['id'] })).to.be.false;
-    });
-
-    it('should return false when allowedColumns is empty', function () {
-      expect(util.isCaptureEnabled({ disable: false, allowedColumns: [] })).to.be.false;
-    });
-
-    it('should return true when disable=false and allowedColumns is non-empty', function () {
-      expect(util.isCaptureEnabled({ disable: false, allowedColumns: ['id'] })).to.be.true;
-    });
-  });
-
   describe('isColumnAllowed', function () {
     it('unqualified entry matches bare column name', function () {
       expect(util.isColumnAllowed('username', ['username'])).to.be.true;
@@ -167,65 +149,36 @@ describe('tracing.bindVariables', function () {
     });
   });
 
-  describe('captureBinds', function () {
-    const enabledConfig = { disable: false, allowedColumns: ['name'] };
-    const disabledConfig = { disable: true, allowedColumns: ['name'] };
+  describe('buildBinds', function () {
+    const allowedColumns = ['name'];
 
-    it('returns null when capture is disabled', function () {
-      const result = util.captureBinds(
-        'SELECT * FROM users WHERE name = $1',
-        'SELECT * FROM users WHERE name = $1',
-        ['SELECT * FROM users WHERE name = $1', ['alice']],
-        disabledConfig
-      );
-      expect(result).to.equal(null);
-    });
-
-    it('returns null when config is undefined', function () {
-      const result = util.captureBinds(
-        'SELECT * FROM users WHERE name = $1',
-        'SELECT * FROM users WHERE name = $1',
-        ['SELECT * FROM users WHERE name = $1', ['alice']],
-        undefined
-      );
-      expect(result).to.equal(null);
-    });
-
-    it('extracts values from string query + positional array', function () {
+    it('extracts values from positional array', function () {
       const sql = 'SELECT * FROM users WHERE name = $1';
-      const result = util.captureBinds(sql, sql, [sql, ['alice']], enabledConfig);
+      const result = util.buildBinds({ sql, rawValues: ['alice'], allowedColumns });
       expect(result).to.deep.equal([{ name: 'name', value: 'alice' }]);
     });
 
-    it('extracts values from config object with values property', function () {
+    it('returns null when rawValues is null, undefined, or empty', function () {
       const sql = 'SELECT * FROM users WHERE name = $1';
-      const config = { text: sql, values: ['alice'] };
-      const result = util.captureBinds(sql, config, [config], enabledConfig);
-      expect(result).to.deep.equal([{ name: 'name', value: 'alice' }]);
+      expect(util.buildBinds({ sql, rawValues: null, allowedColumns })).to.equal(null);
+      expect(util.buildBinds({ sql, rawValues: undefined, allowedColumns })).to.equal(null);
+      expect(util.buildBinds({ sql, rawValues: [], allowedColumns })).to.equal(null);
     });
 
-    it('returns null when string query has no values array', function () {
-      const sql = 'SELECT * FROM users WHERE name = $1';
-      const result = util.captureBinds(sql, sql, [sql], enabledConfig);
-      expect(result).to.equal(null);
-    });
-
-    it('returns null when config object has no values property', function () {
-      const sql = 'SELECT * FROM users WHERE name = $1';
-      const config = { text: sql };
-      const result = util.captureBinds(sql, config, [config], enabledConfig);
-      expect(result).to.equal(null);
+    it('returns null when sql is null or empty', function () {
+      expect(util.buildBinds({ sql: null, rawValues: ['alice'], allowedColumns })).to.equal(null);
+      expect(util.buildBinds({ sql: '', rawValues: ['alice'], allowedColumns })).to.equal(null);
     });
 
     it('applies allowed-columns filter', function () {
       const sql = 'SELECT * FROM users WHERE name = $1 AND email = $2';
-      const result = util.captureBinds(sql, sql, [sql, ['alice', 'alice@example.com']], enabledConfig);
+      const result = util.buildBinds({ sql, rawValues: ['alice', 'alice@example.com'], allowedColumns });
       expect(result).to.deep.equal([{ name: 'name', value: 'alice' }]);
     });
 
     it('resolves DELETE WHERE conditions', function () {
       const sql = 'DELETE FROM users WHERE name = $1 AND email = $2';
-      const result = util.captureBinds(sql, sql, [sql, ['deleteuser', 'delete@example.com']], enabledConfig);
+      const result = util.buildBinds({ sql, rawValues: ['deleteuser', 'delete@example.com'], allowedColumns });
       expect(result).to.deep.equal([{ name: 'name', value: 'deleteuser' }]);
     });
   });

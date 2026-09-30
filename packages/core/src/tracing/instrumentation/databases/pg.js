@@ -69,7 +69,12 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
       db
     };
 
-    const binds = tracingUtil.captureBinds(sql, config, argsForOriginalQuery);
+    const rawValues =
+      typeof config === 'string'
+        ? Array.isArray(argsForOriginalQuery[1]) && argsForOriginalQuery[1]
+        : config && Array.isArray(config.values) && config.values;
+
+    const binds = tracingUtil.captureBinds({ sql, rawValues });
     if (binds !== null) {
       span.data.pg.binds = binds;
     }

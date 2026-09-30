@@ -490,13 +490,22 @@ exports.isLogLevelAnError = function isLogLevelAnError(level) {
 };
 
 /**
+ * @param {import('../config').InstanaConfig['tracing']['dbBindVariables']} cfg
+ * @returns {boolean}
+ */
+exports.isCaptureEnabled = function isCaptureEnabled(cfg) {
+  return !!(cfg && cfg.disable === false && cfg.allowedColumns && cfg.allowedColumns.length > 0);
+};
+
+/**
  * Extracts raw positional values from pg query arguments and builds the binds array.
  *
- * @param {string} sql
- * @param {string | { text: string, values?: any[] }} config
- * @param {any[]} argsForOriginalQuery
+ * @param {{ sql: string, rawValues: any[] }} opts
  * @returns {import('../util/bindVariables').BindEntry[] | null}
  */
-exports.captureBinds = function captureBinds(sql, config, argsForOriginalQuery) {
-  return bindVariables.captureBinds(sql, config, argsForOriginalQuery, dbBindVariablesConfig);
+exports.captureBinds = function captureBinds({ sql, rawValues }) {
+  if (!exports.isCaptureEnabled(dbBindVariablesConfig)) {
+    return null;
+  }
+  return bindVariables.buildBinds({ sql, rawValues, allowedColumns: dbBindVariablesConfig.allowedColumns });
 };
