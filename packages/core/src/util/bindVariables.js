@@ -6,9 +6,9 @@
 
 const { MAX_BINDS } = require('../tracing/constants');
 
-const OP_GROUP = '(?:=|!=|<>|<=|>=|<|>|LIKE|ILIKE)';
-const DOLLAR_PARAM_REGEX = `([\\w.]+)\\s*${OP_GROUP}\\s*\\$(\\d+)`;
-const QUESTION_PARAM_REGEX = `([\\w.]+)\\s*${OP_GROUP}\\s*\\?`;
+const OPERATOR_GROUP_REGEX = '(?:=|!=|<>|<=|>=|<|>|LIKE|ILIKE)';
+const DOLLAR_PARAM_REGEX = `([\\w.]+)\\s*${OPERATOR_GROUP_REGEX}\\s*\\$(\\d+)`;
+const QUESTION_PARAM_REGEX = `([\\w.]+)\\s*${OPERATOR_GROUP_REGEX}\\s*\\?`;
 
 /** @typedef {{ name: string, value: string }} BindEntry */
 
