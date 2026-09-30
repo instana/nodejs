@@ -24,6 +24,7 @@
     "serverless-offline": "^14.8.2"
   },
   "overrides": {
+    "undici": "6.29.0",
     "velocityjs": "2.1.7"
   }
 }
