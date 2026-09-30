@@ -322,5 +322,144 @@ module.exports = function (name, version, isLatest) {
             })
           )
         ));
+
+    it('must not capture bind variables by default (? style)', () =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=question-select' }).then(() =>
+        testUtils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables');
+            testUtils.getSpansByName(spans, 'mysql').forEach(span => {
+              expect(span.data.mysql.binds).to.not.exist;
+            });
+          })
+        )
+      ));
+
+    it('must not capture bind variables by default (:param style)', () =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=named-select' }).then(() =>
+        testUtils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables');
+            testUtils.getSpansByName(spans, 'mysql').forEach(span => {
+              expect(span.data.mysql.binds).to.not.exist;
+            });
+          })
+        )
+      ));
+
+    describe('bind variables with allowed-columns=name', () => {
+      before(async () => {
+        await controls.stop();
+        controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE = 'false';
+        controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS = 'name';
+        await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+      });
+
+      after(async () => {
+        await controls.stop();
+        delete controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE;
+        delete controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS;
+        await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+      });
+
+      it('? style: must capture only name, not email — SELECT', () =>
+        controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=question-select' }).then(() =>
+          testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyHttpEntry(spans, '/bind-variables');
+              const span = testUtils
+                .getSpansByName(spans, 'mysql')
+                .find(s => s.data.mysql.stmt === 'SELECT * FROM users WHERE name = ? AND email = ?');
+              expect(span).to.exist;
+              expect(span.data.mysql.binds).to.be.an('array').with.lengthOf(1);
+              expect(span.data.mysql.binds[0]).to.deep.equal({ name: 'name', value: 'bindtest' });
+            })
+          )
+        ));
+
+      it('? style: must capture name from INSERT column list', () =>
+        controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=question-insert' }).then(() =>
+          testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyHttpEntry(spans, '/bind-variables');
+              const span = testUtils
+                .getSpansByName(spans, 'mysql')
+                .find(s => s.data.mysql.stmt === 'INSERT INTO users (name, email) VALUES (?, ?)');
+              expect(span).to.exist;
+              expect(span.data.mysql.binds).to.be.an('array').with.lengthOf(1);
+              expect(span.data.mysql.binds[0]).to.deep.equal({ name: 'name', value: 'insertuser' });
+            })
+          )
+        ));
+
+      it('? style: must represent null as "null"', () =>
+        controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=question-null' }).then(() =>
+          testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyHttpEntry(spans, '/bind-variables');
+              const span = testUtils
+                .getSpansByName(spans, 'mysql')
+                .find(s => s.data.mysql.stmt === 'SELECT * FROM users WHERE name = ?');
+              expect(span).to.exist;
+              expect(span.data.mysql.binds).to.be.an('array').with.lengthOf(1);
+              expect(span.data.mysql.binds[0]).to.deep.equal({ name: 'name', value: 'null' });
+            })
+          )
+        ));
+
+      it(':param style: must capture only name, not email — SELECT', () =>
+        controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=named-select' }).then(() =>
+          testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyHttpEntry(spans, '/bind-variables');
+              const span = testUtils
+                .getSpansByName(spans, 'mysql')
+                .find(s => s.data.mysql.stmt === 'SELECT * FROM users WHERE name = :name AND email = :email');
+              expect(span).to.exist;
+              expect(span.data.mysql.binds).to.be.an('array').with.lengthOf(1);
+              expect(span.data.mysql.binds[0]).to.deep.equal({ name: 'name', value: 'nameduser' });
+            })
+          )
+        ));
+
+      it(':param style: must capture name from INSERT column list', () =>
+        controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=named-insert' }).then(() =>
+          testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyHttpEntry(spans, '/bind-variables');
+              const span = testUtils
+                .getSpansByName(spans, 'mysql')
+                .find(s => s.data.mysql.stmt === 'INSERT INTO users (name, email) VALUES (:name, :email)');
+              expect(span).to.exist;
+              expect(span.data.mysql.binds).to.be.an('array').with.lengthOf(1);
+              expect(span.data.mysql.binds[0]).to.deep.equal({ name: 'name', value: 'namedinsert' });
+            })
+          )
+        ));
+
+      it(':param style: must represent null as "null"', () =>
+        controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=named-null' }).then(() =>
+          testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyHttpEntry(spans, '/bind-variables');
+              const span = testUtils
+                .getSpansByName(spans, 'mysql')
+                .find(s => s.data.mysql.stmt === 'SELECT * FROM users WHERE name = :name');
+              expect(span).to.exist;
+              expect(span.data.mysql.binds).to.be.an('array').with.lengthOf(1);
+              expect(span.data.mysql.binds[0]).to.deep.equal({ name: 'name', value: 'null' });
+            })
+          )
+        ));
+    });
   }
 };
+
+function verifyHttpEntry(spans, url) {
+  return testUtils.expectAtLeastOneMatching(spans, [
+    span => expect(span.p).to.not.exist,
+    span => expect(span.k).to.equal(constants.ENTRY),
+    span => expect(span.n).to.equal('node.http.server'),
+    span => expect(span.data.http.url).to.contain(url.split('?')[0])
+  ]);
+}

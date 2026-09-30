@@ -42,6 +42,16 @@ const pool = mysql2.createPool({
   database: process.env.INSTANA_CONNECT_MYSQL_DB
 });
 
+// A dedicated pool with namedPlaceholders enabled for :param style queries.
+const namedPool = mysql2.createPool({
+  connectionLimit: 5,
+  host: process.env.INSTANA_CONNECT_MYSQL_HOST,
+  user: process.env.INSTANA_CONNECT_MYSQL_USER,
+  password: process.env.INSTANA_CONNECT_MYSQL_PW,
+  database: process.env.INSTANA_CONNECT_MYSQL_DB,
+  namedPlaceholders: true
+});
+
 function wrapAccess(connection, query, optQueryParams, cb) {
   if (accessFunction === 'execute') {
     return wrapExecute(connection, query, optQueryParams, cb);
@@ -115,19 +125,52 @@ const getConnection = () => {
 
     connected = true;
     wrapAccess(connection, 'CREATE TABLE random_values (value double);', null, queryError => {
-      connection.release();
-
       if (queryError && queryError.code !== 'ER_TABLE_EXISTS_ERROR') {
         log('Failed to execute query for table creation', queryError);
-        return;
       }
 
-      log('Successfully created table');
+      connection.query(
+        'CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(40) NOT NULL, email VARCHAR(40) NOT NULL);',
+        usersError => {
+          connection.release();
+          if (usersError) {
+            log('Failed to create users table', usersError);
+            return;
+          }
+          log('Successfully created tables');
+        }
+      );
     });
   });
 };
 
 getConnection();
+
+const MYSQL2_QUERY_SCENARIOS = {
+  'question-select': (connection, cb) =>
+    connection.query('SELECT * FROM users WHERE name = ? AND email = ?', ['bindtest', 'bind@example.com'], cb),
+
+  'question-insert': (connection, cb) =>
+    connection.query('INSERT INTO users (name, email) VALUES (?, ?)', ['insertuser', 'insert@example.com'], cb),
+
+  'question-null': (connection, cb) => connection.query('SELECT * FROM users WHERE name = ?', [null], cb),
+
+  'named-select': (connection, cb) =>
+    connection.query(
+      'SELECT * FROM users WHERE name = :name AND email = :email',
+      { name: 'nameduser', email: 'named@example.com' },
+      cb
+    ),
+
+  'named-insert': (connection, cb) =>
+    connection.query(
+      'INSERT INTO users (name, email) VALUES (:name, :email)',
+      { name: 'namedinsert', email: 'namedinsert@example.com' },
+      cb
+    ),
+
+  'named-null': (connection, cb) => connection.query('SELECT * FROM users WHERE name = :name', { name: null }, cb)
+};
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
@@ -176,6 +219,49 @@ app.post('/error', (req, res) => {
     triggerErrorWithPromises(req, res);
   } else {
     triggerError(req, res);
+  }
+});
+
+app.get('/bind-variables', async (req, res) => {
+  const scenario = req.query.scenario;
+  const isNamed = scenario && scenario.startsWith('named-');
+  const connectionPool = isNamed ? namedPool : pool;
+
+  const handler = MYSQL2_QUERY_SCENARIOS[scenario];
+  if (!handler) {
+    return res.status(400).json({ error: `Unknown scenario: ${scenario}` });
+  }
+
+  try {
+    if (usePromises) {
+      const connection = await connectionPool.getConnection();
+      try {
+        const result = await handler(connection);
+        // mysql2/promise returns [rows, fields]; grab just the rows
+        const rows = Array.isArray(result) ? result[0] : result;
+        res.json({ success: true, rows });
+      } finally {
+        connection.release();
+      }
+    } else {
+      connectionPool.getConnection((err, connection) => {
+        if (err) {
+          log('Failed to get connection', err);
+          return res.sendStatus(500);
+        }
+        handler(connection, (queryError, results) => {
+          connection.release();
+          if (queryError) {
+            log('Query error in bind-variables scenario', queryError);
+            return res.sendStatus(500);
+          }
+          res.json({ success: true, rows: results });
+        });
+      });
+    }
+  } catch (err) {
+    log('Error in /bind-variables', err);
+    res.sendStatus(500);
   }
 });
 
