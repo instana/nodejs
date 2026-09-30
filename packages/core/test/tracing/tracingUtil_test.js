@@ -1671,24 +1671,6 @@ describe('tracing/tracingUtil', () => {
     });
   });
 
-  describe('isBindsCaptureEnabled', () => {
-    it('should return false when config is undefined', () => {
-      expect(tracingUtil.isBindsCaptureEnabled(undefined)).to.be.false;
-    });
-
-    it('should return false when disable=true', () => {
-      expect(tracingUtil.isBindsCaptureEnabled({ disable: true, allowedColumns: ['id'] })).to.be.false;
-    });
-
-    it('should return false when allowedColumns is empty', () => {
-      expect(tracingUtil.isBindsCaptureEnabled({ disable: false, allowedColumns: [] })).to.be.false;
-    });
-
-    it('should return true when disable=false and allowedColumns is non-empty', () => {
-      expect(tracingUtil.isBindsCaptureEnabled({ disable: false, allowedColumns: ['id'] })).to.be.true;
-    });
-  });
-
   describe('captureBinds', () => {
     const baseConfig = {
       logger: createFakeLogger(),
@@ -1698,19 +1680,28 @@ describe('tracing/tracingUtil', () => {
     };
 
     it('should return null when dbBindVariables is disabled', () => {
-      tracingUtil.init({ ...baseConfig, tracing: { ...baseConfig.tracing, dbBindVariables: { disable: true, allowedColumns: ['name'] } } });
+      tracingUtil.init({
+        ...baseConfig,
+        tracing: { ...baseConfig.tracing, dbBindVariables: { disable: true, allowedColumns: ['name'] } }
+      });
       const result = tracingUtil.captureBinds({ sql: 'SELECT * FROM users WHERE name = $1', rawValues: ['alice'] });
       expect(result).to.equal(null);
     });
 
     it('should return null when dbBindVariables is undefined or has empty allowedColumns', () => {
-      tracingUtil.init({ ...baseConfig, tracing: { ...baseConfig.tracing, dbBindVariables: { disable: false, allowedColumns: [] } } });
+      tracingUtil.init({
+        ...baseConfig,
+        tracing: { ...baseConfig.tracing, dbBindVariables: { disable: false, allowedColumns: [] } }
+      });
       const result = tracingUtil.captureBinds({ sql: 'SELECT * FROM users WHERE name = $1', rawValues: ['alice'] });
       expect(result).to.equal(null);
     });
 
     it('should capture binds when dbBindVariables is enabled', () => {
-      tracingUtil.init({ ...baseConfig, tracing: { ...baseConfig.tracing, dbBindVariables: { disable: false, allowedColumns: ['name'] } } });
+      tracingUtil.init({
+        ...baseConfig,
+        tracing: { ...baseConfig.tracing, dbBindVariables: { disable: false, allowedColumns: ['name'] } }
+      });
       const result = tracingUtil.captureBinds({ sql: 'SELECT * FROM users WHERE name = $1', rawValues: ['alice'] });
       expect(result).to.deep.equal([{ name: 'name', value: 'alice' }]);
     });
