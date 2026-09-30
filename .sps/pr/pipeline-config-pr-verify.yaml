@@ -67,7 +67,7 @@ tasks:
           touch "$CLAIMED_FILE" "$DOWNLOADED_FILE"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          npm install --loglevel warn --ignore-scripts
           node bin/create-version-test-folders.js
 
           # Helper: download the COS result file for a single completed status context.
@@ -350,7 +350,7 @@ tasks:
           PR_STATE="$(get_env pr-state "")"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
-          npm install --loglevel warn --foreground-scripts
+          npm install --loglevel warn --ignore-scripts
 
           echo "Running ESLint..."
           npx eslint packages/ -f json -o eslint-report.json || true
