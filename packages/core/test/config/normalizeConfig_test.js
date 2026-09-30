@@ -3049,7 +3049,7 @@ describe('config.normalizeConfig', () => {
 
     it('should apply in-code config', () => {
       const config = coreConfig.normalize({
-        userConfig: { tracing: { dbBindVariables: { disable: false, allowedColumns: ['order_id'] } } }
+        userConfig: { tracing: { global: { dbBindVariables: { disable: false, allowedColumns: ['order_id'] } } } }
       });
       expect(config.tracing.dbBindVariables).to.deep.equal({ disable: false, allowedColumns: ['order_id'] });
     });
@@ -3072,7 +3072,7 @@ describe('config.normalizeConfig', () => {
       process.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE = 'true';
       process.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS = 'env_col';
       const config = coreConfig.normalize({
-        userConfig: { tracing: { dbBindVariables: { disable: false, allowedColumns: ['incode_col'] } } }
+        userConfig: { tracing: { global: { dbBindVariables: { disable: false, allowedColumns: ['incode_col'] } } } }
       });
       expect(config.tracing.dbBindVariables).to.deep.equal({ disable: true, allowedColumns: ['env_col'] });
     });

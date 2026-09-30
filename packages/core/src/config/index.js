@@ -115,6 +115,7 @@ let currentConfig;
  * @typedef {Object} globalStackTraceConfig
  * @property {string} [stackTrace]
  * @property {number} [stackTraceLength]
+ * @property {DbBindVariablesConfig} [dbBindVariables]
  */
 
 /**
@@ -1249,7 +1250,7 @@ function parseSecretsEnvVar(envVarValue) {
  * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
  */
 function normalizeDbBindVariables({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
-  const userDbBindVars = userConfig.tracing?.dbBindVariables || /** @type {DbBindVariablesConfig} */ ({});
+  const userDbBindVars = userConfig.tracing?.global?.dbBindVariables || /** @type {DbBindVariablesConfig} */ ({});
   finalConfig.tracing.dbBindVariables =
     finalConfig.tracing.dbBindVariables || /** @type {DbBindVariablesConfig} */ ({});
 
