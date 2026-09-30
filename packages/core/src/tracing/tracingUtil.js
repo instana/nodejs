@@ -50,7 +50,7 @@ exports.init = function (config) {
   stackTraceMode = config?.tracing?.stackTrace;
   httpExitConfig = config.tracing.http.exit;
   logLevelConfig = config.tracing.captureLogLevel;
-  dbBindVariablesConfig = config?.tracing?.dbBindVariables;
+  dbBindVariablesConfig = config.tracing.dbBindVariables;
 };
 
 /**
