@@ -1670,4 +1670,40 @@ describe('tracing/tracingUtil', () => {
       expect(isLogLevelAnError(LOG_LEVEL.WARN)).to.be.false;
     });
   });
+
+  describe('captureBinds', () => {
+    const baseConfig = {
+      logger: createFakeLogger(),
+      tracing: {
+        http: { exit: { classifyAll4xxAsErrors: false, classifyAsErrors: [] } }
+      }
+    };
+
+    it('should return null when dbBindVariables is disabled', () => {
+      tracingUtil.init({
+        ...baseConfig,
+        tracing: { ...baseConfig.tracing, dbBindVariables: { disable: true, allowedColumns: ['name'] } }
+      });
+      const result = tracingUtil.captureBinds({ sql: 'SELECT * FROM users WHERE name = $1', rawValues: ['alice'] });
+      expect(result).to.equal(null);
+    });
+
+    it('should return null when dbBindVariables is undefined or has empty allowedColumns', () => {
+      tracingUtil.init({
+        ...baseConfig,
+        tracing: { ...baseConfig.tracing, dbBindVariables: { disable: false, allowedColumns: [] } }
+      });
+      const result = tracingUtil.captureBinds({ sql: 'SELECT * FROM users WHERE name = $1', rawValues: ['alice'] });
+      expect(result).to.equal(null);
+    });
+
+    it('should capture binds when dbBindVariables is enabled', () => {
+      tracingUtil.init({
+        ...baseConfig,
+        tracing: { ...baseConfig.tracing, dbBindVariables: { disable: false, allowedColumns: ['name'] } }
+      });
+      const result = tracingUtil.captureBinds({ sql: 'SELECT * FROM users WHERE name = $1', rawValues: ['alice'] });
+      expect(result).to.deep.equal([{ name: 'name', value: 'alice' }]);
+    });
+  });
 });

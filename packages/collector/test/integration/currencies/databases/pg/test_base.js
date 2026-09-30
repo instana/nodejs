@@ -17,6 +17,7 @@ const {
 } = require('@_local/core/test/test_util');
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 const globalAgent = require('@_local/collector/test/globalAgent');
+const { AgentStubControls } = require('@_local/collector/test/apps/agentStubControls');
 
 module.exports = function (name, version, isLatest) {
   globalAgent.setUpCleanUpHooks();
@@ -64,6 +65,563 @@ module.exports = function (name, version, isLatest) {
           })
         )
       ));
+
+  it('must not capture bind variables by default', () =>
+    controls
+      .sendRequest({
+        method: 'GET',
+        path: '/bind-variables?scenario=mixed-queries'
+      })
+      .then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables');
+            const pgSpans = getSpansByName(spans, 'postgres');
+            pgSpans.forEach(span => {
+              expect(span.data.pg.binds).to.not.exist;
+            });
+          })
+        )
+      ));
+
+  describe('with INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE=false and allowed-columns=name', () => {
+    before(async () => {
+      await controls.stop();
+      controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE = 'false';
+      controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS = 'name';
+      await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+    });
+
+    after(async () => {
+      await controls.stop();
+      delete controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE;
+      delete controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS;
+      await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+    });
+
+    it('must capture only the allowed column (name), not email — SELECT', () =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=allowed-columns' }).then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables');
+
+            const selectSpan = getSpansByName(spans, 'postgres').find(
+              span => span.data.pg.stmt === 'SELECT * FROM users WHERE name = $1 AND email = $2'
+            );
+            expect(selectSpan).to.exist;
+            expect(selectSpan.data.pg.binds).to.be.an('array');
+            expect(selectSpan.data.pg.binds).to.have.lengthOf(1);
+            expect(selectSpan.data.pg.binds[0]).to.deep.equal({ name: 'name', value: 'alloweduser' });
+          })
+        )
+      ));
+
+    it('must capture only the allowed column (name), not email — UPDATE', () =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=allowed-columns' }).then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables');
+
+            const updateSpan = getSpansByName(spans, 'postgres').find(
+              span => span.data.pg.stmt === 'UPDATE users SET name = $1, email = $2 WHERE id = $3'
+            );
+            expect(updateSpan).to.exist;
+            expect(updateSpan.data.pg.binds).to.be.an('array');
+            expect(updateSpan.data.pg.binds).to.have.lengthOf(1);
+            expect(updateSpan.data.pg.binds[0]).to.deep.equal({ name: 'name', value: 'updatedname' });
+          })
+        )
+      ));
+
+    it('must capture only the allowed column (name), not email — DELETE', () =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=allowed-columns' }).then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables');
+
+            const deleteSpan = getSpansByName(spans, 'postgres').find(
+              span => span.data.pg.stmt === 'DELETE FROM users WHERE name = $1 AND email = $2'
+            );
+            expect(deleteSpan).to.exist;
+            expect(deleteSpan.data.pg.binds).to.be.an('array');
+            expect(deleteSpan.data.pg.binds).to.have.lengthOf(1);
+            expect(deleteSpan.data.pg.binds[0]).to.deep.equal({ name: 'name', value: 'deleteuser' });
+          })
+        )
+      ));
+
+    it('must not capture binds for INSERT (positional params in VALUES list not resolvable)', () =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=mixed-queries' }).then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables');
+
+            const insertSpan = getSpansByName(spans, 'postgres').find(
+              span => span.data.pg.stmt === 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *'
+            );
+            expect(insertSpan).to.exist;
+            expect(insertSpan.data.pg.binds).to.not.exist;
+          })
+        )
+      ));
+
+    it('must capture the allowed column from a string+array style query', () =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=mixed-queries' }).then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables');
+
+            const selectSpan = getSpansByName(spans, 'postgres').find(
+              span => span.data.pg.stmt === 'SELECT * FROM users WHERE name = $1 AND email = $2'
+            );
+            expect(selectSpan).to.exist;
+            expect(selectSpan.data.pg.binds).to.be.an('array');
+            expect(selectSpan.data.pg.binds).to.have.lengthOf(1);
+            expect(selectSpan.data.pg.binds[0]).to.deep.equal({ name: 'name', value: 'testuser' });
+          })
+        )
+      ));
+
+    it('must capture two separate binds entries for OR clause on the same column', () =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=or-clause' }).then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables');
+
+            const orSpan = getSpansByName(spans, 'postgres').find(
+              span => span.data.pg.stmt === 'SELECT * FROM users WHERE name = $1 OR name = $2'
+            );
+            expect(orSpan).to.exist;
+            expect(orSpan.data.pg.binds).to.be.an('array');
+            expect(orSpan.data.pg.binds).to.have.lengthOf(2);
+            expect(orSpan.data.pg.binds[0]).to.deep.equal({ name: 'name', value: 'alice' });
+            expect(orSpan.data.pg.binds[1]).to.deep.equal({ name: 'name', value: 'bob' });
+          })
+        )
+      ));
+
+    it('must represent null bind values as the string "null"', () =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=null-value' }).then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables');
+
+            const nullSpan = getSpansByName(spans, 'postgres').find(
+              span => span.data.pg.stmt === 'SELECT * FROM users WHERE name = $1'
+            );
+            expect(nullSpan).to.exist;
+            expect(nullSpan.data.pg.binds).to.be.an('array');
+            expect(nullSpan.data.pg.binds).to.have.lengthOf(1);
+            expect(nullSpan.data.pg.binds[0]).to.deep.equal({ name: 'name', value: 'null' });
+          })
+        )
+      ));
+  });
+
+  describe('with allowed-columns=data,name — binary Buffer value', () => {
+    before(async () => {
+      await controls.stop();
+      controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE = 'false';
+      controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS = 'data,name';
+      await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+    });
+
+    after(async () => {
+      await controls.stop();
+      delete controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE;
+      delete controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS;
+      await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+    });
+
+    it('must represent a Buffer bind value as "<binary>"', () =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=binary' }).then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables');
+
+            const span = getSpansByName(spans, 'postgres').find(
+              s => s.data.pg.stmt === 'UPDATE blobs SET data = $1 WHERE name = $2'
+            );
+            expect(span).to.exist;
+            expect(span.data.pg.binds).to.be.an('array');
+            expect(span.data.pg.binds).to.have.lengthOf(2);
+            expect(span.data.pg.binds[0]).to.deep.equal({ name: 'data', value: '<binary>' });
+            expect(span.data.pg.binds[1]).to.deep.equal({ name: 'name', value: 'testblob' });
+          })
+        )
+      ));
+  });
+
+  describe('with allowed-columns=name — plain object value serialised to JSON', () => {
+    before(async () => {
+      await controls.stop();
+      controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE = 'false';
+      controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS = 'name';
+      await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+    });
+
+    after(async () => {
+      await controls.stop();
+      delete controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE;
+      delete controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS;
+      await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+    });
+
+    it('must serialise a plain object bind value to its JSON representation', () =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=unsupported' }).then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables');
+
+            const span = getSpansByName(spans, 'postgres').find(
+              s => s.data.pg.stmt === 'SELECT * FROM users WHERE name = $1'
+            );
+            expect(span).to.exist;
+            expect(span.data.pg.binds).to.be.an('array');
+            expect(span.data.pg.binds).to.have.lengthOf(1);
+            expect(span.data.pg.binds[0]).to.deep.equal({ name: 'name', value: '{"key":"value"}' });
+          })
+        )
+      ));
+
+    it('must represent a circular object bind value as "<unsupported>"', () =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=circular' }).then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables');
+
+            const span = getSpansByName(spans, 'postgres').find(
+              s => s.data.pg.stmt === 'SELECT * FROM users WHERE name = $1'
+            );
+            expect(span).to.exist;
+            expect(span.data.pg.binds).to.be.an('array');
+            expect(span.data.pg.binds).to.have.lengthOf(1);
+            expect(span.data.pg.binds[0]).to.deep.equal({ name: 'name', value: '<unsupported>' });
+          })
+        )
+      ));
+  });
+
+  describe('with allowed-columns=name — stored procedure call', () => {
+    before(async () => {
+      await controls.stop();
+      controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE = 'false';
+      controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS = 'name';
+      await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+    });
+
+    after(async () => {
+      await controls.stop();
+      delete controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE;
+      delete controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS;
+      await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+    });
+
+    it('must not capture binds for stored procedure call (parameter not resolvable to a column name)', () =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=stored-procedure' }).then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables');
+
+            const span = getSpansByName(spans, 'postgres').find(
+              s => s.data.pg.stmt === 'SELECT * FROM get_user_by_name($1)'
+            );
+            expect(span).to.exist;
+            expect(span.data.pg.binds).to.not.exist;
+          })
+        )
+      ));
+  });
+
+  describe('with allowed-columns=name — 150 params (50 allowed in first 100, 50 from remaining 50), capped at 100', () => {
+    before(async () => {
+      await controls.stop();
+      controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE = 'false';
+      controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS = 'name';
+      await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+    });
+
+    after(async () => {
+      await controls.stop();
+      delete controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE;
+      delete controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS;
+      await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+    });
+
+    it('must scan past non-allowed entries and fill from remaining params to reach the 100 cap', () =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=cap' }).then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables');
+
+            const span = getSpansByName(spans, 'postgres').find(
+              s => s.data.pg.stmt && s.data.pg.stmt.includes('name = $1')
+            );
+            expect(span).to.exist;
+            expect(span.data.pg.binds).to.be.an('array');
+
+            expect(span.data.pg.binds).to.have.lengthOf(100);
+
+            span.data.pg.binds.forEach(b => expect(b.name).to.equal('name'));
+
+            expect(span.data.pg.binds[0]).to.deep.equal({ name: 'name', value: 'val0' });
+            expect(span.data.pg.binds[1]).to.deep.equal({ name: 'name', value: 'val2' });
+            expect(span.data.pg.binds[49]).to.deep.equal({ name: 'name', value: 'val98' });
+            expect(span.data.pg.binds[50]).to.deep.equal({ name: 'name', value: 'val100' });
+            expect(span.data.pg.binds[99]).to.deep.equal({ name: 'name', value: 'val149' });
+          })
+        )
+      ));
+  });
+
+  describe('with allowed-columns=name and span batching enabled', () => {
+    before(async () => {
+      await controls.stop();
+      controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE = 'false';
+      controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS = 'name';
+      controls.env.INSTANA_SPANBATCHING_ENABLED = 'true';
+      controls.env.INSTANA_DEV_BATCH_THRESHOLD = '100';
+      await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+    });
+
+    after(async () => {
+      await controls.stop();
+      delete controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE;
+      delete controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS;
+      delete controls.env.INSTANA_SPANBATCHING_ENABLED;
+      delete controls.env.INSTANA_DEV_BATCH_THRESHOLD;
+      await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+    });
+
+    it('must only report bind variables from the final merged statement', () =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=span-batching' }).then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables');
+
+            const pgSpans = getSpansByName(spans, 'postgres');
+            expect(pgSpans.length).to.be.at.least(1);
+
+            const lastPgSpan = pgSpans[pgSpans.length - 1];
+            expect(lastPgSpan.data.pg.binds).to.be.an('array');
+            expect(lastPgSpan.data.pg.binds).to.have.lengthOf(1);
+            expect(lastPgSpan.data.pg.binds[0]).to.deep.equal({ name: 'name', value: 'last-query' });
+          })
+        )
+      ));
+  });
+
+  describe('with allowed-columns=id (unqualified) and a query using orders.id (qualified)', () => {
+    before(async () => {
+      await controls.stop();
+      controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE = 'false';
+      controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS = 'id';
+      await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+    });
+
+    after(async () => {
+      await controls.stop();
+      delete controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE;
+      delete controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS;
+      await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+    });
+
+    it('must capture orders.id when allowed-columns entry is the unqualified id', () =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=qualified-col' }).then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables');
+
+            const span = getSpansByName(spans, 'postgres').find(
+              s => s.data.pg.stmt === 'SELECT * FROM orders WHERE orders.id = $1'
+            );
+            expect(span).to.exist;
+            expect(span.data.pg.binds).to.be.an('array');
+            expect(span.data.pg.binds).to.have.lengthOf(1);
+            expect(span.data.pg.binds[0]).to.deep.equal({ name: 'orders.id', value: '42' });
+          })
+        )
+      ));
+  });
+
+  describe('with allowed-columns=orders.id (qualified) and a query using bare id', () => {
+    before(async () => {
+      await controls.stop();
+      controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE = 'false';
+      controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS = 'orders.id';
+      await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+    });
+
+    after(async () => {
+      await controls.stop();
+      delete controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE;
+      delete controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS;
+      await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+    });
+
+    it('must NOT capture bare id when allowed-columns entry is fully qualified orders.id', () =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=qualified-entry-no-match' }).then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables');
+
+            const span = getSpansByName(spans, 'postgres').find(
+              s => s.data.pg.stmt === 'SELECT * FROM users WHERE id = $1'
+            );
+            expect(span).to.exist;
+            expect(span.data.pg.binds).to.not.exist;
+          })
+        )
+      ));
+  });
+
+  describe('with INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE=true (kill switch)', () => {
+    before(async () => {
+      await controls.stop();
+      controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE = 'true';
+      controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS = 'name';
+      await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+    });
+
+    after(async () => {
+      await controls.stop();
+      delete controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE;
+      delete controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS;
+      await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+    });
+
+    it('must not capture any bind variables when disable=true, even with allowed-columns set', () =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=allowed-columns' }).then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables');
+
+            const pgSpans = getSpansByName(spans, 'postgres');
+            expect(pgSpans.length).to.be.greaterThan(0);
+            pgSpans.forEach(span => {
+              expect(span.data.pg.binds).to.not.exist;
+            });
+          })
+        )
+      ));
+  });
+
+  describe('Config precedence', () => {
+    describe('when both agent config and env var are set, env var takes precedence', () => {
+      const customAgentControls = new AgentStubControls();
+      let configControls;
+
+      before(async () => {
+        await customAgentControls.startAgent({
+          dbBindVariablesConfig: {
+            disable: false,
+            'allowed-columns': ['name']
+          }
+        });
+
+        configControls = new ProcessControls({
+          agentControls: customAgentControls,
+          dirname: __dirname,
+          env: {
+            LIBRARY_LATEST: isLatest,
+            LIBRARY_VERSION: version,
+            LIBRARY_NAME: name,
+            // env var kill switch overrides the agent config (disable: false)
+            INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE: 'true',
+            INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS: 'name'
+          }
+        });
+        await configControls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+      });
+
+      beforeEach(async () => {
+        await customAgentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await customAgentControls.stopAgent();
+        await configControls.stop();
+      });
+
+      it('must not capture bind variables when env var kill switch overrides agent config', () =>
+        configControls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=allowed-columns' }).then(() =>
+          retry(() =>
+            customAgentControls.getSpans().then(spans => {
+              expectAtLeastOneMatching(spans, [
+                span => expect(span.p).to.not.exist,
+                span => expect(span.k).to.equal(constants.ENTRY),
+                span => expect(span.f.e).to.equal(String(configControls.getPid())),
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.data.http.url).to.equal('/bind-variables')
+              ]);
+
+              const pgSpans = getSpansByName(spans, 'postgres');
+              expect(pgSpans.length).to.be.greaterThan(0);
+              pgSpans.forEach(span => {
+                expect(span.data.pg.binds).to.not.exist;
+              });
+            })
+          )
+        ));
+    });
+
+    describe('when only agent config is set (no env var)', () => {
+      const customAgentControls = new AgentStubControls();
+      let configControls;
+
+      before(async () => {
+        await customAgentControls.startAgent({
+          dbBindVariablesConfig: {
+            disable: false,
+            'allowed-columns': ['name']
+          }
+        });
+
+        configControls = new ProcessControls({
+          agentControls: customAgentControls,
+          dirname: __dirname,
+          env: {
+            LIBRARY_LATEST: isLatest,
+            LIBRARY_VERSION: version,
+            LIBRARY_NAME: name
+          }
+        });
+        await configControls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+      });
+
+      beforeEach(async () => {
+        await customAgentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await customAgentControls.stopAgent();
+        await configControls.stop();
+      });
+
+      it('must capture allowed bind variables when config is delivered via agent', () =>
+        configControls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=allowed-columns' }).then(() =>
+          retry(() =>
+            customAgentControls.getSpans().then(spans => {
+              expectAtLeastOneMatching(spans, [
+                span => expect(span.p).to.not.exist,
+                span => expect(span.k).to.equal(constants.ENTRY),
+                span => expect(span.f.e).to.equal(String(configControls.getPid())),
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.data.http.url).to.equal('/bind-variables')
+              ]);
+
+              const selectSpan = getSpansByName(spans, 'postgres').find(
+                span => span.data.pg.stmt === 'SELECT * FROM users WHERE name = $1 AND email = $2'
+              );
+              expect(selectSpan).to.exist;
+              expect(selectSpan.data.pg.binds).to.be.an('array');
+              expect(selectSpan.data.pg.binds).to.have.lengthOf(1);
+              expect(selectSpan.data.pg.binds[0]).to.deep.equal({ name: 'name', value: 'alloweduser' });
+            })
+          )
+        ));
+    });
+  });
 
   it('must trace pooled select now', () =>
     controls

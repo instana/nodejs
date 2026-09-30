@@ -89,3 +89,6 @@ exports.isIntermediateSpan = function isIntermediateSpan(span) {
  * @type {Set<string>}
  */
 exports.DISABLABLE_INSTRUMENTATION_GROUPS = new Set(['logging', 'messaging', 'databases']);
+
+// Maximum number of bind variables captured per span, to limit data volume and overhead.
+exports.MAX_BINDS = 100;

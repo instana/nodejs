@@ -11,6 +11,7 @@ const StringDecoder = require('string_decoder').StringDecoder;
 
 const stackTrace = require('../util/stackTrace');
 const { STACK_TRACE_MODES, LOG_LEVEL_PRIORITY, LOG_LEVEL } = require('../util/constants');
+const bindVariables = require('../util/bindVariables');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -34,6 +35,12 @@ let httpExitConfig;
  * @type {string}
  */
 let logLevelConfig;
+
+/**
+ * @type {import('../config').InstanaConfig['tracing']['dbBindVariables']}
+ */
+let dbBindVariablesConfig;
+
 /**
  * @param {import('../config').InstanaConfig} config
  */
@@ -43,6 +50,7 @@ exports.init = function (config) {
   stackTraceMode = config?.tracing?.stackTrace;
   httpExitConfig = config.tracing.http.exit;
   logLevelConfig = config.tracing.captureLogLevel;
+  dbBindVariablesConfig = config.tracing.dbBindVariables;
 };
 
 /**
@@ -52,6 +60,7 @@ exports.activate = function activate(_config) {
   stackTraceLength = _config.tracing.stackTraceLength;
   stackTraceMode = _config.tracing.stackTrace;
   httpExitConfig = _config.tracing.http.exit;
+  dbBindVariablesConfig = _config?.tracing?.dbBindVariables;
 };
 
 /**
@@ -478,4 +487,30 @@ exports.shouldCaptureLogSpan = function shouldCaptureLogSpan(level) {
  */
 exports.isLogLevelAnError = function isLogLevelAnError(level) {
   return level === LOG_LEVEL.ERROR || level === LOG_LEVEL.FATAL;
+};
+
+/**
+ * @returns {boolean}
+ */
+function isBindsCaptureEnabled() {
+  const cfg = dbBindVariablesConfig;
+  return !!(cfg && cfg.disable === false && cfg.allowedColumns && cfg.allowedColumns.length > 0);
+}
+
+/**
+ * Extracts bind variable values from a database query and builds the binds array.
+ *
+ * @param {{ sql: string, rawValues: any[], parameterStyle?: 'dollar' | 'question' }} opts
+ * @returns {import('../util/bindVariables').BindEntry[] | null}
+ */
+exports.captureBinds = function captureBinds({ sql, rawValues, parameterStyle }) {
+  if (!isBindsCaptureEnabled()) {
+    return null;
+  }
+  return bindVariables.buildBinds({
+    sql,
+    rawValues,
+    allowedColumns: dbBindVariablesConfig.allowedColumns,
+    parameterStyle
+  });
 };
