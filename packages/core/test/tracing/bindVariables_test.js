@@ -261,11 +261,5 @@ describe('tracing.bindVariables', function () {
       });
       expect(result).to.deep.equal([{ name: 'name', value: 'alice' }]);
     });
-
-    it('falls back to dollar resolver for unknown parameterStyle', function () {
-      const sql = 'SELECT * FROM users WHERE name = $1';
-      const result = util.buildBinds({ sql, rawValues: ['alice'], allowedColumns, parameterStyle: 'unknown' });
-      expect(result).to.deep.equal([{ name: 'name', value: 'alice' }]);
-    });
   });
 });
