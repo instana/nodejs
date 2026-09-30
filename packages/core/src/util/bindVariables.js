@@ -60,22 +60,6 @@ exports.normalizeValue = function normalizeValue(rawValue) {
 };
 
 /**
- * @param {Array<{ name: string, rawValue: any }>} namedBinds
- * @param {string[]} allowedColumns
- * @returns {BindEntry[] | null}
- */
-exports.buildBindsFromNamed = function buildBindsFromNamed(namedBinds, allowedColumns) {
-  const binds = [];
-  for (let i = 0; i < namedBinds.length; i++) {
-    const { name, rawValue } = namedBinds[i];
-    if (!exports.isColumnAllowed(name, allowedColumns)) continue;
-    binds.push({ name, value: exports.normalizeValue(rawValue) });
-    if (binds.length >= MAX_BINDS) break;
-  }
-  return binds.length > 0 ? binds : null;
-};
-
-/**
  * @param {any[]} positionalValues
  * @param {string[]} columnNames
  * @param {string[]} allowedColumns

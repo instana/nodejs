@@ -93,35 +93,6 @@ describe('tracing.bindVariables', function () {
     });
   });
 
-  describe('buildBindsFromNamed', function () {
-    it('returns null when no entries match allowed columns', function () {
-      const result = util.buildBindsFromNamed([{ name: 'password', rawValue: 'secret' }], ['username']);
-      expect(result).to.equal(null);
-    });
-
-    it('includes only allowed columns', function () {
-      const result = util.buildBindsFromNamed(
-        [
-          { name: 'username', rawValue: 'john' },
-          { name: 'password', rawValue: 'secret' }
-        ],
-        ['username']
-      );
-      expect(result).to.deep.equal([{ name: 'username', value: 'john' }]);
-    });
-
-    it('normalizes values', function () {
-      const result = util.buildBindsFromNamed([{ name: 'data', rawValue: null }], ['data']);
-      expect(result).to.deep.equal([{ name: 'data', value: 'null' }]);
-    });
-
-    it('caps at 100 entries', function () {
-      const entries = Array.from({ length: 110 }, (_, i) => ({ name: 'col', rawValue: i }));
-      const result = util.buildBindsFromNamed(entries, ['col']);
-      expect(result).to.have.length(100);
-    });
-  });
-
   describe('buildBindsFromPositional', function () {
     it('returns null when no column names can be resolved', function () {
       const result = util.buildBindsFromPositional([42, 'secret'], [undefined, undefined], ['id']);
@@ -195,7 +166,6 @@ describe('tracing.bindVariables', function () {
       expect(r[1]).to.equal('email');
     });
   });
-
 
   describe('captureBinds', function () {
     const enabledConfig = { disable: false, allowedColumns: ['name'] };
