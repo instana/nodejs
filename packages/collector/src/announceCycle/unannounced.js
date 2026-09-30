@@ -431,10 +431,14 @@ function applyDbBindVariablesConfiguration(agentResponse) {
   ensureNestedObjectExists(agentOpts.config, ['tracing', 'dbBindVariables']);
 
   const disable = coreConfig.validators.booleanValidator(dbBindVarsFromAgent.disable);
-  agentOpts.config.tracing.dbBindVariables.disable = disable ?? true;
+  if (disable !== undefined) {
+    agentOpts.config.tracing.dbBindVariables.disable = disable;
+  }
 
   const allowedColumns = coreConfig.validators.allowedColumnsValidator(dbBindVarsFromAgent['allowed-columns']);
-  agentOpts.config.tracing.dbBindVariables.allowedColumns = allowedColumns ?? [];
+  if (allowedColumns !== undefined) {
+    agentOpts.config.tracing.dbBindVariables.allowedColumns = allowedColumns;
+  }
 }
 
 module.exports = {
