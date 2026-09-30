@@ -181,17 +181,6 @@ app.get('/bind-variables', async (req, res) => {
   res.json({ success: true, rows: result && result.rows });
 });
 
-app.get('/stored-procedure-test', async (req, res) => {
-  await client.query('INSERT INTO users(name, email) VALUES($1, $2) ON CONFLICT DO NOTHING', [
-    'proceduretest',
-    'procedure@example.com'
-  ]);
-
-  const result = await client.query('SELECT * FROM get_user_by_name($1)', ['proceduretest']);
-
-  res.json({ success: true, rows: result.rows });
-});
-
 app.get('/pool-string-insert', (req, res) => {
   const insert = 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *';
   const values = ['beaker', 'beaker@muppets.com'];
