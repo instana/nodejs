@@ -6,7 +6,9 @@
 
 const { MAX_BINDS } = require('../tracing/constants');
 
-const DOLLAR_PARAM_RE_SOURCE = '([\\w.]+)\\s*(?:=|!=|<>|<=|>=|<|>|LIKE|ILIKE)\\s*\\$(\\d+)';
+const OP_GROUP = '(?:=|!=|<>|<=|>=|<|>|LIKE|ILIKE)';
+const DOLLAR_PARAM_RE_SOURCE = `([\\w.]+)\\s*${OP_GROUP}\\s*\\$(\\d+)`;
+const QUESTION_PARAM_RE_SOURCE = `([\\w.]+)\\s*${OP_GROUP}\\s*\\?`;
 
 /** @typedef {{ name: string, value: string }} BindEntry */
 
@@ -70,7 +72,7 @@ exports.buildBindsFromPositional = function buildBindsFromPositional(positionalV
 };
 
 /**
- * Resolves PostgreSQL like `$N` placeholders to column names via `<col> <op> $N` pattern matching.
+ * Resolves PostgreSQL-style `$N` placeholders to column names via `<col> <op> $N` pattern matching.
  * Returns a sparse array indexed by param position (0-based).
  *
  * @param {string} sql
@@ -90,14 +92,46 @@ exports.resolveColumnNamesDollarParams = function resolveColumnNamesDollarParams
 };
 
 /**
- * @param {{ sql: string, rawValues: any[], allowedColumns: string[] }} opts
+ * Resolves JDBC-style `?` placeholders to column names via `<col> <op> ?` pattern matching.
+ * Returns a sparse array indexed by param position (0-based), in left-to-right order of appearance.
+ *
+ * @param {string} sql
+ * @param {number} paramCount
+ * @returns {(string | undefined)[]}
+ */
+exports.resolveColumnNamesQuestionParams = function resolveColumnNamesQuestionParams(sql, paramCount) {
+  const result = new Array(paramCount);
+  const re = new RegExp(QUESTION_PARAM_RE_SOURCE, 'gi');
+  let pos = 0;
+  for (let match = re.exec(sql); match !== null && pos < paramCount; match = re.exec(sql)) {
+    result[pos++] = match[1];
+  }
+  return result;
+};
+
+/**
+ * Maps a parameterStyle name to its positional resolver function.
+ * To add support for mysql2 named placeholders (`:paramName` style with an object for values),
+ * add a 'named' entry here and a corresponding buildBindsFromNamed path in buildBinds.
+ * Each resolver signature: (sql: string, paramCount: number) => (string | undefined)[]
+ *
+ * @type {{ [style: string]: (sql: string, paramCount: number) => (string | undefined)[] }}
+ */
+const resolvers = {
+  dollar: exports.resolveColumnNamesDollarParams,
+  question: exports.resolveColumnNamesQuestionParams
+};
+
+/**
+ * @param {{ sql: string, rawValues: any[], allowedColumns: string[], parameterStyle?: 'dollar' | 'question' }} opts
  * @returns {BindEntry[] | null}
  */
-exports.buildBinds = function buildBinds({ sql, rawValues, allowedColumns }) {
+exports.buildBinds = function buildBinds({ sql, rawValues, allowedColumns, parameterStyle = 'dollar' }) {
   if (!sql || !Array.isArray(rawValues) || rawValues.length === 0) {
     return null;
   }
 
-  const columnNames = exports.resolveColumnNamesDollarParams(sql, rawValues.length);
+  const resolver = resolvers[parameterStyle] || resolvers.dollar;
+  const columnNames = resolver(sql, rawValues.length);
   return exports.buildBindsFromPositional(rawValues, columnNames, allowedColumns);
 };

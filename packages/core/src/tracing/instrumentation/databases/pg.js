@@ -74,7 +74,7 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
         ? Array.isArray(argsForOriginalQuery[1]) && argsForOriginalQuery[1]
         : config && Array.isArray(config.values) && config.values;
 
-    const binds = tracingUtil.captureBinds({ sql, rawValues });
+    const binds = tracingUtil.captureBinds({ sql, rawValues, parameterStyle: 'dollar' });
     if (binds !== null) {
       span.data.pg.binds = binds;
     }

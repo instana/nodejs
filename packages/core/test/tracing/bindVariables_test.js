@@ -149,6 +149,63 @@ describe('tracing.bindVariables', function () {
     });
   });
 
+  describe('resolveColumnNamesQuestionParams', function () {
+    it('resolves a single equality condition', function () {
+      const r = util.resolveColumnNamesQuestionParams('SELECT * FROM t WHERE id = ?', 1);
+      expect(r[0]).to.equal('id');
+    });
+
+    it('resolves multiple conditions in left-to-right order', function () {
+      const r = util.resolveColumnNamesQuestionParams('SELECT * FROM t WHERE username = ? AND password = ?', 2);
+      expect(r[0]).to.equal('username');
+      expect(r[1]).to.equal('password');
+    });
+
+    it('resolves table-qualified column names', function () {
+      const r = util.resolveColumnNamesQuestionParams('SELECT * FROM orders WHERE orders.user_id = ?', 1);
+      expect(r[0]).to.equal('orders.user_id');
+    });
+
+    it('resolves comparison operators other than =', function () {
+      const r = util.resolveColumnNamesQuestionParams('SELECT * FROM t WHERE age >= ? AND score < ?', 2);
+      expect(r[0]).to.equal('age');
+      expect(r[1]).to.equal('score');
+    });
+
+    it('resolves LIKE and ILIKE operators', function () {
+      const r = util.resolveColumnNamesQuestionParams('SELECT * FROM t WHERE name LIKE ? AND bio ILIKE ?', 2);
+      expect(r[0]).to.equal('name');
+      expect(r[1]).to.equal('bio');
+    });
+
+    it('leaves INSERT VALUES positions as undefined', function () {
+      const r = util.resolveColumnNamesQuestionParams('INSERT INTO users (username, email) VALUES (?, ?)', 2);
+      expect(r[0]).to.equal(undefined);
+      expect(r[1]).to.equal(undefined);
+    });
+
+    it('resolves UPDATE SET conditions', function () {
+      const r = util.resolveColumnNamesQuestionParams('UPDATE users SET username = ?, email = ? WHERE id = ?', 3);
+      expect(r[0]).to.equal('username');
+      expect(r[1]).to.equal('email');
+      expect(r[2]).to.equal('id');
+    });
+
+    it('resolves DELETE WHERE conditions', function () {
+      const r = util.resolveColumnNamesQuestionParams('DELETE FROM users WHERE name = ? AND email = ?', 2);
+      expect(r[0]).to.equal('name');
+      expect(r[1]).to.equal('email');
+    });
+
+    it('stops collecting once paramCount is reached', function () {
+      // sql has 3 ? but we only ask for 2
+      const r = util.resolveColumnNamesQuestionParams('SELECT * FROM t WHERE a = ? AND b = ? AND c = ?', 2);
+      expect(r[0]).to.equal('a');
+      expect(r[1]).to.equal('b');
+      expect(r[2]).to.equal(undefined);
+    });
+  });
+
   describe('buildBinds', function () {
     const allowedColumns = ['name'];
 
@@ -180,6 +237,35 @@ describe('tracing.bindVariables', function () {
       const sql = 'DELETE FROM users WHERE name = $1 AND email = $2';
       const result = util.buildBinds({ sql, rawValues: ['deleteuser', 'delete@example.com'], allowedColumns });
       expect(result).to.deep.equal([{ name: 'name', value: 'deleteuser' }]);
+    });
+
+    it('uses dollar resolver by default', function () {
+      const sql = 'SELECT * FROM users WHERE name = $1';
+      const result = util.buildBinds({ sql, rawValues: ['alice'], allowedColumns });
+      expect(result).to.deep.equal([{ name: 'name', value: 'alice' }]);
+    });
+
+    it('uses question resolver when parameterStyle is "question"', function () {
+      const sql = 'SELECT * FROM users WHERE name = ?';
+      const result = util.buildBinds({ sql, rawValues: ['alice'], allowedColumns, parameterStyle: 'question' });
+      expect(result).to.deep.equal([{ name: 'name', value: 'alice' }]);
+    });
+
+    it('applies allowed-columns filter with question style', function () {
+      const sql = 'SELECT * FROM users WHERE name = ? AND email = ?';
+      const result = util.buildBinds({
+        sql,
+        rawValues: ['alice', 'alice@example.com'],
+        allowedColumns,
+        parameterStyle: 'question'
+      });
+      expect(result).to.deep.equal([{ name: 'name', value: 'alice' }]);
+    });
+
+    it('falls back to dollar resolver for unknown parameterStyle', function () {
+      const sql = 'SELECT * FROM users WHERE name = $1';
+      const result = util.buildBinds({ sql, rawValues: ['alice'], allowedColumns, parameterStyle: 'unknown' });
+      expect(result).to.deep.equal([{ name: 'name', value: 'alice' }]);
     });
   });
 });

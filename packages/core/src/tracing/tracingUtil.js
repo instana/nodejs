@@ -498,14 +498,19 @@ function isBindsCaptureEnabled() {
 }
 
 /**
- * Extracts raw positional values from pg query arguments and builds the binds array.
+ * Extracts bind variable values from a database query and builds the binds array.
  *
- * @param {{ sql: string, rawValues: any[] }} opts
+ * @param {{ sql: string, rawValues: any[], parameterStyle?: 'dollar' | 'question' }} opts
  * @returns {import('../util/bindVariables').BindEntry[] | null}
  */
-exports.captureBinds = function captureBinds({ sql, rawValues }) {
+exports.captureBinds = function captureBinds({ sql, rawValues, parameterStyle }) {
   if (!isBindsCaptureEnabled()) {
     return null;
   }
-  return bindVariables.buildBinds({ sql, rawValues, allowedColumns: dbBindVariablesConfig.allowedColumns });
+  return bindVariables.buildBinds({
+    sql,
+    rawValues,
+    allowedColumns: dbBindVariablesConfig.allowedColumns,
+    parameterStyle
+  });
 };
