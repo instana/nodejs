@@ -71,19 +71,49 @@ const getConnection = () => {
 
     connected = true;
     connection.query('CREATE TABLE random_values (value double);', queryError => {
-      connection.release();
-
       if (queryError && queryError.code !== 'ER_TABLE_EXISTS_ERROR') {
         log('Failed to execute query for table creation', queryError);
-        return;
       }
 
-      log('Successfully created table');
+      connection.query(
+        'CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(40) NOT NULL, email VARCHAR(40) NOT NULL);',
+        usersError => {
+          connection.release();
+
+          if (usersError) {
+            log('Failed to create users table', usersError);
+            return;
+          }
+
+          log('Successfully created tables');
+        }
+      );
     });
   });
 };
 
 getConnection();
+
+const MYSQL_QUERY_SCENARIOS = {
+  'question-select': (connection, cb) => {
+    connection.query('SELECT * FROM users WHERE name = ? AND email = ?', ['bindtest', 'bind@example.com'], cb);
+  },
+  'question-insert': (connection, cb) => {
+    connection.query('INSERT INTO users (name, email) VALUES (?, ?)', ['insertuser', 'insert@example.com'], cb);
+  },
+  'question-update': (connection, cb) => {
+    connection.query('UPDATE users SET name = ?, email = ? WHERE id = ?', ['updatedname', 'upd@example.com', 1], cb);
+  },
+  'question-delete': (connection, cb) => {
+    connection.query('DELETE FROM users WHERE name = ? AND email = ?', ['deleteuser', 'delete@example.com'], cb);
+  },
+  'question-or': (connection, cb) => {
+    connection.query('SELECT * FROM users WHERE name = ? OR name = ?', ['alice', 'bob'], cb);
+  },
+  'question-null': (connection, cb) => {
+    connection.query('SELECT * FROM users WHERE name = ?', [null], cb);
+  }
+};
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
@@ -155,6 +185,32 @@ app.post('/valuesAndCall', (req, res) => {
           log('Fetch failed', fetchErr);
           res.sendStatus(500);
         });
+    });
+  });
+});
+
+app.get('/bind-variables', (req, res) => {
+  const scenario = req.query.scenario;
+  const handler = MYSQL_QUERY_SCENARIOS[scenario];
+  if (!handler) {
+    return res.status(400).json({ error: `Unknown scenario: ${scenario}` });
+  }
+
+  pool.getConnection((err, connection) => {
+    if (err) {
+      log('Failed to get connection', err);
+      return res.sendStatus(500);
+    }
+
+    handler(connection, (queryError, results) => {
+      connection.release();
+
+      if (queryError) {
+        log('Query error in bind-variables scenario', queryError);
+        return res.sendStatus(500);
+      }
+
+      res.json({ success: true, rows: results });
     });
   });
 });

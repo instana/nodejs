@@ -13,6 +13,7 @@ const config = require('@_local/core/test/config');
 const testUtils = require('@_local/core/test/test_util');
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 const globalAgent = require('@_local/collector/test/globalAgent');
+const { AgentStubControls } = require('@_local/collector/test/apps/agentStubControls');
 
 module.exports = function (name, version, isLatest, mode) {
   this.timeout(config.getTestTimeout() * 10);
@@ -313,5 +314,285 @@ module.exports = function (name, version, isLatest, mode) {
             })
           )
         ));
+
+    it('must not capture bind variables by default (question-mark style)', () =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=question-select' }).then(() =>
+        testUtils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables');
+            const mysqlSpans = testUtils.getSpansByName(spans, 'mysql');
+            mysqlSpans.forEach(span => {
+              expect(span.data.mysql.binds).to.not.exist;
+            });
+          })
+        )
+      ));
+
+    describe('question-mark (?) style — with INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE=false and allowed-columns=name', () => {
+      before(async () => {
+        await controls.stop();
+        controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE = 'false';
+        controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS = 'name';
+        await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+      });
+
+      after(async () => {
+        await controls.stop();
+        delete controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE;
+        delete controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS;
+        await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+      });
+
+      it('must capture only the allowed column (name), not email — SELECT', () =>
+        controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=question-select' }).then(() =>
+          testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyHttpEntry(spans, '/bind-variables');
+
+              const span = testUtils
+                .getSpansByName(spans, 'mysql')
+                .find(s => s.data.mysql.stmt === 'SELECT * FROM users WHERE name = ? AND email = ?');
+              expect(span).to.exist;
+              expect(span.data.mysql.binds).to.be.an('array');
+              expect(span.data.mysql.binds).to.have.lengthOf(1);
+              expect(span.data.mysql.binds[0]).to.deep.equal({ name: 'name', value: 'bindtest' });
+            })
+          )
+        ));
+
+      it('must capture allowed binds for INSERT — column list correlated with ? positions', () =>
+        controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=question-insert' }).then(() =>
+          testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyHttpEntry(spans, '/bind-variables');
+
+              const span = testUtils
+                .getSpansByName(spans, 'mysql')
+                .find(s => s.data.mysql.stmt === 'INSERT INTO users (name, email) VALUES (?, ?)');
+              expect(span).to.exist;
+              expect(span.data.mysql.binds).to.be.an('array');
+              expect(span.data.mysql.binds).to.have.lengthOf(1);
+              expect(span.data.mysql.binds[0]).to.deep.equal({ name: 'name', value: 'insertuser' });
+            })
+          )
+        ));
+
+      it('must capture only the allowed column (name), not email or id — UPDATE', () =>
+        controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=question-update' }).then(() =>
+          testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyHttpEntry(spans, '/bind-variables');
+
+              const span = testUtils
+                .getSpansByName(spans, 'mysql')
+                .find(s => s.data.mysql.stmt === 'UPDATE users SET name = ?, email = ? WHERE id = ?');
+              expect(span).to.exist;
+              expect(span.data.mysql.binds).to.be.an('array');
+              expect(span.data.mysql.binds).to.have.lengthOf(1);
+              expect(span.data.mysql.binds[0]).to.deep.equal({ name: 'name', value: 'updatedname' });
+            })
+          )
+        ));
+
+      it('must capture only the allowed column (name), not email — DELETE', () =>
+        controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=question-delete' }).then(() =>
+          testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyHttpEntry(spans, '/bind-variables');
+
+              const span = testUtils
+                .getSpansByName(spans, 'mysql')
+                .find(s => s.data.mysql.stmt === 'DELETE FROM users WHERE name = ? AND email = ?');
+              expect(span).to.exist;
+              expect(span.data.mysql.binds).to.be.an('array');
+              expect(span.data.mysql.binds).to.have.lengthOf(1);
+              expect(span.data.mysql.binds[0]).to.deep.equal({ name: 'name', value: 'deleteuser' });
+            })
+          )
+        ));
+
+      it('must capture two separate bind entries for OR clause on the same column', () =>
+        controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=question-or' }).then(() =>
+          testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyHttpEntry(spans, '/bind-variables');
+
+              const span = testUtils
+                .getSpansByName(spans, 'mysql')
+                .find(s => s.data.mysql.stmt === 'SELECT * FROM users WHERE name = ? OR name = ?');
+              expect(span).to.exist;
+              expect(span.data.mysql.binds).to.be.an('array');
+              expect(span.data.mysql.binds).to.have.lengthOf(2);
+              expect(span.data.mysql.binds[0]).to.deep.equal({ name: 'name', value: 'alice' });
+              expect(span.data.mysql.binds[1]).to.deep.equal({ name: 'name', value: 'bob' });
+            })
+          )
+        ));
+
+      it('must represent null bind values as the string "null"', () =>
+        controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=question-null' }).then(() =>
+          testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyHttpEntry(spans, '/bind-variables');
+
+              const span = testUtils
+                .getSpansByName(spans, 'mysql')
+                .find(s => s.data.mysql.stmt === 'SELECT * FROM users WHERE name = ?');
+              expect(span).to.exist;
+              expect(span.data.mysql.binds).to.be.an('array');
+              expect(span.data.mysql.binds).to.have.lengthOf(1);
+              expect(span.data.mysql.binds[0]).to.deep.equal({ name: 'name', value: 'null' });
+            })
+          )
+        ));
+    });
+
+    describe('question-mark (?) style — with INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE=true (kill switch)', () => {
+      before(async () => {
+        await controls.stop();
+        controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE = 'true';
+        controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS = 'name';
+        await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+      });
+
+      after(async () => {
+        await controls.stop();
+        delete controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE;
+        delete controls.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS;
+        await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+      });
+
+      it('must not capture any bind variables when disable=true, even with allowed-columns set', () =>
+        controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=question-select' }).then(() =>
+          testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyHttpEntry(spans, '/bind-variables');
+
+              const mysqlSpans = testUtils.getSpansByName(spans, 'mysql');
+              expect(mysqlSpans.length).to.be.greaterThan(0);
+              mysqlSpans.forEach(span => {
+                expect(span.data.mysql.binds).to.not.exist;
+              });
+            })
+          )
+        ));
+    });
+
+    describe('question-mark (?) style — Config precedence', () => {
+      describe('when both agent config and env var are set, env var kill switch takes precedence', () => {
+        const customAgentControls = new AgentStubControls();
+        let configControls;
+
+        before(async () => {
+          await customAgentControls.startAgent({
+            dbBindVariablesConfig: {
+              disable: false,
+              'allowed-columns': ['name']
+            }
+          });
+
+          configControls = new ProcessControls({
+            agentControls: customAgentControls,
+            dirname: __dirname,
+            env: {
+              ...env,
+              INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE: 'true',
+              INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS: 'name'
+            }
+          });
+          await configControls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+        });
+
+        beforeEach(async () => {
+          await customAgentControls.clearReceivedTraceData();
+        });
+
+        after(async () => {
+          await customAgentControls.stopAgent();
+          await configControls.stop();
+        });
+
+        it('must not capture bind variables when env var kill switch overrides agent config', () =>
+          configControls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=question-select' }).then(() =>
+            testUtils.retry(() =>
+              customAgentControls.getSpans().then(spans => {
+                testUtils.expectAtLeastOneMatching(spans, [
+                  span => expect(span.p).to.not.exist,
+                  span => expect(span.k).to.equal(constants.ENTRY),
+                  span => expect(span.n).to.equal('node.http.server'),
+                  span => expect(span.data.http.url).to.equal('/bind-variables')
+                ]);
+
+                const mysqlSpans = testUtils.getSpansByName(spans, 'mysql');
+                expect(mysqlSpans.length).to.be.greaterThan(0);
+                mysqlSpans.forEach(span => {
+                  expect(span.data.mysql.binds).to.not.exist;
+                });
+              })
+            )
+          ));
+      });
+
+      describe('when only agent config is set (no env var), question-mark (?) style', () => {
+        const customAgentControls = new AgentStubControls();
+        let configControls;
+
+        before(async () => {
+          await customAgentControls.startAgent({
+            dbBindVariablesConfig: {
+              disable: false,
+              'allowed-columns': ['name']
+            }
+          });
+
+          configControls = new ProcessControls({
+            agentControls: customAgentControls,
+            dirname: __dirname,
+            env
+          });
+          await configControls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
+        });
+
+        beforeEach(async () => {
+          await customAgentControls.clearReceivedTraceData();
+        });
+
+        after(async () => {
+          await customAgentControls.stopAgent();
+          await configControls.stop();
+        });
+
+        it('must capture allowed bind variables when config is delivered via agent', () =>
+          configControls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=question-select' }).then(() =>
+            testUtils.retry(() =>
+              customAgentControls.getSpans().then(spans => {
+                testUtils.expectAtLeastOneMatching(spans, [
+                  span => expect(span.p).to.not.exist,
+                  span => expect(span.k).to.equal(constants.ENTRY),
+                  span => expect(span.n).to.equal('node.http.server'),
+                  span => expect(span.data.http.url).to.equal('/bind-variables')
+                ]);
+
+                const span = testUtils
+                  .getSpansByName(spans, 'mysql')
+                  .find(s => s.data.mysql.stmt === 'SELECT * FROM users WHERE name = ? AND email = ?');
+                expect(span).to.exist;
+                expect(span.data.mysql.binds).to.be.an('array');
+                expect(span.data.mysql.binds).to.have.lengthOf(1);
+                expect(span.data.mysql.binds[0]).to.deep.equal({ name: 'name', value: 'bindtest' });
+              })
+            )
+          ));
+      });
+    });
+  }
+
+  function verifyHttpEntry(spans, url) {
+    return testUtils.expectAtLeastOneMatching(spans, [
+      span => expect(span.p).to.not.exist,
+      span => expect(span.k).to.equal(constants.ENTRY),
+      span => expect(span.n).to.equal('node.http.server'),
+      span => expect(span.data.http.url).to.contain(url.split('?')[0])
+    ]);
   }
 };
