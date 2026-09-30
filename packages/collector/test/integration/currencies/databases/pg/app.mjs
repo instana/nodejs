@@ -48,10 +48,10 @@ pool.query(createTableQuery, err => {
   }
 });
 
-const createBlobsTableQuery =
+const createTableForBinds =
   'CREATE TABLE IF NOT EXISTS blobs(id serial primary key, name varchar(40) NOT NULL, data bytea)';
 
-pool.query(createBlobsTableQuery, err => {
+pool.query(createTableForBinds, err => {
   if (err) {
     log('Failed to create blobs table', err);
   }
