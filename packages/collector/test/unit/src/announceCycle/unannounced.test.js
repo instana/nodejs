@@ -1830,7 +1830,7 @@ describe('unannounced state', () => {
           transitionTo: () => {
             expect(agentOptsStub.config).to.deep.equal({
               tracing: {
-                dbBindVariables: { disable: false, allowedColumns: [] }
+                dbBindVariables: { disable: false }
               }
             });
             done();
@@ -1861,7 +1861,7 @@ describe('unannounced state', () => {
         });
       });
 
-      it('should fall back to default disable=true when disable value is invalid', done => {
+      it('should ignore disable when disable value is invalid', done => {
         prepareAnnounceResponse({
           tracing: {
             global: {
@@ -1876,7 +1876,7 @@ describe('unannounced state', () => {
           transitionTo: () => {
             expect(agentOptsStub.config).to.deep.equal({
               tracing: {
-                dbBindVariables: { disable: true, allowedColumns: ['order_id'] }
+                dbBindVariables: { allowedColumns: ['order_id'] }
               }
             });
             done();
@@ -1936,7 +1936,7 @@ describe('unannounced state', () => {
         });
       });
 
-      it('should apply defaults when db-bind-variables is an empty object', done => {
+      it('should not set fields when db-bind-variables is an empty object', done => {
         prepareAnnounceResponse({
           tracing: {
             global: {
@@ -1948,7 +1948,7 @@ describe('unannounced state', () => {
           transitionTo: () => {
             expect(agentOptsStub.config).to.deep.equal({
               tracing: {
-                dbBindVariables: { disable: true, allowedColumns: [] }
+                dbBindVariables: {}
               }
             });
             done();

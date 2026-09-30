@@ -49,6 +49,72 @@ pool.query(createTableQuery, err => {
   }
 });
 
+const createTableForBinds =
+  'CREATE TABLE IF NOT EXISTS blobs(id serial primary key, name varchar(40) NOT NULL, data bytea)';
+
+pool.query(createTableForBinds, err => {
+  if (err) {
+    log('Failed to create blobs table', err);
+  }
+});
+
+const createProcedureQuery = `
+  CREATE OR REPLACE FUNCTION get_user_by_name(user_name VARCHAR)
+  RETURNS TABLE(id INT, name VARCHAR, email VARCHAR) AS $$
+  BEGIN
+    RETURN QUERY SELECT users.id, users.name, users.email FROM users WHERE users.name = user_name;
+  END;
+  $$ LANGUAGE plpgsql;
+`;
+
+pool.query(createProcedureQuery, err => {
+  if (err) {
+    log('Failed to create stored procedure', err);
+  }
+});
+
+const PG_QUERY_SCENARIOS = {
+  'mixed-queries': async () => {
+    await client.query('SELECT * FROM users WHERE name = $1 AND email = $2', ['testuser', 'test@example.com']);
+    return pool.query({
+      text: 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *',
+      values: ['bindtest', 'bindtest@example.com']
+    });
+  },
+  'allowed-columns': async () => {
+    await client.query('SELECT * FROM users WHERE name = $1 AND email = $2', ['alloweduser', 'allowed@example.com']);
+    await client.query('UPDATE users SET name = $1, email = $2 WHERE id = $3', ['updatedname', 'upd@example.com', 1]);
+    return client.query('DELETE FROM users WHERE name = $1 AND email = $2', ['deleteuser', 'delete@example.com']);
+  },
+  'null-value': () => pool.query('SELECT * FROM users WHERE name = $1', [null]),
+  'or-clause': () => client.query('SELECT * FROM users WHERE name = $1 OR name = $2', ['alice', 'bob']),
+  binary: () => {
+    const binaryData = Buffer.from('binary-payload');
+    return client.query('UPDATE blobs SET data = $1 WHERE name = $2', [binaryData, 'testblob']);
+  },
+  unsupported: () => client.query('SELECT * FROM users WHERE name = $1', [{ key: 'value' }]),
+  circular: () => {
+    const circular = {};
+    circular.self = circular;
+    return client.query('SELECT * FROM users WHERE name = $1', [circular]);
+  },
+  'stored-procedure': () => client.query('SELECT * FROM get_user_by_name($1)', ['proceduretest']),
+  'qualified-col': () => client.query('SELECT * FROM orders WHERE orders.id = $1', [42]),
+  'qualified-entry-no-match': () => client.query('SELECT * FROM users WHERE id = $1', [99]),
+  cap: () => {
+    const conditions = Array.from({ length: 150 }, (_, i) => {
+      const col = i < 100 && i % 2 !== 0 ? 'email' : 'name';
+      return `${col} = $${i + 1}`;
+    }).join(' OR ');
+    const values = Array.from({ length: 150 }, (_, i) => `val${i}`);
+    return client.query(`SELECT * FROM users WHERE ${conditions}`, values);
+  },
+  'span-batching': async () => {
+    client.query('SELECT * FROM users WHERE name = $1', ['first-query']);
+    await client.query('SELECT * FROM users WHERE name = $1', ['last-query']);
+  }
+};
+
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
 }
@@ -103,6 +169,16 @@ app.get('/select-now-no-pool-promise', (req, res) => {
 app.get('/parameterized-query', async (req, res) => {
   await client.query('SELECT * FROM users WHERE name = $1', ['parapeter']);
   res.json({});
+});
+
+app.get('/bind-variables', async (req, res) => {
+  const scenario = req.query.scenario;
+  const handler = PG_QUERY_SCENARIOS[scenario];
+  if (!handler) {
+    return res.status(400).json({ error: `Unknown scenario: ${scenario}` });
+  }
+  const result = await handler();
+  res.json({ success: true, rows: result && result.rows });
 });
 
 app.get('/pool-string-insert', (req, res) => {

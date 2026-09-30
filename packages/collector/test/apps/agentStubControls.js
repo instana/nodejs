@@ -76,6 +76,9 @@ class AgentStubControls {
     if (opts.httpExitConfig) {
       env.AGENT_STUB_HTTP_EXIT_CONFIG = JSON.stringify(opts.httpExitConfig);
     }
+    if (opts.dbBindVariablesConfig) {
+      env.AGENT_STUB_DB_BIND_VARIABLES_CONFIG = JSON.stringify(opts.dbBindVariablesConfig);
+    }
 
     this.agentStub = spawn('node', [path.join(__dirname, 'agentStub.js')], {
       stdio: config.getAppStdio(),
