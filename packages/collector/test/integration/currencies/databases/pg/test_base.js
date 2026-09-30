@@ -70,12 +70,12 @@ module.exports = function (name, version, isLatest) {
     controls
       .sendRequest({
         method: 'GET',
-        path: '/bind-variables-test'
+        path: '/bind-variables?scenario=mixed-queries'
       })
       .then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            verifyHttpEntry(spans, '/bind-variables-test');
+            verifyHttpEntry(spans, '/bind-variables');
             const pgSpans = getSpansByName(spans, 'postgres');
             pgSpans.forEach(span => {
               expect(span.data.pg.binds).to.not.exist;
@@ -100,10 +100,10 @@ module.exports = function (name, version, isLatest) {
     });
 
     it('must capture only the allowed column (name), not email — SELECT', () =>
-      controls.sendRequest({ method: 'GET', path: '/bind-variables-allowed-columns-test' }).then(() =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=allowed-columns' }).then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            verifyHttpEntry(spans, '/bind-variables-allowed-columns-test');
+            verifyHttpEntry(spans, '/bind-variables');
 
             const selectSpan = getSpansByName(spans, 'postgres').find(
               span => span.data.pg.stmt === 'SELECT * FROM users WHERE name = $1 AND email = $2'
@@ -117,10 +117,10 @@ module.exports = function (name, version, isLatest) {
       ));
 
     it('must capture only the allowed column (name), not email — UPDATE', () =>
-      controls.sendRequest({ method: 'GET', path: '/bind-variables-allowed-columns-test' }).then(() =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=allowed-columns' }).then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            verifyHttpEntry(spans, '/bind-variables-allowed-columns-test');
+            verifyHttpEntry(spans, '/bind-variables');
 
             const updateSpan = getSpansByName(spans, 'postgres').find(
               span => span.data.pg.stmt === 'UPDATE users SET name = $1, email = $2 WHERE id = $3'
@@ -134,10 +134,10 @@ module.exports = function (name, version, isLatest) {
       ));
 
     it('must capture only the allowed column (name), not email — DELETE', () =>
-      controls.sendRequest({ method: 'GET', path: '/bind-variables-allowed-columns-test' }).then(() =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=allowed-columns' }).then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            verifyHttpEntry(spans, '/bind-variables-allowed-columns-test');
+            verifyHttpEntry(spans, '/bind-variables');
 
             const deleteSpan = getSpansByName(spans, 'postgres').find(
               span => span.data.pg.stmt === 'DELETE FROM users WHERE name = $1 AND email = $2'
@@ -151,10 +151,10 @@ module.exports = function (name, version, isLatest) {
       ));
 
     it('must not capture binds for INSERT (positional params in VALUES list not resolvable)', () =>
-      controls.sendRequest({ method: 'GET', path: '/bind-variables-test' }).then(() =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=mixed-queries' }).then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            verifyHttpEntry(spans, '/bind-variables-test');
+            verifyHttpEntry(spans, '/bind-variables');
 
             const insertSpan = getSpansByName(spans, 'postgres').find(
               span => span.data.pg.stmt === 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *'
@@ -166,10 +166,10 @@ module.exports = function (name, version, isLatest) {
       ));
 
     it('must capture the allowed column from a string+array style query', () =>
-      controls.sendRequest({ method: 'GET', path: '/bind-variables-test' }).then(() =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=mixed-queries' }).then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            verifyHttpEntry(spans, '/bind-variables-test');
+            verifyHttpEntry(spans, '/bind-variables');
 
             const selectSpan = getSpansByName(spans, 'postgres').find(
               span => span.data.pg.stmt === 'SELECT * FROM users WHERE name = $1 AND email = $2'
@@ -183,10 +183,10 @@ module.exports = function (name, version, isLatest) {
       ));
 
     it('must capture two separate binds entries for OR clause on the same column', () =>
-      controls.sendRequest({ method: 'GET', path: '/bind-variables-or-clause-test' }).then(() =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=or-clause' }).then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            verifyHttpEntry(spans, '/bind-variables-or-clause-test');
+            verifyHttpEntry(spans, '/bind-variables');
 
             const orSpan = getSpansByName(spans, 'postgres').find(
               span => span.data.pg.stmt === 'SELECT * FROM users WHERE name = $1 OR name = $2'
@@ -201,10 +201,10 @@ module.exports = function (name, version, isLatest) {
       ));
 
     it('must represent null bind values as the string "null"', () =>
-      controls.sendRequest({ method: 'GET', path: '/bind-variables-null-value-test' }).then(() =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=null-value' }).then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            verifyHttpEntry(spans, '/bind-variables-null-value-test');
+            verifyHttpEntry(spans, '/bind-variables');
 
             const nullSpan = getSpansByName(spans, 'postgres').find(
               span => span.data.pg.stmt === 'SELECT * FROM users WHERE name = $1'
@@ -234,10 +234,10 @@ module.exports = function (name, version, isLatest) {
     });
 
     it('must represent a Buffer bind value as "<binary>"', () =>
-      controls.sendRequest({ method: 'GET', path: '/bind-variables-binary-test' }).then(() =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=binary' }).then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            verifyHttpEntry(spans, '/bind-variables-binary-test');
+            verifyHttpEntry(spans, '/bind-variables');
 
             const span = getSpansByName(spans, 'postgres').find(
               s => s.data.pg.stmt === 'UPDATE blobs SET data = $1 WHERE name = $2'
@@ -268,10 +268,10 @@ module.exports = function (name, version, isLatest) {
     });
 
     it('must serialise a plain object bind value to its JSON representation', () =>
-      controls.sendRequest({ method: 'GET', path: '/bind-variables-unsupported-test' }).then(() =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=unsupported' }).then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            verifyHttpEntry(spans, '/bind-variables-unsupported-test');
+            verifyHttpEntry(spans, '/bind-variables');
 
             const span = getSpansByName(spans, 'postgres').find(
               s => s.data.pg.stmt === 'SELECT * FROM users WHERE name = $1'
@@ -285,10 +285,10 @@ module.exports = function (name, version, isLatest) {
       ));
 
     it('must represent a circular object bind value as "<unsupported>"', () =>
-      controls.sendRequest({ method: 'GET', path: '/bind-variables-circular-test' }).then(() =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=circular' }).then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            verifyHttpEntry(spans, '/bind-variables-circular-test');
+            verifyHttpEntry(spans, '/bind-variables');
 
             const span = getSpansByName(spans, 'postgres').find(
               s => s.data.pg.stmt === 'SELECT * FROM users WHERE name = $1'
@@ -318,10 +318,10 @@ module.exports = function (name, version, isLatest) {
     });
 
     it('must not capture binds for stored procedure call (parameter not resolvable to a column name)', () =>
-      controls.sendRequest({ method: 'GET', path: '/bind-variables-stored-procedure-test' }).then(() =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=stored-procedure' }).then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            verifyHttpEntry(spans, '/bind-variables-stored-procedure-test');
+            verifyHttpEntry(spans, '/bind-variables');
 
             const span = getSpansByName(spans, 'postgres').find(
               s => s.data.pg.stmt === 'SELECT * FROM get_user_by_name($1)'
@@ -349,10 +349,10 @@ module.exports = function (name, version, isLatest) {
     });
 
     it('must scan past non-allowed entries and fill from remaining params to reach the 100 cap', () =>
-      controls.sendRequest({ method: 'GET', path: '/bind-variables-cap-test' }).then(() =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=cap' }).then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            verifyHttpEntry(spans, '/bind-variables-cap-test');
+            verifyHttpEntry(spans, '/bind-variables');
 
             const span = getSpansByName(spans, 'postgres').find(
               s => s.data.pg.stmt && s.data.pg.stmt.includes('name = $1')
@@ -394,10 +394,10 @@ module.exports = function (name, version, isLatest) {
     });
 
     it('must only report bind variables from the final merged statement', () =>
-      controls.sendRequest({ method: 'GET', path: '/bind-variables-span-batching-test' }).then(() =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=span-batching' }).then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            verifyHttpEntry(spans, '/bind-variables-span-batching-test');
+            verifyHttpEntry(spans, '/bind-variables');
 
             const pgSpans = getSpansByName(spans, 'postgres');
             expect(pgSpans.length).to.be.at.least(1);
@@ -427,10 +427,10 @@ module.exports = function (name, version, isLatest) {
     });
 
     it('must capture orders.id when allowed-columns entry is the unqualified id', () =>
-      controls.sendRequest({ method: 'GET', path: '/bind-variables-qualified-col-test' }).then(() =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=qualified-col' }).then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            verifyHttpEntry(spans, '/bind-variables-qualified-col-test');
+            verifyHttpEntry(spans, '/bind-variables');
 
             const span = getSpansByName(spans, 'postgres').find(
               s => s.data.pg.stmt === 'SELECT * FROM orders WHERE orders.id = $1'
@@ -460,10 +460,10 @@ module.exports = function (name, version, isLatest) {
     });
 
     it('must NOT capture bare id when allowed-columns entry is fully qualified orders.id', () =>
-      controls.sendRequest({ method: 'GET', path: '/bind-variables-qualified-entry-no-match-test' }).then(() =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=qualified-entry-no-match' }).then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            verifyHttpEntry(spans, '/bind-variables-qualified-entry-no-match-test');
+            verifyHttpEntry(spans, '/bind-variables');
 
             const span = getSpansByName(spans, 'postgres').find(
               s => s.data.pg.stmt === 'SELECT * FROM users WHERE id = $1'
@@ -491,10 +491,10 @@ module.exports = function (name, version, isLatest) {
     });
 
     it('must not capture any bind variables when disable=true, even with allowed-columns set', () =>
-      controls.sendRequest({ method: 'GET', path: '/bind-variables-allowed-columns-test' }).then(() =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=allowed-columns' }).then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            verifyHttpEntry(spans, '/bind-variables-allowed-columns-test');
+            verifyHttpEntry(spans, '/bind-variables');
 
             const pgSpans = getSpansByName(spans, 'postgres');
             expect(pgSpans.length).to.be.greaterThan(0);
@@ -544,7 +544,7 @@ module.exports = function (name, version, isLatest) {
       });
 
       it('must not capture bind variables when env var kill switch overrides agent config', () =>
-        configControls.sendRequest({ method: 'GET', path: '/bind-variables-allowed-columns-test' }).then(() =>
+        configControls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=allowed-columns' }).then(() =>
           retry(() =>
             customAgentControls.getSpans().then(spans => {
               expectAtLeastOneMatching(spans, [
@@ -552,7 +552,7 @@ module.exports = function (name, version, isLatest) {
                 span => expect(span.k).to.equal(constants.ENTRY),
                 span => expect(span.f.e).to.equal(String(configControls.getPid())),
                 span => expect(span.n).to.equal('node.http.server'),
-                span => expect(span.data.http.url).to.equal('/bind-variables-allowed-columns-test')
+                span => expect(span.data.http.url).to.equal('/bind-variables')
               ]);
 
               const pgSpans = getSpansByName(spans, 'postgres');
@@ -599,7 +599,7 @@ module.exports = function (name, version, isLatest) {
       });
 
       it('must capture allowed bind variables when config is delivered via agent', () =>
-        configControls.sendRequest({ method: 'GET', path: '/bind-variables-allowed-columns-test' }).then(() =>
+        configControls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=allowed-columns' }).then(() =>
           retry(() =>
             customAgentControls.getSpans().then(spans => {
               expectAtLeastOneMatching(spans, [
@@ -607,7 +607,7 @@ module.exports = function (name, version, isLatest) {
                 span => expect(span.k).to.equal(constants.ENTRY),
                 span => expect(span.f.e).to.equal(String(configControls.getPid())),
                 span => expect(span.n).to.equal('node.http.server'),
-                span => expect(span.data.http.url).to.equal('/bind-variables-allowed-columns-test')
+                span => expect(span.data.http.url).to.equal('/bind-variables')
               ]);
 
               const selectSpan = getSpansByName(spans, 'postgres').find(
