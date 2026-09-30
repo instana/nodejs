@@ -1671,21 +1671,21 @@ describe('tracing/tracingUtil', () => {
     });
   });
 
-  describe('isCaptureEnabled', () => {
+  describe('isBindsCaptureEnabled', () => {
     it('should return false when config is undefined', () => {
-      expect(tracingUtil.isCaptureEnabled(undefined)).to.be.false;
+      expect(tracingUtil.isBindsCaptureEnabled(undefined)).to.be.false;
     });
 
     it('should return false when disable=true', () => {
-      expect(tracingUtil.isCaptureEnabled({ disable: true, allowedColumns: ['id'] })).to.be.false;
+      expect(tracingUtil.isBindsCaptureEnabled({ disable: true, allowedColumns: ['id'] })).to.be.false;
     });
 
     it('should return false when allowedColumns is empty', () => {
-      expect(tracingUtil.isCaptureEnabled({ disable: false, allowedColumns: [] })).to.be.false;
+      expect(tracingUtil.isBindsCaptureEnabled({ disable: false, allowedColumns: [] })).to.be.false;
     });
 
     it('should return true when disable=false and allowedColumns is non-empty', () => {
-      expect(tracingUtil.isCaptureEnabled({ disable: false, allowedColumns: ['id'] })).to.be.true;
+      expect(tracingUtil.isBindsCaptureEnabled({ disable: false, allowedColumns: ['id'] })).to.be.true;
     });
   });
 

@@ -493,7 +493,7 @@ exports.isLogLevelAnError = function isLogLevelAnError(level) {
  * @param {import('../config').InstanaConfig['tracing']['dbBindVariables']} cfg
  * @returns {boolean}
  */
-exports.isCaptureEnabled = function isCaptureEnabled(cfg) {
+exports.isBindsCaptureEnabled = function isBindsCaptureEnabled(cfg) {
   return !!(cfg && cfg.disable === false && cfg.allowedColumns && cfg.allowedColumns.length > 0);
 };
 
@@ -504,7 +504,7 @@ exports.isCaptureEnabled = function isCaptureEnabled(cfg) {
  * @returns {import('../util/bindVariables').BindEntry[] | null}
  */
 exports.captureBinds = function captureBinds({ sql, rawValues }) {
-  if (!exports.isCaptureEnabled(dbBindVariablesConfig)) {
+  if (!exports.isBindsCaptureEnabled(dbBindVariablesConfig)) {
     return null;
   }
   return bindVariables.buildBinds({ sql, rawValues, allowedColumns: dbBindVariablesConfig.allowedColumns });
