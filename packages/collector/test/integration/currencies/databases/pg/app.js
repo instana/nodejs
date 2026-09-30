@@ -67,10 +67,19 @@ const createProcedureQuery = `
   $$ LANGUAGE plpgsql;
 `;
 
+pool.query(createProcedureQuery, err => {
+  if (err) {
+    log('Failed to create stored procedure', err);
+  }
+});
+
 const PG_QUERY_SCENARIOS = {
   'mixed-queries': async () => {
     await client.query('SELECT * FROM users WHERE name = $1 AND email = $2', ['testuser', 'test@example.com']);
-    return pool.query({ text: 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *', values: ['bindtest', 'bindtest@example.com'] });
+    return pool.query({
+      text: 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *',
+      values: ['bindtest', 'bindtest@example.com']
+    });
   },
   'allowed-columns': async () => {
     await client.query('SELECT * FROM users WHERE name = $1 AND email = $2', ['alloweduser', 'allowed@example.com']);
@@ -105,12 +114,6 @@ const PG_QUERY_SCENARIOS = {
     await client.query('SELECT * FROM users WHERE name = $1', ['last-query']);
   }
 };
-
-pool.query(createProcedureQuery, err => {
-  if (err) {
-    log('Failed to create stored procedure', err);
-  }
-});
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
