@@ -9,6 +9,8 @@ const { MAX_BINDS } = require('../tracing/constants');
 const OPERATOR_GROUP_REGEX = '(?:=|!=|<>|<=|>=|<|>|LIKE|ILIKE)';
 const DOLLAR_PARAM_REGEX = `([\\w.]+)\\s*${OPERATOR_GROUP_REGEX}\\s*\\$(\\d+)`;
 const QUESTION_PARAM_REGEX = `([\\w.]+)\\s*${OPERATOR_GROUP_REGEX}\\s*\\?`;
+const NAMED_PARAM_REGEX = `([\\w.]+)\\s*${OPERATOR_GROUP_REGEX}\\s*:([a-zA-Z][a-zA-Z0-9_]*)`;
+const INSERT_REGEX = /INSERT\s+INTO\s+\w+\s*\(([^)]+)\)\s*VALUES\s*([\s\S]+)/i;
 
 /** @typedef {{ name: string, value: string }} BindEntry */
 
@@ -72,7 +74,30 @@ exports.buildPositionalBinds = function buildPositionalBinds(positionalValues, c
 };
 
 /**
- * Resolves PostgreSQL-style `$N` placeholders to column names via `<col> <op> $N` pattern matching.
+ * Maps columns to matched placeholder tokens in an INSERT's VALUES clause
+ *
+ * @param {string} sql
+ * @param {RegExp} tokenRe
+ * @param {(col: string, token: RegExpExecArray) => void} applyToken
+ */
+function applyInsertMappings(sql, tokenRe, applyToken) {
+  const m = INSERT_REGEX.exec(sql);
+  if (!m) return;
+  const cols = m[1]
+    .split(',')
+    .map(c => c.trim())
+    .filter(Boolean);
+  const valuesClause = m[2];
+  tokenRe.lastIndex = 0;
+  let i = 0;
+  for (let tok = tokenRe.exec(valuesClause); tok !== null && i < cols.length; tok = tokenRe.exec(valuesClause)) {
+    applyToken(cols[i++], tok);
+  }
+}
+
+/**
+ * Resolves PostgreSQL-style `$N` placeholders to column names.
+ * Handles `<col> <op> $N` patterns (WHERE/SET) and INSERT column-list correlation.
  * Returns a sparse array indexed by param position (0-based).
  *
  * @param {string} sql
@@ -88,12 +113,21 @@ exports.resolveDollarParamColumns = function resolveDollarParamColumns(sql, para
       result[idx] = match[1];
     }
   }
+
+  applyInsertMappings(sql, /\$(\d+)/g, (col, tok) => {
+    const idx = parseInt(tok[1], 10) - 1;
+    if (idx >= 0 && idx < paramCount) {
+      result[idx] = result[idx] || col;
+    }
+  });
+
   return result;
 };
 
 /**
- * Resolves JDBC-style `?` placeholders to column names via `<col> <op> ?` pattern matching.
- * Returns a sparse array indexed by param position (0-based), in left-to-right order of appearance.
+ * Resolves JDBC-style `?` placeholders to column names.
+ * Handles `<col> <op> ?` patterns (WHERE/SET) and INSERT column-list correlation.
+ * Returns a sparse array indexed by param position (0-based), in left-to-right order.
  *
  * @param {string} sql
  * @param {number} paramCount
@@ -103,16 +137,66 @@ exports.resolveQuestionParamColumns = function resolveQuestionParamColumns(sql, 
   const result = new Array(paramCount);
   const re = new RegExp(QUESTION_PARAM_REGEX, 'gi');
   let pos = 0;
+
   for (let match = re.exec(sql); match !== null && pos < paramCount; match = re.exec(sql)) {
     result[pos++] = match[1];
   }
+
+  applyInsertMappings(sql, /\?/g, col => {
+    if (pos < paramCount) result[pos++] = col;
+  });
+
   return result;
 };
 
 /**
+ * Resolves mysql2 named placeholders (`:paramName`) to `{ col, key }` pairs.
+ * Handles `<col> <op> :paramName` patterns (WHERE/SET) and INSERT column-list correlation.
+ * Returns pairs in left-to-right order of appearance.
+ *
+ * @param {string} sql
+ * @returns {{ col: string, key: string }[]}
+ */
+exports.resolveNamedParamColumns = function resolveNamedParamColumns(sql) {
+  const result = [];
+
+  const re = new RegExp(NAMED_PARAM_REGEX, 'gi');
+  for (let match = re.exec(sql); match !== null; match = re.exec(sql)) {
+    result.push({ col: match[1], key: match[2] });
+  }
+
+  applyInsertMappings(sql, /:([a-zA-Z][a-zA-Z0-9_]*)/g, (col, tok) => {
+    result.push({ col, key: tok[1] });
+  });
+
+  return result;
+};
+
+/**
+ * Builds binds from a named-parameter values object (mysql2 `namedPlaceholders: true` mode).
+ * Column names are resolved from `<col> <op> :paramName` patterns in the SQL;
+ * values are looked up by paramName from the object.
+ *
+ * @param {string} sql
+ * @param {Record<string, unknown>} namedValues  e.g. { name: 'alice', age: 30 }
+ * @param {string[]} allowedColumns
+ * @returns {BindEntry[] | null}
+ */
+exports.buildBindsFromNamed = function buildBindsFromNamed(sql, namedValues, allowedColumns) {
+  const pairs = exports.resolveNamedParamColumns(sql);
+  const binds = [];
+  for (let i = 0; i < pairs.length; i++) {
+    const { col, key } = pairs[i];
+    if (!exports.isColumnAllowed(col, allowedColumns)) continue;
+    if (!Object.prototype.hasOwnProperty.call(namedValues, key)) continue;
+    binds.push({ name: col, value: exports.normalizeBindValue(namedValues[key]) });
+    if (binds.length >= MAX_BINDS) break;
+  }
+  return binds.length > 0 ? binds : null;
+};
+
+/**
  * Maps a parameterStyle name to its positional resolver function.
- * To add support for mysql2 named placeholders (`:paramName` style with an object for values),
- * add a 'named' entry here and a corresponding buildBindsFromNamed path in buildBinds.
  * Each resolver signature: (sql: string, paramCount: number) => (string | undefined)[]
  *
  * @type {{ [style: string]: (sql: string, paramCount: number) => (string | undefined)[] }}
@@ -123,11 +207,25 @@ const resolvers = {
 };
 
 /**
- * @param {{ sql: string, rawValues: any[], allowedColumns: string[], parameterStyle?: 'dollar' | 'question' }} opts
+ * @param {{
+ *   sql: string,
+ *   rawValues: any[] | Record<string, unknown>,
+ *   allowedColumns: string[],
+ *   parameterStyle?: 'dollar' | 'question' | 'named'
+ * }} opts
  * @returns {BindEntry[] | null}
  */
 exports.buildBinds = function buildBinds({ sql, rawValues, allowedColumns, parameterStyle = 'dollar' }) {
-  if (!sql || !Array.isArray(rawValues) || rawValues.length === 0) {
+  if (!sql || rawValues == null) {
+    return null;
+  }
+
+  if (parameterStyle === 'named') {
+    if (Array.isArray(rawValues) || typeof rawValues !== 'object') return null;
+    return exports.buildBindsFromNamed(sql, rawValues, allowedColumns);
+  }
+
+  if (!Array.isArray(rawValues) || rawValues.length === 0) {
     return null;
   }
 

@@ -500,7 +500,11 @@ function isBindsCaptureEnabled() {
 /**
  * Extracts bind variable values from a database query and builds the binds array.
  *
- * @param {{ sql: string, rawValues: any[], parameterStyle?: 'dollar' | 'question' }} opts
+ * @param {{
+ *   sql: string,
+ *   rawValues: any[] | Record<string, unknown>,
+ *   parameterStyle?: 'dollar' | 'question' | 'named'
+ * }} opts
  * @returns {import('../util/bindVariables').BindEntry[] | null}
  */
 exports.captureBinds = function captureBinds({ sql, rawValues, parameterStyle }) {

@@ -150,7 +150,7 @@ module.exports = function (name, version, isLatest) {
         )
       ));
 
-    it('must not capture binds for INSERT (positional params in VALUES list not resolvable)', () =>
+    it('must capture allowed binds for INSERT (column list correlated with VALUES positions)', () =>
       controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=mixed-queries' }).then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
@@ -160,7 +160,9 @@ module.exports = function (name, version, isLatest) {
               span => span.data.pg.stmt === 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *'
             );
             expect(insertSpan).to.exist;
-            expect(insertSpan.data.pg.binds).to.not.exist;
+            expect(insertSpan.data.pg.binds).to.be.an('array');
+            expect(insertSpan.data.pg.binds).to.have.lengthOf(1);
+            expect(insertSpan.data.pg.binds[0]).to.deep.equal({ name: 'name', value: 'bindtest' });
           })
         )
       ));
