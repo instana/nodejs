@@ -206,14 +206,14 @@ describe('tracing.bindVariables', function () {
     });
   });
 
-  describe('resolveColumnNamesNamedParams', function () {
+  describe('resolveNamedParamColumns', function () {
     it('resolves a single :name equality condition', function () {
-      const r = util.resolveColumnNamesNamedParams('SELECT * FROM t WHERE id = :id');
+      const r = util.resolveNamedParamColumns('SELECT * FROM t WHERE id = :id');
       expect(r).to.deep.equal([{ col: 'id', key: 'id' }]);
     });
 
     it('resolves multiple named conditions in left-to-right order', function () {
-      const r = util.resolveColumnNamesNamedParams('SELECT * FROM t WHERE name = :name AND age > :age');
+      const r = util.resolveNamedParamColumns('SELECT * FROM t WHERE name = :name AND age > :age');
       expect(r).to.deep.equal([
         { col: 'name', key: 'name' },
         { col: 'age', key: 'age' }
@@ -221,12 +221,12 @@ describe('tracing.bindVariables', function () {
     });
 
     it('resolves table-qualified column names', function () {
-      const r = util.resolveColumnNamesNamedParams('SELECT * FROM orders WHERE orders.user_id = :userId');
+      const r = util.resolveNamedParamColumns('SELECT * FROM orders WHERE orders.user_id = :userId');
       expect(r).to.deep.equal([{ col: 'orders.user_id', key: 'userId' }]);
     });
 
     it('resolves comparison operators other than =', function () {
-      const r = util.resolveColumnNamesNamedParams('SELECT * FROM t WHERE age >= :minAge AND score < :maxScore');
+      const r = util.resolveNamedParamColumns('SELECT * FROM t WHERE age >= :minAge AND score < :maxScore');
       expect(r).to.deep.equal([
         { col: 'age', key: 'minAge' },
         { col: 'score', key: 'maxScore' }
@@ -234,12 +234,12 @@ describe('tracing.bindVariables', function () {
     });
 
     it('resolves LIKE operator', function () {
-      const r = util.resolveColumnNamesNamedParams('SELECT * FROM t WHERE name LIKE :namePattern');
+      const r = util.resolveNamedParamColumns('SELECT * FROM t WHERE name LIKE :namePattern');
       expect(r).to.deep.equal([{ col: 'name', key: 'namePattern' }]);
     });
 
     it('resolves INSERT column-list positions', function () {
-      const r = util.resolveColumnNamesNamedParams('INSERT INTO users (name, email) VALUES (:name, :email)');
+      const r = util.resolveNamedParamColumns('INSERT INTO users (name, email) VALUES (:name, :email)');
       expect(r).to.deep.equal([
         { col: 'name', key: 'name' },
         { col: 'email', key: 'email' }
@@ -247,7 +247,7 @@ describe('tracing.bindVariables', function () {
     });
 
     it('resolves INSERT when param key differs from column name', function () {
-      const r = util.resolveColumnNamesNamedParams('INSERT INTO users (name, email) VALUES (:n, :e)');
+      const r = util.resolveNamedParamColumns('INSERT INTO users (name, email) VALUES (:n, :e)');
       expect(r).to.deep.equal([
         { col: 'name', key: 'n' },
         { col: 'email', key: 'e' }
@@ -255,7 +255,7 @@ describe('tracing.bindVariables', function () {
     });
 
     it('resolves UPDATE SET conditions', function () {
-      const r = util.resolveColumnNamesNamedParams('UPDATE users SET name = :name, email = :email WHERE id = :id');
+      const r = util.resolveNamedParamColumns('UPDATE users SET name = :name, email = :email WHERE id = :id');
       expect(r).to.deep.equal([
         { col: 'name', key: 'name' },
         { col: 'email', key: 'email' },
@@ -264,7 +264,7 @@ describe('tracing.bindVariables', function () {
     });
 
     it('resolves DELETE WHERE conditions', function () {
-      const r = util.resolveColumnNamesNamedParams('DELETE FROM users WHERE name = :name AND email = :email');
+      const r = util.resolveNamedParamColumns('DELETE FROM users WHERE name = :name AND email = :email');
       expect(r).to.deep.equal([
         { col: 'name', key: 'name' },
         { col: 'email', key: 'email' }
@@ -272,7 +272,7 @@ describe('tracing.bindVariables', function () {
     });
 
     it('returns empty array when no named placeholders present', function () {
-      const r = util.resolveColumnNamesNamedParams('SELECT * FROM t WHERE id = ?');
+      const r = util.resolveNamedParamColumns('SELECT * FROM t WHERE id = ?');
       expect(r).to.deep.equal([]);
     });
   });

@@ -157,7 +157,7 @@ exports.resolveQuestionParamColumns = function resolveQuestionParamColumns(sql, 
  * @param {string} sql
  * @returns {{ col: string, key: string }[]}
  */
-exports.resolveColumnNamesNamedParams = function resolveColumnNamesNamedParams(sql) {
+exports.resolveNamedParamColumns = function resolveNamedParamColumns(sql) {
   const result = [];
 
   const re = new RegExp(NAMED_PARAM_REGEX, 'gi');
@@ -183,7 +183,7 @@ exports.resolveColumnNamesNamedParams = function resolveColumnNamesNamedParams(s
  * @returns {BindEntry[] | null}
  */
 exports.buildBindsFromNamed = function buildBindsFromNamed(sql, namedValues, allowedColumns) {
-  const pairs = exports.resolveColumnNamesNamedParams(sql);
+  const pairs = exports.resolveNamedParamColumns(sql);
   const binds = [];
   for (let i = 0; i < pairs.length; i++) {
     const { col, key } = pairs[i];
