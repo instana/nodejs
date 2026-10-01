@@ -218,6 +218,95 @@ module.exports = function (name, version, isLatest) {
           })
         )
       ));
+
+    it('must capture the allowed column (name) from WHERE and ignore the non-column LIMIT param in ORDER BY query', () =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=order-by' }).then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables');
+
+            const span = getSpansByName(spans, 'postgres').find(
+              s => s.data.pg.stmt === 'SELECT * FROM users WHERE name = $1 ORDER BY email ASC LIMIT $2'
+            );
+            expect(span).to.exist;
+            expect(span.data.pg.binds).to.be.an('array');
+            // $1 maps to WHERE name — captured; $2 is a LIMIT value with no column context.
+            expect(span.data.pg.binds).to.have.lengthOf(1);
+            expect(span.data.pg.binds[0]).to.deep.equal({ name: 'name', value: 'alice' });
+          })
+        )
+      ));
+
+    it('must not capture binds for HAVING clause (aggregate expression, not a base column)', () =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=having' }).then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables');
+
+            const span = getSpansByName(spans, 'postgres').find(
+              s =>
+                s.data.pg.stmt ===
+                'SELECT name, COUNT(*) AS cnt FROM users GROUP BY name HAVING COUNT(*) > $1'
+            );
+            expect(span).to.exist;
+            // HAVING COUNT(*) > $1 — $1 is bound to an aggregate function result, not a column name.
+            expect(span.data.pg.binds).to.not.exist;
+          })
+        )
+      ));
+
+    it('must capture IN collection binds as a single grouped JSON-array entry', () =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=in-collection' }).then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables');
+
+            const span = getSpansByName(spans, 'postgres').find(
+              s => s.data.pg.stmt === 'SELECT * FROM users WHERE name IN ($1, $2, $3)'
+            );
+            expect(span).to.exist;
+            expect(span.data.pg.binds).to.be.an('array');
+            expect(span.data.pg.binds).to.have.lengthOf(1);
+            expect(span.data.pg.binds[0]).to.deep.equal({ name: 'name', value: '["alice","bob","carol"]' });
+          })
+        )
+      ));
+
+    it('must capture ANY($1) array bind as a single JSON-serialised value', () =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=any-collection' }).then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables');
+
+            const span = getSpansByName(spans, 'postgres').find(
+              s => s.data.pg.stmt === 'SELECT * FROM users WHERE name = ANY($1)'
+            );
+            expect(span).to.exist;
+            expect(span.data.pg.binds).to.be.an('array');
+            expect(span.data.pg.binds).to.have.lengthOf(1);
+            expect(span.data.pg.binds[0]).to.deep.equal({
+              name: 'name',
+              value: '["alice","bob","carol"]'
+            });
+          })
+        )
+      ));
+
+    it('must not capture binds when ORDER BY query has no WHERE clause (no column context)', () =>
+      controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=order-by-no-where' }).then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyHttpEntry(spans, '/bind-variables');
+
+            const span = getSpansByName(spans, 'postgres').find(
+              s => s.data.pg.stmt === 'SELECT * FROM users ORDER BY name ASC LIMIT $1'
+            );
+            expect(span).to.exist;
+            // $1 is a LIMIT value — no column mapping exists.
+            expect(span.data.pg.binds).to.not.exist;
+          })
+        )
+      ));
   });
 
   describe('with allowed-columns=data,name — binary Buffer value', () => {

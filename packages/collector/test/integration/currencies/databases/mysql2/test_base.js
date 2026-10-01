@@ -451,6 +451,109 @@ module.exports = function (name, version, isLatest) {
             })
           )
         ));
+
+      it('? style: must capture WHERE name and ignore non-column ORDER BY LIMIT param', () =>
+        controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=question-order-by' }).then(() =>
+          testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyHttpEntry(spans, '/bind-variables');
+              const span = testUtils
+                .getSpansByName(spans, 'mysql')
+                .find(
+                  s =>
+                    s.data.mysql.stmt === 'SELECT * FROM users WHERE name = ? ORDER BY email ASC LIMIT ?'
+                );
+              expect(span).to.exist;
+              expect(span.data.mysql.binds).to.be.an('array').with.lengthOf(1);
+              expect(span.data.mysql.binds[0]).to.deep.equal({ name: 'name', value: 'alice' });
+            })
+          )
+        ));
+
+      it('? style: must not capture binds for HAVING clause (alias, not a base column)', () =>
+        controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=question-having' }).then(() =>
+          testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyHttpEntry(spans, '/bind-variables');
+              const span = testUtils
+                .getSpansByName(spans, 'mysql')
+                .find(
+                  s =>
+                    s.data.mysql.stmt ===
+                    'SELECT name, COUNT(*) AS cnt FROM users GROUP BY name HAVING cnt > ?'
+                );
+              expect(span).to.exist;
+              expect(span.data.mysql.binds).to.not.exist;
+            })
+          )
+        ));
+
+      it('? style: must capture IN collection binds as a single grouped JSON-array entry', () =>
+        controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=question-in' }).then(() =>
+          testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyHttpEntry(spans, '/bind-variables');
+              const span = testUtils
+                .getSpansByName(spans, 'mysql')
+                .find(s => s.data.mysql.stmt === 'SELECT * FROM users WHERE name IN (?, ?, ?)');
+              expect(span).to.exist;
+              expect(span.data.mysql.binds).to.be.an('array').with.lengthOf(1);
+              expect(span.data.mysql.binds[0]).to.deep.equal({ name: 'name', value: '["alice","bob","carol"]' });
+            })
+          )
+        ));
+
+      it(':param style: must capture name from WHERE and ignore ORDER BY (no bind for sort column)', () =>
+        controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=named-order-by' }).then(() =>
+          testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyHttpEntry(spans, '/bind-variables');
+              const span = testUtils
+                .getSpansByName(spans, 'mysql')
+                .find(
+                  s =>
+                    s.data.mysql.stmt ===
+                    'SELECT * FROM users WHERE name = :name ORDER BY email ASC'
+                );
+              expect(span).to.exist;
+              expect(span.data.mysql.binds).to.be.an('array').with.lengthOf(1);
+              expect(span.data.mysql.binds[0]).to.deep.equal({ name: 'name', value: 'alice' });
+            })
+          )
+        ));
+
+      it(':param style: must not capture binds for HAVING clause (alias, not a base column)', () =>
+        controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=named-having' }).then(() =>
+          testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyHttpEntry(spans, '/bind-variables');
+              const span = testUtils
+                .getSpansByName(spans, 'mysql')
+                .find(
+                  s =>
+                    s.data.mysql.stmt ===
+                    'SELECT name, COUNT(*) AS cnt FROM users GROUP BY name HAVING cnt > :threshold'
+                );
+              expect(span).to.exist;
+              expect(span.data.mysql.binds).to.not.exist;
+            })
+          )
+        ));
+
+      it(':param style: must capture IN collection binds as a single grouped JSON-array entry', () =>
+        controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=named-in' }).then(() =>
+          testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyHttpEntry(spans, '/bind-variables');
+              const span = testUtils
+                .getSpansByName(spans, 'mysql')
+                .find(s => s.data.mysql.stmt === 'SELECT * FROM users WHERE name IN (:n1, :n2, :n3)');
+              expect(span).to.exist;
+              expect(span.data.mysql.binds).to.be.an('array').with.lengthOf(1);
+              expect(span.data.mysql.binds[0]).to.deep.equal({ name: 'name', value: '["alice","bob","carol"]' });
+            })
+          )
+        ));
     });
   }
 };

@@ -111,7 +111,13 @@ const PG_QUERY_SCENARIOS = {
   'span-batching': async () => {
     client.query('SELECT * FROM users WHERE name = $1', ['first-query']);
     await client.query('SELECT * FROM users WHERE name = $1', ['last-query']);
-  }
+  },
+  'in-collection': () =>
+    client.query('SELECT * FROM users WHERE name IN ($1, $2, $3)', ['alice', 'bob', 'carol']),
+  'any-collection': () =>
+    client.query('SELECT * FROM users WHERE name = ANY($1)', [['alice', 'bob', 'carol']]),
+  'order-by-no-where': () =>
+    client.query('SELECT * FROM users ORDER BY name ASC LIMIT $1', [5])
 };
 
 if (process.env.WITH_STDOUT) {

@@ -445,6 +445,64 @@ module.exports = function (name, version, isLatest, mode) {
             })
           )
         ));
+
+      it('must capture the allowed column (name) from WHERE and ignore non-column ORDER BY param', () =>
+        controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=question-order-by' }).then(() =>
+          testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyHttpEntry(spans, '/bind-variables');
+
+              const span = testUtils
+                .getSpansByName(spans, 'mysql')
+                .find(
+                  s =>
+                    s.data.mysql.stmt === 'SELECT * FROM users WHERE name = ? ORDER BY email ASC LIMIT ?'
+                );
+              expect(span).to.exist;
+              expect(span.data.mysql.binds).to.be.an('array');
+              // Only the WHERE name=? position is an allowed column; the LIMIT ? has no column context.
+              expect(span.data.mysql.binds).to.have.lengthOf(1);
+              expect(span.data.mysql.binds[0]).to.deep.equal({ name: 'name', value: 'alice' });
+            })
+          )
+        ));
+
+      it('must not capture binds for HAVING clause (no column-to-param mapping)', () =>
+        controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=question-having' }).then(() =>
+          testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyHttpEntry(spans, '/bind-variables');
+
+              const span = testUtils
+                .getSpansByName(spans, 'mysql')
+                .find(
+                  s =>
+                    s.data.mysql.stmt ===
+                    'SELECT name, COUNT(*) AS cnt FROM users GROUP BY name HAVING cnt > ?'
+                );
+              expect(span).to.exist;
+              // HAVING cnt > ? — "cnt" is an alias, not a base column, so no bind is captured.
+              expect(span.data.mysql.binds).to.not.exist;
+            })
+          )
+        ));
+
+      it('must capture IN collection binds as a single grouped JSON-array entry', () =>
+        controls.sendRequest({ method: 'GET', path: '/bind-variables?scenario=question-in' }).then(() =>
+          testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyHttpEntry(spans, '/bind-variables');
+
+              const span = testUtils
+                .getSpansByName(spans, 'mysql')
+                .find(s => s.data.mysql.stmt === 'SELECT * FROM users WHERE name IN (?, ?, ?)');
+              expect(span).to.exist;
+              expect(span.data.mysql.binds).to.be.an('array');
+              expect(span.data.mysql.binds).to.have.lengthOf(1);
+              expect(span.data.mysql.binds[0]).to.deep.equal({ name: 'name', value: '["alice","bob","carol"]' });
+            })
+          )
+        ));
     });
 
     describe('question-mark (?) style — with INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE=true (kill switch)', () => {
