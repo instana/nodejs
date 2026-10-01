@@ -112,6 +112,15 @@ const MYSQL_QUERY_SCENARIOS = {
   },
   'question-null': (connection, cb) => {
     connection.query('SELECT * FROM users WHERE name = ?', [null], cb);
+  },
+  'question-order-by': (connection, cb) => {
+    connection.query('SELECT * FROM users WHERE name = ? ORDER BY email ASC LIMIT ?', ['alice', 10], cb);
+  },
+  'question-having': (connection, cb) => {
+    connection.query('SELECT name, COUNT(*) AS cnt FROM users GROUP BY name HAVING cnt > ?', [0], cb);
+  },
+  'question-in': (connection, cb) => {
+    connection.query('SELECT * FROM users WHERE name IN (?, ?, ?)', ['alice', 'bob', 'carol'], cb);
   }
 };
 

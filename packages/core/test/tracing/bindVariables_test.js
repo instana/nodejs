@@ -147,6 +147,26 @@ describe('tracing.bindVariables', function () {
       expect(r[0]).to.equal('name');
       expect(r[1]).to.equal('email');
     });
+
+    it('resolves IN-collection positions — tagged with inGroup', function () {
+      const r = util.resolveDollarParamColumns('SELECT * FROM users WHERE name IN ($1, $2, $3)', 3);
+      expect(r[0]).to.deep.equal({ col: 'name', inGroup: 0 });
+      expect(r[1]).to.deep.equal({ col: 'name', inGroup: 0 });
+      expect(r[2]).to.deep.equal({ col: 'name', inGroup: 0 });
+    });
+
+    it('resolves IN-collection alongside a WHERE equality in the same query', function () {
+      const r = util.resolveDollarParamColumns('SELECT * FROM users WHERE status = $1 AND name IN ($2, $3)', 3);
+      expect(r[0]).to.equal('status');
+      expect(r[1]).to.deep.equal({ col: 'name', inGroup: 0 });
+      expect(r[2]).to.deep.equal({ col: 'name', inGroup: 0 });
+    });
+
+    it('resolves qualified column IN-collection', function () {
+      const r = util.resolveDollarParamColumns('SELECT * FROM users WHERE users.name IN ($1, $2)', 2);
+      expect(r[0]).to.deep.equal({ col: 'users.name', inGroup: 0 });
+      expect(r[1]).to.deep.equal({ col: 'users.name', inGroup: 0 });
+    });
   });
 
   describe('resolveQuestionParamColumns', function () {
@@ -203,6 +223,37 @@ describe('tracing.bindVariables', function () {
       expect(r[0]).to.equal('a');
       expect(r[1]).to.equal('b');
       expect(r[2]).to.equal(undefined);
+    });
+
+    it('resolves IN-collection positions — tagged with inGroup', function () {
+      const r = util.resolveQuestionParamColumns('SELECT * FROM users WHERE name IN (?, ?, ?)', 3);
+      expect(r[0]).to.deep.equal({ col: 'name', inGroup: 0 });
+      expect(r[1]).to.deep.equal({ col: 'name', inGroup: 0 });
+      expect(r[2]).to.deep.equal({ col: 'name', inGroup: 0 });
+    });
+
+    it('resolves IN-collection alongside a WHERE equality in the same query', function () {
+      const r = util.resolveQuestionParamColumns('SELECT * FROM users WHERE status = ? AND name IN (?, ?)', 3);
+      expect(r[0]).to.equal('status');
+      expect(r[1]).to.deep.equal({ col: 'name', inGroup: 0 });
+      expect(r[2]).to.deep.equal({ col: 'name', inGroup: 0 });
+    });
+
+    it('resolves IN-collection followed by ORDER BY LIMIT (LIMIT ? has no column context)', function () {
+      const r = util.resolveQuestionParamColumns(
+        'SELECT * FROM users WHERE name IN (?, ?) ORDER BY email ASC LIMIT ?',
+        3
+      );
+      expect(r[0]).to.deep.equal({ col: 'name', inGroup: 0 });
+      expect(r[1]).to.deep.equal({ col: 'name', inGroup: 0 });
+      expect(r[2]).to.equal(undefined);
+    });
+
+    it('resolves WHERE equality before IN-collection', function () {
+      const r = util.resolveQuestionParamColumns('SELECT * FROM users WHERE email = ? AND name IN (?, ?)', 3);
+      expect(r[0]).to.equal('email');
+      expect(r[1]).to.deep.equal({ col: 'name', inGroup: 0 });
+      expect(r[2]).to.deep.equal({ col: 'name', inGroup: 0 });
     });
   });
 
@@ -275,6 +326,32 @@ describe('tracing.bindVariables', function () {
       const r = util.resolveNamedParamColumns('SELECT * FROM t WHERE id = ?');
       expect(r).to.deep.equal([]);
     });
+
+    it('resolves IN-collection with named placeholders — tagged with inGroup', function () {
+      const r = util.resolveNamedParamColumns('SELECT * FROM users WHERE name IN (:n1, :n2, :n3)');
+      expect(r).to.deep.equal([
+        { col: 'name', key: 'n1', inGroup: 0 },
+        { col: 'name', key: 'n2', inGroup: 0 },
+        { col: 'name', key: 'n3', inGroup: 0 }
+      ]);
+    });
+
+    it('resolves IN-collection alongside a WHERE equality with named placeholders', function () {
+      const r = util.resolveNamedParamColumns('SELECT * FROM users WHERE status = :status AND name IN (:n1, :n2)');
+      expect(r).to.deep.equal([
+        { col: 'status', key: 'status' },
+        { col: 'name', key: 'n1', inGroup: 0 },
+        { col: 'name', key: 'n2', inGroup: 0 }
+      ]);
+    });
+
+    it('resolves qualified column IN-collection with named placeholders', function () {
+      const r = util.resolveNamedParamColumns('SELECT * FROM users WHERE users.name IN (:a, :b)');
+      expect(r).to.deep.equal([
+        { col: 'users.name', key: 'a', inGroup: 0 },
+        { col: 'users.name', key: 'b', inGroup: 0 }
+      ]);
+    });
   });
 
   describe('buildBindsFromNamed', function () {
@@ -322,6 +399,27 @@ describe('tracing.bindVariables', function () {
     it('returns null when values object is empty', function () {
       const r = util.buildBindsFromNamed('SELECT * FROM t WHERE name = :name', {}, ['name']);
       expect(r).to.equal(null);
+    });
+
+    it('IN collection groups all values into a single JSON-array entry', function () {
+      const r = util.buildBindsFromNamed(
+        'SELECT * FROM users WHERE name IN (:n1, :n2, :n3)',
+        { n1: 'alice', n2: 'bob', n3: 'carol' },
+        ['name']
+      );
+      expect(r).to.deep.equal([{ name: 'name', value: '["alice","bob","carol"]' }]);
+    });
+
+    it('IN collection alongside equality — grouped entry plus individual entry', function () {
+      const r = util.buildBindsFromNamed(
+        'SELECT * FROM users WHERE status = :status AND name IN (:n1, :n2)',
+        { status: 'active', n1: 'alice', n2: 'bob' },
+        ['name', 'status']
+      );
+      expect(r).to.deep.equal([
+        { name: 'status', value: 'active' },
+        { name: 'name', value: '["alice","bob"]' }
+      ]);
     });
   });
 
@@ -407,6 +505,115 @@ describe('tracing.bindVariables', function () {
         parameterStyle: 'question'
       });
       expect(result).to.deep.equal([{ name: 'name', value: 'alice' }]);
+    });
+
+    it('IN collection (dollar) groups all values into a single JSON-array entry', function () {
+      const sql = 'SELECT * FROM users WHERE name IN ($1, $2, $3)';
+      const result = util.buildBinds({ sql, rawValues: ['alice', 'bob', 'carol'], allowedColumns });
+      expect(result).to.deep.equal([{ name: 'name', value: '["alice","bob","carol"]' }]);
+    });
+
+    it('IN collection (question) groups all values into a single JSON-array entry', function () {
+      const sql = 'SELECT * FROM users WHERE name IN (?, ?, ?)';
+      const result = util.buildBinds({
+        sql,
+        rawValues: ['alice', 'bob', 'carol'],
+        allowedColumns,
+        parameterStyle: 'question'
+      });
+      expect(result).to.deep.equal([{ name: 'name', value: '["alice","bob","carol"]' }]);
+    });
+
+    it('IN collection alongside equality — grouped entry plus individual entry', function () {
+      const sql = 'SELECT * FROM users WHERE status = $1 AND name IN ($2, $3)';
+      const result = util.buildBinds({
+        sql,
+        rawValues: ['active', 'alice', 'bob'],
+        allowedColumns: ['name', 'status']
+      });
+      expect(result).to.deep.equal([
+        { name: 'status', value: 'active' },
+        { name: 'name', value: '["alice","bob"]' }
+      ]);
+    });
+  });
+
+  describe('ANY — full pipeline', function () {
+    it('dollar: array value serialised as JSON', function () {
+      const result = util.buildBinds({
+        sql: 'SELECT * FROM users WHERE name = ANY($1)',
+        rawValues: [['alice', 'bob', 'carol']],
+        allowedColumns: ['name']
+      });
+      expect(result).to.deep.equal([{ name: 'name', value: '["alice","bob","carol"]' }]);
+    });
+
+    it('question: array value serialised as JSON', function () {
+      const result = util.buildBinds({
+        sql: 'SELECT * FROM users WHERE name = ANY(?)',
+        rawValues: [['alice', 'bob', 'carol']],
+        allowedColumns: ['name'],
+        parameterStyle: 'question'
+      });
+      expect(result).to.deep.equal([{ name: 'name', value: '["alice","bob","carol"]' }]);
+    });
+
+    it('named: array value serialised as JSON', function () {
+      const result = util.buildBinds({
+        sql: 'SELECT * FROM users WHERE name = ANY(:names)',
+        rawValues: { names: ['alice', 'bob', 'carol'] },
+        allowedColumns: ['name'],
+        parameterStyle: 'named'
+      });
+      expect(result).to.deep.equal([{ name: 'name', value: '["alice","bob","carol"]' }]);
+    });
+
+    it('dollar: ANY alongside a WHERE equality — both captured', function () {
+      const result = util.buildBinds({
+        sql: 'SELECT * FROM users WHERE status = $1 AND name = ANY($2)',
+        rawValues: ['active', ['alice', 'bob']],
+        allowedColumns: ['name', 'status']
+      });
+      expect(result).to.deep.equal([
+        { name: 'status', value: 'active' },
+        { name: 'name', value: '["alice","bob"]' }
+      ]);
+    });
+
+    it('dollar: != ANY operator variant is captured', function () {
+      const result = util.buildBinds({
+        sql: 'SELECT * FROM users WHERE name != ANY($1)',
+        rawValues: [['alice', 'bob']],
+        allowedColumns: ['name']
+      });
+      expect(result).to.deep.equal([{ name: 'name', value: '["alice","bob"]' }]);
+    });
+
+    it('dollar: qualified column ANY is captured', function () {
+      const result = util.buildBinds({
+        sql: 'SELECT * FROM users WHERE users.name = ANY($1)',
+        rawValues: [['alice', 'bob']],
+        allowedColumns: ['name']
+      });
+      expect(result).to.deep.equal([{ name: 'users.name', value: '["alice","bob"]' }]);
+    });
+
+    it('dollar: allowed-columns filter applies — column not in list returns null', function () {
+      const result = util.buildBinds({
+        sql: 'SELECT * FROM users WHERE email = ANY($1)',
+        rawValues: [['a@x.com', 'b@x.com']],
+        allowedColumns: ['name']
+      });
+      expect(result).to.equal(null);
+    });
+
+    it('dollar: null element inside array is serialised as JSON null', function () {
+      const result = util.buildBinds({
+        sql: 'SELECT * FROM users WHERE name = ANY($1)',
+        rawValues: [[null, 'alice']],
+        allowedColumns: ['name']
+      });
+      expect(result).to.deep.equal([{ name: 'name', value: '[null,"alice"]' }]);
     });
   });
 });
