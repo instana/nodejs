@@ -327,21 +327,25 @@ exports.buildBinds = function buildBinds({ sql, rawValues, allowedColumns, param
     return null;
   }
 
-  if (parameterStyle === 'named') {
-    if (Array.isArray(rawValues) || typeof rawValues !== 'object') return null;
-    return exports.buildBindsFromNamed(sql, rawValues, allowedColumns);
-  }
+  try {
+    if (parameterStyle === 'named') {
+      if (Array.isArray(rawValues) || typeof rawValues !== 'object') return null;
+      return exports.buildBindsFromNamed(sql, rawValues, allowedColumns);
+    }
 
-  if (!Array.isArray(rawValues) || rawValues.length === 0) {
+    if (!Array.isArray(rawValues) || rawValues.length === 0) {
+      return null;
+    }
+
+    const resolver = resolvers[parameterStyle];
+
+    if (!resolver) {
+      return null;
+    }
+
+    const columnNames = resolver(sql, rawValues.length);
+    return exports.buildPositionalBinds(rawValues, columnNames, allowedColumns);
+  } catch (_) {
     return null;
   }
-
-  const resolver = resolvers[parameterStyle];
-
-  if (!resolver) {
-    return null;
-  }
-
-  const columnNames = resolver(sql, rawValues.length);
-  return exports.buildPositionalBinds(rawValues, columnNames, allowedColumns);
 };
