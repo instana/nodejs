@@ -206,7 +206,7 @@
       "micromatch": "4.0.8",
       "nx": "23.1.1",
       "smol-toml": "1.7.1",
-      "brace-expansion": "5.0.11"
+      "brace-expansion": "5.0.12"
     },
     "lodash": "4.18.0",
     "micromatch": "4.0.8",
@@ -230,7 +230,7 @@
     },
     "prebuildify-cross": {
       "bn.js": "5.2.3",
-      "brace-expansion": "5.0.11",
+      "brace-expansion": "5.0.12",
       "cipher-base": "1.0.5",
       "debug": "2.6.9",
       "pbkdf2": "3.1.3",
