@@ -5,5 +5,9 @@
     "bunyan": "1.8.15",
     "winston": "3.19.0",
     "log4js": "6.9.1"
+  },
+   "overrides":{
+    "moment": "2.31.0",
+    "brace-expansion": "1.1.20"
   }
 }

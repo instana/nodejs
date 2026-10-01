@@ -134,7 +134,7 @@
     "mocha": "8.4.0",
     "mocha-junit-reporter": "2.0.2",
     "mocha-multi-reporters": "1.5.1",
-    "moment": "2.30.1",
+    "moment": "2.31.0",
     "morgan": "1.12.1",
     "nan": "2.27.0",
     "node-gyp": "11.2.0",
@@ -168,14 +168,16 @@
     "@commitlint/cli": {
       "semver": "7.8.5"
     },
+    "@grpc/grpc-js": "1.14.5",
     "@protobufjs/utf8": "1.1.1",
     "admin": {
       "bootstrap": "4.3.1"
     },
-    "axios": "1.19.0",
+    "axios": "1.20.0",
     "body-parser": "2.3.0",
     "braces": "3.0.3",
     "depcheck": {
+      "brace-expansion": "2.1.7",
       "postcss": "8.5.23"
     },
     "diff": "5.2.2",
@@ -194,7 +196,7 @@
     "handlebars": "4.7.9",
     "hbs": "4.3.1",
     "immutable": "5.1.8",
-    "ip-address": "10.5.1",
+    "ip-address": "10.7.1",
     "js-yaml": "4.3.2",
     "jsonwebtoken": "9.0.2",
     "lerna": {
@@ -204,13 +206,14 @@
       "micromatch": "4.0.8",
       "nx": "23.1.1",
       "smol-toml": "1.7.1",
-      "brace-expansion": "5.0.9"
+      "brace-expansion": "5.0.11"
     },
     "lodash": "4.18.0",
     "micromatch": "4.0.8",
     "minimatch": "8.0.6",
     "minimist": "1.2.7",
     "mocha": {
+      "brace-expansion": "1.1.21",
       "diff": "5.2.2",
       "minimatch": "3.1.5",
       "nanoid": "3.3.18",
@@ -227,7 +230,7 @@
     },
     "prebuildify-cross": {
       "bn.js": "5.2.3",
-      "brace-expansion": "5.0.9",
+      "brace-expansion": "5.0.11",
       "cipher-base": "1.0.5",
       "debug": "2.6.9",
       "pbkdf2": "3.1.3",
