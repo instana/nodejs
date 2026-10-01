@@ -250,12 +250,16 @@
     "versions": [
       {
         "v": "6.1.0",
-        "node": ">=22"
+        "node": ">=22",
+        "overrides": {
+          "@grpc/grpc-js": "^1.14.5"
+        }
       },
       {
         "v": "5.3.1",
         "overrides": {
-          "@opentelemetry/core": "^2.8.0"
+          "@opentelemetry/core": "^2.8.0",
+          "@grpc/grpc-js": "^1.14.5"
         }
       }
     ],
@@ -827,7 +831,10 @@
         "v": "6.21.0"
       },
       {
-        "v": "4.17.2"
+        "v": "4.17.2",
+        "overrides": {
+          "ip-address": "^10.7.1"
+        }
       }
     ],
     "group": "databases"
@@ -848,7 +855,10 @@
         "node": ">=20.19"
       },
       {
-        "v": "6.13.11"
+        "v": "6.13.11",
+        "overrides": {
+          "ip-address": "^10.7.1"
+        }
       }
     ],
     "group": "databases"
@@ -1303,7 +1313,10 @@
         "node": ">=20"
       },
       {
-        "v": "0.3.31"
+        "v": "0.3.31",
+        "overrides": {
+          "brace-expansion": "^2.1.7"
+        }
       }
     ],
     "group": "frameworks"
@@ -1320,7 +1333,11 @@
     "core": false,
     "versions": [
       {
-        "v": "1.8.15"
+        "v": "1.8.15",
+        "overrides": {
+          "moment": "^2.31.0",
+          "brace-expansion":"^1.1.20"
+        }
       }
     ],
     "group": "logging"
