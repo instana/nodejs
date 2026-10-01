@@ -3053,7 +3053,7 @@ describe('config.normalizeConfig', () => {
     describe('in-code config', () => {
       it('should apply in-code config when only in-code is set', () => {
         const config = coreConfig.normalize({
-          userConfig: { tracing: { global: { dbBindVariables: { disable: false, allowedColumns: ['order_id'] } } } }
+          userConfig: { tracing: { dbBindVariables: { disable: false, allowedColumns: ['order_id'] } } }
         });
         expect(config.tracing.dbBindVariables).to.deep.equal({ disable: false, allowedColumns: ['order_id'] });
       });
@@ -3061,7 +3061,7 @@ describe('config.normalizeConfig', () => {
       it('in-code config should take precedence over agent config', () => {
         const config = coreConfig.normalize({
           userConfig: {
-            tracing: { global: { dbBindVariables: { disable: false, allowedColumns: ['incode_col'] } } }
+            tracing: { dbBindVariables: { disable: false, allowedColumns: ['incode_col'] } }
           }
         });
 
@@ -3086,7 +3086,7 @@ describe('config.normalizeConfig', () => {
         process.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE = 'true';
         process.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS = 'env_col';
         const config = coreConfig.normalize({
-          userConfig: { tracing: { global: { dbBindVariables: { disable: false, allowedColumns: ['incode_col'] } } } }
+          userConfig: { tracing: { dbBindVariables: { disable: false, allowedColumns: ['incode_col'] } } }
         });
         expect(config.tracing.dbBindVariables).to.deep.equal({ disable: true, allowedColumns: ['env_col'] });
       });
