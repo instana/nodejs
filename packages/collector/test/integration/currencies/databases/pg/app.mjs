@@ -112,6 +112,13 @@ const PG_QUERY_SCENARIOS = {
     client.query('SELECT * FROM users WHERE name = $1', ['first-query']);
     await client.query('SELECT * FROM users WHERE name = $1', ['last-query']);
   },
+  'order-by': () =>
+    client.query('SELECT * FROM users WHERE name = $1 ORDER BY email ASC LIMIT $2', ['alice', 10]),
+  having: () =>
+    client.query(
+      'SELECT name, COUNT(*) AS cnt FROM users GROUP BY name HAVING COUNT(*) > $1',
+      [0]
+    ),
   'in-collection': () =>
     client.query('SELECT * FROM users WHERE name IN ($1, $2, $3)', ['alice', 'bob', 'carol']),
   'any-collection': () =>
