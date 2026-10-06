@@ -38,11 +38,11 @@ const producer = new Producer({
 let connected = false;
 
 async function connect() {
-  try {
-    await producer.metadata({ topics: [topic] });
-    connected = true;
-    log('Producer ready.');
-  } catch (err) {
+    try {
+      await producer.metadata({ topics: [topic], autocreateTopics: true });
+      connected = true;
+      log('Producer ready.');
+    } catch (err) {
     log('Producer connection error:', err.message);
   }
 }

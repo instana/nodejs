@@ -33,40 +33,40 @@ const topic = process.env.PLATFORMATIC_KAFKA_TOPIC || 'platformatic-kafka-topic'
 let connected = false;
 
 async function setupConsumer() {
-  const consumer = new Consumer({
-    clientId: `test-consumer-${randomUUID()}`,
-    bootstrapBrokers,
-    groupId: `test-consumer-group-${randomUUID()}`,
-    sessionTimeout: 6000,
-    rebalanceTimeout: 6000,
-    heartbeatInterval: 1000,
-    deserializers: stringDeserializers
-  });
+      const consumer = new Consumer({
+        clientId: `test-consumer-${randomUUID()}`,
+        bootstrapBrokers,
+        groupId: `test-consumer-group-${randomUUID()}`,
+        sessionTimeout: 6000,
+        rebalanceTimeout: 6000,
+        heartbeatInterval: 1000,
+        deserializers: stringDeserializers
+      });
 
-  const stream = await consumer.consume({
-    topics: [topic],
-    mode: MessagesStreamModes.LATEST,
-    maxWaitTime: 1000
-  });
+      const stream = await consumer.consume({
+        topics: [topic],
+        mode: MessagesStreamModes.LATEST,
+        maxWaitTime: 1000
+      });
 
-  stream.on('data', async message => {
-    log('Consumed message from topic', message.topic, message.value);
+      stream.on('data', async message => {
+        log('Consumed message from topic', message.topic, message.value);
 
-    await processWithTracing(message, async () => {
-      await delay(50);
-      await fetch(`http://127.0.0.1:${process.env.INSTANA_AGENT_PORT}/ping`);
-    });
-  });
+        await processWithTracing(message, async () => {
+          await delay(50);
+          await fetch(`http://127.0.0.1:${process.env.INSTANA_AGENT_PORT}/ping`);
+        });
+      });
 
-  stream.on('error', err => {
-    log('Consumer stream error:', err && err.message);
-  });
+      stream.on('error', err => {
+        log('Consumer stream error:', err && err.message);
+      });
 
-  // Allow time for initial rebalance
-  setTimeout(() => {
-    connected = true;
-    log('Consumer ready.');
-  }, 3 * 1000);
+      // Allow time for initial rebalance
+      setTimeout(() => {
+        connected = true;
+        log('Consumer ready.');
+      }, 3 * 1000);
 }
 
 app.get('/', (_req, res) => {
