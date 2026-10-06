@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.9.0](https://github.com/instana/nodejs/compare/v6.8.0...v6.9.0) (2026-10-06)
+
+
+### Features
+
+* added W3C baggage support ([#2755](https://github.com/instana/nodejs/issues/2755)) ([4f79495](https://github.com/instana/nodejs/commit/4f7949591c055897a0102c26441d2077dff148cc))
+* **mysql:** added support for bind variables collection ([#2809](https://github.com/instana/nodejs/issues/2809)) ([5960e42](https://github.com/instana/nodejs/commit/5960e42ceff79540317f85e3cc2637c0f4669465))
+* **pg:** added support for bind variables ([#2366](https://github.com/instana/nodejs/issues/2366)) ([7625e5d](https://github.com/instana/nodejs/commit/7625e5d80761c169cb5869469e373ec355c3de17))
+
+
+
+
+
 # [6.8.0](https://github.com/instana/nodejs/compare/v6.7.0...v6.8.0) (2026-09-28)
 
 
