@@ -39,7 +39,7 @@ let connected = false;
 
 async function connect() {
   try {
-    await producer.metadata({ topics: [topic] });
+    await producer.metadata({ topics: [topic], autocreateTopics: true });
     connected = true;
     log('Producer ready.');
   } catch (err) {
