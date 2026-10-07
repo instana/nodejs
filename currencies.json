@@ -75,7 +75,7 @@
     "core": false,
     "versions": [
       {
-        "v": "3.1138.0"
+        "v": "3.1145.0"
       }
     ],
     "group": "cloud"
@@ -1336,7 +1336,7 @@
         "v": "1.8.15",
         "overrides": {
           "moment": "^2.31.0",
-          "brace-expansion":"^1.1.20"
+          "brace-expansion": "^1.1.20"
         }
       }
     ],
