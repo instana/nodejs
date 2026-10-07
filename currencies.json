@@ -1001,7 +1001,7 @@
     "core": false,
     "versions": [
       {
-        "v": "8.23.0"
+        "v": "8.23.1"
       }
     ],
     "group": "databases"
