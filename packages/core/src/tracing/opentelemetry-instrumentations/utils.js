@@ -3,10 +3,7 @@
 
  */
 
-/* [object Object]
-[object Object]
-[object Object]
-[object Object] */
+// @ts-nocheck
 
 'use strict';
 
@@ -14,13 +11,11 @@ const constants = require('../constants');
 const W3cTraceContext = require('../w3c_trace_context/W3cTraceContext');
 const TraceFlags = require('./files/trace_flags').TraceFlags;
 
-// @ts-ignore
 const getSamplingDecision = otelSpan => {
   let sampled = true;
   const spanContext = otelSpan.spanContext();
 
   if (spanContext?.traceFlags !== undefined) {
-    // @ts-ignore
     // eslint-disable-next-line no-bitwise
     const isSampled = (spanContext.traceFlags & TraceFlags.SAMPLED) === TraceFlags.SAMPLED;
     if (!isSampled) {
@@ -72,7 +67,6 @@ const setW3CTraceContext = (
   }
 
   const carrier = {};
-  // @ts-ignore
   carrier[constants.w3cTraceParent] = w3cTraceContext.renderTraceParent();
 
   return api.propagation.extract(originalCtx, carrier);
@@ -88,9 +82,7 @@ const extractW3CTraceContext = (
   /** @type {{ parentSpanContext: any; }} */ otelSpan
 ) => {
   const result = {
-    // @ts-ignore
     traceId: null,
-    // @ts-ignore
     parentSpanId: null
   };
 
