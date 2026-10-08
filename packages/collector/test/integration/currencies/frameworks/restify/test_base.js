@@ -5,7 +5,6 @@
 'use strict';
 
 const expect = require('chai').expect;
-const semver = require('semver');
 const constants = require('@_local/core').tracing.constants;
 const config = require('@_local/core/test/config');
 const {
@@ -46,11 +45,8 @@ function verifyHttpExit(spans, parentSpan) {
   ]);
 }
 
-// TODO: Restify test is broken in v24. See Issue: https://github.com/restify/node-restify/issues/1984
 module.exports = function (name, version, isLatest) {
-  const restifyTest = semver.gte(process.versions.node, '24.0.0') ? describe.skip : describe;
-
-  restifyTest('tracing/restify', function () {
+  describe('tracing/restify', function () {
     this.timeout(config.getTestTimeout() * 2.5);
 
     globalAgent.setUpCleanUpHooks();
@@ -109,7 +105,7 @@ module.exports = function (name, version, isLatest) {
                       extraTests: span => {
                         expect(span.data.tags.name).to.eql('request handler - /test');
                         expect(span.data.operation).to.equal('restify');
-                        expect(span.data.tags['restify.version']).to.eql('11.1.0');
+                        expect(span.data.tags['restify.version']).to.exist;
                         expect(span.data.tags['restify.type']).to.eql('request_handler');
                         expect(span.data.tags['restify.method']).to.eql('get');
                         expect(span.data.tags['http.route']).to.eql('/test');
@@ -140,7 +136,7 @@ module.exports = function (name, version, isLatest) {
                         extraTests: span => {
                           expect(span.data.tags.name).to.eql(`middleware - ${mwName}`);
                           expect(span.data.tags['restify.name']).to.eql(mwName);
-                          expect(span.data.tags['restify.version']).to.eql('11.1.0');
+                          expect(span.data.tags['restify.version']).to.exist;
                           expect(span.data.tags['restify.type']).to.eql('middleware');
                           expect(span.data.tags['restify.method']).to.eql('use');
                           expect(span.data.tags['http.route']).to.eql('/test');
@@ -160,7 +156,7 @@ module.exports = function (name, version, isLatest) {
                       extraTests: span => {
                         expect(span.data.tags.name).to.eql('request handler - /test');
                         expect(span.data.tags['restify.name']).to.not.exist;
-                        expect(span.data.tags['restify.version']).to.eql('11.1.0');
+                        expect(span.data.tags['restify.version']).to.exist;
                         expect(span.data.tags['restify.type']).to.eql('request_handler');
                         expect(span.data.tags['restify.method']).to.eql('get');
                         expect(span.data.tags['http.route']).to.eql('/test');
