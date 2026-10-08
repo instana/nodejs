@@ -2015,6 +2015,24 @@ function generateOne(t) {
       'echo "Posting tekton/devsecops status: $DEVSECOPS_STATE"'
     ];
 
+    const verifyOwnStatusLines = [
+      '',
+      '# ── Post verify own check-run status to GitHub ───────────────────────────────',
+      'CURL_RESPONSE=$(curl -s -w "\\n%{http_code}" \\',
+      '  -X POST "https://api.github.com/repos/$REPO/statuses/$GIT_COMMIT" \\',
+      '  -H "Authorization: Bearer $GH_TOKEN" \\',
+      '  -H "Accept: application/vnd.github+json" \\',
+      '  -H "Content-Type: application/json" \\',
+      '  -d "{\\"state\\":\\"$DEVSECOPS_STATE\\",\\"target_url\\":\\"$PIPELINE_RUN_URL\\",\\"description\\":\\"$DEVSECOPS_DESC\\",\\"context\\":\\"tekton/code-build-verify/code-unit-tests\\"}")',
+      'CURL_HTTP=$(echo "$CURL_RESPONSE" | tail -1)',
+      'CURL_BODY=$(echo "$CURL_RESPONSE" | sed \'$d\')',
+      'if [ "$CURL_HTTP" = "201" ]; then',
+      '  echo "verify status posted: $DEVSECOPS_STATE"',
+      'else',
+      '  echo "WARNING: Failed to post verify status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"',
+      'fi'
+    ];
+
     const mainVerifyScript = [
       ...mainVerifyScriptLines,
       'CURL_RESPONSE=$(curl -s -w "\\n%{http_code}" \\',
@@ -2030,6 +2048,7 @@ function generateOne(t) {
       'else',
       '  echo "WARNING: Failed to post tekton/devsecops status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"',
       'fi',
+      ...verifyOwnStatusLines,
       '',
       'exit $FINAL_EXIT'
     ].join('\n');
@@ -2049,6 +2068,7 @@ function generateOne(t) {
       'else',
       '  echo "WARNING: Failed to post tekton/devsecops status (non-fatal). HTTP $CURL_HTTP: $CURL_BODY"',
       'fi',
+      ...verifyOwnStatusLines,
       '',
       'exit $FINAL_EXIT'
     ].join('\n');
