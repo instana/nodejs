@@ -5,7 +5,7 @@
 'use strict';
 
 const resource = require('../../common/transformers/resource');
-const runtimeMetrics = require('./runtimeMetrics');
+const { extractMappedMetrics } = require('./util');
 
 /**
  * @param {Record<string, any>} metricsPayload
@@ -13,9 +13,7 @@ const runtimeMetrics = require('./runtimeMetrics');
  * @returns {Array<Record<string, any>>} OTLP metric objects
  */
 function extractMetrics(metricsPayload, allMappings) {
-  return allMappings.flatMap(mapper => [...runtimeMetrics.extractMetrics(metricsPayload, mapper)
-    // Future: Add other metric categories here as needed
-  ]);
+  return allMappings.flatMap(mapper => extractMappedMetrics(metricsPayload, mapper));
 }
 
 module.exports = {

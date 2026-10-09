@@ -91,7 +91,7 @@ function resolvePath(payload, path) {
 }
 
 /**
- * @param {MetricMapping} mapping
+ * @param {import('../mappers/runtimeMetricsMappings').HeapSpaceMapping} mapping
  * @param {any} raw
  * @returns {Array<{ attributes: Record<string, any>, value: any }> | null}
  */
@@ -115,7 +115,8 @@ function resolveHeapSpacePoints(mapping, raw) {
 }
 
 /**
- * @param {MetricMapping} mapping
+ * @param {import('../mappers/runtimeMetricsMappings').SinglePointMapping |
+ *  import('../mappers/runtimeMetricsMappings').HistogramMapping} mapping
  * @param {any} raw
  * @param {Record<string, any>} payload
  * @returns {Array<{ attributes: Record<string, any>, value: any }> | null}
@@ -145,10 +146,18 @@ function resolveDataPoints(mapping, payload) {
   const raw = resolvePath(payload, mapping.instana);
 
   if (mapping.pointType === POINT_TYPES.HEAP_SPACE) {
-    return resolveHeapSpacePoints(mapping, raw);
+    return resolveHeapSpacePoints(
+      /** @type {import('../mappers/runtimeMetricsMappings').HeapSpaceMapping} */ (mapping),
+      raw
+    );
   }
 
-  return resolveScalarValue(mapping, raw, payload);
+  return resolveScalarValue(
+    /** @type {import('../mappers/runtimeMetricsMappings').SinglePointMapping
+     * | import('../mappers/runtimeMetricsMappings').HistogramMapping} */ (mapping),
+    raw,
+    payload
+  );
 }
 /**
  * @param {string} type - One of METRIC_TYPES
