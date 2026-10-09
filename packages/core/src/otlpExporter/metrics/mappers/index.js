@@ -6,11 +6,9 @@
 
 const runtimeMetricsMappings = require('./runtimeMetricsMappings');
 
-module.exports = {
-  get allMappings() {
-    return [
-      runtimeMetricsMappings
-      // future: httpMetricsMappings,
-    ];
-  }
-};
+const allMappings = [
+  runtimeMetricsMappings
+  // future: httpMetricsMappings,
+];
+
+module.exports = { allMappings };
