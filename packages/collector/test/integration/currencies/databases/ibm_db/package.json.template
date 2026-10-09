@@ -1,5 +1,8 @@
 {
   "overrides": {
     "adm-zip": "0.6.0"
+  },
+  "allowScripts": {
+    "ibm_db": true
   }
 }
