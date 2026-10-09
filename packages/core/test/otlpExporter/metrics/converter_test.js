@@ -37,13 +37,16 @@ function loadOutputFixture(filename) {
 
 describe('metrics/converters/otlp', () => {
   let hostnameStub;
+  let platformStub;
 
   before(() => {
     hostnameStub = sinon.stub(os, 'hostname').returns('test-hostname');
+    platformStub = sinon.stub(process, 'platform').value('linux');
   });
 
   after(() => {
     hostnameStub.restore();
+    platformStub.restore();
   });
 
   describe('converter', () => {
