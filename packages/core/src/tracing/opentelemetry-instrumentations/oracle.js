@@ -7,11 +7,16 @@
 const constants = require('../constants');
 
 let OracleInstrumentation;
+let isActive = false;
 
 function initInstrumentation() {
-  OracleInstrumentation =
-    OracleInstrumentation || require('@opentelemetry/instrumentation-oracledb').OracleInstrumentation;
+  if (!OracleInstrumentation) {
+    OracleInstrumentation = require('@opentelemetry/instrumentation-oracledb').OracleInstrumentation;
+    isActive = true;
+  }
 }
+
+module.exports.isActive = () => isActive;
 
 module.exports.preInit = () => {
   initInstrumentation();
