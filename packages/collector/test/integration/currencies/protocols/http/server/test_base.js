@@ -293,6 +293,8 @@ module.exports = function (name, version, isLatest) {
                   'x-my-entry-request-multi-header': 'value1,value2'
                 });
               }
+              expect(span.data.http.requestHeader).to.not.exist;
+              expect(span.data.http.responseHeader).to.not.exist;
             })
           )
         );
@@ -314,6 +316,8 @@ module.exports = function (name, version, isLatest) {
                 'x-my-entry-response-header': expectedResponeHeaderValue,
                 'x-my-entry-response-multi-header': 'value1, value2'
               });
+              expect(span.data.http.requestHeader).to.not.exist;
+              expect(span.data.http.responseHeader).to.not.exist;
             })
           )
         );
@@ -336,6 +340,8 @@ module.exports = function (name, version, isLatest) {
                 'x-write-head-response-header': expectedResponeHeaderValue,
                 'x-write-head-response-multi-header': 'value1, value2'
               });
+              expect(span.data.http.requestHeader).to.not.exist;
+              expect(span.data.http.responseHeader).to.not.exist;
             })
           )
         );
@@ -374,6 +380,8 @@ module.exports = function (name, version, isLatest) {
                   'x-my-entry-response-multi-header': 'value1, value2'
                 });
               }
+              expect(span.data.http.requestHeader).to.not.exist;
+              expect(span.data.http.responseHeader).to.not.exist;
             })
           )
         );
@@ -420,6 +428,8 @@ module.exports = function (name, version, isLatest) {
                   'x-write-head-response-multi-header': 'value1, value2'
                 });
               }
+              expect(span.data.http.requestHeader).to.not.exist;
+              expect(span.data.http.responseHeader).to.not.exist;
             })
           )
         );
@@ -437,6 +447,8 @@ module.exports = function (name, version, isLatest) {
             agentControls.getSpans().then(spans => {
               const span = verifyThereIsExactlyOneHttpEntry(spans, controls, '/', 'GET', 200, false, false);
               expect(span.data.http.header).to.not.exist;
+              expect(span.data.http.requestHeader).to.not.exist;
+              expect(span.data.http.responseHeader).to.not.exist;
             })
           )
         ));
