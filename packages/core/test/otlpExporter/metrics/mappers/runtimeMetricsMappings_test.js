@@ -283,9 +283,9 @@ describe('otlpExporter/metrics/mappers/runtimeMetrics', () => {
       mapping = findMapping(NODEJS.EVENTLOOP_DELAY_MEAN);
     });
 
-    it('declares instana path libuv and transform = computeMean', () => {
+    it('declares instana path libuv and has a transform function', () => {
       expect(mapping.instana).to.equal('libuv');
-      expect(mapping.transform).to.equal(computeMean);
+      expect(mapping.transform).to.be.a('function');
     });
 
     it('derives mean from sum / num and converts ms → seconds', () => {
@@ -306,15 +306,19 @@ describe('otlpExporter/metrics/mappers/runtimeMetrics', () => {
   describe('mappers/util helpers', () => {
     describe('computeMean', () => {
       it('returns mean in seconds', () => {
-        expect(computeMean({ sum: 4200, num: 42 })).to.equal(0.1);
+        expect(computeMean(4200, 42)).to.equal(0.1);
       });
 
       it('returns undefined when num is 0', () => {
-        expect(computeMean({ sum: 100, num: 0 })).to.be.undefined;
+        expect(computeMean(100, 0)).to.be.undefined;
       });
 
-      it('returns undefined when libuv is null', () => {
-        expect(computeMean(null)).to.be.undefined;
+      it('returns undefined when sum is not a number', () => {
+        expect(computeMean(null, 5)).to.be.undefined;
+      });
+
+      it('returns undefined when num is not a number', () => {
+        expect(computeMean(100, null)).to.be.undefined;
       });
     });
   });

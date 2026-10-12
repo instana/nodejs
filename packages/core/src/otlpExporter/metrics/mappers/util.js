@@ -14,14 +14,17 @@ function msToSeconds(ms) {
 }
 
 /**
- * @param {any} libuv - The `libuv` sub-object from the metrics payload
+ * Computes the mean of a sum over a count and converts the result from ms to seconds.
+ *
+ * @param {any} sum - The total sum value (ms)
+ * @param {any} num - The sample count
  * @returns {number | undefined}
  */
-function computeMean(libuv) {
-  if (!libuv || typeof libuv.sum !== 'number' || typeof libuv.num !== 'number' || libuv.num === 0) {
+function computeMean(sum, num) {
+  if (typeof sum !== 'number' || typeof num !== 'number' || num === 0) {
     return undefined;
   }
-  return msToSeconds(libuv.sum / libuv.num);
+  return msToSeconds(sum / num);
 }
 
 module.exports = {

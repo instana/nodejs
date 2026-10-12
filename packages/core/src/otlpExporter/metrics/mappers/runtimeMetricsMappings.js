@@ -11,7 +11,7 @@ const { msToSeconds, computeMean } = require('./util');
 const OTLP = /** @type {any} */ (ctx.semConv);
 
 /**
- * A single-value metric — maps one Instana payload field to one OTLP data point.
+ * Maps one Instana payload field to one OTLP data point.
  *
  * @typedef {Object} SinglePointMapping
  * @property {typeof import('../constants').POINT_TYPES.SINGLE} pointType
@@ -24,7 +24,7 @@ const OTLP = /** @type {any} */ (ctx.semConv);
  */
 
 /**
- * A histogram metric — maps one Instana payload field to an OTLP histogram data point
+ * Maps one Instana payload field to an OTLP histogram data point
  * (produces `{ count, sum }` instead of a plain number).
  *
  * @typedef {Object} HistogramMapping
@@ -148,7 +148,7 @@ const nodejsMappings = [
     type: METRIC_TYPES.GAUGE,
     instana: 'libuv',
     attributes: {},
-    transform: computeMean
+    transform: ({ sum, num } = {}) => computeMean(sum, num)
   }
 ];
 

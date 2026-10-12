@@ -13,9 +13,6 @@ const { INSTRUMENTATION_SCOPE } = transformers.resource;
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
 
-/** @type {{ attributes: Array<{ key: string, value: any }> } | null} */
-let cachedResource = null;
-
 /**
  * @param {import('../../config').InstanaConfig} config
  */
@@ -45,10 +42,7 @@ function convert(metrics) {
     // Service name resolution, it not come from first metric once it set it will be used for all metrics
     resolveServiceName(metrics);
 
-    if (!cachedResource) {
-      cachedResource = transformers.resource.extractResourceAttributes(/** @type {any} */ (metrics));
-    }
-    const resource = cachedResource;
+    const resource = transformers.resource.extractResourceAttributes(/** @type {any} */ (metrics));
 
     return {
       resourceMetrics: [
