@@ -30,10 +30,6 @@ jobs:
           git config user.name "IBM/Instana/Team Node.js"
           git config user.email github-actions@github.com
 
-      - name: Authenticate GitHub CLI
-        run: |
-          gh auth login --with-token <<< "${{ secrets.GH_PAT }}"
-
       - name: Detect newer Node.js version for .nvmrc
         id: detect
         env:
@@ -91,6 +87,8 @@ jobs:
       - name: Create pull request
         if: steps.detect.outputs.update_needed == 'true' && steps.image_check.outputs.image_available == 'true'
         env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+
           NEW_VERSION: ${{ steps.detect.outputs.new_version }}
           DRY_RUN: ${{ github.event.inputs.dryRun }}
         run: |
