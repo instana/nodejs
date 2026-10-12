@@ -74,7 +74,7 @@ exports.activate = function activate(_config) {
  * @returns {boolean}
  */
 exports.isServerTimingDisabled = function isServerTimingDisabled() {
-  return disableServerTiming;
+  return disableServerTiming === true;
 };
 
 /**
