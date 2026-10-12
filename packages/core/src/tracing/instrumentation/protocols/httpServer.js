@@ -138,8 +138,8 @@ function shimEmit(realEmit) {
                 } else if (Array.isArray(value)) {
                   if (value.find(kv => kv.indexOf('intid;') === 0)) {
                     // If the application code sets intid, do not append another intid value. Actually, the application
-                    // has no business setting an intid key-value pair, but it could happen theoretically for a proxy-like
-                    // Node.js app (which blindly copies headers from downstream responses) in combination with a
+                    // has no business setting an intid key-value pair, but it could happen theoretically for a proxy-
+                    // like Node.js app (which blindly copies headers from downstream responses) in combination with a
                     // downstream service that is also instrumented by Instana (and adds the intid key-value pair).
                     return realSetHeader.apply(this, arguments);
                   } else {
