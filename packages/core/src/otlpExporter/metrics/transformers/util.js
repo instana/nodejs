@@ -54,7 +54,7 @@ function toOtlpNumericField(value) {
     return Number.isInteger(value) ? { asInt: value } : { asDouble: value };
   }
   if (value && typeof value === 'object' && ('count' in value || 'sum' in value)) {
-    return { count: String(value.count), sum: value.sum };
+    return { count: value.count, sum: value.sum };
   }
   return { asDouble: Number(value) };
 }
@@ -159,6 +159,7 @@ function resolveDataPoints(mapping, payload) {
     payload
   );
 }
+
 /**
  * @param {string} type - One of METRIC_TYPES
  * @param {Array<Record<string, any>>} dataPoints
@@ -195,10 +196,11 @@ function buildMetricEnvelope(type, dataPoints) {
  * @returns {Array<Record<string, any>>} OTLP metric objects
  */
 function extractMappedMetrics(metricsPayload, mapper) {
-  const timeUnixNano = toTimeUnixNano(metricsPayload?.timestamp);
   if (!metricsPayload || !Array.isArray(mapper?.metricMappings)) {
     return [];
   }
+
+  const timeUnixNano = toTimeUnixNano(metricsPayload.timestamp);
 
   const result = [];
   const mappings = mapper.metricMappings;
@@ -231,6 +233,7 @@ module.exports = {
   formatAttributes,
   buildDataPoints,
   buildMetricEnvelope,
+  toOtlpNumericField,
   resolveDataPoints,
   extractMappedMetrics
 };
