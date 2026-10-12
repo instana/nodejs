@@ -8,6 +8,7 @@
 const { headers: headersUtil } = require('@instana/serverless');
 
 const { captureHeaders } = require('./capture_headers');
+const tracingUtil = require('@instana/core').tracing.util;
 
 const serverTimingHeader = 'Server-Timing';
 
@@ -64,6 +65,9 @@ function captureResponseHeaders(result, entrySpan) {
 }
 
 function injectEumBackendCorrelationHeader(result, entrySpan) {
+  if (tracingUtil.isServerTimingDisabled()) {
+    return;
+  }
   if (exports._isLambdaProxyResponse(result)) {
     if (result.headers == null && result.multiValueHeaders == null) {
       // result has neither headers nor multiValueHeaders, arbitrarily add it to result.headers

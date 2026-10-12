@@ -42,6 +42,11 @@ let logLevelConfig;
 let dbBindVariablesConfig;
 
 /**
+ * @type {boolean}
+ */
+let disableServerTiming = false;
+
+/**
  * @param {import('../config').InstanaConfig} config
  */
 exports.init = function (config) {
@@ -51,6 +56,7 @@ exports.init = function (config) {
   httpExitConfig = config.tracing.http.exit;
   logLevelConfig = config.tracing.captureLogLevel;
   dbBindVariablesConfig = config.tracing.dbBindVariables;
+  disableServerTiming = config.tracing.disableServerTiming;
 };
 
 /**
@@ -61,6 +67,14 @@ exports.activate = function activate(_config) {
   stackTraceMode = _config.tracing.stackTrace;
   httpExitConfig = _config.tracing.http.exit;
   dbBindVariablesConfig = _config?.tracing?.dbBindVariables;
+  disableServerTiming = _config.tracing.disableServerTiming;
+};
+
+/**
+ * @returns {boolean}
+ */
+exports.isServerTimingDisabled = function isServerTimingDisabled() {
+  return disableServerTiming;
 };
 
 /**

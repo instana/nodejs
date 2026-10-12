@@ -1706,4 +1706,54 @@ describe('tracing/tracingUtil', () => {
       expect(result).to.deep.equal([{ name: 'name', value: 'alice' }]);
     });
   });
+
+  describe('isServerTimingDisabled', () => {
+    const baseConfig = {
+      logger: createFakeLogger(),
+      tracing: {
+        stackTraceLength: 10,
+        http: { exit: { classifyAll4xxAsErrors: false, classifyAsErrors: [] } },
+        captureLogLevel: 'warn',
+        dbBindVariables: { disable: false, allowedColumns: [] }
+      }
+    };
+
+    afterEach(() => {
+      tracingUtil.init({ ...baseConfig, tracing: { ...baseConfig.tracing } });
+    });
+
+    it('should return false by default when disableServerTiming is not set', () => {
+      tracingUtil.init(baseConfig);
+      expect(tracingUtil.isServerTimingDisabled()).to.be.false;
+    });
+
+    it('should return true after init with disableServerTiming: true', () => {
+      tracingUtil.init({ ...baseConfig, tracing: { ...baseConfig.tracing, disableServerTiming: true } });
+      expect(tracingUtil.isServerTimingDisabled()).to.be.true;
+    });
+
+    it('should return false after init with disableServerTiming: false', () => {
+      tracingUtil.init({ ...baseConfig, tracing: { ...baseConfig.tracing, disableServerTiming: false } });
+      expect(tracingUtil.isServerTimingDisabled()).to.be.false;
+    });
+
+    it('should reflect updated value after activate with disableServerTiming: true', () => {
+      tracingUtil.init(baseConfig);
+      expect(tracingUtil.isServerTimingDisabled()).to.be.false;
+      tracingUtil.activate({ ...baseConfig, tracing: { ...baseConfig.tracing, disableServerTiming: true } });
+      expect(tracingUtil.isServerTimingDisabled()).to.be.true;
+    });
+
+    it('should reflect updated value after activate with disableServerTiming: false', () => {
+      tracingUtil.init({ ...baseConfig, tracing: { ...baseConfig.tracing, disableServerTiming: true } });
+      expect(tracingUtil.isServerTimingDisabled()).to.be.true;
+      tracingUtil.activate({ ...baseConfig, tracing: { ...baseConfig.tracing, disableServerTiming: false } });
+      expect(tracingUtil.isServerTimingDisabled()).to.be.false;
+    });
+
+    it('should treat undefined disableServerTiming as false', () => {
+      tracingUtil.init({ ...baseConfig, tracing: { ...baseConfig.tracing, disableServerTiming: undefined } });
+      expect(tracingUtil.isServerTimingDisabled()).to.be.false;
+    });
+  });
 });

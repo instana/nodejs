@@ -79,6 +79,9 @@ class AgentStubControls {
     if (opts.dbBindVariablesConfig) {
       env.AGENT_STUB_DB_BIND_VARIABLES_CONFIG = JSON.stringify(opts.dbBindVariablesConfig);
     }
+    if (opts.disableServerTiming) {
+      env.AGENT_STUB_DISABLE_SERVER_TIMING = String(opts.disableServerTiming);
+    }
 
     this.agentStub = spawn('node', [path.join(__dirname, 'agentStub.js')], {
       stdio: config.getAppStdio(),

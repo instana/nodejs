@@ -65,6 +65,7 @@ describe('config.normalizeConfig', () => {
     delete process.env.INSTANA_TRACING_CAPTURE_LOG_LEVEL;
     delete process.env.INSTANA_TRACING_DB_BIND_VARIABLES_DISABLE;
     delete process.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS;
+    delete process.env.INSTANA_TRACING_DISABLE_SERVER_TIMING;
   }
 
   describe('default configuration', () => {
@@ -3126,6 +3127,126 @@ describe('config.normalizeConfig', () => {
     });
   });
 
+  describe('disableServerTiming configuration', () => {
+    const { CONFIG_SOURCES } = require('../../src/util/constants');
+
+    afterEach(() => {
+      delete process.env.INSTANA_TRACING_DISABLE_SERVER_TIMING;
+    });
+
+    describe('in-code config', () => {
+      it('should apply in-code config when only in-code is set', () => {
+        const config = coreConfig.normalize({
+          userConfig: { tracing: { disableServerTiming: true } }
+        });
+        expect(config.tracing.disableServerTiming).to.be.true;
+      });
+
+      it('in-code config set to false should result in false when no env or agent config', () => {
+        const config = coreConfig.normalize({
+          userConfig: { tracing: { disableServerTiming: false } }
+        });
+        expect(config.tracing.disableServerTiming).to.be.false;
+      });
+
+      it('in-code config should take precedence over agent config', () => {
+        const config = coreConfig.normalize({
+          userConfig: { tracing: { disableServerTiming: false } }
+        });
+
+        coreConfig.update({
+          externalConfig: { tracing: { disableServerTiming: true } },
+          source: CONFIG_SOURCES.AGENT
+        });
+
+        expect(config.tracing.disableServerTiming).to.be.false;
+      });
+    });
+
+    describe('env var config', () => {
+      it('env var set to true should take precedence over agent config', () => {
+        process.env.INSTANA_TRACING_DISABLE_SERVER_TIMING = 'true';
+        const config = coreConfig.normalize({});
+
+        coreConfig.update({
+          externalConfig: { tracing: { disableServerTiming: false } },
+          source: CONFIG_SOURCES.AGENT
+        });
+
+        expect(config.tracing.disableServerTiming).to.be.true;
+      });
+
+      it('env var set to false should take precedence over agent config set to true', () => {
+        process.env.INSTANA_TRACING_DISABLE_SERVER_TIMING = 'false';
+        const config = coreConfig.normalize({});
+
+        coreConfig.update({
+          externalConfig: { tracing: { disableServerTiming: true } },
+          source: CONFIG_SOURCES.AGENT
+        });
+
+        expect(config.tracing.disableServerTiming).to.be.false;
+      });
+
+      it('env var set to true should take precedence over in-code config set to false', () => {
+        process.env.INSTANA_TRACING_DISABLE_SERVER_TIMING = 'true';
+        const config = coreConfig.normalize({
+          userConfig: { tracing: { disableServerTiming: false } }
+        });
+        expect(config.tracing.disableServerTiming).to.be.true;
+      });
+    });
+
+    describe('agent config', () => {
+      it('should apply agent config (true) when neither env nor in-code config is set', () => {
+        const config = coreConfig.normalize({});
+
+        coreConfig.update({
+          externalConfig: { tracing: { disableServerTiming: true } },
+          source: CONFIG_SOURCES.AGENT
+        });
+
+        expect(config.tracing.disableServerTiming).to.be.true;
+      });
+
+      it('should apply agent config (false) when neither env nor in-code config is set', () => {
+        const config = coreConfig.normalize({});
+
+        coreConfig.update({
+          externalConfig: { tracing: { disableServerTiming: false } },
+          source: CONFIG_SOURCES.AGENT
+        });
+
+        expect(config.tracing.disableServerTiming).to.be.false;
+      });
+
+      it('agent config should not override in-code config', () => {
+        const config = coreConfig.normalize({
+          userConfig: { tracing: { disableServerTiming: true } }
+        });
+
+        coreConfig.update({
+          externalConfig: { tracing: { disableServerTiming: false } },
+          source: CONFIG_SOURCES.AGENT
+        });
+
+        expect(config.tracing.disableServerTiming).to.be.true;
+      });
+
+      it('agent config should not override env var', () => {
+        process.env.INSTANA_TRACING_DISABLE_SERVER_TIMING = 'true';
+        const config = coreConfig.normalize({});
+
+        coreConfig.update({
+          externalConfig: { tracing: { disableServerTiming: false } },
+          source: CONFIG_SOURCES.AGENT
+        });
+
+        expect(config.tracing.disableServerTiming).to.be.true;
+      });
+    });
+  });
+
   function checkDefaults(config) {
     expect(config).to.be.an('object');
 
@@ -3160,6 +3281,7 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.kafka.traceCorrelation).to.be.true;
     expect(config.tracing.useOpentelemetry).to.equal(true);
     expect(config.tracing.allowRootExitSpan).to.equal(false);
+    expect(config.tracing.disableServerTiming).to.be.false;
     expect(config.tracing.dbBindVariables).to.deep.equal({ disable: true, allowedColumns: [] });
 
     expect(config.tracing.otlp).to.deep.equal({

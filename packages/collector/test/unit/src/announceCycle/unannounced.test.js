@@ -1957,6 +1957,144 @@ describe('unannounced state', () => {
       });
     });
 
+    describe('applyServerTimingConfiguration', () => {
+      it('should set disableServerTiming when disable-server-timing is true in tracing.global', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'disable-server-timing': true
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                disableServerTiming: true
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should set disableServerTiming to false when disable-server-timing is false', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'disable-server-timing': false
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                disableServerTiming: false
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should set disableServerTiming to false when disable-server-timing is the string "false"', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'disable-server-timing': 'false'
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                disableServerTiming: false
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should not set disableServerTiming when disable-server-timing is null', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'disable-server-timing': null
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({});
+            done();
+          }
+        });
+      });
+
+      it('should not set disableServerTiming when disable-server-timing is a non-boolean truthy value', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'disable-server-timing': 'yes'
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({});
+            done();
+          }
+        });
+      });
+
+      it('should not set disableServerTiming when tracing.global is missing', done => {
+        prepareAnnounceResponse({
+          tracing: {}
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({});
+            done();
+          }
+        });
+      });
+
+      it('should not set disableServerTiming when tracing is missing', done => {
+        prepareAnnounceResponse({});
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({});
+            done();
+          }
+        });
+      });
+
+      it('should set disableServerTiming alongside other global config', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'disable-server-timing': true,
+              'stack-trace': 'error'
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                disableServerTiming: true,
+                stackTrace: 'error'
+              }
+            });
+            done();
+          }
+        });
+      });
+    });
+
     function prepareAnnounceResponse(announceResponse) {
       agentConnectionStub.announceNodeCollector.callsArgWithAsync(0, null, JSON.stringify(announceResponse));
     }
