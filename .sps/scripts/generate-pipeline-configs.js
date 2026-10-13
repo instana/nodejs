@@ -317,7 +317,7 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
   scriptLines.push('  --workdir /work \\');
   scriptLines.push('  "$NODE_IMAGE" \\');
   scriptLines.push(
-    '  bash -c "npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"'
+    '  bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"'
   );
   scriptLines.push('');
 
@@ -758,7 +758,7 @@ function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv
   scriptLines.push('  "$NODE_IMAGE" \\');
   const rebuildCmd = needsRebuild ? ' && npm rebuild' : '';
   scriptLines.push(
-    `  bash -c "npm install --loglevel warn --ignore-scripts${rebuildCmd} && node bin/create-version-test-folders.js"`
+    `  bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts${rebuildCmd} && node bin/create-version-test-folders.js"`
   );
   scriptLines.push('');
 
@@ -843,6 +843,7 @@ function buildGeneralTasks() {
       nodeVersionSwitchScript(),
       '',
       'cd "$WORKSPACE/$(load_repo app-repo path)"',
+      'bash bin/install-npm.sh',
       'npm install --loglevel warn --ignore-scripts',
       '',
       'LAST_EXIT=0',
@@ -1026,6 +1027,7 @@ function buildSonarTask(rootTask = 'pr-code-checks') {
         'PR_STATE="$(get_env pr-state "")"',
         '',
         'cd "$WORKSPACE/$(load_repo app-repo path)"',
+        'bash bin/install-npm.sh',
         'npm install --loglevel warn --ignore-scripts',
         '',
         'echo "Running ESLint..."',
@@ -1067,6 +1069,7 @@ function buildSonarTask(rootTask = 'pr-code-checks') {
         'fi',
         '',
         'cd "$WORKSPACE/$(load_repo app-repo path)"',
+        'bash bin/install-npm.sh',
         'npm install --loglevel warn --ignore-scripts',
         '',
         'echo "Running ESLint..."',
@@ -1106,6 +1109,7 @@ function buildUploadCurrencyReportTask() {
     'GH_ENTERPRISE_TOKEN="$(get_secret git-token)"',
     '',
     'cd "$WORKSPACE/$(load_repo app-repo path)"',
+    'bash bin/install-npm.sh',
     'npm install --loglevel warn --ignore-scripts',
     '',
     'echo "Generating report..."',
@@ -1388,6 +1392,7 @@ function generateOne(t) {
                 nodeVersionSwitchScript(),
                 '',
                 'cd "$WORKSPACE/$(load_repo app-repo path)"',
+                'bash bin/install-npm.sh',
                 'npm install --loglevel warn --ignore-scripts',
                 'node bin/create-version-test-folders.js'
               ].join('\n')
@@ -1614,6 +1619,7 @@ function generateOne(t) {
       'touch "$CLAIMED_FILE" "$DOWNLOADED_FILE"',
       '',
       'cd "$WORKSPACE/$(load_repo app-repo path)"',
+      'bash bin/install-npm.sh',
       'npm install --loglevel warn --ignore-scripts',
       'node bin/create-version-test-folders.js',
       '',

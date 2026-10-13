@@ -40,6 +40,7 @@ tasks:
           GH_ENTERPRISE_TOKEN="$(get_secret git-token)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+          bash bin/install-npm.sh
           npm install --loglevel warn --ignore-scripts
 
           echo "Generating report..."
