@@ -175,21 +175,13 @@ const MYSQL2_QUERY_SCENARIOS = {
     connection.query('SELECT * FROM users WHERE name = ? ORDER BY email ASC LIMIT ?', ['alice', 10], cb),
 
   'question-having': (connection, cb) =>
-    connection.query(
-      'SELECT name, COUNT(*) AS cnt FROM users GROUP BY name HAVING cnt > ?',
-      [0],
-      cb
-    ),
+    connection.query('SELECT name, COUNT(*) AS cnt FROM users GROUP BY name HAVING cnt > ?', [0], cb),
 
   'question-in': (connection, cb) =>
     connection.query('SELECT * FROM users WHERE name IN (?, ?, ?)', ['alice', 'bob', 'carol'], cb),
 
   'named-order-by': (connection, cb) =>
-    connection.query(
-      'SELECT * FROM users WHERE name = :name ORDER BY email ASC',
-      { name: 'alice' },
-      cb
-    ),
+    connection.query('SELECT * FROM users WHERE name = :name ORDER BY email ASC', { name: 'alice' }, cb),
 
   'named-having': (connection, cb) =>
     connection.query(
@@ -199,11 +191,7 @@ const MYSQL2_QUERY_SCENARIOS = {
     ),
 
   'named-in': (connection, cb) =>
-    connection.query(
-      'SELECT * FROM users WHERE name IN (:n1, :n2, :n3)',
-      { n1: 'alice', n2: 'bob', n3: 'carol' },
-      cb
-    )
+    connection.query('SELECT * FROM users WHERE name IN (:n1, :n2, :n3)', { n1: 'alice', n2: 'bob', n3: 'carol' }, cb)
 };
 
 if (process.env.WITH_STDOUT) {

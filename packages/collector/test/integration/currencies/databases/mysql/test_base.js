@@ -454,10 +454,7 @@ module.exports = function (name, version, isLatest, mode) {
 
               const span = testUtils
                 .getSpansByName(spans, 'mysql')
-                .find(
-                  s =>
-                    s.data.mysql.stmt === 'SELECT * FROM users WHERE name = ? ORDER BY email ASC LIMIT ?'
-                );
+                .find(s => s.data.mysql.stmt === 'SELECT * FROM users WHERE name = ? ORDER BY email ASC LIMIT ?');
               expect(span).to.exist;
               expect(span.data.mysql.binds).to.be.an('array');
               // Only the WHERE name=? position is an allowed column; the LIMIT ? has no column context.
@@ -476,9 +473,7 @@ module.exports = function (name, version, isLatest, mode) {
               const span = testUtils
                 .getSpansByName(spans, 'mysql')
                 .find(
-                  s =>
-                    s.data.mysql.stmt ===
-                    'SELECT name, COUNT(*) AS cnt FROM users GROUP BY name HAVING cnt > ?'
+                  s => s.data.mysql.stmt === 'SELECT name, COUNT(*) AS cnt FROM users GROUP BY name HAVING cnt > ?'
                 );
               expect(span).to.exist;
               // HAVING cnt > ? — "cnt" is an alias, not a base column, so no bind is captured.

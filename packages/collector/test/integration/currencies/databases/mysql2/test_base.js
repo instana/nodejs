@@ -459,10 +459,7 @@ module.exports = function (name, version, isLatest) {
               verifyHttpEntry(spans, '/bind-variables');
               const span = testUtils
                 .getSpansByName(spans, 'mysql')
-                .find(
-                  s =>
-                    s.data.mysql.stmt === 'SELECT * FROM users WHERE name = ? ORDER BY email ASC LIMIT ?'
-                );
+                .find(s => s.data.mysql.stmt === 'SELECT * FROM users WHERE name = ? ORDER BY email ASC LIMIT ?');
               expect(span).to.exist;
               expect(span.data.mysql.binds).to.be.an('array').with.lengthOf(1);
               expect(span.data.mysql.binds[0]).to.deep.equal({ name: 'name', value: 'alice' });
@@ -478,9 +475,7 @@ module.exports = function (name, version, isLatest) {
               const span = testUtils
                 .getSpansByName(spans, 'mysql')
                 .find(
-                  s =>
-                    s.data.mysql.stmt ===
-                    'SELECT name, COUNT(*) AS cnt FROM users GROUP BY name HAVING cnt > ?'
+                  s => s.data.mysql.stmt === 'SELECT name, COUNT(*) AS cnt FROM users GROUP BY name HAVING cnt > ?'
                 );
               expect(span).to.exist;
               expect(span.data.mysql.binds).to.not.exist;
@@ -510,11 +505,7 @@ module.exports = function (name, version, isLatest) {
               verifyHttpEntry(spans, '/bind-variables');
               const span = testUtils
                 .getSpansByName(spans, 'mysql')
-                .find(
-                  s =>
-                    s.data.mysql.stmt ===
-                    'SELECT * FROM users WHERE name = :name ORDER BY email ASC'
-                );
+                .find(s => s.data.mysql.stmt === 'SELECT * FROM users WHERE name = :name ORDER BY email ASC');
               expect(span).to.exist;
               expect(span.data.mysql.binds).to.be.an('array').with.lengthOf(1);
               expect(span.data.mysql.binds[0]).to.deep.equal({ name: 'name', value: 'alice' });

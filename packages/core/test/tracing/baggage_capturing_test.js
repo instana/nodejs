@@ -127,7 +127,7 @@ describe('baggage capturing', () => {
       baggage = require('../../src/tracing/baggage');
     });
 
-    const makeSpan = (existingTags) => {
+    const makeSpan = existingTags => {
       const span = { data: {} };
       if (existingTags) {
         span.data.sdk = { custom: { tags: existingTags } };
@@ -208,7 +208,11 @@ describe('baggage capturing', () => {
     it('existing annotation wins over baggage value', () => {
       cls.ns.run(() => {
         cls.setBaggage('userId=fromBaggage');
-        const span = cls.startSpan({ spanName: 'node.http.server', kind: 1, spanData: { sdk: { custom: { tags: { userId: 'existing' } } } } });
+        const span = cls.startSpan({
+          spanName: 'node.http.server',
+          kind: 1,
+          spanData: { sdk: { custom: { tags: { userId: 'existing' } } } }
+        });
         expect(span.data.sdk.custom.tags.userId).to.equal('existing');
       });
     });

@@ -395,7 +395,13 @@ function tryToAddHeadersToOpts(options, span, w3cTraceContext) {
     options.headers[constants.spanIdHeaderName] = span.s;
     options.headers[constants.traceIdHeaderName] = span.t;
     options.headers[constants.traceLevelHeaderName] = '1';
-    tracingHeaders.addW3cHeaders((k, v) => { options.headers[k] = v; }, w3cTraceContext, cls);
+    tracingHeaders.addW3cHeaders(
+      (k, v) => {
+        options.headers[k] = v;
+      },
+      w3cTraceContext,
+      cls
+    );
     return true;
   }
 
@@ -405,7 +411,13 @@ function tryToAddHeadersToOpts(options, span, w3cTraceContext) {
 function tryToAddTraceLevelAddHeaderToOpts(options, level, w3cTraceContext) {
   if (hasHeadersOption(options)) {
     options.headers[constants.traceLevelHeaderName] = level;
-    tracingHeaders.addW3cHeaders((k, v) => { options.headers[k] = v; }, w3cTraceContext, cls);
+    tracingHeaders.addW3cHeaders(
+      (k, v) => {
+        options.headers[k] = v;
+      },
+      w3cTraceContext,
+      cls
+    );
     return true;
   }
   return false;

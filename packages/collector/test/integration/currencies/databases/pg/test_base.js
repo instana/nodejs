@@ -244,9 +244,7 @@ module.exports = function (name, version, isLatest) {
             verifyHttpEntry(spans, '/bind-variables');
 
             const span = getSpansByName(spans, 'postgres').find(
-              s =>
-                s.data.pg.stmt ===
-                'SELECT name, COUNT(*) AS cnt FROM users GROUP BY name HAVING COUNT(*) > $1'
+              s => s.data.pg.stmt === 'SELECT name, COUNT(*) AS cnt FROM users GROUP BY name HAVING COUNT(*) > $1'
             );
             expect(span).to.exist;
             // HAVING COUNT(*) > $1 — $1 is bound to an aggregate function result, not a column name.
