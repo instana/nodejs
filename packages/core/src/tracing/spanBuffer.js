@@ -454,11 +454,12 @@ function transmitSpans() {
   spans = [];
   batchingBuckets.clear();
 
-  const transformedSpans = applySpanTransformation(spansToSend);
+  const { tracePayload, logPayload } = preparePayloads(spansToSend);
+
   // We restore the content of the spans array if sending them downstream was not successful. We do not restore
   // batchingBuckets, though. This is deliberate. In the worst case, we might miss some batching opportunities, but
   // since sending spans downstream will take a few milliseconds, even that will be rare (and it is acceptable).
-  downstreamConnection.sendSpans(transformedSpans, function sendSpans(/** @type {Error} */ error) {
+  downstreamConnection.sendSpans(tracePayload, function sendSpans(/** @type {Error} */ error) {
     if (error) {
       logger.warn(`Failed to transmit spans, will retry in ${transmissionDelay} ms. ${error?.message} ${error?.stack}`);
       spans = spans.concat(spansToSend);
@@ -470,6 +471,16 @@ function transmitSpans() {
       transmissionTimeoutHandle.unref();
     }
   });
+
+  if (logPayload && typeof downstreamConnection.sendLogs === 'function') {
+    downstreamConnection.sendLogs(logPayload, function sendLogs(/** @type {Error} */ error) {
+      if (error) {
+        logger.warn(`Failed to transmit logs, will retry in ${transmissionDelay} ms. ${error?.message} ${error?.stack}`);
+        spans = spans.concat(spansToSend);
+        removeSpansIfNecessary();
+      }
+    });
+  }
 }
 
 /**
@@ -480,7 +491,7 @@ exports.getAndResetSpans = function getAndResetSpans() {
   const spansToSend = spans;
   spans = [];
   batchingBuckets.clear();
-  return applySpanTransformation(spansToSend);
+  return preparePayloads(spansToSend).tracePayload;
 };
 
 exports.isEmpty = function isEmpty() {
@@ -506,30 +517,32 @@ function removeSpansIfNecessary() {
 }
 
 /**
- * Transforms internal spans into the format required by the configured exporter.
- * Depending on configuration, spans are transformed to either:
- * - Instana backend format
- * - OTLP format
+ * Prepares both trace and log payloads from the raw span buffer in a single pass.
+ * When OTLP is enabled: traces go to resourceSpans, log spans go to resourceLogs.
+ * When OTLP is disabled: all spans go through the Instana backend mapper; no log payload.
  *
  * @param {import('../core').InstanaBaseSpan[]} spansToSend
- * @returns {any}
+ * @returns {{ tracePayload: any, logPayload: any | null }}
  */
-function applySpanTransformation(spansToSend) {
+function preparePayloads(spansToSend) {
   if (useOtlpExporter) {
-    return otlpExporter.traces.transform(spansToSend);
+    return {
+      tracePayload: otlpExporter.traces.transform(spansToSend),
+      logPayload: otlpExporter.logs.transform(spansToSend)
+    };
   }
 
-  return (
-    spansToSend
-      // Transform internal span data format into external (backend) readable format.
-      .map(span => instanaBackendMapper.transform(span))
-      .filter(span => {
-        if (span.t != null) {
-          return true;
-        }
+  const tracePayload = spansToSend
+    // Transform internal span data format into external (backend) readable format.
+    .map(span => instanaBackendMapper.transform(span))
+    .filter(span => {
+      if (span.t != null) {
+        return true;
+      }
 
-        logger.debug(`Span of type ${span.n} has no trace ID. Not transmitting this span.`);
-        return false;
-      })
-  );
+      logger.debug(`Span of type ${span.n} has no trace ID. Not transmitting this span.`);
+      return false;
+    });
+
+  return { tracePayload, logPayload: null };
 }
