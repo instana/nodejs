@@ -145,6 +145,9 @@ function prelude(opts) {
   if (opts.serverTiming) {
     env.SERVER_TIMING_HEADER = opts.serverTiming;
   }
+  if (opts.instanaDisableServerTiming) {
+    env.INSTANA_TRACING_DISABLE_SERVER_TIMING = 'true';
+  }
 
   // The option useExtension controls whether the Lambda under test should try to talk to the extension or to the back
   // end directly.
@@ -2411,6 +2414,61 @@ function registerTests(handlerDefinitionPath, reduced) {
                   span => expect(serverTimingValue).to.contain(span.t)
                 ]);
               });
+          });
+        }
+      );
+    });
+
+    ['1.0', '2.0'].forEach(payloadFormatVersion => {
+      describeOrSkipIfReduced(reduced)(
+        `Server-Timing injection disabled via INSTANA_TRACING_DISABLE_SERVER_TIMING (PayloadFormat: ${payloadFormatVersion})`,
+        function () {
+          const env = prelude.bind(this)({
+            handlerDefinitionPath,
+            trigger: 'api-gateway-proxy',
+            instanaAgentKey,
+            instanaDisableServerTiming: true
+          });
+
+          let control;
+
+          before(async () => {
+            control = new Control({
+              faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+              handlerDefinitionPath,
+              startBackend: true,
+              env
+            });
+
+            await control.start();
+          });
+
+          beforeEach(async () => {
+            await control.reset();
+            await control.resetBackendSpansAndMetrics();
+          });
+
+          after(async () => {
+            await control.stop();
+          });
+
+          it('must not inject the Server-Timing header', () => {
+            return verify(
+              control,
+              { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:api.gateway' },
+              { payloadFormatVersion }
+            ).then(() => {
+              const response = control.getLambdaResults()[0];
+
+              let serverTimingValue;
+              if (payloadFormatVersion === '1.0') {
+                serverTimingValue = getHeaderCaseInsensitive(response.multiValueHeaders, 'server-timing');
+              } else {
+                serverTimingValue = getHeaderCaseInsensitive(response.headers, 'server-timing');
+              }
+
+              expect(serverTimingValue).to.not.exist;
+            });
           });
         }
       );
