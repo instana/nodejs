@@ -31,7 +31,12 @@ const MAPPINGS = {
     EVENTS: 'events',
     LINKS: 'links',
     START_TIME_UNIX_NANO: 'startTimeUnixNano',
-    END_TIME_UNIX_NANO: 'endTimeUnixNano'
+    END_TIME_UNIX_NANO: 'endTimeUnixNano',
+    TIME_UNIX_NANO: 'timeUnixNano',
+    OBSERVED_TIME_UNIX_NANO: 'observedTimeUnixNano',
+    SEVERITY_NUMBER: 'severityNumber',
+    SEVERITY_TEXT: 'severityText',
+    BODY: 'body'
   },
 
   http: {

@@ -460,6 +460,16 @@ app.post('/v1/metrics', function handleOtlpMetrics(req, res) {
   res.send('OK');
 });
 
+app.post('/v1/logs', function handleOtlpLogs(req, res) {
+  if (!dropAllData) {
+    receivedData.logs.push({
+      time: Date.now(),
+      data: req.body
+    });
+  }
+  res.send('OK');
+});
+
 function aggregateMetrics(entityId, snapshotUpdate) {
   if (!receivedData.aggregatedMetrics[entityId]) {
     receivedData.aggregatedMetrics[entityId] = _.cloneDeep(snapshotUpdate);
@@ -474,6 +484,7 @@ function resetReceivedData() {
     metrics: [],
     aggregatedMetrics: {},
     traces: [],
+    logs: [],
     profiles: [],
     responses: [],
     events: [],

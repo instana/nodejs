@@ -34,7 +34,7 @@ function convert(spans) {
   for (let i = 0; i < spans.length; i++) {
     const span = spans[i];
     if (isLogSpan(span)) {
-      // TODO: Add log span converter
+      // Log spans are converted separately by the logs converter (otlpExporter.logs.transform).
       continue;
     }
 

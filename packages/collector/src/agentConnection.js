@@ -114,6 +114,10 @@ const EXPORT_ENDPOINTS = {
   metrics: {
     otlpPath: '/v1/metrics',
     instanaPath: () => `/com.instana.plugin.nodejs.${pidStore.pid}`
+  },
+  logs: {
+    otlpPath: '/v1/logs',
+    instanaPath: () => `/com.instana.plugin.nodejs/traces.${pidStore.pid}`
   }
 };
 
@@ -385,6 +389,21 @@ exports.sendMetrics = function sendMetrics(data, cb) {
 
       cb(null, body);
     }
+  });
+};
+
+/**
+ * @param {Object} logs - OTLP resourceLogs payload
+ * @param {(...args: *) => *} cb
+ */
+exports.sendLogs = function sendLogs(logs, cb) {
+  const callback = util.atMostOnce('callback for sendLogs', cb);
+  const exportTarget = resolveExportEndpoint('logs');
+  sendData({
+    ...exportTarget,
+    data: logs,
+    cb: callback,
+    ignore404: true
   });
 };
 
