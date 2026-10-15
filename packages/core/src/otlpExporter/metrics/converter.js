@@ -35,7 +35,7 @@ function resolveServiceName(metrics) {
  */
 function convert(metrics) {
   try {
-    if (!metrics || typeof metrics !== 'object' || (Array.isArray(metrics) && metrics.length === 0)) {
+    if (!metrics) {
       return { resourceMetrics: [] };
     }
 
@@ -43,6 +43,7 @@ function convert(metrics) {
     resolveServiceName(metrics);
 
     const resource = transformers.resource.extractResourceAttributes(/** @type {any} */ (metrics));
+    const otlpMetrics = transformers.metrics.extractMetrics(metrics, mappers.allMappings);
 
     return {
       resourceMetrics: [
@@ -51,7 +52,7 @@ function convert(metrics) {
           scopeMetrics: [
             {
               scope: INSTRUMENTATION_SCOPE,
-              metrics: transformers.extractMetrics(metrics, mappers.allMappings)
+              metrics: otlpMetrics
             }
           ]
         }
