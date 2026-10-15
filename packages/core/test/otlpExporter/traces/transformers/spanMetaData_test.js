@@ -22,11 +22,15 @@ describe('otlpExporter/traces/transformers/spanMetaData', () => {
           TRACE_ID: 'traceId',
           SPAN_ID: 'spanId',
           PARENT_ID: 'parentSpanId',
-          SPAN_KIND: 'kind',
           START_TIME_UNIX_NANO: 'startTimeUnixNano',
-          END_TIME_UNIX_NANO: 'endTimeUnixNano',
-          NAME: 'name',
-          STATUS: 'status'
+          END_TIME_UNIX_NANO: 'endTimeUnixNano'
+        },
+        traces: {
+          metadata: {
+            SPAN_KIND: 'kind',
+            NAME: 'name',
+            STATUS: 'status'
+          }
         }
       }
     };

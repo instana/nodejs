@@ -171,7 +171,7 @@ describe('otlpExporter/common/semconv', () => {
             const config = getLookupConfig();
 
             expect(config).to.be.an('object');
-            expect(config).to.have.property('http');
+            expect(config.traces).to.have.property('http');
             expect(config).to.have.property('metadata');
             expect(config).to.have.property('resource');
           });
@@ -180,7 +180,7 @@ describe('otlpExporter/common/semconv', () => {
             const config = getLookupConfig('1.23');
 
             expect(config).to.be.an('object');
-            expect(config).to.have.property('http');
+            expect(config.traces).to.have.property('http');
             expect(config).to.have.property('metadata');
             expect(config).to.have.property('resource');
           });
@@ -189,7 +189,7 @@ describe('otlpExporter/common/semconv', () => {
             const config = getLookupConfig('1.41');
 
             expect(config).to.be.an('object');
-            expect(config).to.have.property('http');
+            expect(config.traces).to.have.property('http');
             expect(config).to.have.property('metadata');
             expect(config).to.have.property('resource');
           });
@@ -256,33 +256,33 @@ describe('otlpExporter/common/semconv', () => {
             const config123 = getLookupConfig('1.23');
             const config141 = getLookupConfig('1.41');
 
-            expect(config123.http).to.be.an('object');
-            expect(config141.http).to.be.an('object');
+            expect(config123.traces.http).to.be.an('object');
+            expect(config141.traces.http).to.be.an('object');
 
-            expect(config123.http).to.have.property('REQUEST_METHOD');
-            expect(config141.http).to.have.property('REQUEST_METHOD');
+            expect(config123.traces.http).to.have.property('REQUEST_METHOD');
+            expect(config141.traces.http).to.have.property('REQUEST_METHOD');
           });
 
           it('should have database semantic conventions in both versions', () => {
             const config123 = getLookupConfig('1.23');
             const config141 = getLookupConfig('1.41');
 
-            expect(config123.database).to.be.an('object');
-            expect(config141.database).to.be.an('object');
+            expect(config123.traces.database).to.be.an('object');
+            expect(config141.traces.database).to.be.an('object');
 
-            expect(config123.database).to.have.property('SYSTEM_NAME');
-            expect(config141.database).to.have.property('SYSTEM_NAME');
+            expect(config123.traces.database).to.have.property('SYSTEM_NAME');
+            expect(config141.traces.database).to.have.property('SYSTEM_NAME');
           });
 
           it('should have messaging semantic conventions in both versions', () => {
             const config123 = getLookupConfig('1.23');
             const config141 = getLookupConfig('1.41');
 
-            expect(config123.messaging).to.be.an('object');
-            expect(config141.messaging).to.be.an('object');
+            expect(config123.traces.messaging).to.be.an('object');
+            expect(config141.traces.messaging).to.be.an('object');
 
-            expect(config123.messaging).to.have.property('SYSTEM');
-            expect(config141.messaging).to.have.property('SYSTEM');
+            expect(config123.traces.messaging).to.have.property('SYSTEM');
+            expect(config141.traces.messaging).to.have.property('SYSTEM');
           });
 
           it('should handle version as string with proper type checking', () => {
