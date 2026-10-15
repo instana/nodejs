@@ -111,11 +111,11 @@ function extractSpanMetadata(span, mapper) {
     { otlp: OTLP.metadata.TRACE_ID, value: metaMapper.convertTraceId(span) },
     { otlp: OTLP.metadata.SPAN_ID, value: metaMapper.convertSpanId(span) },
     { otlp: OTLP.metadata.PARENT_ID, value: metaMapper.convertParentId(span) },
-    { otlp: OTLP.metadata.SPAN_KIND, value: metaMapper.convertSpanKind(span) },
+    { otlp: OTLP.traces.metadata.SPAN_KIND, value: metaMapper.convertSpanKind(span) },
     { otlp: OTLP.metadata.START_TIME_UNIX_NANO, value: metaMapper.convertStartTime(span) },
     { otlp: OTLP.metadata.END_TIME_UNIX_NANO, value: metaMapper.generateEndTime(span) },
-    { otlp: OTLP.metadata.NAME, value: mapper.spanName(span) },
-    { otlp: OTLP.metadata.STATUS, value: mapper.spanStatus(span) }
+    { otlp: OTLP.traces.metadata.NAME, value: mapper.spanName(span) },
+    { otlp: OTLP.traces.metadata.STATUS, value: mapper.spanStatus(span) }
   ];
 
   return metadataMappings.reduce((/** @type {Record<string, any>} */ acc, current) => {
