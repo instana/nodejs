@@ -9,6 +9,7 @@ const expect = require('chai').expect;
 const { cloneDeep } = require('lodash');
 
 const processResult = require('../src/process_result');
+const tracingUtil = require('@instana/core').tracing.util;
 
 describe('process lambda result', () => {
   let entrySpan;
@@ -417,6 +418,62 @@ describe('process lambda result', () => {
           'sErVeR-tImInG': [`cpu;dur=2.4, intid;desc=${traceId}`, 'somethingelse']
         });
       });
+    });
+  });
+
+  describe('Server-Timing injection disabled (disableServerTiming)', () => {
+    const baseTracingConfig = {
+      logger: { debug: () => {}, info: () => {}, warn: () => {}, error: () => {}, trace: () => {} },
+      tracing: {
+        stackTraceLength: 10,
+        http: { exit: { classifyAll4xxAsErrors: false, classifyAsErrors: [] } },
+        captureLogLevel: 'warn',
+        dbBindVariables: { disable: false, allowedColumns: [] }
+      }
+    };
+
+    before(() => {
+      tracingUtil.init({ ...baseTracingConfig, tracing: { ...baseTracingConfig.tracing, disableServerTiming: true } });
+    });
+
+    after(() => {
+      tracingUtil.init({ ...baseTracingConfig, tracing: { ...baseTracingConfig.tracing, disableServerTiming: false } });
+    });
+
+    it('must not add Server-Timing header when result has no headers', () => {
+      const result = { statusCode: 200 };
+      processResult(result, entrySpan);
+      expect(result.headers).to.not.exist;
+      expect(result.multiValueHeaders).to.not.exist;
+    });
+
+    it('must not add Server-Timing header when result has single value headers', () => {
+      const result = { statusCode: 200, headers: { 'x-custom-header': 'value' } };
+      processResult(result, entrySpan);
+      expect(result.headers).to.deep.equal({ 'x-custom-header': 'value' });
+      expect(result.headers['Server-Timing']).to.not.exist;
+      expect(result.headers['server-timing']).to.not.exist;
+    });
+
+    it('must not add Server-Timing header when result has multi value headers', () => {
+      const result = { statusCode: 200, multiValueHeaders: { 'x-custom-header': ['v1', 'v2'] } };
+      processResult(result, entrySpan);
+      expect(result.multiValueHeaders).to.deep.equal({ 'x-custom-header': ['v1', 'v2'] });
+      expect(result.multiValueHeaders['Server-Timing']).to.not.exist;
+    });
+
+    it('must not modify an existing Server-Timing header in single value headers', () => {
+      const existingValue = 'cache;desc="Cache Read";dur=23.2';
+      const result = { statusCode: 200, headers: { 'sErver-timinG': existingValue } };
+      processResult(result, entrySpan);
+      expect(result.headers['sErver-timinG']).to.equal(existingValue);
+    });
+
+    it('must not modify an existing Server-Timing header in multi value headers', () => {
+      const existingValue = ['cache;desc="Cache Read";dur=23.2'];
+      const result = { statusCode: 200, multiValueHeaders: { 'sErver-timinG': existingValue } };
+      processResult(result, entrySpan);
+      expect(result.multiValueHeaders['sErver-timinG']).to.deep.equal(existingValue);
     });
   });
 });

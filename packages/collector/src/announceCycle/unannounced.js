@@ -62,6 +62,7 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @property {boolean} [disable-w3c-baggage]
  * @property {string} [capture-w3c-baggage]
  * @property {Record<string, any>} [db-bind-variables]
+ * @property {boolean} [disable-server-timing]
  */
 
 /**
@@ -162,6 +163,7 @@ function applyAgentConfiguration(agentResponse) {
   applyW3cDisableConfiguration(agentResponse);
   applyPollRateConfiguration(agentResponse);
   applyDbBindVariablesConfiguration(agentResponse);
+  applyServerTimingConfiguration(agentResponse);
 }
 
 /**
@@ -339,6 +341,20 @@ function applyStackTraceConfiguration(agentResponse) {
     } else {
       logger.warn(`Invalid stack-trace-length value from agent: ${stackTraceLengthValidation.error}`);
     }
+  }
+}
+
+/**
+ * @param {AgentAnnounceResponse} agentResponse
+ */
+function applyServerTimingConfiguration(agentResponse) {
+  const globalConfig = agentResponse?.tracing?.global;
+  if (!globalConfig) return;
+
+  const disableServerTiming = coreConfig.validators.booleanValidator(globalConfig['disable-server-timing']);
+  if (disableServerTiming !== undefined) {
+    ensureNestedObjectExists(agentOpts.config, ['tracing']);
+    agentOpts.config.tracing.disableServerTiming = disableServerTiming;
   }
 }
 
