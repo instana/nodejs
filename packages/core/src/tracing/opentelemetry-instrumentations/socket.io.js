@@ -7,13 +7,18 @@
 const constants = require('../constants');
 
 let SocketIoInstrumentation;
+let isActive = false;
 
 function initInstrumentation() {
-  SocketIoInstrumentation =
-    SocketIoInstrumentation || require('@opentelemetry/instrumentation-socket.io').SocketIoInstrumentation;
+  if (!SocketIoInstrumentation) {
+    SocketIoInstrumentation = require('@opentelemetry/instrumentation-socket.io').SocketIoInstrumentation;
+    isActive = true;
+  }
 }
 
 const isOnEvent = otelSpan => otelSpan.name.indexOf('receive') !== -1;
+
+exports.isActive = () => isActive;
 
 exports.preInit = () => {
   initInstrumentation();
