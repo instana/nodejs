@@ -18,5 +18,7 @@ function extractMetrics(metricsPayload, allMappings) {
 
 module.exports = {
   resource,
-  extractMetrics
+  metrics: {
+    extractMetrics
+  }
 };

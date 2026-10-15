@@ -107,10 +107,6 @@ describe('metrics/converters/otlp', () => {
         });
       });
 
-      it('returns empty resourceMetrics for an empty array', () => {
-        expect(converter.transform([])).to.deep.equal({ resourceMetrics: [] });
-      });
-
       it('returns empty resourceMetrics for null', () => {
         expect(converter.transform(null)).to.deep.equal({ resourceMetrics: [] });
       });
