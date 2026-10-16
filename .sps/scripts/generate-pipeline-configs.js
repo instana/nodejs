@@ -316,8 +316,9 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
   scriptLines.push('  --volume "$REPO_DIR:/work" \\');
   scriptLines.push('  --workdir /work \\');
   scriptLines.push('  "$NODE_IMAGE" \\');
+  const rebuildCmd = options.needsRebuild ? ' && npm rebuild' : '';
   scriptLines.push(
-    '  bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"'
+    `  bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts${rebuildCmd} && node bin/create-version-test-folders.js"`
   );
   scriptLines.push('');
 
@@ -1452,7 +1453,8 @@ function generateOne(t) {
       'collector-metrics',
       'collector-metrics',
       ['test/integration/metrics'],
-      []
+      [],
+      { needsRebuild: true }
     );
     const prConfig = baseConfig({ [taskName]: task });
     writeConfig(t, prConfig, toMainConfig(prConfig), toMainConfig(prConfig, 'sps/main/${node_version%%.*}/$TASK_NAME'));
