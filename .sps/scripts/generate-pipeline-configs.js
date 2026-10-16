@@ -551,7 +551,6 @@ function runWithRetryContainerLines(npmScript, envLines = [], withEsm = true) {
 
   return [
     ...(withEsm ? runEsmReadLines() : []),
-    'TEST_LOG="$REPO_DIR/test-run.log"',
     'retry=1',
     'while [ $retry -le 2 ]; do',
     '  LAST_EXIT=0',
@@ -564,17 +563,13 @@ function runWithRetryContainerLines(npmScript, envLines = [], withEsm = true) {
     '    --env TEST_FILES="$TEST_FILES" \\',
     ...dockerEnvFlags.map(f => `    ${f} \\`),
     '    "$NODE_IMAGE" \\',
-    `    npm run ${npmScript} 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=\${PIPESTATUS[0]}`,
+    `    npm run ${npmScript} || LAST_EXIT=$?`,
     '  if [ $LAST_EXIT -eq 0 ]; then',
     '    break',
     '  fi',
     '  echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."',
     '  retry=$((retry + 1))',
-    'done',
-    'if [ $LAST_EXIT -ne 0 ]; then',
-    '  echo "--- Test output (last attempt) ---"',
-    '  cat "$TEST_LOG" || true',
-    'fi'
+    'done'
   ];
 }
 

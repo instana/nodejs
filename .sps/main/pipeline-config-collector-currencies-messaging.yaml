@@ -170,7 +170,6 @@ tasks:
           fi
 
           RUN_ESM="$(get_env RUN_ESM "")"
-          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -182,17 +181,13 @@ tasks:
               --env RUN_ESM="$RUN_ESM" \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-kafka-javascript" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-kafka-javascript" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
-          if [ $LAST_EXIT -ne 0 ]; then
-            echo "--- Test output (last attempt) ---"
-            cat "$TEST_LOG" || true
-          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -412,7 +407,6 @@ tasks:
           fi
 
           RUN_ESM="$(get_env RUN_ESM "")"
-          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -424,17 +418,13 @@ tasks:
               --env RUN_ESM="$RUN_ESM" \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-kafka" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-kafka" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
-          if [ $LAST_EXIT -ne 0 ]; then
-            echo "--- Test output (last attempt) ---"
-            cat "$TEST_LOG" || true
-          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -624,7 +614,6 @@ tasks:
           fi
 
           RUN_ESM="$(get_env RUN_ESM "")"
-          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -636,17 +625,13 @@ tasks:
               --env RUN_ESM="$RUN_ESM" \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-amqplib" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-amqplib" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
-          if [ $LAST_EXIT -ne 0 ]; then
-            echo "--- Test output (last attempt) ---"
-            cat "$TEST_LOG" || true
-          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -827,7 +812,6 @@ tasks:
           fi
 
           RUN_ESM="$(get_env RUN_ESM "")"
-          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -839,17 +823,13 @@ tasks:
               --env RUN_ESM="$RUN_ESM" \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-bull" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-bull" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
-          if [ $LAST_EXIT -ne 0 ]; then
-            echo "--- Test output (last attempt) ---"
-            cat "$TEST_LOG" || true
-          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -1069,7 +1049,6 @@ tasks:
           fi
 
           RUN_ESM="$(get_env RUN_ESM "")"
-          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -1081,17 +1060,13 @@ tasks:
               --env RUN_ESM="$RUN_ESM" \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-kafka-node" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-kafka-node" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
-          if [ $LAST_EXIT -ne 0 ]; then
-            echo "--- Test output (last attempt) ---"
-            cat "$TEST_LOG" || true
-          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -1311,7 +1286,6 @@ tasks:
           fi
 
           RUN_ESM="$(get_env RUN_ESM "")"
-          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -1323,17 +1297,13 @@ tasks:
               --env RUN_ESM="$RUN_ESM" \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-kafkajs" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-kafkajs" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
-          if [ $LAST_EXIT -ne 0 ]; then
-            echo "--- Test output (last attempt) ---"
-            cat "$TEST_LOG" || true
-          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -1531,7 +1501,6 @@ tasks:
           fi
 
           RUN_ESM="$(get_env RUN_ESM "")"
-          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -1543,17 +1512,13 @@ tasks:
               --env RUN_ESM="$RUN_ESM" \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-nats" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-nats" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
-          if [ $LAST_EXIT -ne 0 ]; then
-            echo "--- Test output (last attempt) ---"
-            cat "$TEST_LOG" || true
-          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -1768,7 +1733,6 @@ tasks:
           fi
 
           RUN_ESM="$(get_env RUN_ESM "")"
-          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -1780,17 +1744,13 @@ tasks:
               --env RUN_ESM="$RUN_ESM" \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-node-nats-streaming" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-node-nats-streaming" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
-          if [ $LAST_EXIT -ne 0 ]; then
-            echo "--- Test output (last attempt) ---"
-            cat "$TEST_LOG" || true
-          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -2010,7 +1970,6 @@ tasks:
           fi
 
           RUN_ESM="$(get_env RUN_ESM "")"
-          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -2022,17 +1981,13 @@ tasks:
               --env RUN_ESM="$RUN_ESM" \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-node-rdkafka-1" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-node-rdkafka-1" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
-          if [ $LAST_EXIT -ne 0 ]; then
-            echo "--- Test output (last attempt) ---"
-            cat "$TEST_LOG" || true
-          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -2252,7 +2207,6 @@ tasks:
           fi
 
           RUN_ESM="$(get_env RUN_ESM "")"
-          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -2264,17 +2218,13 @@ tasks:
               --env RUN_ESM="$RUN_ESM" \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-node-rdkafka-2" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-node-rdkafka-2" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
-          if [ $LAST_EXIT -ne 0 ]; then
-            echo "--- Test output (last attempt) ---"
-            cat "$TEST_LOG" || true
-          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -2494,7 +2444,6 @@ tasks:
           fi
 
           RUN_ESM="$(get_env RUN_ESM "")"
-          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -2506,17 +2455,13 @@ tasks:
               --env RUN_ESM="$RUN_ESM" \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-node-rdkafka-3" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-node-rdkafka-3" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
-          if [ $LAST_EXIT -ne 0 ]; then
-            echo "--- Test output (last attempt) ---"
-            cat "$TEST_LOG" || true
-          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -2736,7 +2681,6 @@ tasks:
           fi
 
           RUN_ESM="$(get_env RUN_ESM "")"
-          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -2748,17 +2692,13 @@ tasks:
               --env RUN_ESM="$RUN_ESM" \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-node-rdkafka-4" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-node-rdkafka-4" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
-          if [ $LAST_EXIT -ne 0 ]; then
-            echo "--- Test output (last attempt) ---"
-            cat "$TEST_LOG" || true
-          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -2978,7 +2918,6 @@ tasks:
           fi
 
           RUN_ESM="$(get_env RUN_ESM "")"
-          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -2990,17 +2929,13 @@ tasks:
               --env RUN_ESM="$RUN_ESM" \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-node-rdkafka-5" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-node-rdkafka-5" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
-          if [ $LAST_EXIT -ne 0 ]; then
-            echo "--- Test output (last attempt) ---"
-            cat "$TEST_LOG" || true
-          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -3154,7 +3089,6 @@ tasks:
           fi
 
           RUN_ESM="$(get_env RUN_ESM "")"
-          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -3166,17 +3100,13 @@ tasks:
               --env RUN_ESM="$RUN_ESM" \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-socket-io" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-messaging-socket-io" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
-          if [ $LAST_EXIT -ne 0 ]; then
-            echo "--- Test output (last attempt) ---"
-            cat "$TEST_LOG" || true
-          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT

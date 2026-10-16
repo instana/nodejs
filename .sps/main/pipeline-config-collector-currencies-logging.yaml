@@ -104,7 +104,6 @@ tasks:
           fi
 
           RUN_ESM="$(get_env RUN_ESM "")"
-          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -116,17 +115,13 @@ tasks:
               --env RUN_ESM="$RUN_ESM" \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-logging-bunyan" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-logging-bunyan" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
-          if [ $LAST_EXIT -ne 0 ]; then
-            echo "--- Test output (last attempt) ---"
-            cat "$TEST_LOG" || true
-          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -280,7 +275,6 @@ tasks:
           fi
 
           RUN_ESM="$(get_env RUN_ESM "")"
-          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -292,17 +286,13 @@ tasks:
               --env RUN_ESM="$RUN_ESM" \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-logging-console" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-logging-console" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
-          if [ $LAST_EXIT -ne 0 ]; then
-            echo "--- Test output (last attempt) ---"
-            cat "$TEST_LOG" || true
-          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -456,7 +446,6 @@ tasks:
           fi
 
           RUN_ESM="$(get_env RUN_ESM "")"
-          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -468,17 +457,13 @@ tasks:
               --env RUN_ESM="$RUN_ESM" \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-logging-express-winston" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-logging-express-winston" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
-          if [ $LAST_EXIT -ne 0 ]; then
-            echo "--- Test output (last attempt) ---"
-            cat "$TEST_LOG" || true
-          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -632,7 +617,6 @@ tasks:
           fi
 
           RUN_ESM="$(get_env RUN_ESM "")"
-          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -644,17 +628,13 @@ tasks:
               --env RUN_ESM="$RUN_ESM" \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-logging-log4js" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-logging-log4js" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
-          if [ $LAST_EXIT -ne 0 ]; then
-            echo "--- Test output (last attempt) ---"
-            cat "$TEST_LOG" || true
-          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -808,7 +788,6 @@ tasks:
           fi
 
           RUN_ESM="$(get_env RUN_ESM "")"
-          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -820,17 +799,13 @@ tasks:
               --env RUN_ESM="$RUN_ESM" \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-logging-pino" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-logging-pino" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
-          if [ $LAST_EXIT -ne 0 ]; then
-            echo "--- Test output (last attempt) ---"
-            cat "$TEST_LOG" || true
-          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -984,7 +959,6 @@ tasks:
           fi
 
           RUN_ESM="$(get_env RUN_ESM "")"
-          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -996,17 +970,13 @@ tasks:
               --env RUN_ESM="$RUN_ESM" \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-logging-winston" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
+              npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-logging-winston" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
-          if [ $LAST_EXIT -ne 0 ]; then
-            echo "--- Test output (last attempt) ---"
-            cat "$TEST_LOG" || true
-          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT

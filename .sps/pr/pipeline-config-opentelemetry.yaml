@@ -102,7 +102,6 @@ tasks:
           # collect test files
           TEST_FILES=$(cd packages/opentelemetry-exporter && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
 
-          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -113,17 +112,13 @@ tasks:
               --env CI=true \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:opentelemetry-exporter" --report_dir="opentelemetry-exporter" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
+              npm run coverage-ci --npm_command="test:ci:opentelemetry-exporter" --report_dir="opentelemetry-exporter" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
-          if [ $LAST_EXIT -ne 0 ]; then
-            echo "--- Test output (last attempt) ---"
-            cat "$TEST_LOG" || true
-          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -273,7 +268,6 @@ tasks:
           # collect test files
           TEST_FILES=$(cd packages/opentelemetry-sampler && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
 
-          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -284,17 +278,13 @@ tasks:
               --env CI=true \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:opentelemetry-sampler" --report_dir="opentelemetry-sampler" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
+              npm run coverage-ci --npm_command="test:ci:opentelemetry-sampler" --report_dir="opentelemetry-sampler" || LAST_EXIT=$?
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
-          if [ $LAST_EXIT -ne 0 ]; then
-            echo "--- Test output (last attempt) ---"
-            cat "$TEST_LOG" || true
-          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
