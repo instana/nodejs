@@ -94,6 +94,7 @@ tasks:
           # collect test files
           TEST_FILES=$(cd packages/core && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
 
+          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -104,13 +105,17 @@ tasks:
               --env CI=true \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:core" --report_dir="core" || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:core" --report_dir="core" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          if [ $LAST_EXIT -ne 0 ]; then
+            echo "--- Test output (last attempt) ---"
+            cat "$TEST_LOG" || true
+          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -254,6 +259,7 @@ tasks:
           # collect test files
           TEST_FILES=$(cd packages/metrics-util && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
 
+          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -264,13 +270,17 @@ tasks:
               --env CI=true \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:metrics-util" --report_dir="metrics-util" || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:metrics-util" --report_dir="metrics-util" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          if [ $LAST_EXIT -ne 0 ]; then
+            echo "--- Test output (last attempt) ---"
+            cat "$TEST_LOG" || true
+          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -414,6 +424,7 @@ tasks:
           # collect test files
           TEST_FILES=$(cd packages/serverless && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
 
+          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -424,13 +435,17 @@ tasks:
               --env CI=true \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:serverless" --report_dir="serverless" || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:serverless" --report_dir="serverless" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          if [ $LAST_EXIT -ne 0 ]; then
+            echo "--- Test output (last attempt) ---"
+            cat "$TEST_LOG" || true
+          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -574,6 +589,7 @@ tasks:
           # collect test files
           TEST_FILES=$(cd packages/serverless-collector && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
 
+          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -584,13 +600,17 @@ tasks:
               --env CI=true \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:serverless-collector" --report_dir="serverless-collector" || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:serverless-collector" --report_dir="serverless-collector" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          if [ $LAST_EXIT -ne 0 ]; then
+            echo "--- Test output (last attempt) ---"
+            cat "$TEST_LOG" || true
+          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -734,6 +754,7 @@ tasks:
           # collect test files
           TEST_FILES=$(cd packages/shared-metrics && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
 
+          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -744,13 +765,17 @@ tasks:
               --env CI=true \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:shared-metrics" --report_dir="shared-metrics" || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:shared-metrics" --report_dir="shared-metrics" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          if [ $LAST_EXIT -ne 0 ]; then
+            echo "--- Test output (last attempt) ---"
+            cat "$TEST_LOG" || true
+          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT

@@ -122,6 +122,7 @@ tasks:
           # collect test files
           TEST_FILES=$(cd packages/aws-lambda && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
 
+          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -133,13 +134,17 @@ tasks:
               --env TEST_FILES="$TEST_FILES" \
               --env INSTANA_CONNECT_LOCALSTACK_AWS="http://127.0.0.1:4566" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:aws-lambda" --report_dir="aws-lambda" || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:aws-lambda" --report_dir="aws-lambda" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          if [ $LAST_EXIT -ne 0 ]; then
+            echo "--- Test output (last attempt) ---"
+            cat "$TEST_LOG" || true
+          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -283,6 +288,7 @@ tasks:
           # collect test files
           TEST_FILES=$(cd packages/aws-fargate && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
 
+          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -293,13 +299,17 @@ tasks:
               --env CI=true \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:aws-fargate" --report_dir="aws-fargate" || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:aws-fargate" --report_dir="aws-fargate" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          if [ $LAST_EXIT -ne 0 ]; then
+            echo "--- Test output (last attempt) ---"
+            cat "$TEST_LOG" || true
+          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -443,6 +453,7 @@ tasks:
           # collect test files
           TEST_FILES=$(cd packages/azure-container-services && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
 
+          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -453,13 +464,17 @@ tasks:
               --env CI=true \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:azure-container-services" --report_dir="azure-container-services" || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:azure-container-services" --report_dir="azure-container-services" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          if [ $LAST_EXIT -ne 0 ]; then
+            echo "--- Test output (last attempt) ---"
+            cat "$TEST_LOG" || true
+          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
@@ -603,6 +618,7 @@ tasks:
           # collect test files
           TEST_FILES=$(cd packages/google-cloud-run && find test -name '*test.js' -not -path '*/node_modules/*' | sort | tr '\n' ' ')
 
+          TEST_LOG="$REPO_DIR/test-run.log"
           retry=1
           while [ $retry -le 2 ]; do
             LAST_EXIT=0
@@ -613,13 +629,17 @@ tasks:
               --env CI=true \
               --env TEST_FILES="$TEST_FILES" \
               "$NODE_IMAGE" \
-              npm run coverage-ci --npm_command="test:ci:google-cloud-run" --report_dir="google-cloud-run" || LAST_EXIT=$?
+              npm run coverage-ci --npm_command="test:ci:google-cloud-run" --report_dir="google-cloud-run" 2>&1 | tee -a "$TEST_LOG"; LAST_EXIT=${PIPESTATUS[0]}
             if [ $LAST_EXIT -eq 0 ]; then
               break
             fi
             echo "Attempt $retry failed with exit code $LAST_EXIT — retrying..."
             retry=$((retry + 1))
           done
+          if [ $LAST_EXIT -ne 0 ]; then
+            echo "--- Test output (last attempt) ---"
+            cat "$TEST_LOG" || true
+          fi
           # Cleanup filter container so host has direct connectivity for uploads
           cleanup
           trap - EXIT
