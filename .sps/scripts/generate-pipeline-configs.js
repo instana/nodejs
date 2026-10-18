@@ -316,9 +316,8 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
   scriptLines.push('  --volume "$REPO_DIR:/work" \\');
   scriptLines.push('  --workdir /work \\');
   scriptLines.push('  "$NODE_IMAGE" \\');
-  const rebuildCmd = options.needsRebuild ? ' && npm rebuild && npm run node_modules:exists --workspaces --if-present' : '';
   scriptLines.push(
-    `  bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts${rebuildCmd} && node bin/create-version-test-folders.js"`
+    '  bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"'
   );
   scriptLines.push('');
 
@@ -699,7 +698,15 @@ function buildCurrencyTasks(pkgName, folder, group) {
   });
 }
 
-function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv = null, supportsEsm = false, needsRebuild = false) {
+function buildSimpleTask(
+  taskSlug,
+  displayName,
+  testScript,
+  needs = [],
+  extraEnv = null,
+  supportsEsm = false,
+  needsRebuild = false
+) {
   const scriptLines = ['#!/usr/bin/env bash', 'set -eo pipefail', ''];
   scriptLines.push('node_version="${node_version:-$(get_env node-version "$(get_env NODE_VERSION "")")}"');
   scriptLines.push('REPO_DIR="$WORKSPACE/$(load_repo app-repo path)"');
@@ -757,7 +764,7 @@ function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv
   scriptLines.push('  --volume "$REPO_DIR:/work" \\');
   scriptLines.push('  --workdir /work \\');
   scriptLines.push('  "$NODE_IMAGE" \\');
-  const rebuildCmd = needsRebuild ? ' && npm rebuild && npm run node_modules:exists --workspaces --if-present' : '';
+  const rebuildCmd = needsRebuild ? ' && npm rebuild' : '';
   scriptLines.push(
     `  bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts${rebuildCmd} && node bin/create-version-test-folders.js"`
   );
@@ -1350,7 +1357,11 @@ function toMainConfig(prConfig, context = 'sps/main/$TASK_NAME') {
 const SIMPLE_TARGETS = {
   'aws-lambda': { script: 'test:ci:aws-lambda', displayName: 'aws-lambda', needs: ['localstack'], needsRebuild: true },
   'aws-fargate': { script: 'test:ci:aws-fargate', displayName: 'aws-fargate', needsRebuild: true },
-  'azure-container-services': { script: 'test:ci:azure-container-services', displayName: 'azure-container-services', needsRebuild: true },
+  'azure-container-services': {
+    script: 'test:ci:azure-container-services',
+    displayName: 'azure-container-services',
+    needsRebuild: true
+  },
   'google-cloud-run': { script: 'test:ci:google-cloud-run', displayName: 'google-cloud-run', needsRebuild: true },
   autoprofile: {
     script: 'test:ci:autoprofile',
@@ -1448,8 +1459,7 @@ function generateOne(t) {
       'collector-metrics',
       'collector-metrics',
       ['test/integration/metrics'],
-      [],
-      { needsRebuild: true }
+      []
     );
     const prConfig = baseConfig({ [taskName]: task });
     writeConfig(t, prConfig, toMainConfig(prConfig), toMainConfig(prConfig, 'sps/main/${node_version%%.*}/$TASK_NAME'));
@@ -1553,7 +1563,15 @@ function generateOne(t) {
     const fanOutTasks = {};
     for (const member of members) {
       const { script, displayName, needs = [], extraEnv, needsRebuild = false } = SIMPLE_TARGETS[member];
-      fanOutTasks[`pr-code-checks-${member}`] = buildSimpleTask(member, displayName, script, needs, extraEnv, false, needsRebuild);
+      fanOutTasks[`pr-code-checks-${member}`] = buildSimpleTask(
+        member,
+        displayName,
+        script,
+        needs,
+        extraEnv,
+        false,
+        needsRebuild
+      );
     }
     const prConfig = baseConfig(fanOutTasks);
     writeConfig(t, prConfig, toMainConfig(prConfig), toMainConfig(prConfig, 'sps/main/${node_version%%.*}/$TASK_NAME'));
@@ -2144,7 +2162,9 @@ function generateOne(t) {
     }
   } else if (SIMPLE_TARGETS[t]) {
     const { script, displayName, needs = [], extraEnv, needsRebuild = false } = SIMPLE_TARGETS[t];
-    const fanOutTasks = { [`pr-code-checks-${t}`]: buildSimpleTask(t, displayName, script, needs, extraEnv, false, needsRebuild) };
+    const fanOutTasks = {
+      [`pr-code-checks-${t}`]: buildSimpleTask(t, displayName, script, needs, extraEnv, false, needsRebuild)
+    };
     const prConfig = baseConfig(fanOutTasks);
     writeConfig(t, prConfig, toMainConfig(prConfig), toMainConfig(prConfig, 'sps/main/${node_version%%.*}/$TASK_NAME'));
   } else {
