@@ -764,7 +764,7 @@ function buildSimpleTask(
   scriptLines.push('  --volume "$REPO_DIR:/work" \\');
   scriptLines.push('  --workdir /work \\');
   scriptLines.push('  "$NODE_IMAGE" \\');
-  const rebuildCmd = needsRebuild ? ' && npm rebuild' : '';
+  const rebuildCmd = needsRebuild ? ' && npm rebuild && npm run node_modules:exists --workspaces --if-present' : '';
   scriptLines.push(
     `  bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts${rebuildCmd} && node bin/create-version-test-folders.js"`
   );
