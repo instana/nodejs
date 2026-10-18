@@ -246,6 +246,24 @@ function buildSocatFwdImageLines() {
   ];
 }
 
+// Rebuild native add-ons (output shown via --foreground-scripts), create the per-package node_modules dirs that the
+// skipped root postinstall would have created, and list the native add-on build output for debugging.
+const REBUILD_CMD =
+  ' && npm rebuild --foreground-scripts' +
+  ' && npm run node_modules:exists --workspaces --if-present' +
+  " && (echo '--- native add-on build output ---';" +
+  ' ls -la node_modules/gcstats.js/build/Release node_modules/event-loop-stats/build/Release || true)';
+
+// Prints the network-filter sidecar logs so that domains blocked during the install/rebuild (for example node-gyp
+// downloading headers) show up in the pipeline log.
+function filterLogsLines() {
+  return [
+    '',
+    'echo "--- network-filter logs (after install/rebuild) ---"',
+    'docker logs "$FILTER_CTR" 2>&1 | tail -n 100 || true'
+  ];
+}
+
 /**
  * Generic collector task builder.
  * Produces the shell script and SPS task object for one pipeline step that
@@ -316,10 +334,11 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
   scriptLines.push('  --volume "$REPO_DIR:/work" \\');
   scriptLines.push('  --workdir /work \\');
   scriptLines.push('  "$NODE_IMAGE" \\');
-  const rebuildCmd = options.needsRebuild ? ' && npm rebuild && npm run node_modules:exists --workspaces --if-present' : '';
+  const rebuildCmd = options.needsRebuild ? REBUILD_CMD : '';
   scriptLines.push(
     `  bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts${rebuildCmd} && node bin/create-version-test-folders.js"`
   );
+  if (options.needsRebuild) scriptLines.push(...filterLogsLines());
   scriptLines.push('');
 
   if (needs.includes('oracledb')) {
@@ -757,10 +776,11 @@ function buildSimpleTask(taskSlug, displayName, testScript, needs = [], extraEnv
   scriptLines.push('  --volume "$REPO_DIR:/work" \\');
   scriptLines.push('  --workdir /work \\');
   scriptLines.push('  "$NODE_IMAGE" \\');
-  const rebuildCmd = needsRebuild ? ' && npm rebuild && npm run node_modules:exists --workspaces --if-present' : '';
+  const rebuildCmd = needsRebuild ? REBUILD_CMD : '';
   scriptLines.push(
     `  bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts${rebuildCmd} && node bin/create-version-test-folders.js"`
   );
+  if (needsRebuild) scriptLines.push(...filterLogsLines());
   scriptLines.push('');
 
   if (needs.length > 0) {
