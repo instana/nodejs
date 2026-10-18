@@ -97,10 +97,7 @@ tasks:
             --volume "$REPO_DIR:/work" \
             --workdir /work \
             "$NODE_IMAGE" \
-            bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts && npm rebuild --foreground-scripts && npm run node_modules:exists --workspaces --if-present && (echo '--- native add-on build output ---'; ls -la node_modules/gcstats.js/build/Release node_modules/event-loop-stats/build/Release || true) && node bin/create-version-test-folders.js"
-
-          echo "--- network-filter logs (after install/rebuild) ---"
-          docker logs "$FILTER_CTR" 2>&1 | tail -n 100 || true
+            bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts && npm rebuild && npm run node_modules:exists --workspaces --if-present && node bin/create-version-test-folders.js"
 
           # collect test files
           TEST_FILES=$(cd packages/collector && find \
