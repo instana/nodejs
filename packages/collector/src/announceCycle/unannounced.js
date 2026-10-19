@@ -21,6 +21,8 @@ const agentOpts = require('../agent/opts');
 let logger;
 /** @type {{ pid: number }} */
 let pidStore;
+/** @type {NodeJS.Timeout | undefined} */
+let configFetchIntervalHandle;
 
 const initialRetryDelay = 10 * 1000; // 10 seconds
 const backoffFactor = 1.5;
@@ -142,6 +144,34 @@ function tryToAnnounce(ctx, retryDelay = initialRetryDelay) {
 
     agentOpts.agentUuid = agentResponse.agentUuid;
     applyAgentConfiguration(agentResponse);
+
+    if (!configFetchIntervalHandle) {
+      logger.info(
+        `[CONFIG_POLLING_SIMULATION] Starting 10s interval for agent config polling with PID ${pidStore.pid}`
+      );
+      configFetchIntervalHandle = setInterval(async () => {
+        const url =
+          `http://${agentOpts.host}:${agentOpts.port}` +
+          `/com.instana.agent.config/com.instana.plugin.nodejs/${pidStore.pid}`;
+        logger.info(`[CONFIG_POLLING_SIMULATION] Fetching agent config from ${url}`);
+        try {
+          const res = await fetch(url);
+          const body = await res.text();
+          logger.info(
+            `[CONFIG_POLLING_SIMULATION] Agent config response: status=${res.status}, body=${body}`
+          );
+        } catch (fetchErr) {
+          const cause = fetchErr?.cause
+            ? ` (cause: ${fetchErr.cause.message || fetchErr.cause.code || fetchErr.cause})`
+            : '';
+          logger.error(
+            `[CONFIG_POLLING_SIMULATION] Failed to fetch agent config: ${fetchErr?.message}${cause}`
+          );
+        }
+      }, 10000);
+      configFetchIntervalHandle.unref();
+    }
+
     ctx.transitionTo('announced');
   });
 }
