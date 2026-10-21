@@ -92,7 +92,7 @@ describe('otlpExporter/common/transformers/resource', () => {
   describe('INSTRUMENTATION_SCOPE', () => {
     it('exposes name and version', () => {
       expect(resource.INSTRUMENTATION_SCOPE).to.deep.equal({
-        name: '@instana/collector',
+        name: 'instana.nodejs.tracer',
         version: '6.0.0'
       });
     });
