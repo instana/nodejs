@@ -4,8 +4,8 @@
 
 'use strict';
 
-// Base mappings - common across all semantic convention versions
-// Version-specific attribute names should be defined in their respective version directories
+// Base mappings shared across semantic convention versions.
+// Version-specific attribute names belong in their respective version directories.
 const MAPPINGS = {
   resource: {
     SERVICE_NAME: 'service.name',
@@ -19,7 +19,7 @@ const MAPPINGS = {
     FAAS_NAME: 'faas.name'
   },
 
-  metadata: {
+  common: {
     TRACE_ID: 'traceId',
     SPAN_ID: 'spanId',
     PARENT_ID: 'parentSpanId',
@@ -30,8 +30,8 @@ const MAPPINGS = {
   },
 
   traces: {
-    metadata: {
-      SPAN_KIND: 'kind',
+    span: {
+      KIND: 'kind',
       NAME: 'name',
       STATUS: 'status',
       EVENTS: 'events',
@@ -52,9 +52,11 @@ const MAPPINGS = {
       MESSAGE_ID: 'messaging.message.id',
       MESSAGE_BODY_SIZE: 'messaging.message.body.size',
       DESTINATION_PARTITION_ID: 'messaging.destination.partition.id',
+
       kafka: {
         MESSAGE_KEY: 'messaging.kafka.message.key'
       },
+
       rabbitmq: {
         ROUTING_KEY: 'messaging.rabbitmq.destination.routing_key'
       }
@@ -62,9 +64,11 @@ const MAPPINGS = {
 
     database: {
       COLLECTION_NAME: 'db.collection.name',
+
       dynamodb: {
         COLLECTION_NAME: 'aws.dynamodb.table_names'
       },
+
       mongodb: {
         COLLECTION: 'db.mongodb.collection'
       }
@@ -94,9 +98,11 @@ const MAPPINGS = {
       PLATFORM: 'cloud.platform',
       ACCOUNT_ID: 'cloud.account.id',
       RESOURCE_ID: 'cloud.resource_id',
+
       gcp: {
         PROJECT_ID: 'gcp.project_id'
       },
+
       aws: {
         S3_BUCKET: 'aws.s3.bucket',
         S3_KEY: 'aws.s3.key'
@@ -124,17 +130,17 @@ const MAPPINGS = {
     server: {
       ADDRESS: 'server.address',
       PORT: 'server.port'
+    },
+
+    exception: {
+      MESSAGE: 'exception.message',
+      STACKTRACE: 'exception.stacktrace',
+      TYPE: 'exception.type'
+    },
+
+    error: {
+      TYPE: 'error.type'
     }
-  },
-
-  exception: {
-    MESSAGE: 'exception.message',
-    STACKTRACE: 'exception.stacktrace',
-    TYPE: 'exception.type'
-  },
-
-  error: {
-    TYPE: 'error.type'
   }
 };
 

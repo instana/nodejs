@@ -172,7 +172,7 @@ describe('otlpExporter/common/semconv', () => {
 
             expect(config).to.be.an('object');
             expect(config.traces).to.have.property('http');
-            expect(config).to.have.property('metadata');
+            expect(config).to.have.property('common');
             expect(config).to.have.property('resource');
           });
 
@@ -181,7 +181,7 @@ describe('otlpExporter/common/semconv', () => {
 
             expect(config).to.be.an('object');
             expect(config.traces).to.have.property('http');
-            expect(config).to.have.property('metadata');
+            expect(config).to.have.property('common');
             expect(config).to.have.property('resource');
           });
 
@@ -190,7 +190,7 @@ describe('otlpExporter/common/semconv', () => {
 
             expect(config).to.be.an('object');
             expect(config.traces).to.have.property('http');
-            expect(config).to.have.property('metadata');
+            expect(config).to.have.property('common');
             expect(config).to.have.property('resource');
           });
 
@@ -210,18 +210,18 @@ describe('otlpExporter/common/semconv', () => {
             expect(config123).to.not.equal(config141);
           });
 
-          it('should have consistent metadata structure across versions', () => {
+          it('should have consistent common structure across versions', () => {
             const config123 = getLookupConfig('1.23');
             const config141 = getLookupConfig('1.41');
 
-            // Both should have metadata with core fields
-            expect(config123.metadata).to.have.property('TRACE_ID');
-            expect(config123.metadata).to.have.property('SPAN_ID');
-            expect(config123.metadata).to.have.property('PARENT_ID');
+            // Both should have common with core fields
+            expect(config123.common).to.have.property('TRACE_ID');
+            expect(config123.common).to.have.property('SPAN_ID');
+            expect(config123.common).to.have.property('PARENT_ID');
 
-            expect(config141.metadata).to.have.property('TRACE_ID');
-            expect(config141.metadata).to.have.property('SPAN_ID');
-            expect(config141.metadata).to.have.property('PARENT_ID');
+            expect(config141.common).to.have.property('TRACE_ID');
+            expect(config141.common).to.have.property('SPAN_ID');
+            expect(config141.common).to.have.property('PARENT_ID');
           });
 
           it('should have consistent resource structure across versions', () => {
@@ -292,18 +292,18 @@ describe('otlpExporter/common/semconv', () => {
             expect(() => getLookupConfig('1.41')).to.not.throw();
           });
 
-          it('should maintain attribute naming consistency for metadata fields', () => {
+          it('should maintain attribute naming consistency for common fields', () => {
             const config123 = getLookupConfig('1.23');
             const config141 = getLookupConfig('1.41');
 
-            expect(config123.metadata.TRACE_ID).to.equal('traceId');
-            expect(config141.metadata.TRACE_ID).to.equal('traceId');
+            expect(config123.common.TRACE_ID).to.equal('traceId');
+            expect(config141.common.TRACE_ID).to.equal('traceId');
 
-            expect(config123.metadata.SPAN_ID).to.equal('spanId');
-            expect(config141.metadata.SPAN_ID).to.equal('spanId');
+            expect(config123.common.SPAN_ID).to.equal('spanId');
+            expect(config141.common.SPAN_ID).to.equal('spanId');
 
-            expect(config123.metadata.PARENT_ID).to.equal('parentSpanId');
-            expect(config141.metadata.PARENT_ID).to.equal('parentSpanId');
+            expect(config123.common.PARENT_ID).to.equal('parentSpanId');
+            expect(config141.common.PARENT_ID).to.equal('parentSpanId');
           });
 
           it('should support switching between versions multiple times', () => {
