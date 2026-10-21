@@ -17,6 +17,7 @@ const {
 const readSymbolProperty = require('../../../util/readSymbolProperty');
 const tracingHeaders = require('../../tracingHeaders');
 const { filterParams, sanitizeUrl } = require('../../../util/url');
+const tracingUtil = require('../../tracingUtil');
 
 let extraHttpHeadersToCapture;
 let isActive = false;
@@ -142,10 +143,12 @@ function shimEmit(realEmit) {
       // Support for automatic client/back end EUM correlation: We add our key-value pair to the Server-Timing header
       // (the key intid is short for INstana Trace ID). This abbreviation is small enough to not incur a notable
       // overhead while at the same time being unique enough to avoid name collisions.
-      const serverTimingValue = `intid;desc=${span.t}`;
-      instrumentResponseMethod(stream, 'respond', 0, serverTimingValue);
-      instrumentResponseMethod(stream, 'respondWithFD', 1, serverTimingValue);
-      instrumentResponseMethod(stream, 'respondWithFile', 1, serverTimingValue);
+      if (!tracingUtil.isServerTimingDisabled()) {
+        const serverTimingValue = `intid;desc=${span.t}`;
+        instrumentResponseMethod(stream, 'respond', 0, serverTimingValue);
+        instrumentResponseMethod(stream, 'respondWithFD', 1, serverTimingValue);
+        instrumentResponseMethod(stream, 'respondWithFile', 1, serverTimingValue);
+      }
 
       stream.on('aborted', () => {
         finishSpan();

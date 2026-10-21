@@ -83,6 +83,7 @@ let currentConfig;
  * @property {import('../config/types').IgnoreEndpoints} [ignoreEndpoints]
  * @property {boolean} [ignoreEndpointsDisableSuppression]
  * @property {boolean} [disableEOLEvents]
+ * @property {boolean} [disableServerTiming]
  * @property {globalStackTraceConfig} [global]
  * @property {otlpExporterOptions} [otlp]
  * @property {string} [captureLogLevel]
@@ -207,6 +208,7 @@ let defaults = {
     ignoreEndpoints: {},
     ignoreEndpointsDisableSuppression: false,
     disableEOLEvents: false,
+    disableServerTiming: false,
     captureLogLevel: DEFAULT_LOG_LEVEL,
     otlp: {
       enabled: false,
@@ -435,6 +437,7 @@ function normalizeTracingConfig({ userConfig = {}, defaultConfig = {}, finalConf
   normalizeIgnoreEndpoints({ userConfig, defaultConfig, finalConfig });
   normalizeIgnoreEndpointsDisableSuppression({ userConfig, defaultConfig, finalConfig });
   normalizeDisableEOLEvents({ userConfig, defaultConfig, finalConfig });
+  normalizeDisableServerTiming({ userConfig, defaultConfig, finalConfig });
   normalizeOtlpExporter({ userConfig, defaultConfig, finalConfig });
   normalizeLogLevelCapture({ userConfig, defaultConfig, finalConfig });
 }
@@ -1438,6 +1441,29 @@ function normalizeDisableEOLEvents({ userConfig = {}, defaultConfig = {}, finalC
     source,
     value,
     envVarName: 'INSTANA_TRACING_DISABLE_EOL_EVENTS'
+  });
+}
+
+/**
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
+ */
+function normalizeDisableServerTiming({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
+  const { value, source } = util.resolve(
+    {
+      envValue: 'INSTANA_TRACING_DISABLE_SERVER_TIMING',
+      inCodeValue: userConfig.tracing.disableServerTiming,
+      defaultValue: defaultConfig.tracing.disableServerTiming
+    },
+    [validators.booleanValidator]
+  );
+
+  configStore.set('config.tracing.disableServerTiming', { source });
+  finalConfig.tracing.disableServerTiming = value;
+  util.log({
+    configPath: 'config.tracing.disableServerTiming',
+    source,
+    value,
+    envVarName: 'INSTANA_TRACING_DISABLE_SERVER_TIMING'
   });
 }
 

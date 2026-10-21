@@ -626,6 +626,213 @@ module.exports = function (name, version, isLatest) {
       );
     });
 
+    describe('Server-Timing header disabled (INSTANA_TRACING_DISABLE_SERVER_TIMING=true)', () => {
+      let disabledControls;
+
+      before(async () => {
+        disabledControls = new ProcessControls({
+          dirname: __dirname,
+          http2: useHttp2CompatApi,
+          agentControls,
+          appUsesHttps: true,
+          env: {
+            ...commonEnv,
+            APP_USES_HTTP2: useHttp2CompatApi,
+            INSTANA_TRACING_DISABLE_SERVER_TIMING: 'true'
+          }
+        });
+        await disabledControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await disabledControls.stop();
+      });
+
+      afterEach(async () => {
+        await disabledControls.clearIpcMessages();
+      });
+
+      it('must not add Server-Timing header when disabled', () =>
+        disabledControls
+          .sendRequest({
+            method: 'POST',
+            path: '/checkout',
+            resolveWithFullResponse: true
+          })
+          .then(res => {
+            const serverTiming = res.headers['server-timing'] || res.headers.get?.('server-timing');
+            expect(serverTiming).to.not.exist;
+          }));
+
+      it('must preserve existing application Server-Timing header without appending intid', () =>
+        disabledControls
+          .sendRequest({
+            method: 'POST',
+            path: '/checkout?server-timing-string=true',
+            resolveWithFullResponse: true
+          })
+          .then(res => {
+            const serverTiming = res.headers['server-timing'] || res.headers.get?.('server-timing');
+            expect(serverTiming).to.equal('myServerTimingKey');
+            expect(serverTiming).to.not.match(/intid;/);
+          }));
+
+      it('must preserve existing application Server-Timing array without appending intid', () =>
+        disabledControls
+          .sendRequest({
+            method: 'POST',
+            path: '/checkout?server-timing-array=true',
+            resolveWithFullResponse: true
+          })
+          .then(res => {
+            const serverTiming = res.headers['server-timing'] || res.headers.get?.('server-timing');
+            expect(serverTiming).to.not.match(/intid;/);
+          }));
+
+      it('must still record the entry span when Server-Timing is disabled', () =>
+        disabledControls
+          .sendRequest({
+            method: 'POST',
+            path: '/checkout',
+            resolveWithFullResponse: true
+          })
+          .then(() =>
+            retry(() =>
+              agentControls.getSpans().then(spans => {
+                const httpEntries = spans.filter(
+                  s => s.n === 'node.http.server' && s.data.http.url === '/checkout'
+                );
+                expect(httpEntries).to.have.lengthOf.at.least(1);
+                expect(httpEntries[0].t).to.be.a('string');
+              })
+            )
+          ));
+    });
+
+    describe('Server-Timing header disabled via agent configuration (tracing.global.disable-server-timing)', () => {
+      const agentControlsWithServerTimingDisabled = new AgentStubControls();
+      let agentConfigDisabledControls;
+
+      before(async () => {
+        await agentControlsWithServerTimingDisabled.startAgent({
+          disableServerTiming: true
+        });
+
+        agentConfigDisabledControls = new ProcessControls({
+          dirname: __dirname,
+          http2: useHttp2CompatApi,
+          agentControls: agentControlsWithServerTimingDisabled,
+          appUsesHttps: true,
+          env: {
+            ...commonEnv,
+            APP_USES_HTTP2: useHttp2CompatApi
+          }
+        });
+        await agentConfigDisabledControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await agentControlsWithServerTimingDisabled.stopAgent();
+        await agentConfigDisabledControls.stop();
+      });
+
+      afterEach(async () => {
+        await agentConfigDisabledControls.clearIpcMessages();
+        await agentControlsWithServerTimingDisabled.clearReceivedData();
+      });
+
+      it('must not add Server-Timing header when disabled via agent config', () =>
+        agentConfigDisabledControls
+          .sendRequest({
+            method: 'POST',
+            path: '/checkout',
+            resolveWithFullResponse: true
+          })
+          .then(res => {
+            const serverTiming = res.headers['server-timing'] || res.headers.get?.('server-timing');
+            expect(serverTiming).to.not.exist;
+          }));
+
+      it('must preserve existing application Server-Timing header without appending intid when disabled via agent config', () =>
+        agentConfigDisabledControls
+          .sendRequest({
+            method: 'POST',
+            path: '/checkout?server-timing-string=true',
+            resolveWithFullResponse: true
+          })
+          .then(res => {
+            const serverTiming = res.headers['server-timing'] || res.headers.get?.('server-timing');
+            expect(serverTiming).to.equal('myServerTimingKey');
+            expect(serverTiming).to.not.match(/intid;/);
+          }));
+
+      it('must still record the entry span when Server-Timing is disabled via agent config', () =>
+        agentConfigDisabledControls
+          .sendRequest({
+            method: 'POST',
+            path: '/checkout',
+            resolveWithFullResponse: true
+          })
+          .then(() =>
+            retry(() =>
+              agentControlsWithServerTimingDisabled.getSpans().then(spans => {
+                const httpEntries = spans.filter(
+                  s => s.n === 'node.http.server' && s.data.http.url === '/checkout'
+                );
+                expect(httpEntries).to.have.lengthOf.at.least(1);
+                expect(httpEntries[0].t).to.be.a('string');
+              })
+            )
+          ));
+    });
+
+    describe('Server-Timing: env var takes precedence over agent config', () => {
+      const agentControlsServerTimingEnabled = new AgentStubControls();
+      let envVarPrecedenceControls;
+
+      before(async () => {
+        // Agent says disable=false, but env var overrides to disable=true
+        await agentControlsServerTimingEnabled.startAgent({
+          disableServerTiming: false
+        });
+
+        envVarPrecedenceControls = new ProcessControls({
+          dirname: __dirname,
+          http2: useHttp2CompatApi,
+          agentControls: agentControlsServerTimingEnabled,
+          appUsesHttps: true,
+          env: {
+            ...commonEnv,
+            APP_USES_HTTP2: useHttp2CompatApi,
+            INSTANA_TRACING_DISABLE_SERVER_TIMING: 'true'
+          }
+        });
+        await envVarPrecedenceControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await agentControlsServerTimingEnabled.stopAgent();
+        await envVarPrecedenceControls.stop();
+      });
+
+      afterEach(async () => {
+        await envVarPrecedenceControls.clearIpcMessages();
+        await agentControlsServerTimingEnabled.clearReceivedData();
+      });
+
+      it('must not add Server-Timing header when env var disables it even though agent config allows it', () =>
+        envVarPrecedenceControls
+          .sendRequest({
+            method: 'POST',
+            path: '/checkout',
+            resolveWithFullResponse: true
+          })
+          .then(res => {
+            const serverTiming = res.headers['server-timing'] || res.headers.get?.('server-timing');
+            expect(serverTiming).to.not.exist;
+          }));
+    });
+
     it('must expose trace ID on incoming HTTP request', () =>
       controls
         .sendRequest({

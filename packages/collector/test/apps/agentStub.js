@@ -57,6 +57,10 @@ const otlpExporter = process.env.AGENT_STUB_OTLP_EXPORTER && JSON.parse(process.
 const httpExitConfig = process.env.AGENT_STUB_HTTP_EXIT_CONFIG && JSON.parse(process.env.AGENT_STUB_HTTP_EXIT_CONFIG);
 const dbBindVariablesConfig =
   process.env.AGENT_STUB_DB_BIND_VARIABLES_CONFIG && JSON.parse(process.env.AGENT_STUB_DB_BIND_VARIABLES_CONFIG);
+const disableServerTimingConfig =
+  process.env.AGENT_STUB_DISABLE_SERVER_TIMING != null
+    ? process.env.AGENT_STUB_DISABLE_SERVER_TIMING === 'true'
+    : undefined;
 
 const uuids = {};
 const agentLogs = [];
@@ -139,7 +143,8 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
     w3cDisableConfig ||
     otlpExporter ||
     httpExitConfig ||
-    dbBindVariablesConfig
+    dbBindVariablesConfig ||
+    disableServerTimingConfig
   ) {
     response.tracing = {};
 
@@ -181,6 +186,10 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
     if (dbBindVariablesConfig) {
       response.tracing.global = response.tracing.global || {};
       response.tracing.global['db-bind-variables'] = dbBindVariablesConfig;
+    }
+    if (disableServerTimingConfig) {
+      response.tracing.global = response.tracing.global || {};
+      response.tracing.global['disable-server-timing'] = disableServerTimingConfig;
     }
   }
 
