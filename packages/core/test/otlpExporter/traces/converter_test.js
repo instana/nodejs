@@ -265,7 +265,7 @@ describe('tracing/converters/otlp', () => {
       expect(result.resourceSpans).to.have.lengthOf(1);
       expect(result.resourceSpans[0].scopeSpans).to.have.lengthOf(1);
       expect(result.resourceSpans[0].scopeSpans[0].scope).to.deep.equal({
-        name: '@instana/collector',
+        name: 'instana.nodejs.tracer',
         version: '6.0.0'
       });
 
