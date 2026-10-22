@@ -16,7 +16,7 @@ node_modules/.bin/git-raw-commits --from "$LAST_TAG" --format '%B%n-hash-%n%H'
 RELEASE_TYPE=$(node_modules/.bin/conventional-recommended-bump --preset conventionalcommits)
 
 if [[ $RELEASE_TYPE = major ]]; then
-  echo "Erro: There have been breaking changes since the last release, so this release would be a major release. This Github action does not support publishing major releases, only minor and patch releases are supported (for now). See CONTRIBUTING.md for more information."
+  echo "Error: There have been breaking changes since the last release, so this release would be a major release. This Github action does not support publishing major releases, only minor and patch releases are supported (for now). See CONTRIBUTING.md for more information."
   exit 1
 fi
 
