@@ -109,6 +109,7 @@
     "chai-as-promised": "7.1.1",
     "cls-hooked": "4.2.2",
     "commitizen": "4.2.4",
+    "conventional-changelog-conventionalcommits": "6.1.0",
     "cz-conventional-changelog": "3.3.0",
     "depcheck": "1.4.3",
     "dev-null": "0.1.1",
@@ -168,6 +169,7 @@
     "@commitlint/cli": {
       "semver": "7.8.5"
     },
+    "conventional-changelog-conventionalcommits": "6.1.0",
     "@grpc/grpc-js": "1.14.5",
     "@protobufjs/utf8": "1.1.1",
     "admin": {
