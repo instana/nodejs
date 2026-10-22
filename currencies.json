@@ -1443,7 +1443,7 @@
     "core": false,
     "versions": [
       {
-        "v": "7.0.1"
+        "v": "26.0.0"
       }
     ],
     "group": "databases"
