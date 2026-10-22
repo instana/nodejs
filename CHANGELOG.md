@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.10.0](https://github.com/instana/nodejs/compare/v6.9.0...v6.10.0) (2026-10-22)
+
+
+### Bug Fixes
+
+* bumped @opentelemetry/core from 2.9.0 to 2.12.0 ([#2820](https://github.com/instana/nodejs/issues/2820)) ([6cf49b9](https://github.com/instana/nodejs/commit/6cf49b91b3359fe50c61a0161c7fc2e0d9de4ffe))
+* bumped @opentelemetry/instrumentation-fs from 0.41.0 to 0.42.0 ([#2836](https://github.com/instana/nodejs/issues/2836)) ([d09aeda](https://github.com/instana/nodejs/commit/d09aeda80ecd6afee5461be30376f52bbdc9e131))
+* bumped @opentelemetry/instrumentation-restify from 0.63.0 to 0.67.0 ([#2813](https://github.com/instana/nodejs/issues/2813)) ([6443220](https://github.com/instana/nodejs/commit/6443220ba7a48fc323702003c18d1e74657a41a0))
+* bumped @opentelemetry/instrumentation-restify from 0.67.0 to 0.68.0 ([95bae8e](https://github.com/instana/nodejs/commit/95bae8e4f16441d31d73b8e5b25cbb42d09089f1))
+
+
+### Features
+
+* added option to disable Server-Timing header injection ([#2823](https://github.com/instana/nodejs/issues/2823)) ([aa7dddd](https://github.com/instana/nodejs/commit/aa7dddd61621b3088f05758e765ac1f32c21edc7))
+* added support for restify v12 ([9bde945](https://github.com/instana/nodejs/commit/9bde9453b7673f40578edba12fabe33944f88458))
+
+
+
+
+
 # [6.9.0](https://github.com/instana/nodejs/compare/v6.8.0...v6.9.0) (2026-10-06)
 
 

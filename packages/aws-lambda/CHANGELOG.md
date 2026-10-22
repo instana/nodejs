@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.10.0](https://github.com/instana/nodejs/compare/v6.9.0...v6.10.0) (2026-10-22)
+
+
+### Features
+
+* added option to disable Server-Timing header injection ([#2823](https://github.com/instana/nodejs/issues/2823)) ([aa7dddd](https://github.com/instana/nodejs/commit/aa7dddd61621b3088f05758e765ac1f32c21edc7))
+
+
+
+
+
 # [6.9.0](https://github.com/instana/nodejs/compare/v6.8.0...v6.9.0) (2026-10-06)
 
 **Note:** Version bump only for package @instana/aws-lambda

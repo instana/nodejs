@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.10.0](https://github.com/instana/nodejs/compare/v6.9.0...v6.10.0) (2026-10-22)
+
+**Note:** Version bump only for package @instana/autoprofile
+
+
+
+
+
 # [6.9.0](https://github.com/instana/nodejs/compare/v6.8.0...v6.9.0) (2026-10-06)
 
 **Note:** Version bump only for package @instana/autoprofile
