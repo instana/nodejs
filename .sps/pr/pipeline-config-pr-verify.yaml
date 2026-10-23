@@ -67,6 +67,7 @@ tasks:
           touch "$CLAIMED_FILE" "$DOWNLOADED_FILE"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+          bash bin/install-npm.sh
           npm install --loglevel warn --ignore-scripts
           node bin/create-version-test-folders.js
 
@@ -350,6 +351,7 @@ tasks:
           PR_STATE="$(get_env pr-state "")"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+          bash bin/install-npm.sh
           npm install --loglevel warn --ignore-scripts
 
           echo "Running ESLint..."
