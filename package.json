@@ -21,10 +21,6 @@
   "engines": {
     "node": ">=18.19.0"
   },
-  "allowScripts": {
-    "event-loop-stats": true,
-    "gcstats.js": true
-  },
   "contributors": [
     {
       "name": "Katharina Irrgang",
