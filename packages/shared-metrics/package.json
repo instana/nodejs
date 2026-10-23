@@ -74,9 +74,5 @@
   "optionalDependencies": {
     "event-loop-stats": "1.4.1",
     "gcstats.js": "1.0.0"
-  },
-  "allowScripts": {
-    "event-loop-stats": true,
-    "gcstats.js": true
   }
 }
