@@ -16,6 +16,23 @@
           "scope": { "name": "instana.nodejs.tracer", "version": "6.0.0" },
           "metrics": [
             {
+              "name": "v8js.gc.duration",
+              "unit": "s",
+              "histogram": {
+                "aggregationTemporality": 1,
+                "dataPoints": [
+                  {
+                    "sum": 0.414,
+                    "count": 1,
+                    "bucketCounts": [1],
+                    "explicitBounds": [],
+                    "timeUnixNano": "1544712660300000000",
+                    "attributes": [{ "key": "v8js.gc.type", "value": { "stringValue": "all" } }]
+                  }
+                ]
+              }
+            },
+            {
               "name": "v8js.memory.heap.space.available_size",
               "unit": "By",
               "sum": {

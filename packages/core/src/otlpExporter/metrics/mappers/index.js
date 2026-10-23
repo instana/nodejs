@@ -8,7 +8,7 @@ const runtimeMetricsMappings = require('./runtimeMetricsMappings');
 
 const allMappings = [
   runtimeMetricsMappings
-  // future: httpMetricsMappings,
+  // extend with other mappings as needed
 ];
 
 module.exports = { allMappings };

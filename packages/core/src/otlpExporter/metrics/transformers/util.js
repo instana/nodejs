@@ -6,16 +6,9 @@
 
 const { POINT_TYPES, METRIC_TYPES, OTLP_AGGREGATION_TEMPORALITY } = require('../constants');
 
-/**
- * @typedef {import('../mappers/runtimeMetricsMappings').MetricMapping} MetricMapping
- */
+/** @typedef {import('../mappers/runtimeMetricsMappings').MetricMapping} MetricMapping */
 
-/**
- * Converts a primitive value into an OTLP-compliant typed value container.
- *
- * @param {any} val
- * @returns {Record<string, any>}
- */
+/** @param {any} val */
 function toOtlpAttributeValue(val) {
   if (typeof val === 'number') {
     return Number.isInteger(val) ? { intValue: val } : { doubleValue: val };
@@ -26,55 +19,55 @@ function toOtlpAttributeValue(val) {
   return { stringValue: String(val ?? '') };
 }
 
-/**
- * @param {Record<string, any>} [attributes={}]
- * @returns {Array<{ key: string, value: Record<string, any> }>}
- */
+/** @param {Record<string, any>} [attributes={}] */
 function formatAttributes(attributes = {}) {
   const entries = Object.entries(attributes);
   const result = new Array(entries.length);
 
   for (let i = 0; i < entries.length; i++) {
     const [key, val] = entries[i];
-    result[i] = {
-      key,
-      value: toOtlpAttributeValue(val)
-    };
+    result[i] = { key, value: toOtlpAttributeValue(val) };
   }
 
   return result;
 }
 
-/**
- * @param {any} value
- * @returns {Record<string, any>}
- */
+/** @param {number} value */
 function toOtlpNumericField(value) {
-  if (typeof value === 'number') {
-    return Number.isInteger(value) ? { asInt: value } : { asDouble: value };
-  }
-  if (value && typeof value === 'object' && ('count' in value || 'sum' in value)) {
-    return { count: value.count, sum: value.sum };
-  }
-  return { asDouble: Number(value) };
+  return Number.isInteger(value) ? { asInt: value } : { asDouble: value };
 }
 
 /**
  * @param {Array<{ attributes: Record<string, any>, value: any }>} rawPoints
  * @param {number} timeUnixNano
- * @returns {Array<Record<string, any>>}
+ * @param {string} type
  */
-function buildDataPoints(rawPoints, timeUnixNano) {
+function buildDataPoints(rawPoints, timeUnixNano, type) {
   const timeStr = String(timeUnixNano);
   const result = new Array(rawPoints.length);
 
   for (let i = 0; i < rawPoints.length; i++) {
     const { value, attributes } = rawPoints[i];
-    result[i] = {
-      ...toOtlpNumericField(value),
-      timeUnixNano: timeStr,
-      attributes: formatAttributes(attributes)
-    };
+    const formattedAttributes = formatAttributes(attributes);
+
+    if (type === METRIC_TYPES.HISTOGRAM) {
+      // OTLP histogram data points require bucketCounts and explicitBounds even for a
+      // degenerate single-bucket histogram (no explicit boundaries = one catch-all bucket).
+      result[i] = {
+        sum: value,
+        count: 1,
+        bucketCounts: [1],
+        explicitBounds: [],
+        timeUnixNano: timeStr,
+        attributes: formattedAttributes
+      };
+    } else {
+      result[i] = {
+        ...toOtlpNumericField(value),
+        timeUnixNano: timeStr,
+        attributes: formattedAttributes
+      };
+    }
   }
 
   return result;
@@ -83,7 +76,6 @@ function buildDataPoints(rawPoints, timeUnixNano) {
 /**
  * @param {Record<string, any>} payload
  * @param {string} path
- * @returns {any}
  */
 function resolvePath(payload, path) {
   if (!path) return undefined;
@@ -93,7 +85,6 @@ function resolvePath(payload, path) {
 /**
  * @param {import('../mappers/runtimeMetricsMappings').HeapSpaceMapping} mapping
  * @param {any} raw
- * @returns {Array<{ attributes: Record<string, any>, value: any }> | null}
  */
 function resolveHeapSpacePoints(mapping, raw) {
   if (!raw || typeof raw !== 'object') return null;
@@ -116,10 +107,9 @@ function resolveHeapSpacePoints(mapping, raw) {
 
 /**
  * @param {import('../mappers/runtimeMetricsMappings').SinglePointMapping |
- *  import('../mappers/runtimeMetricsMappings').HistogramMapping} mapping
+ *   import('../mappers/runtimeMetricsMappings').HistogramMapping} mapping
  * @param {any} raw
  * @param {Record<string, any>} payload
- * @returns {Array<{ attributes: Record<string, any>, value: any }> | null}
  */
 function resolveScalarValue(mapping, raw, payload) {
   if (!mapping.transform && typeof raw !== 'number') return null;
@@ -128,42 +118,26 @@ function resolveScalarValue(mapping, raw, payload) {
 
   if (value == null || Number.isNaN(value)) return null;
 
-  const attributes = mapping.attributes ?? {};
-
-  if (mapping.pointType === POINT_TYPES.HISTOGRAM) {
-    return [{ attributes, value: { count: 1, sum: value } }];
-  }
-
-  return [{ attributes, value }];
+  return [{ attributes: mapping.attributes ?? {}, value }];
 }
 
 /**
  * @param {MetricMapping} mapping
  * @param {Record<string, any>} payload
- * @returns {Array<{ attributes: Record<string, any>, value: any }> | null}
  */
 function resolveDataPoints(mapping, payload) {
   const raw = resolvePath(payload, mapping.instana);
 
   if (mapping.pointType === POINT_TYPES.HEAP_SPACE) {
-    return resolveHeapSpacePoints(
-      /** @type {import('../mappers/runtimeMetricsMappings').HeapSpaceMapping} */ (mapping),
-      raw
-    );
+    return resolveHeapSpacePoints(/** @type {any} */ (mapping), raw);
   }
 
-  return resolveScalarValue(
-    /** @type {import('../mappers/runtimeMetricsMappings').SinglePointMapping
-     * | import('../mappers/runtimeMetricsMappings').HistogramMapping} */ (mapping),
-    raw,
-    payload
-  );
+  return resolveScalarValue(/** @type {any} */ (mapping), raw, payload);
 }
 
 /**
- * @param {string} type - One of METRIC_TYPES
+ * @param {string} type
  * @param {Array<Record<string, any>>} dataPoints
- * @returns {Record<string, any>}
  */
 function buildMetricEnvelope(type, dataPoints) {
   switch (type) {
@@ -193,7 +167,6 @@ function buildMetricEnvelope(type, dataPoints) {
 /**
  * @param {Record<string, any>} metricsPayload
  * @param {{ metricMappings: MetricMapping[] }} mapper
- * @returns {Array<Record<string, any>>} OTLP metric objects
  */
 function extractMappedMetrics(metricsPayload, mapper) {
   if (!metricsPayload || !Array.isArray(mapper?.metricMappings)) {
@@ -213,7 +186,7 @@ function extractMappedMetrics(metricsPayload, mapper) {
       result.push({
         name: mapping.name,
         unit: mapping.unit,
-        ...buildMetricEnvelope(mapping.type, buildDataPoints(rawDataPoints, timeUnixNano))
+        ...buildMetricEnvelope(mapping.type, buildDataPoints(rawDataPoints, timeUnixNano, mapping.type))
       });
     }
   }
@@ -221,10 +194,7 @@ function extractMappedMetrics(metricsPayload, mapper) {
   return result;
 }
 
-/**
- * @param {number} [timestampMs]
- * @returns {number}
- */
+/** @param {number} [timestampMs] */
 function toTimeUnixNano(timestampMs) {
   return (timestampMs ?? Date.now()) * 1e6;
 }

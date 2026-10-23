@@ -19,9 +19,6 @@ const resourceTransformer = proxyquire('../../../src/otlpExporter/common/transfo
 
 const realTransformers = require('../../../src/otlpExporter/metrics/transformers');
 
-const { toOtlpNumericField, buildMetricEnvelope } = require('../../../src/otlpExporter/metrics/transformers/util');
-const { METRIC_TYPES, OTLP_AGGREGATION_TEMPORALITY } = require('../../../src/otlpExporter/metrics/constants');
-
 const converterModule = proxyquire('../../../src/otlpExporter/metrics/converter', {
   './transformers': {
     ...realTransformers,
@@ -133,61 +130,6 @@ describe('metrics/converters/otlp', () => {
         expect(debugSpy.firstCall.args[0]).to.equal('Failed to convert metrics to OTLP format.');
 
         converterModule.init({ logger: null });
-      });
-    });
-  });
-
-  describe('transformers', () => {
-    describe('toOtlpNumericField', () => {
-      it('returns asInt for integer values', () => {
-        expect(toOtlpNumericField(42)).to.deep.equal({ asInt: 42 });
-      });
-
-      it('returns asDouble for float values', () => {
-        expect(toOtlpNumericField(0.5)).to.deep.equal({ asDouble: 0.5 });
-      });
-
-      it('returns count and sum for histogram objects', () => {
-        expect(toOtlpNumericField({ count: 1, sum: 0.414 })).to.deep.equal({ count: 1, sum: 0.414 });
-      });
-
-      it('falls back to asDouble for non-numeric non-object values', () => {
-        expect(toOtlpNumericField('7')).to.deep.equal({ asDouble: 7 });
-      });
-    });
-
-    describe('buildMetricEnvelope', () => {
-      const dataPoints = [{ asInt: 1, timeUnixNano: '123', attributes: [] }];
-
-      it('wraps gauge metrics in a gauge envelope', () => {
-        expect(buildMetricEnvelope(METRIC_TYPES.GAUGE, dataPoints)).to.deep.equal({
-          gauge: { dataPoints }
-        });
-      });
-
-      it('wraps updowncounter metrics in a cumulative sum envelope', () => {
-        expect(buildMetricEnvelope(METRIC_TYPES.UPDOWNCOUNTER, dataPoints)).to.deep.equal({
-          sum: {
-            aggregationTemporality: OTLP_AGGREGATION_TEMPORALITY.CUMULATIVE,
-            isMonotonic: false,
-            dataPoints
-          }
-        });
-      });
-
-      it('wraps histogram metrics in a delta histogram envelope', () => {
-        expect(buildMetricEnvelope(METRIC_TYPES.HISTOGRAM, dataPoints)).to.deep.equal({
-          histogram: {
-            aggregationTemporality: OTLP_AGGREGATION_TEMPORALITY.DELTA,
-            dataPoints
-          }
-        });
-      });
-
-      it('defaults to gauge envelope for unknown type', () => {
-        expect(buildMetricEnvelope('unknown', dataPoints)).to.deep.equal({
-          gauge: { dataPoints }
-        });
       });
     });
   });

@@ -14,8 +14,6 @@ function msToSeconds(ms) {
 }
 
 /**
- * Computes the mean of a sum over a count and converts the result from ms to seconds.
- *
  * @param {any} sum - The total sum value (ms)
  * @param {any} num - The sample count
  * @returns {number | undefined}

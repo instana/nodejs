@@ -75,9 +75,7 @@ describe('otlpExporter/metrics/mappers/runtimeMetrics', () => {
 
     it('resolves to a histogram data point from a full payload', () => {
       const points = resolveDataPoints(mapping, { gc: { gcPause: 414 } });
-      expect(points).to.deep.equal([
-        { attributes: { [V8.attributes.GC_TYPE]: 'all' }, value: { count: 1, sum: 0.414 } }
-      ]);
+      expect(points).to.deep.equal([{ attributes: { [V8.attributes.GC_TYPE]: 'all' }, value: 0.414 }]);
     });
 
     it('returns null when gc is missing', () => {

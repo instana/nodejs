@@ -60,8 +60,8 @@ const OTLP_NODEJS = OTLP.metrics.nodejs;
 /** @type {MetricMapping[]} */
 const v8Mappings = [
   {
-    pointType: POINT_TYPES.HISTOGRAM,
     name: OTLP_V8.GC_DURATION,
+    pointType: POINT_TYPES.HISTOGRAM,
     unit: METRIC_UNITS.SECONDS,
     type: METRIC_TYPES.HISTOGRAM,
     instana: 'gc.gcPause',
@@ -70,8 +70,8 @@ const v8Mappings = [
   },
 
   {
-    pointType: POINT_TYPES.HEAP_SPACE,
     name: OTLP_V8.HEAP_SPACE_AVAILABLE_SIZE,
+    pointType: POINT_TYPES.HEAP_SPACE,
     unit: METRIC_UNITS.BYTES,
     type: METRIC_TYPES.UPDOWNCOUNTER,
     instana: 'heapSpaces',
@@ -80,8 +80,8 @@ const v8Mappings = [
   },
 
   {
-    pointType: POINT_TYPES.HEAP_SPACE,
     name: OTLP_V8.HEAP_SPACE_PHYSICAL_SIZE,
+    pointType: POINT_TYPES.HEAP_SPACE,
     unit: METRIC_UNITS.BYTES,
     type: METRIC_TYPES.UPDOWNCOUNTER,
     instana: 'heapSpaces',
@@ -90,8 +90,8 @@ const v8Mappings = [
   },
 
   {
-    pointType: POINT_TYPES.HEAP_SPACE,
     name: OTLP_V8.HEAP_SPACE_SIZE,
+    pointType: POINT_TYPES.HEAP_SPACE,
     unit: METRIC_UNITS.BYTES,
     type: METRIC_TYPES.UPDOWNCOUNTER,
     instana: 'heapSpaces',
@@ -100,8 +100,8 @@ const v8Mappings = [
   },
 
   {
-    pointType: POINT_TYPES.HEAP_SPACE,
     name: OTLP_V8.HEAP_USED,
+    pointType: POINT_TYPES.HEAP_SPACE,
     unit: METRIC_UNITS.BYTES,
     type: METRIC_TYPES.UPDOWNCOUNTER,
     instana: 'heapSpaces',
@@ -110,8 +110,8 @@ const v8Mappings = [
   },
 
   {
-    pointType: POINT_TYPES.SINGLE,
     name: OTLP_V8.RESOURCE_ACTIVE,
+    pointType: POINT_TYPES.SINGLE,
     unit: METRIC_UNITS.RESOURCES,
     type: METRIC_TYPES.GAUGE,
     instana: 'activeResources.count',
@@ -122,8 +122,8 @@ const v8Mappings = [
 /** @type {MetricMapping[]} */
 const nodejsMappings = [
   {
-    pointType: POINT_TYPES.SINGLE,
     name: OTLP_NODEJS.EVENTLOOP_DELAY_MIN,
+    pointType: POINT_TYPES.SINGLE,
     unit: METRIC_UNITS.SECONDS,
     type: METRIC_TYPES.GAUGE,
     instana: 'libuv.min',
@@ -132,8 +132,8 @@ const nodejsMappings = [
   },
 
   {
-    pointType: POINT_TYPES.SINGLE,
     name: OTLP_NODEJS.EVENTLOOP_DELAY_MAX,
+    pointType: POINT_TYPES.SINGLE,
     unit: METRIC_UNITS.SECONDS,
     type: METRIC_TYPES.GAUGE,
     instana: 'libuv.max',
@@ -142,8 +142,8 @@ const nodejsMappings = [
   },
 
   {
-    pointType: POINT_TYPES.SINGLE,
     name: OTLP_NODEJS.EVENTLOOP_DELAY_MEAN,
+    pointType: POINT_TYPES.SINGLE,
     unit: METRIC_UNITS.SECONDS,
     type: METRIC_TYPES.GAUGE,
     instana: 'libuv',
