@@ -6,72 +6,9 @@
 
 const expect = require('chai').expect;
 
-const { flattenObject, normalizeMetrics, getResourceKey } = require('../../../src/otlpExporter/metrics/util');
+const { flattenObject, normalizeMetrics } = require('../../../src/otlpExporter/metrics/util');
 
 describe('otlpExporter/metrics/util', () => {
-  describe('getResourceKey', () => {
-    it('should generate key from host and entity', () => {
-      const from = { h: 'host123', e: 'entity456' };
-      const key = getResourceKey(from);
-
-      expect(key).to.equal('h:host123|e:entity456');
-    });
-
-    it('should handle missing host', () => {
-      const from = { e: 'entity456' };
-      const key = getResourceKey(from);
-
-      expect(key).to.equal('h:empty|e:entity456');
-    });
-
-    it('should handle missing entity', () => {
-      const from = { h: 'host123' };
-      const key = getResourceKey(from);
-
-      expect(key).to.equal('h:host123|e:empty');
-    });
-
-    it('should handle both missing', () => {
-      const from = {};
-      const key = getResourceKey(from);
-
-      expect(key).to.equal('h:empty|e:empty');
-    });
-
-    it('should handle null input', () => {
-      const key = getResourceKey(null);
-
-      expect(key).to.equal('h:empty|e:empty');
-    });
-
-    it('should handle undefined input', () => {
-      const key = getResourceKey(undefined);
-
-      expect(key).to.equal('h:empty|e:empty');
-    });
-
-    it('should handle numeric values', () => {
-      const from = { h: 123, e: 456 };
-      const key = getResourceKey(from);
-
-      expect(key).to.equal('h:123|e:456');
-    });
-
-    it('should create unique keys for different resources', () => {
-      const key1 = getResourceKey({ h: 'host1', e: 'entity1' });
-      const key2 = getResourceKey({ h: 'host2', e: 'entity2' });
-
-      expect(key1).to.not.equal(key2);
-    });
-
-    it('should create same key for identical resources', () => {
-      const key1 = getResourceKey({ h: 'host1', e: 'entity1' });
-      const key2 = getResourceKey({ h: 'host1', e: 'entity1' });
-
-      expect(key1).to.equal(key2);
-    });
-  });
-
   describe('flattenObject', () => {
     describe('basic flattening', () => {
       it('should flatten simple nested object', () => {

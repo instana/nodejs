@@ -4,4 +4,4 @@
 
 'use strict';
 
-exports.INSTRUMENTATION_SCOPE_NAME = '@instana/collector';
+exports.INSTRUMENTATION_SCOPE_NAME = 'instana.nodejs.tracer';
