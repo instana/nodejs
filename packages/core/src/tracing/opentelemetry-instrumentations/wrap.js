@@ -55,6 +55,7 @@ function preInitInstrumentations() {
   Object.values(instrumentations).forEach(instr => {
     const instrumentation = getInstrumentation(instr);
     instrumentation.preInit?.();
+    instr.isActive = instrumentation.isActive ? instrumentation.isActive() : true;
   });
 }
 
@@ -62,6 +63,7 @@ function initInstrumentations(cls) {
   Object.values(instrumentations).forEach(instr => {
     const instrumentation = getInstrumentation(instr);
     instrumentation.init?.({ cls, api });
+    instr.isActive = instrumentation.isActive ? instrumentation.isActive() : true;
   });
 }
 
@@ -252,8 +254,8 @@ module.exports.init = (_config, cls) => {
 
     const instrumentation = instrumentations[instrumentationName];
 
-    // CASE: we don't support this instrumentation
-    if (!instrumentation || !instrumentation.module) {
+    // CASE: we don't support this instrumentation or the underlying package is not active
+    if (!instrumentation || !instrumentation.module || !instrumentation.isActive) {
       return orig.apply(this, arguments);
     }
 
