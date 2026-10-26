@@ -187,7 +187,7 @@
     "event-loop-stats": {
       "nan": "2.27.0"
     },
-    "fast-uri": "4.2.1",
+    "fast-uri": "4.2.3",
     "fast-xml-parser": "5.7.0",
     "flatted": "3.4.2",
     "follow-redirects": "1.16.0",

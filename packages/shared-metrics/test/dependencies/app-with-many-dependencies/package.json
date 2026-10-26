@@ -42,7 +42,7 @@
     "html-webpack-plugin": "^5.6.3"
   },
   "overrides": {
-    "fast-uri": "^4.2.1",
+    "fast-uri": "^4.2.3",
     "qs": "^6.16.0",
     "webpack-dev-middleware": "^7.4.6",
     "uuid": "^11.1.1",
