@@ -875,13 +875,18 @@
     "core": false,
     "versions": [
       {
-        "v": "12.7.9"
+        "v": "12.7.9",
+        "node": ">=20",
+        "overrides": {
+          "@azure/msal-node": "7.1.0"
+        }
       },
       {
         "v": "10.0.4",
         "overrides": {
           "uuid": "^11.1.1",
-          "@azure/identity": "^4.2.1"
+          "@azure/identity": "^4.2.1",
+          "@azure/msal-node": "7.1.0"
         }
       }
     ],
@@ -1189,10 +1194,16 @@
     "versions": [
       {
         "v": "20.3.8",
-        "node": ">=22"
+        "node": ">=22",
+        "overrides": {
+          "@azure/msal-node": "7.1.0"
+        }
       },
       {
-        "v": "19.2.2"
+        "v": "19.2.2",
+        "overrides": {
+          "@azure/msal-node": "7.1.0"
+        }
       }
     ],
     "group": "databases"

@@ -18,12 +18,14 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "express": "^4.22.2",
-    "fastify": "^5.12.2",
+    "express": "^4.22.3",
+    "fastify": "^5.12.6",
     "koa": "^3.2.1"
   },
   "overrides": {
     "qs": "6.16.0",
-    "fast-uri": "^4.2.3"
+    "fast-uri": "^4.2.3",
+    "body-parser": "^1.20.9",
+    "proxy-addr": "^2.0.8"
   }
 }

@@ -102,7 +102,7 @@
     "admin-plugin-healthcheck": "1.1.0",
     "aws-sdk": "2.1693.0",
     "basic-auth-parser": "0.0.2",
-    "body-parser": "2.3.0",
+    "body-parser": "2.4.0",
     "bunyan": "1.8.15",
     "c8": "^10.1.3",
     "chai": "4.3.6",
@@ -164,7 +164,9 @@
   },
   "overrides": {
     "@as-integrations/express5": {
-      "@apollo/server": "5.5.1"
+      "@apollo/server": "5.5.1",
+      "@graphql-tools/utils": "12.0.2",
+      "proxy-addr": "2.0.8"
     },
     "@commitlint/cli": {
       "semver": "7.8.5"
@@ -173,14 +175,16 @@
     "@grpc/grpc-js": "1.14.5",
     "@protobufjs/utf8": "1.1.1",
     "admin": {
-      "bootstrap": "4.3.1"
+      "bootstrap": "4.3.1",
+      "proxy-addr": "2.0.8"
     },
     "axios": "1.20.0",
-    "body-parser": "2.3.0",
+    "body-parser": "2.4.0",
     "braces": "3.0.3",
     "depcheck": {
       "brace-expansion": "2.1.7",
-      "postcss": "8.5.23"
+      "postcss": "8.5.23",
+      "source-map-js": "1.2.2"
     },
     "diff": "5.2.2",
     "elliptic": "6.6.1",
@@ -190,15 +194,15 @@
     "fast-uri": "4.2.3",
     "fast-xml-parser": "5.7.0",
     "flatted": "3.4.2",
-    "follow-redirects": "1.16.0",
+    "follow-redirects": "1.16.1",
     "form-data": "4.0.6",
     "gcstats.js": {
       "nan": "2.27.0"
     },
-    "handlebars": "4.7.9",
+    "handlebars": "4.7.10",
     "hbs": "4.3.1",
     "immutable": "5.1.8",
-    "ip-address": "10.7.1",
+    "ip-address": "10.7.4",
     "js-yaml": "4.3.2",
     "jsonwebtoken": "9.0.2",
     "lerna": {
@@ -206,7 +210,8 @@
       "@octokit/request": "8.4.1",
       "@octokit/request-error": "5.1.1",
       "micromatch": "4.0.8",
-      "nx": "23.1.1",
+      "nx": "23.2.1",
+      "postcss-selector-parser": "7.1.7",
       "smol-toml": "1.7.1",
       "brace-expansion": "5.0.12",
       "tar": "6.2.1"
@@ -220,7 +225,7 @@
       "diff": "5.2.2",
       "minimatch": "3.1.5",
       "nanoid": "3.3.18",
-      "serialize-javascript": "7.0.5",
+      "serialize-javascript": "7.1.4",
       "yargs": "17.7.3"
     },
     "morgan": "1.12.1",
@@ -236,8 +241,8 @@
       "brace-expansion": "5.0.12",
       "cipher-base": "1.0.5",
       "debug": "2.6.9",
-      "pbkdf2": "3.1.3",
-      "shell-quote": "1.9.0",
+      "pbkdf2": "3.1.7",
+      "shell-quote": "1.12.0",
       "trim-newlines": "3.0.1"
     },
     "prismjs": "1.30.0",
@@ -250,7 +255,7 @@
     "tar-fs": "3.1.3",
     "tmp": "0.2.7",
     "trim": "0.0.3",
-    "undici": "6.29.0",
+    "undici": "6.29.1",
     "underscore": "1.13.8",
     "uuid": "^11.1.1",
     "yaml": "^2.8.3"
