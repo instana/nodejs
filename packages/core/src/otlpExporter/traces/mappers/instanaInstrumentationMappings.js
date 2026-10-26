@@ -180,7 +180,10 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.PG]: {
-    spanName: data => `pg.${data.stmt?.split(/\s+/)[0]?.toUpperCase()}`,
+    spanName: data => {
+      const operation = data.stmt ? data.stmt.trim().split(/\s+/)[0]?.toUpperCase() : undefined;
+      return operation || data.db || 'postgresql';
+    },
     spanAttributes: [
       { otlp: OTLP.traces.database.SYSTEM_NAME, value: 'postgresql' },
       { otlp: OTLP.traces.database.QUERY_TEXT, instana: 'stmt' },
@@ -193,7 +196,10 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.MYSQL]: {
-    spanName: data => `mysql.${data.stmt?.split(/\s+/)[0]?.toUpperCase()}`,
+    spanName: data => {
+      const operation = data.stmt ? data.stmt.trim().split(/\s+/)[0]?.toUpperCase() : undefined;
+      return operation || data.db || 'mysql';
+    },
     spanAttributes: [
       { otlp: OTLP.traces.database.SYSTEM_NAME, value: INSTRUMENTATION_TYPES.MYSQL },
       { otlp: OTLP.traces.database.QUERY_TEXT, instana: 'stmt' },
@@ -206,7 +212,10 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.MSSQL]: {
-    spanName: data => `mssql.${data.stmt?.split(/\s+/)[0]?.toUpperCase()}`,
+    spanName: data => {
+      const operation = data.stmt ? data.stmt.trim().split(/\s+/)[0]?.toUpperCase() : undefined;
+      return operation || data.db || 'mssql';
+    },
     spanAttributes: [
       { otlp: OTLP.traces.database.SYSTEM_NAME, value: INSTRUMENTATION_TYPES.MSSQL },
       { otlp: OTLP.traces.database.QUERY_TEXT, instana: 'stmt' },
@@ -219,7 +228,10 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.DB2]: {
-    spanName: data => `db2.${data.stmt?.split(/\s+/)[0]?.toUpperCase()}`,
+    spanName: data => {
+      const operation = data.stmt ? data.stmt.trim().split(/\s+/)[0]?.toUpperCase() : undefined;
+      return operation || data.db || 'db2';
+    },
     spanAttributes: [
       { otlp: OTLP.traces.database.SYSTEM_NAME, value: 'ibm.db2' },
       { otlp: OTLP.traces.database.QUERY_TEXT, instana: 'stmt' },
@@ -228,7 +240,13 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.MONGO]: {
-    spanName: data => `mongodb.${data.command}`,
+    spanName: data => {
+      const target = data.collection || data.namespace;
+      if (data.command && target) {
+        return `${data.command} ${target}`;
+      }
+      return data.command || target || 'mongodb';
+    },
     spanAttributes: [
       { otlp: OTLP.traces.database.SYSTEM_NAME, value: 'mongodb' },
       { otlp: OTLP.traces.database.NAMESPACE, instana: 'namespace' },
@@ -242,7 +260,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.REDIS]: {
-    spanName: data => `redis.${data.operation}`,
+    spanName: data => data.operation || data.command || 'redis',
     spanAttributes: [
       { otlp: OTLP.traces.database.SYSTEM_NAME, value: INSTRUMENTATION_TYPES.REDIS },
       { otlp: OTLP.traces.database.OPERATION_NAME, instana: 'operation' },
@@ -254,7 +272,15 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.COUCHBASE]: {
-    spanName: data => `couchbase.${data.stmt?.split(/\s+/)[0]?.toUpperCase()}`,
+    spanName: data => {
+      const stmt = data.sql || data.stmt;
+      const operation = stmt ? stmt.trim().split(/\s+/)[0]?.toUpperCase() : undefined;
+      const target = data.bucket;
+      if (operation && target) {
+        return `${operation} ${target}`;
+      }
+      return operation || target || 'couchbase';
+    },
     spanAttributes: [
       { otlp: OTLP.traces.database.SYSTEM_NAME, value: [INSTRUMENTATION_TYPES.COUCHBASE] },
       { otlp: OTLP.traces.database.NAMESPACE, instana: 'bucket' },
@@ -264,7 +290,13 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.ELASTICSEARCH]: {
-    spanName: data => `elasticsearch.${data.action}`,
+    spanName: data => {
+      const target = data.index || data.cluster;
+      if (data.action && target) {
+        return `${data.action} ${target}`;
+      }
+      return data.action || target || 'elasticsearch';
+    },
     spanAttributes: [
       { otlp: OTLP.traces.database.SYSTEM_NAME, value: INSTRUMENTATION_TYPES.ELASTICSEARCH },
       { otlp: OTLP.traces.database.OPERATION_NAME, instana: 'action' },
@@ -279,7 +311,13 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.DYNAMODB]: {
-    spanName: data => `dynamodb.${data.operation}`,
+    spanName: data => {
+      const target = data.table;
+      if (data.operation && target) {
+        return `${data.operation} ${target}`;
+      }
+      return data.operation || target || 'dynamodb';
+    },
     spanAttributes: [
       { otlp: OTLP.traces.database.SYSTEM_NAME, value: 'aws.dynamodb' },
       { otlp: OTLP.traces.rpc.SYSTEM_NAME, value: 'aws-api' },
@@ -291,7 +329,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.MEMCACHED]: {
-    spanName: data => `memcached.${data.operation}`,
+    spanName: data => data.operation || data.command || 'memcached',
     spanAttributes: [
       { otlp: OTLP.traces.database.SYSTEM_NAME, value: INSTRUMENTATION_TYPES.MEMCACHED },
       { otlp: OTLP.traces.database.CONNECTION_STRING, instana: 'connection' },
@@ -304,7 +342,13 @@ const instrumentationMappings = {
   // Note: There is no official OpenTelemetry semantic convention for Prisma, and it is not covered in our RFD either.
   // We can therefore adopt a generic database convention, using the Prisma provider as the database system identifier.
   [INSTRUMENTATION_TYPES.PRISMA]: {
-    spanName: data => `prisma.${data.action}`,
+    spanName: data => {
+      const target = data.model;
+      if (data.action && target) {
+        return `${data.action} ${target}`;
+      }
+      return data.action || target || 'prisma';
+    },
     spanAttributes: [
       { otlp: OTLP.traces.database.SYSTEM_NAME, instana: 'provider' },
       { otlp: OTLP.traces.database.COLLECTION_NAME, instana: 'model' },

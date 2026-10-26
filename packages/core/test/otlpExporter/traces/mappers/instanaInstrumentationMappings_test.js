@@ -85,7 +85,27 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       };
 
       const result = spanName(span);
-      expect(result).to.equal('pg.SELECT');
+      expect(result).to.equal('SELECT');
+    });
+
+    it('should fallback PostgreSQL span name to db or postgresql when statement is missing', () => {
+      const spanWithDb = {
+        n: 'postgres',
+        data: {
+          pg: {
+            db: 'my_database'
+          }
+        }
+      };
+      expect(spanName(spanWithDb)).to.equal('my_database');
+
+      const spanWithoutDb = {
+        n: 'postgres',
+        data: {
+          pg: {}
+        }
+      };
+      expect(spanName(spanWithoutDb)).to.equal('postgresql');
     });
 
     it('should generate MySQL span name from statement', () => {
@@ -99,11 +119,61 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       };
 
       const result = spanName(span);
-      expect(result).to.equal('mysql.INSERT');
+      expect(result).to.equal('INSERT');
     });
 
-    it('should generate MongoDB span name', () => {
+    it('should generate MSSQL span name from statement', () => {
       const span = {
+        n: 'mssql',
+        data: {
+          mssql: {
+            stmt: 'SELECT * FROM users'
+          }
+        }
+      };
+
+      const result = spanName(span);
+      expect(result).to.equal('SELECT');
+    });
+
+    it('should generate DB2 span name from statement', () => {
+      const span = {
+        n: 'db2',
+        data: {
+          db2: {
+            stmt: 'SELECT * FROM users'
+          }
+        }
+      };
+
+      const result = spanName(span);
+      expect(result).to.equal('SELECT');
+    });
+
+    it('should generate MongoDB span name with operation and collection or namespace', () => {
+      const spanWithCollection = {
+        n: 'mongo',
+        data: {
+          mongo: {
+            command: 'find',
+            collection: 'users'
+          }
+        }
+      };
+      expect(spanName(spanWithCollection)).to.equal('find users');
+
+      const spanWithNamespace = {
+        n: 'mongo',
+        data: {
+          mongo: {
+            command: 'find',
+            namespace: 'shopDb.users'
+          }
+        }
+      };
+      expect(spanName(spanWithNamespace)).to.equal('find shopDb.users');
+
+      const spanCommandOnly = {
         n: 'mongo',
         data: {
           mongo: {
@@ -111,9 +181,15 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
           }
         }
       };
+      expect(spanName(spanCommandOnly)).to.equal('find');
 
-      const result = spanName(span);
-      expect(result).to.equal('mongodb.find');
+      const spanFallback = {
+        n: 'mongo',
+        data: {
+          mongo: {}
+        }
+      };
+      expect(spanName(spanFallback)).to.equal('mongodb');
     });
 
     it('should generate Redis span name', () => {
@@ -127,11 +203,68 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
       };
 
       const result = spanName(span);
-      expect(result).to.equal('redis.get');
+      expect(result).to.equal('get');
+    });
+
+    it('should generate Couchbase span name', () => {
+      const spanWithBucket = {
+        n: 'couchbase',
+        data: {
+          couchbase: {
+            sql: 'SELECT * FROM users',
+            bucket: 'users'
+          }
+        }
+      };
+      expect(spanName(spanWithBucket)).to.equal('SELECT users');
+
+      const spanWithoutBucket = {
+        n: 'couchbase',
+        data: {
+          couchbase: {
+            stmt: 'SELECT * FROM users'
+          }
+        }
+      };
+      expect(spanName(spanWithoutBucket)).to.equal('SELECT');
+    });
+
+    it('should generate Elasticsearch span name', () => {
+      const spanWithIndex = {
+        n: 'elasticsearch',
+        data: {
+          elasticsearch: {
+            action: 'search',
+            index: 'my-index'
+          }
+        }
+      };
+      expect(spanName(spanWithIndex)).to.equal('search my-index');
+
+      const spanActionOnly = {
+        n: 'elasticsearch',
+        data: {
+          elasticsearch: {
+            action: 'search'
+          }
+        }
+      };
+      expect(spanName(spanActionOnly)).to.equal('search');
     });
 
     it('should generate DynamoDB span name', () => {
-      const span = {
+      const spanWithTable = {
+        n: 'dynamodb',
+        data: {
+          dynamodb: {
+            operation: 'GetItem',
+            table: 'users'
+          }
+        }
+      };
+      expect(spanName(spanWithTable)).to.equal('GetItem users');
+
+      const spanWithoutTable = {
         n: 'dynamodb',
         data: {
           dynamodb: {
@@ -139,9 +272,42 @@ describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
           }
         }
       };
+      expect(spanName(spanWithoutTable)).to.equal('GetItem');
+    });
 
-      const result = spanName(span);
-      expect(result).to.equal('dynamodb.GetItem');
+    it('should generate Memcached span name', () => {
+      const span = {
+        n: 'memcached',
+        data: {
+          memcached: {
+            operation: 'get'
+          }
+        }
+      };
+      expect(spanName(span)).to.equal('get');
+    });
+
+    it('should generate Prisma span name', () => {
+      const spanWithModel = {
+        n: 'prisma',
+        data: {
+          prisma: {
+            action: 'findMany',
+            model: 'User'
+          }
+        }
+      };
+      expect(spanName(spanWithModel)).to.equal('findMany User');
+
+      const spanActionOnly = {
+        n: 'prisma',
+        data: {
+          prisma: {
+            action: 'findMany'
+          }
+        }
+      };
+      expect(spanName(spanActionOnly)).to.equal('findMany');
     });
 
     it('should generate S3 span name', () => {
