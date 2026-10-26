@@ -16,7 +16,8 @@ const {
   toBoolean,
   getRegionFromArn,
   getAccountIdFromArn,
-  buildFullUrl
+  buildFullUrl,
+  getSqlOperation
 } = require('./util');
 
 const ctx = require('../../common/context');
@@ -180,10 +181,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.PG]: {
-    spanName: data => {
-      const operation = data.stmt ? data.stmt.trim().split(/\s+/)[0]?.toUpperCase() : undefined;
-      return operation || data.db || 'postgresql';
-    },
+    spanName: data => getSqlOperation(data.stmt) || data.db || 'postgresql',
     spanAttributes: [
       { otlp: OTLP.traces.database.SYSTEM_NAME, value: 'postgresql' },
       { otlp: OTLP.traces.database.QUERY_TEXT, instana: 'stmt' },
@@ -196,10 +194,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.MYSQL]: {
-    spanName: data => {
-      const operation = data.stmt ? data.stmt.trim().split(/\s+/)[0]?.toUpperCase() : undefined;
-      return operation || data.db || 'mysql';
-    },
+    spanName: data => getSqlOperation(data.stmt) || data.db || INSTRUMENTATION_TYPES.MYSQL,
     spanAttributes: [
       { otlp: OTLP.traces.database.SYSTEM_NAME, value: INSTRUMENTATION_TYPES.MYSQL },
       { otlp: OTLP.traces.database.QUERY_TEXT, instana: 'stmt' },
@@ -212,10 +207,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.MSSQL]: {
-    spanName: data => {
-      const operation = data.stmt ? data.stmt.trim().split(/\s+/)[0]?.toUpperCase() : undefined;
-      return operation || data.db || 'mssql';
-    },
+    spanName: data => getSqlOperation(data.stmt) || data.db || INSTRUMENTATION_TYPES.MSSQL,
     spanAttributes: [
       { otlp: OTLP.traces.database.SYSTEM_NAME, value: INSTRUMENTATION_TYPES.MSSQL },
       { otlp: OTLP.traces.database.QUERY_TEXT, instana: 'stmt' },
@@ -228,10 +220,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.DB2]: {
-    spanName: data => {
-      const operation = data.stmt ? data.stmt.trim().split(/\s+/)[0]?.toUpperCase() : undefined;
-      return operation || data.db || 'db2';
-    },
+    spanName: data => getSqlOperation(data.stmt) || data.db || 'ibm.db2',
     spanAttributes: [
       { otlp: OTLP.traces.database.SYSTEM_NAME, value: 'ibm.db2' },
       { otlp: OTLP.traces.database.QUERY_TEXT, instana: 'stmt' },
@@ -260,7 +249,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.REDIS]: {
-    spanName: data => data.operation || data.command || 'redis',
+    spanName: data => data.operation || data.command || INSTRUMENTATION_TYPES.REDIS,
     spanAttributes: [
       { otlp: OTLP.traces.database.SYSTEM_NAME, value: INSTRUMENTATION_TYPES.REDIS },
       { otlp: OTLP.traces.database.OPERATION_NAME, instana: 'operation' },
@@ -273,13 +262,12 @@ const instrumentationMappings = {
 
   [INSTRUMENTATION_TYPES.COUCHBASE]: {
     spanName: data => {
-      const stmt = data.sql || data.stmt;
-      const operation = stmt ? stmt.trim().split(/\s+/)[0]?.toUpperCase() : undefined;
+      const operation = getSqlOperation(data.sql || data.stmt);
       const target = data.bucket;
       if (operation && target) {
         return `${operation} ${target}`;
       }
-      return operation || target || 'couchbase';
+      return operation || target || INSTRUMENTATION_TYPES.COUCHBASE;
     },
     spanAttributes: [
       { otlp: OTLP.traces.database.SYSTEM_NAME, value: [INSTRUMENTATION_TYPES.COUCHBASE] },
@@ -295,7 +283,7 @@ const instrumentationMappings = {
       if (data.action && target) {
         return `${data.action} ${target}`;
       }
-      return data.action || target || 'elasticsearch';
+      return data.action || target || INSTRUMENTATION_TYPES.ELASTICSEARCH;
     },
     spanAttributes: [
       { otlp: OTLP.traces.database.SYSTEM_NAME, value: INSTRUMENTATION_TYPES.ELASTICSEARCH },
@@ -316,7 +304,7 @@ const instrumentationMappings = {
       if (data.operation && target) {
         return `${data.operation} ${target}`;
       }
-      return data.operation || target || 'dynamodb';
+      return data.operation || target || INSTRUMENTATION_TYPES.DYNAMODB;
     },
     spanAttributes: [
       { otlp: OTLP.traces.database.SYSTEM_NAME, value: 'aws.dynamodb' },
@@ -329,7 +317,7 @@ const instrumentationMappings = {
   },
 
   [INSTRUMENTATION_TYPES.MEMCACHED]: {
-    spanName: data => data.operation || data.command || 'memcached',
+    spanName: data => data.operation || data.command || INSTRUMENTATION_TYPES.MEMCACHED,
     spanAttributes: [
       { otlp: OTLP.traces.database.SYSTEM_NAME, value: INSTRUMENTATION_TYPES.MEMCACHED },
       { otlp: OTLP.traces.database.CONNECTION_STRING, instana: 'connection' },
@@ -347,7 +335,7 @@ const instrumentationMappings = {
       if (data.action && target) {
         return `${data.action} ${target}`;
       }
-      return data.action || target || 'prisma';
+      return data.action || target || INSTRUMENTATION_TYPES.PRISMA;
     },
     spanAttributes: [
       { otlp: OTLP.traces.database.SYSTEM_NAME, instana: 'provider' },

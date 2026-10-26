@@ -183,6 +183,16 @@ const buildFullUrl = values => {
   return endpoints;
 };
 
+/**
+ * @param {string} stmt
+ * @returns {string | undefined}
+ */
+const getSqlOperation = stmt => {
+  if (typeof stmt !== 'string') return undefined;
+  const trimmed = stmt.trim();
+  return trimmed ? trimmed.split(/\s+/)[0]?.toUpperCase() : undefined;
+};
+
 module.exports = {
   toUpperCase,
   firstDefined,
@@ -196,5 +206,6 @@ module.exports = {
   toBoolean,
   getRegionFromArn,
   getAccountIdFromArn,
-  buildFullUrl
+  buildFullUrl,
+  getSqlOperation
 };
