@@ -62,5 +62,9 @@
   {
     "cve": "CVE-2026-23950",
     "alwaysOmit": true
+  },
+  {
+    "cve": "CVE-2026-93748",
+    "alwaysOmit": true
   }
 ]
