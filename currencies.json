@@ -1254,7 +1254,7 @@
     "core": false,
     "versions": [
       {
-        "v": "4.0.1",
+        "v": "4.1.0",
         "overrides": {
           "adm-zip": "^0.6.1"
         }
