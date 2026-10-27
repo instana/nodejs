@@ -74,5 +74,8 @@
   "optionalDependencies": {
     "event-loop-stats": "1.4.1",
     "gcstats.js": "1.0.0"
+  },
+  "gcstats.js": {
+    "nan": "2.27.0"
   }
 }
