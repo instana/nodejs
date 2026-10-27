@@ -37,7 +37,8 @@ describe('unannounced state', () => {
       unannouncedState = proxyquire('../../../../src/announceCycle/unannounced', {
         '@instana/core': {
           secrets: secretsStub,
-          tracing: tracingStub
+          tracing: tracingStub,
+          coreConfig
         },
         '../agent/opts': agentOptsStub,
         '../agentConnection': agentConnectionStub
@@ -2089,6 +2090,125 @@ describe('unannounced state', () => {
                 stackTrace: 'error'
               }
             });
+            done();
+          }
+        });
+      });
+    });
+
+    describe('applySamplingConfiguration', () => {
+      it('should apply sampling configuration from tracing.sampling', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            sampling: {
+              enable: true,
+              type: 'random',
+              threshold: 50,
+              precision: 2
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                sampling: {
+                  enable: true,
+                  type: 1,
+                  threshold: 50,
+                  precision: 2
+                }
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should apply sampling configuration from tracing.com.instana.tracing.sampling', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            'com.instana.tracing.sampling': {
+              enabled: true,
+              type: 'RANDOM',
+              threshold: 100,
+              precision: 4
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                sampling: {
+                  enable: true,
+                  type: 1,
+                  threshold: 100,
+                  precision: 4
+                }
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should apply sampling configuration from top-level sampling object', done => {
+        prepareAnnounceResponse({
+          sampling: {
+            enable: false,
+            threshold: 0
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                sampling: {
+                  enable: false,
+                  threshold: 0
+                }
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should ignore invalid sampling properties', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            sampling: {
+              enable: true,
+              type: 'INVALID_TYPE',
+              threshold: 'not-a-number',
+              precision: -5
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                sampling: {
+                  enable: true
+                }
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should not set sampling config when not provided by agent', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {}
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({});
             done();
           }
         });

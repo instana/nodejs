@@ -62,6 +62,15 @@ export interface InstanaBaseSpan {
     s?: number;
     d?: number;
   };
+  /** sampling metadata */
+  sm?: {
+    s?: number;
+    th?: number;
+    p?: number;
+  };
+  samplingType?: number;
+  samplingThreshold?: number;
+  samplingPrecision?: number;
   /** GraphQL destination */
   gqd?: any;
   /** function to transmit logs */

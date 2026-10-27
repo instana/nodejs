@@ -4,7 +4,12 @@
 
 'use strict';
 
-const { validStackTraceModes, LOG_LEVEL, allowedTransmissionDelayValues } = require('../util/constants');
+const {
+  validStackTraceModes,
+  LOG_LEVEL,
+  allowedTransmissionDelayValues,
+  SAMPLING_TYPES
+} = require('../util/constants');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -263,4 +268,60 @@ exports.allowedColumnsValidator = function allowedColumnsValidator(value) {
     return value.filter(c => typeof c === 'string' && c.trim() !== '').map(c => c.trim().toLowerCase());
   }
   return undefined;
+};
+
+/**
+ * @param {any} value
+ * @returns {number|undefined}
+ */
+exports.samplingTypeValidator = function samplingTypeValidator(value) {
+  if (value == null) return undefined;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed === '') return undefined;
+    const upper = trimmed.toUpperCase();
+    if (Object.prototype.hasOwnProperty.call(SAMPLING_TYPES, upper)) {
+      return SAMPLING_TYPES[upper];
+    }
+    const parsedNum = Number(trimmed);
+    if (!Number.isNaN(parsedNum) && Number.isFinite(parsedNum) && parsedNum >= 0) {
+      const intVal = Math.floor(parsedNum);
+      if (Object.values(SAMPLING_TYPES).includes(intVal)) {
+        return intVal;
+      }
+    }
+    return undefined;
+  }
+  const num = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(num) || num < 0) return undefined;
+  const intVal = Math.floor(num);
+  if (Object.values(SAMPLING_TYPES).includes(intVal)) {
+    return intVal;
+  }
+  return undefined;
+};
+
+/**
+ * @param {any} value
+ * @returns {number|undefined}
+ */
+exports.samplingThresholdValidator = function samplingThresholdValidator(value) {
+  if (value == null) return undefined;
+  if (typeof value === 'bigint') {
+    return value >= 0n ? Number(value) : undefined;
+  }
+  const num = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(num) || num < 0) return undefined;
+  return Math.floor(num);
+};
+
+/**
+ * @param {any} value
+ * @returns {number|undefined}
+ */
+exports.samplingPrecisionValidator = function samplingPrecisionValidator(value) {
+  if (value == null) return undefined;
+  const num = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(num) || num < 0) return undefined;
+  return Math.floor(num);
 };

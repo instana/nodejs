@@ -263,36 +263,39 @@ function initInstanaInstrumentations(_config) {
 }
 
 exports.activate = function activate(_config = config) {
-  if (tracingEnabled && !tracingActivated) {
-    tracingActivated = true;
+  if (tracingEnabled) {
     cls.activate(_config);
-    coreUtil.activate(_config);
-    tracingUtil.activate(_config);
-    spanBuffer.activate(_config);
-    tracingHeaders.activate(_config);
-    secrets.activate(_config);
-    opentracing.activate();
-    sdk.activate();
 
-    if (automaticTracingEnabled) {
-      instrumentations.forEach(instrumentationKey => {
-        // If instrumentation is disabled via agent config, we skip tracing using the `isActive` flag
-        // within the instrumentation logic.
-        // However, modules already shimmered (e.g., logging) remain wrapped — we don't currently unwrap them.
-        // This may lead to minor performance overhead or partial interception. Proper unwrapping via
-        // `shimmer.unwrap(...)` would need broader changes. Given the very low performance and functional
-        // impact at present, we are accepting this behavior for now.
-        //
-        // We will revisit this in the future, especially if we encounter issues with disabled instrumentations.
-        if (
-          !coreUtil.disableInstrumentation.isInstrumentationDisabled({
-            instrumentationModules,
-            instrumentationKey
-          })
-        ) {
-          instrumentationModules[instrumentationKey].activate(_config);
-        }
-      });
+    if (!tracingActivated) {
+      tracingActivated = true;
+      coreUtil.activate(_config);
+      tracingUtil.activate(_config);
+      spanBuffer.activate(_config);
+      tracingHeaders.activate(_config);
+      secrets.activate(_config);
+      opentracing.activate();
+      sdk.activate();
+
+      if (automaticTracingEnabled) {
+        instrumentations.forEach(instrumentationKey => {
+          // If instrumentation is disabled via agent config, we skip tracing using the `isActive` flag
+          // within the instrumentation logic.
+          // However, modules already shimmered (e.g., logging) remain wrapped — we don't currently unwrap them.
+          // This may lead to minor performance overhead or partial interception. Proper unwrapping via
+          // `shimmer.unwrap(...)` would need broader changes. Given the very low performance and functional
+          // impact at present, we are accepting this behavior for now.
+          //
+          // We will revisit this in the future, especially if we encounter issues with disabled instrumentations.
+          if (
+            !coreUtil.disableInstrumentation.isInstrumentationDisabled({
+              instrumentationModules,
+              instrumentationKey
+            })
+          ) {
+            instrumentationModules[instrumentationKey].activate(_config);
+          }
+        });
+      }
     }
   }
 };

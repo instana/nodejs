@@ -13,7 +13,11 @@ const {
   CONFIG_SOURCES,
   DEFAULT_LOG_LEVEL,
   DEFAULT_DB_BIND_VARIABLES_DISABLE,
-  DEFAULT_DB_BIND_VARIABLES_ALLOWED_COLUMNS
+  DEFAULT_DB_BIND_VARIABLES_ALLOWED_COLUMNS,
+  DEFAULT_SAMPLING_ENABLE,
+  DEFAULT_SAMPLING_TYPE,
+  DEFAULT_SAMPLING_THRESHOLD,
+  DEFAULT_SAMPLING_PRECISION
 } = require('../util/constants');
 const util = require('./util');
 const validators = require('./validator');
@@ -88,6 +92,7 @@ let currentConfig;
  * @property {otlpExporterOptions} [otlp]
  * @property {string} [captureLogLevel]
  * @property {DbBindVariablesConfig} [dbBindVariables]
+ * @property {import('./types').SamplingConfig} [sampling]
  */
 
 /**
@@ -216,6 +221,12 @@ let defaults = {
       // This option is internal and not exposed
       port: 4318,
       semConvVersion: '1.23'
+    },
+    sampling: {
+      enable: DEFAULT_SAMPLING_ENABLE,
+      type: DEFAULT_SAMPLING_TYPE,
+      threshold: DEFAULT_SAMPLING_THRESHOLD,
+      precision: DEFAULT_SAMPLING_PRECISION
     }
   },
   preloadOpentelemetry: false,
@@ -440,6 +451,7 @@ function normalizeTracingConfig({ userConfig = {}, defaultConfig = {}, finalConf
   normalizeDisableServerTiming({ userConfig, defaultConfig, finalConfig });
   normalizeOtlpExporter({ userConfig, defaultConfig, finalConfig });
   normalizeLogLevelCapture({ userConfig, defaultConfig, finalConfig });
+  normalizeTracingSampling({ userConfig, defaultConfig, finalConfig });
 }
 
 /**
@@ -1537,6 +1549,127 @@ function normalizeOtlpExporter({ userConfig = {}, defaultConfig = {}, finalConfi
     source,
     value,
     envVarName: 'INSTANA_TRACING_OTLP_ENABLED'
+  });
+}
+
+/**
+ * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
+ */
+function normalizeTracingSampling({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
+  const userSampling = userConfig.tracing?.sampling || {};
+  finalConfig.tracing.sampling = {};
+
+  normalizeSamplingEnable({ userSampling, defaultConfig, finalConfig });
+  normalizeSamplingType({ userSampling, defaultConfig, finalConfig });
+  normalizeSamplingThreshold({ userSampling, defaultConfig, finalConfig });
+  normalizeSamplingPrecision({ userSampling, defaultConfig, finalConfig });
+}
+
+function normalizeSamplingEnable({ userSampling = {}, defaultConfig = {}, finalConfig = {} }) {
+  const envValue =
+    process.env.INSTANA_SAMPLING_ENABLE !== undefined
+      ? 'INSTANA_SAMPLING_ENABLE'
+      : process.env.INSTANA_TRACING_SAMPLING_ENABLE !== undefined
+        ? 'INSTANA_TRACING_SAMPLING_ENABLE'
+        : undefined;
+
+  const { value, source } = util.resolve(
+    {
+      envValue,
+      inCodeValue: userSampling.enable,
+      defaultValue: defaultConfig.tracing.sampling.enable
+    },
+    [validators.booleanValidator]
+  );
+
+  configStore.set('config.tracing.sampling.enable', { source });
+  finalConfig.tracing.sampling.enable = value;
+  util.log({
+    configPath: 'config.tracing.sampling.enable',
+    source,
+    value,
+    envVarName: envValue
+  });
+}
+
+function normalizeSamplingType({ userSampling = {}, defaultConfig = {}, finalConfig = {} }) {
+  const envValue =
+    process.env.INSTANA_SAMPLING_TYPE !== undefined
+      ? 'INSTANA_SAMPLING_TYPE'
+      : process.env.INSTANA_TRACING_SAMPLING_TYPE !== undefined
+        ? 'INSTANA_TRACING_SAMPLING_TYPE'
+        : undefined;
+
+  const { value, source } = util.resolve(
+    {
+      envValue,
+      inCodeValue: userSampling.type,
+      defaultValue: defaultConfig.tracing.sampling.type
+    },
+    [validators.samplingTypeValidator]
+  );
+
+  configStore.set('config.tracing.sampling.type', { source });
+  finalConfig.tracing.sampling.type = value;
+  util.log({
+    configPath: 'config.tracing.sampling.type',
+    source,
+    value,
+    envVarName: envValue
+  });
+}
+
+function normalizeSamplingThreshold({ userSampling = {}, defaultConfig = {}, finalConfig = {} }) {
+  const envValue =
+    process.env.INSTANA_SAMPLING_THRESHOLD !== undefined
+      ? 'INSTANA_SAMPLING_THRESHOLD'
+      : process.env.INSTANA_TRACING_SAMPLING_THRESHOLD !== undefined
+        ? 'INSTANA_TRACING_SAMPLING_THRESHOLD'
+        : undefined;
+
+  const { value, source } = util.resolve(
+    {
+      envValue,
+      inCodeValue: userSampling.threshold,
+      defaultValue: defaultConfig.tracing.sampling.threshold
+    },
+    [validators.samplingThresholdValidator]
+  );
+
+  configStore.set('config.tracing.sampling.threshold', { source });
+  finalConfig.tracing.sampling.threshold = value;
+  util.log({
+    configPath: 'config.tracing.sampling.threshold',
+    source,
+    value,
+    envVarName: envValue
+  });
+}
+
+function normalizeSamplingPrecision({ userSampling = {}, defaultConfig = {}, finalConfig = {} }) {
+  const envValue =
+    process.env.INSTANA_SAMPLING_PRECISION !== undefined
+      ? 'INSTANA_SAMPLING_PRECISION'
+      : process.env.INSTANA_TRACING_SAMPLING_PRECISION !== undefined
+        ? 'INSTANA_TRACING_SAMPLING_PRECISION'
+        : undefined;
+
+  const { value, source } = util.resolve(
+    {
+      envValue,
+      inCodeValue: userSampling.precision,
+      defaultValue: defaultConfig.tracing.sampling.precision
+    },
+    [validators.samplingPrecisionValidator]
+  );
+
+  configStore.set('config.tracing.sampling.precision', { source });
+  finalConfig.tracing.sampling.precision = value;
+  util.log({
+    configPath: 'config.tracing.sampling.precision',
+    source,
+    value,
+    envVarName: envValue
   });
 }
 
