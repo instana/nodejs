@@ -875,7 +875,7 @@
     "core": false,
     "versions": [
       {
-        "v": "12.7.10",
+        "v": "12.7.11",
         "overrides": {
           "@azure/msal-node": "7.1.0",
           "tedious": "19.2.2"
