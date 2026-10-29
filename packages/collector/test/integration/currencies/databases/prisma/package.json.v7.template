@@ -1,4 +1,7 @@
 {
+  "allowScripts": {
+    "better-sqlite3": true
+  },
   "dependencies": {
     "@prisma/client": "{{CURRENCY_VERSION}}",
     "@prisma/adapter-pg": "{{CURRENCY_VERSION}}",

@@ -127,6 +127,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+          bash bin/install-npm.sh
           npm install --loglevel warn --ignore-scripts
 
           LAST_EXIT=0
@@ -184,6 +185,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+          bash bin/install-npm.sh
           npm install --loglevel warn --ignore-scripts
 
           LAST_EXIT=0
@@ -241,6 +243,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+          bash bin/install-npm.sh
           npm install --loglevel warn --ignore-scripts
 
           LAST_EXIT=0
@@ -298,6 +301,7 @@ tasks:
           echo "Node.js: $(node --version)"
 
           cd "$WORKSPACE/$(load_repo app-repo path)"
+          bash bin/install-npm.sh
           npm install --loglevel warn --ignore-scripts
 
           LAST_EXIT=0
