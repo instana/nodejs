@@ -1,8 +1,10 @@
 ARG NODEJS_VERSION
 FROM node:${NODEJS_VERSION} AS instana-google-cloud-run-build-nodejs
 
+ARG NPM_VERSION
 ARG package_version
 WORKDIR /instana
+RUN npm install -g npm@${NPM_VERSION}
 COPY package.json.npm ./
 RUN sed -e s/SELF_VERSION/$package_version/g \
         -e s/INSTANA_GOOGLE_CLOUD_RUN_VERSION/$package_version/g \

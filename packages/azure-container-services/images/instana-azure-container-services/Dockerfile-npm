@@ -1,9 +1,11 @@
 ARG NODEJS_VERSION
 FROM node:${NODEJS_VERSION} AS instana-azure-container-services-build-nodejs
 
+ARG NPM_VERSION
 ARG package_version
 
 WORKDIR /instana
+RUN npm install -g npm@${NPM_VERSION}
 COPY package.json.npm ./
 RUN sed -e s/SELF_VERSION/$package_version/g \
         -e s/INSTANA_AZURE_CONTAINER_SERVICES_VERSION/$package_version/g \
