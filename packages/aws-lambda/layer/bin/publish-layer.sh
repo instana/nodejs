@@ -172,6 +172,8 @@ ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || echo "../../..")
 NVMRC_PATH="$ROOT_DIR/.nvmrc"
 NODEJS_DEV_VERSION=$(cut -d '.' -f 1 "$NVMRC_PATH")
 echo "Using Node.js version $NODEJS_DEV_VERSION from .nvmrc for Docker build"
+NPM_VERSION=$(cat "$ROOT_DIR/.npm")
+echo "Using npm version $NPM_VERSION from .npm for Docker build"
 
 echo Will build Lambda layer with name \"$LAYER_NAME\".
 
@@ -403,7 +405,7 @@ if [[ -z $SKIP_DOCKER_IMAGE ]]; then
   echo "Step 7/9: Building Docker image for Lambda layer targeting Node.js version $NODEJS_DEV_VERSION"
 
   # Build the Docker image for the specified Node.js version
-  docker build --build-arg NODEJS_VERSION=$NODEJS_DEV_VERSION . -t "$DOCKER_IMAGE_NAME:$VERSION"
+  docker build --build-arg NODEJS_VERSION=$NODEJS_DEV_VERSION --build-arg NPM_VERSION=$NPM_VERSION . -t "$DOCKER_IMAGE_NAME:$VERSION"
 
   # NOTE: serverless/ci/pipeline.yaml passes PACKAGE_VERSION=1 for 1.x branch
   if [[ $PACKAGE_VERSION == latest ]]; then

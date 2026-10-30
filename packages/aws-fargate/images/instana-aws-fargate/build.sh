@@ -70,6 +70,7 @@ echo npm Tag: ${npm_tag}
 ROOT_DIR=$(git rev-parse --show-toplevel)
 NVMRC_PATH="$ROOT_DIR/.nvmrc"
 NODEJS_VERSION=$(cat "$NVMRC_PATH")
+NPM_VERSION=$(cat "$ROOT_DIR/.npm")
 
 dockerfile=Dockerfile-$build_mode
 build_arg=
@@ -130,7 +131,7 @@ echo "Removing images $image_tag_without_version and $image_tag"
 docker rmi -f $image_tag_without_version
 docker rmi -f $image_tag
 
-build_arg="--build-arg NODEJS_VERSION=$NODEJS_VERSION $build_arg"
+build_arg="--build-arg NODEJS_VERSION=$NODEJS_VERSION --build-arg NPM_VERSION=$NPM_VERSION $build_arg"
 
 echo "Building $dockerfile -> $image_tag with $build_arg"
 
