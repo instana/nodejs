@@ -66,7 +66,7 @@ function init(config, _processIdentityProvider) {
 
   if (config?.tracing?.sampling?.enable) {
     const sampling = config.tracing.sampling;
-    sampler = new ConfigurationSampler(sampling.type, sampling.threshold, sampling.precision);
+    sampler = new ConfigurationSampler(sampling.type, sampling.threshold, sampling.precision, sampling.rate);
   } else {
     sampler = null;
   }
@@ -81,9 +81,9 @@ function activate(config) {
   if (config?.tracing?.sampling?.enable) {
     const sampling = config.tracing.sampling;
     if (sampler) {
-      sampler.updateSamplingParameters(sampling.type, sampling.threshold, sampling.precision);
+      sampler.updateSamplingParameters(sampling.type, sampling.threshold, sampling.precision, sampling.rate);
     } else {
-      sampler = new ConfigurationSampler(sampling.type, sampling.threshold, sampling.precision);
+      sampler = new ConfigurationSampler(sampling.type, sampling.threshold, sampling.precision, sampling.rate);
     }
   } else {
     sampler = null;
@@ -429,6 +429,14 @@ function startSpan(spanAttributes = {}) {
   if (parentSpan) {
     if (parentSpan.samplingThreshold > 0 || parentSpan.samplingType > 0) {
       span.setSamplingParameters(parentSpan.samplingType, parentSpan.samplingThreshold, parentSpan.samplingPrecision);
+    }
+  } else if (traceId) {
+    // Trace continuity from upstream (Instana or OpenTelemetry)
+    if (w3cTraceContext && w3cTraceContext.otelThreshold != null && w3cTraceContext.otelThreshold > 0) {
+      const samplingType = w3cTraceContext.instanaType || 1;
+      const samplingThreshold = w3cTraceContext.otelThreshold;
+      const samplingPrecision = w3cTraceContext.instanaPrecision || 4;
+      span.setSamplingParameters(samplingType, samplingThreshold, samplingPrecision);
     }
   } else if (!traceId) {
     if (sampler) {
@@ -871,9 +879,17 @@ module.exports = {
   tracingLevel,
   tracingSuppressed,
   getSampler: () => sampler,
+  /**
+   * @param {any} s
+   */
   setSampler: s => {
     sampler = s;
   },
+  /**
+   * @param {any} [type]
+   * @param {any} [threshold]
+   * @param {any} [precision]
+   */
   updateSamplingConfig: (type, threshold, precision) => {
     if (sampler) {
       sampler.updateSamplingParameters(type, threshold, precision);

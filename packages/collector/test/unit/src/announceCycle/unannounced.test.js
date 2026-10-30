@@ -2153,6 +2153,30 @@ describe('unannounced state', () => {
         });
       });
 
+      it('should apply sampling rate from agent response', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            sampling: {
+              enable: true,
+              rate: 50
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                sampling: {
+                  enable: true,
+                  rate: 50
+                }
+              }
+            });
+            done();
+          }
+        });
+      });
+
       it('should apply sampling configuration from top-level sampling object', done => {
         prepareAnnounceResponse({
           sampling: {

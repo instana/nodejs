@@ -3,6 +3,8 @@
  * (c) Copyright Instana Inc. and contributors 2019
  */
 
+/* eslint-disable no-loss-of-precision */
+
 'use strict';
 
 const expect = require('chai').expect;
@@ -67,10 +69,12 @@ describe('config.normalizeConfig', () => {
     delete process.env.INSTANA_TRACING_DB_BIND_VARIABLES_ALLOWED_COLUMNS;
     delete process.env.INSTANA_TRACING_DISABLE_SERVER_TIMING;
     delete process.env.INSTANA_SAMPLING_ENABLE;
+    delete process.env.INSTANA_SAMPLING_RATE;
     delete process.env.INSTANA_SAMPLING_TYPE;
     delete process.env.INSTANA_SAMPLING_THRESHOLD;
     delete process.env.INSTANA_SAMPLING_PRECISION;
     delete process.env.INSTANA_TRACING_SAMPLING_ENABLE;
+    delete process.env.INSTANA_TRACING_SAMPLING_RATE;
     delete process.env.INSTANA_TRACING_SAMPLING_TYPE;
     delete process.env.INSTANA_TRACING_SAMPLING_THRESHOLD;
     delete process.env.INSTANA_TRACING_SAMPLING_PRECISION;
@@ -2504,6 +2508,77 @@ describe('config.normalizeConfig', () => {
           type: 0,
           threshold: 0,
           precision: 0
+        });
+      });
+
+      it('should accept sampling rate from in-code config and calculate threshold with defaults type=1, precision=4', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              sampling: {
+                enable: true,
+                rate: 50
+              }
+            }
+          }
+        });
+        expect(config.tracing.sampling).to.deep.equal({
+          enable: true,
+          rate: 50,
+          type: 1,
+          threshold: 36028797018963968,
+          precision: 4
+        });
+      });
+
+      it('should accept sampling rate from INSTANA_SAMPLING_RATE env var', () => {
+        process.env.INSTANA_SAMPLING_ENABLE = 'true';
+        process.env.INSTANA_SAMPLING_RATE = '25';
+
+        const config = coreConfig.normalize({});
+        expect(config.tracing.sampling).to.deep.equal({
+          enable: true,
+          rate: 25,
+          type: 1,
+          threshold: 54043195528445952,
+          precision: 4
+        });
+      });
+
+      it('should accept sampling rate from INSTANA_TRACING_SAMPLING_RATE alias env var', () => {
+        process.env.INSTANA_TRACING_SAMPLING_ENABLE = 'true';
+        process.env.INSTANA_TRACING_SAMPLING_RATE = '10';
+
+        const config = coreConfig.normalize({});
+        expect(config.tracing.sampling).to.deep.equal({
+          enable: true,
+          rate: 10,
+          type: 1,
+          threshold: 64851834634135142,
+          precision: 4
+        });
+      });
+
+      it('should give precedence to rate over threshold when both are provided', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              sampling: {
+                enable: true,
+                rate: 50,
+                threshold: '12345',
+                type: 1,
+                precision: 14
+              }
+            }
+          }
+        });
+        expect(config.tracing.sampling).to.deep.equal({
+          enable: true,
+          rate: 50,
+          type: 1,
+          threshold: 36028797018963968,
+          precision: 4
         });
       });
     });

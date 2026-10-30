@@ -2,6 +2,8 @@
  * (c) Copyright IBM Corp. 2026
  */
 
+/* global BigInt */
+
 'use strict';
 
 const {
@@ -274,15 +276,29 @@ exports.allowedColumnsValidator = function allowedColumnsValidator(value) {
  * @param {any} value
  * @returns {number|undefined}
  */
+exports.samplingRateValidator = function samplingRateValidator(value) {
+  if (value == null) return undefined;
+  const num = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(num)) return undefined;
+  const intVal = Math.floor(num);
+  if (intVal >= 1 && intVal <= 100) {
+    return intVal;
+  }
+  return undefined;
+};
+
+/**
+ * @param {any} value
+ * @returns {number|undefined}
+ */
 exports.samplingTypeValidator = function samplingTypeValidator(value) {
   if (value == null) return undefined;
   if (typeof value === 'string') {
     const trimmed = value.trim();
     if (trimmed === '') return undefined;
     const upper = trimmed.toUpperCase();
-    if (Object.prototype.hasOwnProperty.call(SAMPLING_TYPES, upper)) {
-      return SAMPLING_TYPES[upper];
-    }
+    if (upper === 'NONE') return SAMPLING_TYPES.NONE;
+    if (upper === 'RANDOM') return SAMPLING_TYPES.RANDOM;
     const parsedNum = Number(trimmed);
     if (!Number.isNaN(parsedNum) && Number.isFinite(parsedNum) && parsedNum >= 0) {
       const intVal = Math.floor(parsedNum);
@@ -308,7 +324,17 @@ exports.samplingTypeValidator = function samplingTypeValidator(value) {
 exports.samplingThresholdValidator = function samplingThresholdValidator(value) {
   if (value == null) return undefined;
   if (typeof value === 'bigint') {
-    return value >= 0n ? Number(value) : undefined;
+    return value >= BigInt(0) ? Number(value) : undefined;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed === '') return undefined;
+    try {
+      const b = BigInt(trimmed);
+      if (b >= BigInt(0)) return Number(b);
+    } catch {
+      return undefined;
+    }
   }
   const num = typeof value === 'number' ? value : Number(value);
   if (!Number.isFinite(num) || num < 0) return undefined;
@@ -322,6 +348,6 @@ exports.samplingThresholdValidator = function samplingThresholdValidator(value) 
 exports.samplingPrecisionValidator = function samplingPrecisionValidator(value) {
   if (value == null) return undefined;
   const num = typeof value === 'number' ? value : Number(value);
-  if (!Number.isFinite(num) || num < 0) return undefined;
+  if (!Number.isFinite(num) || num < 1 || num > 14) return undefined;
   return Math.floor(num);
 };

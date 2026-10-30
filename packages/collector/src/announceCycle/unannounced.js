@@ -32,6 +32,7 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @property {Array.<string>} [extraHeaders]
  * @property {boolean|string} [spanBatchingEnabled]
  * @property {number} [pollRate] - Metrics poll rate in seconds; mapped to metrics.transmissionDelay (ms)
+ * @property {any} [sampling]
  */
 
 /**
@@ -50,6 +51,9 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @property {import('@instana/core/src/config/types').Disable} [disable]
  * @property {GlobalTracingConfig} [global]
  * @property {HTTPTracingConfig} [http]
+ * @property {any} [sampling]
+ * @property {Record<string, any>} [key]
+ * @property {any} [com.instana.tracing.sampling]
  */
 
 /**
@@ -475,9 +479,10 @@ function applyDbBindVariablesConfiguration(agentResponse) {
  * @param {AgentAnnounceResponse} agentResponse
  */
 function applySamplingConfiguration(agentResponse) {
+  const agentTracing = /** @type {Record<string, any>|undefined} */ (agentResponse.tracing);
   const samplingFromAgent =
-    agentResponse.tracing?.sampling ||
-    agentResponse.tracing?.['com.instana.tracing.sampling'] ||
+    agentTracing?.sampling ||
+    agentTracing?.['com.instana.tracing.sampling'] ||
     agentResponse.sampling;
 
   if (samplingFromAgent && typeof samplingFromAgent === 'object') {
@@ -486,6 +491,12 @@ function applySamplingConfiguration(agentResponse) {
     if (samplingFromAgent.enable != null || samplingFromAgent.enabled != null) {
       agentOpts.config.tracing.sampling.enable =
         samplingFromAgent.enable != null ? Boolean(samplingFromAgent.enable) : Boolean(samplingFromAgent.enabled);
+    }
+    if (samplingFromAgent.rate != null) {
+      const rate = coreConfig.validators.samplingRateValidator(samplingFromAgent.rate);
+      if (rate !== undefined) {
+        agentOpts.config.tracing.sampling.rate = rate;
+      }
     }
     if (samplingFromAgent.type != null) {
       const type = coreConfig.validators.samplingTypeValidator(samplingFromAgent.type);

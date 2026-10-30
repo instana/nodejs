@@ -7,6 +7,7 @@
 
 const constants = require('../constants');
 const leftPad = require('../leftPad');
+const ConfigurationSampler = require('../sampler/ConfigurationSampler');
 const W3cTraceContext = require('./W3cTraceContext');
 
 /** @type {import('../../core').GenericLogger} */
@@ -97,6 +98,12 @@ function parseTraceState(traceStateRaw, parsed) {
     return;
   }
 
+  // Parse ot entry if present
+  const otKeyValuePair = keyValuePairs.find(kv => kv.toLowerCase().indexOf(constants.w3cOtelEquals) === 0);
+  if (otKeyValuePair) {
+    parseOtelTraceStateKeyValuePair(parsed, otKeyValuePair);
+  }
+
   const indexOfInstanaKeyValuePair = keyValuePairs.findIndex(
     kv => kv.toLowerCase().indexOf(constants.w3cInstanaEquals) === 0
   );
@@ -123,12 +130,45 @@ function parseTraceState(traceStateRaw, parsed) {
 
 /**
  * @param {W3cTraceContext} parsed
+ * @param {string} otelKeyValuePair
+ */
+function parseOtelTraceStateKeyValuePair(parsed, otelKeyValuePair) {
+  const value = otelKeyValuePair.substring(constants.w3cOtelEquals.length);
+  const parts = value.split(';');
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i].trim();
+    if (part.startsWith('th:')) {
+      parsed.otelThresholdHex = part.substring(3).trim();
+      parsed.otelThreshold = ConfigurationSampler.hexToThreshold(parsed.otelThresholdHex);
+    } else if (part.startsWith('rv:')) {
+      parsed.otelRandomValueHex = part.substring(3).trim();
+      parsed.otelRandomValue = parsed.otelRandomValueHex;
+    }
+  }
+}
+
+/**
+ * @param {W3cTraceContext} parsed
  * @param {string} instanaKeyValuePair
  */
 function parseInstanaTraceStateKeyValuePair(parsed, instanaKeyValuePair) {
   const fields = instanaKeyValuePair.substring(instanaVendorKeyOffset).split(';');
   parsed.instanaTraceId = normalizeId(fields[0], true);
   parsed.instanaParentId = normalizeId(fields[1], false);
+  for (let i = 2; i < fields.length; i++) {
+    const field = fields[i].trim();
+    if (field.startsWith('pr:')) {
+      const prVal = parseInt(field.substring(3), 10);
+      if (!isNaN(prVal) && prVal >= 1 && prVal <= 14) {
+        parsed.instanaPrecision = prVal;
+      }
+    } else if (field.startsWith('ty:')) {
+      const tyVal = parseInt(field.substring(3), 10);
+      if (!isNaN(tyVal)) {
+        parsed.instanaType = tyVal;
+      }
+    }
+  }
 }
 
 /**
@@ -138,7 +178,7 @@ function parseInstanaTraceStateKeyValuePair(parsed, instanaKeyValuePair) {
  */
 function normalizeId(id, isTraceId) {
   if (!id || typeof id !== 'string' || id.trim() === '') {
-    logger.warn(`Received an invalid ${isTraceId ? 'trace' : 'span'} ID: "${id}"`);
+    if (logger) logger.warn(`Received an invalid ${isTraceId ? 'trace' : 'span'} ID: "${id}"`);
     return null;
   }
 
@@ -153,10 +193,10 @@ function normalizeId(id, isTraceId) {
   } else if (id.length < 32 && isTraceId) {
     return leftPad(id, 32);
   } else if (id.length > 16 && !isTraceId) {
-    logger.warn(`Received an invalid (too long) span ID: ${id}`);
+    if (logger) logger.warn(`Received an invalid (too long) span ID: ${id}`);
     return null;
   } else if (id.length > 32) {
-    logger.warn(`Received an invalid (too long) trace ID: ${id}`);
+    if (logger) logger.warn(`Received an invalid (too long) trace ID: ${id}`);
     return null;
   }
 

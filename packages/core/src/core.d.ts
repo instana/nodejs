@@ -71,6 +71,7 @@ export interface InstanaBaseSpan {
   samplingType?: number;
   samplingThreshold?: number;
   samplingPrecision?: number;
+  setSamplingParameters?: (type?: number, threshold?: number, precision?: number) => void;
   /** GraphQL destination */
   gqd?: any;
   /** function to transmit logs */

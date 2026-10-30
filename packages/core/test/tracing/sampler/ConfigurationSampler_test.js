@@ -2,6 +2,8 @@
  * (c) Copyright IBM Corp. 2026
  */
 
+/* eslint-disable no-loss-of-precision */
+
 'use strict';
 
 const { expect } = require('chai');
@@ -104,5 +106,89 @@ describe('ConfigurationSampler', () => {
     expect(config.type).to.equal(1);
     expect(config.threshold).to.equal(234567892345);
     expect(config.precision).to.equal(4);
+  });
+
+  describe('calculateThresholdFromRate', () => {
+    it('should correctly calculate threshold for rate=100 (0% rejection)', () => {
+      const th = ConfigurationSampler.calculateThresholdFromRate(100);
+      expect(th).to.equal(0n);
+    });
+
+    it('should correctly calculate threshold for rate=50 (50% rejection)', () => {
+      const th = ConfigurationSampler.calculateThresholdFromRate(50);
+      expect(th).to.equal(36028797018963968n);
+    });
+
+    it('should correctly calculate threshold for rate=25 (75% rejection)', () => {
+      const th = ConfigurationSampler.calculateThresholdFromRate(25);
+      expect(th).to.equal(54043195528445952n);
+    });
+
+    it('should correctly calculate threshold for rate=10 (90% rejection)', () => {
+      const th = ConfigurationSampler.calculateThresholdFromRate(10);
+      expect(th).to.equal(64851834634135142n);
+    });
+
+    it('should correctly calculate threshold for rate=1 (99% rejection)', () => {
+      const th = ConfigurationSampler.calculateThresholdFromRate(1);
+      expect(th).to.equal(71337018097548656n);
+    });
+
+    it('should correctly calculate threshold for rate=99 (1% rejection)', () => {
+      const th = ConfigurationSampler.calculateThresholdFromRate(99);
+      expect(th).to.equal(720575940379279n);
+    });
+
+    it('should return 0n for invalid rates', () => {
+      expect(ConfigurationSampler.calculateThresholdFromRate(0)).to.equal(0n);
+      expect(ConfigurationSampler.calculateThresholdFromRate(101)).to.equal(0n);
+      expect(ConfigurationSampler.calculateThresholdFromRate(-5)).to.equal(0n);
+      expect(ConfigurationSampler.calculateThresholdFromRate(NaN)).to.equal(0n);
+    });
+  });
+
+  describe('thresholdToHex and hexToThreshold', () => {
+    it('should convert thresholds to hex with trailing zeros omitted', () => {
+      expect(ConfigurationSampler.thresholdToHex(0)).to.equal('0');
+      expect(ConfigurationSampler.thresholdToHex(36028797018963968n)).to.equal('8');
+      expect(ConfigurationSampler.thresholdToHex(54043195528445952n)).to.equal('c');
+      expect(ConfigurationSampler.thresholdToHex(64851834634135142n)).to.equal('e6666666666666');
+      expect(ConfigurationSampler.thresholdToHex(71337018097548656n)).to.equal('fd70a3d70a3d7');
+      expect(ConfigurationSampler.thresholdToHex(720575940379279n)).to.equal('028f5c28f5c28f');
+    });
+
+    it('should convert hex strings from tracestate to decimal threshold', () => {
+      expect(ConfigurationSampler.hexToThreshold('0')).to.equal(0);
+      expect(ConfigurationSampler.hexToThreshold('8')).to.equal(36028797018963968);
+      expect(ConfigurationSampler.hexToThreshold('c')).to.equal(54043195528445952);
+      expect(ConfigurationSampler.hexToThreshold('e6666666666666')).to.equal(64851834634135142);
+      expect(ConfigurationSampler.hexToThreshold('fd70a3d70a3d7')).to.equal(71337018097548656);
+      expect(ConfigurationSampler.hexToThreshold('028f5c28f5c28f')).to.equal(720575940379279);
+    });
+  });
+
+  describe('rate-based configuration and precedence', () => {
+    it('should initialize with rate parameter', () => {
+      const sampler = new ConfigurationSampler(1, 0, 4, 50);
+      const config = sampler.getSamplingConfig();
+      expect(config.rate).to.equal(50);
+      expect(config.type).to.equal(1);
+      expect(config.threshold).to.equal(36028797018963968);
+      expect(config.precision).to.equal(4);
+    });
+
+    it('should initialize with options object and give precedence to rate', () => {
+      const sampler = new ConfigurationSampler({
+        rate: 25,
+        threshold: 12345,
+        type: 1,
+        precision: 14
+      });
+      const config = sampler.getSamplingConfig();
+      expect(config.rate).to.equal(25);
+      expect(config.type).to.equal(1);
+      expect(config.threshold).to.equal(54043195528445952);
+      expect(config.precision).to.equal(4);
+    });
   });
 });

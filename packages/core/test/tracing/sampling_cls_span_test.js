@@ -2,6 +2,8 @@
  * (c) Copyright IBM Corp. 2026
  */
 
+/* eslint-disable no-loss-of-precision */
+
 'use strict';
 
 const proxyquire = require('proxyquire');
@@ -10,6 +12,8 @@ const testUtils = require('../test_util');
 const constants = require('../../src/tracing/constants');
 const backendMapper = require('../../src/tracing/backend_mappers/mapper');
 const { ConfigurationSampler } = require('../../src/tracing/sampler');
+const w3c = require('../../src/tracing/w3c_trace_context');
+const tracingHeaders = require('../../src/tracing/tracingHeaders');
 
 describe('tracing/sampling - CLS and Span integration', () => {
   let cls;
@@ -17,6 +21,8 @@ describe('tracing/sampling - CLS and Span integration', () => {
   beforeEach(() => {
     cls = proxyquire('../../src/tracing/cls', {});
     cls.init({ logger: testUtils.createFakeLogger() });
+    tracingHeaders.init({ logger: testUtils.createFakeLogger(), tracing: {} });
+    w3c.init({ logger: testUtils.createFakeLogger() });
   });
 
   it('should initialize and activate sampler from config', () => {
@@ -175,6 +181,140 @@ describe('tracing/sampling - CLS and Span integration', () => {
 
       expect(span.isIgnored).to.be.true;
       expect(cls.tracingSuppressed()).to.be.true;
+    });
+  });
+
+  describe('Trace Continuity', () => {
+    it('should extract sampling threshold from OTel ot tracestate and set sm on entry span', () => {
+      const incomingHeaders = {
+        traceparent: '00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01',
+        tracestate: 'ot=th:8,rojo=123'
+      };
+      const parsedContext = tracingHeaders.fromHeaders(incomingHeaders);
+
+      cls.ns.runAndReturn(() => {
+        const span = cls.startSpan({
+          spanName: 'node.http.server',
+          kind: constants.ENTRY,
+          traceId: parsedContext.traceId,
+          parentSpanId: parsedContext.parentId,
+          w3cTraceContext: parsedContext.w3cTraceContext,
+          spanData: {}
+        });
+        tracingHeaders.setSpanAttributes(span, parsedContext);
+
+        expect(span.tp).to.be.true;
+        expect(span.samplingType).to.equal(1);
+        expect(span.samplingThreshold).to.equal(36028797018963968);
+        expect(span.samplingPrecision).to.equal(4);
+        expect(span.sm).to.deep.equal({
+          s: 1,
+          th: 36028797018963968,
+          p: 4
+        });
+
+        // Child span should inherit sm
+        const childSpan = cls.startSpan({
+          spanName: 'node.http.client',
+          kind: constants.EXIT,
+          spanData: {}
+        });
+
+        expect(childSpan.sm).to.deep.equal({
+          s: 1,
+          th: 36028797018963968,
+          p: 4
+        });
+
+        // Downstream W3C trace context should have in with defaults and original ot
+        const downstreamW3c = cls.getW3cTraceContext();
+        expect(downstreamW3c.instanaPrecision).to.equal(4);
+        expect(downstreamW3c.instanaType).to.equal(1);
+        const renderedTraceState = downstreamW3c.renderTraceState();
+        expect(renderedTraceState).to.include('pr:4;ty:1');
+        expect(renderedTraceState).to.include('ot=th:8');
+      });
+    });
+
+    it('should respect upstream sampling decision and ignore local sampler on continuing traces', () => {
+      // Local sampler configured to reject everything
+      cls.setSampler(new ConfigurationSampler(1, 0xffffffffffffffn, 0));
+
+      const incomingHeaders = {
+        traceparent: '00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01',
+        tracestate: 'ot=th:8'
+      };
+      const parsedContext = tracingHeaders.fromHeaders(incomingHeaders);
+
+      cls.ns.runAndReturn(() => {
+        const span = cls.startSpan({
+          spanName: 'node.http.server',
+          kind: constants.ENTRY,
+          traceId: parsedContext.traceId,
+          parentSpanId: parsedContext.parentId,
+          w3cTraceContext: parsedContext.w3cTraceContext,
+          spanData: {}
+        });
+
+        // Span must NOT be ignored because local sampler is not applied to continuing traces
+        expect(span.isIgnored).to.be.false;
+        expect(cls.tracingSuppressed()).to.be.false;
+        expect(span.sm).to.deep.equal({
+          s: 1,
+          th: 36028797018963968,
+          p: 4
+        });
+      });
+    });
+
+    it('should preserve Instana custom precision from in entry and ot threshold', () => {
+      const incomingHeaders = {
+        traceparent: '00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01',
+        tracestate: 'in=0af7651916cd43dd;b7ad6b7169203331;pr:14;ty:1,ot=th:8'
+      };
+      const parsedContext = tracingHeaders.fromHeaders(incomingHeaders);
+
+      cls.ns.runAndReturn(() => {
+        const span = cls.startSpan({
+          spanName: 'node.http.server',
+          kind: constants.ENTRY,
+          traceId: parsedContext.traceId,
+          parentSpanId: parsedContext.parentId,
+          w3cTraceContext: parsedContext.w3cTraceContext,
+          spanData: {}
+        });
+
+        expect(span.samplingType).to.equal(1);
+        expect(span.samplingThreshold).to.equal(36028797018963968);
+        expect(span.samplingPrecision).to.equal(14);
+        expect(span.sm).to.deep.equal({
+          s: 1,
+          th: 36028797018963968,
+          p: 14
+        });
+      });
+    });
+
+    it('should suppress tracing when OTel traceparent has sampled=0 and no Instana level header', () => {
+      const incomingHeaders = {
+        traceparent: '00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-00',
+        tracestate: 'ot=th:8'
+      };
+      const parsedContext = tracingHeaders.fromHeaders(incomingHeaders);
+      expect(parsedContext.level).to.equal('0');
+      expect(parsedContext.traceId).to.be.null;
+    });
+
+    it('should give precedence to X-INSTANA-L over traceparent sampled flag', () => {
+      // traceparent says sampled=0, but X-INSTANA-L says 1
+      const incomingHeaders = {
+        traceparent: '00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-00',
+        'x-instana-l': '1',
+        tracestate: 'ot=th:8'
+      };
+      const parsedContext = tracingHeaders.fromHeaders(incomingHeaders);
+      expect(parsedContext.level).to.equal('1');
+      expect(parsedContext.traceId).to.equal('8448eb211c80319c');
     });
   });
 
