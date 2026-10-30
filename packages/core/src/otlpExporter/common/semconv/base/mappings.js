@@ -143,6 +143,17 @@ const MAPPINGS = {
     }
   },
 
+  logs: {
+    record: {
+      TIME_UNIX_NANO: 'timeUnixNano',
+      OBSERVED_TIME_UNIX_NANO: 'observedTimeUnixNano',
+      SEVERITY_NUMBER: 'severityNumber',
+      SEVERITY_TEXT: 'severityText',
+      BODY: 'body',
+      ATTRIBUTES: 'attributes'
+    }
+  },
+
   metrics: {
     v8js: {
       GC_DURATION: 'v8js.gc.duration',

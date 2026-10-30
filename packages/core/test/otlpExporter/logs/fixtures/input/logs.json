@@ -1,0 +1,81 @@
+[
+  {
+    "t": "5b8efff798038103d269b633813fc60c",
+    "s": "1111111111111111",
+    "p": "eee19b7ec3c1b174",
+    "ts": 1544712660300,
+    "d": 1,
+    "n": "log.pino",
+    "k": 2,
+    "f": { "e": "12345", "h": "host-id-1" },
+    "data": { "log": { "message": "Example log record", "level": "info" } }
+  },
+  {
+    "t": "abc",
+    "s": "1111111111111111",
+    "p": "def",
+    "ts": 1544712660301,
+    "d": 1,
+    "n": "log.winston",
+    "k": 2,
+    "f": { "e": "12345", "h": "host-id-1" },
+    "data": { "log": { "message": "trace message", "level": "trace" } }
+  },
+  {
+    "t": "abc",
+    "s": "1111111111111111",
+    "p": "def",
+    "ts": 1544712660302,
+    "d": 1,
+    "n": "log.bunyan",
+    "k": 2,
+    "f": { "e": "12345", "h": "host-id-1" },
+    "data": { "log": { "message": "debug message", "level": "debug" } }
+  },
+  {
+    "t": "abc",
+    "s": "1111111111111111",
+    "p": "def",
+    "ts": 1544712660303,
+    "d": 1,
+    "n": "log.log4js",
+    "k": 2,
+    "f": { "e": "12345", "h": "host-id-1" },
+    "data": { "log": { "message": "warn message", "level": "warn" } }
+  },
+  {
+    "t": "abc",
+    "s": "1111111111111111",
+    "p": "def",
+    "ts": 1544712660304,
+    "d": 1,
+    "n": "log.console",
+    "k": 2,
+    "ec": 1,
+    "f": { "e": "12345", "h": "host-id-1" },
+    "data": { "log": { "message": "error message", "level": "error" } }
+  },
+  {
+    "t": "abc",
+    "s": "1111111111111111",
+    "p": "def",
+    "ts": 1544712660305,
+    "d": 1,
+    "n": "log.pino",
+    "k": 2,
+    "ec": 1,
+    "f": { "e": "12345", "h": "host-id-1" },
+    "data": { "log": { "message": "fatal message", "level": "fatal" } }
+  },
+  {
+    "t": "abc",
+    "s": "1111111111111111",
+    "p": "def",
+    "ts": 1544712660306,
+    "d": 1,
+    "n": "log.pino",
+    "k": 2,
+    "f": { "e": "12345", "h": "host-id-1" },
+    "data": { "log": { "message": "unknown level message", "level": "verbose" } }
+  }
+]
