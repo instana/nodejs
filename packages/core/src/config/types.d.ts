@@ -14,3 +14,11 @@ export interface TracingDisableOptions {
 }
 
 export type Disable = TracingDisableOptions | boolean;
+
+export interface SamplingConfig {
+  enable?: boolean;
+  rate?: number;
+  type?: number;
+  threshold?: number | string;
+  precision?: number;
+}

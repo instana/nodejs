@@ -13,6 +13,7 @@ const hooked = require('./clsHooked');
 const tracingMetrics = require('./metrics');
 const { applyFilter } = require('../util/spanFilter');
 const baggageUtil = require('./baggage');
+const { ConfigurationSampler } = require('./sampler');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -35,6 +36,8 @@ let allowRootExitSpan;
 let ignoreEndpointsDisableDownStreamSuppression;
 /** @type {string[]} */
 let captureW3cBaggage = [];
+/** @type {ConfigurationSampler|null} */
+let sampler = null;
 
 /*
  * Access the Instana namespace in continuation local storage.
@@ -60,6 +63,13 @@ function init(config, _processIdentityProvider) {
   allowRootExitSpan = config?.tracing?.allowRootExitSpan;
   ignoreEndpointsDisableDownStreamSuppression = config?.tracing?.ignoreEndpointsDisableSuppression;
   captureW3cBaggage = config?.tracing?.captureW3cBaggage || [];
+
+  if (config?.tracing?.sampling?.enable) {
+    const sampling = config.tracing.sampling;
+    sampler = new ConfigurationSampler(sampling.type, sampling.threshold, sampling.precision, sampling.rate);
+  } else {
+    sampler = null;
+  }
 }
 
 /**
@@ -67,6 +77,17 @@ function init(config, _processIdentityProvider) {
  */
 function activate(config) {
   captureW3cBaggage = config?.tracing?.captureW3cBaggage || [];
+
+  if (config?.tracing?.sampling?.enable) {
+    const sampling = config.tracing.sampling;
+    if (sampler) {
+      sampler.updateSamplingParameters(sampling.type, sampling.threshold, sampling.precision, sampling.rate);
+    } else {
+      sampler = new ConfigurationSampler(sampling.type, sampling.threshold, sampling.precision, sampling.rate);
+    }
+  } else {
+    sampler = null;
+  }
 }
 
 class InstanaSpan {
@@ -120,6 +141,21 @@ class InstanaSpan {
     // Properties for the span that are only used internally but will not be transmitted to the agent/backend,
     // therefore defined as non-enumerabled. NOTE: If you add a new property, make sure that it is also defined as
     // non-enumerable.
+    Object.defineProperty(this, 'samplingType', {
+      value: 0,
+      writable: true,
+      enumerable: false
+    });
+    Object.defineProperty(this, 'samplingThreshold', {
+      value: 0,
+      writable: true,
+      enumerable: false
+    });
+    Object.defineProperty(this, 'samplingPrecision', {
+      value: 0,
+      writable: true,
+      enumerable: false
+    });
     Object.defineProperty(this, 'cleanupFunctions', {
       value: [],
       writable: false,
@@ -222,6 +258,33 @@ class InstanaSpan {
 
   disableAutoEnd() {
     this.manualEndMode = true;
+  }
+
+  /**
+   * @param {number} type
+   * @param {number} threshold
+   * @param {number} precision
+   */
+  setSamplingParameters(type, threshold, precision) {
+    this.samplingType = type || 0;
+    this.samplingThreshold = threshold || 0;
+    this.samplingPrecision = precision || 0;
+    if (this.samplingThreshold > 0) {
+      this.sm = {
+        s: this.samplingType,
+        th: this.samplingThreshold,
+        p: this.samplingPrecision
+      };
+    } else {
+      delete this.sm;
+    }
+  }
+
+  clearSamplingParameters() {
+    this.samplingType = 0;
+    this.samplingThreshold = 0;
+    this.samplingPrecision = 0;
+    delete this.sm;
   }
 }
 
@@ -360,6 +423,37 @@ function startSpan(spanAttributes = {}) {
   if (w3cTraceContext) {
     w3cTraceContext.updateParent(span.t, span.s);
     span.addCleanup(ns.set(w3cTraceContextKey, w3cTraceContext));
+  }
+
+  // Sampling determination & inheritance
+  if (parentSpan) {
+    if (parentSpan.samplingThreshold > 0 || parentSpan.samplingType > 0) {
+      span.setSamplingParameters(parentSpan.samplingType, parentSpan.samplingThreshold, parentSpan.samplingPrecision);
+    }
+  } else if (traceId) {
+    // Trace continuity from upstream (Instana or OpenTelemetry)
+    if (w3cTraceContext && w3cTraceContext.otelThreshold != null && w3cTraceContext.otelThreshold > 0) {
+      const samplingType = w3cTraceContext.instanaType || 1;
+      const samplingThreshold = w3cTraceContext.otelThreshold;
+      const samplingPrecision = w3cTraceContext.instanaPrecision || 4;
+      span.setSamplingParameters(samplingType, samplingThreshold, samplingPrecision);
+    }
+  } else if (!traceId) {
+    if (sampler) {
+      const isSampled = sampler.shouldSample(span.t);
+      if (!isSampled) {
+        setTracingLevel('0');
+        return setIgnoredSpan({
+          spanName: span.n,
+          kind: span.k,
+          traceId: span.t,
+          parentId: span.p,
+          data: span.data
+        });
+      }
+      const samplingConfig = sampler.getSamplingConfig();
+      span.setSamplingParameters(samplingConfig.type, samplingConfig.threshold, samplingConfig.precision);
+    }
   }
 
   const spanIsTraced = applyFilter(span);
@@ -784,6 +878,23 @@ module.exports = {
   setTracingLevel,
   tracingLevel,
   tracingSuppressed,
+  getSampler: () => sampler,
+  /**
+   * @param {any} s
+   */
+  setSampler: s => {
+    sampler = s;
+  },
+  /**
+   * @param {any} [type]
+   * @param {any} [threshold]
+   * @param {any} [precision]
+   */
+  updateSamplingConfig: (type, threshold, precision) => {
+    if (sampler) {
+      sampler.updateSamplingParameters(type, threshold, precision);
+    }
+  },
   getAsyncContext,
   enterAsyncContext,
   leaveAsyncContext,

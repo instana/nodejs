@@ -356,6 +356,22 @@ function mergeIntoTargetSpan(target, source, originalBucketKey) {
   // Sum up error count.
   target.ec += source.ec;
 
+  // Preserve sampling parameters if source has them and target does not
+  if ((!target.samplingThreshold || target.samplingThreshold <= 0) && source.samplingThreshold > 0) {
+    if (typeof target.setSamplingParameters === 'function') {
+      target.setSamplingParameters(source.samplingType, source.samplingThreshold, source.samplingPrecision);
+    } else {
+      target.samplingType = source.samplingType;
+      target.samplingThreshold = source.samplingThreshold;
+      target.samplingPrecision = source.samplingPrecision;
+      target.sm = {
+        s: source.samplingType || 0,
+        th: source.samplingThreshold,
+        p: source.samplingPrecision || 0
+      };
+    }
+  }
+
   setBatchSize(target, source);
 
   // After changing span.ts and span.d we might need to put the span into an additional bucket.
