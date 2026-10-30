@@ -958,6 +958,118 @@ describe('tracing/spanBuffer', () => {
           expect(resource).to.have.property('attributes');
           expect(resource.attributes).to.be.an('array');
         });
+
+        describe('log spans', () => {
+          function createLogSpan(overrides = {}) {
+            return {
+              t: '1234567803',
+              s: '1234567892',
+              p: '1234567891',
+              n: 'log.pino',
+              k: 2,
+              f: { e: '45543', h: 'localhost' },
+              ts: timestamp(Date.now()),
+              d: 1,
+              ec: 0,
+              data: { log: { message: 'Example log record', level: 'info' } },
+              ...overrides
+            };
+          }
+
+          function createHttpSpan() {
+            return {
+              t: '1234567803',
+              s: '1234567893',
+              n: 'node.http.server',
+              k: 1,
+              f: { e: '45543', h: 'localhost' },
+              ts: timestamp(Date.now()),
+              d: 25,
+              ec: 0,
+              data: { http: { operation: 'GET', url: '/orders', status: 200 } }
+            };
+          }
+
+          beforeEach(() => {
+            downstreamConnectionStub.sendLogs = sinon.stub();
+            spanBuffer.setTransmitImmediate(true);
+          });
+
+          afterEach(() => {
+            delete downstreamConnectionStub.sendLogs;
+          });
+
+          it('should send log spans in OTLP log format via sendLogs', () => {
+            spanBuffer.addSpan(createLogSpan());
+
+            expect(downstreamConnectionStub.sendLogs.calledOnce).to.be.true;
+            const sentPayload = downstreamConnectionStub.sendLogs.getCall(0).args[0];
+            expect(sentPayload.resourceLogs).to.have.lengthOf(1);
+
+            const logRecords = sentPayload.resourceLogs[0].scopeLogs[0].logRecords;
+            expect(logRecords).to.have.lengthOf(1);
+            expect(logRecords[0].body).to.deep.equal({ stringValue: 'Example log record' });
+            expect(logRecords[0].severityText).to.equal('info');
+            expect(logRecords[0].severityNumber).to.equal(9);
+            expect(logRecords[0].traceId).to.have.lengthOf(32);
+            expect(logRecords[0].spanId).to.have.lengthOf(16);
+          });
+
+          it('should not include log spans in the OTLP trace payload', () => {
+            spanBuffer.addSpan(createLogSpan());
+
+            expect(downstreamConnectionStub.sendSpans.calledOnce).to.be.true;
+            expect(downstreamConnectionStub.sendSpans.getCall(0).args[0]).to.deep.equal({ resourceSpans: [] });
+          });
+
+          it('should send trace spans and log spans separately', () => {
+            spanBuffer.setTransmitImmediate(false);
+            spanBuffer.addSpan(createLogSpan());
+            spanBuffer.addSpan(createHttpSpan());
+            spanBuffer.setTransmitImmediate(true);
+            spanBuffer.addSpan(createLogSpan({ s: '1234567894' }));
+
+            expect(downstreamConnectionStub.sendSpans.calledOnce).to.be.true;
+            expect(downstreamConnectionStub.sendLogs.calledOnce).to.be.true;
+
+            const traces = downstreamConnectionStub.sendSpans.getCall(0).args[0];
+            expect(traces.resourceSpans[0].scopeSpans[0].spans).to.have.lengthOf(1);
+            expect(traces.resourceSpans[0].scopeSpans[0].spans[0].name).to.not.match(/^log\./);
+
+            const logs = downstreamConnectionStub.sendLogs.getCall(0).args[0];
+            expect(logs.resourceLogs[0].scopeLogs[0].logRecords).to.have.lengthOf(2);
+          });
+
+          it('should not call sendLogs for spans that are not log spans', () => {
+            spanBuffer.addSpan(createHttpSpan());
+
+            expect(downstreamConnectionStub.sendSpans.calledOnce).to.be.true;
+            expect(downstreamConnectionStub.sendLogs.called).to.be.false;
+          });
+
+          it('should restore log spans in the buffer if sending the logs failed', () => {
+            downstreamConnectionStub.sendLogs.callsFake((_logs, cb) => cb(new Error('failed')));
+
+            spanBuffer.addSpan(createLogSpan());
+            expect(downstreamConnectionStub.sendLogs.calledOnce).to.be.true;
+
+            downstreamConnectionStub.sendLogs.resetHistory();
+            downstreamConnectionStub.sendLogs.callsFake((_logs, cb) => cb());
+            spanBuffer.addSpan(createLogSpan({ s: '1234567895' }));
+
+            expect(downstreamConnectionStub.sendLogs.calledOnce).to.be.true;
+            const logRecords =
+              downstreamConnectionStub.sendLogs.getCall(0).args[0].resourceLogs[0].scopeLogs[0].logRecords;
+            expect(logRecords).to.have.lengthOf(2);
+          });
+
+          it('should not fail if the downstream connection has no sendLogs function', () => {
+            delete downstreamConnectionStub.sendLogs;
+
+            expect(() => spanBuffer.addSpan(createLogSpan())).to.not.throw();
+            expect(downstreamConnectionStub.sendSpans.calledOnce).to.be.true;
+          });
+        });
       });
     });
   });

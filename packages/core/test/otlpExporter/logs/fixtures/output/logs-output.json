@@ -1,0 +1,97 @@
+{
+  "resourceLogs": [
+    {
+      "resource": {
+        "attributes": [
+          { "key": "service.name", "value": { "stringValue": "my.service" } },
+          { "key": "telemetry.sdk.language", "value": { "stringValue": "nodejs" } },
+          { "key": "telemetry.sdk.name", "value": { "stringValue": "instana" } },
+          { "key": "telemetry.sdk.version", "value": { "stringValue": "6.0.0" } },
+          { "key": "process.pid", "value": { "intValue": 12345 } },
+          { "key": "os.type", "value": { "stringValue": "linux" } },
+          { "key": "host.name", "value": { "stringValue": "test-hostname" } }
+        ]
+      },
+      "scopeLogs": [
+        {
+          "scope": {
+            "name": "instana.nodejs.tracer",
+            "version": "6.0.0"
+          },
+          "logRecords": [
+            {
+              "timeUnixNano": "1544712660300000000",
+              "observedTimeUnixNano": "1544712660300000000",
+              "body": { "stringValue": "Example log record" },
+              "severityText": "info",
+              "severityNumber": 9,
+              "traceId": "5b8efff798038103d269b633813fc60c",
+              "spanId": "eee19b7ec3c1b174",
+              "attributes": []
+            },
+            {
+              "timeUnixNano": "1544712660301000000",
+              "observedTimeUnixNano": "1544712660301000000",
+              "body": { "stringValue": "trace message" },
+              "severityText": "trace",
+              "severityNumber": 1,
+              "traceId": "00000000000000000000000000000abc",
+              "spanId": "0000000000000def",
+              "attributes": []
+            },
+            {
+              "timeUnixNano": "1544712660302000000",
+              "observedTimeUnixNano": "1544712660302000000",
+              "body": { "stringValue": "debug message" },
+              "severityText": "debug",
+              "severityNumber": 5,
+              "traceId": "00000000000000000000000000000abc",
+              "spanId": "0000000000000def",
+              "attributes": []
+            },
+            {
+              "timeUnixNano": "1544712660303000000",
+              "observedTimeUnixNano": "1544712660303000000",
+              "body": { "stringValue": "warn message" },
+              "severityText": "warn",
+              "severityNumber": 13,
+              "traceId": "00000000000000000000000000000abc",
+              "spanId": "0000000000000def",
+              "attributes": []
+            },
+            {
+              "timeUnixNano": "1544712660304000000",
+              "observedTimeUnixNano": "1544712660304000000",
+              "body": { "stringValue": "error message" },
+              "severityText": "error",
+              "severityNumber": 17,
+              "traceId": "00000000000000000000000000000abc",
+              "spanId": "0000000000000def",
+              "attributes": []
+            },
+            {
+              "timeUnixNano": "1544712660305000000",
+              "observedTimeUnixNano": "1544712660305000000",
+              "body": { "stringValue": "fatal message" },
+              "severityText": "fatal",
+              "severityNumber": 21,
+              "traceId": "00000000000000000000000000000abc",
+              "spanId": "0000000000000def",
+              "attributes": []
+            },
+            {
+              "timeUnixNano": "1544712660306000000",
+              "observedTimeUnixNano": "1544712660306000000",
+              "body": { "stringValue": "unknown level message" },
+              "severityText": "verbose",
+              "severityNumber": 0,
+              "traceId": "00000000000000000000000000000abc",
+              "spanId": "0000000000000def",
+              "attributes": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
