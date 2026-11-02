@@ -175,6 +175,9 @@
     },
     "conventional-changelog-conventionalcommits": "6.1.0",
     "@grpc/grpc-js": "1.14.5",
+    "@npmcli/package-json": {
+      "glob": "14.0.2"
+    },
     "@protobufjs/utf8": "1.1.1",
     "admin": {
       "bootstrap": "4.3.1",
@@ -184,6 +187,9 @@
     "body-parser": "2.4.0",
     "braces": "3.0.3",
     "c8": {
+      "glob": "14.0.2"
+    },
+    "cacache": {
       "glob": "14.0.2"
     },
     "depcheck": {
