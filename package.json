@@ -183,6 +183,9 @@
     "axios": "1.20.0",
     "body-parser": "2.4.0",
     "braces": "3.0.3",
+    "c8": {
+      "glob": "14.0.2"
+    },
     "depcheck": {
       "brace-expansion": "2.1.7",
       "postcss": "8.5.23",
@@ -248,6 +251,9 @@
     "prismjs": "1.30.0",
     "protobufjs": "8.6.6",
     "qs": "6.16.1",
+    "rimraf": {
+      "glob": "14.0.2"
+    },
     "sha.js": "2.4.12",
     "sigstore": "4.1.1",
     "stream-shift": "1.0.2",
