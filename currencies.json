@@ -249,7 +249,7 @@
     "core": false,
     "versions": [
       {
-        "v": "6.3.1",
+        "v": "6.3.2",
         "node": ">=22",
         "overrides": {
           "@grpc/grpc-js": "^1.14.5"
