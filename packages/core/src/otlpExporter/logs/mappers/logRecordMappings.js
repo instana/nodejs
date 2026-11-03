@@ -5,7 +5,8 @@
 'use strict';
 
 const ctx = require('../../common/context');
-const { toTraceId, toSpanId, toTimeUnixNano, toBody, toSeverityText, toSeverityNumber } = require('./util');
+const { toTraceId, toSpanId, toTimeUnixNano } = require('../../common/util');
+const { toBody, toSeverityText, toSeverityNumber } = require('./util');
 
 const OTLP = /** @type {any} */ (ctx.semConv);
 
@@ -26,7 +27,7 @@ const logRecordMappings = [
   { otlp: OTLP.logs.record.SEVERITY_NUMBER, instana: 'data.log.level', transform: toSeverityNumber },
   { otlp: OTLP.common.TRACE_ID, instana: 't', transform: toTraceId },
   { otlp: OTLP.common.SPAN_ID, instana: 'p', transform: toSpanId },
-  // TODO: log attributes, example exceptions
+  // TODO: Add log attributes (e.g. exceptions).
   { otlp: OTLP.logs.record.ATTRIBUTES, value: [] }
 ];
 

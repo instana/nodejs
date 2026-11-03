@@ -5,6 +5,7 @@
 'use strict';
 
 const { POINT_TYPES, METRIC_TYPES, OTLP_AGGREGATION_TEMPORALITY } = require('../constants');
+const { toTimeUnixNano } = require('../../common/util');
 
 /** @typedef {import('../mappers/runtimeMetricsMappings').MetricMapping} MetricMapping */
 
@@ -39,7 +40,7 @@ function toOtlpNumericField(value) {
 
 /**
  * @param {Array<{ attributes: Record<string, any>, value: any }>} rawPoints
- * @param {number} timeUnixNano
+ * @param {string | number} timeUnixNano
  * @param {string} type
  */
 function buildDataPoints(rawPoints, timeUnixNano, type) {
@@ -173,7 +174,7 @@ function extractMappedMetrics(metricsPayload, mapper) {
     return [];
   }
 
-  const timeUnixNano = toTimeUnixNano(metricsPayload.timestamp);
+  const timeUnixNano = toTimeUnixNano(metricsPayload.timestamp ?? Date.now());
 
   const result = [];
   const mappings = mapper.metricMappings;
@@ -192,11 +193,6 @@ function extractMappedMetrics(metricsPayload, mapper) {
   }
 
   return result;
-}
-
-/** @param {number} [timestampMs] */
-function toTimeUnixNano(timestampMs) {
-  return (timestampMs ?? Date.now()) * 1e6;
 }
 
 module.exports = {

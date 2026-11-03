@@ -7,30 +7,6 @@
 const { SEVERITY_NUMBERS } = require('./constants');
 
 /**
- * @param {any} traceId
- * @returns {string}
- */
-function toTraceId(traceId) {
-  return traceId ? String(traceId).padStart(32, '0') : '';
-}
-
-/**
- * @param {any} spanId
- * @returns {string}
- */
-function toSpanId(spanId) {
-  return spanId ? String(spanId).padStart(16, '0') : '';
-}
-
-/**
- * @param {any} ms
- * @returns {string | undefined}
- */
-function toTimeUnixNano(ms) {
-  return String(Number(ms) * 1000000);
-}
-
-/**
  * @param {any} message
  * @returns {{ stringValue: string } | undefined}
  */
@@ -71,9 +47,6 @@ function toSeverityNumber(level) {
 }
 
 module.exports = {
-  toTraceId,
-  toSpanId,
-  toTimeUnixNano,
   toBody,
   toSeverityText,
   toSeverityNumber
