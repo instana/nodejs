@@ -329,17 +329,11 @@ describe('tracing/converters/otlp', () => {
       expect(convert([])).to.deep.equal({ resourceSpans: [] });
     });
 
-    it('skips invalid, null and log spans while keeping valid spans', () => {
+    it('skips invalid and null spans while keeping valid spans', () => {
       const validSpan = createHttpSpan();
       const invalidSpan = null;
-      const logSpan = {
-        t: 'trace-2',
-        s: 'log-1',
-        n: 'log.console',
-        data: { log: { message: 'test' } }
-      };
 
-      const result = convert([null, invalidSpan, logSpan, validSpan, null]);
+      const result = convert([null, invalidSpan, validSpan, null]);
 
       expect(result.resourceSpans).to.have.lengthOf(1);
       expect(getConvertedSpans(result)).to.have.lengthOf(1);

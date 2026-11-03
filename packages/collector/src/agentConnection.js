@@ -114,6 +114,10 @@ const EXPORT_ENDPOINTS = {
   metrics: {
     otlpPath: '/v1/metrics',
     instanaPath: () => `/com.instana.plugin.nodejs.${pidStore.pid}`
+  },
+  logs: {
+    otlpPath: '/v1/logs',
+    instanaPath: () => `/com.instana.plugin.nodejs/traces.${pidStore.pid}`
   }
 };
 
@@ -414,6 +418,27 @@ exports.sendSpans = function sendSpans(spans, cb) {
   sendData({
     ...exportTarget,
     data: spans,
+    cb: callback,
+    ignore404: true
+  });
+};
+
+/**
+ * Sends OTLP log records.
+ * @param {Object} logs
+ * @param {(...args: *) => *} cb
+ */
+exports.sendLogs = function sendLogs(logs, cb) {
+  const callback = util.atMostOnce('callback for sendLogs', err => {
+    if (err) {
+      logger.debug(`Failed to send logs: ${err.message}`);
+    }
+    cb(err);
+  });
+
+  sendData({
+    ...resolveExportEndpoint('logs'),
+    data: logs,
     cb: callback,
     ignore404: true
   });

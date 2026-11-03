@@ -5,6 +5,7 @@
 'use strict';
 
 const ctx = require('../../common/context');
+const { toTraceId, toSpanId, toTimeUnixNano } = require('../../common/util');
 const { OTLP_SPAN_KINDS, INSTANA_SPAN_KINDS } = require('../mappers/constants');
 
 const metaMapper = {
@@ -14,8 +15,7 @@ const metaMapper = {
    */
   convertTraceId(span) {
     if (span.t === undefined) return undefined;
-    if (!span.t) return '';
-    return String(span.t).padStart(32, '0');
+    return toTraceId(span.t);
   },
 
   /**
@@ -24,8 +24,7 @@ const metaMapper = {
    */
   convertSpanId(span) {
     if (span.s === undefined) return undefined;
-    if (!span.s) return '';
-    return String(span.s).padStart(16, '0');
+    return toSpanId(span.s);
   },
 
   /**
@@ -34,8 +33,7 @@ const metaMapper = {
    */
   convertParentId(span) {
     if (span.p === undefined) return undefined;
-    if (!span.p) return '';
-    return String(span.p).padStart(16, '0');
+    return toSpanId(span.p);
   },
 
   /**
@@ -63,7 +61,7 @@ const metaMapper = {
    */
   convertStartTime(span) {
     if (span.ts === undefined) return undefined;
-    return String(Number(span.ts) * 1000000);
+    return toTimeUnixNano(span.ts);
   },
 
   /**
@@ -73,7 +71,7 @@ const metaMapper = {
   generateEndTime(span) {
     const startMs = span.ts !== undefined ? Number(span.ts) : 0;
     const deltaMs = span.d !== undefined ? Number(span.d) : 0;
-    return String((startMs + deltaMs) * 1000000);
+    return toTimeUnixNano(startMs + deltaMs);
   },
 
   /**

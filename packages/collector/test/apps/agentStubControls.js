@@ -291,6 +291,11 @@ class AgentStubControls {
     return data.traces.reduce((result, traceMessage) => result.concat(traceMessage.data), []);
   }
 
+  async getLogs() {
+    const data = await this.getReceivedData();
+    return data.logs.reduce((result, logMessage) => result.concat(logMessage.data), []);
+  }
+
   async getProfiles() {
     const data = await this.getReceivedData();
     return data.profiles.reduce((result, profile) => result.concat(profile.data), []);
