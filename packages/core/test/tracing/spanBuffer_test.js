@@ -1015,11 +1015,11 @@ describe('tracing/spanBuffer', () => {
             expect(logRecords[0].spanId).to.have.lengthOf(16);
           });
 
-          it('should not include log spans in the OTLP trace payload', () => {
+          it('should not send an empty trace payload if only log spans are buffered', () => {
             spanBuffer.addSpan(createLogSpan());
 
-            expect(downstreamConnectionStub.sendSpans.calledOnce).to.be.true;
-            expect(downstreamConnectionStub.sendSpans.getCall(0).args[0]).to.deep.equal({ resourceSpans: [] });
+            expect(downstreamConnectionStub.sendLogs.calledOnce).to.be.true;
+            expect(downstreamConnectionStub.sendSpans.called).to.be.false;
           });
 
           it('should send trace spans and log spans separately', () => {
@@ -1067,7 +1067,7 @@ describe('tracing/spanBuffer', () => {
             delete downstreamConnectionStub.sendLogs;
 
             expect(() => spanBuffer.addSpan(createLogSpan())).to.not.throw();
-            expect(downstreamConnectionStub.sendSpans.calledOnce).to.be.true;
+            expect(downstreamConnectionStub.sendSpans.called).to.be.false;
           });
         });
       });

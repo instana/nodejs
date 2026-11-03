@@ -6,7 +6,6 @@
 
 const transformers = require('./transformers');
 const mappers = require('./mappers');
-const { isLogSpan } = require('./util');
 
 const { INSTRUMENTATION_SCOPE } = transformers.resource;
 
@@ -33,10 +32,6 @@ function convert(spans) {
   // TODO: consider parallel processing of spans in later phase
   for (let i = 0; i < spans.length; i++) {
     const span = spans[i];
-    if (isLogSpan(span)) {
-      // TODO: Add log span converter
-      continue;
-    }
 
     try {
       const mapper = mappers.get(span);

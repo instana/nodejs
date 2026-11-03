@@ -8,7 +8,6 @@
 const tracingMetrics = require('./metrics');
 const instanaBackendMapper = require('./backend_mappers');
 const otlpExporter = require('../otlpExporter');
-const { isLogSpan } = require('../otlpExporter/traces/util');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -457,8 +456,18 @@ function transmitSpans() {
 
   if (useOtlpExporter) {
     // OTLP exports logs as a separate signal, so log spans must not be part of the traces.
-    transmitLogSpans(spansToSend.filter(isLogSpan));
-    spansToSend = spansToSend.filter(span => !isLogSpan(span));
+    const { traceSpans, logSpans } = otlpExporter.splitSignals(spansToSend);
+    spansToSend = traceSpans;
+    transmitLogSpans(logSpans);
+
+    if (spansToSend.length === 0) {
+      // Only log spans in this flush, there is nothing to send as traces.
+      if (!isFaaS) {
+        transmissionTimeoutHandle = setTimeout(transmitSpans, transmissionDelay);
+        transmissionTimeoutHandle.unref();
+      }
+      return;
+    }
   }
 
   const transformedSpans = applySpanTransformation(spansToSend);
@@ -506,9 +515,15 @@ function transmitLogSpans(logSpans) {
  * array.
  */
 exports.getAndResetSpans = function getAndResetSpans() {
-  const spansToSend = spans;
+  let spansToSend = spans;
   spans = [];
   batchingBuckets.clear();
+
+  if (useOtlpExporter) {
+    // Log spans are not part of the OTLP traces payload.
+    spansToSend = otlpExporter.splitSignals(spansToSend).traceSpans;
+  }
+
   return applySpanTransformation(spansToSend);
 };
 
