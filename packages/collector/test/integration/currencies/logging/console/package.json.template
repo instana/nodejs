@@ -4,6 +4,7 @@
   },
   "overrides": {
     "moment": "2.31.0",
-    "brace-expansion": "1.1.21"
+    "brace-expansion": "1.1.21",
+    "minimatch": "11.0.1"
   }
 }
