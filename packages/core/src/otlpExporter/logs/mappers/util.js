@@ -4,7 +4,7 @@
 
 'use strict';
 
-const { SEVERITY_NUMBERS, SEVERITY_NUMBER_UNKNOWN } = require('./constants');
+const { SEVERITY_NUMBERS } = require('./constants');
 
 /**
  * @param {any} traceId
@@ -23,10 +23,8 @@ function toSpanId(spanId) {
 }
 
 /**
- * Converts milliseconds to nanoseconds.
- *
  * @param {any} ms
- * @returns {string}
+ * @returns {string | undefined}
  */
 function toTimeUnixNano(ms) {
   return String(Number(ms) * 1000000);
@@ -34,7 +32,7 @@ function toTimeUnixNano(ms) {
 
 /**
  * @param {any} message
- * @returns {{ stringValue: string }}
+ * @returns {{ stringValue: string } | undefined}
  */
 function toBody(message) {
   return { stringValue: String(message) };
@@ -54,7 +52,10 @@ function normalizeLevel(level) {
  * @returns {string | undefined}
  */
 function toSeverityText(level) {
-  return String(level).trim() === '' ? undefined : String(level);
+  if (level && String(level).trim() !== '') {
+    return String(level);
+  }
+  return undefined;
 }
 
 /**
@@ -62,12 +63,11 @@ function toSeverityText(level) {
  * @returns {number | undefined}
  */
 function toSeverityNumber(level) {
-  const normalized = normalizeLevel(level);
-  if (normalized === undefined) {
-    return undefined;
+  if (level && String(level).trim() !== '') {
+    const normalized = normalizeLevel(level);
+    return normalized ? SEVERITY_NUMBERS.get(normalized) : undefined;
   }
-  const severityNumber = SEVERITY_NUMBERS.get(normalized);
-  return severityNumber === undefined ? SEVERITY_NUMBER_UNKNOWN : severityNumber;
+  return undefined;
 }
 
 module.exports = {

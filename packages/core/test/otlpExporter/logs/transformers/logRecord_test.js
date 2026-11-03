@@ -33,12 +33,12 @@ describe('otlpExporter/logs/transformers/logRecord', () => {
       });
     });
 
-    it('should map an unknown level to severityNumber 0 and keep the original text', () => {
+    it('should omit severityNumber for an unmapped level and keep the raw severityText', () => {
       const span = { t: '1', p: '2', ts: 1, data: { log: { message: 'x', level: 'Weird' } } };
       const record = extractLogRecord(span, logRecordMappings);
 
       expect(record.severityText).to.equal('Weird');
-      expect(record.severityNumber).to.equal(0);
+      expect(record).to.not.have.property('severityNumber');
     });
 
     it('should omit severity fields for an empty level', () => {

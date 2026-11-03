@@ -172,7 +172,7 @@ describe('logs/converters/otlp', () => {
           ['warn', 13],
           ['error', 17],
           ['fatal', 21],
-          ['verbose', 0]
+          ['verbose', undefined]
         ]);
       });
 

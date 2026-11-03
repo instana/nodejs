@@ -84,7 +84,6 @@
               "observedTimeUnixNano": "1544712660306000000",
               "body": { "stringValue": "unknown level message" },
               "severityText": "verbose",
-              "severityNumber": 0,
               "traceId": "00000000000000000000000000000abc",
               "spanId": "0000000000000def",
               "attributes": []

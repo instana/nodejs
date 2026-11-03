@@ -4,13 +4,15 @@
 
 'use strict';
 
+const { LOG_LEVEL } = require('../../../util/constants');
+
 const SEVERITY_NUMBERS = new Map([
-  ['trace', 1],
-  ['debug', 5],
-  ['info', 9],
-  ['warn', 13],
-  ['error', 17],
-  ['fatal', 21]
+  [LOG_LEVEL.TRACE, 1],
+  [LOG_LEVEL.DEBUG, 5],
+  [LOG_LEVEL.INFO, 9],
+  [LOG_LEVEL.WARN, 13],
+  [LOG_LEVEL.ERROR, 17],
+  [LOG_LEVEL.FATAL, 21]
 ]);
 
 // According to OTEL spec, SeverityNumber=0 is used to represent an unspecified value.

@@ -78,6 +78,7 @@ describe('otlpExporter/logs/mappers/util', () => {
     it('should return undefined for an empty level', () => {
       expect(toSeverityText('')).to.equal(undefined);
       expect(toSeverityText('   ')).to.equal(undefined);
+      expect(toSeverityText(undefined)).to.equal(undefined);
     });
   });
 
@@ -97,23 +98,29 @@ describe('otlpExporter/logs/mappers/util', () => {
 
     it('should be case insensitive', () => {
       expect(toSeverityNumber('ERROR')).to.equal(17);
+      expect(toSeverityNumber('Warn')).to.equal(13);
+      expect(toSeverityNumber('INFO')).to.equal(9);
     });
 
     it('should trim the level before the lookup', () => {
       expect(toSeverityNumber(' error ')).to.equal(17);
+      expect(toSeverityNumber(' warn ')).to.equal(13);
     });
 
     it('should return undefined for an empty level', () => {
       expect(toSeverityNumber('')).to.equal(undefined);
       expect(toSeverityNumber('   ')).to.equal(undefined);
+      expect(toSeverityNumber(undefined)).to.equal(undefined);
     });
 
-    it('should map unknown levels to 0', () => {
-      expect(toSeverityNumber('unknown')).to.equal(0);
+    it('should return undefined for unknown levels (omit severityNumber)', () => {
+      expect(toSeverityNumber('unknown')).to.equal(undefined);
+      expect(toSeverityNumber('verbose')).to.equal(undefined);
+      expect(toSeverityNumber('silly')).to.equal(undefined);
     });
 
     it('should not resolve inherited object properties', () => {
-      expect(toSeverityNumber('constructor')).to.equal(0);
+      expect(toSeverityNumber('constructor')).to.equal(undefined);
     });
   });
 });
