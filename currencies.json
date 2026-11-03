@@ -306,7 +306,7 @@
     "core": false,
     "versions": [
       {
-        "v": "1.14.6"
+        "v": "1.14.7"
       }
     ],
     "group": "protocols"
