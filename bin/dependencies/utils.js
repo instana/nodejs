@@ -16,6 +16,16 @@ const fs = require('fs');
 const MIN_VERSION_AGE_DAYS = 5;
 exports.MIN_VERSION_AGE_DAYS = MIN_VERSION_AGE_DAYS;
 
+/**
+ * Parses the JSON output of an `npm view/show <pkg> <field> --json` call which returns an object.
+ * Newer npm versions can wrap the object in an array, in which case the entries are merged.
+ */
+const parseNpmObject = output => {
+  const parsed = JSON.parse(output.toString());
+  return Array.isArray(parsed) ? Object.assign({}, ...parsed) : parsed;
+};
+exports.parseNpmObject = parseNpmObject;
+
 exports.getDelayedLatestVersion = ({
   pkgName,
   installedVersion,
@@ -25,7 +35,7 @@ exports.getDelayedLatestVersion = ({
   today = new Date(),
   execSyncFn = execSync
 }) => {
-  const time = JSON.parse(execSyncFn(`npm view ${pkgName} time --json`).toString());
+  const time = parseNpmObject(execSyncFn(`npm view ${pkgName} time --json`));
   const cutoff = moment(today).subtract(minAgeDays, 'days');
 
   const candidates = Object.entries(time)
@@ -91,7 +101,7 @@ exports.getPackageDependencyVersion = name => {
 };
 
 const hasPrereleaseTag = (packageName, majorVersion) => {
-  const tags = JSON.parse(execSync(`npm view ${packageName} dist-tags --json`).toString());
+  const tags = parseNpmObject(execSync(`npm view ${packageName} dist-tags --json`));
   let toReturn = false;
 
   Object.keys(tags).forEach(tag => {

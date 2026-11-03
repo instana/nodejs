@@ -61,7 +61,7 @@ currencies = currencies.map(currency => {
 
     try {
       latestVersionPublishedAt = new Date(
-        JSON.parse(execSync(`npm show ${currency.name} time --json`).toString())[latestVersion]
+        utils.parseNpmObject(execSync(`npm show ${currency.name} time --json`))[latestVersion]
       );
     } catch (err) {
       // ignore
@@ -69,7 +69,7 @@ currencies = currencies.map(currency => {
 
     if (!upToDate) {
       try {
-        const releaseList = JSON.parse(execSync(`npm show ${currency.name} time --json`).toString());
+        const releaseList = utils.parseNpmObject(execSync(`npm show ${currency.name} time --json`));
         daysBehind = utils.getDaysBehind(releaseList, installedVersion);
       } catch (err) {
         console.log(err);
