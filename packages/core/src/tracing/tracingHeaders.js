@@ -471,6 +471,17 @@ exports.setSpanAttributes = function (span, tracingHeaders) {
   if (tracingHeaders.synthetic) {
     span.sy = true;
   }
+  if (tracingHeaders.w3cTraceContext) {
+    const { w3cTraceContext } = tracingHeaders;
+    if (w3cTraceContext.otelThreshold != null && w3cTraceContext.otelThreshold > 0) {
+      const samplingType = w3cTraceContext.instanaType || 1;
+      const samplingThreshold = w3cTraceContext.otelThreshold;
+      const samplingPrecision = w3cTraceContext.instanaPrecision || 4;
+      if (typeof span.setSamplingParameters === 'function') {
+        span.setSamplingParameters(samplingType, samplingThreshold, samplingPrecision);
+      }
+    }
+  }
 };
 
 /**

@@ -2,6 +2,8 @@
  * (c) Copyright IBM Corp. 2025
  */
 
+/* global BigInt */
+
 'use strict';
 
 /**
@@ -53,3 +55,15 @@ exports.allowedTransmissionDelayValues = [1000, 5000, 10000, 20000, 30000, 60000
 exports.DEFAULT_DB_BIND_VARIABLES_DISABLE = true;
 /** @type {string[]} */
 exports.DEFAULT_DB_BIND_VARIABLES_ALLOWED_COLUMNS = [];
+
+exports.DEFAULT_SAMPLING_ENABLE = false;
+exports.DEFAULT_SAMPLING_TYPE = 0;
+exports.DEFAULT_SAMPLING_THRESHOLD = 0;
+exports.DEFAULT_SAMPLING_PRECISION = 0;
+exports.DEFAULT_SAMPLING_RATE = undefined;
+exports.SAMPLING_TYPES = {
+  NONE: 0,
+  RANDOM: 1
+};
+exports.SAMPLING_MASK_56 = BigInt('0xffffffffffffff');
+exports.MAX_56_BIT_VALUE = BigInt('72057594037927936');

@@ -219,6 +219,50 @@ describe('W3cTraceContext API', () => {
       expect(traceContext.sampled).to.be.false;
     });
   });
+
+  describe('trace continuity with sampling metadata', () => {
+    it('should add default pr:4;ty:1 to in entry when continuing OTel trace with ot=th:8', () => {
+      const incomingTraceParent = `00-${traceParentTraceId}-${traceParentParentId}-01`;
+      const incomingTraceState = 'ot=th:8,rojo=123';
+      const traceContext = parse(incomingTraceParent, incomingTraceState);
+
+      expect(traceContext.otelThresholdHex).to.equal('8');
+      expect(traceContext.otelThreshold).to.equal(36028797018963968);
+
+      // Start child span
+      traceContext.updateParent(otherInstana16CharTraceId, otherInstanaSpanId);
+
+      // in entry should be leftmost and have pr:4;ty:1
+      expect(traceContext.instanaPrecision).to.equal(4);
+      expect(traceContext.instanaType).to.equal(1);
+
+      const renderedState = traceContext.renderTraceState();
+      expect(renderedState).to.equal(
+        `${constants.w3cInstana}=${otherInstana16CharTraceId};${otherInstanaSpanId};pr:4;ty:1,ot=th:8,rojo=123`
+      );
+    });
+
+    it('should preserve existing pr:14;ty:1 and ot=th:8 when continuing Instana trace', () => {
+      const incomingTraceParent = `00-${traceParentTraceId}-${traceParentParentId}-01`;
+      const incomingTraceState = `${constants.w3cInstana}=${instana16CharTraceId};${instanaSpanId};pr:14;ty:1,ot=th:8`;
+      const traceContext = parse(incomingTraceParent, incomingTraceState);
+
+      expect(traceContext.instanaPrecision).to.equal(14);
+      expect(traceContext.instanaType).to.equal(1);
+      expect(traceContext.otelThreshold).to.equal(36028797018963968);
+
+      // Start child span
+      traceContext.updateParent(otherInstana16CharTraceId, otherInstanaSpanId);
+
+      expect(traceContext.instanaPrecision).to.equal(14);
+      expect(traceContext.instanaType).to.equal(1);
+
+      const renderedState = traceContext.renderTraceState();
+      expect(renderedState).to.equal(
+        `${constants.w3cInstana}=${otherInstana16CharTraceId};${otherInstanaSpanId};pr:14;ty:1,ot=th:8`
+      );
+    });
+  });
 });
 
 function idLengthTitle(shortId) {
