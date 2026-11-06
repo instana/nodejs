@@ -46,10 +46,19 @@ const ALL_TARGETS = ['default', ...ALL_CURRENCY_GROUPS, ...ALL_SIMPLE_TARGETS];
 
 const TARGET = whatArg ? whatArg.split('=')[1] : null;
 const NODE_IMAGE = 'mirror.gcr.io/library/node:24';
+const NETWORK_FILTER_IMAGE = 'mirror.gcr.io/monadicalsas/network-filter:v0.3.0';
 const SIDECAR_NETWORK = 'offline-net';
 
 function sidecar(name) {
   return sidecarsData.sidecars.find(s => s.name === name);
+}
+
+function dockerPullScript(name) {
+  const s = sidecar(name);
+  if (!s || !s.image) return '';
+  const img = JSON.stringify(s.image.trim());
+  const platform = s.platform ? ` ${JSON.stringify(s.platform)}` : '';
+  return `docker_pull_retry ${img}${platform}`;
 }
 
 function dockerRunScript(name, options = {}) {
@@ -238,6 +247,7 @@ function readNeeds(folder) {
  */
 function buildSocatFwdImageLines() {
   return [
+    'docker_pull_retry "mirror.gcr.io/library/alpine:3"',
     "docker build -t socat-fwd - <<'DOCKERFILE'",
     'FROM mirror.gcr.io/library/alpine:3',
     'RUN apk add --no-cache socat netcat-openbsd',
@@ -278,10 +288,11 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
     'ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"'
   );
   scriptLines.push('');
+  scriptLines.push(`docker_pull_retry "${NETWORK_FILTER_IMAGE}"`);
   scriptLines.push('docker run --detach --name "$FILTER_CTR" \\');
   scriptLines.push('  --cap-add NET_ADMIN \\');
   scriptLines.push('  --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \\');
-  scriptLines.push('  mirror.gcr.io/monadicalsas/network-filter:latest');
+  scriptLines.push(`  ${NETWORK_FILTER_IMAGE}`);
   scriptLines.push('');
   scriptLines.push('elapsed=0');
   scriptLines.push('until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do');
@@ -309,6 +320,7 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
 
   scriptLines.push('NODE_MAJOR="${node_version%%.*}"');
   scriptLines.push('NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"');
+  scriptLines.push('docker_pull_retry "$NODE_IMAGE"');
   scriptLines.push('');
   scriptLines.push('echo "Running npm install & test folder setup inside filtered container..."');
   scriptLines.push('docker run --rm \\');
@@ -323,6 +335,8 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
 
   if (needs.includes('oracledb')) {
     scriptLines.push('# start oracledb early — initialises during npm install');
+    const pullOracle = dockerPullScript('oracledb');
+    if (pullOracle) scriptLines.push(pullOracle);
     scriptLines.push(dockerRunScript('oracledb'));
     const socatOracle = socatForwardScript('oracledb');
     if (socatOracle) scriptLines.push(socatOracle);
@@ -340,6 +354,8 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
       } else {
         const s = sidecar(need);
         scriptLines.push(`# start ${need}`);
+        const pullSidecar = dockerPullScript(need);
+        if (pullSidecar) scriptLines.push(pullSidecar);
         if (s && s.bootstrap) {
           const { network: bootstrapNetwork, readinessCommand, timeoutSeconds } = s.bootstrap;
           // Some services require temporary egress at startup to lazily download backends.
@@ -503,7 +519,24 @@ function dockerClientInstallScript() {
     'chmod a+r /etc/apt/keyrings/docker.gpg',
     'echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null',
     'apt-get update -qq && apt-get install -y -qq docker-ce-cli',
-    "timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'"
+    "timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'",
+    '',
+    'docker_pull_retry() {',
+    '  local img="$1"',
+    '  local platform="${2:-}"',
+    '  local platform_flag=""',
+    '  [ -n "$platform" ] && platform_flag="--platform $platform"',
+    '  for i in {1..3}; do',
+    '    docker pull $platform_flag "$img" && break || {',
+    '      if [ "$i" -eq 3 ]; then',
+    '        echo "ERROR: Failed to pull $img after 3 attempts"',
+    '        exit 1',
+    '      fi',
+    '      echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."',
+    '      sleep 5',
+    '    }',
+    '  done',
+    '}'
   ].join('\n');
 }
 
@@ -726,10 +759,11 @@ function buildSimpleTask(
     'ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"'
   );
   scriptLines.push('');
+  scriptLines.push(`docker_pull_retry "${NETWORK_FILTER_IMAGE}"`);
   scriptLines.push('docker run --detach --name "$FILTER_CTR" \\');
   scriptLines.push('  --cap-add NET_ADMIN \\');
   scriptLines.push('  --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \\');
-  scriptLines.push('  mirror.gcr.io/monadicalsas/network-filter:latest');
+  scriptLines.push(`  ${NETWORK_FILTER_IMAGE}`);
   scriptLines.push('');
   scriptLines.push('elapsed=0');
   scriptLines.push('until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do');
@@ -757,6 +791,7 @@ function buildSimpleTask(
 
   scriptLines.push('NODE_MAJOR="${node_version%%.*}"');
   scriptLines.push('NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"');
+  scriptLines.push('docker_pull_retry "$NODE_IMAGE"');
   scriptLines.push('');
   scriptLines.push('echo "Running npm install & test folder setup inside filtered container..."');
   scriptLines.push('docker run --rm \\');
@@ -773,6 +808,8 @@ function buildSimpleTask(
   if (needs.length > 0) {
     for (const need of needs) {
       scriptLines.push(`# start ${need}`);
+      const pullSidecar = dockerPullScript(need);
+      if (pullSidecar) scriptLines.push(pullSidecar);
       scriptLines.push(dockerRunScript(need));
       const socat = socatForwardScript(need);
       if (socat) scriptLines.push(socat);
