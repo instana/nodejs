@@ -62,6 +62,23 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          docker_pull_retry() {
+            local img="$1"
+            local platform="${2:-}"
+            local platform_flag=""
+            [ -n "$platform" ] && platform_flag="--platform $platform"
+            for i in {1..3}; do
+              docker pull $platform_flag "$img" && break || {
+                if [ "$i" -eq 3 ]; then
+                  echo "ERROR: Failed to pull $img after 3 attempts"
+                  exit 1
+                fi
+                echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."
+                sleep 5
+              }
+            done
+          }
+
           # start network-filter sidecar
           FILTER_CTR="network-filter-collector-databases-elasticsearch-$$"
           cleanup() {
@@ -71,6 +88,7 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
@@ -89,6 +107,7 @@ tasks:
           echo "network-filter ready after ${elapsed}s"
 
           # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker_pull_retry "mirror.gcr.io/library/alpine:3"
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
@@ -101,6 +120,7 @@ tasks:
 
           NODE_MAJOR="${node_version%%.*}"
           NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+          docker_pull_retry "$NODE_IMAGE"
 
           echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
@@ -111,6 +131,7 @@ tasks:
             bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
 
           # start elasticsearch
+          docker_pull_retry "mirror.gcr.io/elastic/elasticsearch:9.0.0"
           docker run -d --network offline-net --name elasticsearch \
             -e discovery.type="single-node" \
             -e ES_JAVA_OPTS="-Xms500m -Xmx500m" \
@@ -273,6 +294,23 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          docker_pull_retry() {
+            local img="$1"
+            local platform="${2:-}"
+            local platform_flag=""
+            [ -n "$platform" ] && platform_flag="--platform $platform"
+            for i in {1..3}; do
+              docker pull $platform_flag "$img" && break || {
+                if [ "$i" -eq 3 ]; then
+                  echo "ERROR: Failed to pull $img after 3 attempts"
+                  exit 1
+                fi
+                echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."
+                sleep 5
+              }
+            done
+          }
+
           # start network-filter sidecar
           FILTER_CTR="network-filter-collector-databases-client-$$"
           cleanup() {
@@ -282,6 +320,7 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
@@ -300,6 +339,7 @@ tasks:
           echo "network-filter ready after ${elapsed}s"
 
           # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker_pull_retry "mirror.gcr.io/library/alpine:3"
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
@@ -312,6 +352,7 @@ tasks:
 
           NODE_MAJOR="${node_version%%.*}"
           NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+          docker_pull_retry "$NODE_IMAGE"
 
           echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
@@ -322,6 +363,7 @@ tasks:
             bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
 
           # start redis
+          docker_pull_retry "mirror.gcr.io/library/redis:7.4.3"
           docker run -d --network offline-net --name redis \
             "mirror.gcr.io/library/redis:7.4.3"
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis)
@@ -338,11 +380,13 @@ tasks:
             'until nc -z 127.0.0.1 6379 2>/dev/null; do sleep 1; done'
 
           # start redis-slave
+          docker_pull_retry "mirror.gcr.io/library/redis:7.4.3"
           docker run -d --network offline-net --name redis-slave \
             "mirror.gcr.io/library/redis:7.4.3" "redis-server" "--replicaof" "redis" "6379" "--port" "6380"
           sleep 60
 
           # start redis-sentinel
+          docker_pull_retry "mirror.gcr.io/library/redis:7.4.3"
           docker run -d --network offline-net --name redis-sentinel \
             "mirror.gcr.io/library/redis:7.4.3" "sh" "-c" "echo \"sentinel monitor mymaster redis 6379 2\" > /etc/sentinel.conf && echo \"sentinel down-after-milliseconds mymaster 1000\" >> /etc/sentinel.conf && echo \"sentinel failover-timeout mymaster 5000\" >> /etc/sentinel.conf && echo \"sentinel parallel-syncs mymaster 1\" >> /etc/sentinel.conf && echo \"sentinel resolve-hostnames yes\" >> /etc/sentinel.conf && redis-server /etc/sentinel.conf --sentinel --port 26379"
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis-sentinel)
@@ -358,6 +402,7 @@ tasks:
           sleep 60
 
           # start redis-cluster
+          docker_pull_retry "mirror.gcr.io/library/redis:7.4.3"
           docker run -d --network offline-net --name redis-cluster \
             --entrypoint "sh" \
             "mirror.gcr.io/library/redis:7.4.3" "-c" "redis-server --port 7000 --cluster-enabled yes --cluster-config-file nodes-7000.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && redis-server --port 7001 --cluster-enabled yes --cluster-config-file nodes-7001.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && redis-server --port 7002 --cluster-enabled yes --cluster-config-file nodes-7002.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && sleep 1 && echo 'yes' | redis-cli --cluster create 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 --cluster-replicas 0 && tail -f /dev/null"
@@ -532,6 +577,23 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          docker_pull_retry() {
+            local img="$1"
+            local platform="${2:-}"
+            local platform_flag=""
+            [ -n "$platform" ] && platform_flag="--platform $platform"
+            for i in {1..3}; do
+              docker pull $platform_flag "$img" && break || {
+                if [ "$i" -eq 3 ]; then
+                  echo "ERROR: Failed to pull $img after 3 attempts"
+                  exit 1
+                fi
+                echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."
+                sleep 5
+              }
+            done
+          }
+
           # start network-filter sidecar
           FILTER_CTR="network-filter-collector-databases-couchbase-$$"
           cleanup() {
@@ -541,6 +603,7 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
@@ -559,6 +622,7 @@ tasks:
           echo "network-filter ready after ${elapsed}s"
 
           # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker_pull_retry "mirror.gcr.io/library/alpine:3"
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
@@ -571,6 +635,7 @@ tasks:
 
           NODE_MAJOR="${node_version%%.*}"
           NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+          docker_pull_retry "$NODE_IMAGE"
 
           echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
@@ -581,6 +646,7 @@ tasks:
             bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
 
           # start couchbase
+          docker_pull_retry "mirror.gcr.io/library/couchbase:7.6.7"
           docker run -d --network offline-net --name couchbase \
             "mirror.gcr.io/library/couchbase:7.6.7"
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' couchbase)
@@ -790,6 +856,23 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          docker_pull_retry() {
+            local img="$1"
+            local platform="${2:-}"
+            local platform_flag=""
+            [ -n "$platform" ] && platform_flag="--platform $platform"
+            for i in {1..3}; do
+              docker pull $platform_flag "$img" && break || {
+                if [ "$i" -eq 3 ]; then
+                  echo "ERROR: Failed to pull $img after 3 attempts"
+                  exit 1
+                fi
+                echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."
+                sleep 5
+              }
+            done
+          }
+
           # start network-filter sidecar
           FILTER_CTR="network-filter-collector-databases-ibm-db-$$"
           cleanup() {
@@ -799,6 +882,7 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
@@ -817,6 +901,7 @@ tasks:
           echo "network-filter ready after ${elapsed}s"
 
           # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker_pull_retry "mirror.gcr.io/library/alpine:3"
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
@@ -829,6 +914,7 @@ tasks:
 
           NODE_MAJOR="${node_version%%.*}"
           NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+          docker_pull_retry "$NODE_IMAGE"
 
           echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
@@ -839,6 +925,7 @@ tasks:
             bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
 
           # start ibm_db
+          docker_pull_retry "icr.io/db2_community/db2:12.1.5.0" "linux/amd64"
           docker run -d --network offline-net --name ibm_db \
             --platform linux/amd64 \
             --privileged \
@@ -1020,6 +1107,23 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          docker_pull_retry() {
+            local img="$1"
+            local platform="${2:-}"
+            local platform_flag=""
+            [ -n "$platform" ] && platform_flag="--platform $platform"
+            for i in {1..3}; do
+              docker pull $platform_flag "$img" && break || {
+                if [ "$i" -eq 3 ]; then
+                  echo "ERROR: Failed to pull $img after 3 attempts"
+                  exit 1
+                fi
+                echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."
+                sleep 5
+              }
+            done
+          }
+
           # start network-filter sidecar
           FILTER_CTR="network-filter-collector-databases-ioredis-$$"
           cleanup() {
@@ -1029,6 +1133,7 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
@@ -1047,6 +1152,7 @@ tasks:
           echo "network-filter ready after ${elapsed}s"
 
           # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker_pull_retry "mirror.gcr.io/library/alpine:3"
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
@@ -1059,6 +1165,7 @@ tasks:
 
           NODE_MAJOR="${node_version%%.*}"
           NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+          docker_pull_retry "$NODE_IMAGE"
 
           echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
@@ -1069,6 +1176,7 @@ tasks:
             bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
 
           # start redis
+          docker_pull_retry "mirror.gcr.io/library/redis:7.4.3"
           docker run -d --network offline-net --name redis \
             "mirror.gcr.io/library/redis:7.4.3"
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis)
@@ -1085,11 +1193,13 @@ tasks:
             'until nc -z 127.0.0.1 6379 2>/dev/null; do sleep 1; done'
 
           # start redis-slave
+          docker_pull_retry "mirror.gcr.io/library/redis:7.4.3"
           docker run -d --network offline-net --name redis-slave \
             "mirror.gcr.io/library/redis:7.4.3" "redis-server" "--replicaof" "redis" "6379" "--port" "6380"
           sleep 60
 
           # start redis-sentinel
+          docker_pull_retry "mirror.gcr.io/library/redis:7.4.3"
           docker run -d --network offline-net --name redis-sentinel \
             "mirror.gcr.io/library/redis:7.4.3" "sh" "-c" "echo \"sentinel monitor mymaster redis 6379 2\" > /etc/sentinel.conf && echo \"sentinel down-after-milliseconds mymaster 1000\" >> /etc/sentinel.conf && echo \"sentinel failover-timeout mymaster 5000\" >> /etc/sentinel.conf && echo \"sentinel parallel-syncs mymaster 1\" >> /etc/sentinel.conf && echo \"sentinel resolve-hostnames yes\" >> /etc/sentinel.conf && redis-server /etc/sentinel.conf --sentinel --port 26379"
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis-sentinel)
@@ -1105,6 +1215,7 @@ tasks:
           sleep 60
 
           # start redis-cluster
+          docker_pull_retry "mirror.gcr.io/library/redis:7.4.3"
           docker run -d --network offline-net --name redis-cluster \
             --entrypoint "sh" \
             "mirror.gcr.io/library/redis:7.4.3" "-c" "redis-server --port 7000 --cluster-enabled yes --cluster-config-file nodes-7000.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && redis-server --port 7001 --cluster-enabled yes --cluster-config-file nodes-7001.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && redis-server --port 7002 --cluster-enabled yes --cluster-config-file nodes-7002.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && sleep 1 && echo 'yes' | redis-cli --cluster create 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 --cluster-replicas 0 && tail -f /dev/null"
@@ -1279,6 +1390,23 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          docker_pull_retry() {
+            local img="$1"
+            local platform="${2:-}"
+            local platform_flag=""
+            [ -n "$platform" ] && platform_flag="--platform $platform"
+            for i in {1..3}; do
+              docker pull $platform_flag "$img" && break || {
+                if [ "$i" -eq 3 ]; then
+                  echo "ERROR: Failed to pull $img after 3 attempts"
+                  exit 1
+                fi
+                echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."
+                sleep 5
+              }
+            done
+          }
+
           # start network-filter sidecar
           FILTER_CTR="network-filter-collector-databases-memcached-$$"
           cleanup() {
@@ -1288,6 +1416,7 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
@@ -1306,6 +1435,7 @@ tasks:
           echo "network-filter ready after ${elapsed}s"
 
           # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker_pull_retry "mirror.gcr.io/library/alpine:3"
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
@@ -1318,6 +1448,7 @@ tasks:
 
           NODE_MAJOR="${node_version%%.*}"
           NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+          docker_pull_retry "$NODE_IMAGE"
 
           echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
@@ -1328,6 +1459,7 @@ tasks:
             bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
 
           # start memcached
+          docker_pull_retry "mirror.gcr.io/library/memcached:1.6.9"
           docker run -d --network offline-net --name memcached \
             "mirror.gcr.io/library/memcached:1.6.9"
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' memcached)
@@ -1482,6 +1614,23 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          docker_pull_retry() {
+            local img="$1"
+            local platform="${2:-}"
+            local platform_flag=""
+            [ -n "$platform" ] && platform_flag="--platform $platform"
+            for i in {1..3}; do
+              docker pull $platform_flag "$img" && break || {
+                if [ "$i" -eq 3 ]; then
+                  echo "ERROR: Failed to pull $img after 3 attempts"
+                  exit 1
+                fi
+                echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."
+                sleep 5
+              }
+            done
+          }
+
           # start network-filter sidecar
           FILTER_CTR="network-filter-collector-databases-mongodb-$$"
           cleanup() {
@@ -1491,6 +1640,7 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
@@ -1509,6 +1659,7 @@ tasks:
           echo "network-filter ready after ${elapsed}s"
 
           # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker_pull_retry "mirror.gcr.io/library/alpine:3"
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
@@ -1521,6 +1672,7 @@ tasks:
 
           NODE_MAJOR="${node_version%%.*}"
           NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+          docker_pull_retry "$NODE_IMAGE"
 
           echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
@@ -1531,6 +1683,7 @@ tasks:
             bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
 
           # start mongodb
+          docker_pull_retry "mirror.gcr.io/library/mongo:8.0.8"
           docker run -d --network offline-net --name mongodb \
             "mirror.gcr.io/library/mongo:8.0.8"
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mongodb)
@@ -1686,6 +1839,23 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          docker_pull_retry() {
+            local img="$1"
+            local platform="${2:-}"
+            local platform_flag=""
+            [ -n "$platform" ] && platform_flag="--platform $platform"
+            for i in {1..3}; do
+              docker pull $platform_flag "$img" && break || {
+                if [ "$i" -eq 3 ]; then
+                  echo "ERROR: Failed to pull $img after 3 attempts"
+                  exit 1
+                fi
+                echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."
+                sleep 5
+              }
+            done
+          }
+
           # start network-filter sidecar
           FILTER_CTR="network-filter-collector-databases-mongoose-$$"
           cleanup() {
@@ -1695,6 +1865,7 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
@@ -1713,6 +1884,7 @@ tasks:
           echo "network-filter ready after ${elapsed}s"
 
           # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker_pull_retry "mirror.gcr.io/library/alpine:3"
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
@@ -1725,6 +1897,7 @@ tasks:
 
           NODE_MAJOR="${node_version%%.*}"
           NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+          docker_pull_retry "$NODE_IMAGE"
 
           echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
@@ -1735,6 +1908,7 @@ tasks:
             bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
 
           # start mongodb
+          docker_pull_retry "mirror.gcr.io/library/mongo:8.0.8"
           docker run -d --network offline-net --name mongodb \
             "mirror.gcr.io/library/mongo:8.0.8"
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mongodb)
@@ -1890,6 +2064,23 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          docker_pull_retry() {
+            local img="$1"
+            local platform="${2:-}"
+            local platform_flag=""
+            [ -n "$platform" ] && platform_flag="--platform $platform"
+            for i in {1..3}; do
+              docker pull $platform_flag "$img" && break || {
+                if [ "$i" -eq 3 ]; then
+                  echo "ERROR: Failed to pull $img after 3 attempts"
+                  exit 1
+                fi
+                echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."
+                sleep 5
+              }
+            done
+          }
+
           # start network-filter sidecar
           FILTER_CTR="network-filter-collector-databases-mssql-$$"
           cleanup() {
@@ -1899,6 +2090,7 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
@@ -1917,6 +2109,7 @@ tasks:
           echo "network-filter ready after ${elapsed}s"
 
           # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker_pull_retry "mirror.gcr.io/library/alpine:3"
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
@@ -1929,6 +2122,7 @@ tasks:
 
           NODE_MAJOR="${node_version%%.*}"
           NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+          docker_pull_retry "$NODE_IMAGE"
 
           echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
@@ -1939,6 +2133,7 @@ tasks:
             bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
 
           # start mssql
+          docker_pull_retry "mcr.microsoft.com/azure-sql-edge:1.0.7"
           docker run -d --network offline-net --name mssql \
             -e ACCEPT_EULA="Y" \
             -e MSSQL_SA_PASSWORD="stanCanHazMsSQL1" \
@@ -2095,6 +2290,23 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          docker_pull_retry() {
+            local img="$1"
+            local platform="${2:-}"
+            local platform_flag=""
+            [ -n "$platform" ] && platform_flag="--platform $platform"
+            for i in {1..3}; do
+              docker pull $platform_flag "$img" && break || {
+                if [ "$i" -eq 3 ]; then
+                  echo "ERROR: Failed to pull $img after 3 attempts"
+                  exit 1
+                fi
+                echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."
+                sleep 5
+              }
+            done
+          }
+
           # start network-filter sidecar
           FILTER_CTR="network-filter-collector-databases-mysql-$$"
           cleanup() {
@@ -2104,6 +2316,7 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
@@ -2122,6 +2335,7 @@ tasks:
           echo "network-filter ready after ${elapsed}s"
 
           # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker_pull_retry "mirror.gcr.io/library/alpine:3"
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
@@ -2134,6 +2348,7 @@ tasks:
 
           NODE_MAJOR="${node_version%%.*}"
           NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+          docker_pull_retry "$NODE_IMAGE"
 
           echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
@@ -2144,6 +2359,7 @@ tasks:
             bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
 
           # start mysql
+          docker_pull_retry "mirror.gcr.io/library/mysql:8.0.26"
           docker run -d --network offline-net --name mysql \
             -e MYSQL_ROOT_PASSWORD="nodepw" \
             -e MYSQL_DATABASE="nodedb" \
@@ -2304,6 +2520,23 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          docker_pull_retry() {
+            local img="$1"
+            local platform="${2:-}"
+            local platform_flag=""
+            [ -n "$platform" ] && platform_flag="--platform $platform"
+            for i in {1..3}; do
+              docker pull $platform_flag "$img" && break || {
+                if [ "$i" -eq 3 ]; then
+                  echo "ERROR: Failed to pull $img after 3 attempts"
+                  exit 1
+                fi
+                echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."
+                sleep 5
+              }
+            done
+          }
+
           # start network-filter sidecar
           FILTER_CTR="network-filter-collector-databases-mysql2-$$"
           cleanup() {
@@ -2313,6 +2546,7 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
@@ -2331,6 +2565,7 @@ tasks:
           echo "network-filter ready after ${elapsed}s"
 
           # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker_pull_retry "mirror.gcr.io/library/alpine:3"
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
@@ -2343,6 +2578,7 @@ tasks:
 
           NODE_MAJOR="${node_version%%.*}"
           NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+          docker_pull_retry "$NODE_IMAGE"
 
           echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
@@ -2353,6 +2589,7 @@ tasks:
             bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
 
           # start mysql
+          docker_pull_retry "mirror.gcr.io/library/mysql:8.0.26"
           docker run -d --network offline-net --name mysql \
             -e MYSQL_ROOT_PASSWORD="nodepw" \
             -e MYSQL_DATABASE="nodedb" \
@@ -2513,6 +2750,23 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          docker_pull_retry() {
+            local img="$1"
+            local platform="${2:-}"
+            local platform_flag=""
+            [ -n "$platform" ] && platform_flag="--platform $platform"
+            for i in {1..3}; do
+              docker pull $platform_flag "$img" && break || {
+                if [ "$i" -eq 3 ]; then
+                  echo "ERROR: Failed to pull $img after 3 attempts"
+                  exit 1
+                fi
+                echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."
+                sleep 5
+              }
+            done
+          }
+
           # start network-filter sidecar
           FILTER_CTR="network-filter-collector-databases-oracledb-$$"
           cleanup() {
@@ -2522,6 +2776,7 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
@@ -2540,6 +2795,7 @@ tasks:
           echo "network-filter ready after ${elapsed}s"
 
           # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker_pull_retry "mirror.gcr.io/library/alpine:3"
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
@@ -2552,6 +2808,7 @@ tasks:
 
           NODE_MAJOR="${node_version%%.*}"
           NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+          docker_pull_retry "$NODE_IMAGE"
 
           echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
@@ -2562,6 +2819,7 @@ tasks:
             bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
 
           # start oracledb early — initialises during npm install
+          docker_pull_retry "mirror.gcr.io/gvenzl/oracle-free:23-slim"
           docker run -d --network offline-net --name oracledb \
             -e ORACLE_PASSWORD="teamnodejspassword" \
             "mirror.gcr.io/gvenzl/oracle-free:23-slim"
@@ -2722,6 +2980,23 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          docker_pull_retry() {
+            local img="$1"
+            local platform="${2:-}"
+            local platform_flag=""
+            [ -n "$platform" ] && platform_flag="--platform $platform"
+            for i in {1..3}; do
+              docker pull $platform_flag "$img" && break || {
+                if [ "$i" -eq 3 ]; then
+                  echo "ERROR: Failed to pull $img after 3 attempts"
+                  exit 1
+                fi
+                echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."
+                sleep 5
+              }
+            done
+          }
+
           # start network-filter sidecar
           FILTER_CTR="network-filter-collector-databases-pg-$$"
           cleanup() {
@@ -2731,6 +3006,7 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
@@ -2749,6 +3025,7 @@ tasks:
           echo "network-filter ready after ${elapsed}s"
 
           # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker_pull_retry "mirror.gcr.io/library/alpine:3"
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
@@ -2761,6 +3038,7 @@ tasks:
 
           NODE_MAJOR="${node_version%%.*}"
           NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+          docker_pull_retry "$NODE_IMAGE"
 
           echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
@@ -2771,6 +3049,7 @@ tasks:
             bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
 
           # start postgres
+          docker_pull_retry "mirror.gcr.io/library/postgres:15.15"
           docker run -d --network offline-net --name postgres \
             -e POSTGRES_USER="node" \
             -e POSTGRES_PASSWORD="nodepw" \
@@ -2929,6 +3208,23 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          docker_pull_retry() {
+            local img="$1"
+            local platform="${2:-}"
+            local platform_flag=""
+            [ -n "$platform" ] && platform_flag="--platform $platform"
+            for i in {1..3}; do
+              docker pull $platform_flag "$img" && break || {
+                if [ "$i" -eq 3 ]; then
+                  echo "ERROR: Failed to pull $img after 3 attempts"
+                  exit 1
+                fi
+                echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."
+                sleep 5
+              }
+            done
+          }
+
           # start network-filter sidecar
           FILTER_CTR="network-filter-collector-databases-pg-native-$$"
           cleanup() {
@@ -2938,6 +3234,7 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
@@ -2956,6 +3253,7 @@ tasks:
           echo "network-filter ready after ${elapsed}s"
 
           # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker_pull_retry "mirror.gcr.io/library/alpine:3"
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
@@ -2968,6 +3266,7 @@ tasks:
 
           NODE_MAJOR="${node_version%%.*}"
           NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+          docker_pull_retry "$NODE_IMAGE"
 
           echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
@@ -2978,6 +3277,7 @@ tasks:
             bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
 
           # start postgres
+          docker_pull_retry "mirror.gcr.io/library/postgres:15.15"
           docker run -d --network offline-net --name postgres \
             -e POSTGRES_USER="node" \
             -e POSTGRES_PASSWORD="nodepw" \
@@ -3136,6 +3436,23 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          docker_pull_retry() {
+            local img="$1"
+            local platform="${2:-}"
+            local platform_flag=""
+            [ -n "$platform" ] && platform_flag="--platform $platform"
+            for i in {1..3}; do
+              docker pull $platform_flag "$img" && break || {
+                if [ "$i" -eq 3 ]; then
+                  echo "ERROR: Failed to pull $img after 3 attempts"
+                  exit 1
+                fi
+                echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."
+                sleep 5
+              }
+            done
+          }
+
           # start network-filter sidecar
           FILTER_CTR="network-filter-collector-databases-prisma-$$"
           cleanup() {
@@ -3145,6 +3462,7 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
@@ -3163,6 +3481,7 @@ tasks:
           echo "network-filter ready after ${elapsed}s"
 
           # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker_pull_retry "mirror.gcr.io/library/alpine:3"
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
@@ -3175,6 +3494,7 @@ tasks:
 
           NODE_MAJOR="${node_version%%.*}"
           NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+          docker_pull_retry "$NODE_IMAGE"
 
           echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
@@ -3185,6 +3505,7 @@ tasks:
             bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
 
           # start postgres
+          docker_pull_retry "mirror.gcr.io/library/postgres:15.15"
           docker run -d --network offline-net --name postgres \
             -e POSTGRES_USER="node" \
             -e POSTGRES_PASSWORD="nodepw" \
@@ -3204,6 +3525,7 @@ tasks:
             'until nc -z 127.0.0.1 5432 2>/dev/null; do sleep 2; done'
 
           # start mysql
+          docker_pull_retry "mirror.gcr.io/library/mysql:8.0.26"
           docker run -d --network offline-net --name mysql \
             -e MYSQL_ROOT_PASSWORD="nodepw" \
             -e MYSQL_DATABASE="nodedb" \
@@ -3364,6 +3686,23 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          docker_pull_retry() {
+            local img="$1"
+            local platform="${2:-}"
+            local platform_flag=""
+            [ -n "$platform" ] && platform_flag="--platform $platform"
+            for i in {1..3}; do
+              docker pull $platform_flag "$img" && break || {
+                if [ "$i" -eq 3 ]; then
+                  echo "ERROR: Failed to pull $img after 3 attempts"
+                  exit 1
+                fi
+                echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."
+                sleep 5
+              }
+            done
+          }
+
           # start network-filter sidecar
           FILTER_CTR="network-filter-collector-databases-redis-$$"
           cleanup() {
@@ -3373,6 +3712,7 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
@@ -3391,6 +3731,7 @@ tasks:
           echo "network-filter ready after ${elapsed}s"
 
           # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker_pull_retry "mirror.gcr.io/library/alpine:3"
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
@@ -3403,6 +3744,7 @@ tasks:
 
           NODE_MAJOR="${node_version%%.*}"
           NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+          docker_pull_retry "$NODE_IMAGE"
 
           echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
@@ -3413,6 +3755,7 @@ tasks:
             bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
 
           # start redis
+          docker_pull_retry "mirror.gcr.io/library/redis:7.4.3"
           docker run -d --network offline-net --name redis \
             "mirror.gcr.io/library/redis:7.4.3"
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis)
@@ -3429,11 +3772,13 @@ tasks:
             'until nc -z 127.0.0.1 6379 2>/dev/null; do sleep 1; done'
 
           # start redis-slave
+          docker_pull_retry "mirror.gcr.io/library/redis:7.4.3"
           docker run -d --network offline-net --name redis-slave \
             "mirror.gcr.io/library/redis:7.4.3" "redis-server" "--replicaof" "redis" "6379" "--port" "6380"
           sleep 60
 
           # start redis-sentinel
+          docker_pull_retry "mirror.gcr.io/library/redis:7.4.3"
           docker run -d --network offline-net --name redis-sentinel \
             "mirror.gcr.io/library/redis:7.4.3" "sh" "-c" "echo \"sentinel monitor mymaster redis 6379 2\" > /etc/sentinel.conf && echo \"sentinel down-after-milliseconds mymaster 1000\" >> /etc/sentinel.conf && echo \"sentinel failover-timeout mymaster 5000\" >> /etc/sentinel.conf && echo \"sentinel parallel-syncs mymaster 1\" >> /etc/sentinel.conf && echo \"sentinel resolve-hostnames yes\" >> /etc/sentinel.conf && redis-server /etc/sentinel.conf --sentinel --port 26379"
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis-sentinel)
@@ -3449,6 +3794,7 @@ tasks:
           sleep 60
 
           # start redis-cluster
+          docker_pull_retry "mirror.gcr.io/library/redis:7.4.3"
           docker run -d --network offline-net --name redis-cluster \
             --entrypoint "sh" \
             "mirror.gcr.io/library/redis:7.4.3" "-c" "redis-server --port 7000 --cluster-enabled yes --cluster-config-file nodes-7000.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && redis-server --port 7001 --cluster-enabled yes --cluster-config-file nodes-7001.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && redis-server --port 7002 --cluster-enabled yes --cluster-config-file nodes-7002.conf --cluster-node-timeout 5000 --appendonly no --daemonize yes && sleep 1 && echo 'yes' | redis-cli --cluster create 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 --cluster-replicas 0 && tail -f /dev/null"
@@ -3623,6 +3969,23 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          docker_pull_retry() {
+            local img="$1"
+            local platform="${2:-}"
+            local platform_flag=""
+            [ -n "$platform" ] && platform_flag="--platform $platform"
+            for i in {1..3}; do
+              docker pull $platform_flag "$img" && break || {
+                if [ "$i" -eq 3 ]; then
+                  echo "ERROR: Failed to pull $img after 3 attempts"
+                  exit 1
+                fi
+                echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."
+                sleep 5
+              }
+            done
+          }
+
           # start network-filter sidecar
           FILTER_CTR="network-filter-collector-databases-sequelize-$$"
           cleanup() {
@@ -3632,6 +3995,7 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
@@ -3650,6 +4014,7 @@ tasks:
           echo "network-filter ready after ${elapsed}s"
 
           # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker_pull_retry "mirror.gcr.io/library/alpine:3"
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
@@ -3662,6 +4027,7 @@ tasks:
 
           NODE_MAJOR="${node_version%%.*}"
           NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+          docker_pull_retry "$NODE_IMAGE"
 
           echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
@@ -3672,6 +4038,7 @@ tasks:
             bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
 
           # start postgres
+          docker_pull_retry "mirror.gcr.io/library/postgres:15.15"
           docker run -d --network offline-net --name postgres \
             -e POSTGRES_USER="node" \
             -e POSTGRES_PASSWORD="nodepw" \
@@ -3830,6 +4197,23 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          docker_pull_retry() {
+            local img="$1"
+            local platform="${2:-}"
+            local platform_flag=""
+            [ -n "$platform" ] && platform_flag="--platform $platform"
+            for i in {1..3}; do
+              docker pull $platform_flag "$img" && break || {
+                if [ "$i" -eq 3 ]; then
+                  echo "ERROR: Failed to pull $img after 3 attempts"
+                  exit 1
+                fi
+                echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."
+                sleep 5
+              }
+            done
+          }
+
           # start network-filter sidecar
           FILTER_CTR="network-filter-collector-databases-tedious-$$"
           cleanup() {
@@ -3839,6 +4223,7 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
@@ -3857,6 +4242,7 @@ tasks:
           echo "network-filter ready after ${elapsed}s"
 
           # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker_pull_retry "mirror.gcr.io/library/alpine:3"
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
@@ -3869,6 +4255,7 @@ tasks:
 
           NODE_MAJOR="${node_version%%.*}"
           NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+          docker_pull_retry "$NODE_IMAGE"
 
           echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
@@ -3879,6 +4266,7 @@ tasks:
             bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
 
           # start mssql
+          docker_pull_retry "mcr.microsoft.com/azure-sql-edge:1.0.7"
           docker run -d --network offline-net --name mssql \
             -e ACCEPT_EULA="Y" \
             -e MSSQL_SA_PASSWORD="stanCanHazMsSQL1" \

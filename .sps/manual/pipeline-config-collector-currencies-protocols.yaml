@@ -54,6 +54,23 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          docker_pull_retry() {
+            local img="$1"
+            local platform="${2:-}"
+            local platform_flag=""
+            [ -n "$platform" ] && platform_flag="--platform $platform"
+            for i in {1..3}; do
+              docker pull $platform_flag "$img" && break || {
+                if [ "$i" -eq 3 ]; then
+                  echo "ERROR: Failed to pull $img after 3 attempts"
+                  exit 1
+                fi
+                echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."
+                sleep 5
+              }
+            done
+          }
+
           # start network-filter sidecar
           FILTER_CTR="network-filter-collector-protocols-server-$$"
           cleanup() {
@@ -63,6 +80,7 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
@@ -82,6 +100,7 @@ tasks:
 
           NODE_MAJOR="${node_version%%.*}"
           NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+          docker_pull_retry "$NODE_IMAGE"
 
           echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
@@ -225,6 +244,23 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          docker_pull_retry() {
+            local img="$1"
+            local platform="${2:-}"
+            local platform_flag=""
+            [ -n "$platform" ] && platform_flag="--platform $platform"
+            for i in {1..3}; do
+              docker pull $platform_flag "$img" && break || {
+                if [ "$i" -eq 3 ]; then
+                  echo "ERROR: Failed to pull $img after 3 attempts"
+                  exit 1
+                fi
+                echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."
+                sleep 5
+              }
+            done
+          }
+
           # start network-filter sidecar
           FILTER_CTR="network-filter-collector-protocols-subgraph-$$"
           cleanup() {
@@ -234,6 +270,7 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
@@ -253,6 +290,7 @@ tasks:
 
           NODE_MAJOR="${node_version%%.*}"
           NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+          docker_pull_retry "$NODE_IMAGE"
 
           echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
@@ -396,6 +434,23 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          docker_pull_retry() {
+            local img="$1"
+            local platform="${2:-}"
+            local platform_flag=""
+            [ -n "$platform" ] && platform_flag="--platform $platform"
+            for i in {1..3}; do
+              docker pull $platform_flag "$img" && break || {
+                if [ "$i" -eq 3 ]; then
+                  echo "ERROR: Failed to pull $img after 3 attempts"
+                  exit 1
+                fi
+                echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."
+                sleep 5
+              }
+            done
+          }
+
           # start network-filter sidecar
           FILTER_CTR="network-filter-collector-protocols-grpc-js-$$"
           cleanup() {
@@ -405,6 +460,7 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
@@ -424,6 +480,7 @@ tasks:
 
           NODE_MAJOR="${node_version%%.*}"
           NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+          docker_pull_retry "$NODE_IMAGE"
 
           echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
@@ -567,6 +624,23 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          docker_pull_retry() {
+            local img="$1"
+            local platform="${2:-}"
+            local platform_flag=""
+            [ -n "$platform" ] && platform_flag="--platform $platform"
+            for i in {1..3}; do
+              docker pull $platform_flag "$img" && break || {
+                if [ "$i" -eq 3 ]; then
+                  echo "ERROR: Failed to pull $img after 3 attempts"
+                  exit 1
+                fi
+                echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."
+                sleep 5
+              }
+            done
+          }
+
           # start network-filter sidecar
           FILTER_CTR="network-filter-collector-protocols-graphql-$$"
           cleanup() {
@@ -576,6 +650,7 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
@@ -594,6 +669,7 @@ tasks:
           echo "network-filter ready after ${elapsed}s"
 
           # build socat-fwd image (needed to forward ports into FILTER_CTR netns)
+          docker_pull_retry "mirror.gcr.io/library/alpine:3"
           docker build -t socat-fwd - <<'DOCKERFILE'
           FROM mirror.gcr.io/library/alpine:3
           RUN apk add --no-cache socat netcat-openbsd
@@ -606,6 +682,7 @@ tasks:
 
           NODE_MAJOR="${node_version%%.*}"
           NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+          docker_pull_retry "$NODE_IMAGE"
 
           echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
@@ -616,6 +693,7 @@ tasks:
             bash -c "bash bin/install-npm.sh && npm install --loglevel warn --ignore-scripts && node bin/create-version-test-folders.js"
 
           # start rabbitmq
+          docker_pull_retry "mirror.gcr.io/library/rabbitmq:3.13.0"
           docker run -d --network offline-net --name rabbitmq \
             "mirror.gcr.io/library/rabbitmq:3.13.0"
           SIDECAR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' rabbitmq)
@@ -774,6 +852,23 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          docker_pull_retry() {
+            local img="$1"
+            local platform="${2:-}"
+            local platform_flag=""
+            [ -n "$platform" ] && platform_flag="--platform $platform"
+            for i in {1..3}; do
+              docker pull $platform_flag "$img" && break || {
+                if [ "$i" -eq 3 ]; then
+                  echo "ERROR: Failed to pull $img after 3 attempts"
+                  exit 1
+                fi
+                echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."
+                sleep 5
+              }
+            done
+          }
+
           # start network-filter sidecar
           FILTER_CTR="network-filter-collector-protocols-graphql-subscriptions-$$"
           cleanup() {
@@ -783,6 +878,7 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
@@ -802,6 +898,7 @@ tasks:
 
           NODE_MAJOR="${node_version%%.*}"
           NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+          docker_pull_retry "$NODE_IMAGE"
 
           echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
@@ -945,6 +1042,23 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          docker_pull_retry() {
+            local img="$1"
+            local platform="${2:-}"
+            local platform_flag=""
+            [ -n "$platform" ] && platform_flag="--platform $platform"
+            for i in {1..3}; do
+              docker pull $platform_flag "$img" && break || {
+                if [ "$i" -eq 3 ]; then
+                  echo "ERROR: Failed to pull $img after 3 attempts"
+                  exit 1
+                fi
+                echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."
+                sleep 5
+              }
+            done
+          }
+
           # start network-filter sidecar
           FILTER_CTR="network-filter-collector-protocols-http-$$"
           cleanup() {
@@ -954,6 +1068,7 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
@@ -973,6 +1088,7 @@ tasks:
 
           NODE_MAJOR="${node_version%%.*}"
           NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+          docker_pull_retry "$NODE_IMAGE"
 
           echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
@@ -1116,6 +1232,23 @@ tasks:
           apt-get update -qq && apt-get install -y -qq docker-ce-cli
           timeout 30 bash -c 'until [ -S /var/run/docker.sock ]; do sleep 1; done'
 
+          docker_pull_retry() {
+            local img="$1"
+            local platform="${2:-}"
+            local platform_flag=""
+            [ -n "$platform" ] && platform_flag="--platform $platform"
+            for i in {1..3}; do
+              docker pull $platform_flag "$img" && break || {
+                if [ "$i" -eq 3 ]; then
+                  echo "ERROR: Failed to pull $img after 3 attempts"
+                  exit 1
+                fi
+                echo "Pull failed for $img, retrying in 5s (attempt $i/3)..."
+                sleep 5
+              }
+            done
+          }
+
           # start network-filter sidecar
           FILTER_CTR="network-filter-collector-protocols-http2-$$"
           cleanup() {
@@ -1125,6 +1258,7 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
@@ -1144,6 +1278,7 @@ tasks:
 
           NODE_MAJOR="${node_version%%.*}"
           NODE_IMAGE="mirror.gcr.io/library/node:${NODE_MAJOR:-24}"
+          docker_pull_retry "$NODE_IMAGE"
 
           echo "Running npm install & test folder setup inside filtered container..."
           docker run --rm \
