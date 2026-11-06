@@ -5,8 +5,8 @@
 'use strict';
 
 const otlpCtx = require('../common/context');
-const { normalizeMetrics } = require('./util');
 const transformers = require('./transformers');
+const mappers = require('./mappers');
 
 const { INSTRUMENTATION_SCOPE } = transformers.resource;
 
@@ -35,17 +35,15 @@ function resolveServiceName(metrics) {
  */
 function convert(metrics) {
   try {
-    const metricsArray = normalizeMetrics(metrics);
-
-    if (metricsArray.length === 0) {
+    if (!metrics) {
       return { resourceMetrics: [] };
     }
 
     // Service name resolution, it not come from first metric once it set it will be used for all metrics
     resolveServiceName(metrics);
 
-    // All metrics share the same resource, so we can extract the attributes from the first one
-    const resource = transformers.resource.extractResourceAttributes(/** @type {any} */ (metricsArray[0]));
+    const resource = transformers.resource.extractResourceAttributes(/** @type {any} */ (metrics));
+    const otlpMetrics = transformers.metrics.extractMetrics(metrics, mappers.allMappings);
 
     return {
       resourceMetrics: [
@@ -54,8 +52,7 @@ function convert(metrics) {
           scopeMetrics: [
             {
               scope: INSTRUMENTATION_SCOPE,
-              // TODO: implement metrics transformation later in phase2
-              metrics: []
+              metrics: otlpMetrics
             }
           ]
         }

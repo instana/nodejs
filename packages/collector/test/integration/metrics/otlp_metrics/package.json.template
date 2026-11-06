@@ -1,0 +1,9 @@
+{
+  "name": "otlp-metrics-test-app",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Test app for OTLP metrics integration tests.",
+  "main": "app.js",
+  "license": "MIT",
+  "dependencies": {}
+}
