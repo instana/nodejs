@@ -46,6 +46,7 @@ const ALL_TARGETS = ['default', ...ALL_CURRENCY_GROUPS, ...ALL_SIMPLE_TARGETS];
 
 const TARGET = whatArg ? whatArg.split('=')[1] : null;
 const NODE_IMAGE = 'mirror.gcr.io/library/node:24';
+const NETWORK_FILTER_IMAGE = 'mirror.gcr.io/monadicalsas/network-filter:v0.3.0';
 const SIDECAR_NETWORK = 'offline-net';
 
 function sidecar(name) {
@@ -287,11 +288,11 @@ function buildCollectorTask(taskSlug, displayName, paths, needs, options = {}) {
     'ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"'
   );
   scriptLines.push('');
-  scriptLines.push('docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"');
+  scriptLines.push(`docker_pull_retry "${NETWORK_FILTER_IMAGE}"`);
   scriptLines.push('docker run --detach --name "$FILTER_CTR" \\');
   scriptLines.push('  --cap-add NET_ADMIN \\');
   scriptLines.push('  --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \\');
-  scriptLines.push('  mirror.gcr.io/monadicalsas/network-filter:latest');
+  scriptLines.push(`  ${NETWORK_FILTER_IMAGE}`);
   scriptLines.push('');
   scriptLines.push('elapsed=0');
   scriptLines.push('until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do');
@@ -758,11 +759,11 @@ function buildSimpleTask(
     'ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"'
   );
   scriptLines.push('');
-  scriptLines.push('docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"');
+  scriptLines.push(`docker_pull_retry "${NETWORK_FILTER_IMAGE}"`);
   scriptLines.push('docker run --detach --name "$FILTER_CTR" \\');
   scriptLines.push('  --cap-add NET_ADMIN \\');
   scriptLines.push('  --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \\');
-  scriptLines.push('  mirror.gcr.io/monadicalsas/network-filter:latest');
+  scriptLines.push(`  ${NETWORK_FILTER_IMAGE}`);
   scriptLines.push('');
   scriptLines.push('elapsed=0');
   scriptLines.push('until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do');

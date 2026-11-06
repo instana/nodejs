@@ -88,11 +88,11 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
-          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:v0.3.0"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
-            mirror.gcr.io/monadicalsas/network-filter:latest
+            mirror.gcr.io/monadicalsas/network-filter:v0.3.0
 
           elapsed=0
           until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
@@ -284,11 +284,11 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
-          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:v0.3.0"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
-            mirror.gcr.io/monadicalsas/network-filter:latest
+            mirror.gcr.io/monadicalsas/network-filter:v0.3.0
 
           elapsed=0
           until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
@@ -480,11 +480,11 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
-          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:v0.3.0"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
-            mirror.gcr.io/monadicalsas/network-filter:latest
+            mirror.gcr.io/monadicalsas/network-filter:v0.3.0
 
           elapsed=0
           until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
@@ -676,11 +676,11 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
-          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:v0.3.0"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
-            mirror.gcr.io/monadicalsas/network-filter:latest
+            mirror.gcr.io/monadicalsas/network-filter:v0.3.0
 
           elapsed=0
           until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
@@ -872,11 +872,11 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
-          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:v0.3.0"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
-            mirror.gcr.io/monadicalsas/network-filter:latest
+            mirror.gcr.io/monadicalsas/network-filter:v0.3.0
 
           elapsed=0
           until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
@@ -1068,11 +1068,11 @@ tasks:
 
           ALLOWED_DOMAINS="registry.npmjs.org,registry.npmjs.com,npmjs.org,npmjs.com,raw.githubusercontent.com,github.com,api.github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,nodejs.org,iam.cloud.ibm.com,s3.eu-de.cloud-object-storage.appdomain.cloud,binaries.prisma.sh,cdn.sheetjs.com"
 
-          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:latest"
+          docker_pull_retry "mirror.gcr.io/monadicalsas/network-filter:v0.3.0"
           docker run --detach --name "$FILTER_CTR" \
             --cap-add NET_ADMIN \
             --env ALLOWED_DOMAINS="$ALLOWED_DOMAINS" \
-            mirror.gcr.io/monadicalsas/network-filter:latest
+            mirror.gcr.io/monadicalsas/network-filter:v0.3.0
 
           elapsed=0
           until docker logs "$FILTER_CTR" 2>&1 | grep -qi "iptables"; do
