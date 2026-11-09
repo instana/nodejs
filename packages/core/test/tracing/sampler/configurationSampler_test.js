@@ -7,8 +7,8 @@
 'use strict';
 
 const { expect } = require('chai');
-const ConfigurationSampler = require('../../../src/tracing/sampler/ConfigurationSampler');
-const SamplingType = require('../../../src/tracing/sampler/SamplingType');
+const ConfigurationSampler = require('../../../src/tracing/sampler/configurationSampler');
+const { SAMPLING_TYPES: SamplingType } = require('../../../src/util/constants');
 
 describe('ConfigurationSampler', () => {
   it('should initialize with valid parameters', () => {
@@ -100,12 +100,14 @@ describe('ConfigurationSampler', () => {
     expect(sampler.shouldSample('00000000000000c8')).to.be.true;
   });
 
-  it('should handle string thresholds and BigInt thresholds', () => {
-    const sampler = new ConfigurationSampler(SamplingType.RANDOM, '234567892345', '4');
-    const config = sampler.getSamplingConfig();
+  it('should handle number thresholds and BigInt thresholds', () => {
+    let config = new ConfigurationSampler(SamplingType.RANDOM, 234567892345, 4).getSamplingConfig();
     expect(config.type).to.equal(1);
     expect(config.threshold).to.equal(234567892345);
     expect(config.precision).to.equal(4);
+
+    config = new ConfigurationSampler(SamplingType.RANDOM, 234567892345n, 4).getSamplingConfig();
+    expect(config.threshold).to.equal(234567892345);
   });
 
   describe('calculateThresholdFromRate', () => {
@@ -177,13 +179,8 @@ describe('ConfigurationSampler', () => {
       expect(config.precision).to.equal(4);
     });
 
-    it('should initialize with options object and give precedence to rate', () => {
-      const sampler = new ConfigurationSampler({
-        rate: 25,
-        threshold: 12345,
-        type: 1,
-        precision: 14
-      });
+    it('should give precedence to rate over threshold, type and precision', () => {
+      const sampler = new ConfigurationSampler(SamplingType.NONE, 12345, 14, 25);
       const config = sampler.getSamplingConfig();
       expect(config.rate).to.equal(25);
       expect(config.type).to.equal(1);

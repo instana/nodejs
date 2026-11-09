@@ -19,7 +19,7 @@ const {
   DEFAULT_SAMPLING_PRECISION,
   DEFAULT_SAMPLING_RATE
 } = require('../util/constants');
-const ConfigurationSampler = require('../tracing/sampler/ConfigurationSampler');
+const ConfigurationSampler = require('../tracing/sampler/configurationSampler');
 const util = require('./util');
 const validators = require('./validator');
 const { validateStackTraceMode, validateStackTraceLength } = validators;
@@ -222,13 +222,6 @@ let defaults = {
       // This option is internal and not exposed
       port: 4318,
       semConvVersion: '1.23'
-    },
-    // maybe not required
-    sampling: {
-      rate: DEFAULT_SAMPLING_RATE,
-      type: DEFAULT_SAMPLING_TYPE,
-      threshold: DEFAULT_SAMPLING_THRESHOLD,
-      precision: DEFAULT_SAMPLING_PRECISION
     }
   },
   preloadOpentelemetry: false,
@@ -453,7 +446,7 @@ function normalizeTracingConfig({ userConfig = {}, defaultConfig = {}, finalConf
   normalizeDisableServerTiming({ userConfig, defaultConfig, finalConfig });
   normalizeOtlpExporter({ userConfig, defaultConfig, finalConfig });
   normalizeLogLevelCapture({ userConfig, defaultConfig, finalConfig });
-  normalizeTracingSampling({ userConfig, defaultConfig, finalConfig });
+  normalizeTracingSampling({ userConfig, finalConfig });
 }
 
 /**
@@ -1555,18 +1548,23 @@ function normalizeOtlpExporter({ userConfig = {}, defaultConfig = {}, finalConfi
 }
 
 /**
- * @param {{ userConfig?: InstanaConfig|null, defaultConfig?: InstanaConfig, finalConfig?: InstanaConfig }} [options]
+ * @param {{ userConfig?: InstanaConfig|null, finalConfig?: InstanaConfig }} [options]
  */
-function normalizeTracingSampling({ userConfig = {}, defaultConfig = {}, finalConfig = {} } = {}) {
-  const userSampling = userConfig.tracing?.sampling || {};
+function normalizeTracingSampling({ userConfig = {}, finalConfig = {} } = {}) {
+  const userSampling = userConfig.tracing?.sampling;
+
+  // The presence of the sampling object enables the feature. There is no default sampling configuration.
+  if (!userSampling || typeof userSampling !== 'object') {
+    return;
+  }
+
   finalConfig.tracing.sampling = {};
 
-  normalizeSamplingRate({ userSampling, defaultConfig, finalConfig });
-  normalizeSamplingType({ userSampling, defaultConfig, finalConfig });
-  normalizeSamplingThreshold({ userSampling, defaultConfig, finalConfig });
-  normalizeSamplingPrecision({ userSampling, defaultConfig, finalConfig });
+  normalizeSamplingRate({ userSampling, finalConfig });
+  normalizeSamplingType({ userSampling, finalConfig });
+  normalizeSamplingThreshold({ userSampling, finalConfig });
+  normalizeSamplingPrecision({ userSampling, finalConfig });
 
-  // Rate takes precedence over threshold per spec
   if (finalConfig.tracing.sampling.rate !== undefined) {
     const rate = finalConfig.tracing.sampling.rate;
     finalConfig.tracing.sampling.threshold = Number(ConfigurationSampler.calculateThresholdFromRate(rate));
@@ -1578,13 +1576,13 @@ function normalizeTracingSampling({ userConfig = {}, defaultConfig = {}, finalCo
 }
 
 /**
- * @param {{ userSampling?: any, defaultConfig?: any, finalConfig?: any }} options
+ * @param {{ userSampling?: any, finalConfig?: any }} options
  */
-function normalizeSamplingRate({ userSampling = {}, defaultConfig = {}, finalConfig = {} }) {
+function normalizeSamplingRate({ userSampling = {}, finalConfig = {} }) {
   const { value, source } = util.resolve(
     {
       inCodeValue: userSampling.rate,
-      defaultValue: defaultConfig.tracing.sampling.rate
+      defaultValue: DEFAULT_SAMPLING_RATE
     },
     [validators.samplingRateValidator]
   );
@@ -1599,13 +1597,13 @@ function normalizeSamplingRate({ userSampling = {}, defaultConfig = {}, finalCon
 }
 
 /**
- * @param {{ userSampling?: any, defaultConfig?: any, finalConfig?: any }} options
+ * @param {{ userSampling?: any, finalConfig?: any }} options
  */
-function normalizeSamplingType({ userSampling = {}, defaultConfig = {}, finalConfig = {} }) {
+function normalizeSamplingType({ userSampling = {}, finalConfig = {} }) {
   const { value, source } = util.resolve(
     {
       inCodeValue: userSampling.type,
-      defaultValue: defaultConfig.tracing.sampling.type
+      defaultValue: DEFAULT_SAMPLING_TYPE
     },
     [validators.samplingTypeValidator]
   );
@@ -1620,13 +1618,13 @@ function normalizeSamplingType({ userSampling = {}, defaultConfig = {}, finalCon
 }
 
 /**
- * @param {{ userSampling?: any, defaultConfig?: any, finalConfig?: any }} options
+ * @param {{ userSampling?: any, finalConfig?: any }} options
  */
-function normalizeSamplingThreshold({ userSampling = {}, defaultConfig = {}, finalConfig = {} }) {
+function normalizeSamplingThreshold({ userSampling = {}, finalConfig = {} }) {
   const { value, source } = util.resolve(
     {
       inCodeValue: userSampling.threshold,
-      defaultValue: defaultConfig.tracing.sampling.threshold
+      defaultValue: DEFAULT_SAMPLING_THRESHOLD
     },
     [validators.samplingThresholdValidator]
   );
@@ -1641,13 +1639,13 @@ function normalizeSamplingThreshold({ userSampling = {}, defaultConfig = {}, fin
 }
 
 /**
- * @param {{ userSampling?: any, defaultConfig?: any, finalConfig?: any }} options
+ * @param {{ userSampling?: any, finalConfig?: any }} options
  */
-function normalizeSamplingPrecision({ userSampling = {}, defaultConfig = {}, finalConfig = {} }) {
+function normalizeSamplingPrecision({ userSampling = {}, finalConfig = {} }) {
   const { value, source } = util.resolve(
     {
       inCodeValue: userSampling.precision,
-      defaultValue: defaultConfig.tracing.sampling.precision
+      defaultValue: DEFAULT_SAMPLING_PRECISION
     },
     [validators.samplingPrecisionValidator]
   );

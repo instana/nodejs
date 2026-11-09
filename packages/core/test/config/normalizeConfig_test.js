@@ -2401,13 +2401,9 @@ describe('config.normalizeConfig', () => {
     });
 
     describe('sampling configuration', () => {
-      it('should use default sampling configuration when config is not set', () => {
+      it('should not set sampling configuration when config is not set', () => {
         const config = coreConfig.normalize({});
-        expect(config.tracing.sampling).to.deep.equal({
-          type: 1,
-          threshold: 0,
-          precision: 4
-        });
+        expect(config.tracing.sampling).to.be.undefined;
       });
 
       it('should accept sampling configuration from in-code config', () => {
@@ -3410,11 +3406,7 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.allowRootExitSpan).to.equal(false);
     expect(config.tracing.disableServerTiming).to.be.false;
     expect(config.tracing.dbBindVariables).to.deep.equal({ disable: true, allowedColumns: [] });
-    expect(config.tracing.sampling).to.deep.equal({
-      type: 1,
-      threshold: 0,
-      precision: 4
-    });
+    expect(config.tracing.sampling).to.be.undefined;
 
     expect(config.tracing.otlp).to.deep.equal({
       enabled: false,

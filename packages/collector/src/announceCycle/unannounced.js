@@ -32,7 +32,6 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @property {Array.<string>} [extraHeaders]
  * @property {boolean|string} [spanBatchingEnabled]
  * @property {number} [pollRate] - Metrics poll rate in seconds; mapped to metrics.transmissionDelay (ms)
- * @property {any} [sampling]
  */
 
 /**
@@ -51,7 +50,7 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @property {import('@instana/core/src/config/types').Disable} [disable]
  * @property {GlobalTracingConfig} [global]
  * @property {HTTPTracingConfig} [http]
- * @property {any} [sampling]
+ * @property {import('@instana/core/src/config/types').SamplingConfig} [sampling]
  */
 
 /**

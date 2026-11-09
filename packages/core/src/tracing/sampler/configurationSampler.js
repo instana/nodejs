@@ -8,23 +8,26 @@
 
 'use strict';
 
-const SamplingType = require('./SamplingType');
 const tracingUtil = require('../tracingUtil');
+const {
+  SAMPLING_TYPES,
+  SAMPLING_MASK_56,
+  MAX_56_BIT_VALUE,
+  DEFAULT_SAMPLING_PRECISION
+} = require('../../util/constants');
 
-const MASKING_56 = BigInt('0xffffffffffffff');
-const MAX_56_BIT_VALUE = BigInt('72057594037927936'); // 2^56
 const ZERO_BIGINT = BigInt(0);
 const HUNDRED_BIGINT = BigInt(100);
 
 class ConfigurationSampler {
   /**
-   * @param {number|Object} [samplingType=0]
-   * @param {number|string|bigint} [threshold=0]
-   * @param {number} [precision=0]
+   * @param {number} [type]
+   * @param {number|bigint} [threshold]
+   * @param {number} [precision]
    * @param {number} [rate]
    */
-  constructor(samplingType = 0, threshold = 0, precision = 0, rate = undefined) {
-    this.updateSamplingParameters(samplingType, threshold, precision, rate);
+  constructor(type = SAMPLING_TYPES.NONE, threshold = 0, precision = 0, rate = undefined) {
+    this.updateSamplingParameters(type, threshold, precision, rate);
   }
 
   /**
@@ -83,90 +86,33 @@ class ConfigurationSampler {
   }
 
   /**
-   * @param {number|Object} samplingType
-   * @param {number|string|bigint} [threshold=0]
-   * @param {number} [precision=0]
+   * A valid rate (1-100) takes precedence over type, threshold and precision.
+   *
+   * @param {number} [type]
+   * @param {number|bigint} [threshold]
+   * @param {number} [precision]
    * @param {number} [rate]
    */
-  updateSamplingParameters(samplingType = 0, threshold = 0, precision = 0, rate = undefined) {
-    if (typeof samplingType === 'object' && samplingType !== null) {
-      const opts = /** @type {any} */ (samplingType);
-      rate = opts.rate;
-      if (opts.precision !== undefined) {
-        precision = opts.precision;
-      } else if (opts.rate !== undefined) {
-        precision = 4;
-      } else {
-        precision = 0;
-      }
-      threshold = opts.threshold !== undefined ? opts.threshold : 0;
-      if (opts.type !== undefined) {
-        samplingType = opts.type;
-      } else if (opts.rate !== undefined) {
-        samplingType = 1;
-      } else {
-        samplingType = 0;
-      }
-    }
-
+  updateSamplingParameters(type = SAMPLING_TYPES.NONE, threshold = 0, precision = 0, rate = undefined) {
     let parsedRate;
-    let parsedThreshold = 0;
     let thresholdBigInt = ZERO_BIGINT;
-    let parsedType = 0;
-    let parsedPrecision = 0;
 
-    if (rate !== undefined && rate !== null) {
-      const numRate = typeof rate === 'number' ? rate : Number(rate);
-      if (Number.isFinite(numRate) && numRate >= 1 && numRate <= 100) {
-        parsedRate = Math.floor(numRate);
-        thresholdBigInt = ConfigurationSampler.calculateThresholdFromRate(parsedRate);
-        parsedThreshold = Number(thresholdBigInt);
-        parsedType = SamplingType.RANDOM;
-        parsedPrecision = 4;
-      }
-    }
-
-    if (parsedRate === undefined) {
-      if (typeof threshold === 'bigint') {
-        thresholdBigInt = threshold >= ZERO_BIGINT ? threshold : ZERO_BIGINT;
-        parsedThreshold = Number(thresholdBigInt);
-      } else if (typeof threshold === 'number') {
-        parsedThreshold = Number.isFinite(threshold) && threshold >= 0 ? Math.floor(threshold) : 0;
-        thresholdBigInt = BigInt(parsedThreshold);
-      } else if (typeof threshold === 'string') {
-        const trimmed = threshold.trim();
-        try {
-          thresholdBigInt = BigInt(trimmed);
-          if (thresholdBigInt < ZERO_BIGINT) thresholdBigInt = ZERO_BIGINT;
-          parsedThreshold = Number(thresholdBigInt);
-        } catch {
-          parsedThreshold = 0;
-          thresholdBigInt = ZERO_BIGINT;
-        }
-      }
-
-      if (typeof samplingType === 'number') {
-        parsedType = Math.floor(samplingType);
-      } else if (Number.isFinite(Number(samplingType))) {
-        parsedType = Math.floor(Number(samplingType));
-      } else {
-        parsedType = 0;
-      }
-
-      if (typeof precision === 'number') {
-        parsedPrecision = Math.floor(precision);
-      } else if (Number.isFinite(Number(precision))) {
-        parsedPrecision = Math.floor(Number(precision));
-      } else {
-        parsedPrecision = 0;
-      }
+    if (typeof rate === 'number' && Number.isFinite(rate) && rate >= 1 && rate <= 100) {
+      parsedRate = Math.floor(rate);
+      thresholdBigInt = ConfigurationSampler.calculateThresholdFromRate(parsedRate);
+      type = SAMPLING_TYPES.RANDOM;
+      precision = DEFAULT_SAMPLING_PRECISION;
+    } else if (typeof threshold === 'bigint') {
+      thresholdBigInt = threshold >= ZERO_BIGINT ? threshold : ZERO_BIGINT;
+    } else if (Number.isFinite(threshold) && threshold >= 0) {
+      thresholdBigInt = BigInt(Math.floor(threshold));
     }
 
     /** @type {{ type: number, threshold: number, precision: number, rate?: number }} */
     const config = {
-      type: parsedType,
-      threshold: parsedThreshold,
-      precision: parsedPrecision
+      type: Math.floor(type),
+      threshold: Number(thresholdBigInt),
+      precision: Math.floor(precision)
     };
     if (parsedRate !== undefined) {
       config.rate = parsedRate;
@@ -190,7 +136,7 @@ class ConfigurationSampler {
    * @returns {boolean} True if sampled/kept, false if rejected/dropped.
    */
   shouldSample(traceId) {
-    if (this.samplingConfig.type === SamplingType.RANDOM) {
+    if (this.samplingConfig.type === SAMPLING_TYPES.RANDOM) {
       if (this._thresholdBigInt === ZERO_BIGINT) {
         return true;
       }
@@ -211,7 +157,7 @@ class ConfigurationSampler {
         idBigInt = BigInt(`0x${tracingUtil.generateRandomTraceId()}`);
       }
 
-      const maskedId = idBigInt & MASKING_56;
+      const maskedId = idBigInt & SAMPLING_MASK_56;
       if (maskedId < this._thresholdBigInt) {
         return false;
       }
