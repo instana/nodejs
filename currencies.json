@@ -1498,7 +1498,7 @@
     "group": "messaging",
     "versions": [
       {
-        "v": "2.14.0",
+        "v": "2.15.0",
         "esmOnly": true,
         "node": ">=22"
       }
