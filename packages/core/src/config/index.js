@@ -13,8 +13,13 @@ const {
   CONFIG_SOURCES,
   DEFAULT_LOG_LEVEL,
   DEFAULT_DB_BIND_VARIABLES_DISABLE,
-  DEFAULT_DB_BIND_VARIABLES_ALLOWED_COLUMNS
+  DEFAULT_DB_BIND_VARIABLES_ALLOWED_COLUMNS,
+  DEFAULT_SAMPLING_TYPE,
+  DEFAULT_SAMPLING_THRESHOLD,
+  DEFAULT_SAMPLING_PRECISION,
+  DEFAULT_SAMPLING_RATE
 } = require('../util/constants');
+const ConfigurationSampler = require('../tracing/sampler/configurationSampler');
 const util = require('./util');
 const validators = require('./validator');
 const { validateStackTraceMode, validateStackTraceLength } = validators;
@@ -88,6 +93,7 @@ let currentConfig;
  * @property {otlpExporterOptions} [otlp]
  * @property {string} [captureLogLevel]
  * @property {DbBindVariablesConfig} [dbBindVariables]
+ * @property {import('./types').SamplingConfig} [sampling]
  */
 
 /**
@@ -440,6 +446,7 @@ function normalizeTracingConfig({ userConfig = {}, defaultConfig = {}, finalConf
   normalizeDisableServerTiming({ userConfig, defaultConfig, finalConfig });
   normalizeOtlpExporter({ userConfig, defaultConfig, finalConfig });
   normalizeLogLevelCapture({ userConfig, defaultConfig, finalConfig });
+  normalizeTracingSampling({ userConfig, finalConfig });
 }
 
 /**
@@ -1537,6 +1544,118 @@ function normalizeOtlpExporter({ userConfig = {}, defaultConfig = {}, finalConfi
     source,
     value,
     envVarName: 'INSTANA_TRACING_OTLP_ENABLED'
+  });
+}
+
+/**
+ * @param {{ userConfig?: InstanaConfig|null, finalConfig?: InstanaConfig }} [options]
+ */
+function normalizeTracingSampling({ userConfig = {}, finalConfig = {} } = {}) {
+  const userSampling = userConfig.tracing?.sampling;
+
+  // The presence of the sampling object enables the feature. There is no default sampling configuration.
+  if (!userSampling || typeof userSampling !== 'object') {
+    return;
+  }
+
+  finalConfig.tracing.sampling = {};
+
+  normalizeSamplingRate({ userSampling, finalConfig });
+  normalizeSamplingType({ userSampling, finalConfig });
+  normalizeSamplingThreshold({ userSampling, finalConfig });
+  normalizeSamplingPrecision({ userSampling, finalConfig });
+
+  if (finalConfig.tracing.sampling.rate !== undefined) {
+    const rate = finalConfig.tracing.sampling.rate;
+    finalConfig.tracing.sampling.threshold = Number(ConfigurationSampler.calculateThresholdFromRate(rate));
+    finalConfig.tracing.sampling.type = DEFAULT_SAMPLING_TYPE;
+    finalConfig.tracing.sampling.precision = DEFAULT_SAMPLING_PRECISION;
+  } else {
+    delete finalConfig.tracing.sampling.rate;
+  }
+}
+
+/**
+ * @param {{ userSampling?: any, finalConfig?: any }} options
+ */
+function normalizeSamplingRate({ userSampling = {}, finalConfig = {} }) {
+  const { value, source } = util.resolve(
+    {
+      inCodeValue: userSampling.rate,
+      defaultValue: DEFAULT_SAMPLING_RATE
+    },
+    [validators.samplingRateValidator]
+  );
+
+  configStore.set('config.tracing.sampling.rate', { source });
+  finalConfig.tracing.sampling.rate = value;
+  util.log({
+    configPath: 'config.tracing.sampling.rate',
+    source,
+    value
+  });
+}
+
+/**
+ * @param {{ userSampling?: any, finalConfig?: any }} options
+ */
+function normalizeSamplingType({ userSampling = {}, finalConfig = {} }) {
+  const { value, source } = util.resolve(
+    {
+      inCodeValue: userSampling.type,
+      defaultValue: DEFAULT_SAMPLING_TYPE
+    },
+    [validators.samplingTypeValidator]
+  );
+
+  configStore.set('config.tracing.sampling.type', { source });
+  finalConfig.tracing.sampling.type = value;
+  util.log({
+    configPath: 'config.tracing.sampling.type',
+    source,
+    value
+  });
+}
+
+/**
+ * @param {{ userSampling?: any, finalConfig?: any }} options
+ */
+function normalizeSamplingThreshold({ userSampling = {}, finalConfig = {} }) {
+  const { value, source } = util.resolve(
+    {
+      inCodeValue: userSampling.threshold,
+      defaultValue: DEFAULT_SAMPLING_THRESHOLD
+    },
+    [validators.samplingThresholdValidator]
+  );
+
+  configStore.set('config.tracing.sampling.threshold', { source });
+  finalConfig.tracing.sampling.threshold = value;
+  util.log({
+    configPath: 'config.tracing.sampling.threshold',
+    source,
+    value
+  });
+}
+
+/**
+ * @param {{ userSampling?: any, finalConfig?: any }} options
+ */
+function normalizeSamplingPrecision({ userSampling = {}, finalConfig = {} }) {
+  const { value, source } = util.resolve(
+    {
+      inCodeValue: userSampling.precision,
+      defaultValue: DEFAULT_SAMPLING_PRECISION
+    },
+    [validators.samplingPrecisionValidator]
+  );
+
+  configStore.set('config.tracing.sampling.precision', { source });
+  finalConfig.tracing.sampling.precision = value;
+  util.log({
+    configPath: 'config.tracing.sampling.precision',
+    source,
+    value
   });
 }
 

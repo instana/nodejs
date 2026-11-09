@@ -50,6 +50,7 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @property {import('@instana/core/src/config/types').Disable} [disable]
  * @property {GlobalTracingConfig} [global]
  * @property {HTTPTracingConfig} [http]
+ * @property {import('@instana/core/src/config/types').SamplingConfig} [sampling]
  */
 
 /**
@@ -164,6 +165,7 @@ function applyAgentConfiguration(agentResponse) {
   applyPollRateConfiguration(agentResponse);
   applyDbBindVariablesConfiguration(agentResponse);
   applyServerTimingConfiguration(agentResponse);
+  applySamplingConfiguration(agentResponse);
 }
 
 /**
@@ -467,6 +469,44 @@ function applyDbBindVariablesConfiguration(agentResponse) {
   const allowedColumns = coreConfig.validators.allowedColumnsValidator(dbBindVarsFromAgent['allowed-columns']);
   if (allowedColumns !== undefined) {
     agentOpts.config.tracing.dbBindVariables.allowedColumns = allowedColumns;
+  }
+}
+
+/**
+ * @param {AgentAnnounceResponse} agentResponse
+ */
+function applySamplingConfiguration(agentResponse) {
+  const samplingFromAgent = agentResponse?.tracing?.sampling;
+
+  if (samplingFromAgent && typeof samplingFromAgent === 'object') {
+    ensureNestedObjectExists(agentOpts.config, ['tracing', 'sampling']);
+
+    if (samplingFromAgent.rate != null) {
+      const rate = coreConfig.validators.samplingRateValidator(samplingFromAgent.rate);
+      if (rate !== undefined) {
+        agentOpts.config.tracing.sampling.rate = rate;
+      }
+    } else {
+      // For TVM usecase
+      if (samplingFromAgent.type != null) {
+        const type = coreConfig.validators.samplingTypeValidator(samplingFromAgent.type);
+        if (type !== undefined) {
+          agentOpts.config.tracing.sampling.type = type;
+        }
+      }
+      if (samplingFromAgent.threshold != null) {
+        const threshold = coreConfig.validators.samplingThresholdValidator(samplingFromAgent.threshold);
+        if (threshold !== undefined) {
+          agentOpts.config.tracing.sampling.threshold = threshold;
+        }
+      }
+      if (samplingFromAgent.precision != null) {
+        const precision = coreConfig.validators.samplingPrecisionValidator(samplingFromAgent.precision);
+        if (precision !== undefined) {
+          agentOpts.config.tracing.sampling.precision = precision;
+        }
+      }
+    }
   }
 }
 
