@@ -277,8 +277,14 @@ exports.allowedColumnsValidator = function allowedColumnsValidator(value) {
  * @returns {number|undefined}
  */
 exports.samplingRateValidator = function samplingRateValidator(value) {
-  if (value == null) return undefined;
-  const num = typeof value === 'number' ? value : Number(value);
+  let num;
+  if (typeof value === 'number') {
+    num = value;
+  } else if (typeof value === 'string' && /^\d+(\.\d+)?$/.test(value.trim())) {
+    num = Number(value);
+  } else {
+    return undefined;
+  }
   if (!Number.isFinite(num)) return undefined;
   const intVal = Math.floor(num);
   if (intVal >= 1 && intVal <= 100) {
