@@ -1158,7 +1158,7 @@ function buildUploadCurrencyReportTask() {
   };
 }
 
-function buildListCveIssuesTask() {
+function buildListCveIssuesTask(from = 'code-build') {
   const script = [
     '#!/usr/bin/env bash',
     'set -eo pipefail',
@@ -1194,11 +1194,21 @@ function buildListCveIssuesTask() {
     'done <<< "$ISSUES"'
   ].join('\n');
 
+  const prOnlySteps =
+    from === 'pr-code-checks'
+      ? [
+          { name: 'peer-review', when: 'false' },
+          { name: 'detect-secrets', when: 'false' },
+          { name: 'compliance-checks', when: 'false' }
+        ]
+      : [];
+
   return {
-    from: 'code-build',
+    from,
     displayName: 'list-cve-issues',
     runtimeClassName: 'large',
     steps: [
+      ...prOnlySteps,
       { name: 'unit-test', displayName: 'list-cve-issues', image: NODE_IMAGE, script },
       { name: 'sign-artifact', when: 'false' },
       { name: 'build-artifact', when: 'false' },
@@ -1464,7 +1474,8 @@ function generateOne(t) {
         'sign-artifact': { when: 'false' },
         'deploy-checks': { when: 'false' },
         'deploy-release': { when: 'false' },
-        'code-ci-finish': { when: 'false' }
+        'code-ci-finish': { when: 'false' },
+        'pr-code-checks-list-cve-issues': buildListCveIssuesTask('pr-code-checks')
       }
     };
 
