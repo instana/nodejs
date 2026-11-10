@@ -1181,7 +1181,7 @@ function buildListCveIssuesTask(from = 'code-build') {
     '  --state open \\',
     '  --limit 1000 \\',
     '  --json number,title,url,body \\',
-    '  --jq \'.[] | select(.body | test("Subject: https://github.com/instana/nodejs([[:space:]]|$)")) | [.number, .title, .url] | @tsv\')',
+    '  --jq \'.[] | select(.body | test("Subject:[[:space:]]*`?https://github[.]com/instana/nodejs`?([[:space:]]|$)")) | [.number, .title, .url] | @tsv\')',
     '',
     'if [[ -z "$ISSUES" ]]; then',
     '  echo "No open CVE issues found for https://github.com/instana/nodejs."',
