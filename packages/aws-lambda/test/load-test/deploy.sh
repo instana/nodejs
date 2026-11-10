@@ -58,7 +58,7 @@ fi
 
 # if RELEASED is 0
 if [[ $RELEASED -eq 0 ]]; then
-  FUNCTION_NAME_PREFIX=teamnodejstracer
+  FUNCTION_NAME_PREFIX=${FUNCTION_NAME_PREFIX:-teamnodejstracer}
   LAYER_NAME=experimental-instana-nodejs-with-extension
   LAYER_ARN="Will be set after upload..."
 else
