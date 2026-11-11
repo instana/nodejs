@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [6.10.1](https://github.com/instana/nodejs/compare/v6.10.0...v6.10.1) (2026-11-11)
+
+
+### Bug Fixes
+
+* bumped fast-uri from v4.2.1 to v4.2.3 ([23acfaa](https://github.com/instana/nodejs/commit/23acfaade97ca38f5a2cf9d51dab0a84d621faad))
+* bumped import-in-the-middle from 3.3.3 to 3.5.3 ([#2868](https://github.com/instana/nodejs/issues/2868)) ([1396a3e](https://github.com/instana/nodejs/commit/1396a3e28026adddca0626e16df0ff146d70198f))
+* bumped nan from 2.29.0 to 2.30.0 ([#2851](https://github.com/instana/nodejs/issues/2851)) ([644b9c5](https://github.com/instana/nodejs/commit/644b9c57cdfa80a32084a5d8c44e9544bf554738))
+* resolved lambda panic crash ([bfd25f0](https://github.com/instana/nodejs/commit/bfd25f004930ce33a0f4382d4eba3a5e95a997fd))
+
+
+
+
+
 # [6.10.0](https://github.com/instana/nodejs/compare/v6.9.0...v6.10.0) (2026-10-22)
 
 
