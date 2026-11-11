@@ -1424,6 +1424,17 @@ const GROUP_TARGETS = {
 
 function generateOne(t) {
   if (t === 'default') {
+    const generateTestFoldersScript = [
+      '#!/usr/bin/env bash',
+      'set -eo pipefail',
+      nodeVersionSwitchScript(),
+      '',
+      'cd "$WORKSPACE/$(load_repo app-repo path)"',
+      'bash bin/install-npm.sh',
+      'npm install --loglevel warn --ignore-scripts',
+      'node bin/create-version-test-folders.js'
+    ].join('\n');
+
     const prConfig = {
       version: '2',
       tasks: {
@@ -1435,16 +1446,7 @@ function generateOne(t) {
             {
               name: 'unit-test',
               image: NODE_IMAGE,
-              script: [
-                '#!/usr/bin/env bash',
-                'set -eo pipefail',
-                nodeVersionSwitchScript(),
-                '',
-                'cd "$WORKSPACE/$(load_repo app-repo path)"',
-                'bash bin/install-npm.sh',
-                'npm install --loglevel warn --ignore-scripts',
-                'node bin/create-version-test-folders.js'
-              ].join('\n')
+              script: generateTestFoldersScript
             }
           ]
         },
@@ -1471,7 +1473,13 @@ function generateOne(t) {
       'code-ci-finish': { when: 'false' }
     };
     const mainConfig = { version: '2', tasks: { 'code-checks': { when: false }, ...mainConfigTasks } };
-    const mainOnlyConfig = { version: '2', tasks: { ...mainConfigTasks } };
+    const mainOnlyConfig = {
+      version: '2',
+      tasks: {
+        'code-checks': { steps: [{ name: 'setup', image: NODE_IMAGE, script: generateTestFoldersScript }] },
+        ...mainConfigTasks
+      }
+    };
     writeDefaultConfig(prConfig, mainConfig, mainOnlyConfig);
 
     generateOne('pr-general');
