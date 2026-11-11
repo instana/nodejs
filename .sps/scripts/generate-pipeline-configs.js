@@ -1191,6 +1191,7 @@ function buildListCveIssuesTask(from = 'code-build') {
     'echo "Open CVE issues for https://github.com/instana/nodejs:"',
     "while IFS=$'\\t' read -r NUMBER TITLE URL; do",
     '  echo "  #${NUMBER}  ${TITLE}  ${URL}"',
+    '  gh issue edit "$NUMBER" --repo "$REPO" --add-assignee "instana-simon" > /dev/null',
     'done <<< "$ISSUES"'
   ].join('\n');
 
