@@ -18,15 +18,19 @@ describe('otlpExporter/traces/transformers/spanMetaData', () => {
   beforeEach(() => {
     mockContext = {
       semConv: {
-        metadata: {
+        common: {
           TRACE_ID: 'traceId',
           SPAN_ID: 'spanId',
           PARENT_ID: 'parentSpanId',
-          SPAN_KIND: 'kind',
           START_TIME_UNIX_NANO: 'startTimeUnixNano',
-          END_TIME_UNIX_NANO: 'endTimeUnixNano',
-          NAME: 'name',
-          STATUS: 'status'
+          END_TIME_UNIX_NANO: 'endTimeUnixNano'
+        },
+        traces: {
+          span: {
+            KIND: 'kind',
+            NAME: 'name',
+            STATUS: 'status'
+          }
         }
       }
     };
