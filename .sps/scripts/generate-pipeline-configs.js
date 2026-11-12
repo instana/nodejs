@@ -1195,6 +1195,66 @@ function buildUploadCurrencyReportTask() {
   };
 }
 
+function buildListCveIssuesTask(from = 'code-build') {
+  const script = [
+    '#!/usr/bin/env bash',
+    'set -eo pipefail',
+    '',
+    'export GH_HOST=github.ibm.com',
+    'export GH_ENTERPRISE_TOKEN="$(get_secret git-token)"',
+    'REPO="instana/instana-issues"',
+    '',
+    'mkdir -p -m 755 /etc/apt/keyrings',
+    'wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg \\',
+    '  | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null',
+    'chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg',
+    'echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] \\',
+    '  https://cli.github.com/packages stable main" \\',
+    '  | tee /etc/apt/sources.list.d/github-cli.list > /dev/null',
+    'apt-get update -qq && apt-get install -y -qq gh jq',
+    '',
+    'ISSUES=$(gh issue list \\',
+    '  --repo "$REPO" \\',
+    '  --state open \\',
+    '  --limit 1000 \\',
+    '  --json number,title,url,body \\',
+    '  --jq \'.[] | select(.body | test("Subject:[[:space:]]*`?https://github[.]com/instana/nodejs`?([[:space:]]|$)")) | [.number, .title, .url] | @tsv\')',
+    '',
+    'if [[ -z "$ISSUES" ]]; then',
+    '  echo "No open CVE issues found for https://github.com/instana/nodejs."',
+    '  exit 0',
+    'fi',
+    '',
+    'echo "Open CVE issues for https://github.com/instana/nodejs:"',
+    "while IFS=$'\\t' read -r NUMBER TITLE URL; do",
+    '  echo "  #${NUMBER}  ${TITLE}  ${URL}"',
+    '  gh issue edit "$NUMBER" --repo "$REPO" --add-assignee "instana-simon" > /dev/null',
+    'done <<< "$ISSUES"'
+  ].join('\n');
+
+  const prOnlySteps =
+    from === 'pr-code-checks'
+      ? [
+          { name: 'peer-review', when: 'false' },
+          { name: 'detect-secrets', when: 'false' },
+          { name: 'compliance-checks', when: 'false' }
+        ]
+      : [];
+
+  return {
+    from,
+    displayName: 'list-cve-issues',
+    runtimeClassName: 'large',
+    steps: [
+      ...prOnlySteps,
+      { name: 'unit-test', displayName: 'list-cve-issues', image: NODE_IMAGE, script },
+      { name: 'sign-artifact', when: 'false' },
+      { name: 'build-artifact', when: 'false' },
+      { name: 'scan-artifact', when: 'false' }
+    ]
+  };
+}
+
 function baseConfig(fanOutTasks, rootTask = 'pr-code-checks') {
   return {
     version: '2',
@@ -1452,7 +1512,8 @@ function generateOne(t) {
         'sign-artifact': { when: 'false' },
         'deploy-checks': { when: 'false' },
         'deploy-release': { when: 'false' },
-        'code-ci-finish': { when: 'false' }
+        'code-ci-finish': { when: 'false' },
+        'pr-code-checks-list-cve-issues': buildListCveIssuesTask('pr-code-checks')
       }
     };
 
@@ -1471,7 +1532,10 @@ function generateOne(t) {
       'code-ci-finish': { when: 'false' }
     };
     const mainConfig = { version: '2', tasks: { 'code-checks': { when: false }, ...mainConfigTasks } };
-    const mainOnlyConfig = { version: '2', tasks: { ...mainConfigTasks } };
+    const mainOnlyConfig = {
+      version: '2',
+      tasks: { ...mainConfigTasks, 'code-build-list-cve-issues': buildListCveIssuesTask() }
+    };
     writeDefaultConfig(prConfig, mainConfig, mainOnlyConfig);
 
     generateOne('pr-general');
