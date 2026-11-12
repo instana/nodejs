@@ -11,7 +11,7 @@ let isActive = false;
 
 function initInstrumentation() {
   if (!OracleInstrumentation) {
-    OracleInstrumentation = require('@opentelemetry/instrumentation-oracledb').OracleInstrumentation;
+    OracleInstrumentation = require('@instana/instrumentation-oracledb').OracleInstrumentation;
     isActive = true;
   }
 }
