@@ -2,46 +2,12 @@
  * (c) Copyright IBM Corp. 2026
  */
 
-/* eslint-disable no-await-in-loop */
-
 'use strict';
 
 const readline = require('readline');
 const AWS = require('aws-sdk');
 const { getCredentials } = require('../aws-services/aws-credentials');
 const services = require('../aws-services');
-
-// Used when the account's enabled regions cannot be determined via EC2:DescribeRegions.
-const FALLBACK_REGIONS = [
-  'us-east-1',
-  'us-east-2',
-  'us-west-1',
-  'us-west-2',
-  'af-south-1',
-  'ap-east-1',
-  'ap-south-1',
-  'ap-south-2',
-  'ap-southeast-1',
-  'ap-southeast-2',
-  'ap-southeast-3',
-  'ap-southeast-4',
-  'ap-northeast-1',
-  'ap-northeast-2',
-  'ap-northeast-3',
-  'ca-central-1',
-  'eu-central-1',
-  'eu-central-2',
-  'eu-west-1',
-  'eu-west-2',
-  'eu-west-3',
-  'eu-north-1',
-  'eu-south-1',
-  'eu-south-2',
-  'il-central-1',
-  'me-central-1',
-  'me-south-1',
-  'sa-east-1'
-];
 
 exports.command = 'cleanup-aws';
 exports.describe =
@@ -131,7 +97,6 @@ async function run(argv) {
     console.log('Aborted. Nothing deleted.');
     return;
   }
-  // Second, harder confirmation to avoid accidental deletion.
   const typed = await ask(`Type the account id (${identity.Account}) to confirm: `);
   if (typed !== identity.Account) {
     console.log('Account id does not match. Aborted. Nothing deleted.');
@@ -145,6 +110,7 @@ async function run(argv) {
     for (let j = 0; j < resources.length; j++) {
       const resource = resources[j];
       try {
+        // eslint-disable-next-line no-await-in-loop
         await service.remove(credentials, region, resource);
         console.log(`  deleted ${region}/${resource.id}`);
         deleted++;
@@ -176,12 +142,7 @@ async function confirm(question) {
 }
 
 async function getRegions(credentials) {
-  try {
-    const ec2 = new AWS.EC2({ credentials, region: 'us-east-1' });
-    const response = await ec2.describeRegions().promise();
-    return response.Regions.map(r => r.RegionName).sort();
-  } catch (err) {
-    console.warn(`Could not determine enabled regions (${err.message}), using built-in region list.`);
-    return FALLBACK_REGIONS;
-  }
+  const ec2 = new AWS.EC2({ credentials, region: 'us-east-1' });
+  const response = await ec2.describeRegions().promise();
+  return response.Regions.map(r => r.RegionName).sort();
 }

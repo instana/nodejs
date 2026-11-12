@@ -2,28 +2,22 @@
  * (c) Copyright IBM Corp. 2026
  */
 
-/* eslint-disable no-await-in-loop */
-
 'use strict';
 
 const AWS = require('aws-sdk');
-// Fail fast instead of waiting for the SDK defaults (120s timeout, multiple retries) on unreachable regions.
 const CLIENT_OPTIONS = { maxRetries: 1, httpOptions: { connectTimeout: 5000, timeout: 20000 } };
 
 const CREATE_EVENT_NAME = 'CreateFunction20150331';
 
 exports.label = 'Lambda function';
 
-/**
- * Lists the Lambda functions of one region that were created by `callerArn`.
- * Returns [{ id, details }].
- */
 exports.list = async function list(credentials, region, { prefix, callerArn }) {
   const lambda = new AWS.Lambda({ credentials, region, ...CLIENT_OPTIONS });
   let functions = [];
 
   let marker;
   do {
+    // eslint-disable-next-line no-await-in-loop
     const page = await lambda.listFunctions({ Marker: marker }).promise();
     functions.push(...page.Functions);
     marker = page.NextMarker;
@@ -54,6 +48,7 @@ async function getFunctionNamesCreatedBy(credentials, region, callerArn) {
   const names = new Set();
   let nextToken;
   do {
+    // eslint-disable-next-line no-await-in-loop
     const page = await cloudTrail
       .lookupEvents({
         LookupAttributes: [{ AttributeKey: 'EventName', AttributeValue: CREATE_EVENT_NAME }],
@@ -66,7 +61,6 @@ async function getFunctionNamesCreatedBy(credentials, region, callerArn) {
       if (detail.errorCode || !requestedName || !detail.userIdentity || detail.userIdentity.arn !== callerArn) {
         return;
       }
-      // functionName may be a plain name or a (partial) ARN.
       names.add(requestedName.split(':function:').pop().split(':')[0]);
     });
     nextToken = page.NextToken;
