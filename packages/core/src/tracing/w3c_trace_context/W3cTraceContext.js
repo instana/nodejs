@@ -38,6 +38,18 @@ function W3cTraceContext() {
   this.instanaTraceId = undefined;
   // the parent ID from the in key-value pair from the tracestate header
   this.instanaParentId = undefined;
+  // precision (pr) from in key-value pair
+  this.instanaPrecision = undefined;
+  // sampling type (ty) from in key-value pair
+  this.instanaType = undefined;
+  // threshold from ot key-value pair (decimal integer/number)
+  this.otelThreshold = undefined;
+  // threshold hex from ot key-value pair
+  this.otelThresholdHex = undefined;
+  // random value from ot key-value pair
+  this.otelRandomValue = undefined;
+  // random value hex from ot key-value pair
+  this.otelRandomValueHex = undefined;
   // the non-Instana key-value pairs that come after the in key-value pair
   this.traceStateTail = undefined;
 }
@@ -160,7 +172,14 @@ W3cTraceContext.prototype.renderTraceState = function renderTraceState() {
 
 W3cTraceContext.prototype.renderInstanaTraceStateValue = function renderInstanaTraceStateValue() {
   if (this.instanaTraceId && this.instanaParentId) {
-    return `${constants.w3cInstanaEquals + this.instanaTraceId};${this.instanaParentId}`;
+    let result = `${constants.w3cInstanaEquals + this.instanaTraceId};${this.instanaParentId}`;
+    if (this.instanaPrecision != null) {
+      result += `;pr:${this.instanaPrecision}`;
+    }
+    if (this.instanaType != null) {
+      result += `;ty:${this.instanaType}`;
+    }
+    return result;
   } else {
     return null;
   }
@@ -171,12 +190,18 @@ W3cTraceContext.prototype.resetTraceState = function resetTraceState() {
   this.traceStateHead = null;
   this.instanaTraceId = null;
   this.instanaParentId = null;
+  this.instanaPrecision = undefined;
+  this.instanaType = undefined;
+  this.otelThreshold = undefined;
+  this.otelThresholdHex = undefined;
+  this.otelRandomValue = undefined;
+  this.otelRandomValueHex = undefined;
   this.traceStateTail = null;
 };
 
 /**
  * Modifies this trace context object:
- * - updates the foreing parent ID in traceparent to the given given value (not that we do not set the
+ * - updates the foreign parent ID in traceparent to the given value (note that we do not set the
  *   foreign trace ID),
  * - sets the sampled flag in traceparent to true,
  * - upserts the in key-value pair in tracestate to the given trace ID and span ID, and moved to the leftmost position.
@@ -199,6 +224,16 @@ W3cTraceContext.prototype.updateParent = function updateParent(instanaTraceId, i
   // Remove everything from traceStateHead to move the in key-value pair to the leftmost position.
   this.traceStateHead = null;
   this.sampled = true;
+
+  // When continuing an OTel-initiated trace (has otelThreshold), ensure defaults for instana sampling metadata
+  if (this.otelThreshold != null && this.otelThreshold > 0) {
+    if (this.instanaPrecision == null) {
+      this.instanaPrecision = 4;
+    }
+    if (this.instanaType == null) {
+      this.instanaType = 1;
+    }
+  }
 };
 
 /**

@@ -54,12 +54,24 @@ module.exports.transform = span => {
   //  For `span.n === 'node.http.server'` or 'node.http.client', the actual data is under `span.data.http`.
   //  In the case of `span.n === 'graphql.server'`, the span includes both GraphQL-specific and HTTP data,
   //  so `span.data` may contain both `graphql` and `http` keys simultaneously.
-  Object.keys(span.data).forEach(key => {
-    const mappings = fieldMappings[key];
-    if (!mappings) return;
+  if (span.data) {
+    Object.keys(span.data).forEach(key => {
+      const mappings = fieldMappings[key];
+      if (!mappings) return;
 
-    applyMappings(span.data[key], mappings);
-  });
+      applyMappings(span.data[key], mappings);
+    });
+  }
+
+  if (span.samplingThreshold != null && span.samplingThreshold > 0) {
+    span.sm = {
+      s: span.samplingType || 0,
+      th: span.samplingThreshold,
+      p: span.samplingPrecision || 0
+    };
+  } else if (span.sm && (!span.sm.th || span.sm.th <= 0)) {
+    delete span.sm;
+  }
 
   return span;
 };

@@ -494,6 +494,54 @@ describe('tracing/w3c-trace-context parser', () => {
         expect(parsed.instanaTraceId).to.equal('aaaaaaaaaaaaaaaa');
         expect(parsed.instanaParentId).to.equal('bbbbbbbbbbbbbbbb');
       });
+
+      it('should parse pr and ty sampling metadata in the in key-value pair', () => {
+        const traceState = `foo=bar,${constants.w3cInstana}=aaaaaaaaaaaaaaaa;bbbbbbbbbbbbbbbb;pr:14;ty:1,bar=baz`;
+        const parsed = parse(validTraceParent, traceState);
+        expect(parsed.instanaTraceId).to.equal('aaaaaaaaaaaaaaaa');
+        expect(parsed.instanaParentId).to.equal('bbbbbbbbbbbbbbbb');
+        expect(parsed.instanaPrecision).to.equal(14);
+        expect(parsed.instanaType).to.equal(1);
+      });
+    });
+
+    describe('with an ot key-value pair', () => {
+      it('should parse ot entry with threshold only (th:8)', () => {
+        const traceState = 'ot=th:8,rojo=123';
+        const parsed = parse(validTraceParent, traceState);
+        expect(parsed.otelThresholdHex).to.equal('8');
+        expect(parsed.otelThreshold).to.equal(36028797018963968);
+        expect(parsed.otelRandomValue).to.not.exist;
+      });
+
+      it('should parse ot entry with rv and th (ot=rv:a3c5f79bd3e2f1;th:8)', () => {
+        const traceState = 'ot=rv:a3c5f79bd3e2f1;th:8,rojo=123';
+        const parsed = parse(validTraceParent, traceState);
+        expect(parsed.otelThresholdHex).to.equal('8');
+        expect(parsed.otelThreshold).to.equal(36028797018963968);
+        expect(parsed.otelRandomValueHex).to.equal('a3c5f79bd3e2f1');
+        expect(parsed.otelRandomValue).to.equal('a3c5f79bd3e2f1');
+      });
+
+      it('should parse ot entry with th first then rv', () => {
+        const traceState = 'ot=th:c;rv:a3c5f79bd3e2f1,rojo=123';
+        const parsed = parse(validTraceParent, traceState);
+        expect(parsed.otelThresholdHex).to.equal('c');
+        expect(parsed.otelThreshold).to.equal(54043195528445952);
+        expect(parsed.otelRandomValueHex).to.equal('a3c5f79bd3e2f1');
+      });
+
+      it('should parse both in and ot key-value pairs', () => {
+        const traceState = 'in=7a3f9e2b1c4d5e6f;7a3f9e2b1c4d5e6f;pr:14;ty:1,ot=rv:a3c5f79bd3e2f1a;th:8';
+        const parsed = parse(validTraceParent, traceState);
+        expect(parsed.instanaTraceId).to.equal('7a3f9e2b1c4d5e6f');
+        expect(parsed.instanaParentId).to.equal('7a3f9e2b1c4d5e6f');
+        expect(parsed.instanaPrecision).to.equal(14);
+        expect(parsed.instanaType).to.equal(1);
+        expect(parsed.otelThresholdHex).to.equal('8');
+        expect(parsed.otelThreshold).to.equal(36028797018963968);
+        expect(parsed.otelRandomValueHex).to.equal('a3c5f79bd3e2f1a');
+      });
     });
   });
 });
