@@ -327,5 +327,38 @@ describe('tracing/backend_mappers', () => {
       const result = transform(span);
       expect(result).to.deep.equal(span);
     });
+
+    it('should strip requestHeader and responseHeader from http span data', () => {
+      span = {
+        n: 'node.http.server',
+        data: {
+          http: {
+            operation: 'GET',
+            endpoints: '/api/users',
+            connection: 'localhost',
+            status: 200,
+            header: { 'content-type': 'application/json' },
+            requestHeader: { accept: 'application/json' },
+            responseHeader: { 'cache-control': 'no-cache' }
+          }
+        }
+      };
+
+      const result = transform(span);
+
+      expect(result.data.http).to.deep.equal({
+        method: 'GET',
+        url: '/api/users',
+        host: 'localhost',
+        status: 200,
+        header: { 'content-type': 'application/json' }
+      });
+
+      expect(result.data.http).to.not.have.property('operation');
+      expect(result.data.http).to.not.have.property('endpoints');
+      expect(result.data.http).to.not.have.property('connection');
+      expect(result.data.http).to.not.have.property('requestHeader');
+      expect(result.data.http).to.not.have.property('responseHeader');
+    });
   });
 });
