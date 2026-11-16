@@ -6,12 +6,11 @@
 
 const readline = require('readline');
 const AWS = require('aws-sdk');
-const { getCredentials } = require('../aws-services/aws-credentials');
-const services = require('../aws-services');
+const { getCredentials, services } = require('../services/aws');
 
 exports.command = 'cleanup-aws';
 exports.describe =
-  'Find the AWS resources of a service (default: lambda) created by you and delete them after confirmation';
+  'List the AWS resources of a service (default: lambda) in all regions and delete them after confirmation';
 
 exports.builder = yargs =>
   yargs
@@ -24,6 +23,11 @@ exports.builder = yargs =>
     .option('prefix', {
       type: 'string',
       describe: 'Only consider resources whose name starts with this prefix'
+    })
+    .option('created-by-me', {
+      type: 'boolean',
+      default: false,
+      describe: 'Only consider resources created by you (determined via CloudTrail, last 90 days only)'
     })
     .option('regions', {
       type: 'array',
@@ -52,15 +56,23 @@ async function run(argv) {
   console.log(`\nAuthenticated as ${identity.Arn} (account ${identity.Account})`);
 
   const regions = argv.regions && argv.regions.length ? argv.regions.map(String) : await getRegions(credentials);
-  console.log(`Scanning ${regions.length} region(s) for ${service.label}s created by ${identity.Arn}...`);
-  console.log('(creator is determined via CloudTrail, which only covers the last 90 days)\n');
+  const owner = argv.createdByMe ? ` created by ${identity.Arn}` : '';
+  console.log(`Scanning ${regions.length} region(s) for ${service.label}s${owner}...`);
+  if (argv.createdByMe) {
+    console.log('(creator is determined via CloudTrail, which only covers the last 90 days)');
+  }
+  console.log('');
 
   let scanned = 0;
   const results = await Promise.all(
     regions.map(async region => {
       const result = { region, resources: [] };
       try {
-        result.resources = await service.list(credentials, region, { prefix: argv.prefix, callerArn: identity.Arn });
+        result.resources = await service.list(credentials, region, {
+          prefix: argv.prefix,
+          createdByMe: argv.createdByMe,
+          callerArn: identity.Arn
+        });
       } catch (err) {
         result.error = err.message;
       }
@@ -90,9 +102,7 @@ async function run(argv) {
     return;
   }
 
-  const proceed = await confirm(
-    `Delete these ${total} ${service.label}(s) created by you in account ${identity.Account}?`
-  );
+  const proceed = await confirm(`Delete these ${total} ${service.label}(s)${owner} in account ${identity.Account}?`);
   if (!proceed) {
     console.log('Aborted. Nothing deleted.');
     return;
