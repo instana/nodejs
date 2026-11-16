@@ -450,9 +450,25 @@ function transmitSpans() {
 
   logger.debug(`[spanBuffer] Transmitting spans called. There is ${spans.length} spans to send.`);
 
-  const spansToSend = spans;
+  let spansToSend = spans;
   spans = [];
   batchingBuckets.clear();
+
+  if (useOtlpExporter) {
+    // OTLP exports logs as a separate signal, so log spans must not be part of the traces.
+    const { traceSpans, logSpans } = otlpExporter.splitSignals(spansToSend);
+    spansToSend = traceSpans;
+    transmitLogSpans(logSpans);
+
+    if (spansToSend.length === 0) {
+      // Only log spans in this flush, there is nothing to send as traces.
+      if (!isFaaS) {
+        transmissionTimeoutHandle = setTimeout(transmitSpans, transmissionDelay);
+        transmissionTimeoutHandle.unref();
+      }
+      return;
+    }
+  }
 
   const transformedSpans = applySpanTransformation(spansToSend);
   // We restore the content of the spans array if sending them downstream was not successful. We do not restore
@@ -473,13 +489,41 @@ function transmitSpans() {
 }
 
 /**
+ * @param {Array.<import('../core').InstanaBaseSpan>} logSpans
+ */
+function transmitLogSpans(logSpans) {
+  if (logSpans.length === 0) {
+    return;
+  }
+
+  if (typeof downstreamConnection.sendLogs !== 'function') {
+    logger.debug('Configured downstreamConnection has no function "sendLogs". Not transmitting log spans.');
+    return;
+  }
+
+  downstreamConnection.sendLogs(otlpExporter.logs.transform(logSpans), function sendLogs(/** @type {Error} */ error) {
+    if (error) {
+      logger.warn(`Failed to transmit logs, will retry in ${transmissionDelay} ms. ${error?.message} ${error?.stack}`);
+      spans = spans.concat(logSpans);
+      removeSpansIfNecessary();
+    }
+  });
+}
+
+/**
  * Synchronously returns the spans that are scheduled for transmission and resets the internal span buffer to an empty
  * array.
  */
 exports.getAndResetSpans = function getAndResetSpans() {
-  const spansToSend = spans;
+  let spansToSend = spans;
   spans = [];
   batchingBuckets.clear();
+
+  if (useOtlpExporter) {
+    // Log spans are not part of the OTLP traces payload.
+    spansToSend = otlpExporter.splitSignals(spansToSend).traceSpans;
+  }
+
   return applySpanTransformation(spansToSend);
 };
 

@@ -5,6 +5,7 @@
 'use strict';
 
 const ctx = require('../../common/context');
+const { toTraceId, toSpanId, toTimeUnixNano } = require('../../common/util');
 const { OTLP_SPAN_KINDS, INSTANA_SPAN_KINDS } = require('../mappers/constants');
 
 const metaMapper = {
@@ -14,8 +15,7 @@ const metaMapper = {
    */
   convertTraceId(span) {
     if (span.t === undefined) return undefined;
-    if (!span.t) return '';
-    return String(span.t).padStart(32, '0');
+    return toTraceId(span.t);
   },
 
   /**
@@ -24,8 +24,7 @@ const metaMapper = {
    */
   convertSpanId(span) {
     if (span.s === undefined) return undefined;
-    if (!span.s) return '';
-    return String(span.s).padStart(16, '0');
+    return toSpanId(span.s);
   },
 
   /**
@@ -34,8 +33,7 @@ const metaMapper = {
    */
   convertParentId(span) {
     if (span.p === undefined) return undefined;
-    if (!span.p) return '';
-    return String(span.p).padStart(16, '0');
+    return toSpanId(span.p);
   },
 
   /**
@@ -63,7 +61,7 @@ const metaMapper = {
    */
   convertStartTime(span) {
     if (span.ts === undefined) return undefined;
-    return String(Number(span.ts) * 1000000);
+    return toTimeUnixNano(span.ts);
   },
 
   /**
@@ -73,7 +71,7 @@ const metaMapper = {
   generateEndTime(span) {
     const startMs = span.ts !== undefined ? Number(span.ts) : 0;
     const deltaMs = span.d !== undefined ? Number(span.d) : 0;
-    return String((startMs + deltaMs) * 1000000);
+    return toTimeUnixNano(startMs + deltaMs);
   },
 
   /**
@@ -108,14 +106,14 @@ function extractSpanMetadata(span, mapper) {
   const OTLP = /** @type {any} */ (ctx.semConv);
 
   const metadataMappings = [
-    { otlp: OTLP.metadata.TRACE_ID, value: metaMapper.convertTraceId(span) },
-    { otlp: OTLP.metadata.SPAN_ID, value: metaMapper.convertSpanId(span) },
-    { otlp: OTLP.metadata.PARENT_ID, value: metaMapper.convertParentId(span) },
-    { otlp: OTLP.metadata.SPAN_KIND, value: metaMapper.convertSpanKind(span) },
-    { otlp: OTLP.metadata.START_TIME_UNIX_NANO, value: metaMapper.convertStartTime(span) },
-    { otlp: OTLP.metadata.END_TIME_UNIX_NANO, value: metaMapper.generateEndTime(span) },
-    { otlp: OTLP.metadata.NAME, value: mapper.spanName(span) },
-    { otlp: OTLP.metadata.STATUS, value: mapper.spanStatus(span) }
+    { otlp: OTLP.common.TRACE_ID, value: metaMapper.convertTraceId(span) },
+    { otlp: OTLP.common.SPAN_ID, value: metaMapper.convertSpanId(span) },
+    { otlp: OTLP.common.PARENT_ID, value: metaMapper.convertParentId(span) },
+    { otlp: OTLP.traces.span.KIND, value: metaMapper.convertSpanKind(span) },
+    { otlp: OTLP.common.START_TIME_UNIX_NANO, value: metaMapper.convertStartTime(span) },
+    { otlp: OTLP.common.END_TIME_UNIX_NANO, value: metaMapper.generateEndTime(span) },
+    { otlp: OTLP.traces.span.NAME, value: mapper.spanName(span) },
+    { otlp: OTLP.traces.span.STATUS, value: mapper.spanStatus(span) }
   ];
 
   return metadataMappings.reduce((/** @type {Record<string, any>} */ acc, current) => {
