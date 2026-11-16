@@ -38,6 +38,7 @@ const otlpExporter = require('./otlpExporter');
  * This type is based on /nodejs/packages/collector/src/agentConnection.js
  * @typedef {Object} DownstreamConnection
  * @property {(spans: *, cb: Function) => void} sendSpans
+ * @property {(logs: *, cb: Function) => void} [sendLogs]
  * @property {(eventData: Event, cb: (...args: *) => *) => void} sendEvent
  */
 
