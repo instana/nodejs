@@ -42,6 +42,7 @@
   "scripts": {
     "audit": "lerna run audit --stream",
     "commit": "cz",
+    "dev-cli": "node bin/dev-cli",
     "commitlint": "commitlint --from $(git describe --tags --abbrev=0)",
     "doctoc": "doctoc README.md packages/collector/README.md",
     "format:sh": "find . -name \"*.sh\" -not -path \"*/node_modules/*\" -not -path \"*/dockerfile-examples/*\" -not -path \"*/example-apps/*\" -exec shfmt -w {} +",
