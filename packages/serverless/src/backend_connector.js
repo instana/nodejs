@@ -149,11 +149,117 @@ exports.sendMetrics = function sendMetrics(metrics, callback) {
   send({ resourcePath: '/metrics', payload: metrics, finalLambdaRequest: false, callback, requestId });
 };
 
-exports.sendSpans = function sendSpans(spans, callback) {
+/**
+ * The backend connector does not know which format the payload has. If the caller passes an export target with an
+ * absolute `url`, the payload is delivered there directly (bypassing the serverless acceptor/Lambda extension).
+ * Otherwise it goes to the serverless acceptor.
+ *
+ * @param {object} spans
+ * @param {(err?: Error) => void} callback
+ * @param {import('@instana/core/src/otlpExporter').ExportTarget} [target]
+ */
+exports.sendSpans = function sendSpans(spans, callback, target) {
   const requestId = getRequestId();
+
+  if (target?.url) {
+    return sendToUrl({ target, payload: spans, callback, requestId });
+  }
+
   logger.debug(`[${requestId}] Sending spans to Instana (no. of spans: ${spans?.length})`);
   send({ resourcePath: '/traces', payload: spans, finalLambdaRequest: false, callback, requestId });
 };
+
+/**
+ * Same routing as `sendSpans`: directly to `target.url` if given, otherwise to the serverless acceptor.
+ *
+ * @param {object} logs
+ * @param {(err?: Error) => void} callback
+ * @param {import('@instana/core/src/otlpExporter').ExportTarget} [target]
+ */
+exports.sendLogs = function sendLogs(logs, callback, target) {
+  const requestId = getRequestId();
+
+  if (target?.url) {
+    return sendToUrl({ target, payload: logs, callback, requestId });
+  }
+
+  logger.debug(`[${requestId}] Sending logs to Instana.`);
+  send({ resourcePath: '/logs', payload: logs, finalLambdaRequest: false, callback, requestId });
+};
+
+/**
+ * Sends a JSON payload to an arbitrary http(s) URL. The callback receives an error if the request failed or the
+ * receiver did not respond with 2xx, so that the caller can retry. Retries are deliberately not done here.
+ *
+ * @param {{
+ *   target: import('@instana/core/src/otlpExporter').ExportTarget,
+ *   payload: object,
+ *   callback: (err?: Error) => void,
+ *   requestId: string
+ * }} params
+ */
+function sendToUrl({ target, payload, callback, requestId }) {
+  let callbackWasCalled = false;
+  const handleCallback = err => {
+    if (callbackWasCalled) return;
+    callbackWasCalled = true;
+    callback(err);
+  };
+
+  let url;
+  try {
+    url = new URL(target.url);
+  } catch (e) {
+    logger.warn(`[${requestId}] The export URL ${target.url} is not well-formed. Not sending data.`);
+    return handleCallback(e);
+  }
+
+  const isHttps = url.protocol === 'https:';
+  const transport = isHttps ? uninstrumented.https : uninstrumented.http;
+  const serializedPayload = JSON.stringify(payload);
+
+  logger.debug(`[${requestId}] Sending data directly to ${url.hostname}${url.pathname}.`);
+
+  const req = transport.request({
+    hostname: url.hostname,
+    port: url.port || (isHttps ? 443 : 80),
+    path: url.pathname + url.search,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...target.headers,
+      'Content-Length': Buffer.byteLength(serializedPayload)
+    },
+    timeout: options.backendTimeout,
+    agent: proxyAgent && isHttps ? proxyAgent : undefined,
+    rejectUnauthorized: !disableCaCheck
+  });
+
+  req.on('response', res => {
+    // The body is not needed, but it has to be consumed to free the socket.
+    res.resume();
+
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      logger.debug(`[${requestId}] ${url.hostname}${url.pathname} accepted the data (${res.statusCode}).`);
+      return handleCallback();
+    }
+
+    handleCallback(new Error(`${url.hostname}${url.pathname} responded with status code ${res.statusCode}.`));
+  });
+
+  req.on('timeout', () => {
+    logger.debug(`[${requestId}] Timeout while sending data to ${url.hostname}${url.pathname}.`);
+    destroyRequest(req);
+    handleCallback(new Error(`Timeout while sending data to ${url.hostname}${url.pathname}.`));
+  });
+
+  req.on('error', e => {
+    logger.debug(`[${requestId}] Error while sending data to ${url.hostname}${url.pathname}: ${e?.message}`);
+    handleCallback(e);
+  });
+
+  req.end(serializedPayload);
+}
 
 let heartbeatInterval;
 let heartbeatIsActive = false;

@@ -11,6 +11,38 @@ const logs = require('./logs');
 const { isLogSpan } = require('./traces/util');
 
 /**
+ * Describes where a payload should be delivered. It is generic on purpose, connections do not need to know that the
+ * payload is OTLP. A connection uses the parts it can honor and falls back to its own default endpoint otherwise.
+ *
+ * @typedef {Object} ExportTarget
+ * @property {string} [path] Request path, relative to the host the connection talks to (e.g. the agent).
+ * @property {number} [port] Port on the host the connection talks to.
+ * @property {string} [url] Absolute URL. Only set if an endpoint has been configured explicitly.
+ * @property {Record<string, string>} [headers] Additional headers, to be used together with `url`.
+ */
+
+/**
+ * Resolves where the payload of an OTLP signal has to be sent to.
+ *
+ * @param {import('../config').InstanaConfig['tracing']['otlp']} otlpConfig
+ * @param {'traces' | 'logs' | 'metrics'} signal
+ * @returns {ExportTarget}
+ */
+function getExportTarget(otlpConfig, signal) {
+  const path = `/v1/${signal}`;
+
+  /** @type {ExportTarget} */
+  const target = { path, port: otlpConfig?.port };
+
+  if (otlpConfig?.endpoint) {
+    target.url = `${otlpConfig.endpoint.replace(/\/+$/, '')}${path}`;
+    target.headers = otlpConfig.headers;
+  }
+
+  return target;
+}
+
+/**
  * @param {import('../config').InstanaConfig} config
  */
 function init(config) {
@@ -48,6 +80,7 @@ function splitSignals(spans) {
 module.exports = {
   init,
   splitSignals,
+  getExportTarget,
   common,
   traces,
   metrics,

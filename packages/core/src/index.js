@@ -36,9 +36,14 @@ const otlpExporter = require('./otlpExporter');
 
 /**
  * This type is based on /nodejs/packages/collector/src/agentConnection.js
+ *
+ * A connection only transports payloads. It does not know the payload format. The optional last argument is an export
+ * target (see otlpExporter.getExportTarget) that tells the connection where to deliver the payload instead of the
+ * default location.
+ *
  * @typedef {Object} DownstreamConnection
- * @property {(spans: *, cb: Function) => void} sendSpans
- * @property {(logs: *, cb: Function) => void} [sendLogs]
+ * @property {(spans: *, cb: Function, target?: import('./otlpExporter').ExportTarget) => void} sendSpans
+ * @property {(logs: *, cb: Function, target?: import('./otlpExporter').ExportTarget) => void} [sendLogs]
  * @property {(eventData: Event, cb: (...args: *) => *) => void} sendEvent
  */
 

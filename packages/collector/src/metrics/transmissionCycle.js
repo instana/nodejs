@@ -33,6 +33,8 @@ let transmissionTimeoutHandle;
 let transmissionDelay = 1000;
 let isActive = false;
 let useOtlpExporter = false;
+/** @type {import('@instana/core/src/config').InstanaConfig['tracing']['otlp']} */
+let otlpConfig;
 
 /**
  * @param {import('@instana/core/src/metrics').InstanaConfig} config
@@ -41,6 +43,7 @@ exports.init = function init(config) {
   logger = config.logger;
   transmissionDelay = config.metrics.transmissionDelay;
   useOtlpExporter = config.tracing.otlp.enabled;
+  otlpConfig = config.tracing.otlp;
 };
 
 /**
@@ -59,6 +62,7 @@ exports.activate = function activate(_metrics, _downstreamConnection, _onSuccess
   onError = _onError;
 
   useOtlpExporter = _config.tracing.otlp.enabled;
+  otlpConfig = _config.tracing.otlp;
 
   if (!metrics) {
     logger.error('No metrics have been set.');
@@ -108,11 +112,15 @@ function sendMetrics() {
     payload = core.util.compression(previousTransmittedValue, newValueToTransmit);
   }
 
+  const onSent = onMetricsHaveBeenSent.bind(null, isFullTransmission, newValueToTransmit);
+
   if (useOtlpExporter) {
     payload = otlpExporter.metrics.transform(payload);
+    downstreamConnection.sendMetrics(payload, onSent, otlpExporter.getExportTarget(otlpConfig, 'metrics'));
+    return;
   }
 
-  downstreamConnection.sendMetrics(payload, onMetricsHaveBeenSent.bind(null, isFullTransmission, newValueToTransmit));
+  downstreamConnection.sendMetrics(payload, onSent);
 }
 
 /**

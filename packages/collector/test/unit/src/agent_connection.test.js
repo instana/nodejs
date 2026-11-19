@@ -260,16 +260,23 @@ describe('agent connection/export endpoints', function () {
     return agentConnection;
   }
 
+  // The agent connection does not know about OTLP. The exporter passes an export target to change the destination.
+  const otlpTarget = signal => ({ path: `/v1/${signal}`, port: 4318 });
+
+  function failNextRequestWith(requestError) {
+    httpRequestStub.callsFake((options, responseCallback) => {
+      const req = new ExportRequestEmitter();
+      req.options = options;
+      req.responseCallback = responseCallback;
+      req.autoError = requestError;
+      requests.push(req);
+      return req;
+    });
+  }
+
   describe('sendSpans', () => {
-    it('should use the legacy Instana traces endpoint when OTLP export is disabled', done => {
-      initAgentConnection({
-        tracing: {
-          otlp: {
-            enabled: false,
-            port: 4318
-          }
-        }
-      });
+    it('should use the Instana traces endpoint by default', done => {
+      initAgentConnection();
       responseQueue.push({ statusCode: 200, body: '' });
 
       agentConnection.sendSpans([{ n: 'span', k: 1 }], err => {
@@ -287,215 +294,144 @@ describe('agent connection/export endpoints', function () {
       });
     });
 
-    it('should use the OTLP traces endpoint when OTLP export is enabled', done => {
-      initAgentConnection({
-        tracing: {
-          otlp: {
-            enabled: true,
-            port: 4318
-          }
-        }
-      });
+    it('should not change the endpoint when the config enables OTLP, only the caller decides', done => {
+      initAgentConnection({ tracing: { otlp: { enabled: true, port: 4318 } } });
       responseQueue.push({ statusCode: 200, body: '' });
 
       agentConnection.sendSpans([{ n: 'span', k: 1 }], err => {
         expect(err).to.not.exist;
-        expect(requests).to.have.lengthOf(1);
-        expect(requests[0].options).to.include({
-          host: '127.0.0.1',
-          port: 4318,
-          path: '/v1/traces',
-          method: 'POST'
-        });
-        expect(requests[0].options.headers['Content-Type']).to.equal('application/json; charset=UTF-8');
-        expect(JSON.parse(requests[0].payload.toString())).to.deep.equal([{ n: 'span', k: 1 }]);
+        expect(requests[0].options.port).to.equal(42699);
+        expect(requests[0].options.path).to.equal('/com.instana.plugin.nodejs/traces.4711');
         done();
       });
     });
 
-    it('should switch endpoint selection after activate enables OTLP export', done => {
-      initAgentConnection({
-        tracing: {
-          otlp: {
-            enabled: false,
-            port: 4318
-          }
-        }
-      });
-      agentConnection.activate({
-        tracing: {
-          otlp: {
-            enabled: true,
-            port: 4318
-          }
-        }
-      });
+    it('should use path and port of the export target', done => {
+      initAgentConnection();
       responseQueue.push({ statusCode: 200, body: '' });
 
-      agentConnection.sendSpans([{ n: 'span', k: 1 }], err => {
-        expect(err).to.not.exist;
-        expect(requests[0].options.port).to.equal(4318);
-        expect(requests[0].options.path).to.equal('/v1/traces');
-        done();
-      });
+      agentConnection.sendSpans(
+        [{ n: 'span', k: 1 }],
+        err => {
+          expect(err).to.not.exist;
+          expect(requests).to.have.lengthOf(1);
+          expect(requests[0].options).to.include({
+            host: '127.0.0.1',
+            port: 4318,
+            path: '/v1/traces',
+            method: 'POST'
+          });
+          expect(requests[0].options.headers['Content-Type']).to.equal('application/json; charset=UTF-8');
+          expect(JSON.parse(requests[0].payload.toString())).to.deep.equal([{ n: 'span', k: 1 }]);
+          done();
+        },
+        otlpTarget('traces')
+      );
     });
 
-    it('should report OTLP traces request failures with the OTLP endpoint in the error message', done => {
-      initAgentConnection({
-        tracing: {
-          otlp: {
-            enabled: true,
-            port: 4318
-          }
-        }
-      });
+    it('should report request failures with the target path in the error message', done => {
+      initAgentConnection();
+      failNextRequestWith(new Error('connection refused'));
 
-      const requestError = new Error('connection refused');
-      httpRequestStub.callsFake((options, responseCallback) => {
-        const req = new ExportRequestEmitter();
-        req.options = options;
-        req.responseCallback = responseCallback;
-        req.autoError = requestError;
-        requests.push(req);
-        return req;
-      });
-
-      agentConnection.sendSpans([{ n: 'span', k: 1 }], err => {
-        expect(err).to.exist;
-        expect(err.message).to.equal('Send data to agent via POST /v1/traces. Request failed: connection refused');
-        done();
-      });
+      agentConnection.sendSpans(
+        [{ n: 'span', k: 1 }],
+        err => {
+          expect(err).to.exist;
+          expect(err.message).to.equal('Send data to agent via POST /v1/traces. Request failed: connection refused');
+          done();
+        },
+        otlpTarget('traces')
+      );
     });
 
-    it('should ignore 404 responses for traces on the OTLP endpoint', done => {
-      initAgentConnection({
-        tracing: {
-          otlp: {
-            enabled: true,
-            port: 4318
-          }
-        }
-      });
+    it('should ignore 404 responses for traces on a custom target', done => {
+      initAgentConnection();
       responseQueue.push({ statusCode: 404, body: '' });
 
-      agentConnection.sendSpans([{ n: 'span', k: 1 }], err => {
-        expect(err).to.not.exist;
-        done();
-      });
+      agentConnection.sendSpans(
+        [{ n: 'span', k: 1 }],
+        err => {
+          expect(err).to.not.exist;
+          done();
+        },
+        otlpTarget('traces')
+      );
     });
   });
 
   describe('sendLogs', () => {
     const otlpLogs = { resourceLogs: [] };
 
-    it('should use the OTLP logs endpoint when OTLP export is enabled', done => {
-      initAgentConnection({
-        tracing: {
-          otlp: {
-            enabled: true,
-            port: 4318
-          }
-        }
-      });
+    it('should use the Instana traces endpoint by default', done => {
+      initAgentConnection();
       responseQueue.push({ statusCode: 200, body: '' });
 
       agentConnection.sendLogs(otlpLogs, err => {
         expect(err).to.not.exist;
-        expect(requests).to.have.lengthOf(1);
         expect(requests[0].options).to.include({
-          host: '127.0.0.1',
-          port: 4318,
-          path: '/v1/logs',
-          method: 'POST'
+          port: 42699,
+          path: '/com.instana.plugin.nodejs/traces.4711'
         });
-        expect(requests[0].options.headers['Content-Type']).to.equal('application/json; charset=UTF-8');
-        expect(JSON.parse(requests[0].payload.toString())).to.deep.equal(otlpLogs);
         done();
       });
     });
 
-    it('should switch to the OTLP logs endpoint after activate enables OTLP export', done => {
-      initAgentConnection({
-        tracing: {
-          otlp: {
-            enabled: false,
-            port: 4318
-          }
-        }
-      });
-      agentConnection.activate({
-        tracing: {
-          otlp: {
-            enabled: true,
-            port: 4318
-          }
-        }
-      });
+    it('should use path and port of the export target', done => {
+      initAgentConnection();
       responseQueue.push({ statusCode: 200, body: '' });
 
-      agentConnection.sendLogs(otlpLogs, err => {
-        expect(err).to.not.exist;
-        expect(requests[0].options.port).to.equal(4318);
-        expect(requests[0].options.path).to.equal('/v1/logs');
-        done();
-      });
+      agentConnection.sendLogs(
+        otlpLogs,
+        err => {
+          expect(err).to.not.exist;
+          expect(requests).to.have.lengthOf(1);
+          expect(requests[0].options).to.include({
+            host: '127.0.0.1',
+            port: 4318,
+            path: '/v1/logs',
+            method: 'POST'
+          });
+          expect(requests[0].options.headers['Content-Type']).to.equal('application/json; charset=UTF-8');
+          expect(JSON.parse(requests[0].payload.toString())).to.deep.equal(otlpLogs);
+          done();
+        },
+        otlpTarget('logs')
+      );
     });
 
-    it('should report OTLP logs request failures with the OTLP endpoint in the error message', done => {
-      initAgentConnection({
-        tracing: {
-          otlp: {
-            enabled: true,
-            port: 4318
-          }
-        }
-      });
+    it('should report request failures with the target path in the error message', done => {
+      initAgentConnection();
+      failNextRequestWith(new Error('connection refused'));
 
-      const requestError = new Error('connection refused');
-      httpRequestStub.callsFake((options, responseCallback) => {
-        const req = new ExportRequestEmitter();
-        req.options = options;
-        req.responseCallback = responseCallback;
-        req.autoError = requestError;
-        requests.push(req);
-        return req;
-      });
-
-      agentConnection.sendLogs(otlpLogs, err => {
-        expect(err).to.exist;
-        expect(err.message).to.equal('Send data to agent via POST /v1/logs. Request failed: connection refused');
-        done();
-      });
+      agentConnection.sendLogs(
+        otlpLogs,
+        err => {
+          expect(err).to.exist;
+          expect(err.message).to.equal('Send data to agent via POST /v1/logs. Request failed: connection refused');
+          done();
+        },
+        otlpTarget('logs')
+      );
     });
 
-    it('should ignore 404 responses for logs on the OTLP endpoint', done => {
-      initAgentConnection({
-        tracing: {
-          otlp: {
-            enabled: true,
-            port: 4318
-          }
-        }
-      });
+    it('should ignore 404 responses for logs', done => {
+      initAgentConnection();
       responseQueue.push({ statusCode: 404, body: '' });
 
-      agentConnection.sendLogs(otlpLogs, err => {
-        expect(err).to.not.exist;
-        done();
-      });
+      agentConnection.sendLogs(
+        otlpLogs,
+        err => {
+          expect(err).to.not.exist;
+          done();
+        },
+        otlpTarget('logs')
+      );
     });
   });
 
   describe('sendMetrics', () => {
-    it('should use the legacy Instana metrics endpoint when OTLP export is disabled', done => {
-      initAgentConnection({
-        tracing: {
-          otlp: {
-            enabled: false,
-            port: 4318
-          }
-        }
-      });
+    it('should use the Instana metrics endpoint by default', done => {
+      initAgentConnection();
       responseQueue.push({ statusCode: 200, body: '["ok"]' });
 
       agentConnection.sendMetrics({ m: 1 }, (err, body) => {
@@ -513,81 +449,50 @@ describe('agent connection/export endpoints', function () {
       });
     });
 
-    it('should use the OTLP metrics endpoint when OTLP export is enabled', done => {
-      initAgentConnection({
-        tracing: {
-          otlp: {
-            enabled: true,
-            port: 4318
-          }
-        }
-      });
+    it('should use path and port of the export target', done => {
+      initAgentConnection();
       responseQueue.push({ statusCode: 200, body: '[]' });
 
-      agentConnection.sendMetrics({ resourceMetrics: [] }, (err, body) => {
-        expect(err).to.not.exist;
-        expect(body).to.deep.equal([]);
-        expect(requests).to.have.lengthOf(1);
-        expect(requests[0].options).to.include({
-          host: '127.0.0.1',
-          port: 4318,
-          path: '/v1/metrics',
-          method: 'POST'
-        });
-        expect(requests[0].options.headers['Content-Type']).to.equal('application/json; charset=UTF-8');
-        expect(JSON.parse(requests[0].payload.toString())).to.deep.equal({ resourceMetrics: [] });
-        done();
-      });
+      agentConnection.sendMetrics(
+        { resourceMetrics: [] },
+        (err, body) => {
+          expect(err).to.not.exist;
+          expect(body).to.deep.equal([]);
+          expect(requests).to.have.lengthOf(1);
+          expect(requests[0].options).to.include({
+            host: '127.0.0.1',
+            port: 4318,
+            path: '/v1/metrics',
+            method: 'POST'
+          });
+          expect(requests[0].options.headers['Content-Type']).to.equal('application/json; charset=UTF-8');
+          expect(JSON.parse(requests[0].payload.toString())).to.deep.equal({ resourceMetrics: [] });
+          done();
+        },
+        otlpTarget('metrics')
+      );
     });
 
-    it('should forward OTLP metrics errors to the callback', done => {
-      initAgentConnection({
-        tracing: {
-          otlp: {
-            enabled: true,
-            port: 4318
-          }
-        }
-      });
+    it('should forward request errors to the callback', done => {
+      initAgentConnection();
+      failNextRequestWith(new Error('socket hang up'));
 
-      const requestError = new Error('socket hang up');
-      httpRequestStub.callsFake((options, responseCallback) => {
-        const req = new ExportRequestEmitter();
-        req.options = options;
-        req.responseCallback = responseCallback;
-        req.autoError = requestError;
-        requests.push(req);
-        return req;
-      });
-
-      agentConnection.sendMetrics({ resourceMetrics: [] }, (err, body) => {
-        expect(err).to.exist;
-        expect(body).to.equal(null);
-        expect(err.message).to.equal('Send data to agent via POST /v1/metrics. Request failed: socket hang up');
-        expect(logger.error).to.not.have.been.called;
-        done();
-      });
+      agentConnection.sendMetrics(
+        { resourceMetrics: [] },
+        (err, body) => {
+          expect(err).to.exist;
+          expect(body).to.equal(null);
+          expect(err.message).to.equal('Send data to agent via POST /v1/metrics. Request failed: socket hang up');
+          expect(logger.error).to.not.have.been.called;
+          done();
+        },
+        otlpTarget('metrics')
+      );
     });
 
-    it('should not log legacy metrics errors when OTLP export is disabled', done => {
-      initAgentConnection({
-        tracing: {
-          otlp: {
-            enabled: false,
-            port: 4318
-          }
-        }
-      });
-
-      const requestError = new Error('socket hang up');
-      httpRequestStub.callsFake((options, responseCallback) => {
-        const req = new ExportRequestEmitter();
-        req.options = options;
-        req.responseCallback = responseCallback;
-        req.autoError = requestError;
-        requests.push(req);
-        return req;
-      });
+    it('should not log default metrics errors', done => {
+      initAgentConnection();
+      failNextRequestWith(new Error('socket hang up'));
 
       agentConnection.sendMetrics({ m: 1 }, err => {
         expect(err).to.exist;
@@ -599,43 +504,37 @@ describe('agent connection/export endpoints', function () {
       });
     });
 
-    it('should forward non-2xx OTLP metrics responses as errors', done => {
-      initAgentConnection({
-        tracing: {
-          otlp: {
-            enabled: true,
-            port: 4318
-          }
-        }
-      });
+    it('should forward non-2xx responses as errors', done => {
+      initAgentConnection();
       responseQueue.push({ statusCode: 500, body: 'boom' });
 
-      agentConnection.sendMetrics({ resourceMetrics: [] }, (err, body) => {
-        expect(err).to.exist;
-        expect(body).to.equal(null);
-        expect(err.message).to.equal('Failed to send data to agent via POST /v1/metrics. Got status code 500.');
-        expect(logger.error).to.not.have.been.called;
-        done();
-      });
+      agentConnection.sendMetrics(
+        { resourceMetrics: [] },
+        (err, body) => {
+          expect(err).to.exist;
+          expect(body).to.equal(null);
+          expect(err.message).to.equal('Failed to send data to agent via POST /v1/metrics. Got status code 500.');
+          expect(logger.error).to.not.have.been.called;
+          done();
+        },
+        otlpTarget('metrics')
+      );
     });
 
-    it('should use the configured OTLP port for metrics requests', done => {
-      initAgentConnection({
-        tracing: {
-          otlp: {
-            enabled: true,
-            port: 9999
-          }
-        }
-      });
+    it('should use the port of the export target', done => {
+      initAgentConnection();
       responseQueue.push({ statusCode: 200, body: '' });
 
-      agentConnection.sendMetrics({ resourceMetrics: [] }, err => {
-        expect(err).to.not.exist;
-        expect(requests[0].options.port).to.equal(9999);
-        expect(requests[0].options.path).to.equal('/v1/metrics');
-        done();
-      });
+      agentConnection.sendMetrics(
+        { resourceMetrics: [] },
+        err => {
+          expect(err).to.not.exist;
+          expect(requests[0].options.port).to.equal(9999);
+          expect(requests[0].options.path).to.equal('/v1/metrics');
+          done();
+        },
+        { path: '/v1/metrics', port: 9999 }
+      );
     });
   });
 });

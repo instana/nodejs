@@ -2322,6 +2322,57 @@ describe('config.normalizeConfig', () => {
           semConvVersion: '1.23'
         });
       });
+
+      describe('endpoint and headers', () => {
+        afterEach(() => {
+          delete process.env.INSTANA_TRACING_OTLP_ENDPOINT;
+        });
+
+        it('should not set endpoint and headers by default', () => {
+          const config = coreConfig.normalize({});
+          expect(config.tracing.otlp).to.not.have.property('endpoint');
+          expect(config.tracing.otlp).to.not.have.property('headers');
+        });
+
+        it('should read the endpoint and headers from in-code config', () => {
+          const config = coreConfig.normalize({
+            userConfig: {
+              tracing: { otlp: { endpoint: 'https://otlp.example.com:4318', headers: { authorization: 'Bearer abc' } } }
+            }
+          });
+          expect(config.tracing.otlp.endpoint).to.equal('https://otlp.example.com:4318');
+          expect(config.tracing.otlp.headers).to.deep.equal({ authorization: 'Bearer abc' });
+        });
+
+        it('should read the endpoint from INSTANA_TRACING_OTLP_ENDPOINT', () => {
+          process.env.INSTANA_TRACING_OTLP_ENDPOINT = 'http://localhost:4318';
+          const config = coreConfig.normalize({});
+          expect(config.tracing.otlp.endpoint).to.equal('http://localhost:4318');
+        });
+
+        it('should give precedence to INSTANA_TRACING_OTLP_ENDPOINT over in-code config', () => {
+          process.env.INSTANA_TRACING_OTLP_ENDPOINT = 'http://from-env:4318';
+          const config = coreConfig.normalize({
+            userConfig: { tracing: { otlp: { endpoint: 'http://from-code:4318' } } }
+          });
+          expect(config.tracing.otlp.endpoint).to.equal('http://from-env:4318');
+        });
+
+        it('should ignore endpoints that are not http(s) urls', () => {
+          ['not a url', 'ftp://example.com', 'localhost:4318'].forEach(endpoint => {
+            const config = coreConfig.normalize({ userConfig: { tracing: { otlp: { endpoint } } } });
+            expect(config.tracing.otlp, endpoint).to.not.have.property('endpoint');
+          });
+        });
+
+        it('should ignore invalid endpoint and header values', () => {
+          const config = coreConfig.normalize({
+            userConfig: { tracing: { otlp: { endpoint: 42, headers: { a: 1 } } } }
+          });
+          expect(config.tracing.otlp).to.not.have.property('endpoint');
+          expect(config.tracing.otlp).to.not.have.property('headers');
+        });
+      });
     });
 
     describe('preloadOpentelemetry', () => {

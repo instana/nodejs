@@ -433,6 +433,180 @@ describe('[UNIT] backend connector', () => {
     });
   });
 
+  describe('export target with url', function () {
+    this.timeout(testConfig.getTestTimeout());
+
+    let httpRequestStub;
+    let httpsRequestStub;
+    let fakeRequest;
+    let handlers;
+    let target;
+
+    const payload = { resourceSpans: [] };
+
+    beforeEach(() => {
+      handlers = {};
+      fakeRequest = {
+        on: (event, fn) => {
+          handlers[event] = fn;
+          return fakeRequest;
+        },
+        end: sinon.stub(),
+        once: sinon.stub(),
+        removeAllListeners: sinon.stub(),
+        destroy: sinon.stub(),
+        destroyed: false
+      };
+
+      httpRequestStub = sinon.stub().returns(fakeRequest);
+      httpsRequestStub = sinon.stub().returns(fakeRequest);
+      sinon.stub(uninstrumentedHttp, 'http').value({ request: httpRequestStub });
+      sinon.stub(uninstrumentedHttp, 'https').value({ request: httpsRequestStub });
+      sinon.stub(environmentUtil, 'getBackendHost').returns('acceptor.example.com');
+      sinon.stub(environmentUtil, 'getBackendPath').returns('/');
+      sinon.stub(environmentUtil, 'getInstanaAgentKey').returns('fake key');
+
+      target = { path: '/v1/traces', url: 'https://otlp.example.com:4318/prefix/v1/traces', headers: { 'x-api-key': 'k' } };
+      backendConnector.init({ config });
+    });
+
+    afterEach(() => {
+      sinon.restore();
+    });
+
+    it('should send spans to the url of the target with the configured headers', () => {
+      backendConnector.sendSpans(payload, () => {}, target);
+
+      expect(httpsRequestStub.calledOnce).to.be.true;
+      const reqOptions = httpsRequestStub.getCall(0).args[0];
+      expect(reqOptions.hostname).to.equal('otlp.example.com');
+      expect(reqOptions.port).to.equal('4318');
+      expect(reqOptions.path).to.equal('/prefix/v1/traces');
+      expect(reqOptions.method).to.equal('POST');
+      expect(reqOptions.headers['x-api-key']).to.equal('k');
+      expect(reqOptions.headers['Content-Type']).to.equal('application/json');
+      expect(fakeRequest.end.calledWith(JSON.stringify(payload))).to.be.true;
+    });
+
+    it('should not send the Instana agent key to the target url', () => {
+      backendConnector.sendSpans(payload, () => {}, target);
+
+      const reqOptions = httpsRequestStub.getCall(0).args[0];
+      expect(Object.keys(reqOptions.headers).map(h => h.toLowerCase())).to.not.include('x-instana-key');
+    });
+
+    it('should send logs to the url of the target', () => {
+      target.url = 'https://otlp.example.com:4318/prefix/v1/logs';
+      backendConnector.sendLogs(payload, () => {}, target);
+
+      expect(httpsRequestStub.getCall(0).args[0].path).to.equal('/prefix/v1/logs');
+    });
+
+    it('should use plain http for an http url and default the port', () => {
+      target.url = 'http://localhost/v1/logs';
+      backendConnector.sendLogs(payload, () => {}, target);
+
+      expect(httpsRequestStub.called).to.be.false;
+      const reqOptions = httpRequestStub.getCall(0).args[0];
+      expect(reqOptions.port).to.equal(80);
+      expect(reqOptions.path).to.equal('/v1/logs');
+    });
+
+    it('should call back without error for a 2xx response', done => {
+      backendConnector.sendSpans(
+        payload,
+        err => {
+          expect(err).to.not.exist;
+          done();
+        },
+        target
+      );
+      handlers.response({ statusCode: 200, resume: sinon.stub() });
+    });
+
+    it('should call back with an error for a non-2xx response', done => {
+      backendConnector.sendSpans(
+        payload,
+        err => {
+          expect(err.message).to.include('503');
+          done();
+        },
+        target
+      );
+      handlers.response({ statusCode: 503, resume: sinon.stub() });
+    });
+
+    it('should call back with an error if the request fails', done => {
+      backendConnector.sendLogs(
+        payload,
+        err => {
+          expect(err.message).to.equal('boom');
+          done();
+        },
+        target
+      );
+      handlers.error(new Error('boom'));
+    });
+
+    it('should call back with an error and destroy the request on timeout', done => {
+      backendConnector.sendLogs(
+        payload,
+        err => {
+          expect(err.message).to.include('Timeout');
+          expect(fakeRequest.destroy.called).to.be.true;
+          done();
+        },
+        target
+      );
+      handlers.timeout();
+    });
+
+    it('should call back only once', () => {
+      const callback = sinon.spy();
+      backendConnector.sendLogs(payload, callback, target);
+      handlers.error(new Error('boom'));
+      handlers.timeout();
+
+      expect(callback.calledOnce).to.be.true;
+    });
+
+    it('should call back with an error if the url is malformed', done => {
+      target.url = 'not a url';
+      backendConnector.sendSpans(
+        payload,
+        err => {
+          expect(err).to.exist;
+          expect(httpsRequestStub.called).to.be.false;
+          done();
+        },
+        target
+      );
+    });
+
+    it('should send spans to the serverless acceptor if the target has no url', () => {
+      delete target.url;
+      backendConnector.sendSpans(payload, () => {}, target);
+
+      expect(httpsRequestStub.getCall(0).args[0].hostname).to.equal('acceptor.example.com');
+      expect(httpsRequestStub.getCall(0).args[0].path).to.equal('/traces');
+    });
+
+    it('should send spans to the serverless acceptor if there is no target', () => {
+      backendConnector.sendSpans(payload, () => {});
+
+      expect(httpsRequestStub.getCall(0).args[0].hostname).to.equal('acceptor.example.com');
+      expect(httpsRequestStub.getCall(0).args[0].path).to.equal('/traces');
+    });
+
+    it('should send logs to the serverless acceptor /logs if there is no target url', () => {
+      backendConnector.sendLogs(payload, () => {});
+
+      const reqOptions = httpsRequestStub.getCall(0).args[0];
+      expect(reqOptions.hostname).to.equal('acceptor.example.com');
+      expect(reqOptions.path).to.equal('/logs');
+    });
+  });
+
   describe('Agent Key cases', function () {
     this.timeout(testConfig.getTestTimeout());
 

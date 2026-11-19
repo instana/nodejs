@@ -54,6 +54,33 @@ exports.stringValidator = function stringValidator(value) {
 };
 
 /**
+ * Accepts an absolute http(s) URL.
+ * @param {any} value
+ * @returns {string|undefined}
+ */
+exports.httpUrlValidator = function httpUrlValidator(value) {
+  if (typeof value !== 'string') return undefined;
+  try {
+    const { protocol } = new URL(value);
+    return protocol === 'http:' || protocol === 'https:' ? value : undefined;
+  } catch (e) {
+    return undefined;
+  }
+};
+
+/**
+ * Accepts a plain object whose values are all strings.
+ * @param {any} value
+ * @returns {Record<string, string>|undefined}
+ */
+exports.stringRecordValidator = function stringRecordValidator(value) {
+  if (value == null || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const entries = Object.entries(value);
+  if (entries.length === 0 || entries.some(([, v]) => typeof v !== 'string')) return undefined;
+  return Object.fromEntries(entries);
+};
+
+/**
  * @param {any} value
  * @returns {boolean|undefined}
  */
