@@ -11,10 +11,10 @@ const {
   spanName,
   spanAttributes,
   spanStatus
-} = require('../../../../src/otlpExporter/traces/mappers/otelInstrumentationMappings');
-const { OTLP_STATUS_CODES } = require('../../../../src/otlpExporter/traces/mappers/constants');
+} = require('../../../../src/otlpTransformer/traces/mappers/otelInstrumentationMappings');
+const { OTLP_STATUS_CODES } = require('../../../../src/otlpTransformer/traces/mappers/constants');
 
-describe('otlpExporter/traces/mappers/otelInstrumentationMappings', () => {
+describe('otlpTransformer/traces/mappers/otelInstrumentationMappings', () => {
   describe('OTEL_SPAN_NAME', () => {
     it('should export the correct constant', () => {
       expect(OTEL_SPAN_NAME).to.equal('otel');

@@ -6,14 +6,14 @@
 
 const expect = require('chai').expect;
 
-const { MAPPINGS } = require('../../../../src/otlpExporter/common/semconv/base/mappings');
+const { MAPPINGS } = require('../../../../src/otlpTransformer/common/semconv/base/mappings');
 const V8 = MAPPINGS.metrics.v8js;
 const NODEJS = MAPPINGS.metrics.nodejs;
 
-const mapper = require('../../../../src/otlpExporter/metrics/mappers/runtimeMetricsMappings');
-const { msToSeconds, computeMean } = require('../../../../src/otlpExporter/metrics/mappers/util');
-const { resolveDataPoints } = require('../../../../src/otlpExporter/metrics/transformers/util');
-const { POINT_TYPES } = require('../../../../src/otlpExporter/metrics/constants');
+const mapper = require('../../../../src/otlpTransformer/metrics/mappers/runtimeMetricsMappings');
+const { msToSeconds, computeMean } = require('../../../../src/otlpTransformer/metrics/mappers/util');
+const { resolveDataPoints } = require('../../../../src/otlpTransformer/metrics/transformers/util');
+const { POINT_TYPES } = require('../../../../src/otlpTransformer/metrics/constants');
 
 const FULL_PAYLOAD = {
   gc: { gcPause: 414 },
@@ -32,7 +32,7 @@ function findMapping(name) {
   return mapper.metricMappings.find(m => m.name === name);
 }
 
-describe('otlpExporter/metrics/mappers/runtimeMetrics', () => {
+describe('otlpTransformer/metrics/mappers/runtimeMetrics', () => {
   describe('metricMappings', () => {
     it('exports 9 mapping entries', () => {
       expect(mapper.metricMappings).to.have.length(9);

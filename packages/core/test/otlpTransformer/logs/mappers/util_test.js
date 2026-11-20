@@ -6,9 +6,9 @@
 
 const expect = require('chai').expect;
 
-const { toBody, toSeverityText, toSeverityNumber } = require('../../../../src/otlpExporter/logs/mappers/util');
+const { toBody, toSeverityText, toSeverityNumber } = require('../../../../src/otlpTransformer/logs/mappers/util');
 
-describe('otlpExporter/logs/mappers/util', () => {
+describe('otlpTransformer/logs/mappers/util', () => {
   describe('toBody', () => {
     it('should wrap the message in a stringValue', () => {
       expect(toBody('Example log record')).to.deep.equal({ stringValue: 'Example log record' });
