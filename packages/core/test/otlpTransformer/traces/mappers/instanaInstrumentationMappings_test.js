@@ -9,10 +9,10 @@ const {
   spanName,
   spanAttributes,
   spanStatus
-} = require('../../../../src/otlpExporter/traces/mappers/instanaInstrumentationMappings');
-const { OTLP_STATUS_CODES } = require('../../../../src/otlpExporter/traces/mappers/constants');
+} = require('../../../../src/otlpTransformer/traces/mappers/instanaInstrumentationMappings');
+const { OTLP_STATUS_CODES } = require('../../../../src/otlpTransformer/traces/mappers/constants');
 
-describe('otlpExporter/traces/mappers/instanaInstrumentationMappings', () => {
+describe('otlpTransformer/traces/mappers/instanaInstrumentationMappings', () => {
   describe('spanName', () => {
     it('should generate HTTP span name with method and path', () => {
       const span = {

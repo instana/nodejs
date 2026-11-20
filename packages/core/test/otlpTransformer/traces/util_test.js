@@ -6,9 +6,9 @@
 
 const expect = require('chai').expect;
 
-const { isLogSpan } = require('../../../src/otlpExporter/traces/util');
+const { isLogSpan } = require('../../../src/otlpTransformer/traces/util');
 
-describe('otlpExporter/traces/util', () => {
+describe('otlpTransformer/traces/util', () => {
   describe('isLogSpan', () => {
     describe('log span detection via data.log', () => {
       it('should return true for span with data.log property', () => {

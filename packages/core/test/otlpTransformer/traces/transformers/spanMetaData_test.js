@@ -8,9 +8,9 @@ const expect = require('chai').expect;
 const sinon = require('sinon');
 const proxyquire = require('proxyquire');
 
-const { OTLP_SPAN_KINDS, OTLP_STATUS_CODES } = require('../../../../src/otlpExporter/traces/mappers/constants');
+const { OTLP_SPAN_KINDS, OTLP_STATUS_CODES } = require('../../../../src/otlpTransformer/traces/mappers/constants');
 
-describe('otlpExporter/traces/transformers/spanMetaData', () => {
+describe('otlpTransformer/traces/transformers/spanMetaData', () => {
   let extractSpanMetadata;
   let mockContext;
   let mockMapper;
@@ -40,7 +40,7 @@ describe('otlpExporter/traces/transformers/spanMetaData', () => {
       spanStatus: sinon.stub().returns({ code: OTLP_STATUS_CODES.UNSET })
     };
 
-    const spanMetaDataModule = proxyquire('../../../../src/otlpExporter/traces/transformers/spanMetaData', {
+    const spanMetaDataModule = proxyquire('../../../../src/otlpTransformer/traces/transformers/spanMetaData', {
       '../../common/context': mockContext
     });
 

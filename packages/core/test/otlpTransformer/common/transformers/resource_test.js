@@ -12,13 +12,13 @@ const proxyquire = require('proxyquire');
 const mockPackageJson = { version: '6.0.0' };
 
 function loadResource() {
-  return proxyquire('../../../../src/otlpExporter/common/transformers/resource', {
+  return proxyquire('../../../../src/otlpTransformer/common/transformers/resource', {
     '../../../../package.json': Object.assign({ '@noCallThru': true }, mockPackageJson)
   });
 }
 
-const ctx = require('../../../../src/otlpExporter/common/context');
-const otlp = require('../../../../src/otlpExporter');
+const ctx = require('../../../../src/otlpTransformer/common/context');
+const otlp = require('../../../../src/otlpTransformer');
 
 const INIT_CONFIG = {
   serviceName: 'resource-test-service',
@@ -61,7 +61,7 @@ function makeSpan(overrides = {}) {
   };
 }
 
-describe('otlpExporter/common/transformers/resource', () => {
+describe('otlpTransformer/common/transformers/resource', () => {
   let hostnameStub;
 
   before(() => {
