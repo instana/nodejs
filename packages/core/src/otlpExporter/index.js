@@ -11,6 +11,34 @@ const logs = require('./logs');
 const { isLogSpan } = require('./traces/util');
 
 /**
+ * @typedef {Object} ExportTarget
+ * @property {string} [path] 
+ * @property {number} [port] 
+ * @property {string} [url] 
+ * @property {Record<string, string>} [headers]
+ */
+
+/**
+ * todo: config should be available here
+ * @param {import('../config').InstanaConfig['tracing']['otlp']} otlpConfig
+ * @param {'traces' | 'logs' | 'metrics'} signal
+ * @returns {ExportTarget}
+ */
+function getExportTarget(otlpConfig, signal) {
+  const path = `/v1/${signal}`;
+
+  /** @type {ExportTarget} */
+  const target = { path, port: otlpConfig?.port };
+
+  if (otlpConfig?.endpoint) {
+    target.url = `${otlpConfig.endpoint.replace(/\/+$/, '')}${path}`;
+    target.headers = otlpConfig.headers;
+  }
+
+  return target;
+}
+
+/**
  * @param {import('../config').InstanaConfig} config
  */
 function init(config) {
@@ -48,6 +76,7 @@ function splitSignals(spans) {
 module.exports = {
   init,
   splitSignals,
+  getExportTarget,
   common,
   traces,
   metrics,

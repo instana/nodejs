@@ -6,7 +6,6 @@
 'use strict';
 
 const core = require('@instana/core');
-const otlpExporter = require('@instana/core/src/otlpExporter');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
@@ -32,7 +31,6 @@ let previousTransmittedValue;
 let transmissionTimeoutHandle;
 let transmissionDelay = 1000;
 let isActive = false;
-let useOtlpExporter = false;
 
 /**
  * @param {import('@instana/core/src/metrics').InstanaConfig} config
@@ -40,7 +38,6 @@ let useOtlpExporter = false;
 exports.init = function init(config) {
   logger = config.logger;
   transmissionDelay = config.metrics.transmissionDelay;
-  useOtlpExporter = config.tracing.otlp.enabled;
 };
 
 /**
@@ -49,16 +46,13 @@ exports.init = function init(config) {
  * @param {import('../agentConnection')} _downstreamConnection
  * @param {(requests: Array.<import('../agent/requestHandler').AnnounceRequest>) => void} _onSuccess
  * @param {() => void} _onError
- * @param {import('@instana/core/src/metrics').InstanaConfig} _config
  * @returns
  */
-exports.activate = function activate(_metrics, _downstreamConnection, _onSuccess, _onError, _config) {
+exports.activate = function activate(_metrics, _downstreamConnection, _onSuccess, _onError) {
   metrics = _metrics;
   downstreamConnection = _downstreamConnection;
   onSuccess = _onSuccess;
   onError = _onError;
-
-  useOtlpExporter = _config.tracing.otlp.enabled;
 
   if (!metrics) {
     logger.error('No metrics have been set.');
@@ -108,11 +102,8 @@ function sendMetrics() {
     payload = core.util.compression(previousTransmittedValue, newValueToTransmit);
   }
 
-  if (useOtlpExporter) {
-    payload = otlpExporter.metrics.transform(payload);
-  }
-
-  downstreamConnection.sendMetrics(payload, onMetricsHaveBeenSent.bind(null, isFullTransmission, newValueToTransmit));
+  // The exporter decides about the format and the destination of the payload.
+  core.exporter.exportMetrics(payload, onMetricsHaveBeenSent.bind(null, isFullTransmission, newValueToTransmit));
 }
 
 /**
