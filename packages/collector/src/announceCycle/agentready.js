@@ -12,7 +12,7 @@ try {
   // Worker threads are not available, so we know that this is the main thread.
 }
 
-const { tracing, coreConfig, util } = require('@instana/core');
+const { tracing, coreConfig, exporter, util } = require('@instana/core');
 const agentConnection = require('../agentConnection');
 const agentOpts = require('../agent/opts');
 const initializedTooLate = require('../util/initializedTooLate');
@@ -112,6 +112,7 @@ function enter(_ctx) {
     source: util.constants.CONFIG_SOURCES.AGENT
   });
 
+  exporter.activate(updatedConfig);
   agentConnection.activate(updatedConfig);
 
   if (isMainThread) {
@@ -129,8 +130,7 @@ function enter(_ctx) {
       },
       function onError() {
         ctx.transitionTo('unannounced');
-      },
-      updatedConfig
+      }
     );
     scheduleTracingMetrics();
     if (!disableEOLEvents) {
