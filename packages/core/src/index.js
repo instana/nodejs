@@ -38,8 +38,8 @@ const exporter = require('./exporter');
 /**
  * This type is based on /nodejs/packages/collector/src/agentConnection.js
  * @typedef {Object} DownstreamConnection
- * @property {(spans: *, cb: Function, target?: import('./otlpExporter').ExportTarget) => void} sendSpans
- * @property {(logs: *, cb: Function, target?: import('./otlpExporter').ExportTarget) => void} [sendLogs]
+ * @property {(spans: *, cb: Function, target?: import('./exporter').ExportTarget) => void} sendSpans
+ * @property {(logs: *, cb: Function, target?: import('./exporter').ExportTarget) => void} [sendLogs]
  * @property {(eventData: Event, cb: (...args: *) => *) => void} sendEvent
  */
 

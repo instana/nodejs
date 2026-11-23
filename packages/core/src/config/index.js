@@ -112,6 +112,8 @@ let currentConfig;
  * @property {boolean} [enabled]
  * @property {number} [port]
  * @property {string} [semConvVersion]
+ * @property {string} [endpoint]
+ * @property {Record<string, string>} [headers]
  */
 
 /**
@@ -1538,6 +1540,38 @@ function normalizeOtlpExporter({ userConfig = {}, defaultConfig = {}, finalConfi
     value,
     envVarName: 'INSTANA_TRACING_OTLP_ENABLED'
   });
+
+  // endpoint and headers have no default value. The keys are only set when configured.
+  const endpoint = util.resolve(
+    {
+      envValue: 'INSTANA_TRACING_OTLP_ENDPOINT',
+      inCodeValue: userOtlp.endpoint,
+      defaultValue: undefined
+    },
+    [validators.httpUrlValidator]
+  );
+
+  if (endpoint.value) {
+    configStore.set('config.tracing.otlp.endpoint', { source: endpoint.source });
+    finalConfig.tracing.otlp.endpoint = endpoint.value;
+    util.log({
+      configPath: 'config.tracing.otlp.endpoint',
+      source: endpoint.source,
+      value: endpoint.value,
+      envVarName: 'INSTANA_TRACING_OTLP_ENDPOINT'
+    });
+  }
+
+  const headers = util.resolve({ inCodeValue: userOtlp.headers, defaultValue: undefined }, [
+    validators.stringRecordValidator
+  ]);
+
+  if (headers.value) {
+    configStore.set('config.tracing.otlp.headers', { source: headers.source });
+    finalConfig.tracing.otlp.headers = headers.value;
+    // The header values can contain credentials. Do not log them.
+    logger?.debug('[config] config.tracing.otlp.headers <- incode (values omitted)');
+  }
 }
 
 /**

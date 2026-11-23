@@ -105,7 +105,7 @@ const DEFAULT_EXPORT_PATHS = {
 
 /**
  * @param {string} type
- * @param {import('@instana/core/src/otlpExporter').ExportTarget} [target]
+ * @param {import('@instana/core/src/exporter').ExportTarget} [target]
  * @returns { {path: string, port: number} }
  */
 function resolveExportEndpoint(type, target) {
@@ -331,7 +331,7 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
 /**
  * @param {Object<string, *>} data
  * @param {(...args: *) => *} cb
- * @param {import('@instana/core/src/otlpExporter').ExportTarget} [target]
+ * @param {import('@instana/core/src/exporter').ExportTarget} [target]
  */
 exports.sendMetrics = function sendMetrics(data, cb, target) {
   cb = util.atMostOnce('callback for sendMetrics', cb);
@@ -371,7 +371,7 @@ exports.sendMetrics = function sendMetrics(data, cb, target) {
  *
  * @param {Array.<InstanaBaseSpan>|Object} spans
  * @param {(...args: *) => *} cb
- * @param {import('@instana/core/src/otlpExporter').ExportTarget} [target]
+ * @param {import('@instana/core/src/exporter').ExportTarget} [target]
  */
 exports.sendSpans = function sendSpans(spans, cb, target) {
   const callback = util.atMostOnce('callback for sendSpans', err => {
@@ -403,7 +403,7 @@ exports.sendSpans = function sendSpans(spans, cb, target) {
  * Sends log records.
  * @param {Object} logs
  * @param {(...args: *) => *} cb
- * @param {import('@instana/core/src/otlpExporter').ExportTarget} [target]
+ * @param {import('@instana/core/src/exporter').ExportTarget} [target]
  */
 exports.sendLogs = function sendLogs(logs, cb, target) {
   const callback = util.atMostOnce('callback for sendLogs', err => {

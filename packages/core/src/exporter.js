@@ -8,6 +8,12 @@ const instanaBackendMapper = require('./tracing/backend_mappers');
 const otlpExporter = require('./otlpTransformer');
 
 /**
+ * @typedef {Object} ExportTarget
+ * @property {string} [path]
+ * @property {number} [port]
+ * @property {string} [url]
+ * @property {Record<string, string>} [headers]
+ *
  * @typedef {Array<import('./core').InstanaBaseSpan>} InstanaSpans
  * @typedef {(error?: Error, failedSpans?: InstanaSpans) => void} ExportCallback
  *
@@ -16,7 +22,7 @@ const otlpExporter = require('./otlpTransformer');
  *   Transforms and sends the spans. The callback is called exactly once. If anything could not be sent, it receives the
  *   (internal format) spans that need to be retried.
  * @property {(spans: InstanaSpans) => any} transformSpans
- *   Transforms the spans into the trace payload without sending it (used when the spans are shipped as a bundle).
+ *   Transforms the spans into the trace payload without sending it.
  * @property {(payload: Object<string, *>, cb: (...args: *) => *) => void} exportMetrics
  */
 
@@ -27,8 +33,7 @@ let connection;
 /** @type {Format} */
 let format;
 /**
- * Resolved once per (re-)configuration, not per export.
- * @type {Record<'traces' | 'logs' | 'metrics', import('./otlpExporter').ExportTarget>}
+ * @type {Record<'traces' | 'logs' | 'metrics', ExportTarget>}
  */
 let targets;
 
