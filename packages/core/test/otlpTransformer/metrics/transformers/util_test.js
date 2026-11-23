@@ -13,18 +13,18 @@ const {
   buildMetricEnvelope,
   resolveDataPoints,
   extractMappedMetrics
-} = require('../../../../src/otlpExporter/metrics/transformers/util');
+} = require('../../../../src/otlpTransformer/metrics/transformers/util');
 
 const {
   METRIC_TYPES,
   POINT_TYPES,
   OTLP_AGGREGATION_TEMPORALITY
-} = require('../../../../src/otlpExporter/metrics/constants');
+} = require('../../../../src/otlpTransformer/metrics/constants');
 
 const TIME_MS = 1544712660300;
 const TIME_NANO = String(TIME_MS * 1e6);
 
-describe('otlpExporter/metrics/transformers/util', () => {
+describe('otlpTransformer/metrics/transformers/util', () => {
   describe('formatAttributes', () => {
     it('returns an empty array when called with no argument', () => {
       expect(formatAttributes()).to.deep.equal([]);

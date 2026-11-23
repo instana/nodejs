@@ -6,9 +6,9 @@
 
 const expect = require('chai').expect;
 
-const { logRecordMappings } = require('../../../../src/otlpExporter/logs/mappers');
+const { logRecordMappings } = require('../../../../src/otlpTransformer/logs/mappers');
 
-describe('otlpExporter/logs/mappers/logRecordMappings', () => {
+describe('otlpTransformer/logs/mappers/logRecordMappings', () => {
   function find(otlp) {
     return logRecordMappings.filter(mapping => mapping.otlp === otlp);
   }

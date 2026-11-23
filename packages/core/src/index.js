@@ -14,7 +14,7 @@ const secrets = require('./secrets');
 const tracing = require('./tracing');
 const util = require('./util');
 const coreConfig = require('./config');
-const otlpExporter = require('./otlpExporter');
+const otlpTransformer = require('./otlpTransformer');
 
 /**
  * @typedef {{
@@ -82,7 +82,7 @@ function init(config, downstreamConnection, processIdentityProvider) {
   util.init(config);
   util.hasThePackageBeenInitializedTooLate.activate();
   secrets.init(config);
-  otlpExporter.init(config);
+  otlpTransformer.init(config);
   tracing.init(config, downstreamConnection, processIdentityProvider);
 }
 
@@ -102,5 +102,5 @@ module.exports = {
   init,
   preInit,
   registerAdditionalInstrumentations,
-  otlpExporter
+  otlpTransformer
 };

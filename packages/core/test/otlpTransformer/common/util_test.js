@@ -6,9 +6,9 @@
 
 const expect = require('chai').expect;
 
-const { toTraceId, toSpanId, toTimeUnixNano } = require('../../../src/otlpExporter/common/util');
+const { toTraceId, toSpanId, toTimeUnixNano } = require('../../../src/otlpTransformer/common/util');
 
-describe('otlpExporter/common/util', () => {
+describe('otlpTransformer/common/util', () => {
   describe('toTraceId', () => {
     it('should pad the trace id to 32 characters', () => {
       expect(toTraceId('abc')).to.equal('00000000000000000000000000000abc');

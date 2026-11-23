@@ -7,7 +7,7 @@
 
 const tracingMetrics = require('./metrics');
 const instanaBackendMapper = require('./backend_mappers');
-const otlpExporter = require('../otlpExporter');
+const otlpTransformer = require('../otlpTransformer');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -456,7 +456,7 @@ function transmitSpans() {
 
   if (useOtlpExporter) {
     // OTLP exports logs as a separate signal, so log spans must not be part of the traces.
-    const { traceSpans, logSpans } = otlpExporter.splitSignals(spansToSend);
+    const { traceSpans, logSpans } = otlpTransformer.splitSignals(spansToSend);
     spansToSend = traceSpans;
     transmitLogSpans(logSpans);
 
@@ -501,7 +501,8 @@ function transmitLogSpans(logSpans) {
     return;
   }
 
-  downstreamConnection.sendLogs(otlpExporter.logs.transform(logSpans), function sendLogs(/** @type {Error} */ error) {
+  const transformedLogs = otlpTransformer.logs.transform(logSpans);
+  downstreamConnection.sendLogs(transformedLogs, function sendLogs(/** @type {Error} */ error) {
     if (error) {
       logger.warn(`Failed to transmit logs, will retry in ${transmissionDelay} ms. ${error?.message} ${error?.stack}`);
       spans = spans.concat(logSpans);
@@ -521,7 +522,7 @@ exports.getAndResetSpans = function getAndResetSpans() {
 
   if (useOtlpExporter) {
     // Log spans are not part of the OTLP traces payload.
-    spansToSend = otlpExporter.splitSignals(spansToSend).traceSpans;
+    spansToSend = otlpTransformer.splitSignals(spansToSend).traceSpans;
   }
 
   return applySpanTransformation(spansToSend);
@@ -560,7 +561,7 @@ function removeSpansIfNecessary() {
  */
 function applySpanTransformation(spansToSend) {
   if (useOtlpExporter) {
-    return otlpExporter.traces.transform(spansToSend);
+    return otlpTransformer.traces.transform(spansToSend);
   }
 
   return (
