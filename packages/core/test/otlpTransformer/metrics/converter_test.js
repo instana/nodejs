@@ -13,20 +13,20 @@ const proxyquire = require('proxyquire');
 
 const mockPackageJson = { version: '6.0.0' };
 
-const resourceTransformer = proxyquire('../../../src/otlpExporter/common/transformers/resource', {
+const resourceTransformer = proxyquire('../../../src/otlpTransformer/common/transformers/resource', {
   '../../../../package.json': mockPackageJson
 });
 
-const realTransformers = require('../../../src/otlpExporter/metrics/transformers');
+const realTransformers = require('../../../src/otlpTransformer/metrics/transformers');
 
-const converterModule = proxyquire('../../../src/otlpExporter/metrics/converter', {
+const converterModule = proxyquire('../../../src/otlpTransformer/metrics/converter', {
   './transformers': {
     ...realTransformers,
     resource: resourceTransformer
   }
 });
 
-const converter = proxyquire('../../../src/otlpExporter/metrics', {
+const converter = proxyquire('../../../src/otlpTransformer/metrics', {
   './converter': converterModule
 });
 

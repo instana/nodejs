@@ -6,9 +6,9 @@
 
 const expect = require('chai').expect;
 
-const { merge } = require('../../../src/otlpExporter/common/semconv/merge');
+const { merge } = require('../../../src/otlpTransformer/common/semconv/merge');
 
-describe('otlpExporter/common/semconv', () => {
+describe('otlpTransformer/common/semconv', () => {
   describe('merge function', () => {
     describe('basic merging', () => {
       it('should merge two simple objects without conflicts', () => {
@@ -164,7 +164,7 @@ describe('otlpExporter/common/semconv', () => {
       });
 
       describe('getLookupConfig', () => {
-        const { getLookupConfig } = require('../../../src/otlpExporter/common/semconv');
+        const { getLookupConfig } = require('../../../src/otlpTransformer/common/semconv');
 
         describe('version switching', () => {
           it('should return version 1.23 configuration when no version is specified', () => {

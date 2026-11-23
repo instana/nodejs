@@ -304,7 +304,7 @@ describe('baggage capturing', () => {
     let mapper;
 
     before(() => {
-      mapper = require('../../src/otlpExporter/traces/mappers/instanaInstrumentationMappings');
+      mapper = require('../../src/otlpTransformer/traces/mappers/instanaInstrumentationMappings');
     });
 
     it('includes sdk.custom.tags entries as OTLP attributes', () => {

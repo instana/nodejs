@@ -11,20 +11,20 @@ const proxyquire = require('proxyquire');
 
 const mockPackageJson = { version: '6.0.0' };
 
-const resourceTransformer = proxyquire('../../../src/otlpExporter/common/transformers/resource', {
+const resourceTransformer = proxyquire('../../../src/otlpTransformer/common/transformers/resource', {
   '../../../../package.json': mockPackageJson
 });
-const { convert } = proxyquire('../../../src/otlpExporter/traces/converter', {
+const { convert } = proxyquire('../../../src/otlpTransformer/traces/converter', {
   './transformers': {
-    ...require('../../../src/otlpExporter/traces/transformers'),
+    ...require('../../../src/otlpTransformer/traces/transformers'),
     resource: resourceTransformer
   }
 });
 
-const otlp = require('../../../src/otlpExporter');
-const { extractSpanMetadata } = require('../../../src/otlpExporter/traces/transformers/spanMetaData');
-const { extractSpanAttributes } = require('../../../src/otlpExporter/traces/transformers/spanAttributes');
-const mappers = require('../../../src/otlpExporter/traces/mappers');
+const otlp = require('../../../src/otlpTransformer');
+const { extractSpanMetadata } = require('../../../src/otlpTransformer/traces/transformers/spanMetaData');
+const { extractSpanAttributes } = require('../../../src/otlpTransformer/traces/transformers/spanAttributes');
+const mappers = require('../../../src/otlpTransformer/traces/mappers');
 
 function createSpan(overrides = {}) {
   return {

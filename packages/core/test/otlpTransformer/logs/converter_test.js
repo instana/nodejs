@@ -13,24 +13,24 @@ const proxyquire = require('proxyquire');
 
 const mockPackageJson = { version: '6.0.0' };
 
-const resourceTransformer = proxyquire('../../../src/otlpExporter/common/transformers/resource', {
+const resourceTransformer = proxyquire('../../../src/otlpTransformer/common/transformers/resource', {
   '../../../../package.json': mockPackageJson
 });
 
-const realTransformers = require('../../../src/otlpExporter/logs/transformers');
+const realTransformers = require('../../../src/otlpTransformer/logs/transformers');
 
-const converterModule = proxyquire('../../../src/otlpExporter/logs/converter', {
+const converterModule = proxyquire('../../../src/otlpTransformer/logs/converter', {
   './transformers': {
     ...realTransformers,
     resource: resourceTransformer
   }
 });
 
-const converter = proxyquire('../../../src/otlpExporter/logs', {
+const converter = proxyquire('../../../src/otlpTransformer/logs', {
   './converter': converterModule
 });
 
-const otlpCtx = require('../../../src/otlpExporter/common/context');
+const otlpCtx = require('../../../src/otlpTransformer/common/context');
 
 function loadInputFixture(filename) {
   const fixturePath = path.join(__dirname, 'fixtures/input', filename);
@@ -269,7 +269,7 @@ describe('logs/converters/otlp', () => {
     });
 
     describe('exporter entry point', () => {
-      const otlp = require('../../../src/otlpExporter');
+      const otlp = require('../../../src/otlpTransformer');
 
       it('exposes logs.transform on the otlp exporter', () => {
         const result = otlp.logs.transform([createLogSpan()]);

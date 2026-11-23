@@ -6,7 +6,7 @@
 'use strict';
 
 const core = require('@instana/core');
-const otlpExporter = require('@instana/core/src/otlpExporter');
+const otlpTransformer = require('@instana/core/src/otlpTransformer');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
@@ -109,7 +109,7 @@ function sendMetrics() {
   }
 
   if (useOtlpExporter) {
-    payload = otlpExporter.metrics.transform(payload);
+    payload = otlpTransformer.metrics.transform(payload);
   }
 
   downstreamConnection.sendMetrics(payload, onMetricsHaveBeenSent.bind(null, isFullTransmission, newValueToTransmit));

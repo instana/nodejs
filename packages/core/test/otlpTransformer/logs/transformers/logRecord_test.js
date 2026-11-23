@@ -6,10 +6,10 @@
 
 const expect = require('chai').expect;
 
-const { extractLogRecord } = require('../../../../src/otlpExporter/logs/transformers/logRecord');
-const { logRecordMappings } = require('../../../../src/otlpExporter/logs/mappers');
+const { extractLogRecord } = require('../../../../src/otlpTransformer/logs/transformers/logRecord');
+const { logRecordMappings } = require('../../../../src/otlpTransformer/logs/mappers');
 
-describe('otlpExporter/logs/transformers/logRecord', () => {
+describe('otlpTransformer/logs/transformers/logRecord', () => {
   describe('extractLogRecord', () => {
     it('should extract all log record fields from a complete log span', () => {
       const span = {
