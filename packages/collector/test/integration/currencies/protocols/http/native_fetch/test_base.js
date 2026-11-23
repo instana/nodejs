@@ -1137,6 +1137,8 @@ module.exports = function (name, version, isLatest) {
     } else {
       expect(span.data.http.header).to.not.exist;
     }
+    expect(span.data.http.requestHeader).to.not.exist;
+    expect(span.data.http.responseHeader).to.not.exist;
   }
 
   function verifyHttpExitEc({ spans, expectedEc, expectedStatus }) {
