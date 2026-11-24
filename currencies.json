@@ -1259,7 +1259,7 @@
     "core": false,
     "versions": [
       {
-        "v": "4.1.0",
+        "v": "4.1.1",
         "overrides": {
           "adm-zip": "^0.6.1"
         }
