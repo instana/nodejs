@@ -5,7 +5,7 @@
 'use strict';
 
 const instanaBackendMapper = require('./tracing/backend_mappers');
-const otlpExporter = require('./otlpTransformer');
+const otlpTransformer = require('./otlpTransformer');
 
 /**
  * @typedef {Object} ExportTarget
@@ -70,11 +70,11 @@ const instanaFormat = {
 const otlpFormat = {
   transformSpans(spans) {
     // Log spans are exported as a separate signal and are not part of the OTLP traces payload.
-    return otlpExporter.traces.transform(otlpExporter.splitSignals(spans).traceSpans);
+    return otlpTransformer.traces.transform(otlpTransformer.splitSignals(spans).traceSpans);
   },
 
   exportSpans(spans, cb) {
-    const { traceSpans, logSpans } = otlpExporter.splitSignals(spans);
+    const { traceSpans, logSpans } = otlpTransformer.splitSignals(spans);
 
     /** @type {Array<{ spans: InstanaSpans, send: (done: (error?: Error) => void) => void }>} */
     const signals = [];
@@ -82,7 +82,7 @@ const otlpFormat = {
     if (traceSpans.length > 0) {
       signals.push({
         spans: traceSpans,
-        send: done => connection.sendSpans(otlpExporter.traces.transform(traceSpans), done, targets.traces)
+        send: done => connection.sendSpans(otlpTransformer.traces.transform(traceSpans), done, targets.traces)
       });
     }
 
@@ -90,7 +90,7 @@ const otlpFormat = {
       if (typeof connection.sendLogs === 'function') {
         signals.push({
           spans: logSpans,
-          send: done => connection.sendLogs(otlpExporter.logs.transform(logSpans), done, targets.logs)
+          send: done => connection.sendLogs(otlpTransformer.logs.transform(logSpans), done, targets.logs)
         });
       } else {
         logger.debug('Configured downstreamConnection has no function "sendLogs". Not transmitting log spans.');
@@ -122,7 +122,7 @@ const otlpFormat = {
   },
 
   exportMetrics(payload, cb) {
-    connection.sendMetrics(otlpExporter.metrics.transform(payload), cb, targets.metrics);
+    connection.sendMetrics(otlpTransformer.metrics.transform(payload), cb, targets.metrics);
   }
 };
 
@@ -135,9 +135,9 @@ function configure(config) {
   if (otlpConfig?.enabled) {
     format = otlpFormat;
     targets = {
-      traces: otlpExporter.getExportTarget(otlpConfig, 'traces'),
-      logs: otlpExporter.getExportTarget(otlpConfig, 'logs'),
-      metrics: otlpExporter.getExportTarget(otlpConfig, 'metrics')
+      traces: otlpTransformer.getExportTarget('traces'),
+      logs: otlpTransformer.getExportTarget('logs'),
+      metrics: otlpTransformer.getExportTarget('metrics')
     };
   } else {
     format = instanaFormat;
@@ -152,6 +152,7 @@ function configure(config) {
 exports.init = function init(config, downstreamConnection) {
   logger = config.logger;
   connection = downstreamConnection;
+  otlpTransformer.init(config);
   configure(config);
 };
 
@@ -160,6 +161,7 @@ exports.init = function init(config, downstreamConnection) {
  * @param {import('./config').InstanaConfig} config
  */
 exports.activate = function activate(config) {
+  otlpTransformer.activate(config);
   configure(config);
 };
 

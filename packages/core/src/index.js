@@ -83,7 +83,6 @@ function init(config, downstreamConnection, processIdentityProvider) {
   util.init(config);
   util.hasThePackageBeenInitializedTooLate.activate();
   secrets.init(config);
-  otlpTransformer.init(config);
   exporter.init(config, downstreamConnection);
   tracing.init(config, downstreamConnection, processIdentityProvider);
 }

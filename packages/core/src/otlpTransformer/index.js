@@ -10,24 +10,20 @@ const metrics = require('./metrics');
 const logs = require('./logs');
 const { isLogSpan } = require('./traces/util');
 
-/**
- * @typedef {Object} ExportTarget
- * @property {string} [path]
- * @property {number} [port]
- * @property {string} [url]
- * @property {Record<string, string>} [headers]
- */
+/** @type {import('../config').InstanaConfig} */
+let config;
 
 /**
  * todo: config should be available here
  * @param {import('../config').InstanaConfig['tracing']['otlp']} otlpConfig
  * @param {'traces' | 'logs' | 'metrics'} signal
- * @returns {ExportTarget}
+ * @returns {import('../exporter').ExportTarget}
  */
-function getExportTarget(otlpConfig, signal) {
+function getExportTarget(signal) {
+  const otlpConfig = config?.tracing?.otlp;
   const path = `/v1/${signal}`;
 
-  /** @type {ExportTarget} */
+  /** @type {import('../exporter').ExportTarget} */
   const target = { path, port: otlpConfig?.port };
 
   if (otlpConfig?.endpoint) {
@@ -39,13 +35,21 @@ function getExportTarget(otlpConfig, signal) {
 }
 
 /**
- * @param {import('../config').InstanaConfig} config
+ * @param {import('../config').InstanaConfig} _config
  */
-function init(config) {
-  common.init(config);
-  traces.init(config);
-  metrics.init(config);
-  logs.init(config);
+function init(_config) {
+  config = _config;
+  common.init(_config);
+  traces.init(_config);
+  metrics.init(_config);
+  logs.init(_config);
+}
+
+/**
+ * @param {import('../config').InstanaConfig} _config
+ */
+function activate(_config) {
+  config = _config;
 }
 
 /**
@@ -75,6 +79,7 @@ function splitSignals(spans) {
 
 module.exports = {
   init,
+  activate,
   splitSignals,
   getExportTarget,
   common,
