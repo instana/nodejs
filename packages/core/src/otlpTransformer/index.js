@@ -14,8 +14,6 @@ const { isLogSpan } = require('./traces/util');
 let config;
 
 /**
- * todo: config should be available here
- * @param {import('../config').InstanaConfig['tracing']['otlp']} otlpConfig
  * @param {'traces' | 'logs' | 'metrics'} signal
  * @returns {import('../exporter').ExportTarget}
  */
