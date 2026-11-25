@@ -1203,7 +1203,7 @@
     "core": false,
     "versions": [
       {
-        "v": "20.3.10",
+        "v": "20.4.0",
         "node": ">=22",
         "overrides": {
           "@azure/msal-node": "7.1.0"
