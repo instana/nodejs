@@ -282,12 +282,14 @@
         "v": "8.4.0",
         "node": ">=22",
         "overrides": {
+          "fast-xml-parser": "^5.12.0",
           "uuid": "^11.1.1"
         }
       },
       {
         "v": "7.22.0",
         "overrides": {
+          "fast-xml-parser": "^5.12.0",
           "uuid": "^11.1.1"
         }
       }
@@ -1298,14 +1300,16 @@
         "node": ">=20.19.0 <23 || >=24",
         "skipValidation": true,
         "overrides": {
-          "deepmerge-ts": "^8.0.0"
+          "deepmerge-ts": "^8.0.0",
+          "effect": "3.22.1"
         }
       },
       {
         "v": "6.19.3",
         "skipValidation": true,
         "overrides": {
-          "deepmerge-ts": "^8.0.0"
+          "deepmerge-ts": "^8.0.0",
+          "effect": "3.22.1"
         }
       },
       {
@@ -1389,7 +1393,10 @@
     "versions": [
       {
         "v": "12.34.0",
-        "node": ">=20"
+        "node": ">=20",
+        "overrides": {
+          "fast-xml-parser": "^5.12.0"
+        }
       }
     ],
     "group": "cloud"
