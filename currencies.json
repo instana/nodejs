@@ -27,7 +27,12 @@
     "core": false,
     "versions": [
       {
-        "v": "5.5.2"
+        "v": "5.5.2",
+        "overrides": {
+          "body-parser": "2.4.0",
+          "@graphql-tools/utils": "12.0.2",
+          "qs": "6.16.1"
+        }
       },
       {
         "v": "4.13.0"
