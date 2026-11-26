@@ -6,8 +6,7 @@
 'use strict';
 
 const tracingMetrics = require('./metrics');
-const instanaBackendMapper = require('./backend_mappers');
-const otlpTransformer = require('../otlpTransformer');
+const exporter = require('../exporter');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -36,8 +35,6 @@ let preActivationCleanupIntervalHandle;
 let isFaaS;
 /** @type {boolean} */
 let transmitImmediate;
-/** @type {boolean} */
-let useOtlpExporter = false;
 
 /** @type {Array.<import('../core').InstanaBaseSpan>} */
 let spans = [];
@@ -95,7 +92,6 @@ exports.init = function init(config, _downstreamConnection) {
   batchingEnabled = config.tracing.spanBatchingEnabled;
   isFaaS = false;
   transmitImmediate = false;
-  useOtlpExporter = config.tracing.otlp.enabled;
 
   if (config.tracing.activateImmediately) {
     preActivationCleanupIntervalHandle = setInterval(() => {
@@ -124,7 +120,6 @@ exports.activate = function activate(_config) {
   }
 
   batchingEnabled = _config.tracing.spanBatchingEnabled;
-  useOtlpExporter = _config.tracing.otlp?.enabled;
 
   isActive = true;
   if (activatedAt == null) {
@@ -450,34 +445,18 @@ function transmitSpans() {
 
   logger.debug(`[spanBuffer] Transmitting spans called. There is ${spans.length} spans to send.`);
 
-  let spansToSend = spans;
+  const spansToSend = spans;
   spans = [];
   batchingBuckets.clear();
 
-  if (useOtlpExporter) {
-    // OTLP exports logs as a separate signal, so log spans must not be part of the traces.
-    const { traceSpans, logSpans } = otlpTransformer.splitSignals(spansToSend);
-    spansToSend = traceSpans;
-    transmitLogSpans(logSpans);
-
-    if (spansToSend.length === 0) {
-      // Only log spans in this flush, there is nothing to send as traces.
-      if (!isFaaS) {
-        transmissionTimeoutHandle = setTimeout(transmitSpans, transmissionDelay);
-        transmissionTimeoutHandle.unref();
-      }
-      return;
-    }
-  }
-
-  const transformedSpans = applySpanTransformation(spansToSend);
-  // We restore the content of the spans array if sending them downstream was not successful. We do not restore
+  // The exporter decides about the wire format and about which signals (traces, logs) are sent where.
+  // We restore the spans that could not be sent, so they are retried with the next transmission. We do not restore
   // batchingBuckets, though. This is deliberate. In the worst case, we might miss some batching opportunities, but
   // since sending spans downstream will take a few milliseconds, even that will be rare (and it is acceptable).
-  downstreamConnection.sendSpans(transformedSpans, function sendSpans(/** @type {Error} */ error) {
+  exporter.exportSpans(spansToSend, function onExported(error, failedSpans) {
     if (error) {
       logger.warn(`Failed to transmit spans, will retry in ${transmissionDelay} ms. ${error?.message} ${error?.stack}`);
-      spans = spans.concat(spansToSend);
+      spans = spans.concat(failedSpans || spansToSend);
       removeSpansIfNecessary();
     }
 
@@ -489,43 +468,15 @@ function transmitSpans() {
 }
 
 /**
- * @param {Array.<import('../core').InstanaBaseSpan>} logSpans
- */
-function transmitLogSpans(logSpans) {
-  if (logSpans.length === 0) {
-    return;
-  }
-
-  if (typeof downstreamConnection.sendLogs !== 'function') {
-    logger.debug('Configured downstreamConnection has no function "sendLogs". Not transmitting log spans.');
-    return;
-  }
-
-  const transformedLogs = otlpTransformer.logs.transform(logSpans);
-  downstreamConnection.sendLogs(transformedLogs, function sendLogs(/** @type {Error} */ error) {
-    if (error) {
-      logger.warn(`Failed to transmit logs, will retry in ${transmissionDelay} ms. ${error?.message} ${error?.stack}`);
-      spans = spans.concat(logSpans);
-      removeSpansIfNecessary();
-    }
-  });
-}
-
-/**
  * Synchronously returns the spans that are scheduled for transmission and resets the internal span buffer to an empty
  * array.
  */
 exports.getAndResetSpans = function getAndResetSpans() {
-  let spansToSend = spans;
+  const spansToSend = spans;
   spans = [];
   batchingBuckets.clear();
 
-  if (useOtlpExporter) {
-    // Log spans are not part of the OTLP traces payload.
-    spansToSend = otlpTransformer.splitSignals(spansToSend).traceSpans;
-  }
-
-  return applySpanTransformation(spansToSend);
+  return exporter.transformSpans(spansToSend);
 };
 
 exports.isEmpty = function isEmpty() {
@@ -548,33 +499,4 @@ function removeSpansIfNecessary() {
     // retain the last maxBufferedSpans elements, drop everything before that
     spans = spans.slice(-maxBufferedSpans);
   }
-}
-
-/**
- * Transforms internal spans into the format required by the configured exporter.
- * Depending on configuration, spans are transformed to either:
- * - Instana backend format
- * - OTLP format
- *
- * @param {import('../core').InstanaBaseSpan[]} spansToSend
- * @returns {any}
- */
-function applySpanTransformation(spansToSend) {
-  if (useOtlpExporter) {
-    return otlpTransformer.traces.transform(spansToSend);
-  }
-
-  return (
-    spansToSend
-      // Transform internal span data format into external (backend) readable format.
-      .map(span => instanaBackendMapper.transform(span))
-      .filter(span => {
-        if (span.t != null) {
-          return true;
-        }
-
-        logger.debug(`Span of type ${span.n} has no trace ID. Not transmitting this span.`);
-        return false;
-      })
-  );
 }

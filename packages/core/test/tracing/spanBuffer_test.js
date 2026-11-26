@@ -8,9 +8,15 @@
 const { expect } = require('chai');
 const sinon = require('sinon');
 const spanBuffer = require('../../src/tracing/spanBuffer');
+const exporter = require('../../src/exporter');
 const delay = require('../test_util/delay');
 const testUtils = require('../test_util');
 const { generateRandomSpanId, generateRandomTraceId } = require('../../src/tracing/tracingUtil');
+
+function initSpanBuffer(config, downstreamConnection) {
+  exporter.init(config, downstreamConnection);
+  spanBuffer.init(config, downstreamConnection);
+}
 
 describe('tracing/spanBuffer', () => {
   const start = 18000; // arbitrary reference timestamp
@@ -29,7 +35,7 @@ describe('tracing/spanBuffer', () => {
         sendSpans: sinon.stub()
       };
 
-      spanBuffer.init(
+      initSpanBuffer(
         {
           logger: testUtils.createFakeLogger(),
           tracing: {
@@ -116,7 +122,7 @@ describe('tracing/spanBuffer', () => {
         sendSpans: sinon.stub()
       };
 
-      spanBuffer.init(
+      initSpanBuffer(
         {
           logger: testUtils.createFakeLogger(),
           tracing: {
@@ -217,7 +223,7 @@ describe('tracing/spanBuffer', () => {
       // an init call in the before-hook for the whole spanBuffer suite.)
 
       before(() => {
-        spanBuffer.init(
+        initSpanBuffer(
           {
             logger: testUtils.createFakeLogger(),
             tracing: {
@@ -572,7 +578,7 @@ describe('tracing/spanBuffer', () => {
 
     describe('batching disabled', () => {
       before(() => {
-        spanBuffer.init(
+        initSpanBuffer(
           {
             logger: testUtils.createFakeLogger(),
             tracing: {
@@ -618,7 +624,7 @@ describe('tracing/spanBuffer', () => {
             sendSpans: sinon.stub()
           };
 
-          spanBuffer.init(
+          initSpanBuffer(
             {
               logger: testUtils.createFakeLogger(),
               tracing: {
@@ -688,7 +694,7 @@ describe('tracing/spanBuffer', () => {
             sendSpans: sinon.stub()
           };
 
-          spanBuffer.init(
+          initSpanBuffer(
             {
               logger: testUtils.createFakeLogger(),
               tracing: {

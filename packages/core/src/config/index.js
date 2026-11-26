@@ -112,6 +112,8 @@ let currentConfig;
  * @property {boolean} [enabled]
  * @property {number} [port]
  * @property {string} [semConvVersion]
+ * @property {string} [endpoint]
+ * @property {Record<string, string>} [headers]
  */
 
 /**

@@ -15,6 +15,7 @@ const tracing = require('./tracing');
 const util = require('./util');
 const coreConfig = require('./config');
 const otlpTransformer = require('./otlpTransformer');
+const exporter = require('./exporter');
 
 /**
  * @typedef {{
@@ -37,8 +38,8 @@ const otlpTransformer = require('./otlpTransformer');
 /**
  * This type is based on /nodejs/packages/collector/src/agentConnection.js
  * @typedef {Object} DownstreamConnection
- * @property {(spans: *, cb: Function) => void} sendSpans
- * @property {(logs: *, cb: Function) => void} [sendLogs]
+ * @property {(spans: *, cb: Function, target?: import('./exporter').ExportTarget) => void} sendSpans
+ * @property {(logs: *, cb: Function, target?: import('./exporter').ExportTarget) => void} [sendLogs]
  * @property {(eventData: Event, cb: (...args: *) => *) => void} sendEvent
  */
 
@@ -82,7 +83,7 @@ function init(config, downstreamConnection, processIdentityProvider) {
   util.init(config);
   util.hasThePackageBeenInitializedTooLate.activate();
   secrets.init(config);
-  otlpTransformer.init(config);
+  exporter.init(config, downstreamConnection);
   tracing.init(config, downstreamConnection, processIdentityProvider);
 }
 
@@ -102,5 +103,6 @@ module.exports = {
   init,
   preInit,
   registerAdditionalInstrumentations,
-  otlpTransformer
+  otlpTransformer,
+  exporter
 };

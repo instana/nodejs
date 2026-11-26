@@ -19,7 +19,6 @@ let logger;
 let pidStore;
 /** @type {import('@instana/core/src/config').InstanaConfig} */
 let config;
-let isOtlpExporterEnabled = false;
 
 // How many extra characters are to be reserved for the inode and
 // file descriptor fields in the collector announce cycle.
@@ -33,11 +32,6 @@ let maxContentErrorHasBeenLogged = false;
 
 const http = uninstrumentedHttp.http;
 let isConnected = false;
-
-/**
- * @type {number | undefined}
- */
-let otlpPort;
 
 /** @type {string | null} */
 let cpuSetFileContent = null;
@@ -53,8 +47,6 @@ exports.init = function init(_config, _pidStore) {
 
   cmdline.init(config);
   cpuSetFileContent = getCpuSetFileContent();
-  isOtlpExporterEnabled = config.tracing.otlp.enabled;
-  otlpPort = config.tracing.otlp.port;
 };
 
 /**
@@ -62,7 +54,6 @@ exports.init = function init(_config, _pidStore) {
  */
 exports.activate = function activate(_config) {
   config = _config;
-  isOtlpExporterEnabled = config.tracing.otlp.enabled;
 };
 
 exports.AgentEventSeverity = {
@@ -105,41 +96,27 @@ exports.AgentEventSeverity = {
  * @property {string} [cpuSetFileContent]
  */
 
-/** @type {Record<string, { otlpPath: string, instanaPath: () => string }>} */
-const EXPORT_ENDPOINTS = {
-  traces: {
-    otlpPath: '/v1/traces',
-    instanaPath: () => `/com.instana.plugin.nodejs/traces.${pidStore.pid}`
-  },
-  metrics: {
-    otlpPath: '/v1/metrics',
-    instanaPath: () => `/com.instana.plugin.nodejs.${pidStore.pid}`
-  },
-  logs: {
-    otlpPath: '/v1/logs',
-    instanaPath: () => `/com.instana.plugin.nodejs/traces.${pidStore.pid}`
-  }
+/**
+ * Instana native endpoints of the agent, used for the Instana format.
+ * @type {Record<'traces' | 'metrics', () => string>}
+ */
+const INSTANA_NATIVE_PATHS = {
+  traces: () => `/com.instana.plugin.nodejs/traces.${pidStore.pid}`,
+  metrics: () => `/com.instana.plugin.nodejs.${pidStore.pid}`
 };
 
 /**
- * @param {string} type
+ * @param {'traces' | 'metrics'} type
+ * @param {import('@instana/core/src/exporter').ExportTarget} [target]
  * @returns { {path: string, port: number} }
  */
-function resolveExportEndpoint(type) {
-  const endpoint = EXPORT_ENDPOINTS[type];
-
-  if (isOtlpExporterEnabled) {
-    return {
-      path: endpoint.otlpPath,
-      port: otlpPort
-    };
-  }
-
+function resolveExportEndpoint(type, target) {
   return {
-    path: endpoint.instanaPath(),
-    port: agentOpts.port
+    path: target?.path || INSTANA_NATIVE_PATHS[type](),
+    port: target?.port || agentOpts.port
   };
 }
+
 /**
  * @param {(err: Error, rawResponse?: string) => void} callback
  */
@@ -357,11 +334,12 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
 /**
  * @param {Object<string, *>} data
  * @param {(...args: *) => *} cb
+ * @param {import('@instana/core/src/exporter').ExportTarget} [target]
  */
-exports.sendMetrics = function sendMetrics(data, cb) {
+exports.sendMetrics = function sendMetrics(data, cb, target) {
   cb = util.atMostOnce('callback for sendMetrics', cb);
 
-  const exportTarget = resolveExportEndpoint('metrics');
+  const exportTarget = resolveExportEndpoint('metrics', target);
   sendData({
     ...exportTarget,
     data,
@@ -396,8 +374,9 @@ exports.sendMetrics = function sendMetrics(data, cb) {
  *
  * @param {Array.<InstanaBaseSpan>|Object} spans
  * @param {(...args: *) => *} cb
+ * @param {import('@instana/core/src/exporter').ExportTarget} [target]
  */
-exports.sendSpans = function sendSpans(spans, cb) {
+exports.sendSpans = function sendSpans(spans, cb, target) {
   const callback = util.atMostOnce('callback for sendSpans', err => {
     if (err && !maxContentErrorHasBeenLogged && err instanceof PayloadTooLargeError) {
       if (Array.isArray(spans)) {
@@ -414,7 +393,7 @@ exports.sendSpans = function sendSpans(spans, cb) {
     }
     cb(err);
   });
-  const exportTarget = resolveExportEndpoint('traces');
+  const exportTarget = resolveExportEndpoint('traces', target);
   sendData({
     ...exportTarget,
     data: spans,
@@ -424,11 +403,12 @@ exports.sendSpans = function sendSpans(spans, cb) {
 };
 
 /**
- * Sends OTLP log records.
+ * Sends log records. The Instana agent has no default endpoint for logs, so an export target with a path is required.
  * @param {Object} logs
  * @param {(...args: *) => *} cb
+ * @param {import('@instana/core/src/exporter').ExportTarget} target
  */
-exports.sendLogs = function sendLogs(logs, cb) {
+exports.sendLogs = function sendLogs(logs, cb, target) {
   const callback = util.atMostOnce('callback for sendLogs', err => {
     if (err) {
       logger.debug(`Failed to send logs: ${err.message}`);
@@ -436,8 +416,13 @@ exports.sendLogs = function sendLogs(logs, cb) {
     cb(err);
   });
 
+  if (!target?.path) {
+    return setImmediate(callback.bind(null, new Error('Cannot send logs without an export target path.')));
+  }
+
   sendData({
-    ...resolveExportEndpoint('logs'),
+    path: target.path,
+    port: target.port || agentOpts.port,
     data: logs,
     cb: callback,
     ignore404: true
