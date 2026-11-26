@@ -1560,17 +1560,19 @@ function normalizeTracingSampling({ userConfig = {}, finalConfig = {} } = {}) {
   finalConfig.tracing.sampling = {};
 
   normalizeSamplingRate({ userSampling, finalConfig });
-  normalizeSamplingType({ userSampling, finalConfig });
-  normalizeSamplingThreshold({ userSampling, finalConfig });
-  normalizeSamplingPrecision({ userSampling, finalConfig });
 
   if (finalConfig.tracing.sampling.rate !== undefined) {
+    // A valid rate takes precedence: threshold, type and precision are derived from it, so the user provided
+    // values for those do not need to be normalized.
     const rate = finalConfig.tracing.sampling.rate;
     finalConfig.tracing.sampling.threshold = normalizers.sampling.calculateThresholdFromRate(rate).toString();
     finalConfig.tracing.sampling.type = DEFAULT_SAMPLING_TYPE;
     finalConfig.tracing.sampling.precision = DEFAULT_SAMPLING_PRECISION;
   } else {
     delete finalConfig.tracing.sampling.rate;
+    normalizeSamplingType({ userSampling, finalConfig });
+    normalizeSamplingThreshold({ userSampling, finalConfig });
+    normalizeSamplingPrecision({ userSampling, finalConfig });
   }
 }
 
