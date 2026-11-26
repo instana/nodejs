@@ -19,7 +19,6 @@ const {
   DEFAULT_SAMPLING_PRECISION,
   DEFAULT_SAMPLING_RATE
 } = require('../util/constants');
-const ConfigurationSampler = require('../tracing/sampler/configurationSampler');
 const util = require('./util');
 const validators = require('./validator');
 const { validateStackTraceMode, validateStackTraceLength } = validators;
@@ -1567,7 +1566,7 @@ function normalizeTracingSampling({ userConfig = {}, finalConfig = {} } = {}) {
 
   if (finalConfig.tracing.sampling.rate !== undefined) {
     const rate = finalConfig.tracing.sampling.rate;
-    finalConfig.tracing.sampling.threshold = ConfigurationSampler.calculateThresholdFromRate(rate).toString();
+    finalConfig.tracing.sampling.threshold = normalizers.sampling.calculateThresholdFromRate(rate).toString();
     finalConfig.tracing.sampling.type = DEFAULT_SAMPLING_TYPE;
     finalConfig.tracing.sampling.precision = DEFAULT_SAMPLING_PRECISION;
   } else {
