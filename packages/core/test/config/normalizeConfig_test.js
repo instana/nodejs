@@ -3,6 +3,8 @@
  * (c) Copyright Instana Inc. and contributors 2019
  */
 
+/* eslint-disable no-loss-of-precision */
+
 'use strict';
 
 const expect = require('chai').expect;
@@ -2397,6 +2399,189 @@ describe('config.normalizeConfig', () => {
         expect(config.tracing.disableEOLEvents).to.be.false;
       });
     });
+
+    describe('sampling configuration', () => {
+      it('should not set sampling configuration when config is not set', () => {
+        const config = coreConfig.normalize({});
+        expect(config.tracing.sampling).to.be.undefined;
+      });
+
+      it('should accept sampling configuration from in-code config', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              sampling: {
+                type: 1,
+                threshold: 234567892345,
+                precision: 4
+              }
+            }
+          }
+        });
+        expect(config.tracing.sampling).to.deep.equal({
+          type: 1,
+          threshold: '234567892345',
+          precision: 4
+        });
+      });
+
+      it('should fall back to defaults for invalid in-code sampling values', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              sampling: {
+                type: 'negative-invalid',
+                threshold: 'invalid',
+                precision: 'invalid'
+              }
+            }
+          }
+        });
+        expect(config.tracing.sampling).to.deep.equal({
+          type: 1,
+          threshold: '0',
+          precision: 4
+        });
+      });
+
+      it('should accept sampling rate from in-code config and calculate threshold with defaults type=1, precision=4', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              sampling: {
+                rate: 50
+              }
+            }
+          }
+        });
+        expect(config.tracing.sampling).to.deep.equal({
+          rate: 50,
+          type: 1,
+          threshold: '36028797018963968',
+          precision: 4
+        });
+      });
+
+      it('should give precedence to rate over threshold when both are provided', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              sampling: {
+                rate: 50,
+                threshold: '12345',
+                type: 1,
+                precision: 14
+              }
+            }
+          }
+        });
+        expect(config.tracing.sampling).to.deep.equal({
+          rate: 50,
+          type: 1,
+          threshold: '36028797018963968',
+          precision: 4
+        });
+      });
+
+      it('should handle Mode 2 (rate only) without type or precision specified', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              sampling: {
+                rate: 50
+              }
+            }
+          }
+        });
+        expect(config.tracing.sampling).to.deep.equal({
+          rate: 50,
+          type: 1,
+          threshold: '36028797018963968',
+          precision: 4
+        });
+      });
+
+      it('should reject the sampling configuration when rate is provided but invalid', () => {
+        [0, 101, -1, 'abc', NaN, {}].forEach(rate => {
+          const config = coreConfig.normalize({
+            userConfig: {
+              tracing: {
+                sampling: {
+                  rate,
+                  type: 1,
+                  threshold: '36028797018963968',
+                  precision: 14
+                }
+              }
+            }
+          });
+          expect(config.tracing.sampling, `rate=${String(rate)}`).to.be.undefined;
+        });
+      });
+
+      it('should use threshold mode when rate is null or undefined', () => {
+        [null, undefined].forEach(rate => {
+          const config = coreConfig.normalize({
+            userConfig: {
+              tracing: {
+                sampling: {
+                  rate,
+                  type: 1,
+                  threshold: '36028797018963968',
+                  precision: 14
+                }
+              }
+            }
+          });
+          expect(config.tracing.sampling).to.deep.equal({
+            type: 1,
+            threshold: '36028797018963968',
+            precision: 14
+          });
+        });
+      });
+
+      it('should accept 2^56 as the maximum threshold and reject larger values', () => {
+        const normalize = threshold =>
+          coreConfig.normalize({ userConfig: { tracing: { sampling: { threshold } } } }).tracing.sampling.threshold;
+
+        expect(normalize('72057594037927936')).to.equal('72057594037927936');
+        expect(normalize('72057594037927937')).to.equal('0');
+        expect(normalize('99999999999999999999')).to.equal('0');
+      });
+
+      it('should keep a 56-bit threshold as a decimal string without losing precision', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              sampling: {
+                threshold: '72057594037927935'
+              }
+            }
+          }
+        });
+        expect(config.tracing.sampling.threshold).to.equal('72057594037927935');
+      });
+
+      it('should handle Mode 1 (threshold string representation of long integer with type and precision)', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              sampling: {
+                type: 1,
+                threshold: '36028797018963968',
+                precision: 14
+              }
+            }
+          }
+        });
+        expect(config.tracing.sampling).to.deep.equal({
+          type: 1,
+          threshold: '36028797018963968',
+          precision: 14
+        });
+      });
+    });
   });
 
   describe('finalConfigBase parameter', () => {
@@ -3283,6 +3468,7 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.allowRootExitSpan).to.equal(false);
     expect(config.tracing.disableServerTiming).to.be.false;
     expect(config.tracing.dbBindVariables).to.deep.equal({ disable: true, allowedColumns: [] });
+    expect(config.tracing.sampling).to.be.undefined;
 
     expect(config.tracing.otlp).to.deep.equal({
       enabled: false,

@@ -673,4 +673,40 @@ describe('config.validator', () => {
       expect(validator.validateTransmissionDelay(72000)).to.equal(60000);
     });
   });
+
+  describe('samplingRateValidator', () => {
+    it('should accept integers from 1 to 100', () => {
+      expect(validator.samplingRateValidator(1)).to.equal(1);
+      expect(validator.samplingRateValidator(50)).to.equal(50);
+      expect(validator.samplingRateValidator(100)).to.equal(100);
+    });
+
+    it('should floor decimal numbers', () => {
+      expect(validator.samplingRateValidator(50.9)).to.equal(50);
+    });
+
+    it('should accept decimal numeric strings', () => {
+      expect(validator.samplingRateValidator('50')).to.equal(50);
+      expect(validator.samplingRateValidator(' 50 ')).to.equal(50);
+      expect(validator.samplingRateValidator('50.9')).to.equal(50);
+    });
+
+    it('should reject out of range values', () => {
+      [0, 0.5, 101, -5, '0', '101', '-5'].forEach(value => {
+        expect(validator.samplingRateValidator(value), String(value)).to.be.undefined;
+      });
+    });
+
+    it('should reject non-numeric values such as RANDOM and NONE', () => {
+      ['RANDOM', 'NONE', 'random', 'abc', '', ' ', '5e1', '0x32', 'Infinity'].forEach(value => {
+        expect(validator.samplingRateValidator(value), String(value)).to.be.undefined;
+      });
+    });
+
+    it('should reject non-number and non-string types', () => {
+      [true, false, [50], {}, null, undefined, NaN, Infinity, 50n].forEach(value => {
+        expect(validator.samplingRateValidator(value), String(value)).to.be.undefined;
+      });
+    });
+  });
 });

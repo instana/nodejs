@@ -2,9 +2,17 @@
  * (c) Copyright IBM Corp. 2026
  */
 
+/* global BigInt */
+
 'use strict';
 
-const { validStackTraceModes, LOG_LEVEL, allowedTransmissionDelayValues } = require('../util/constants');
+const {
+  validStackTraceModes,
+  LOG_LEVEL,
+  allowedTransmissionDelayValues,
+  SAMPLING_TYPES,
+  MAX_56_BIT_VALUE
+} = require('../util/constants');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -263,4 +271,77 @@ exports.allowedColumnsValidator = function allowedColumnsValidator(value) {
     return value.filter(c => typeof c === 'string' && c.trim() !== '').map(c => c.trim().toLowerCase());
   }
   return undefined;
+};
+
+/**
+ * @param {any} value
+ * @returns {number|undefined}
+ */
+exports.samplingRateValidator = function samplingRateValidator(value) {
+  if (typeof value !== 'number' && !(typeof value === 'string' && /^\d+(\.\d+)?$/.test(value.trim()))) {
+    return undefined;
+  }
+  const num = exports.numberValidator(value);
+  if (num === undefined || !Number.isFinite(num)) return undefined;
+  const intVal = Math.floor(num);
+  return intVal >= 1 && intVal <= 100 ? intVal : undefined;
+};
+
+/**
+ * @param {any} value
+ * @returns {number|undefined}
+ */
+exports.samplingTypeValidator = function samplingTypeValidator(value) {
+  if (value == null) return undefined;
+  let input = value;
+  if (typeof value === 'string') {
+    input = value.trim();
+    if (input === '') return undefined;
+    const upper = input.toUpperCase();
+    if (upper === 'NONE') return SAMPLING_TYPES.NONE;
+    if (upper === 'RANDOM') return SAMPLING_TYPES.RANDOM;
+  }
+  const num = exports.numberValidator(input);
+  if (num === undefined || !Number.isFinite(num) || num < 0) return undefined;
+  const intVal = Math.floor(num);
+  return Object.values(SAMPLING_TYPES).includes(intVal) ? intVal : undefined;
+};
+
+/**
+ * The threshold is a 56-bit value, which cannot be represented as a Number without losing precision.
+ * It is therefore kept as a decimal string and BigInt is used for validation.
+ * Valid values are in the range 0 to 2^56 (inclusive, 2^56 rejects everything).
+ *
+ * @param {any} value
+ * @returns {string|undefined} decimal string representation of the threshold
+ */
+exports.samplingThresholdValidator = function samplingThresholdValidator(value) {
+  if (value == null) return undefined;
+  try {
+    let b;
+    if (typeof value === 'bigint') {
+      b = value;
+    } else if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (trimmed === '') return undefined;
+      b = BigInt(trimmed);
+    } else {
+      const num = exports.numberValidator(value);
+      if (num === undefined || !Number.isFinite(num)) return undefined;
+      b = BigInt(Math.floor(num));
+    }
+    return b >= BigInt(0) && b <= MAX_56_BIT_VALUE ? b.toString() : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+/**
+ * @param {any} value
+ * @returns {number|undefined}
+ */
+exports.samplingPrecisionValidator = function samplingPrecisionValidator(value) {
+  const num = exports.numberValidator(value);
+  if (num === undefined || !Number.isFinite(num) || num < 1 || num > 14) return undefined;
+  return Math.floor(num);
 };
