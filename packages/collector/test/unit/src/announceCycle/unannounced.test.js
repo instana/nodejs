@@ -2160,7 +2160,7 @@ describe('unannounced state', () => {
               tracing: {
                 sampling: {
                   type: 1,
-                  threshold: 50,
+                  threshold: '50',
                   precision: 2
                 }
               }

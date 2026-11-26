@@ -2420,7 +2420,7 @@ describe('config.normalizeConfig', () => {
         });
         expect(config.tracing.sampling).to.deep.equal({
           type: 1,
-          threshold: 234567892345,
+          threshold: '234567892345',
           precision: 4
         });
       });
@@ -2439,7 +2439,7 @@ describe('config.normalizeConfig', () => {
         });
         expect(config.tracing.sampling).to.deep.equal({
           type: 1,
-          threshold: 0,
+          threshold: '0',
           precision: 4
         });
       });
@@ -2457,7 +2457,7 @@ describe('config.normalizeConfig', () => {
         expect(config.tracing.sampling).to.deep.equal({
           rate: 50,
           type: 1,
-          threshold: 36028797018963968,
+          threshold: '36028797018963968',
           precision: 4
         });
       });
@@ -2478,7 +2478,7 @@ describe('config.normalizeConfig', () => {
         expect(config.tracing.sampling).to.deep.equal({
           rate: 50,
           type: 1,
-          threshold: 36028797018963968,
+          threshold: '36028797018963968',
           precision: 4
         });
       });
@@ -2496,9 +2496,22 @@ describe('config.normalizeConfig', () => {
         expect(config.tracing.sampling).to.deep.equal({
           rate: 50,
           type: 1,
-          threshold: 36028797018963968,
+          threshold: '36028797018963968',
           precision: 4
         });
+      });
+
+      it('should keep a 56-bit threshold as a decimal string without losing precision', () => {
+        const config = coreConfig.normalize({
+          userConfig: {
+            tracing: {
+              sampling: {
+                threshold: '72057594037927935'
+              }
+            }
+          }
+        });
+        expect(config.tracing.sampling.threshold).to.equal('72057594037927935');
       });
 
       it('should handle Mode 1 (threshold string representation of long integer with type and precision)', () => {
@@ -2515,7 +2528,7 @@ describe('config.normalizeConfig', () => {
         });
         expect(config.tracing.sampling).to.deep.equal({
           type: 1,
-          threshold: 36028797018963968,
+          threshold: '36028797018963968',
           precision: 14
         });
       });

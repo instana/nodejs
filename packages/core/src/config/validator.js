@@ -324,27 +324,31 @@ exports.samplingTypeValidator = function samplingTypeValidator(value) {
 };
 
 /**
+ * The threshold is a 56-bit value, which cannot be represented as a Number without losing precision.
+ * It is therefore kept as a decimal string and BigInt is used for validation.
+ *
  * @param {any} value
- * @returns {number|undefined}
+ * @returns {string|undefined} decimal string representation of the threshold
  */
 exports.samplingThresholdValidator = function samplingThresholdValidator(value) {
   if (value == null) return undefined;
-  if (typeof value === 'bigint') {
-    return value >= BigInt(0) ? Number(value) : undefined;
-  }
-  if (typeof value === 'string') {
-    const trimmed = value.trim();
-    if (trimmed === '') return undefined;
-    try {
-      const b = BigInt(trimmed);
-      if (b >= BigInt(0)) return Number(b);
-    } catch {
-      return undefined;
+  try {
+    let b;
+    if (typeof value === 'bigint') {
+      b = value;
+    } else if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (trimmed === '') return undefined;
+      b = BigInt(trimmed);
+    } else {
+      const num = typeof value === 'number' ? value : Number(value);
+      if (!Number.isFinite(num)) return undefined;
+      b = BigInt(Math.floor(num));
     }
+    return b >= BigInt(0) ? b.toString() : undefined;
+  } catch {
+    return undefined;
   }
-  const num = typeof value === 'number' ? value : Number(value);
-  if (!Number.isFinite(num) || num < 0) return undefined;
-  return Math.floor(num);
 };
 
 /**

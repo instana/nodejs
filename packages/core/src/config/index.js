@@ -1567,7 +1567,7 @@ function normalizeTracingSampling({ userConfig = {}, finalConfig = {} } = {}) {
 
   if (finalConfig.tracing.sampling.rate !== undefined) {
     const rate = finalConfig.tracing.sampling.rate;
-    finalConfig.tracing.sampling.threshold = Number(ConfigurationSampler.calculateThresholdFromRate(rate));
+    finalConfig.tracing.sampling.threshold = ConfigurationSampler.calculateThresholdFromRate(rate).toString();
     finalConfig.tracing.sampling.type = DEFAULT_SAMPLING_TYPE;
     finalConfig.tracing.sampling.precision = DEFAULT_SAMPLING_PRECISION;
   } else {
