@@ -64,5 +64,4 @@ exports.SAMPLING_TYPES = {
   NONE: 0,
   RANDOM: 1
 };
-exports.SAMPLING_MASK_56 = BigInt('0xffffffffffffff');
 exports.MAX_56_BIT_VALUE = BigInt('72057594037927936');
