@@ -1557,6 +1557,16 @@ function normalizeTracingSampling({ userConfig = {}, finalConfig = {} } = {}) {
     return;
   }
 
+  // An explicitly provided rate selects the rate based mode. If it is invalid, the whole sampling configuration is
+  // rejected instead of falling back to the threshold based mode (same behavior as for the agent configuration).
+  if (userSampling.rate != null && validators.samplingRateValidator(userSampling.rate) === undefined) {
+    logger?.warn(
+      `[config] Invalid tracing.sampling.rate: ${JSON.stringify(userSampling.rate)}. ` +
+        'The rate must be a number between 1 and 100. Ignoring the sampling configuration.'
+    );
+    return;
+  }
+
   finalConfig.tracing.sampling = {};
 
   normalizeSamplingRate({ userSampling, finalConfig });

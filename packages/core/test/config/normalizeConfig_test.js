@@ -2501,6 +2501,46 @@ describe('config.normalizeConfig', () => {
         });
       });
 
+      it('should reject the sampling configuration when rate is provided but invalid', () => {
+        [0, 101, -1, 'abc', NaN, {}].forEach(rate => {
+          const config = coreConfig.normalize({
+            userConfig: {
+              tracing: {
+                sampling: {
+                  rate,
+                  type: 1,
+                  threshold: '36028797018963968',
+                  precision: 14
+                }
+              }
+            }
+          });
+          expect(config.tracing.sampling, `rate=${String(rate)}`).to.be.undefined;
+        });
+      });
+
+      it('should use threshold mode when rate is null or undefined', () => {
+        [null, undefined].forEach(rate => {
+          const config = coreConfig.normalize({
+            userConfig: {
+              tracing: {
+                sampling: {
+                  rate,
+                  type: 1,
+                  threshold: '36028797018963968',
+                  precision: 14
+                }
+              }
+            }
+          });
+          expect(config.tracing.sampling).to.deep.equal({
+            type: 1,
+            threshold: '36028797018963968',
+            precision: 14
+          });
+        });
+      });
+
       it('should accept 2^56 as the maximum threshold and reject larger values', () => {
         const normalize = threshold =>
           coreConfig.normalize({ userConfig: { tracing: { sampling: { threshold } } } }).tracing.sampling.threshold;
