@@ -361,18 +361,30 @@ describe('agent connection/export endpoints', function () {
   describe('sendLogs', () => {
     const otlpLogs = { resourceLogs: [] };
 
-    it('should use the Instana traces endpoint by default', done => {
+    it('should not send logs without an export target, because the agent has no native logs endpoint', done => {
+      initAgentConnection();
+
+      agentConnection.sendLogs(otlpLogs, err => {
+        expect(err).to.exist;
+        expect(err.message).to.equal('Cannot send logs without an export target path.');
+        expect(requests).to.have.lengthOf(0);
+        done();
+      });
+    });
+
+    it('should use the agent port if the export target has no port', done => {
       initAgentConnection();
       responseQueue.push({ statusCode: 200, body: '' });
 
-      agentConnection.sendLogs(otlpLogs, err => {
-        expect(err).to.not.exist;
-        expect(requests[0].options).to.include({
-          port: 42699,
-          path: '/com.instana.plugin.nodejs/traces.4711'
-        });
-        done();
-      });
+      agentConnection.sendLogs(
+        otlpLogs,
+        err => {
+          expect(err).to.not.exist;
+          expect(requests[0].options).to.include({ port: 42699, path: '/v1/logs' });
+          done();
+        },
+        { path: '/v1/logs' }
+      );
     });
 
     it('should use path and port of the export target', done => {

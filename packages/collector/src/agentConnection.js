@@ -96,24 +96,27 @@ exports.AgentEventSeverity = {
  * @property {string} [cpuSetFileContent]
  */
 
-/** @type {Record<string, () => string>} */
-const DEFAULT_EXPORT_PATHS = {
+/**
+ * Instana native endpoints of the agent, used for the Instana format.
+ * @type {Record<'traces' | 'metrics', () => string>}
+ */
+const INSTANA_NATIVE_PATHS = {
   traces: () => `/com.instana.plugin.nodejs/traces.${pidStore.pid}`,
-  metrics: () => `/com.instana.plugin.nodejs.${pidStore.pid}`,
-  logs: () => `/com.instana.plugin.nodejs/traces.${pidStore.pid}`
+  metrics: () => `/com.instana.plugin.nodejs.${pidStore.pid}`
 };
 
 /**
- * @param {string} type
+ * @param {'traces' | 'metrics'} type
  * @param {import('@instana/core/src/exporter').ExportTarget} [target]
  * @returns { {path: string, port: number} }
  */
 function resolveExportEndpoint(type, target) {
   return {
-    path: target?.path || DEFAULT_EXPORT_PATHS[type](),
+    path: target?.path || INSTANA_NATIVE_PATHS[type](),
     port: target?.port || agentOpts.port
   };
 }
+
 /**
  * @param {(err: Error, rawResponse?: string) => void} callback
  */
@@ -400,10 +403,10 @@ exports.sendSpans = function sendSpans(spans, cb, target) {
 };
 
 /**
- * Sends log records.
+ * Sends log records. The Instana agent has no default endpoint for logs, so an export target with a path is required.
  * @param {Object} logs
  * @param {(...args: *) => *} cb
- * @param {import('@instana/core/src/exporter').ExportTarget} [target]
+ * @param {import('@instana/core/src/exporter').ExportTarget} target
  */
 exports.sendLogs = function sendLogs(logs, cb, target) {
   const callback = util.atMostOnce('callback for sendLogs', err => {
@@ -413,8 +416,13 @@ exports.sendLogs = function sendLogs(logs, cb, target) {
     cb(err);
   });
 
+  if (!target?.path) {
+    return setImmediate(callback.bind(null, new Error('Cannot send logs without an export target path.')));
+  }
+
   sendData({
-    ...resolveExportEndpoint('logs', target),
+    path: target.path,
+    port: target.port || agentOpts.port,
     data: logs,
     cb: callback,
     ignore404: true
