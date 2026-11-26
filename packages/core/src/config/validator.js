@@ -278,20 +278,13 @@ exports.allowedColumnsValidator = function allowedColumnsValidator(value) {
  * @returns {number|undefined}
  */
 exports.samplingRateValidator = function samplingRateValidator(value) {
-  let num;
-  if (typeof value === 'number') {
-    num = value;
-  } else if (typeof value === 'string' && /^\d+(\.\d+)?$/.test(value.trim())) {
-    num = Number(value);
-  } else {
+  if (typeof value !== 'number' && !(typeof value === 'string' && /^\d+(\.\d+)?$/.test(value.trim()))) {
     return undefined;
   }
-  if (!Number.isFinite(num)) return undefined;
+  const num = exports.numberValidator(value);
+  if (num === undefined || !Number.isFinite(num)) return undefined;
   const intVal = Math.floor(num);
-  if (intVal >= 1 && intVal <= 100) {
-    return intVal;
-  }
-  return undefined;
+  return intVal >= 1 && intVal <= 100 ? intVal : undefined;
 };
 
 /**
@@ -300,28 +293,18 @@ exports.samplingRateValidator = function samplingRateValidator(value) {
  */
 exports.samplingTypeValidator = function samplingTypeValidator(value) {
   if (value == null) return undefined;
+  let input = value;
   if (typeof value === 'string') {
-    const trimmed = value.trim();
-    if (trimmed === '') return undefined;
-    const upper = trimmed.toUpperCase();
+    input = value.trim();
+    if (input === '') return undefined;
+    const upper = input.toUpperCase();
     if (upper === 'NONE') return SAMPLING_TYPES.NONE;
     if (upper === 'RANDOM') return SAMPLING_TYPES.RANDOM;
-    const parsedNum = Number(trimmed);
-    if (!Number.isNaN(parsedNum) && Number.isFinite(parsedNum) && parsedNum >= 0) {
-      const intVal = Math.floor(parsedNum);
-      if (Object.values(SAMPLING_TYPES).includes(intVal)) {
-        return intVal;
-      }
-    }
-    return undefined;
   }
-  const num = typeof value === 'number' ? value : Number(value);
-  if (!Number.isFinite(num) || num < 0) return undefined;
+  const num = exports.numberValidator(input);
+  if (num === undefined || !Number.isFinite(num) || num < 0) return undefined;
   const intVal = Math.floor(num);
-  if (Object.values(SAMPLING_TYPES).includes(intVal)) {
-    return intVal;
-  }
-  return undefined;
+  return Object.values(SAMPLING_TYPES).includes(intVal) ? intVal : undefined;
 };
 
 /**
@@ -343,8 +326,8 @@ exports.samplingThresholdValidator = function samplingThresholdValidator(value) 
       if (trimmed === '') return undefined;
       b = BigInt(trimmed);
     } else {
-      const num = typeof value === 'number' ? value : Number(value);
-      if (!Number.isFinite(num)) return undefined;
+      const num = exports.numberValidator(value);
+      if (num === undefined || !Number.isFinite(num)) return undefined;
       b = BigInt(Math.floor(num));
     }
     return b >= BigInt(0) && b <= MAX_56_BIT_VALUE ? b.toString() : undefined;
@@ -358,8 +341,7 @@ exports.samplingThresholdValidator = function samplingThresholdValidator(value) 
  * @returns {number|undefined}
  */
 exports.samplingPrecisionValidator = function samplingPrecisionValidator(value) {
-  if (value == null) return undefined;
-  const num = typeof value === 'number' ? value : Number(value);
-  if (!Number.isFinite(num) || num < 1 || num > 14) return undefined;
+  const num = exports.numberValidator(value);
+  if (num === undefined || !Number.isFinite(num) || num < 1 || num > 14) return undefined;
   return Math.floor(num);
 };
