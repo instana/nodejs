@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.11.0](https://github.com/instana/nodejs/compare/v6.10.1...v6.11.0) (2026-11-26)
+
+
+### Features
+
+* added support for oracledb v26 ([#2832](https://github.com/instana/nodejs/issues/2832)) ([c5032d8](https://github.com/instana/nodejs/commit/c5032d81def1a2d56d6126ff7168bb98fa6ed422))
+* **lambda:** added support for v26 ([#2873](https://github.com/instana/nodejs/issues/2873)) ([109bc15](https://github.com/instana/nodejs/commit/109bc150867d14afe2c7d3ea7215598846075ee4))
+
+
+### Reverts
+
+* Revert "v6.11.0" ([ad98a7f](https://github.com/instana/nodejs/commit/ad98a7fa82f458c45303dc0b0d8f29807fc0316c))
+* Revert "build: bumped ibm_db from 4.1.0 to 4.1.1" ([789c605](https://github.com/instana/nodejs/commit/789c605f5212e720f2adaa16e14344340171fea0))
+
+
+
+
+
 ## [6.10.1](https://github.com/instana/nodejs/compare/v6.10.0...v6.10.1) (2026-11-11)
 
 
