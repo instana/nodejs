@@ -10,7 +10,8 @@ const {
   validStackTraceModes,
   LOG_LEVEL,
   allowedTransmissionDelayValues,
-  SAMPLING_TYPES
+  SAMPLING_TYPES,
+  MAX_56_BIT_VALUE
 } = require('../util/constants');
 
 /** @type {import('../core').GenericLogger} */
@@ -326,6 +327,7 @@ exports.samplingTypeValidator = function samplingTypeValidator(value) {
 /**
  * The threshold is a 56-bit value, which cannot be represented as a Number without losing precision.
  * It is therefore kept as a decimal string and BigInt is used for validation.
+ * Valid values are in the range 0 to 2^56 (inclusive, 2^56 rejects everything).
  *
  * @param {any} value
  * @returns {string|undefined} decimal string representation of the threshold
@@ -345,7 +347,7 @@ exports.samplingThresholdValidator = function samplingThresholdValidator(value) 
       if (!Number.isFinite(num)) return undefined;
       b = BigInt(Math.floor(num));
     }
-    return b >= BigInt(0) ? b.toString() : undefined;
+    return b >= BigInt(0) && b <= MAX_56_BIT_VALUE ? b.toString() : undefined;
   } catch {
     return undefined;
   }

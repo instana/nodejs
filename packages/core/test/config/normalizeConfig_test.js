@@ -2501,6 +2501,15 @@ describe('config.normalizeConfig', () => {
         });
       });
 
+      it('should accept 2^56 as the maximum threshold and reject larger values', () => {
+        const normalize = threshold =>
+          coreConfig.normalize({ userConfig: { tracing: { sampling: { threshold } } } }).tracing.sampling.threshold;
+
+        expect(normalize('72057594037927936')).to.equal('72057594037927936');
+        expect(normalize('72057594037927937')).to.equal('0');
+        expect(normalize('99999999999999999999')).to.equal('0');
+      });
+
       it('should keep a 56-bit threshold as a decimal string without losing precision', () => {
         const config = coreConfig.normalize({
           userConfig: {
