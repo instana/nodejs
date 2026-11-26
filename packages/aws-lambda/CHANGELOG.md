@@ -3,17 +3,6 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-# [6.11.0](https://github.com/instana/nodejs/compare/v6.10.1...v6.11.0) (2026-11-26)
-
-
-### Features
-
-* **lambda:** added support for v26 ([#2873](https://github.com/instana/nodejs/issues/2873)) ([109bc15](https://github.com/instana/nodejs/commit/109bc150867d14afe2c7d3ea7215598846075ee4))
-
-
-
-
-
 ## [6.10.1](https://github.com/instana/nodejs/compare/v6.10.0...v6.10.1) (2026-11-11)
 
 

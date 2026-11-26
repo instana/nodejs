@@ -3,17 +3,6 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-# [6.11.0](https://github.com/instana/nodejs/compare/v6.10.1...v6.11.0) (2026-11-26)
-
-
-### Features
-
-* added support for oracledb v26 ([#2832](https://github.com/instana/nodejs/issues/2832)) ([c5032d8](https://github.com/instana/nodejs/commit/c5032d81def1a2d56d6126ff7168bb98fa6ed422))
-
-
-
-
-
 ## [6.10.1](https://github.com/instana/nodejs/compare/v6.10.0...v6.10.1) (2026-11-11)
 
 
