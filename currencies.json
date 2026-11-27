@@ -388,7 +388,7 @@
     "group": "messaging",
     "versions": [
       {
-        "v": "2.4.0"
+        "v": "2.4.1"
       },
       {
         "v": "0.10.9"
@@ -885,7 +885,7 @@
     "core": false,
     "versions": [
       {
-        "v": "12.8.0",
+        "v": "12.8.1",
         "overrides": {
           "@azure/msal-node": "7.1.0",
           "tedious": "19.2.2"
@@ -1203,7 +1203,7 @@
     "core": false,
     "versions": [
       {
-        "v": "20.4.1",
+        "v": "20.4.2",
         "node": ">=22",
         "overrides": {
           "@azure/msal-node": "7.1.0"
@@ -1264,7 +1264,7 @@
     "core": false,
     "versions": [
       {
-        "v": "4.1.0",
+        "v": "4.1.1",
         "overrides": {
           "adm-zip": "^0.6.1"
         }
