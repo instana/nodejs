@@ -31,8 +31,7 @@ Services are selected with `--service` (default: `lambda`). Currently supported:
 **S3 deletes data:** a bucket can only be deleted when empty, so `--service s3` first removes **all objects, all
 versions and all delete markers** of every selected bucket, then the bucket itself. This cannot be undone.
 
-**Credentials:** the CLI reads `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_SESSION_TOKEN` from the
-environment. It never asks for credentials. Set them in your shell first, e.g. with an MFA helper:
+**Credentials:** the CLI never asks for credentials. Set them in your shell first, e.g. with an MFA helper:
 
 ```sh
 awstoken <MFA-CODE>
