@@ -1,0 +1,129 @@
+/*
+ * (c) Copyright IBM Corp. 2026
+ */
+
+'use strict';
+
+const ctx = require('../../common/context');
+const { toTraceId, toSpanId, toTimeUnixNano } = require('../../common/util');
+const { OTLP_SPAN_KINDS, INSTANA_SPAN_KINDS } = require('../mappers/constants');
+
+const metaMapper = {
+  /**
+   * @param {import('../../../core').InstanaBaseSpan} span
+   * @returns {string | undefined}
+   */
+  convertTraceId(span) {
+    if (span.t === undefined) return undefined;
+    return toTraceId(span.t);
+  },
+
+  /**
+   * @param {import('../../../core').InstanaBaseSpan} span
+   * @returns {string | undefined}
+   */
+  convertSpanId(span) {
+    if (span.s === undefined) return undefined;
+    return toSpanId(span.s);
+  },
+
+  /**
+   * @param {import('../../../core').InstanaBaseSpan} span
+   * @returns {string | undefined}
+   */
+  convertParentId(span) {
+    if (span.p === undefined) return undefined;
+    return toSpanId(span.p);
+  },
+
+  /**
+   * @param {import('../../../core').InstanaBaseSpan} span
+   * @returns {number | undefined}
+   */
+  convertSpanKind(span) {
+    if (span.k === INSTANA_SPAN_KINDS.ENTRY) {
+      return OTLP_SPAN_KINDS.SERVER;
+    }
+    if (span.k === INSTANA_SPAN_KINDS.EXIT) {
+      return OTLP_SPAN_KINDS.CLIENT;
+    }
+
+    if (span.k === INSTANA_SPAN_KINDS.INTERMEDIATE) {
+      return OTLP_SPAN_KINDS.INTERNAL;
+    }
+
+    return OTLP_SPAN_KINDS.UNSPECIFIED;
+  },
+
+  /**
+   * @param {import('../../../core').InstanaBaseSpan} span
+   * @returns {string | undefined}
+   */
+  convertStartTime(span) {
+    if (span.ts === undefined) return undefined;
+    return toTimeUnixNano(span.ts);
+  },
+
+  /**
+   * @param {import('../../../core').InstanaBaseSpan} span
+   * @returns {string}
+   */
+  generateEndTime(span) {
+    const startMs = span.ts !== undefined ? Number(span.ts) : 0;
+    const deltaMs = span.d !== undefined ? Number(span.d) : 0;
+    return toTimeUnixNano(startMs + deltaMs);
+  },
+
+  /**
+   * TODO: currently not supported in Instana and not added in the payload
+   * @returns {any[]}
+   */
+  events() {
+    return [];
+  },
+
+  /**
+   * TODO: currently not supported in Instana and not added in the payload
+   * @returns {any[]}
+   */
+  links() {
+    return [];
+  }
+};
+
+/**
+ * @typedef {Object} SpanMapper
+ * @property {function(import('../../../core').InstanaBaseSpan): string} spanName
+ * @property {function(import('../../../core').InstanaBaseSpan): { code: number, message?: string }} spanStatus
+ */
+
+/**
+ * @param {import('../../../core').InstanaBaseSpan} span
+ * @param {SpanMapper} mapper
+ * @returns {Record<string, any>}
+ */
+function extractSpanMetadata(span, mapper) {
+  const OTLP = /** @type {any} */ (ctx.semConv);
+
+  const metadataMappings = [
+    { otlp: OTLP.common.TRACE_ID, value: metaMapper.convertTraceId(span) },
+    { otlp: OTLP.common.SPAN_ID, value: metaMapper.convertSpanId(span) },
+    { otlp: OTLP.common.PARENT_ID, value: metaMapper.convertParentId(span) },
+    { otlp: OTLP.traces.span.KIND, value: metaMapper.convertSpanKind(span) },
+    { otlp: OTLP.common.START_TIME_UNIX_NANO, value: metaMapper.convertStartTime(span) },
+    { otlp: OTLP.common.END_TIME_UNIX_NANO, value: metaMapper.generateEndTime(span) },
+    { otlp: OTLP.traces.span.NAME, value: mapper.spanName(span) },
+    { otlp: OTLP.traces.span.STATUS, value: mapper.spanStatus(span) }
+  ];
+
+  return metadataMappings.reduce((/** @type {Record<string, any>} */ acc, current) => {
+    if (current.value !== undefined) {
+      acc[current.otlp] = current.value;
+    }
+    return acc;
+  }, {});
+}
+
+module.exports = {
+  extractSpanMetadata
+};
